@@ -1,0 +1,17 @@
+*~
+README.html
+build_dir
+*.bo
+*.ba
+*.o
+obj_dir
+elf_to_hex
+Mem.hex
+exe*
+*.log
+Tests/Logs
+*_edited.v
+*.trace_mem_load
+AA_*
+symbol_table.txt
+vpi_wrapper_*
