@@ -388,8 +388,8 @@ module mkMMIOInst(CLK,
 
   // value method getFetchTarget
   assign getFetchTarget =
-	     (getFetchTarget_phyPc[63:3] >= 61'd512 &&
-	      getFetchTarget_phyPc[63:3] < 61'd1024) ?
+	     (getFetchTarget_phyPc[63:3] >= 61'd234881024 &&
+	      getFetchTarget_phyPc[63:3] < 61'd234881536) ?
 	       2'd1 :
 	       IF_NOT_getFetchTarget_phyPc_BITS_63_TO_3_61_UL_ETC___d276 ;
   assign RDY_getFetchTarget = 1'd1 ;
@@ -840,7 +840,7 @@ module mkMMIOInst(CLK,
 
   // remaining internal signals
   assign IF_NOT_getFetchTarget_phyPc_BITS_63_TO_3_61_UL_ETC___d276 =
-	     (getFetchTarget_phyPc[63:3] >= 61'd268435456 &&
+	     (getFetchTarget_phyPc[63:3] >= 61'd402653184 &&
 	      getFetchTarget_phyPc[63:3] != toHostAddr &&
 	      getFetchTarget_phyPc[63:3] != fromHostAddr) ?
 	       2'd0 :

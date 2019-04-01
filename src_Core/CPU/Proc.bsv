@@ -27,12 +27,13 @@ package Proc;
 // ================================================================
 // BSV lib imports
 
-import Vector::*;
-import GetPut::*;
-import ClientServer::*;
-import Connectable::*;
-import FIFOF     :: *;
-import ConfigReg :: *;
+import Assert       :: *;
+import Vector       :: *;
+import GetPut       :: *;
+import ClientServer :: *;
+import Connectable  :: *;
+import FIFOF        :: *;
+import ConfigReg    :: *;
 
 // ----------------
 // BSV additional libs
@@ -65,14 +66,16 @@ import Performance::*;
 
 import ISA_Decls  :: *;
 
-import AXI4_Types   :: *;
-import Fabric_Defs  :: *;
-
 import Core              :: *;
 import Proc_IFC          :: *;
 import MMIOPlatform      :: *;
 import LLC_AXI4_Adapter  :: *;
 import MMIO_AXI4_Adapter :: *;
+
+import SoC_Map      :: *;
+import AXI4_Types   :: *;
+import Fabric_Defs  :: *;
+
 
 `ifdef INCLUDE_GDB_CONTROL
 import DM_CPU_Req_Rsp  :: *;
@@ -86,6 +89,12 @@ import TV_Info  :: *;
 
 (* synthesize *)
 module mkProc (Proc_IFC);
+
+   // Check that RISCY-OOO and Bluespec defs of boot rom size are the same
+   staticAssert ( (soc_map_struct.boot_rom_addr_size == fromInteger (valueOf (TExp #(LgBootRomBytes)))),
+		 "Boot ROM size def mismatch: ProcConfig.bsv:LgBootRomBytes vs. SoC_Map.bsv:soc_map_struct.boot_rom_addr_size");
+
+   // ----------------
     // cores
     Vector#(CoreNum, Core) core = ?;
     for(Integer i = 0; i < valueof(CoreNum); i = i+1) begin

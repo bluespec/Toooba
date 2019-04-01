@@ -683,6 +683,8 @@ module mkP3_Core(CLK,
 		corew$cpu_imem_master_awaddr,
 		corew$cpu_imem_master_rdata,
 		corew$cpu_imem_master_wdata,
+		corew$set_htif_addrs_fromhost_addr,
+		corew$set_htif_addrs_tohost_addr,
 		corew$set_verbosity_logdelay;
   wire [31 : 0] corew$dm_dmi_read_data, corew$dm_dmi_write_dm_word;
   wire [7 : 0] corew$cpu_dmem_master_arlen,
@@ -737,6 +739,7 @@ module mkP3_Core(CLK,
        corew$EN_dm_dmi_read_data,
        corew$EN_dm_dmi_write,
        corew$EN_dm_ndm_reset_req_get_get,
+       corew$EN_set_htif_addrs,
        corew$EN_set_verbosity,
        corew$EN_tv_verifier_info_get_get,
        corew$RDY_cpu_reset_server_request_put,
@@ -1228,9 +1231,12 @@ module mkP3_Core(CLK,
 		.dm_dmi_read_addr_dm_addr(corew$dm_dmi_read_addr_dm_addr),
 		.dm_dmi_write_dm_addr(corew$dm_dmi_write_dm_addr),
 		.dm_dmi_write_dm_word(corew$dm_dmi_write_dm_word),
+		.set_htif_addrs_fromhost_addr(corew$set_htif_addrs_fromhost_addr),
+		.set_htif_addrs_tohost_addr(corew$set_htif_addrs_tohost_addr),
 		.set_verbosity_logdelay(corew$set_verbosity_logdelay),
 		.set_verbosity_verbosity(corew$set_verbosity_verbosity),
 		.EN_set_verbosity(corew$EN_set_verbosity),
+		.EN_set_htif_addrs(corew$EN_set_htif_addrs),
 		.EN_cpu_reset_server_request_put(corew$EN_cpu_reset_server_request_put),
 		.EN_cpu_reset_server_response_get(corew$EN_cpu_reset_server_response_get),
 		.EN_tv_verifier_info_get_get(corew$EN_tv_verifier_info_get_get),
@@ -1239,6 +1245,7 @@ module mkP3_Core(CLK,
 		.EN_dm_dmi_write(corew$EN_dm_dmi_write),
 		.EN_dm_ndm_reset_req_get_get(corew$EN_dm_ndm_reset_req_get_get),
 		.RDY_set_verbosity(),
+		.RDY_set_htif_addrs(),
 		.RDY_cpu_reset_server_request_put(corew$RDY_cpu_reset_server_request_put),
 		.RDY_cpu_reset_server_response_get(corew$RDY_cpu_reset_server_response_get),
 		.cpu_imem_master_awvalid(corew$cpu_imem_master_awvalid),
@@ -1624,9 +1631,12 @@ module mkP3_Core(CLK,
   assign corew$dm_dmi_read_addr_dm_addr = bus_dmi_req_fifof$D_OUT[40:34] ;
   assign corew$dm_dmi_write_dm_addr = bus_dmi_req_fifof$D_OUT[40:34] ;
   assign corew$dm_dmi_write_dm_word = bus_dmi_req_fifof$D_OUT[33:2] ;
+  assign corew$set_htif_addrs_fromhost_addr = 64'h0 ;
+  assign corew$set_htif_addrs_tohost_addr = 64'h0 ;
   assign corew$set_verbosity_logdelay = 64'h0 ;
   assign corew$set_verbosity_verbosity = 4'h0 ;
   assign corew$EN_set_verbosity = 1'b0 ;
+  assign corew$EN_set_htif_addrs = 1'b0 ;
   assign corew$EN_cpu_reset_server_request_put = CAN_FIRE_RL_rl_once ;
   assign corew$EN_cpu_reset_server_response_get =
 	     corew$RDY_cpu_reset_server_response_get ;

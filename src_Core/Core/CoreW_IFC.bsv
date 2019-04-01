@@ -46,9 +46,11 @@ import Debug_Module  :: *;
 interface CoreW_IFC #(numeric type t_n_interrupt_sources);
 
    // ----------------------------------------------------------------
-   // Debugging: set core's verbosity
+   // Debugging: set core's verbosity, htif addrs
 
    method Action  set_verbosity (Bit #(4)  verbosity, Bit #(64)  logdelay);
+
+   method Action  set_htif_addrs  (Bit #(64) tohost_addr, Bit #(64) fromhost_addr);
 
    // ----------------------------------------------------------------
    // Soft reset

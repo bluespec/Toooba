@@ -22,9 +22,9 @@ package SoC_Map;
 // ================================================================
 // Exports
 
-export  SoC_Map_IFC (..), mkSoC_Map;
+export  SoC_Map_Struct (..), soc_map_struct;
 
-// export  fn_addr_in_range;
+export  SoC_Map_IFC (..), mkSoC_Map;
 
 export  Num_Masters;
 export  imem_master_num;
@@ -48,6 +48,36 @@ export  irq_num_uart0;
 // Project imports
 
 import Fabric_Defs :: *;    // Only for type Fabric_Addr
+
+// ================================================================
+// Top-level-struct version of the SoC Map for RISCY-OOO
+
+typedef struct {
+   Bit #(64)  near_mem_io_addr_base;
+   Bit #(64)  near_mem_io_addr_size;
+
+   Bit #(64)  boot_rom_addr_base;
+   Bit #(64)  boot_rom_addr_size;
+
+   Bit #(64)  mem0_controller_addr_base;
+   Bit #(64)  mem0_controller_addr_size;
+
+   Bit #(64)  pc_reset_value;
+   } SoC_Map_Struct
+deriving (FShow);
+
+SoC_Map_Struct soc_map_struct =
+SoC_Map_Struct {
+   near_mem_io_addr_base:     'h_0200_0000,
+
+   boot_rom_addr_base:        'h_0000_1000,
+   boot_rom_addr_size:        'h_0000_1000,
+
+   mem0_controller_addr_base: 'h_8000_0000,
+   mem0_controller_addr_size: 'h_1000_0000,
+
+   pc_reset_value:            'h_0000_1000
+   };
 
 // ================================================================
 // Interface and module for the address map

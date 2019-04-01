@@ -98,6 +98,10 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
    Debug_Module_IFC  debug_module <- mkDebug_Module;
 `endif
 
+   // HTIF locations (for debugging only)
+   Reg #(Bit #(64)) rg_tohost_addr   <- mkReg (0);
+   Reg #(Bit #(64)) rg_fromhost_addr <- mkReg (0);
+
    // ================================================================
    // RESET
    // There are two sources of reset requests to the CPU: externally
@@ -159,10 +163,9 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
 	 f_reset_rsps.enq (?);
 
       // Start running the cores
-      Bit #(64) startpc      = 'h_0000_1000;    // TODO: fixup
-      Bit #(64) tohostAddr   = 'h_8000_1000;    // TODO: fixup
-      Bit #(64) fromhostAddr = 0;
-      proc.start (startpc, tohostAddr, fromhostAddr);
+      proc.start (soc_map_struct.pc_reset_value,
+		  rg_tohost_addr,
+		  rg_fromhost_addr);
 
       $display ("%0d: Core.rl_cpu_hart0_reset_complete; started running proc", cur_cycle);
    endrule
@@ -334,11 +337,16 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
    // INTERFACE
 
    // ----------------------------------------------------------------
-   // Debugging: set core's verbosity
+   // Debugging: set core's verbosity, htif addrs
 
    method Action  set_verbosity (Bit #(4)  verbosity, Bit #(64)  logdelay);
       // Warning: ignoring logdelay
       proc.set_verbosity (verbosity);
+   endmethod
+
+   method Action  set_htif_addrs  (Bit #(64) tohost_addr, Bit #(64) fromhost_addr);
+      rg_tohost_addr   <= tohost_addr;
+      rg_fromhost_addr <= fromhost_addr;
    endmethod
 
    // ----------------------------------------------------------------
