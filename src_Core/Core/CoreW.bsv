@@ -44,11 +44,11 @@ import SoC_Map      :: *;
 import Debug_Module  :: *;
 `endif
 
-import Core_IFC     :: *;
+import CoreW_IFC    :: *;
 import PLIC         :: *;
 import PLIC_16_2_7  :: *;
-import Proc_IFC   :: *;
-import Proc       :: *;
+import Proc_IFC     :: *;
+import Proc         :: *;
 
 `ifdef INCLUDE_TANDEM_VERIF
 import TV_Info    :: *;
@@ -66,7 +66,7 @@ import TV_Taps  :: *;
 // The Core module
 
 (* synthesize *)
-module mkCoreW (Core_IFC #(N_External_Interrupt_Sources));
+module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
 
    // ================================================================
    // STATE
@@ -359,6 +359,13 @@ module mkCoreW (Core_IFC #(N_External_Interrupt_Sources));
    // External interrupt sources
 
    interface core_external_interrupt_sources = plic.v_sources;
+
+   // ----------------
+   // External interrupt [14] to go into Debug Mode
+
+   method Action  debug_external_interrupt_req (Bool set_not_clear);
+      proc.debug_external_interrupt_req (set_not_clear);
+   endmethod
 
    // ----------------------------------------------------------------
    // Optional TV interface

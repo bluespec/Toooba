@@ -61,7 +61,9 @@ import DramCommon::*;
 import Performance::*;
 
 // ----------------
-// From McStriiv
+// From Tooba
+
+import ISA_Decls  :: *;
 
 import AXI4_Types   :: *;
 import Fabric_Defs  :: *;
@@ -71,6 +73,14 @@ import Proc_IFC          :: *;
 import MMIOPlatform      :: *;
 import LLC_AXI4_Adapter  :: *;
 import MMIO_AXI4_Adapter :: *;
+
+`ifdef INCLUDE_GDB_CONTROL
+import DM_CPU_Req_Rsp  :: *;
+`endif
+
+`ifdef INCLUDE_TANDEM_VERIF
+import TV_Info  :: *;
+`endif
 
 // ================================================================
 
@@ -110,18 +120,18 @@ module mkProc (Proc_IFC);
    Reg #(Bit #(1))  rg_step_count <- mkReg (0);
 
    // Debugger GPR read/write request/response
-   FIFOF #(MemoryRequest  #(5,  XLEN)) f_gpr_reqs <- mkFIFOF1;
-   FIFOF #(MemoryResponse #(    XLEN)) f_gpr_rsps <- mkFIFOF1;
+   FIFOF #(DM_CPU_Req #(5,  XLEN)) f_gpr_reqs <- mkFIFOF1;
+   FIFOF #(DM_CPU_Rsp #(XLEN))     f_gpr_rsps <- mkFIFOF1;
 
 `ifdef ISA_F
    // Debugger FPR read/write request/response
-   FIFOF #(MemoryRequest  #(5,  FLEN)) f_fpr_reqs <- mkFIFOF1;
-   FIFOF #(MemoryResponse #(    FLEN)) f_fpr_rsps <- mkFIFOF1;
+   FIFOF #(DM_CPU_Req #(5,  FLEN)) f_fpr_reqs <- mkFIFOF1;
+   FIFOF #(DM_CPU_Rsp #(FLEN))     f_fpr_rsps <- mkFIFOF1;
 `endif
 
    // Debugger CSR read/write request/response
-   FIFOF #(MemoryRequest  #(12, XLEN)) f_csr_reqs <- mkFIFOF1;
-   FIFOF #(MemoryResponse #(    XLEN)) f_csr_rsps <- mkFIFOF1;
+   FIFOF #(DM_CPU_Req #(12, XLEN)) f_csr_reqs <- mkFIFOF1;
+   FIFOF #(DM_CPU_Rsp #(XLEN))     f_csr_rsps <- mkFIFOF1;
 
 `endif
 
@@ -310,6 +320,13 @@ module mkProc (Proc_IFC);
    endmethod
 
    // ----------------
+   // External interrupt [14] to go into Debug Mode
+
+   method Action  debug_external_interrupt_req (Bool set_not_clear);
+      core[0].setDEIP (pack (set_not_clear));
+   endmethod
+
+   // ----------------
    // Non-maskable interrupt
 
    // TODO: fixup: NMIs should send CPU to an NMI vector (TBD in SoC_Map)
@@ -343,16 +360,19 @@ module mkProc (Proc_IFC);
    endinterface
 
    // GPR access
-   interface MemoryServer  hart0_gpr_mem_server = toGPServer (f_gpr_reqs, f_gpr_rsps);
+   interface Server  hart0_gpr_mem_server = toGPServer (f_gpr_reqs, f_gpr_rsps);
 
 `ifdef ISA_F
    // FPR access
-   interface MemoryServer  hart0_fpr_mem_server = toGPServer (f_fpr_reqs, f_fpr_rsps);
+   interface Server  hart0_fpr_mem_server = toGPServer (f_fpr_reqs, f_fpr_rsps);
 `endif
 
    // CSR access
-   interface MemoryServer  hart0_csr_mem_server = toGPServer (f_csr_reqs, f_csr_rsps);
+   interface Server  hart0_csr_mem_server = toGPServer (f_csr_reqs, f_csr_rsps);
 `endif
-endmodule
+
+endmodule: mkProc
+
+// ================================================================
 
 endpackage

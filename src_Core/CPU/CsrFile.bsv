@@ -79,6 +79,9 @@ interface CsrFile;
     method Action setMEIP (Bit #(1) v);
     method Action setSEIP (Bit #(1) v);
 
+   // Bluespec: external interrupt to enter debug mode
+    method Action setDEIP (Bit #(1) v);
+
     // performance stats is collected or not
     method Bool doPerfStats;
     // send/recv updates on stats CSR globally
@@ -306,6 +309,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
         readOnlyReg(1'b0), mideleg_1_0_reg
     );
     // mie
+    Reg #(Bit #(1)) debug_int_en = readOnlyReg (1);
     Vector#(4, Reg#(Bit#(1))) external_int_en_vec = replicate(readOnlyReg(0));
     external_int_en_vec[prvU] <- mkCsrReg(0);
     external_int_en_vec[prvS] <- mkCsrReg(0);
@@ -318,8 +322,10 @@ module mkCsrFile #(Data hartid)(CsrFile);
     software_int_en_vec[prvU] <- mkCsrReg(0);
     software_int_en_vec[prvS] <- mkCsrReg(0);
     software_int_en_vec[prvM] <- mkCsrReg(0);
-    Reg#(Data) mie_csr = concatReg13(
-        readOnlyReg(52'b0),
+    Reg#(Data) mie_csr = concatReg15(
+        readOnlyReg(49'b0),
+        debug_int_en,                // mie [14]
+        readOnlyReg(2'b0),
         external_int_en_vec[prvM], readOnlyReg(1'b0),
         external_int_en_vec[prvS], external_int_en_vec[prvU],
         timer_int_en_vec[prvM],    readOnlyReg(1'b0),
@@ -356,6 +362,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
     // mtval (mbadaddr in spike)
     Reg#(Data) mtval_csr <- mkCsrReg(0);
     // mip
+    Reg #(Bit #(1)) debug_int_pend <- mkCsrReg (0);
     Vector#(4, Reg#(Bit#(1))) external_int_pend_vec = replicate(readOnlyReg(0));
     external_int_pend_vec[prvU] <- mkCsrReg(0);
     external_int_pend_vec[prvS] <- mkCsrReg(0);
@@ -368,8 +375,10 @@ module mkCsrFile #(Data hartid)(CsrFile);
     software_int_pend_vec[prvU] <- mkCsrReg(0);
     software_int_pend_vec[prvS] <- mkCsrReg(0);
     software_int_pend_vec[prvM] <- mkCsrReg(0);
-    Reg#(Data) mip_csr = concatReg13(
-        readOnlyReg(52'b0),
+    Reg#(Data) mip_csr = concatReg15(
+        readOnlyReg(49'b0),
+        debug_int_pend,
+        readOnlyReg(2'b0),
         external_int_pend_vec[prvM], readOnlyReg(1'b0),
         external_int_pend_vec[prvS], external_int_pend_vec[prvU],
         readOnlyReg(timer_int_pend_vec[prvM]), // MTIP is read-only to software
@@ -829,8 +838,14 @@ module mkCsrFile #(Data hartid)(CsrFile);
     method Action setMEIP (Bit #(1) v);
        external_int_pend_vec[prvM] <= v;
     endmethod
+
     method Action setSEIP (Bit #(1) v);
        external_int_pend_vec[prvS] <= v;
+    endmethod
+
+   // Bluespec: external interrupt to enter debug mode
+    method Action setDEIP (Bit #(1) v);
+       debug_int_pend <= v;
     endmethod
 
     method terminate = terminate_module.terminate;

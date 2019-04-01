@@ -135,6 +135,9 @@ interface Core;
    // Bluespec: external interrupt requests targeting Machine and Supervisor modes
     method Action setMEIP (Bit #(1) v);
     method Action setSEIP (Bit #(1) v);
+
+   // Bluespec: external interrupt to enter debug mode
+    method Action setDEIP (Bit #(1) v);
 endinterface
 
 // fixpoint to instantiate modules
@@ -973,5 +976,8 @@ module mkCore#(CoreId coreId)(Core);
    // Bluespec: external interrupt requests targeting Machine and Supervisor modes
     method Action setMEIP (v) = csrf.setMEIP (v);
     method Action setSEIP (v) = csrf.setSEIP (v);
+
+   // Bluespec: external interrupt to enter debug mode
+    method Action setDEIP (v) = csrf.setDEIP (v);
 endmodule
 

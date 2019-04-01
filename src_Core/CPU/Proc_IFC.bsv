@@ -5,7 +5,6 @@ package Proc_IFC;
 // ================================================================
 // BSV library imports
 
-import Memory       :: *;
 import GetPut       :: *;
 import ClientServer :: *;
 
@@ -14,12 +13,16 @@ import ClientServer :: *;
 
 import ISA_Decls  :: *;
 
+import AXI4_Types  :: *;
+import Fabric_Defs :: *;
+
+`ifdef INCLUDE_GDB_CONTROL
+import DM_CPU_Req_Rsp :: *;
+`endif
+
 `ifdef INCLUDE_TANDEM_VERIF
 import TV_Info  :: *;
 `endif
-
-import AXI4_Types  :: *;
-import Fabric_Defs :: *;
 
 // ================================================================
 // CPU interface
@@ -55,6 +58,12 @@ interface Proc_IFC;
    method Action  s_external_interrupt_req (Bool set_not_clear);
 
    // ----------------
+   // External interrupt [14] to go into Debug Mode
+
+   (* always_ready, always_enabled *)
+   method Action  debug_external_interrupt_req (Bool set_not_clear);
+
+   // ----------------
    // Non-maskable interrupt
 
    (* always_ready, always_enabled *)
@@ -81,15 +90,15 @@ interface Proc_IFC;
    interface Put #(Bit #(4))       hart0_put_other_req;
 
    // GPR access
-   interface MemoryServer #(5,  XLEN)  hart0_gpr_mem_server;
+   interface Server #(DM_CPU_Req #(5,  XLEN), DM_CPU_Rsp #(XLEN)) hart0_gpr_mem_server;
 
 `ifdef ISA_F
    // FPR access
-   interface MemoryServer #(5,  FLEN)  hart0_fpr_mem_server;
+   interface Server #(DM_CPU_Req #(5,  FLEN), DM_CPU_Rsp #(FLEN)) hart0_fpr_mem_server;
 `endif
 
    // CSR access
-   interface MemoryServer #(12, XLEN)  hart0_csr_mem_server;
+   interface Server #(DM_CPU_Req #(12, XLEN), DM_CPU_Rsp #(XLEN)) hart0_csr_mem_server;
 `endif
 
 endinterface

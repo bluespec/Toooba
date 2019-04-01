@@ -443,10 +443,13 @@ typedef enum {
     MachineTimer       = 4'd7,
     UserExternal       = 4'd8,
     SupervisorExternel = 4'd9,
-    MachineExternal    = 4'd11
+    MachineExternal    = 4'd11,
+
+    DebugExternal      = 4'd14    // Bluespec: for debug mode   
 } Interrupt deriving(Bits, Eq, FShow);
 
-typedef 12 InterruptNum;
+// typedef 12 InterruptNum;
+typedef 15 InterruptNum;    // Bluespec: extended to 15 bits for debug interrupt
 
 // Traps are either an exception or an interrupt
 typedef union tagged {

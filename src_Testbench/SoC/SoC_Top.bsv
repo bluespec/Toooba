@@ -41,9 +41,9 @@ import SoC_Fabric  :: *;
 
 // SoC components (CPU, mem, and IPs)
 
-import Core_IFC :: *;
-import CoreW    :: *;
-import PLIC     :: *;    // For interface to PLIC interrupt sources, in Core_IFC
+import CoreW_IFC :: *;
+import CoreW     :: *;
+import PLIC      :: *;    // For interface to PLIC interrupt sources, in CoreW_IFC
 
 import Boot_ROM       :: *;
 import Mem_Controller :: *;
@@ -113,7 +113,7 @@ module mkSoC_Top (SoC_Top_IFC);
    SoC_Map_IFC soc_map <- mkSoC_Map;
 
    // Core: CPU + Near_Mem_IO (CLINT) + PLIC + Debug module (optional) + TV (optional)
-   Core_IFC #(N_External_Interrupt_Sources)  core <- mkCoreW;
+   CoreW_IFC #(N_External_Interrupt_Sources)  corew <- mkCoreW;
 
    // SoC Fabric
    Fabric_AXI4_IFC  fabric <- mkFabric_AXI4;
@@ -137,10 +137,10 @@ module mkSoC_Top (SoC_Top_IFC);
    // Note: see 'SoC_Map' for 'master_num' definitions
 
    // CPU IMem master to fabric
-   mkConnection (core.cpu_imem_master,  fabric.v_from_masters [imem_master_num]);
+   mkConnection (corew.cpu_imem_master,  fabric.v_from_masters [imem_master_num]);
 
    // CPU DMem master to fabric
-   mkConnection (core.cpu_dmem_master,  fabric.v_from_masters [dmem_master_num]);
+   mkConnection (corew.cpu_dmem_master,  fabric.v_from_masters [dmem_master_num]);
 
 `ifdef INCLUDE_ACCEL0
    // accel_aes0 to fabric
@@ -181,11 +181,14 @@ module mkSoC_Top (SoC_Top_IFC);
       Bool intr = uart0.intr;
 
       // UART
-      core.core_external_interrupt_sources [irq_num_uart0].m_interrupt_req (intr);
+      corew.core_external_interrupt_sources [irq_num_uart0].m_interrupt_req (intr);
 
       // Tie off remaining interrupt request lines (1..N)
       for (Integer j = 1; j < valueOf (N_External_Interrupt_Sources); j = j + 1)
-	 core.core_external_interrupt_sources [j].m_interrupt_req (False);
+	 corew.core_external_interrupt_sources [j].m_interrupt_req (False);
+
+      // Tie off debugger interrupt
+      corew.debug_external_interrupt_req (False);
 
       /* For debugging only
       if ((! rg_intr_prev) && intr)
@@ -201,7 +204,7 @@ module mkSoC_Top (SoC_Top_IFC);
    // RESET BEHAVIOR WITHOUT DEBUG MODULE
 
    rule rl_reset_start_2 (rg_state == SOC_START);
-      core.cpu_reset_server.request.put (?);
+      corew.cpu_reset_server.request.put (?);
       mem0_controller.server_reset.request.put (?);
       uart0.server_reset.request.put (?);
 
@@ -226,7 +229,7 @@ module mkSoC_Top (SoC_Top_IFC);
 
    rule rl_handle_external_req_read_request (req.op == external_control_req_op_read_control_fabric);
       f_external_control_reqs.deq;
-      core.dm_dmi.read_addr (truncate (req.arg1));
+      corew.dm_dmi.read_addr (truncate (req.arg1));
       if (verbosity != 0) begin
 	 $display ("%0d: SoC_Top.rl_handle_external_req_read_request", cur_cycle);
          $display ("    ", fshow (req));
@@ -234,7 +237,7 @@ module mkSoC_Top (SoC_Top_IFC);
    endrule
 
    rule rl_handle_external_req_read_response;
-      let x <- core.dm_dmi.read_data;
+      let x <- corew.dm_dmi.read_data;
       let rsp = Control_Rsp {status: external_control_rsp_status_ok, result: signExtend (x)};
       f_external_control_rsps.enq (rsp);
       if (verbosity != 0) begin
@@ -245,7 +248,7 @@ module mkSoC_Top (SoC_Top_IFC);
 
    rule rl_handle_external_req_write (req.op == external_control_req_op_write_control_fabric);
       f_external_control_reqs.deq;
-      core.dm_dmi.write (truncate (req.arg1), truncate (req.arg2));
+      corew.dm_dmi.write (truncate (req.arg1), truncate (req.arg2));
       // let rsp = Control_Rsp {status: external_control_rsp_status_ok, result: 0};
       // f_external_control_rsps.enq (rsp);
       if (verbosity != 0) begin
@@ -268,9 +271,9 @@ module mkSoC_Top (SoC_Top_IFC);
    // NDM reset (all except Debug Module) request from debug module
 
    rule rl_reset_start (rg_state != SOC_RESETTING);
-      let req <- core.dm_ndm_reset_req_get.get;
+      let req <- corew.dm_ndm_reset_req_get.get;
 
-      core.cpu_reset_server.request.put (?);
+      corew.cpu_reset_server.request.put (?);
       mem0_controller.server_reset.request.put (?);
       uart0.server_reset.request.put (?);
 
@@ -284,7 +287,7 @@ module mkSoC_Top (SoC_Top_IFC);
 `endif
 
    rule rl_reset_complete (rg_state == SOC_RESETTING);
-      let cpu_rsp             <- core.cpu_reset_server.response.get;
+      let cpu_rsp             <- corew.cpu_reset_server.response.get;
       let mem0_controller_rsp <- mem0_controller.server_reset.response.get;
       let uart0_rsp           <- uart0.server_reset.response.get;
 
@@ -323,7 +326,7 @@ module mkSoC_Top (SoC_Top_IFC);
    // INTERFACE
 
    method Action  set_verbosity (Bit #(4)  verbosity, Bit #(64)  logdelay);
-      core.set_verbosity (verbosity, logdelay);
+      corew.set_verbosity (verbosity, logdelay);
    endmethod
 
    // To external controller (E.g., GDB)
@@ -333,7 +336,7 @@ module mkSoC_Top (SoC_Top_IFC);
 
 `ifdef INCLUDE_TANDEM_VERIF
    // To tandem verifier
-   interface tv_verifier_info_get = core.tv_verifier_info_get;
+   interface tv_verifier_info_get = corew.tv_verifier_info_get;
 `endif
 
    // External real memory
