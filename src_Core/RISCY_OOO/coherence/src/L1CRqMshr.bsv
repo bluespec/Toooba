@@ -184,6 +184,8 @@ module mkL1CRqMshrSafe#(
     Alias#(tagT, Bit#(_tagSz)),
     Bits#(reqT, _reqSz)
 );
+   Bool verbose = False;
+
     // EHR ports
     // We put pipelineResp < transfer to cater for deq < enq of cache pipeline
     Integer flush_port = 0; // flush port is read only
@@ -218,6 +220,7 @@ module mkL1CRqMshrSafe#(
         initIdx <= initIdx + 1;
         if(initIdx == fromInteger(valueOf(cRqNum) - 1)) begin
             inited <= True;
+	   if (verbose)
             $display("%t L1CRqMshrSafe %m: init empty entry done", $time);
         end
     endrule

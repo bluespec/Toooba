@@ -123,7 +123,7 @@ typedef struct {
 } CommitTrap deriving(Bits, Eq, FShow);
 
 module mkCommitStage#(CommitInput inIfc)(CommitStage);
-    Bool verbose = True;
+    Integer verbosity = 0;
 
     // func units
     ReorderBufferSynth rob = inIfc.robIfc;
@@ -345,7 +345,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
     );
         rob.deqPort[0].deq;
         let x = rob.deqPort[0].deq_data;
-        if(verbose) $display("[doCommitTrap] ", fshow(x));
+        if (verbosity > 0) $display("[doCommitTrap] ", fshow(x));
 
         // record trap info
         Addr vaddr = ?;
@@ -415,7 +415,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
     );
         rob.deqPort[0].deq;
         let x = rob.deqPort[0].deq_data;
-        if(verbose) $display("[doCommitKilledLd] ", fshow(x));
+        if (verbosity > 1) $display("[doCommitKilledLd] ", fshow(x));
 
         // kill everything, redirect, and increment epoch
         inIfc.killAll;
@@ -451,7 +451,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
     );
         rob.deqPort[0].deq;
         let x = rob.deqPort[0].deq_data;
-        if(verbose) $display("[doCommitSystemInst] ", fshow(x));
+        if (verbosity > 0) $display("[doCommitSystemInst] ", fshow(x));
 
         // we claim a phy reg for every inst, so commit its renaming
         regRenamingTable.commit[0].commit;
@@ -553,7 +553,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
     );
         let x = rob.deqPort[0].deq_data;
         let inst_tag = rob.deqPort[0].getDeqInstTag;
-        if(verbose) $display("[notifyLSQCommit] ", fshow(x), "; ", fshow(inst_tag));
+        if (verbosity > 1) $display("[notifyLSQCommit] ", fshow(x), "; ", fshow(inst_tag));
 
         // notify LSQ, and record in ROB that notification is done
         setLSQAtCommit[0].wset(x.lsqTag);
@@ -605,7 +605,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                     stop = True;
                 end
                 else begin
-                    if (verbose) $display("[doCommitNormalInst - %d] ", i, fshow(inst_tag), " ; ", fshow(x));
+                    if (verbosity > 0) $display("[doCommitNormalInst - %d] ", i, fshow(inst_tag), " ; ", fshow(x));
 
                     // inst can be committed, deq it
                     rob.deqPort[i].deq;

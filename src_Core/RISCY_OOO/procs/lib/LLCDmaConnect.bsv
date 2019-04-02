@@ -55,7 +55,7 @@ module mkLLCDmaConnect#(
 )(Empty) provisos (
     Alias#(dmaRqT, DmaRq#(LLCDmaReqId))
 );
-    Bool verbose = True;
+    Bool verbose = False;
 
     // helper functions for cross bar
     function XBarDstInfo#(Bit#(0), Tuple2#(CoreId, TlbMemReq)) getTlbDst(CoreId core, TlbMemReq r);

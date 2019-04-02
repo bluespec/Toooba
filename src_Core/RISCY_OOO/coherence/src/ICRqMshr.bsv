@@ -175,6 +175,8 @@ module mkICRqMshrSafe#(
     Bits#(reqT, _reqSz),
     Bits#(resultT, _resultTSz)
 );
+   Bool verbose = False;
+
     // EHR ports
     // We put pipelineResp < transfer to cater for deq < enq of cache pipeline
     Integer cRqTransfer_port = 2;
@@ -208,6 +210,7 @@ module mkICRqMshrSafe#(
         initIdx <= initIdx + 1;
         if(initIdx == fromInteger(valueOf(cRqNum) - 1)) begin
             inited <= True;
+	   if (verbose)
             $display("%t ICRqMshrSafe %m: init empty entry done", $time);
         end
     endrule

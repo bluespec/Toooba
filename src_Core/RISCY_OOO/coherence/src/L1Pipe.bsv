@@ -169,6 +169,9 @@ module mkL1Pipe(
     Add#(indexSz, a__, AddrSz),
     Add#(tagSz, b__, AddrSz)
 );
+
+   Bool verbose = False;
+
     // RAMs
     Vector#(wayNum, RWBramCore#(indexT, infoT)) infoRam <- replicateM(mkRWBramCore);
     RWBramCore#(indexT, repT) repRam <- mkRandRepRam;
@@ -227,6 +230,7 @@ module mkL1Pipe(
         return actionvalue
             function tagT getTag(Addr a) = truncateLSB(a);
 
+	    if (verbose)
             $display("%t L1 %m tagMatch: ", $time, 
                 fshow(cmd), " ; ", 
                 fshow(getTag(getAddrFromCmd(cmd))),

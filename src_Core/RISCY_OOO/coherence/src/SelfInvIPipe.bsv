@@ -237,6 +237,8 @@ module mkSelfInvIPipe(
     Add#(indexSz, a__, AddrSz),
     Add#(tagSz, b__, AddrSz)
 );
+   Bool verbose = False;
+
     // info RAM
     Vector#(wayNum, CacheInfoArray#(indexT, tagT, ownerT, otherT)) infoArray <- replicateM(mkCacheInfoArray);
     function RWBramCore#(indexT, infoT) getInfoRam(Integer i) = infoArray[i].ram;
@@ -294,6 +296,7 @@ module mkSelfInvIPipe(
         return actionvalue
             function tagT getTag(Addr a) = truncateLSB(a);
 
+            if (verbose)
             $display("%t L1 %m tagMatch: ", $time, 
                 fshow(cmd), " ; ", 
                 fshow(getTag(getAddrFromCmd(cmd))),
@@ -409,6 +412,7 @@ module mkSelfInvIPipe(
         needReconcile <= False;
         // conflict with deq
         conflict_reconcile_deq.wset(?);
+       if (verbose)
         $display("%t I %m doReconcile", $time);
     endrule
 

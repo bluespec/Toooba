@@ -122,7 +122,7 @@ typedef union tagged {
 module mkDTlb#(
     function TlbReq getTlbReq(instT inst)
 )(DTlb::DTlb#(instT)) provisos(Bits#(instT, a__));
-    Bool verbose = True;
+    Bool verbose = False;
 
     // TLB array
     DTlbArray tlb <- mkDTlbArray;

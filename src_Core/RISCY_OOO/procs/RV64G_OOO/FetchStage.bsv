@@ -138,7 +138,7 @@ module mkFetchStage(FetchStage);
     // rule ordering: Fetch1 (BTB+TLB) < Fetch3 (decode & dir pred) < redirect method
     // Fetch1 < Fetch3 to avoid bypassing path on PC and epochs
 
-    let verbose = True;
+    let verbose = False;
 
     // Basic State Elements
     Reg#(Bool) started <- mkReg(False);

@@ -77,6 +77,9 @@ module mkReservationStation#(Bool lazySched, Bool lazyEnq, Bool countValid)(
     Bits#(a, aSz), FShow#(a),
     Add#(1, b__, size)
 );
+
+   Bool verbose = False;
+
     Integer valid_wrongSpec_port = 0;
     Integer valid_dispatch_port = 0; // write valid
     Integer valid_enq_port = 1; // write valid
@@ -213,6 +216,7 @@ module mkReservationStation#(Bool lazySched, Bool lazyEnq, Bool countValid)(
     //endrule
 
     method Action enq(ToReservationStation#(a) x) if (enqP matches tagged Valid .idx);
+       if (verbose)
         $display("  [mkReservationStationRow::_write] ", fshow(x));
         valid[idx][valid_enq_port] <= True;
         data[idx] <= x.data;

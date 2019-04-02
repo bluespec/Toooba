@@ -436,6 +436,9 @@ module mkSupReorderBuffer#(
     Add#(TExp#(TLog#(SupSize)), 0, SupSize), // require SupSize to be power of 2
     Add#(1, a__, aluExeNum), Add#(1, b__, fpuMulDivExeNum)
 );
+
+    Bool verbose = False;
+
     // doCommit rule: deq < wrongSpec (overwrite deq in doCommit) < doRenaming rule: enq
     Integer valid_deq_port = 0;
     Integer valid_wrongSpec_port = 1;
@@ -665,6 +668,7 @@ module mkSupReorderBuffer#(
                 function Bool getDepOn(Integer i) = row[w][i].dependsOn_wrongSpec(specTag);
                 depVec[w] = map(getDepOn, genVector);
             end
+	   if (verbose)
             $display("[ROB incorrectSpec] ",
                 fshow(specTag), " ; ",
                 fshow(killInstTag), " ; ",

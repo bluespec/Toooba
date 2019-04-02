@@ -703,98 +703,66 @@ module mkIBankWrapper(CLK,
        MUX_m_pipeline$deqWrite_3__VAL_2,
        MUX_m_rsToPIndexQ$enq_1__SEL_1;
 
-  // declarations used by system tasks
-  // synopsys translate_off
-  reg [63 : 0] v__h49980;
-  reg [63 : 0] v__h50688;
-  reg [63 : 0] v__h50873;
-  reg [63 : 0] v__h52302;
-  reg [63 : 0] v__h54025;
-  reg [63 : 0] v__h54065;
-  reg [63 : 0] v__h56981;
-  reg [63 : 0] v__h53975;
-  reg [63 : 0] v__h52754;
-  reg [63 : 0] v__h52824;
-  reg [63 : 0] v__h52791;
-  reg [63 : 0] v__h57232;
-  reg [63 : 0] v__h60116;
-  reg [63 : 0] v__h52858;
-  reg [63 : 0] v__h62402;
-  reg [63 : 0] v__h63375;
-  reg [63 : 0] v__h63602;
-  reg [63 : 0] v__h66489;
-  reg [63 : 0] v__h73300;
-  reg [63 : 0] v__h66724;
-  reg [63 : 0] v__h66940;
-  reg [63 : 0] v__h66973;
-  reg [63 : 0] v__h45728;
-  reg [63 : 0] v__h47783;
-  reg [63 : 0] v__h50302;
-  reg [63 : 0] v__h46042;
-  // synopsys translate_on
-
   // remaining internal signals
-  reg [63 : 0] CASE_m_rqToPQ_deqP_0_m_rqToPQ_data_0_BITS_71_T_ETC__q15,
-	       CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_127__ETC__q7,
-	       CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_191__ETC__q6,
-	       CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_255__ETC__q5,
+  reg [63 : 0] CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_130__ETC__q13,
+	       CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_194__ETC__q12,
+	       CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_258__ETC__q11,
+	       CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_322__ETC__q8,
+	       CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_386__ETC__q7,
+	       CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_450__ETC__q6,
+	       CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_514__ETC__q5,
+	       CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_66_T_ETC__q14,
+	       CASE_m_rqToPQ_deqP_0_m_rqToPQ_data_0_BITS_71_T_ETC__q24,
+	       CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_127__ETC__q15,
+	       CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_191__ETC__q10,
+	       CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_255__ETC__q9,
 	       CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_319__ETC__q4,
 	       CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_383__ETC__q3,
 	       CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_447__ETC__q2,
 	       CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_511__ETC__q1,
-	       CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_578__ETC__q9,
-	       CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_63_T_ETC__q8,
-	       SEL_ARR_m_fromPQ_data_0_58_BITS_65_TO_2_67_m_f_ETC___d470,
-	       addr__h46216,
-	       value__h48793,
-	       value__h48884,
-	       value__h48971,
-	       value__h49058,
-	       value__h49145,
-	       value__h49232,
-	       value__h49319,
-	       value__h49406;
-  reg [31 : 0] SEL_ARR_m_pipeline_first__44_BITS_31_TO_0_51_m_ETC___d769,
-	       SEL_ARR_m_pipeline_first__44_BITS_31_TO_0_51_m_ETC___d771;
-  reg [2 : 0] CASE_m_rqToPQ_deqP_0_m_rqToPQ_data_0_BITS_2_TO_ETC__q14,
-	      x__h47758;
-  reg [1 : 0] CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_1_TO_ETC__q19,
-	      CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_517__ETC__q20,
-	      CASE_m_rqToPQ_deqP_0_m_rqToPQ_data_0_BITS_5_TO_ETC__q12,
-	      CASE_m_rqToPQ_deqP_0_m_rqToPQ_data_0_BITS_7_TO_ETC__q16,
-	      CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_514__ETC__q10;
-  reg CASE_m_fromPQ_deqP_0_NOT_m_fromPQ_data_0_BIT_5_ETC__q17,
-      CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BIT_515_1_ETC__q21,
-      CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BIT_582_1_ETC__q18,
-      CASE_m_rqToPQ_deqP_0_m_rqToPQ_data_0_BIT_3_1_m_ETC__q13,
-      CASE_m_rsToPQ_deqP_0_NOT_m_rsToPQ_data_0_BIT_5_ETC__q11,
-      SEL_ARR_NOT_m_fromPQ_data_0_58_BIT_515_08_09_N_ETC___d513,
-      SEL_ARR_m_fromPQ_data_0_58_BITS_1_TO_0_71_EQ_0_ETC___d483,
-      SEL_ARR_m_fromPQ_data_0_58_BITS_1_TO_0_71_EQ_1_ETC___d488,
-      SEL_ARR_m_fromPQ_data_0_58_BITS_1_TO_0_71_EQ_2_ETC___d494,
-      SEL_ARR_m_fromPQ_data_0_58_BITS_517_TO_516_60__ETC___d565,
-      SEL_ARR_m_fromPQ_data_0_58_BITS_517_TO_516_60__ETC___d570,
-      SEL_ARR_m_fromPQ_data_0_58_BITS_517_TO_516_60__ETC___d576;
+	       CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_578__ETC__q17,
+	       CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_63_T_ETC__q16,
+	       SEL_ARR_m_fromPQ_data_0_57_BITS_65_TO_2_66_m_f_ETC___d469,
+	       addr__h46129;
+  reg [31 : 0] CASE_m_cRqMshrpipelineResp_getRq_BITS_5_TO_2__ETC__q29,
+	       CASE_sel2130_0_m_pipelinefirst_BITS_31_TO_0_1_ETC__q28;
+  reg [2 : 0] CASE_m_rqToPQ_deqP_0_m_rqToPQ_data_0_BITS_2_TO_ETC__q23,
+	      x__h47671;
+  reg [1 : 0] CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_1_TO_ETC__q30,
+	      CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_517__ETC__q31,
+	      CASE_m_rqToPQ_deqP_0_m_rqToPQ_data_0_BITS_5_TO_ETC__q21,
+	      CASE_m_rqToPQ_deqP_0_m_rqToPQ_data_0_BITS_7_TO_ETC__q25,
+	      CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_514__ETC__q18;
+  reg CASE_m_fromPQ_deqP_0_NOT_m_fromPQ_data_0_BIT_5_ETC__q20,
+      CASE_m_fromPQ_deqP_0_NOT_m_fromPQ_data_0_BIT_5_ETC__q26,
+      CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BIT_515_1_ETC__q32,
+      CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BIT_582_1_ETC__q27,
+      CASE_m_rqToPQ_deqP_0_m_rqToPQ_data_0_BIT_3_1_m_ETC__q22,
+      CASE_m_rsToPQ_deqP_0_NOT_m_rsToPQ_data_0_BIT_5_ETC__q19;
   wire [581 : 0] IF_m_fromPQ_enqReq_dummy2_2_read__75_AND_IF_m__ETC___d428;
-  wire [511 : 0] SEL_ARR_m_rsToPQ_data_0_10_BITS_511_TO_448_27__ETC___d962;
-  wire [383 : 0] SEL_ARR_m_rsToPQ_data_0_10_BITS_511_TO_448_27__ETC___d953;
-  wire [255 : 0] SEL_ARR_m_rsToPQ_data_0_10_BITS_511_TO_448_27__ETC___d944;
+  wire [517 : 0] _1_CONCAT_NOT_SEL_ARR_NOT_m_fromPQ_data_0_57_BI_ETC___d535;
+  wire [511 : 0] SEL_ARR_m_fromPQ_data_0_57_BITS_514_TO_451_93__ETC___d528,
+		 SEL_ARR_m_rsToPQ_data_0_84_BITS_511_TO_448_01__ETC___d836;
+  wire [383 : 0] SEL_ARR_m_fromPQ_data_0_57_BITS_514_TO_451_93__ETC___d519,
+		 SEL_ARR_m_rsToPQ_data_0_84_BITS_511_TO_448_01__ETC___d827;
+  wire [255 : 0] SEL_ARR_m_fromPQ_data_0_57_BITS_514_TO_451_93__ETC___d510,
+		 SEL_ARR_m_rsToPQ_data_0_84_BITS_511_TO_448_01__ETC___d818;
   wire [63 : 0] IF_m_rqFromCQ_data_0_lat_0_whas_THEN_m_rqFromC_ETC___d6,
-		resp_addr__h49820,
-		v__h43565,
-		x_addr__h14492;
-  wire [57 : 0] IF_m_cRqMshr_pipelineResp_searchEndOfChain_m_c_ETC___d719,
-		IF_m_pipeline_first__44_BITS_514_TO_512_49_EQ__ETC___d712;
-  wire [5 : 0] IF_m_pipeline_first__44_BITS_517_TO_516_55_EQ__ETC___d717,
-	       SEL_ARR_m_rqToPQ_data_0_66_BITS_5_TO_4_76_m_rq_ETC___d988;
-  wire [3 : 0] sel__h55286;
-  wire [2 : 0] IF_m_cRqMshr_pipelineResp_searchEndOfChain_m_c_ETC___d732,
-	       x__h38965;
+		resp_addr__h48035,
+		v__h43566,
+		x_addr__h14493;
+  wire [57 : 0] IF_m_cRqMshr_pipelineResp_searchEndOfChain_m_c_ETC___d641,
+		IF_m_pipeline_first__86_BITS_514_TO_512_91_EQ__ETC___d634;
+  wire [5 : 0] IF_m_pipeline_first__86_BITS_517_TO_516_97_EQ__ETC___d639,
+	       SEL_ARR_m_rqToPQ_data_0_40_BITS_5_TO_4_50_m_rq_ETC___d862;
+  wire [3 : 0] sel__h52130;
+  wire [2 : 0] IF_m_cRqMshr_pipelineResp_searchEndOfChain_m_c_ETC___d654,
+	       x__h38966;
   wire IF_m_fromPQ_deqReq_dummy2_2_read__83_AND_IF_m__ETC___d391,
        IF_m_fromPQ_deqReq_lat_1_whas__54_THEN_m_fromP_ETC___d360,
        IF_m_fromPQ_enqReq_lat_1_whas__63_THEN_NOT_m_f_ETC___d279,
        IF_m_fromPQ_enqReq_lat_1_whas__63_THEN_m_fromP_ETC___d272,
-       IF_m_pipeline_first__44_BITS_517_TO_516_55_EQ__ETC___d665,
+       IF_m_pipeline_first__86_BITS_517_TO_516_97_EQ__ETC___d607,
        IF_m_rqToPQ_deqReq_dummy2_2_read__24_AND_IF_m__ETC___d232,
        IF_m_rqToPQ_deqReq_lat_1_whas__95_THEN_m_rqToP_ETC___d201,
        IF_m_rqToPQ_enqReq_lat_1_whas__66_THEN_m_rqToP_ETC___d175,
@@ -802,34 +770,34 @@ module mkIBankWrapper(CLK,
        IF_m_rsToPQ_deqReq_lat_1_whas__1_THEN_m_rsToPQ_ETC___d97,
        IF_m_rsToPQ_enqReq_lat_1_whas__1_THEN_NOT_m_rs_ETC___d47,
        IF_m_rsToPQ_enqReq_lat_1_whas__1_THEN_m_rsToPQ_ETC___d40,
-       NOT_m_cRqMshr_pipelineResp_searchEndOfChain_m__ETC___d817,
+       NOT_m_cRqMshr_pipelineResp_searchEndOfChain_m__ETC___d725,
        NOT_m_fromPQ_clearReq_dummy2_1_read__69_70_OR__ETC___d374,
        NOT_m_fromPQ_enqReq_dummy2_2_read__75_05_OR_IF_ETC___d409,
-       NOT_m_pipeline_first__44_BIT_515_45_81_AND_NOT_ETC___d841,
-       NOT_m_pipeline_first__44_BIT_570_73_74_AND_NOT_ETC___d900,
+       NOT_m_pipeline_first__86_BIT_515_87_66_AND_NOT_ETC___d730,
+       NOT_m_pipeline_first__86_BIT_570_50_68_AND_NOT_ETC___d774,
        NOT_m_rqToPQ_clearReq_dummy2_1_read__10_11_OR__ETC___d215,
        NOT_m_rqToPQ_enqReq_dummy2_2_read__16_46_OR_IF_ETC___d250,
        NOT_m_rsToPQ_clearReq_dummy2_1_read__06_07_OR__ETC___d111,
        NOT_m_rsToPQ_enqReq_dummy2_2_read__12_42_OR_IF_ETC___d146,
-       _theResult_____2__h18783,
-       _theResult_____2__h26688,
-       _theResult_____2__h41331,
+       _theResult_____2__h18784,
+       _theResult_____2__h26689,
+       _theResult_____2__h41332,
        m_fromPQ_enqReq_dummy2_2_read__75_AND_IF_m_fro_ETC___d401,
-       m_pipeline_RDY_deqWrite__43_AND_IF_m_pipeline__ETC___d870,
-       m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691,
-       m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659,
-       m_pipeline_first__44_BIT_515_45_AND_m_pipeline_ETC___d746,
+       m_pipeline_RDY_deqWrite__85_AND_IF_m_pipeline__ETC___d753,
+       m_pipeline_first__86_BITS_514_TO_512_91_EQ_m_p_ETC___d613,
+       m_pipeline_first__86_BITS_569_TO_518_99_EQ_m_c_ETC___d601,
+       m_pipeline_first__86_BIT_515_87_AND_m_pipeline_ETC___d670,
        m_rqToPQ_enqReq_dummy2_2_read__16_AND_IF_m_rqT_ETC___d242,
        m_rsToPQ_enqReq_dummy2_2_read__12_AND_IF_m_rsT_ETC___d138,
-       next_deqP___1__h19102,
-       next_deqP___1__h27007,
-       next_deqP___1__h41650,
-       v__h14049,
-       v__h14332,
-       v__h25932,
-       v__h26215,
-       v__h36261,
-       v__h36544;
+       next_deqP___1__h19103,
+       next_deqP___1__h27008,
+       next_deqP___1__h41651,
+       v__h14050,
+       v__h14333,
+       v__h25933,
+       v__h26216,
+       v__h36262,
+       v__h36545;
 
   // value method to_parent_rsToP_notEmpty
   assign to_parent_rsToP_notEmpty = !m_rsToPQ_empty ;
@@ -842,10 +810,10 @@ module mkIBankWrapper(CLK,
 
   // value method to_parent_rsToP_first
   assign to_parent_rsToP_first =
-	     { CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_578__ETC__q9,
-	       CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_514__ETC__q10,
-	       !CASE_m_rsToPQ_deqP_0_NOT_m_rsToPQ_data_0_BIT_5_ETC__q11,
-	       SEL_ARR_m_rsToPQ_data_0_10_BITS_511_TO_448_27__ETC___d962 } ;
+	     { CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_578__ETC__q17,
+	       CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_514__ETC__q18,
+	       !CASE_m_rsToPQ_deqP_0_NOT_m_rsToPQ_data_0_BIT_5_ETC__q19,
+	       SEL_ARR_m_rsToPQ_data_0_84_BITS_511_TO_448_01__ETC___d836 } ;
   assign RDY_to_parent_rsToP_first = !m_rsToPQ_empty ;
 
   // value method to_parent_rqToP_notEmpty
@@ -859,9 +827,9 @@ module mkIBankWrapper(CLK,
 
   // value method to_parent_rqToP_first
   assign to_parent_rqToP_first =
-	     { CASE_m_rqToPQ_deqP_0_m_rqToPQ_data_0_BITS_71_T_ETC__q15,
-	       CASE_m_rqToPQ_deqP_0_m_rqToPQ_data_0_BITS_7_TO_ETC__q16,
-	       SEL_ARR_m_rqToPQ_data_0_66_BITS_5_TO_4_76_m_rq_ETC___d988 } ;
+	     { CASE_m_rqToPQ_deqP_0_m_rqToPQ_data_0_BITS_71_T_ETC__q24,
+	       CASE_m_rqToPQ_deqP_0_m_rqToPQ_data_0_BITS_7_TO_ETC__q25,
+	       SEL_ARR_m_rqToPQ_data_0_40_BITS_5_TO_4_50_m_rq_ETC___d862 } ;
   assign RDY_to_parent_rqToP_first = !m_rqToPQ_empty ;
 
   // value method to_parent_fromP_notFull
@@ -1330,7 +1298,7 @@ module mkIBankWrapper(CLK,
 	     m_pipeline$RDY_first && m_pipeline$RDY_deqWrite &&
 	     (m_pipeline$first[515] ||
 	      m_cRqMshr$pipelineResp_searchEndOfChain[3] ||
-	      IF_m_pipeline_first__44_BITS_517_TO_516_55_EQ__ETC___d665) &&
+	      IF_m_pipeline_first__86_BITS_517_TO_516_97_EQ__ETC___d607) &&
 	     m_pipeline$first[578:577] == 2'd0 ;
   assign WILL_FIRE_RL_m_pipelineResp_cRq = CAN_FIRE_RL_m_pipelineResp_cRq ;
 
@@ -1345,7 +1313,7 @@ module mkIBankWrapper(CLK,
   // rule RL_m_pipelineResp_pRq
   assign CAN_FIRE_RL_m_pipelineResp_pRq =
 	     m_pipeline$RDY_first &&
-	     m_pipeline_RDY_deqWrite__43_AND_IF_m_pipeline__ETC___d870 &&
+	     m_pipeline_RDY_deqWrite__85_AND_IF_m_pipeline__ETC___d753 &&
 	     m_pipeline$first[578:577] == 2'd1 ;
   assign WILL_FIRE_RL_m_pipelineResp_pRq = CAN_FIRE_RL_m_pipelineResp_pRq ;
 
@@ -1365,7 +1333,7 @@ module mkIBankWrapper(CLK,
   // rule RL_m_pRsTransfer
   assign CAN_FIRE_RL_m_pRsTransfer =
 	     !m_fromPQ_empty && m_pipeline$RDY_send &&
-	     CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BIT_582_1_ETC__q18 ;
+	     CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BIT_582_1_ETC__q27 ;
   assign WILL_FIRE_RL_m_pRsTransfer = CAN_FIRE_RL_m_pRsTransfer ;
 
   // rule RL_m_sendRsToP_pRq
@@ -1379,7 +1347,7 @@ module mkIBankWrapper(CLK,
   assign CAN_FIRE_RL_m_pRqTransfer =
 	     !m_fromPQ_empty && m_pipeline$RDY_send &&
 	     m_pRqMshr$RDY_getEmptyEntryInit &&
-	     CASE_m_fromPQ_deqP_0_NOT_m_fromPQ_data_0_BIT_5_ETC__q17 ;
+	     CASE_m_fromPQ_deqP_0_NOT_m_fromPQ_data_0_BIT_5_ETC__q26 ;
   assign WILL_FIRE_RL_m_pRqTransfer = CAN_FIRE_RL_m_pRqTransfer ;
 
   // rule RL_m_rqIndexFromPipelineResp
@@ -1462,33 +1430,33 @@ module mkIBankWrapper(CLK,
 	     WILL_FIRE_RL_m_pipelineResp_pRq && !m_pipeline$first[570] ;
   assign MUX_m_cRqMshr$pipelineResp_setResult_2__VAL_1 =
 	     { 4'd15 - m_cRqMshr$pipelineResp_getRq[5:2] != 4'd0,
-	       SEL_ARR_m_pipeline_first__44_BITS_31_TO_0_51_m_ETC___d769,
+	       CASE_sel2130_0_m_pipelinefirst_BITS_31_TO_0_1_ETC__q28,
 	       1'd1,
-	       SEL_ARR_m_pipeline_first__44_BITS_31_TO_0_51_m_ETC___d771 } ;
+	       CASE_m_cRqMshrpipelineResp_getRq_BITS_5_TO_2__ETC__q29 } ;
   assign MUX_m_cRqMshr$pipelineResp_setStateSlot_2__VAL_2 =
 	     m_pipeline$first[515] ?
-	       (m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691 ?
+	       (m_pipeline_first__86_BITS_514_TO_512_91_EQ_m_p_ETC___d613 ?
 		  3'd3 :
 		  3'd4) :
-	       IF_m_cRqMshr_pipelineResp_searchEndOfChain_m_c_ETC___d732 ;
+	       IF_m_cRqMshr_pipelineResp_searchEndOfChain_m_c_ETC___d654 ;
   assign MUX_m_cRqMshr$pipelineResp_setStateSlot_3__VAL_2 =
 	     m_pipeline$first[515] ?
 	       56'h55555555555554 :
 	       (m_cRqMshr$pipelineResp_searchEndOfChain[3] ?
 		  56'h55555555555554 :
 		  ((m_pipeline$first[517:516] == 2'd0 ||
-		    m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659) ?
+		    m_pipeline_first__86_BITS_569_TO_518_99_EQ_m_c_ETC___d601) ?
 		     { m_pipeline$first[573:571], 53'h15555555555555 } :
 		     { m_pipeline$first[573:571],
 		       m_pipeline$first[569:518],
 		       1'd1 })) ;
   assign MUX_m_pipeline$deqWrite_1__VAL_2 =
 	     m_pipeline$first[515] ?
-	       { m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691 &&
+	       { m_pipeline_first__86_BITS_514_TO_512_91_EQ_m_p_ETC___d613 &&
 		 m_cRqMshr$pipelineResp_getSucc[3],
 		 m_cRqMshr$pipelineResp_getSucc[2:0] } :
 	       { !m_cRqMshr$pipelineResp_searchEndOfChain[3] &&
-		 m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659 &&
+		 m_pipeline_first__86_BITS_569_TO_518_99_EQ_m_c_ETC___d601 &&
 		 m_pipeline$first[517:516] != 2'd0 &&
 		 m_cRqMshr$pipelineResp_getSucc[3],
 		 m_cRqMshr$pipelineResp_getSucc[2:0] } ;
@@ -1499,8 +1467,8 @@ module mkIBankWrapper(CLK,
 	       m_pipeline$first[511:0] } ;
   assign MUX_m_pipeline$deqWrite_2__VAL_2 =
 	     { m_pipeline$first[515] ?
-		 IF_m_pipeline_first__44_BITS_514_TO_512_49_EQ__ETC___d712 :
-		 IF_m_cRqMshr_pipelineResp_searchEndOfChain_m_c_ETC___d719,
+		 IF_m_pipeline_first__86_BITS_514_TO_512_91_EQ__ETC___d634 :
+		 IF_m_cRqMshr_pipelineResp_searchEndOfChain_m_c_ETC___d641,
 	       m_pipeline$first[511:0] } ;
   assign MUX_m_pipeline$deqWrite_2__VAL_3 =
 	     m_pipeline$first[570] ?
@@ -1509,39 +1477,29 @@ module mkIBankWrapper(CLK,
 		 518'h02AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA } ;
   assign MUX_m_pipeline$deqWrite_3__VAL_2 =
 	     m_pipeline$first[515] ?
-	       m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691 :
+	       m_pipeline_first__86_BITS_514_TO_512_91_EQ_m_p_ETC___d613 :
 	       !m_cRqMshr$pipelineResp_searchEndOfChain[3] &&
-	       m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659 &&
+	       m_pipeline_first__86_BITS_569_TO_518_99_EQ_m_c_ETC___d601 &&
 	       m_pipeline$first[517:516] != 2'd0 ;
   assign MUX_m_pipeline$send_1__VAL_1 =
 	     { 517'h02AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA,
-	       v__h43565,
+	       v__h43566,
 	       m_cRqMshr$getEmptyEntryInit } ;
   assign MUX_m_pipeline$send_1__VAL_2 =
 	     { 518'h1AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA,
-	       SEL_ARR_m_fromPQ_data_0_58_BITS_65_TO_2_67_m_f_ETC___d470,
+	       SEL_ARR_m_fromPQ_data_0_57_BITS_65_TO_2_66_m_f_ETC___d469,
 	       m_pRqMshr$getEmptyEntryInit } ;
   assign MUX_m_pipeline$send_1__VAL_3 =
 	     { 2'd2,
-	       addr__h46216,
-	       2'd1,
-	       !SEL_ARR_NOT_m_fromPQ_data_0_58_BIT_515_08_09_N_ETC___d513,
-	       value__h49406,
-	       value__h49319,
-	       value__h49232,
-	       value__h49145,
-	       value__h49058,
-	       value__h48971,
-	       value__h48884,
-	       value__h48793,
-	       x__h47758 } ;
+	       addr__h46129,
+	       _1_CONCAT_NOT_SEL_ARR_NOT_m_fromPQ_data_0_57_BI_ETC___d535 } ;
   assign MUX_m_rsToPIndexQ$enq_1__VAL_1 =
 	     { 1'd1, m_pipeline$first[576:574] } ;
   assign MUX_m_rsToPIndexQ$enq_1__VAL_2 =
 	     { 1'd0, m_pipeline$first[576:574] } ;
   assign MUX_m_rsToPQ_enqReq_lat_0$wset_1__VAL_1 =
 	     { 1'd1,
-	       resp_addr__h49820,
+	       resp_addr__h48035,
 	       515'h0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA } ;
   assign MUX_m_rsToPQ_enqReq_lat_0$wset_1__VAL_2 =
 	     { 1'd1,
@@ -1593,7 +1551,7 @@ module mkIBankWrapper(CLK,
   // register m_fromPQ_deqP
   assign m_fromPQ_deqP$D_IN =
 	     NOT_m_fromPQ_clearReq_dummy2_1_read__69_70_OR__ETC___d374 &&
-	     _theResult_____2__h41331 ;
+	     _theResult_____2__h41332 ;
   assign m_fromPQ_deqP$EN = 1'd1 ;
 
   // register m_fromPQ_deqReq_rl
@@ -1610,7 +1568,7 @@ module mkIBankWrapper(CLK,
   // register m_fromPQ_enqP
   assign m_fromPQ_enqP$D_IN =
 	     NOT_m_fromPQ_clearReq_dummy2_1_read__69_70_OR__ETC___d374 &&
-	     v__h36261 ;
+	     v__h36262 ;
   assign m_fromPQ_enqP$EN = 1'd1 ;
 
   // register m_fromPQ_enqReq_rl
@@ -1671,7 +1629,7 @@ module mkIBankWrapper(CLK,
   // register m_rqToPQ_deqP
   assign m_rqToPQ_deqP$D_IN =
 	     NOT_m_rqToPQ_clearReq_dummy2_1_read__10_11_OR__ETC___d215 &&
-	     _theResult_____2__h26688 ;
+	     _theResult_____2__h26689 ;
   assign m_rqToPQ_deqP$EN = 1'd1 ;
 
   // register m_rqToPQ_deqReq_rl
@@ -1688,7 +1646,7 @@ module mkIBankWrapper(CLK,
   // register m_rqToPQ_enqP
   assign m_rqToPQ_enqP$D_IN =
 	     NOT_m_rqToPQ_clearReq_dummy2_1_read__10_11_OR__ETC___d215 &&
-	     v__h25932 ;
+	     v__h25933 ;
   assign m_rqToPQ_enqP$EN = 1'd1 ;
 
   // register m_rqToPQ_enqReq_rl
@@ -1708,7 +1666,7 @@ module mkIBankWrapper(CLK,
 
   // register m_rsToPQ_data_0
   assign m_rsToPQ_data_0$D_IN =
-	     { x_addr__h14492,
+	     { x_addr__h14493,
 	       m_rsToPQ_enqReq_lat_0$whas ?
 		 m_rsToPQ_enqReq_lat_0$wget[514:513] :
 		 m_rsToPQ_enqReq_rl[514:513],
@@ -1737,7 +1695,7 @@ module mkIBankWrapper(CLK,
   // register m_rsToPQ_deqP
   assign m_rsToPQ_deqP$D_IN =
 	     NOT_m_rsToPQ_clearReq_dummy2_1_read__06_07_OR__ETC___d111 &&
-	     _theResult_____2__h18783 ;
+	     _theResult_____2__h18784 ;
   assign m_rsToPQ_deqP$EN = 1'd1 ;
 
   // register m_rsToPQ_deqReq_rl
@@ -1754,7 +1712,7 @@ module mkIBankWrapper(CLK,
   // register m_rsToPQ_enqP
   assign m_rsToPQ_enqP$D_IN =
 	     NOT_m_rsToPQ_clearReq_dummy2_1_read__06_07_OR__ETC___d111 &&
-	     v__h14049 ;
+	     v__h14050 ;
   assign m_rsToPQ_enqP$EN = 1'd1 ;
 
   // register m_rsToPQ_enqReq_rl
@@ -1776,7 +1734,7 @@ module mkIBankWrapper(CLK,
   assign m_cRqIndexQ$CLR = 1'b0 ;
 
   // submodule m_cRqMshr
-  assign m_cRqMshr$getEmptyEntryInit_r = v__h43565 ;
+  assign m_cRqMshr$getEmptyEntryInit_r = v__h43566 ;
   assign m_cRqMshr$pipelineResp_getRq_n =
 	     (m_pipeline$first[578:577] == 2'd0) ?
 	       m_pipeline$first[576:574] :
@@ -1784,9 +1742,9 @@ module mkIBankWrapper(CLK,
   assign m_cRqMshr$pipelineResp_getSlot_n = m_pipeline$first[576:574] ;
   assign m_cRqMshr$pipelineResp_getState_n = 3'h0 ;
   assign m_cRqMshr$pipelineResp_getSucc_n =
-	     WILL_FIRE_RL_m_pipelineResp_cRq ?
-	       m_pipeline$first[576:574] :
-	       m_pipeline$first[514:512] ;
+	     WILL_FIRE_RL_m_pipelineResp_pRs ?
+	       m_pipeline$first[514:512] :
+	       m_pipeline$first[576:574] ;
   assign m_cRqMshr$pipelineResp_searchEndOfChain_addr =
 	     m_cRqMshr$pipelineResp_getRq ;
   assign m_cRqMshr$pipelineResp_setResult_n =
@@ -1824,14 +1782,14 @@ module mkIBankWrapper(CLK,
   assign m_cRqMshr$EN_pipelineResp_setResult =
 	     WILL_FIRE_RL_m_pipelineResp_pRs && m_pipeline$first[515] ||
 	     WILL_FIRE_RL_m_pipelineResp_cRq &&
-	     m_pipeline_first__44_BIT_515_45_AND_m_pipeline_ETC___d746 ;
+	     m_pipeline_first__86_BIT_515_87_AND_m_pipeline_ETC___d670 ;
   assign m_cRqMshr$EN_pipelineResp_setStateSlot =
 	     WILL_FIRE_RL_m_pipelineResp_pRs && m_pipeline$first[515] ||
 	     WILL_FIRE_RL_m_pipelineResp_cRq ;
   assign m_cRqMshr$EN_pipelineResp_setSucc =
 	     WILL_FIRE_RL_m_pipelineResp_cRq &&
 	     (m_pipeline$first[515] &&
-	      !m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691 ||
+	      !m_pipeline_first__86_BITS_514_TO_512_91_EQ_m_p_ETC___d613 ||
 	      !m_pipeline$first[515] &&
 	      m_cRqMshr$pipelineResp_searchEndOfChain[3]) ;
   assign m_cRqMshr$EN_stuck_get = EN_cRqStuck_get ;
@@ -1870,8 +1828,8 @@ module mkIBankWrapper(CLK,
 
   // submodule m_pRqMshr
   assign m_pRqMshr$getEmptyEntryInit_r =
-	     { SEL_ARR_m_fromPQ_data_0_58_BITS_65_TO_2_67_m_f_ETC___d470,
-	       CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_1_TO_ETC__q19 } ;
+	     { SEL_ARR_m_fromPQ_data_0_57_BITS_65_TO_2_66_m_f_ETC___d469,
+	       CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_1_TO_ETC__q30 } ;
   assign m_pRqMshr$pipelineResp_getRq_n = m_pipeline$first[575:574] ;
   assign m_pRqMshr$pipelineResp_releaseEntry_n = m_pipeline$first[575:574] ;
   assign m_pRqMshr$pipelineResp_setDone_n = m_pipeline$first[575:574] ;
@@ -2072,7 +2030,7 @@ module mkIBankWrapper(CLK,
 	     WILL_FIRE_RL_m_pipelineResp_cRq && !m_pipeline$first[515] &&
 	     !m_cRqMshr$pipelineResp_searchEndOfChain[3] &&
 	     m_pipeline$first[517:516] != 2'd0 &&
-	     !m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659 ;
+	     !m_pipeline_first__86_BITS_569_TO_518_99_EQ_m_c_ETC___d601 ;
   assign m_rsToPIndexQ$DEQ =
 	     WILL_FIRE_RL_m_sendRsToP_pRq || WILL_FIRE_RL_m_sendRsToP_cRq ;
   assign m_rsToPIndexQ$CLR = 1'b0 ;
@@ -2111,20 +2069,20 @@ module mkIBankWrapper(CLK,
   assign m_rsToPQ_enqReq_dummy2_2$EN = 1'd1 ;
 
   // remaining internal signals
-  assign IF_m_cRqMshr_pipelineResp_searchEndOfChain_m_c_ETC___d719 =
+  assign IF_m_cRqMshr_pipelineResp_searchEndOfChain_m_c_ETC___d641 =
 	     m_cRqMshr$pipelineResp_searchEndOfChain[3] ?
 	       m_pipeline$first[569:512] :
 	       { m_cRqMshr$pipelineResp_getRq[63:12],
-		 IF_m_pipeline_first__44_BITS_517_TO_516_55_EQ__ETC___d717 } ;
-  assign IF_m_cRqMshr_pipelineResp_searchEndOfChain_m_c_ETC___d732 =
+		 IF_m_pipeline_first__86_BITS_517_TO_516_97_EQ__ETC___d639 } ;
+  assign IF_m_cRqMshr_pipelineResp_searchEndOfChain_m_c_ETC___d654 =
 	     m_cRqMshr$pipelineResp_searchEndOfChain[3] ?
 	       3'd4 :
 	       ((m_pipeline$first[517:516] == 2'd0 ||
-		 m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659) ?
+		 m_pipeline_first__86_BITS_569_TO_518_99_EQ_m_c_ETC___d601) ?
 		  ((m_pipeline$first[517:516] == 2'd0) ? 3'd2 : 3'd3) :
 		  3'd2) ;
   assign IF_m_fromPQ_deqReq_dummy2_2_read__83_AND_IF_m__ETC___d391 =
-	     _theResult_____2__h41331 == v__h36261 ;
+	     _theResult_____2__h41332 == v__h36262 ;
   assign IF_m_fromPQ_deqReq_lat_1_whas__54_THEN_m_fromP_ETC___d360 =
 	     m_fromPQ_deqReq_lat_0$whas || m_fromPQ_deqReq_rl ;
   assign IF_m_fromPQ_enqReq_dummy2_2_read__75_AND_IF_m__ETC___d428 =
@@ -2151,7 +2109,7 @@ module mkIBankWrapper(CLK,
 		 EN_to_parent_fromP_enq ?
 		   m_fromPQ_enqReq_lat_0$wget[514:3] :
 		   m_fromPQ_enqReq_rl[514:3],
-		 x__h38965 } ;
+		 x__h38966 } ;
   assign IF_m_fromPQ_enqReq_lat_1_whas__63_THEN_NOT_m_f_ETC___d279 =
 	     EN_to_parent_fromP_enq ?
 	       !m_fromPQ_enqReq_lat_0$wget[583] :
@@ -2160,21 +2118,21 @@ module mkIBankWrapper(CLK,
 	     EN_to_parent_fromP_enq ?
 	       m_fromPQ_enqReq_lat_0$wget[583] :
 	       m_fromPQ_enqReq_rl[583] ;
-  assign IF_m_pipeline_first__44_BITS_514_TO_512_49_EQ__ETC___d712 =
-	     m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691 ?
+  assign IF_m_pipeline_first__86_BITS_514_TO_512_91_EQ__ETC___d634 =
+	     m_pipeline_first__86_BITS_514_TO_512_91_EQ_m_p_ETC___d613 ?
 	       { m_cRqMshr$pipelineResp_getRq[63:12],
 		 m_pipeline$first[517:516],
 		 m_cRqMshr$pipelineResp_getSucc } :
 	       m_pipeline$first[569:512] ;
-  assign IF_m_pipeline_first__44_BITS_517_TO_516_55_EQ__ETC___d665 =
+  assign IF_m_pipeline_first__86_BITS_517_TO_516_97_EQ__ETC___d607 =
 	     (m_pipeline$first[517:516] == 2'd0 ||
-	      m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659) ?
+	      m_pipeline_first__86_BITS_569_TO_518_99_EQ_m_c_ETC___d601) ?
 	       m_pipeline$first[517:516] != 2'd0 ||
 	       m_rqToPIndexQ_pipelineResp$FULL_N :
 	       m_rsToPIndexQ$FULL_N ;
-  assign IF_m_pipeline_first__44_BITS_517_TO_516_55_EQ__ETC___d717 =
+  assign IF_m_pipeline_first__86_BITS_517_TO_516_97_EQ__ETC___d639 =
 	     (m_pipeline$first[517:516] == 2'd0 ||
-	      m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659) ?
+	      m_pipeline_first__86_BITS_569_TO_518_99_EQ_m_c_ETC___d601) ?
 	       { m_pipeline$first[517:516],
 		 m_pipeline$first[517:516] == 2'd0 ||
 		 m_cRqMshr$pipelineResp_getSucc[3],
@@ -2185,7 +2143,7 @@ module mkIBankWrapper(CLK,
   assign IF_m_rqFromCQ_data_0_lat_0_whas_THEN_m_rqFromC_ETC___d6 =
 	     EN_to_proc_req_put ? to_proc_req_put : m_rqFromCQ_data_0_rl ;
   assign IF_m_rqToPQ_deqReq_dummy2_2_read__24_AND_IF_m__ETC___d232 =
-	     _theResult_____2__h26688 == v__h25932 ;
+	     _theResult_____2__h26689 == v__h25933 ;
   assign IF_m_rqToPQ_deqReq_lat_1_whas__95_THEN_m_rqToP_ETC___d201 =
 	     EN_to_parent_rqToP_deq || m_rqToPQ_deqReq_rl ;
   assign IF_m_rqToPQ_enqReq_lat_1_whas__66_THEN_m_rqToP_ETC___d175 =
@@ -2193,7 +2151,7 @@ module mkIBankWrapper(CLK,
 	       m_rqToPQ_enqReq_lat_0$wget[72] :
 	       m_rqToPQ_enqReq_rl[72] ;
   assign IF_m_rsToPQ_deqReq_dummy2_2_read__20_AND_IF_m__ETC___d128 =
-	     _theResult_____2__h18783 == v__h14049 ;
+	     _theResult_____2__h18784 == v__h14050 ;
   assign IF_m_rsToPQ_deqReq_lat_1_whas__1_THEN_m_rsToPQ_ETC___d97 =
 	     EN_to_parent_rsToP_deq || m_rsToPQ_deqReq_rl ;
   assign IF_m_rsToPQ_enqReq_lat_1_whas__1_THEN_NOT_m_rs_ETC___d47 =
@@ -2204,9 +2162,9 @@ module mkIBankWrapper(CLK,
 	     m_rsToPQ_enqReq_lat_0$whas ?
 	       m_rsToPQ_enqReq_lat_0$wget[579] :
 	       m_rsToPQ_enqReq_rl[579] ;
-  assign NOT_m_cRqMshr_pipelineResp_searchEndOfChain_m__ETC___d817 =
+  assign NOT_m_cRqMshr_pipelineResp_searchEndOfChain_m__ETC___d725 =
 	     !m_cRqMshr$pipelineResp_searchEndOfChain[3] &&
-	     m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659 &&
+	     m_pipeline_first__86_BITS_569_TO_518_99_EQ_m_c_ETC___d601 &&
 	     m_pipeline$first[517:516] != 2'd0 &&
 	     m_pipeline$first[517:516] != 2'd1 ;
   assign NOT_m_fromPQ_clearReq_dummy2_1_read__69_70_OR__ETC___d374 =
@@ -2217,13 +2175,13 @@ module mkIBankWrapper(CLK,
 	     (m_fromPQ_deqReq_dummy2_2$Q_OUT &&
 	      IF_m_fromPQ_deqReq_lat_1_whas__54_THEN_m_fromP_ETC___d360 ||
 	      m_fromPQ_empty) ;
-  assign NOT_m_pipeline_first__44_BIT_515_45_81_AND_NOT_ETC___d841 =
+  assign NOT_m_pipeline_first__86_BIT_515_87_66_AND_NOT_ETC___d730 =
 	     !m_pipeline$first[515] &&
 	     !m_cRqMshr$pipelineResp_searchEndOfChain[3] &&
 	     m_pipeline$first[517:516] != 2'd0 &&
-	     !m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659 &&
+	     !m_pipeline_first__86_BITS_569_TO_518_99_EQ_m_c_ETC___d601 &&
 	     m_pipeline$first[517:516] != 2'd1 ;
-  assign NOT_m_pipeline_first__44_BIT_570_73_74_AND_NOT_ETC___d900 =
+  assign NOT_m_pipeline_first__86_BIT_570_50_68_AND_NOT_ETC___d774 =
 	     !m_pipeline$first[570] &&
 	     (m_pipeline$first[517:516] != 2'd1 ||
 	      m_pRqMshr$pipelineResp_getRq[1:0] != 2'd0 ||
@@ -2247,37 +2205,55 @@ module mkIBankWrapper(CLK,
 	     (m_rsToPQ_deqReq_dummy2_2$Q_OUT &&
 	      IF_m_rsToPQ_deqReq_lat_1_whas__1_THEN_m_rsToPQ_ETC___d97 ||
 	      m_rsToPQ_empty) ;
-  assign SEL_ARR_m_rqToPQ_data_0_66_BITS_5_TO_4_76_m_rq_ETC___d988 =
-	     { CASE_m_rqToPQ_deqP_0_m_rqToPQ_data_0_BITS_5_TO_ETC__q12,
-	       CASE_m_rqToPQ_deqP_0_m_rqToPQ_data_0_BIT_3_1_m_ETC__q13,
-	       CASE_m_rqToPQ_deqP_0_m_rqToPQ_data_0_BITS_2_TO_ETC__q14 } ;
-  assign SEL_ARR_m_rsToPQ_data_0_10_BITS_511_TO_448_27__ETC___d944 =
+  assign SEL_ARR_m_fromPQ_data_0_57_BITS_514_TO_451_93__ETC___d510 =
+	     { CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_514__ETC__q5,
+	       CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_450__ETC__q6,
+	       CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_386__ETC__q7,
+	       CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_322__ETC__q8 } ;
+  assign SEL_ARR_m_fromPQ_data_0_57_BITS_514_TO_451_93__ETC___d519 =
+	     { SEL_ARR_m_fromPQ_data_0_57_BITS_514_TO_451_93__ETC___d510,
+	       CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_258__ETC__q11,
+	       CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_194__ETC__q12 } ;
+  assign SEL_ARR_m_fromPQ_data_0_57_BITS_514_TO_451_93__ETC___d528 =
+	     { SEL_ARR_m_fromPQ_data_0_57_BITS_514_TO_451_93__ETC___d519,
+	       CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_130__ETC__q13,
+	       CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_66_T_ETC__q14 } ;
+  assign SEL_ARR_m_rqToPQ_data_0_40_BITS_5_TO_4_50_m_rq_ETC___d862 =
+	     { CASE_m_rqToPQ_deqP_0_m_rqToPQ_data_0_BITS_5_TO_ETC__q21,
+	       CASE_m_rqToPQ_deqP_0_m_rqToPQ_data_0_BIT_3_1_m_ETC__q22,
+	       CASE_m_rqToPQ_deqP_0_m_rqToPQ_data_0_BITS_2_TO_ETC__q23 } ;
+  assign SEL_ARR_m_rsToPQ_data_0_84_BITS_511_TO_448_01__ETC___d818 =
 	     { CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_511__ETC__q1,
 	       CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_447__ETC__q2,
 	       CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_383__ETC__q3,
 	       CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_319__ETC__q4 } ;
-  assign SEL_ARR_m_rsToPQ_data_0_10_BITS_511_TO_448_27__ETC___d953 =
-	     { SEL_ARR_m_rsToPQ_data_0_10_BITS_511_TO_448_27__ETC___d944,
-	       CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_255__ETC__q5,
-	       CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_191__ETC__q6 } ;
-  assign SEL_ARR_m_rsToPQ_data_0_10_BITS_511_TO_448_27__ETC___d962 =
-	     { SEL_ARR_m_rsToPQ_data_0_10_BITS_511_TO_448_27__ETC___d953,
-	       CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_127__ETC__q7,
-	       CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_63_T_ETC__q8 } ;
-  assign _theResult_____2__h18783 =
+  assign SEL_ARR_m_rsToPQ_data_0_84_BITS_511_TO_448_01__ETC___d827 =
+	     { SEL_ARR_m_rsToPQ_data_0_84_BITS_511_TO_448_01__ETC___d818,
+	       CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_255__ETC__q9,
+	       CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_191__ETC__q10 } ;
+  assign SEL_ARR_m_rsToPQ_data_0_84_BITS_511_TO_448_01__ETC___d836 =
+	     { SEL_ARR_m_rsToPQ_data_0_84_BITS_511_TO_448_01__ETC___d827,
+	       CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_127__ETC__q15,
+	       CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_63_T_ETC__q16 } ;
+  assign _1_CONCAT_NOT_SEL_ARR_NOT_m_fromPQ_data_0_57_BI_ETC___d535 =
+	     { 2'd1,
+	       !CASE_m_fromPQ_deqP_0_NOT_m_fromPQ_data_0_BIT_5_ETC__q20,
+	       SEL_ARR_m_fromPQ_data_0_57_BITS_514_TO_451_93__ETC___d528,
+	       x__h47671 } ;
+  assign _theResult_____2__h18784 =
 	     (m_rsToPQ_deqReq_dummy2_2$Q_OUT &&
 	      IF_m_rsToPQ_deqReq_lat_1_whas__1_THEN_m_rsToPQ_ETC___d97) ?
-	       next_deqP___1__h19102 :
+	       next_deqP___1__h19103 :
 	       m_rsToPQ_deqP ;
-  assign _theResult_____2__h26688 =
+  assign _theResult_____2__h26689 =
 	     (m_rqToPQ_deqReq_dummy2_2$Q_OUT &&
 	      IF_m_rqToPQ_deqReq_lat_1_whas__95_THEN_m_rqToP_ETC___d201) ?
-	       next_deqP___1__h27007 :
+	       next_deqP___1__h27008 :
 	       m_rqToPQ_deqP ;
-  assign _theResult_____2__h41331 =
+  assign _theResult_____2__h41332 =
 	     (m_fromPQ_deqReq_dummy2_2$Q_OUT &&
 	      IF_m_fromPQ_deqReq_lat_1_whas__54_THEN_m_fromP_ETC___d360) ?
-	       next_deqP___1__h41650 :
+	       next_deqP___1__h41651 :
 	       m_fromPQ_deqP ;
   assign m_fromPQ_enqReq_dummy2_2_read__75_AND_IF_m_fro_ETC___d401 =
 	     m_fromPQ_enqReq_dummy2_2$Q_OUT &&
@@ -2285,22 +2261,22 @@ module mkIBankWrapper(CLK,
 	     (!m_fromPQ_deqReq_dummy2_2$Q_OUT ||
 	      !m_fromPQ_deqReq_lat_0$whas && !m_fromPQ_deqReq_rl) &&
 	     m_fromPQ_full ;
-  assign m_pipeline_RDY_deqWrite__43_AND_IF_m_pipeline__ETC___d870 =
+  assign m_pipeline_RDY_deqWrite__85_AND_IF_m_pipeline__ETC___d753 =
 	     m_pipeline$RDY_deqWrite &&
 	     (m_pipeline$first[570] ?
 		m_pRqMshr$RDY_pipelineResp_releaseEntry :
 		m_rsToPIndexQ$FULL_N) ;
-  assign m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691 =
+  assign m_pipeline_first__86_BITS_514_TO_512_91_EQ_m_p_ETC___d613 =
 	     m_pipeline$first[514:512] == m_pipeline$first[576:574] ;
-  assign m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659 =
+  assign m_pipeline_first__86_BITS_569_TO_518_99_EQ_m_c_ETC___d601 =
 	     m_pipeline$first[569:518] ==
 	     m_cRqMshr$pipelineResp_getRq[63:12] ;
-  assign m_pipeline_first__44_BIT_515_45_AND_m_pipeline_ETC___d746 =
+  assign m_pipeline_first__86_BIT_515_87_AND_m_pipeline_ETC___d670 =
 	     m_pipeline$first[515] &&
-	     m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691 ||
+	     m_pipeline_first__86_BITS_514_TO_512_91_EQ_m_p_ETC___d613 ||
 	     !m_pipeline$first[515] &&
 	     !m_cRqMshr$pipelineResp_searchEndOfChain[3] &&
-	     m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659 &&
+	     m_pipeline_first__86_BITS_569_TO_518_99_EQ_m_c_ETC___d601 &&
 	     m_pipeline$first[517:516] != 2'd0 ;
   assign m_rqToPQ_enqReq_dummy2_2_read__16_AND_IF_m_rqT_ETC___d242 =
 	     m_rqToPQ_enqReq_dummy2_2$Q_OUT &&
@@ -2314,199 +2290,66 @@ module mkIBankWrapper(CLK,
 	     (!m_rsToPQ_deqReq_dummy2_2$Q_OUT ||
 	      !EN_to_parent_rsToP_deq && !m_rsToPQ_deqReq_rl) &&
 	     m_rsToPQ_full ;
-  assign next_deqP___1__h19102 = m_rsToPQ_deqP + 1'd1 ;
-  assign next_deqP___1__h27007 = m_rqToPQ_deqP + 1'd1 ;
-  assign next_deqP___1__h41650 = m_fromPQ_deqP + 1'd1 ;
-  assign resp_addr__h49820 =
+  assign next_deqP___1__h19103 = m_rsToPQ_deqP + 1'd1 ;
+  assign next_deqP___1__h27008 = m_rqToPQ_deqP + 1'd1 ;
+  assign next_deqP___1__h41651 = m_fromPQ_deqP + 1'd1 ;
+  assign resp_addr__h48035 =
 	     { m_cRqMshr$sendRsToP_cRq_getSlot[52:1],
 	       m_cRqMshr$sendRsToP_cRq_getRq[11:0] } ;
-  assign sel__h55286 = m_cRqMshr$pipelineResp_getRq[5:2] + 4'd1 ;
-  assign v__h14049 =
+  assign sel__h52130 = m_cRqMshr$pipelineResp_getRq[5:2] + 4'd1 ;
+  assign v__h14050 =
 	     (m_rsToPQ_enqReq_dummy2_2$Q_OUT &&
 	      IF_m_rsToPQ_enqReq_lat_1_whas__1_THEN_m_rsToPQ_ETC___d40) ?
-	       v__h14332 :
+	       v__h14333 :
 	       m_rsToPQ_enqP ;
-  assign v__h14332 = m_rsToPQ_enqP + 1'd1 ;
-  assign v__h25932 =
+  assign v__h14333 = m_rsToPQ_enqP + 1'd1 ;
+  assign v__h25933 =
 	     (m_rqToPQ_enqReq_dummy2_2$Q_OUT &&
 	      IF_m_rqToPQ_enqReq_lat_1_whas__66_THEN_m_rqToP_ETC___d175) ?
-	       v__h26215 :
+	       v__h26216 :
 	       m_rqToPQ_enqP ;
-  assign v__h26215 = m_rqToPQ_enqP + 1'd1 ;
-  assign v__h36261 =
+  assign v__h26216 = m_rqToPQ_enqP + 1'd1 ;
+  assign v__h36262 =
 	     (m_fromPQ_enqReq_dummy2_2$Q_OUT &&
 	      IF_m_fromPQ_enqReq_lat_1_whas__63_THEN_m_fromP_ETC___d272) ?
-	       v__h36544 :
+	       v__h36545 :
 	       m_fromPQ_enqP ;
-  assign v__h36544 = m_fromPQ_enqP + 1'd1 ;
-  assign v__h43565 =
+  assign v__h36545 = m_fromPQ_enqP + 1'd1 ;
+  assign v__h43566 =
 	     m_rqFromCQ_data_0_dummy2_1$Q_OUT ?
 	       IF_m_rqFromCQ_data_0_lat_0_whas_THEN_m_rqFromC_ETC___d6 :
 	       64'd0 ;
-  assign x__h38965 =
+  assign x__h38966 =
 	     EN_to_parent_fromP_enq ?
 	       m_fromPQ_enqReq_lat_0$wget[2:0] :
 	       m_fromPQ_enqReq_rl[2:0] ;
-  assign x_addr__h14492 =
+  assign x_addr__h14493 =
 	     m_rsToPQ_enqReq_lat_0$whas ?
 	       m_rsToPQ_enqReq_lat_0$wget[578:515] :
 	       m_rsToPQ_enqReq_rl[578:515] ;
   always@(m_fromPQ_deqP or m_fromPQ_data_0 or m_fromPQ_data_1)
   begin
     case (m_fromPQ_deqP)
-      1'd0: addr__h46216 = m_fromPQ_data_0[581:518];
-      1'd1: addr__h46216 = m_fromPQ_data_1[581:518];
+      1'd0: addr__h46129 = m_fromPQ_data_0[581:518];
+      1'd1: addr__h46129 = m_fromPQ_data_1[581:518];
     endcase
   end
   always@(m_fromPQ_deqP or m_fromPQ_data_0 or m_fromPQ_data_1)
   begin
     case (m_fromPQ_deqP)
-      1'd0: value__h48793 = m_fromPQ_data_0[66:3];
-      1'd1: value__h48793 = m_fromPQ_data_1[66:3];
-    endcase
-  end
-  always@(m_fromPQ_deqP or m_fromPQ_data_0 or m_fromPQ_data_1)
-  begin
-    case (m_fromPQ_deqP)
-      1'd0: value__h48884 = m_fromPQ_data_0[130:67];
-      1'd1: value__h48884 = m_fromPQ_data_1[130:67];
-    endcase
-  end
-  always@(m_fromPQ_deqP or m_fromPQ_data_0 or m_fromPQ_data_1)
-  begin
-    case (m_fromPQ_deqP)
-      1'd0: value__h48971 = m_fromPQ_data_0[194:131];
-      1'd1: value__h48971 = m_fromPQ_data_1[194:131];
-    endcase
-  end
-  always@(m_fromPQ_deqP or m_fromPQ_data_0 or m_fromPQ_data_1)
-  begin
-    case (m_fromPQ_deqP)
-      1'd0: value__h49058 = m_fromPQ_data_0[258:195];
-      1'd1: value__h49058 = m_fromPQ_data_1[258:195];
-    endcase
-  end
-  always@(m_fromPQ_deqP or m_fromPQ_data_0 or m_fromPQ_data_1)
-  begin
-    case (m_fromPQ_deqP)
-      1'd0: value__h49145 = m_fromPQ_data_0[322:259];
-      1'd1: value__h49145 = m_fromPQ_data_1[322:259];
-    endcase
-  end
-  always@(m_fromPQ_deqP or m_fromPQ_data_0 or m_fromPQ_data_1)
-  begin
-    case (m_fromPQ_deqP)
-      1'd0: value__h49232 = m_fromPQ_data_0[386:323];
-      1'd1: value__h49232 = m_fromPQ_data_1[386:323];
-    endcase
-  end
-  always@(m_fromPQ_deqP or m_fromPQ_data_0 or m_fromPQ_data_1)
-  begin
-    case (m_fromPQ_deqP)
-      1'd0: value__h49319 = m_fromPQ_data_0[450:387];
-      1'd1: value__h49319 = m_fromPQ_data_1[450:387];
-    endcase
-  end
-  always@(m_fromPQ_deqP or m_fromPQ_data_0 or m_fromPQ_data_1)
-  begin
-    case (m_fromPQ_deqP)
-      1'd0: value__h49406 = m_fromPQ_data_0[514:451];
-      1'd1: value__h49406 = m_fromPQ_data_1[514:451];
-    endcase
-  end
-  always@(m_fromPQ_deqP or m_fromPQ_data_0 or m_fromPQ_data_1)
-  begin
-    case (m_fromPQ_deqP)
-      1'd0: x__h47758 = m_fromPQ_data_0[2:0];
-      1'd1: x__h47758 = m_fromPQ_data_1[2:0];
+      1'd0: x__h47671 = m_fromPQ_data_0[2:0];
+      1'd1: x__h47671 = m_fromPQ_data_1[2:0];
     endcase
   end
   always@(m_fromPQ_deqP or m_fromPQ_data_0 or m_fromPQ_data_1)
   begin
     case (m_fromPQ_deqP)
       1'd0:
-	  SEL_ARR_m_fromPQ_data_0_58_BITS_65_TO_2_67_m_f_ETC___d470 =
+	  SEL_ARR_m_fromPQ_data_0_57_BITS_65_TO_2_66_m_f_ETC___d469 =
 	      m_fromPQ_data_0[65:2];
       1'd1:
-	  SEL_ARR_m_fromPQ_data_0_58_BITS_65_TO_2_67_m_f_ETC___d470 =
+	  SEL_ARR_m_fromPQ_data_0_57_BITS_65_TO_2_66_m_f_ETC___d469 =
 	      m_fromPQ_data_1[65:2];
-    endcase
-  end
-  always@(m_fromPQ_deqP or m_fromPQ_data_0 or m_fromPQ_data_1)
-  begin
-    case (m_fromPQ_deqP)
-      1'd0:
-	  SEL_ARR_m_fromPQ_data_0_58_BITS_1_TO_0_71_EQ_0_ETC___d483 =
-	      m_fromPQ_data_0[1:0] == 2'd0;
-      1'd1:
-	  SEL_ARR_m_fromPQ_data_0_58_BITS_1_TO_0_71_EQ_0_ETC___d483 =
-	      m_fromPQ_data_1[1:0] == 2'd0;
-    endcase
-  end
-  always@(m_fromPQ_deqP or m_fromPQ_data_0 or m_fromPQ_data_1)
-  begin
-    case (m_fromPQ_deqP)
-      1'd0:
-	  SEL_ARR_m_fromPQ_data_0_58_BITS_1_TO_0_71_EQ_1_ETC___d488 =
-	      m_fromPQ_data_0[1:0] == 2'd1;
-      1'd1:
-	  SEL_ARR_m_fromPQ_data_0_58_BITS_1_TO_0_71_EQ_1_ETC___d488 =
-	      m_fromPQ_data_1[1:0] == 2'd1;
-    endcase
-  end
-  always@(m_fromPQ_deqP or m_fromPQ_data_0 or m_fromPQ_data_1)
-  begin
-    case (m_fromPQ_deqP)
-      1'd0:
-	  SEL_ARR_m_fromPQ_data_0_58_BITS_1_TO_0_71_EQ_2_ETC___d494 =
-	      m_fromPQ_data_0[1:0] == 2'd2;
-      1'd1:
-	  SEL_ARR_m_fromPQ_data_0_58_BITS_1_TO_0_71_EQ_2_ETC___d494 =
-	      m_fromPQ_data_1[1:0] == 2'd2;
-    endcase
-  end
-  always@(m_fromPQ_deqP or m_fromPQ_data_0 or m_fromPQ_data_1)
-  begin
-    case (m_fromPQ_deqP)
-      1'd0:
-	  SEL_ARR_NOT_m_fromPQ_data_0_58_BIT_515_08_09_N_ETC___d513 =
-	      !m_fromPQ_data_0[515];
-      1'd1:
-	  SEL_ARR_NOT_m_fromPQ_data_0_58_BIT_515_08_09_N_ETC___d513 =
-	      !m_fromPQ_data_1[515];
-    endcase
-  end
-  always@(m_fromPQ_deqP or m_fromPQ_data_0 or m_fromPQ_data_1)
-  begin
-    case (m_fromPQ_deqP)
-      1'd0:
-	  SEL_ARR_m_fromPQ_data_0_58_BITS_517_TO_516_60__ETC___d570 =
-	      m_fromPQ_data_0[517:516] == 2'd1;
-      1'd1:
-	  SEL_ARR_m_fromPQ_data_0_58_BITS_517_TO_516_60__ETC___d570 =
-	      m_fromPQ_data_1[517:516] == 2'd1;
-    endcase
-  end
-  always@(m_fromPQ_deqP or m_fromPQ_data_0 or m_fromPQ_data_1)
-  begin
-    case (m_fromPQ_deqP)
-      1'd0:
-	  SEL_ARR_m_fromPQ_data_0_58_BITS_517_TO_516_60__ETC___d565 =
-	      m_fromPQ_data_0[517:516] == 2'd0;
-      1'd1:
-	  SEL_ARR_m_fromPQ_data_0_58_BITS_517_TO_516_60__ETC___d565 =
-	      m_fromPQ_data_1[517:516] == 2'd0;
-    endcase
-  end
-  always@(m_fromPQ_deqP or m_fromPQ_data_0 or m_fromPQ_data_1)
-  begin
-    case (m_fromPQ_deqP)
-      1'd0:
-	  SEL_ARR_m_fromPQ_data_0_58_BITS_517_TO_516_60__ETC___d576 =
-	      m_fromPQ_data_0[517:516] == 2'd2;
-      1'd1:
-	  SEL_ARR_m_fromPQ_data_0_58_BITS_517_TO_516_60__ETC___d576 =
-	      m_fromPQ_data_1[517:516] == 2'd2;
     endcase
   end
   always@(m_rsToPQ_deqP or m_rsToPQ_data_0 or m_rsToPQ_data_1)
@@ -2553,14 +2396,58 @@ module mkIBankWrapper(CLK,
 	      m_rsToPQ_data_1[319:256];
     endcase
   end
+  always@(m_fromPQ_deqP or m_fromPQ_data_0 or m_fromPQ_data_1)
+  begin
+    case (m_fromPQ_deqP)
+      1'd0:
+	  CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_514__ETC__q5 =
+	      m_fromPQ_data_0[514:451];
+      1'd1:
+	  CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_514__ETC__q5 =
+	      m_fromPQ_data_1[514:451];
+    endcase
+  end
+  always@(m_fromPQ_deqP or m_fromPQ_data_0 or m_fromPQ_data_1)
+  begin
+    case (m_fromPQ_deqP)
+      1'd0:
+	  CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_450__ETC__q6 =
+	      m_fromPQ_data_0[450:387];
+      1'd1:
+	  CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_450__ETC__q6 =
+	      m_fromPQ_data_1[450:387];
+    endcase
+  end
+  always@(m_fromPQ_deqP or m_fromPQ_data_0 or m_fromPQ_data_1)
+  begin
+    case (m_fromPQ_deqP)
+      1'd0:
+	  CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_386__ETC__q7 =
+	      m_fromPQ_data_0[386:323];
+      1'd1:
+	  CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_386__ETC__q7 =
+	      m_fromPQ_data_1[386:323];
+    endcase
+  end
+  always@(m_fromPQ_deqP or m_fromPQ_data_0 or m_fromPQ_data_1)
+  begin
+    case (m_fromPQ_deqP)
+      1'd0:
+	  CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_322__ETC__q8 =
+	      m_fromPQ_data_0[322:259];
+      1'd1:
+	  CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_322__ETC__q8 =
+	      m_fromPQ_data_1[322:259];
+    endcase
+  end
   always@(m_rsToPQ_deqP or m_rsToPQ_data_0 or m_rsToPQ_data_1)
   begin
     case (m_rsToPQ_deqP)
       1'd0:
-	  CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_255__ETC__q5 =
+	  CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_255__ETC__q9 =
 	      m_rsToPQ_data_0[255:192];
       1'd1:
-	  CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_255__ETC__q5 =
+	  CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_255__ETC__q9 =
 	      m_rsToPQ_data_1[255:192];
     endcase
   end
@@ -2568,127 +2455,65 @@ module mkIBankWrapper(CLK,
   begin
     case (m_rsToPQ_deqP)
       1'd0:
-	  CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_191__ETC__q6 =
+	  CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_191__ETC__q10 =
 	      m_rsToPQ_data_0[191:128];
       1'd1:
-	  CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_191__ETC__q6 =
+	  CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_191__ETC__q10 =
 	      m_rsToPQ_data_1[191:128];
     endcase
   end
-  always@(sel__h55286 or m_pipeline$first)
+  always@(m_fromPQ_deqP or m_fromPQ_data_0 or m_fromPQ_data_1)
   begin
-    case (sel__h55286)
-      4'd0:
-	  SEL_ARR_m_pipeline_first__44_BITS_31_TO_0_51_m_ETC___d769 =
-	      m_pipeline$first[31:0];
-      4'd1:
-	  SEL_ARR_m_pipeline_first__44_BITS_31_TO_0_51_m_ETC___d769 =
-	      m_pipeline$first[63:32];
-      4'd2:
-	  SEL_ARR_m_pipeline_first__44_BITS_31_TO_0_51_m_ETC___d769 =
-	      m_pipeline$first[95:64];
-      4'd3:
-	  SEL_ARR_m_pipeline_first__44_BITS_31_TO_0_51_m_ETC___d769 =
-	      m_pipeline$first[127:96];
-      4'd4:
-	  SEL_ARR_m_pipeline_first__44_BITS_31_TO_0_51_m_ETC___d769 =
-	      m_pipeline$first[159:128];
-      4'd5:
-	  SEL_ARR_m_pipeline_first__44_BITS_31_TO_0_51_m_ETC___d769 =
-	      m_pipeline$first[191:160];
-      4'd6:
-	  SEL_ARR_m_pipeline_first__44_BITS_31_TO_0_51_m_ETC___d769 =
-	      m_pipeline$first[223:192];
-      4'd7:
-	  SEL_ARR_m_pipeline_first__44_BITS_31_TO_0_51_m_ETC___d769 =
-	      m_pipeline$first[255:224];
-      4'd8:
-	  SEL_ARR_m_pipeline_first__44_BITS_31_TO_0_51_m_ETC___d769 =
-	      m_pipeline$first[287:256];
-      4'd9:
-	  SEL_ARR_m_pipeline_first__44_BITS_31_TO_0_51_m_ETC___d769 =
-	      m_pipeline$first[319:288];
-      4'd10:
-	  SEL_ARR_m_pipeline_first__44_BITS_31_TO_0_51_m_ETC___d769 =
-	      m_pipeline$first[351:320];
-      4'd11:
-	  SEL_ARR_m_pipeline_first__44_BITS_31_TO_0_51_m_ETC___d769 =
-	      m_pipeline$first[383:352];
-      4'd12:
-	  SEL_ARR_m_pipeline_first__44_BITS_31_TO_0_51_m_ETC___d769 =
-	      m_pipeline$first[415:384];
-      4'd13:
-	  SEL_ARR_m_pipeline_first__44_BITS_31_TO_0_51_m_ETC___d769 =
-	      m_pipeline$first[447:416];
-      4'd14:
-	  SEL_ARR_m_pipeline_first__44_BITS_31_TO_0_51_m_ETC___d769 =
-	      m_pipeline$first[479:448];
-      4'd15:
-	  SEL_ARR_m_pipeline_first__44_BITS_31_TO_0_51_m_ETC___d769 =
-	      m_pipeline$first[511:480];
+    case (m_fromPQ_deqP)
+      1'd0:
+	  CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_258__ETC__q11 =
+	      m_fromPQ_data_0[258:195];
+      1'd1:
+	  CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_258__ETC__q11 =
+	      m_fromPQ_data_1[258:195];
     endcase
   end
-  always@(m_cRqMshr$pipelineResp_getRq or m_pipeline$first)
+  always@(m_fromPQ_deqP or m_fromPQ_data_0 or m_fromPQ_data_1)
   begin
-    case (m_cRqMshr$pipelineResp_getRq[5:2])
-      4'd0:
-	  SEL_ARR_m_pipeline_first__44_BITS_31_TO_0_51_m_ETC___d771 =
-	      m_pipeline$first[31:0];
-      4'd1:
-	  SEL_ARR_m_pipeline_first__44_BITS_31_TO_0_51_m_ETC___d771 =
-	      m_pipeline$first[63:32];
-      4'd2:
-	  SEL_ARR_m_pipeline_first__44_BITS_31_TO_0_51_m_ETC___d771 =
-	      m_pipeline$first[95:64];
-      4'd3:
-	  SEL_ARR_m_pipeline_first__44_BITS_31_TO_0_51_m_ETC___d771 =
-	      m_pipeline$first[127:96];
-      4'd4:
-	  SEL_ARR_m_pipeline_first__44_BITS_31_TO_0_51_m_ETC___d771 =
-	      m_pipeline$first[159:128];
-      4'd5:
-	  SEL_ARR_m_pipeline_first__44_BITS_31_TO_0_51_m_ETC___d771 =
-	      m_pipeline$first[191:160];
-      4'd6:
-	  SEL_ARR_m_pipeline_first__44_BITS_31_TO_0_51_m_ETC___d771 =
-	      m_pipeline$first[223:192];
-      4'd7:
-	  SEL_ARR_m_pipeline_first__44_BITS_31_TO_0_51_m_ETC___d771 =
-	      m_pipeline$first[255:224];
-      4'd8:
-	  SEL_ARR_m_pipeline_first__44_BITS_31_TO_0_51_m_ETC___d771 =
-	      m_pipeline$first[287:256];
-      4'd9:
-	  SEL_ARR_m_pipeline_first__44_BITS_31_TO_0_51_m_ETC___d771 =
-	      m_pipeline$first[319:288];
-      4'd10:
-	  SEL_ARR_m_pipeline_first__44_BITS_31_TO_0_51_m_ETC___d771 =
-	      m_pipeline$first[351:320];
-      4'd11:
-	  SEL_ARR_m_pipeline_first__44_BITS_31_TO_0_51_m_ETC___d771 =
-	      m_pipeline$first[383:352];
-      4'd12:
-	  SEL_ARR_m_pipeline_first__44_BITS_31_TO_0_51_m_ETC___d771 =
-	      m_pipeline$first[415:384];
-      4'd13:
-	  SEL_ARR_m_pipeline_first__44_BITS_31_TO_0_51_m_ETC___d771 =
-	      m_pipeline$first[447:416];
-      4'd14:
-	  SEL_ARR_m_pipeline_first__44_BITS_31_TO_0_51_m_ETC___d771 =
-	      m_pipeline$first[479:448];
-      4'd15:
-	  SEL_ARR_m_pipeline_first__44_BITS_31_TO_0_51_m_ETC___d771 =
-	      m_pipeline$first[511:480];
+    case (m_fromPQ_deqP)
+      1'd0:
+	  CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_194__ETC__q12 =
+	      m_fromPQ_data_0[194:131];
+      1'd1:
+	  CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_194__ETC__q12 =
+	      m_fromPQ_data_1[194:131];
+    endcase
+  end
+  always@(m_fromPQ_deqP or m_fromPQ_data_0 or m_fromPQ_data_1)
+  begin
+    case (m_fromPQ_deqP)
+      1'd0:
+	  CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_130__ETC__q13 =
+	      m_fromPQ_data_0[130:67];
+      1'd1:
+	  CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_130__ETC__q13 =
+	      m_fromPQ_data_1[130:67];
+    endcase
+  end
+  always@(m_fromPQ_deqP or m_fromPQ_data_0 or m_fromPQ_data_1)
+  begin
+    case (m_fromPQ_deqP)
+      1'd0:
+	  CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_66_T_ETC__q14 =
+	      m_fromPQ_data_0[66:3];
+      1'd1:
+	  CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_66_T_ETC__q14 =
+	      m_fromPQ_data_1[66:3];
     endcase
   end
   always@(m_rsToPQ_deqP or m_rsToPQ_data_0 or m_rsToPQ_data_1)
   begin
     case (m_rsToPQ_deqP)
       1'd0:
-	  CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_127__ETC__q7 =
+	  CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_127__ETC__q15 =
 	      m_rsToPQ_data_0[127:64];
       1'd1:
-	  CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_127__ETC__q7 =
+	  CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_127__ETC__q15 =
 	      m_rsToPQ_data_1[127:64];
     endcase
   end
@@ -2696,10 +2521,10 @@ module mkIBankWrapper(CLK,
   begin
     case (m_rsToPQ_deqP)
       1'd0:
-	  CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_63_T_ETC__q8 =
+	  CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_63_T_ETC__q16 =
 	      m_rsToPQ_data_0[63:0];
       1'd1:
-	  CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_63_T_ETC__q8 =
+	  CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_63_T_ETC__q16 =
 	      m_rsToPQ_data_1[63:0];
     endcase
   end
@@ -2707,10 +2532,10 @@ module mkIBankWrapper(CLK,
   begin
     case (m_rsToPQ_deqP)
       1'd0:
-	  CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_578__ETC__q9 =
+	  CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_578__ETC__q17 =
 	      m_rsToPQ_data_0[578:515];
       1'd1:
-	  CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_578__ETC__q9 =
+	  CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_578__ETC__q17 =
 	      m_rsToPQ_data_1[578:515];
     endcase
   end
@@ -2718,10 +2543,10 @@ module mkIBankWrapper(CLK,
   begin
     case (m_rsToPQ_deqP)
       1'd0:
-	  CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_514__ETC__q10 =
+	  CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_514__ETC__q18 =
 	      m_rsToPQ_data_0[514:513];
       1'd1:
-	  CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_514__ETC__q10 =
+	  CASE_m_rsToPQ_deqP_0_m_rsToPQ_data_0_BITS_514__ETC__q18 =
 	      m_rsToPQ_data_1[514:513];
     endcase
   end
@@ -2729,21 +2554,32 @@ module mkIBankWrapper(CLK,
   begin
     case (m_rsToPQ_deqP)
       1'd0:
-	  CASE_m_rsToPQ_deqP_0_NOT_m_rsToPQ_data_0_BIT_5_ETC__q11 =
+	  CASE_m_rsToPQ_deqP_0_NOT_m_rsToPQ_data_0_BIT_5_ETC__q19 =
 	      !m_rsToPQ_data_0[512];
       1'd1:
-	  CASE_m_rsToPQ_deqP_0_NOT_m_rsToPQ_data_0_BIT_5_ETC__q11 =
+	  CASE_m_rsToPQ_deqP_0_NOT_m_rsToPQ_data_0_BIT_5_ETC__q19 =
 	      !m_rsToPQ_data_1[512];
+    endcase
+  end
+  always@(m_fromPQ_deqP or m_fromPQ_data_0 or m_fromPQ_data_1)
+  begin
+    case (m_fromPQ_deqP)
+      1'd0:
+	  CASE_m_fromPQ_deqP_0_NOT_m_fromPQ_data_0_BIT_5_ETC__q20 =
+	      !m_fromPQ_data_0[515];
+      1'd1:
+	  CASE_m_fromPQ_deqP_0_NOT_m_fromPQ_data_0_BIT_5_ETC__q20 =
+	      !m_fromPQ_data_1[515];
     endcase
   end
   always@(m_rqToPQ_deqP or m_rqToPQ_data_0 or m_rqToPQ_data_1)
   begin
     case (m_rqToPQ_deqP)
       1'd0:
-	  CASE_m_rqToPQ_deqP_0_m_rqToPQ_data_0_BITS_5_TO_ETC__q12 =
+	  CASE_m_rqToPQ_deqP_0_m_rqToPQ_data_0_BITS_5_TO_ETC__q21 =
 	      m_rqToPQ_data_0[5:4];
       1'd1:
-	  CASE_m_rqToPQ_deqP_0_m_rqToPQ_data_0_BITS_5_TO_ETC__q12 =
+	  CASE_m_rqToPQ_deqP_0_m_rqToPQ_data_0_BITS_5_TO_ETC__q21 =
 	      m_rqToPQ_data_1[5:4];
     endcase
   end
@@ -2751,10 +2587,10 @@ module mkIBankWrapper(CLK,
   begin
     case (m_rqToPQ_deqP)
       1'd0:
-	  CASE_m_rqToPQ_deqP_0_m_rqToPQ_data_0_BIT_3_1_m_ETC__q13 =
+	  CASE_m_rqToPQ_deqP_0_m_rqToPQ_data_0_BIT_3_1_m_ETC__q22 =
 	      m_rqToPQ_data_0[3];
       1'd1:
-	  CASE_m_rqToPQ_deqP_0_m_rqToPQ_data_0_BIT_3_1_m_ETC__q13 =
+	  CASE_m_rqToPQ_deqP_0_m_rqToPQ_data_0_BIT_3_1_m_ETC__q22 =
 	      m_rqToPQ_data_1[3];
     endcase
   end
@@ -2762,10 +2598,10 @@ module mkIBankWrapper(CLK,
   begin
     case (m_rqToPQ_deqP)
       1'd0:
-	  CASE_m_rqToPQ_deqP_0_m_rqToPQ_data_0_BITS_2_TO_ETC__q14 =
+	  CASE_m_rqToPQ_deqP_0_m_rqToPQ_data_0_BITS_2_TO_ETC__q23 =
 	      m_rqToPQ_data_0[2:0];
       1'd1:
-	  CASE_m_rqToPQ_deqP_0_m_rqToPQ_data_0_BITS_2_TO_ETC__q14 =
+	  CASE_m_rqToPQ_deqP_0_m_rqToPQ_data_0_BITS_2_TO_ETC__q23 =
 	      m_rqToPQ_data_1[2:0];
     endcase
   end
@@ -2773,10 +2609,10 @@ module mkIBankWrapper(CLK,
   begin
     case (m_rqToPQ_deqP)
       1'd0:
-	  CASE_m_rqToPQ_deqP_0_m_rqToPQ_data_0_BITS_71_T_ETC__q15 =
+	  CASE_m_rqToPQ_deqP_0_m_rqToPQ_data_0_BITS_71_T_ETC__q24 =
 	      m_rqToPQ_data_0[71:8];
       1'd1:
-	  CASE_m_rqToPQ_deqP_0_m_rqToPQ_data_0_BITS_71_T_ETC__q15 =
+	  CASE_m_rqToPQ_deqP_0_m_rqToPQ_data_0_BITS_71_T_ETC__q24 =
 	      m_rqToPQ_data_1[71:8];
     endcase
   end
@@ -2784,10 +2620,10 @@ module mkIBankWrapper(CLK,
   begin
     case (m_rqToPQ_deqP)
       1'd0:
-	  CASE_m_rqToPQ_deqP_0_m_rqToPQ_data_0_BITS_7_TO_ETC__q16 =
+	  CASE_m_rqToPQ_deqP_0_m_rqToPQ_data_0_BITS_7_TO_ETC__q25 =
 	      m_rqToPQ_data_0[7:6];
       1'd1:
-	  CASE_m_rqToPQ_deqP_0_m_rqToPQ_data_0_BITS_7_TO_ETC__q16 =
+	  CASE_m_rqToPQ_deqP_0_m_rqToPQ_data_0_BITS_7_TO_ETC__q25 =
 	      m_rqToPQ_data_1[7:6];
     endcase
   end
@@ -2795,10 +2631,10 @@ module mkIBankWrapper(CLK,
   begin
     case (m_fromPQ_deqP)
       1'd0:
-	  CASE_m_fromPQ_deqP_0_NOT_m_fromPQ_data_0_BIT_5_ETC__q17 =
+	  CASE_m_fromPQ_deqP_0_NOT_m_fromPQ_data_0_BIT_5_ETC__q26 =
 	      !m_fromPQ_data_0[582];
       1'd1:
-	  CASE_m_fromPQ_deqP_0_NOT_m_fromPQ_data_0_BIT_5_ETC__q17 =
+	  CASE_m_fromPQ_deqP_0_NOT_m_fromPQ_data_0_BIT_5_ETC__q26 =
 	      !m_fromPQ_data_1[582];
     endcase
   end
@@ -2806,21 +2642,127 @@ module mkIBankWrapper(CLK,
   begin
     case (m_fromPQ_deqP)
       1'd0:
-	  CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BIT_582_1_ETC__q18 =
+	  CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BIT_582_1_ETC__q27 =
 	      m_fromPQ_data_0[582];
       1'd1:
-	  CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BIT_582_1_ETC__q18 =
+	  CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BIT_582_1_ETC__q27 =
 	      m_fromPQ_data_1[582];
+    endcase
+  end
+  always@(sel__h52130 or m_pipeline$first)
+  begin
+    case (sel__h52130)
+      4'd0:
+	  CASE_sel2130_0_m_pipelinefirst_BITS_31_TO_0_1_ETC__q28 =
+	      m_pipeline$first[31:0];
+      4'd1:
+	  CASE_sel2130_0_m_pipelinefirst_BITS_31_TO_0_1_ETC__q28 =
+	      m_pipeline$first[63:32];
+      4'd2:
+	  CASE_sel2130_0_m_pipelinefirst_BITS_31_TO_0_1_ETC__q28 =
+	      m_pipeline$first[95:64];
+      4'd3:
+	  CASE_sel2130_0_m_pipelinefirst_BITS_31_TO_0_1_ETC__q28 =
+	      m_pipeline$first[127:96];
+      4'd4:
+	  CASE_sel2130_0_m_pipelinefirst_BITS_31_TO_0_1_ETC__q28 =
+	      m_pipeline$first[159:128];
+      4'd5:
+	  CASE_sel2130_0_m_pipelinefirst_BITS_31_TO_0_1_ETC__q28 =
+	      m_pipeline$first[191:160];
+      4'd6:
+	  CASE_sel2130_0_m_pipelinefirst_BITS_31_TO_0_1_ETC__q28 =
+	      m_pipeline$first[223:192];
+      4'd7:
+	  CASE_sel2130_0_m_pipelinefirst_BITS_31_TO_0_1_ETC__q28 =
+	      m_pipeline$first[255:224];
+      4'd8:
+	  CASE_sel2130_0_m_pipelinefirst_BITS_31_TO_0_1_ETC__q28 =
+	      m_pipeline$first[287:256];
+      4'd9:
+	  CASE_sel2130_0_m_pipelinefirst_BITS_31_TO_0_1_ETC__q28 =
+	      m_pipeline$first[319:288];
+      4'd10:
+	  CASE_sel2130_0_m_pipelinefirst_BITS_31_TO_0_1_ETC__q28 =
+	      m_pipeline$first[351:320];
+      4'd11:
+	  CASE_sel2130_0_m_pipelinefirst_BITS_31_TO_0_1_ETC__q28 =
+	      m_pipeline$first[383:352];
+      4'd12:
+	  CASE_sel2130_0_m_pipelinefirst_BITS_31_TO_0_1_ETC__q28 =
+	      m_pipeline$first[415:384];
+      4'd13:
+	  CASE_sel2130_0_m_pipelinefirst_BITS_31_TO_0_1_ETC__q28 =
+	      m_pipeline$first[447:416];
+      4'd14:
+	  CASE_sel2130_0_m_pipelinefirst_BITS_31_TO_0_1_ETC__q28 =
+	      m_pipeline$first[479:448];
+      4'd15:
+	  CASE_sel2130_0_m_pipelinefirst_BITS_31_TO_0_1_ETC__q28 =
+	      m_pipeline$first[511:480];
+    endcase
+  end
+  always@(m_cRqMshr$pipelineResp_getRq or m_pipeline$first)
+  begin
+    case (m_cRqMshr$pipelineResp_getRq[5:2])
+      4'd0:
+	  CASE_m_cRqMshrpipelineResp_getRq_BITS_5_TO_2__ETC__q29 =
+	      m_pipeline$first[31:0];
+      4'd1:
+	  CASE_m_cRqMshrpipelineResp_getRq_BITS_5_TO_2__ETC__q29 =
+	      m_pipeline$first[63:32];
+      4'd2:
+	  CASE_m_cRqMshrpipelineResp_getRq_BITS_5_TO_2__ETC__q29 =
+	      m_pipeline$first[95:64];
+      4'd3:
+	  CASE_m_cRqMshrpipelineResp_getRq_BITS_5_TO_2__ETC__q29 =
+	      m_pipeline$first[127:96];
+      4'd4:
+	  CASE_m_cRqMshrpipelineResp_getRq_BITS_5_TO_2__ETC__q29 =
+	      m_pipeline$first[159:128];
+      4'd5:
+	  CASE_m_cRqMshrpipelineResp_getRq_BITS_5_TO_2__ETC__q29 =
+	      m_pipeline$first[191:160];
+      4'd6:
+	  CASE_m_cRqMshrpipelineResp_getRq_BITS_5_TO_2__ETC__q29 =
+	      m_pipeline$first[223:192];
+      4'd7:
+	  CASE_m_cRqMshrpipelineResp_getRq_BITS_5_TO_2__ETC__q29 =
+	      m_pipeline$first[255:224];
+      4'd8:
+	  CASE_m_cRqMshrpipelineResp_getRq_BITS_5_TO_2__ETC__q29 =
+	      m_pipeline$first[287:256];
+      4'd9:
+	  CASE_m_cRqMshrpipelineResp_getRq_BITS_5_TO_2__ETC__q29 =
+	      m_pipeline$first[319:288];
+      4'd10:
+	  CASE_m_cRqMshrpipelineResp_getRq_BITS_5_TO_2__ETC__q29 =
+	      m_pipeline$first[351:320];
+      4'd11:
+	  CASE_m_cRqMshrpipelineResp_getRq_BITS_5_TO_2__ETC__q29 =
+	      m_pipeline$first[383:352];
+      4'd12:
+	  CASE_m_cRqMshrpipelineResp_getRq_BITS_5_TO_2__ETC__q29 =
+	      m_pipeline$first[415:384];
+      4'd13:
+	  CASE_m_cRqMshrpipelineResp_getRq_BITS_5_TO_2__ETC__q29 =
+	      m_pipeline$first[447:416];
+      4'd14:
+	  CASE_m_cRqMshrpipelineResp_getRq_BITS_5_TO_2__ETC__q29 =
+	      m_pipeline$first[479:448];
+      4'd15:
+	  CASE_m_cRqMshrpipelineResp_getRq_BITS_5_TO_2__ETC__q29 =
+	      m_pipeline$first[511:480];
     endcase
   end
   always@(m_fromPQ_deqP or m_fromPQ_data_0 or m_fromPQ_data_1)
   begin
     case (m_fromPQ_deqP)
       1'd0:
-	  CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_1_TO_ETC__q19 =
+	  CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_1_TO_ETC__q30 =
 	      m_fromPQ_data_0[1:0];
       1'd1:
-	  CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_1_TO_ETC__q19 =
+	  CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_1_TO_ETC__q30 =
 	      m_fromPQ_data_1[1:0];
     endcase
   end
@@ -2828,10 +2770,10 @@ module mkIBankWrapper(CLK,
   begin
     case (m_fromPQ_deqP)
       1'd0:
-	  CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_517__ETC__q20 =
+	  CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_517__ETC__q31 =
 	      m_fromPQ_data_0[517:516];
       1'd1:
-	  CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_517__ETC__q20 =
+	  CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_517__ETC__q31 =
 	      m_fromPQ_data_1[517:516];
     endcase
   end
@@ -2839,10 +2781,10 @@ module mkIBankWrapper(CLK,
   begin
     case (m_fromPQ_deqP)
       1'd0:
-	  CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BIT_515_1_ETC__q21 =
+	  CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BIT_515_1_ETC__q32 =
 	      m_fromPQ_data_0[515];
       1'd1:
-	  CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BIT_515_1_ETC__q21 =
+	  CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BIT_515_1_ETC__q32 =
 	      m_fromPQ_data_1[515];
     endcase
   end
@@ -3012,510 +2954,74 @@ module mkIBankWrapper(CLK,
   begin
     #0;
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_cRq)
-	begin
-	  v__h49980 = $time;
-	  #0;
-	end
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_cRq)
-	$write("%t I %m sendRsToP: ", v__h49980);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_cRq)
-	$write("tagged CRq ", "'h%h", m_rsToPIndexQ$D_OUT[2:0]);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_cRq) $write(" ; ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_cRq) $write("ProcRqToI { ", "addr: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_cRq)
-	$write("'h%h", m_cRqMshr$sendRsToP_cRq_getRq, " }");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_cRq) $write(" ; ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_cRq) $write("ICRqSlot { ", "way: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_cRq)
-	$write("'h%h", m_cRqMshr$sendRsToP_cRq_getSlot[55:53]);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_cRq) $write(", ", "repTag: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_cRq)
-	$write("'h%h", m_cRqMshr$sendRsToP_cRq_getSlot[52:1]);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_cRq) $write(", ", "waitP: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_cRq && m_cRqMshr$sendRsToP_cRq_getSlot[0])
-	$write("True");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_cRq && !m_cRqMshr$sendRsToP_cRq_getSlot[0])
-	$write("False");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_cRq) $write(" }");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_cRq) $write(" ; ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_cRq) $write("CRsMsg { ", "addr: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_cRq) $write("'h%h", resp_addr__h49820);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_cRq) $write(", ", "toState: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_cRq) $write("I");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_cRq) $write(", ", "data: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_cRq) $write("tagged Invalid ", "");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_cRq) $write(", ", "child: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_cRq) $write("", " }");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_cRq) $write("\n");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRqToP)
-	begin
-	  v__h50688 = $time;
-	  #0;
-	end
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRqToP) $write("%t I %m sendRqToP: ", v__h50688);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRqToP) $write("'h%h", m_rqToPIndexQ$D_OUT);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRqToP) $write(" ; ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRqToP) $write("ProcRqToI { ", "addr: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRqToP)
-	$write("'h%h", m_cRqMshr$sendRqToP_getRq, " }");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRqToP) $write(" ; ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRqToP) $write("ICRqSlot { ", "way: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRqToP)
-	$write("'h%h", m_cRqMshr$sendRqToP_getSlot[55:53]);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRqToP) $write(", ", "repTag: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRqToP)
-	$write("'h%h", m_cRqMshr$sendRqToP_getSlot[52:1]);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRqToP) $write(", ", "waitP: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRqToP && m_cRqMshr$sendRqToP_getSlot[0])
-	$write("True");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRqToP && !m_cRqMshr$sendRqToP_getSlot[0])
-	$write("False");
-    if (RST_N != `BSV_RESET_VALUE) if (WILL_FIRE_RL_m_sendRqToP) $write(" }");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRqToP) $write(" ; ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRqToP) $write("CRqMsg { ", "addr: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRqToP) $write("'h%h", m_cRqMshr$sendRqToP_getRq);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRqToP) $write(", ", "fromState: ");
-    if (RST_N != `BSV_RESET_VALUE) if (WILL_FIRE_RL_m_sendRqToP) $write("I");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRqToP) $write(", ", "toState: ");
-    if (RST_N != `BSV_RESET_VALUE) if (WILL_FIRE_RL_m_sendRqToP) $write("S");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRqToP) $write(", ", "canUpToE: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRqToP) $write("False");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRqToP) $write(", ", "id: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRqToP)
-	$write("'h%h", m_cRqMshr$sendRqToP_getSlot[55:53]);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRqToP) $write(", ", "child: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRqToP) $write("", " }");
-    if (RST_N != `BSV_RESET_VALUE) if (WILL_FIRE_RL_m_sendRqToP) $write("\n");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq)
-	begin
-	  v__h50873 = $time;
-	  #0;
-	end
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq)
-	$write("%t I %m pipelineResp: ", v__h50873);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq) $write("PipeOut { ", "cmd: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq)
-	$write("tagged L1CRq ", "'h%h", m_pipeline$first[576:574]);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq) $write(", ", "way: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq)
-	$write("'h%h", m_pipeline$first[573:571]);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq) $write(", ", "pRqMiss: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[570])
-	$write("True");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && !m_pipeline$first[570])
-	$write("False");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq) $write(", ", "ram: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq) $write("RamData { ", "info: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq) $write("CacheInfo { ", "tag: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq)
-	$write("'h%h", m_pipeline$first[569:518]);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq) $write(", ", "cs: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq &&
-	  m_pipeline$first[517:516] == 2'd0)
-	$write("I");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq &&
-	  m_pipeline$first[517:516] == 2'd1)
-	$write("S");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq &&
-	  m_pipeline$first[517:516] == 2'd2)
-	$write("E");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq &&
-	  m_pipeline$first[517:516] != 2'd0 &&
-	  m_pipeline$first[517:516] != 2'd1 &&
-	  m_pipeline$first[517:516] != 2'd2)
-	$write("M");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq) $write(", ", "dir: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq) $write("");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq) $write(", ", "owner: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515])
-	$write("tagged Valid ", "'h%h", m_pipeline$first[514:512]);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && !m_pipeline$first[515])
-	$write("tagged Invalid ", "");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq) $write(", ", "other: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq) $write("", " }");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq) $write(", ", "line: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq) $write("<V ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq)
-	$write("'h%h", m_pipeline$first[63:0], " ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq)
-	$write("'h%h", m_pipeline$first[127:64], " ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq)
-	$write("'h%h", m_pipeline$first[191:128], " ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq)
-	$write("'h%h", m_pipeline$first[255:192], " ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq)
-	$write("'h%h", m_pipeline$first[319:256], " ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq)
-	$write("'h%h", m_pipeline$first[383:320], " ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq)
-	$write("'h%h", m_pipeline$first[447:384], " ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq)
-	$write("'h%h", m_pipeline$first[511:448], " ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq) $write("");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq) $write(" >");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq) $write(" }");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq) $write(", ", "repInfo: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq) $write("", " }");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq) $write("\n");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq)
-	begin
-	  v__h52302 = $time;
-	  #0;
-	end
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq)
-	$write("%t I %m pipelineResp: cRq: ", v__h52302);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq)
-	$write("'h%h", m_pipeline$first[576:574]);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq) $write(" ; ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq) $write("ProcRqToI { ", "addr: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq)
-	$write("'h%h", m_cRqMshr$pipelineResp_getRq, " }");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq) $write("\n");
-    if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515] &&
-	  m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691 &&
-	  (!m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659 ||
+	  m_pipeline_first__86_BITS_514_TO_512_91_EQ_m_p_ETC___d613 &&
+	  (!m_pipeline_first__86_BITS_569_TO_518_99_EQ_m_c_ETC___d601 ||
 	   m_pipeline$first[517:516] != 2'd1))
 	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515] &&
-	  m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691 &&
-	  (!m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659 ||
+	  m_pipeline_first__86_BITS_514_TO_512_91_EQ_m_p_ETC___d613 &&
+	  (!m_pipeline_first__86_BITS_569_TO_518_99_EQ_m_c_ETC___d601 ||
 	   m_pipeline$first[517:516] != 2'd1))
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/coherence/src/IBank.bsv\", line 543, column 21\ncRq swapped in by previous cRq, tag must match & cs = S");
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/coherence/src/IBank.bsv\", line 557, column 21\ncRq swapped in by previous cRq, tag must match & cs = S");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515] &&
-	  m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691 &&
-	  (!m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659 ||
+	  m_pipeline_first__86_BITS_514_TO_512_91_EQ_m_p_ETC___d613 &&
+	  (!m_pipeline_first__86_BITS_569_TO_518_99_EQ_m_c_ETC___d601 ||
 	   m_pipeline$first[517:516] != 2'd1))
 	$finish(32'd0);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515] &&
-	  m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691)
-	begin
-	  v__h54025 = $time;
-	  #0;
-	end
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515] &&
-	  m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691)
-	$display("%t I %m pipelineResp: cRq: own by itself, hit", v__h54025);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515] &&
-	  m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691)
-	begin
-	  v__h54065 = $time;
-	  #0;
-	end
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515] &&
-	  m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691)
-	$write("%t I %m pipelineResp: Hit func: ", v__h54065);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515] &&
-	  m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691)
-	$write("'h%h", m_pipeline$first[576:574]);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515] &&
-	  m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691)
-	$write(" ; ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515] &&
-	  m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691)
-	$write("ProcRqToI { ", "addr: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515] &&
-	  m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691)
-	$write("'h%h", m_cRqMshr$pipelineResp_getRq, " }");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515] &&
-	  m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691)
-	$write("\n");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515] &&
-	  m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691 &&
-	  (!m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659 ||
+	  m_pipeline_first__86_BITS_514_TO_512_91_EQ_m_p_ETC___d613 &&
+	  (!m_pipeline_first__86_BITS_569_TO_518_99_EQ_m_c_ETC___d601 ||
 	   m_pipeline$first[517:516] != 2'd1))
 	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515] &&
-	  m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691 &&
-	  (!m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659 ||
+	  m_pipeline_first__86_BITS_514_TO_512_91_EQ_m_p_ETC___d613 &&
+	  (!m_pipeline_first__86_BITS_569_TO_518_99_EQ_m_c_ETC___d601 ||
 	   m_pipeline$first[517:516] != 2'd1))
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/coherence/src/IBank.bsv\", line 415, column 13\ncRqHit but tag or cs incorrect");
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/coherence/src/IBank.bsv\", line 425, column 13\ncRqHit but tag or cs incorrect");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515] &&
-	  m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691 &&
-	  (!m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659 ||
+	  m_pipeline_first__86_BITS_514_TO_512_91_EQ_m_p_ETC___d613 &&
+	  (!m_pipeline_first__86_BITS_569_TO_518_99_EQ_m_c_ETC___d601 ||
 	   m_pipeline$first[517:516] != 2'd1))
 	$finish(32'd0);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515] &&
-	  m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691)
-	begin
-	  v__h56981 = $time;
-	  #0;
-	end
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515] &&
-	  m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691)
-	$write("%t I %m pipelineResp: Hit func: update ram: ", v__h56981);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515] &&
-	  m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691 &&
-	  m_cRqMshr$pipelineResp_getSucc[3])
-	$write("tagged Valid ", "'h%h", m_cRqMshr$pipelineResp_getSucc[2:0]);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515] &&
-	  m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691 &&
-	  !m_cRqMshr$pipelineResp_getSucc[3])
-	$write("tagged Invalid ", "");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515] &&
-	  m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691)
-	$write(" ; ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515] &&
-	  m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691)
-	$write("<V ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515] &&
-	  m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691)
-	$write("tagged Valid ",
-	       "'h%h",
-	       SEL_ARR_m_pipeline_first__44_BITS_31_TO_0_51_m_ETC___d771);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515] &&
-	  m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691)
-	$write(" ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515] &&
-	  m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691 &&
-	  4'd15 - m_cRqMshr$pipelineResp_getRq[5:2] == 4'd0)
-	$write("tagged Invalid ", "");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515] &&
-	  m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691 &&
-	  4'd15 - m_cRqMshr$pipelineResp_getRq[5:2] != 4'd0)
-	$write("tagged Valid ",
-	       "'h%h",
-	       SEL_ARR_m_pipeline_first__44_BITS_31_TO_0_51_m_ETC___d769);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515] &&
-	  m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691)
-	$write(" ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515] &&
-	  m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691)
-	$write("");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515] &&
-	  m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691)
-	$write(" >");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515] &&
-	  m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691)
-	$write("\n");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515] &&
-	  !m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691 &&
+	  !m_pipeline_first__86_BITS_514_TO_512_91_EQ_m_p_ETC___d613 &&
 	  (m_pipeline$first[517:516] != 2'd1 ||
-	   !m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659))
+	   !m_pipeline_first__86_BITS_569_TO_518_99_EQ_m_c_ETC___d601))
 	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515] &&
-	  !m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691 &&
+	  !m_pipeline_first__86_BITS_514_TO_512_91_EQ_m_p_ETC___d613 &&
 	  (m_pipeline$first[517:516] != 2'd1 ||
-	   !m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659))
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/coherence/src/IBank.bsv\", line 529, column 21\ncRq should hit in tag match");
+	   !m_pipeline_first__86_BITS_569_TO_518_99_EQ_m_c_ETC___d601))
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/coherence/src/IBank.bsv\", line 542, column 21\ncRq should hit in tag match");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515] &&
-	  !m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691 &&
+	  !m_pipeline_first__86_BITS_514_TO_512_91_EQ_m_p_ETC___d613 &&
 	  (m_pipeline$first[517:516] != 2'd1 ||
-	   !m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659))
+	   !m_pipeline_first__86_BITS_569_TO_518_99_EQ_m_c_ETC___d601))
 	$finish(32'd0);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515] &&
-	  !m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691 &&
+	  !m_pipeline_first__86_BITS_514_TO_512_91_EQ_m_p_ETC___d613 &&
 	  !m_cRqMshr$pipelineResp_searchEndOfChain[3])
 	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515] &&
-	  !m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691 &&
+	  !m_pipeline_first__86_BITS_514_TO_512_91_EQ_m_p_ETC___d613 &&
 	  !m_cRqMshr$pipelineResp_searchEndOfChain[3])
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/coherence/src/IBank.bsv\", line 532, column 43\ncRq hit on another cRq, cRqEOC must be true");
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/coherence/src/IBank.bsv\", line 545, column 43\ncRq hit on another cRq, cRqEOC must be true");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515] &&
-	  !m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691 &&
+	  !m_pipeline_first__86_BITS_514_TO_512_91_EQ_m_p_ETC___d613 &&
 	  !m_cRqMshr$pipelineResp_searchEndOfChain[3])
 	$finish(32'd0);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515] &&
-	  !m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691)
-	begin
-	  v__h53975 = $time;
-	  #0;
-	end
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515] &&
-	  !m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691)
-	$write("%t I %m pipelineResp: cRq: own by other cRq ", v__h53975);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515] &&
-	  !m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691)
-	$write("'h%h", m_pipeline$first[514:512]);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515] &&
-	  !m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691)
-	$write(", depend on cRq ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515] &&
-	  !m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691 &&
-	  m_cRqMshr$pipelineResp_searchEndOfChain[3])
-	$write("tagged Valid ",
-	       "'h%h",
-	       m_cRqMshr$pipelineResp_searchEndOfChain[2:0]);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515] &&
-	  !m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691 &&
-	  !m_cRqMshr$pipelineResp_searchEndOfChain[3])
-	$write("tagged Invalid ", "");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && m_pipeline$first[515] &&
-	  !m_pipeline_first__44_BITS_514_TO_512_49_EQ_m_p_ETC___d691)
-	$write("\n");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && !m_pipeline$first[515] &&
-	  m_cRqMshr$pipelineResp_searchEndOfChain[3])
-	begin
-	  v__h52754 = $time;
-	  #0;
-	end
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && !m_pipeline$first[515] &&
-	  m_cRqMshr$pipelineResp_searchEndOfChain[3])
-	$write("%t I %m pipelineResp: cRq: no owner, depend on cRq ",
-	       v__h52754);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && !m_pipeline$first[515] &&
-	  m_cRqMshr$pipelineResp_searchEndOfChain[3])
-	$write("'h%h", m_cRqMshr$pipelineResp_searchEndOfChain[2:0]);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && !m_pipeline$first[515] &&
-	  m_cRqMshr$pipelineResp_searchEndOfChain[3])
-	$write("\n");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && !m_pipeline$first[515] &&
-	  !m_cRqMshr$pipelineResp_searchEndOfChain[3] &&
-	  m_pipeline$first[517:516] == 2'd0)
-	begin
-	  v__h52824 = $time;
-	  #0;
-	end
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && !m_pipeline$first[515] &&
-	  !m_cRqMshr$pipelineResp_searchEndOfChain[3] &&
-	  m_pipeline$first[517:516] == 2'd0)
-	$display("%t I %m pipelineResp: cRq: no owner, miss no replace",
-		 v__h52824);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_pipelineResp_cRq && !m_pipeline$first[515] &&
 	  !m_cRqMshr$pipelineResp_searchEndOfChain[3] &&
@@ -3527,7 +3033,7 @@ module mkIBankWrapper(CLK,
 	  !m_cRqMshr$pipelineResp_searchEndOfChain[3] &&
 	  m_pipeline$first[517:516] == 2'd0 &&
 	  m_cRqMshr$pipelineResp_getSlot[0])
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/coherence/src/IBank.bsv\", line 464, column 56\nwaitP must be false and cs must be I");
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/coherence/src/IBank.bsv\", line 477, column 56\nwaitP must be false and cs must be I");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_pipelineResp_cRq && !m_pipeline$first[515] &&
 	  !m_cRqMshr$pipelineResp_searchEndOfChain[3] &&
@@ -3536,508 +3042,67 @@ module mkIBankWrapper(CLK,
 	$finish(32'd0);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_pipelineResp_cRq && !m_pipeline$first[515] &&
-	  !m_cRqMshr$pipelineResp_searchEndOfChain[3] &&
-	  m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659 &&
-	  m_pipeline$first[517:516] != 2'd0)
-	begin
-	  v__h52791 = $time;
-	  #0;
-	end
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && !m_pipeline$first[515] &&
-	  !m_cRqMshr$pipelineResp_searchEndOfChain[3] &&
-	  m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659 &&
-	  m_pipeline$first[517:516] != 2'd0)
-	$display("%t I %m pipelineResp: cRq: no owner, hit", v__h52791);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && !m_pipeline$first[515] &&
-	  !m_cRqMshr$pipelineResp_searchEndOfChain[3] &&
-	  m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659 &&
-	  m_pipeline$first[517:516] != 2'd0)
-	begin
-	  v__h57232 = $time;
-	  #0;
-	end
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && !m_pipeline$first[515] &&
-	  !m_cRqMshr$pipelineResp_searchEndOfChain[3] &&
-	  m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659 &&
-	  m_pipeline$first[517:516] != 2'd0)
-	$write("%t I %m pipelineResp: Hit func: ", v__h57232);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && !m_pipeline$first[515] &&
-	  !m_cRqMshr$pipelineResp_searchEndOfChain[3] &&
-	  m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659 &&
-	  m_pipeline$first[517:516] != 2'd0)
-	$write("'h%h", m_pipeline$first[576:574]);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && !m_pipeline$first[515] &&
-	  !m_cRqMshr$pipelineResp_searchEndOfChain[3] &&
-	  m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659 &&
-	  m_pipeline$first[517:516] != 2'd0)
-	$write(" ; ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && !m_pipeline$first[515] &&
-	  !m_cRqMshr$pipelineResp_searchEndOfChain[3] &&
-	  m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659 &&
-	  m_pipeline$first[517:516] != 2'd0)
-	$write("ProcRqToI { ", "addr: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && !m_pipeline$first[515] &&
-	  !m_cRqMshr$pipelineResp_searchEndOfChain[3] &&
-	  m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659 &&
-	  m_pipeline$first[517:516] != 2'd0)
-	$write("'h%h", m_cRqMshr$pipelineResp_getRq, " }");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && !m_pipeline$first[515] &&
-	  !m_cRqMshr$pipelineResp_searchEndOfChain[3] &&
-	  m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659 &&
-	  m_pipeline$first[517:516] != 2'd0)
-	$write("\n");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && !m_pipeline$first[515] &&
-	  NOT_m_cRqMshr_pipelineResp_searchEndOfChain_m__ETC___d817)
+	  NOT_m_cRqMshr_pipelineResp_searchEndOfChain_m__ETC___d725)
 	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_pipelineResp_cRq && !m_pipeline$first[515] &&
-	  NOT_m_cRqMshr_pipelineResp_searchEndOfChain_m__ETC___d817)
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/coherence/src/IBank.bsv\", line 415, column 13\ncRqHit but tag or cs incorrect");
+	  NOT_m_cRqMshr_pipelineResp_searchEndOfChain_m__ETC___d725)
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/coherence/src/IBank.bsv\", line 425, column 13\ncRqHit but tag or cs incorrect");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_pipelineResp_cRq && !m_pipeline$first[515] &&
-	  NOT_m_cRqMshr_pipelineResp_searchEndOfChain_m__ETC___d817)
+	  NOT_m_cRqMshr_pipelineResp_searchEndOfChain_m__ETC___d725)
 	$finish(32'd0);
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && !m_pipeline$first[515] &&
-	  !m_cRqMshr$pipelineResp_searchEndOfChain[3] &&
-	  m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659 &&
-	  m_pipeline$first[517:516] != 2'd0)
-	begin
-	  v__h60116 = $time;
-	  #0;
-	end
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && !m_pipeline$first[515] &&
-	  !m_cRqMshr$pipelineResp_searchEndOfChain[3] &&
-	  m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659 &&
-	  m_pipeline$first[517:516] != 2'd0)
-	$write("%t I %m pipelineResp: Hit func: update ram: ", v__h60116);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && !m_pipeline$first[515] &&
-	  !m_cRqMshr$pipelineResp_searchEndOfChain[3] &&
-	  m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659 &&
-	  m_pipeline$first[517:516] != 2'd0 &&
-	  m_cRqMshr$pipelineResp_getSucc[3])
-	$write("tagged Valid ", "'h%h", m_cRqMshr$pipelineResp_getSucc[2:0]);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && !m_pipeline$first[515] &&
-	  !m_cRqMshr$pipelineResp_searchEndOfChain[3] &&
-	  m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659 &&
-	  m_pipeline$first[517:516] != 2'd0 &&
-	  !m_cRqMshr$pipelineResp_getSucc[3])
-	$write("tagged Invalid ", "");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && !m_pipeline$first[515] &&
-	  !m_cRqMshr$pipelineResp_searchEndOfChain[3] &&
-	  m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659 &&
-	  m_pipeline$first[517:516] != 2'd0)
-	$write(" ; ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && !m_pipeline$first[515] &&
-	  !m_cRqMshr$pipelineResp_searchEndOfChain[3] &&
-	  m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659 &&
-	  m_pipeline$first[517:516] != 2'd0)
-	$write("<V ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && !m_pipeline$first[515] &&
-	  !m_cRqMshr$pipelineResp_searchEndOfChain[3] &&
-	  m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659 &&
-	  m_pipeline$first[517:516] != 2'd0)
-	$write("tagged Valid ",
-	       "'h%h",
-	       SEL_ARR_m_pipeline_first__44_BITS_31_TO_0_51_m_ETC___d771);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && !m_pipeline$first[515] &&
-	  !m_cRqMshr$pipelineResp_searchEndOfChain[3] &&
-	  m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659 &&
-	  m_pipeline$first[517:516] != 2'd0)
-	$write(" ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && !m_pipeline$first[515] &&
-	  !m_cRqMshr$pipelineResp_searchEndOfChain[3] &&
-	  m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659 &&
-	  m_pipeline$first[517:516] != 2'd0 &&
-	  4'd15 - m_cRqMshr$pipelineResp_getRq[5:2] == 4'd0)
-	$write("tagged Invalid ", "");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && !m_pipeline$first[515] &&
-	  !m_cRqMshr$pipelineResp_searchEndOfChain[3] &&
-	  m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659 &&
-	  m_pipeline$first[517:516] != 2'd0 &&
-	  4'd15 - m_cRqMshr$pipelineResp_getRq[5:2] != 4'd0)
-	$write("tagged Valid ",
-	       "'h%h",
-	       SEL_ARR_m_pipeline_first__44_BITS_31_TO_0_51_m_ETC___d769);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && !m_pipeline$first[515] &&
-	  !m_cRqMshr$pipelineResp_searchEndOfChain[3] &&
-	  m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659 &&
-	  m_pipeline$first[517:516] != 2'd0)
-	$write(" ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && !m_pipeline$first[515] &&
-	  !m_cRqMshr$pipelineResp_searchEndOfChain[3] &&
-	  m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659 &&
-	  m_pipeline$first[517:516] != 2'd0)
-	$write("");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && !m_pipeline$first[515] &&
-	  !m_cRqMshr$pipelineResp_searchEndOfChain[3] &&
-	  m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659 &&
-	  m_pipeline$first[517:516] != 2'd0)
-	$write(" >");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && !m_pipeline$first[515] &&
-	  !m_cRqMshr$pipelineResp_searchEndOfChain[3] &&
-	  m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659 &&
-	  m_pipeline$first[517:516] != 2'd0)
-	$write("\n");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && !m_pipeline$first[515] &&
-	  !m_cRqMshr$pipelineResp_searchEndOfChain[3] &&
-	  m_pipeline$first[517:516] != 2'd0 &&
-	  !m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659)
-	begin
-	  v__h52858 = $time;
-	  #0;
-	end
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_cRq && !m_pipeline$first[515] &&
-	  !m_cRqMshr$pipelineResp_searchEndOfChain[3] &&
-	  m_pipeline$first[517:516] != 2'd0 &&
-	  !m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659)
-	$display("%t I %m pipelineResp: cRq: no owner, replace", v__h52858);
-    if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_pipelineResp_cRq &&
-	  NOT_m_pipeline_first__44_BIT_515_45_81_AND_NOT_ETC___d841)
+	  NOT_m_pipeline_first__86_BIT_515_87_66_AND_NOT_ETC___d730)
 	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_pipelineResp_cRq &&
-	  NOT_m_pipeline_first__44_BIT_515_45_81_AND_NOT_ETC___d841)
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/coherence/src/IBank.bsv\", line 502, column 40\nI$ replacement only replace S line");
+	  NOT_m_pipeline_first__86_BIT_515_87_66_AND_NOT_ETC___d730)
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/coherence/src/IBank.bsv\", line 515, column 40\nI$ replacement only replace S line");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_pipelineResp_cRq &&
-	  NOT_m_pipeline_first__44_BIT_515_45_81_AND_NOT_ETC___d841)
+	  NOT_m_pipeline_first__86_BIT_515_87_66_AND_NOT_ETC___d730)
 	$finish(32'd0);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs)
-	begin
-	  v__h62402 = $time;
-	  #0;
-	end
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs)
-	$write("%t I %m pipelineResp: ", v__h62402);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs) $write("PipeOut { ", "cmd: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs) $write("tagged L1PRs ", "");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs) $write(", ", "way: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs)
-	$write("'h%h", m_pipeline$first[573:571]);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs) $write(", ", "pRqMiss: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs && m_pipeline$first[570])
-	$write("True");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs && !m_pipeline$first[570])
-	$write("False");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs) $write(", ", "ram: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs) $write("RamData { ", "info: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs) $write("CacheInfo { ", "tag: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs)
-	$write("'h%h", m_pipeline$first[569:518]);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs) $write(", ", "cs: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs &&
-	  m_pipeline$first[517:516] == 2'd0)
-	$write("I");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs &&
-	  m_pipeline$first[517:516] == 2'd1)
-	$write("S");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs &&
-	  m_pipeline$first[517:516] == 2'd2)
-	$write("E");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs &&
-	  m_pipeline$first[517:516] != 2'd0 &&
-	  m_pipeline$first[517:516] != 2'd1 &&
-	  m_pipeline$first[517:516] != 2'd2)
-	$write("M");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs) $write(", ", "dir: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs) $write("");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs) $write(", ", "owner: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs && m_pipeline$first[515])
-	$write("tagged Valid ", "'h%h", m_pipeline$first[514:512]);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs && !m_pipeline$first[515])
-	$write("tagged Invalid ", "");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs) $write(", ", "other: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs) $write("", " }");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs) $write(", ", "line: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs) $write("<V ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs)
-	$write("'h%h", m_pipeline$first[63:0], " ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs)
-	$write("'h%h", m_pipeline$first[127:64], " ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs)
-	$write("'h%h", m_pipeline$first[191:128], " ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs)
-	$write("'h%h", m_pipeline$first[255:192], " ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs)
-	$write("'h%h", m_pipeline$first[319:256], " ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs)
-	$write("'h%h", m_pipeline$first[383:320], " ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs)
-	$write("'h%h", m_pipeline$first[447:384], " ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs)
-	$write("'h%h", m_pipeline$first[511:448], " ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs) $write("");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs) $write(" >");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs) $write(" }");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs) $write(", ", "repInfo: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs) $write("", " }");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs) $write("\n");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs)
-	begin
-	  v__h63375 = $time;
-	  #0;
-	end
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs)
-	$display("%t I %m pipelineResp: pRs: ", v__h63375);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_pipelineResp_pRs && m_pipeline$first[515] &&
 	  (m_pipeline$first[517:516] != 2'd1 ||
-	   !m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659))
+	   !m_pipeline_first__86_BITS_569_TO_518_99_EQ_m_c_ETC___d601))
 	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_pipelineResp_pRs && m_pipeline$first[515] &&
 	  (m_pipeline$first[517:516] != 2'd1 ||
-	   !m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659))
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/coherence/src/IBank.bsv\", line 583, column 17\npRs must be a hit");
+	   !m_pipeline_first__86_BITS_569_TO_518_99_EQ_m_c_ETC___d601))
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/coherence/src/IBank.bsv\", line 604, column 17\npRs must be a hit");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_pipelineResp_pRs && m_pipeline$first[515] &&
 	  (m_pipeline$first[517:516] != 2'd1 ||
-	   !m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659))
+	   !m_pipeline_first__86_BITS_569_TO_518_99_EQ_m_c_ETC___d601))
 	$finish(32'd0);
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs && m_pipeline$first[515])
-	begin
-	  v__h63602 = $time;
-	  #0;
-	end
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs && m_pipeline$first[515])
-	$write("%t I %m pipelineResp: Hit func: ", v__h63602);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs && m_pipeline$first[515])
-	$write("'h%h", m_pipeline$first[514:512]);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs && m_pipeline$first[515])
-	$write(" ; ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs && m_pipeline$first[515])
-	$write("ProcRqToI { ", "addr: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs && m_pipeline$first[515])
-	$write("'h%h", m_cRqMshr$pipelineResp_getRq, " }");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs && m_pipeline$first[515])
-	$write("\n");
-    if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_pipelineResp_pRs && m_pipeline$first[515] &&
-	  (!m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659 ||
+	  (!m_pipeline_first__86_BITS_569_TO_518_99_EQ_m_c_ETC___d601 ||
 	   m_pipeline$first[517:516] != 2'd1))
 	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_pipelineResp_pRs && m_pipeline$first[515] &&
-	  (!m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659 ||
+	  (!m_pipeline_first__86_BITS_569_TO_518_99_EQ_m_c_ETC___d601 ||
 	   m_pipeline$first[517:516] != 2'd1))
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/coherence/src/IBank.bsv\", line 415, column 13\ncRqHit but tag or cs incorrect");
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/coherence/src/IBank.bsv\", line 425, column 13\ncRqHit but tag or cs incorrect");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_pipelineResp_pRs && m_pipeline$first[515] &&
-	  (!m_pipeline_first__44_BITS_569_TO_518_57_EQ_m_c_ETC___d659 ||
+	  (!m_pipeline_first__86_BITS_569_TO_518_99_EQ_m_c_ETC___d601 ||
 	   m_pipeline$first[517:516] != 2'd1))
 	$finish(32'd0);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs && m_pipeline$first[515])
-	begin
-	  v__h66489 = $time;
-	  #0;
-	end
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs && m_pipeline$first[515])
-	$write("%t I %m pipelineResp: Hit func: update ram: ", v__h66489);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs && m_pipeline$first[515] &&
-	  m_cRqMshr$pipelineResp_getSucc[3])
-	$write("tagged Valid ", "'h%h", m_cRqMshr$pipelineResp_getSucc[2:0]);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs && m_pipeline$first[515] &&
-	  !m_cRqMshr$pipelineResp_getSucc[3])
-	$write("tagged Invalid ", "");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs && m_pipeline$first[515])
-	$write(" ; ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs && m_pipeline$first[515])
-	$write("<V ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs && m_pipeline$first[515])
-	$write("tagged Valid ",
-	       "'h%h",
-	       SEL_ARR_m_pipeline_first__44_BITS_31_TO_0_51_m_ETC___d771);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs && m_pipeline$first[515])
-	$write(" ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs && m_pipeline$first[515] &&
-	  4'd15 - m_cRqMshr$pipelineResp_getRq[5:2] == 4'd0)
-	$write("tagged Invalid ", "");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs && m_pipeline$first[515] &&
-	  4'd15 - m_cRqMshr$pipelineResp_getRq[5:2] != 4'd0)
-	$write("tagged Valid ",
-	       "'h%h",
-	       SEL_ARR_m_pipeline_first__44_BITS_31_TO_0_51_m_ETC___d769);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs && m_pipeline$first[515])
-	$write(" ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs && m_pipeline$first[515])
-	$write("");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs && m_pipeline$first[515])
-	$write(" >");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRs && m_pipeline$first[515])
-	$write("\n");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_pipelineResp_pRs && !m_pipeline$first[515])
 	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_pipelineResp_pRs && !m_pipeline$first[515])
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/coherence/src/IBank.bsv\", line 592, column 30\npRs owner must match some cRq");
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/coherence/src/IBank.bsv\", line 613, column 30\npRs owner must match some cRq");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_pipelineResp_pRs && !m_pipeline$first[515])
 	$finish(32'd0);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (EN_to_proc_resp_get)
-	begin
-	  v__h73300 = $time;
-	  #0;
-	end
-    if (RST_N != `BSV_RESET_VALUE)
-      if (EN_to_proc_resp_get) $write("%t I %m sendRsToC: ", v__h73300);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (EN_to_proc_resp_get) $write("'h%h", m_cRqIndexQ$D_OUT);
-    if (RST_N != `BSV_RESET_VALUE) if (EN_to_proc_resp_get) $write(" ; ");
-    if (RST_N != `BSV_RESET_VALUE) if (EN_to_proc_resp_get) $write("<V ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (EN_to_proc_resp_get && m_cRqMshr$sendRsToC_getResult[32])
-	$write("tagged Valid ", "'h%h", m_cRqMshr$sendRsToC_getResult[31:0]);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (EN_to_proc_resp_get && !m_cRqMshr$sendRsToC_getResult[32])
-	$write("tagged Invalid ", "");
-    if (RST_N != `BSV_RESET_VALUE) if (EN_to_proc_resp_get) $write(" ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (EN_to_proc_resp_get && m_cRqMshr$sendRsToC_getResult[65])
-	$write("tagged Valid ", "'h%h", m_cRqMshr$sendRsToC_getResult[64:33]);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (EN_to_proc_resp_get && !m_cRqMshr$sendRsToC_getResult[65])
-	$write("tagged Invalid ", "");
-    if (RST_N != `BSV_RESET_VALUE) if (EN_to_proc_resp_get) $write(" ");
-    if (RST_N != `BSV_RESET_VALUE) if (EN_to_proc_resp_get) $write("");
-    if (RST_N != `BSV_RESET_VALUE) if (EN_to_proc_resp_get) $write(" >");
-    if (RST_N != `BSV_RESET_VALUE) if (EN_to_proc_resp_get) $write("\n");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRq)
-	begin
-	  v__h66724 = $time;
-	  #0;
-	end
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRq)
-	$write("%t I %m pipelineResp: pRq: ", v__h66724);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRq)
-	$write("'h%h", m_pipeline$first[575:574]);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRq) $write(" ; ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRq) $write("PRqMsg { ", "addr: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRq)
-	$write("'h%h", m_pRqMshr$pipelineResp_getRq[65:2]);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRq) $write(", ", "toState: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRq &&
-	  m_pRqMshr$pipelineResp_getRq[1:0] == 2'd0)
-	$write("I");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRq &&
-	  m_pRqMshr$pipelineResp_getRq[1:0] == 2'd1)
-	$write("S");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRq &&
-	  m_pRqMshr$pipelineResp_getRq[1:0] == 2'd2)
-	$write("E");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRq &&
-	  m_pRqMshr$pipelineResp_getRq[1:0] != 2'd0 &&
-	  m_pRqMshr$pipelineResp_getRq[1:0] != 2'd1 &&
-	  m_pRqMshr$pipelineResp_getRq[1:0] != 2'd2)
-	$write("M");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRq) $write(", ", "child: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRq) $write("", " }");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRq) $write("\n");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_pipelineResp_pRq &&
 	  m_pRqMshr$pipelineResp_getRq[1:0] != 2'd0)
@@ -4045,40 +3110,22 @@ module mkIBankWrapper(CLK,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_pipelineResp_pRq &&
 	  m_pRqMshr$pipelineResp_getRq[1:0] != 2'd0)
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/coherence/src/IBank.bsv\", line 600, column 36\nI$ pRq only downgrade to I");
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/coherence/src/IBank.bsv\", line 622, column 36\nI$ pRq only downgrade to I");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_pipelineResp_pRq &&
 	  m_pRqMshr$pipelineResp_getRq[1:0] != 2'd0)
 	$finish(32'd0);
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRq && m_pipeline$first[570])
-	begin
-	  v__h66940 = $time;
-	  #0;
-	end
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRq && m_pipeline$first[570])
-	$display("%t I %m pipelineResp: pRq: drop", v__h66940);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRq && !m_pipeline$first[570])
-	begin
-	  v__h66973 = $time;
-	  #0;
-	end
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pipelineResp_pRq && !m_pipeline$first[570])
-	$display("%t I %m pipelineResp: pRq: valid process", v__h66973);
-    if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_pipelineResp_pRq &&
-	  NOT_m_pipeline_first__44_BIT_570_73_74_AND_NOT_ETC___d900)
+	  NOT_m_pipeline_first__86_BIT_570_50_68_AND_NOT_ETC___d774)
 	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_pipelineResp_pRq &&
-	  NOT_m_pipeline_first__44_BIT_570_73_74_AND_NOT_ETC___d900)
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/coherence/src/IBank.bsv\", line 617, column 17\npRq should be processed");
+	  NOT_m_pipeline_first__86_BIT_570_50_68_AND_NOT_ETC___d774)
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/coherence/src/IBank.bsv\", line 641, column 17\npRq should be processed");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_pipelineResp_pRq &&
-	  NOT_m_pipeline_first__44_BIT_570_73_74_AND_NOT_ETC___d900)
+	  NOT_m_pipeline_first__86_BIT_570_50_68_AND_NOT_ETC___d774)
 	$finish(32'd0);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_pipelineResp_pRq && !m_pipeline$first[570] &&
@@ -4087,253 +3134,26 @@ module mkIBankWrapper(CLK,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_pipelineResp_pRq && !m_pipeline$first[570] &&
 	  m_pipeline$first[515])
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/coherence/src/IBank.bsv\", line 622, column 49\npRq cannot hit on line owned by anyone");
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/coherence/src/IBank.bsv\", line 646, column 49\npRq cannot hit on line owned by anyone");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_pipelineResp_pRq && !m_pipeline$first[570] &&
 	  m_pipeline$first[515])
 	$finish(32'd0);
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_cRqTransfer)
-	begin
-	  v__h45728 = $time;
-	  #0;
-	end
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_cRqTransfer)
-	$write("%t I %m cRqTransfer: ", v__h45728);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_cRqTransfer)
-	$write("'h%h", m_cRqMshr$getEmptyEntryInit);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_cRqTransfer) $write(" ; ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_cRqTransfer) $write("ProcRqToI { ", "addr: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_cRqTransfer) $write("'h%h", v__h43565, " }");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_cRqTransfer) $write("\n");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRsTransfer)
-	begin
-	  v__h47783 = $time;
-	  #0;
-	end
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRsTransfer)
-	$write("%t I %m pRsTransfer: ", v__h47783);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRsTransfer) $write("PRsMsg { ", "addr: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRsTransfer) $write("'h%h", addr__h46216);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRsTransfer) $write(", ", "toState: ");
-    if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_pRsTransfer &&
-	  SEL_ARR_m_fromPQ_data_0_58_BITS_517_TO_516_60__ETC___d565)
-	$write("I");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRsTransfer &&
-	  !SEL_ARR_m_fromPQ_data_0_58_BITS_517_TO_516_60__ETC___d565 &&
-	  SEL_ARR_m_fromPQ_data_0_58_BITS_517_TO_516_60__ETC___d570)
-	$write("S");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRsTransfer &&
-	  !SEL_ARR_m_fromPQ_data_0_58_BITS_517_TO_516_60__ETC___d565 &&
-	  !SEL_ARR_m_fromPQ_data_0_58_BITS_517_TO_516_60__ETC___d570 &&
-	  SEL_ARR_m_fromPQ_data_0_58_BITS_517_TO_516_60__ETC___d576)
-	$write("E");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRsTransfer &&
-	  !SEL_ARR_m_fromPQ_data_0_58_BITS_517_TO_516_60__ETC___d565 &&
-	  !SEL_ARR_m_fromPQ_data_0_58_BITS_517_TO_516_60__ETC___d570 &&
-	  !SEL_ARR_m_fromPQ_data_0_58_BITS_517_TO_516_60__ETC___d576)
-	$write("M");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRsTransfer) $write(", ", "child: ");
-    if (RST_N != `BSV_RESET_VALUE) if (WILL_FIRE_RL_m_pRsTransfer) $write("");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRsTransfer) $write(", ", "data: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRsTransfer &&
-	  SEL_ARR_NOT_m_fromPQ_data_0_58_BIT_515_08_09_N_ETC___d513)
-	$write("tagged Invalid ", "");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRsTransfer &&
-	  !SEL_ARR_NOT_m_fromPQ_data_0_58_BIT_515_08_09_N_ETC___d513)
-	$write("tagged Valid ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRsTransfer &&
-	  SEL_ARR_NOT_m_fromPQ_data_0_58_BIT_515_08_09_N_ETC___d513)
-	$write("");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRsTransfer &&
-	  !SEL_ARR_NOT_m_fromPQ_data_0_58_BIT_515_08_09_N_ETC___d513)
-	$write("<V ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRsTransfer &&
-	  SEL_ARR_NOT_m_fromPQ_data_0_58_BIT_515_08_09_N_ETC___d513)
-	$write("");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRsTransfer &&
-	  !SEL_ARR_NOT_m_fromPQ_data_0_58_BIT_515_08_09_N_ETC___d513)
-	$write("'h%h", value__h48793, " ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRsTransfer &&
-	  SEL_ARR_NOT_m_fromPQ_data_0_58_BIT_515_08_09_N_ETC___d513)
-	$write("");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRsTransfer &&
-	  !SEL_ARR_NOT_m_fromPQ_data_0_58_BIT_515_08_09_N_ETC___d513)
-	$write("'h%h", value__h48884, " ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRsTransfer &&
-	  SEL_ARR_NOT_m_fromPQ_data_0_58_BIT_515_08_09_N_ETC___d513)
-	$write("");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRsTransfer &&
-	  !SEL_ARR_NOT_m_fromPQ_data_0_58_BIT_515_08_09_N_ETC___d513)
-	$write("'h%h", value__h48971, " ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRsTransfer &&
-	  SEL_ARR_NOT_m_fromPQ_data_0_58_BIT_515_08_09_N_ETC___d513)
-	$write("");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRsTransfer &&
-	  !SEL_ARR_NOT_m_fromPQ_data_0_58_BIT_515_08_09_N_ETC___d513)
-	$write("'h%h", value__h49058, " ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRsTransfer &&
-	  SEL_ARR_NOT_m_fromPQ_data_0_58_BIT_515_08_09_N_ETC___d513)
-	$write("");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRsTransfer &&
-	  !SEL_ARR_NOT_m_fromPQ_data_0_58_BIT_515_08_09_N_ETC___d513)
-	$write("'h%h", value__h49145, " ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRsTransfer &&
-	  SEL_ARR_NOT_m_fromPQ_data_0_58_BIT_515_08_09_N_ETC___d513)
-	$write("");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRsTransfer &&
-	  !SEL_ARR_NOT_m_fromPQ_data_0_58_BIT_515_08_09_N_ETC___d513)
-	$write("'h%h", value__h49232, " ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRsTransfer &&
-	  SEL_ARR_NOT_m_fromPQ_data_0_58_BIT_515_08_09_N_ETC___d513)
-	$write("");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRsTransfer &&
-	  !SEL_ARR_NOT_m_fromPQ_data_0_58_BIT_515_08_09_N_ETC___d513)
-	$write("'h%h", value__h49319, " ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRsTransfer &&
-	  SEL_ARR_NOT_m_fromPQ_data_0_58_BIT_515_08_09_N_ETC___d513)
-	$write("");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRsTransfer &&
-	  !SEL_ARR_NOT_m_fromPQ_data_0_58_BIT_515_08_09_N_ETC___d513)
-	$write("'h%h", value__h49406, " ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRsTransfer &&
-	  SEL_ARR_NOT_m_fromPQ_data_0_58_BIT_515_08_09_N_ETC___d513)
-	$write("");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRsTransfer &&
-	  !SEL_ARR_NOT_m_fromPQ_data_0_58_BIT_515_08_09_N_ETC___d513)
-	$write("");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRsTransfer &&
-	  SEL_ARR_NOT_m_fromPQ_data_0_58_BIT_515_08_09_N_ETC___d513)
-	$write("");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRsTransfer &&
-	  !SEL_ARR_NOT_m_fromPQ_data_0_58_BIT_515_08_09_N_ETC___d513)
-	$write(" >");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRsTransfer) $write(", ", "id: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRsTransfer) $write("'h%h", x__h47758, " }");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRsTransfer) $write("\n");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRsTransfer &&
-	  (CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_517__ETC__q20 != 2'd1 ||
-	   !CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BIT_515_1_ETC__q21))
+	  (CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_517__ETC__q31 != 2'd1 ||
+	   !CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BIT_515_1_ETC__q32))
 	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_pRsTransfer &&
-	  (CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_517__ETC__q20 != 2'd1 ||
-	   !CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BIT_515_1_ETC__q21))
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/coherence/src/IBank.bsv\", line 252, column 59\nI$ must upgrade to S with data");
+	  (CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_517__ETC__q31 != 2'd1 ||
+	   !CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BIT_515_1_ETC__q32))
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/coherence/src/IBank.bsv\", line 257, column 59\nI$ must upgrade to S with data");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_pRsTransfer &&
-	  (CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_517__ETC__q20 != 2'd1 ||
-	   !CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BIT_515_1_ETC__q21))
+	  (CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BITS_517__ETC__q31 != 2'd1 ||
+	   !CASE_m_fromPQ_deqP_0_m_fromPQ_data_0_BIT_515_1_ETC__q32))
 	$finish(32'd0);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_pRq)
-	begin
-	  v__h50302 = $time;
-	  #0;
-	end
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_pRq)
-	$write("%t I %m sendRsToP: ", v__h50302);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_pRq)
-	$write("tagged PRq ", "'h%h", m_rsToPIndexQ$D_OUT[1:0]);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_pRq) $write(" ; ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_pRq) $write("PRqMsg { ", "addr: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_pRq)
-	$write("'h%h", m_pRqMshr$sendRsToP_pRq_getRq[65:2]);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_pRq) $write(", ", "toState: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_pRq &&
-	  m_pRqMshr$sendRsToP_pRq_getRq[1:0] == 2'd0)
-	$write("I");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_pRq &&
-	  m_pRqMshr$sendRsToP_pRq_getRq[1:0] == 2'd1)
-	$write("S");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_pRq &&
-	  m_pRqMshr$sendRsToP_pRq_getRq[1:0] == 2'd2)
-	$write("E");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_pRq &&
-	  m_pRqMshr$sendRsToP_pRq_getRq[1:0] != 2'd0 &&
-	  m_pRqMshr$sendRsToP_pRq_getRq[1:0] != 2'd1 &&
-	  m_pRqMshr$sendRsToP_pRq_getRq[1:0] != 2'd2)
-	$write("M");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_pRq) $write(", ", "child: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_pRq) $write("", " }");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_pRq) $write(" ; ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_pRq) $write("CRsMsg { ", "addr: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_pRq)
-	$write("'h%h", m_pRqMshr$sendRsToP_pRq_getRq[65:2]);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_pRq) $write(", ", "toState: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_pRq) $write("I");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_pRq) $write(", ", "data: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_pRq) $write("tagged Invalid ", "");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_pRq) $write(", ", "child: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_pRq) $write("", " }");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_sendRsToP_pRq) $write("\n");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_sendRsToP_pRq &&
 	  m_pRqMshr$sendRsToP_pRq_getRq[1:0] != 2'd0)
@@ -4341,60 +3161,11 @@ module mkIBankWrapper(CLK,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_sendRsToP_pRq &&
 	  m_pRqMshr$sendRsToP_pRq_getRq[1:0] != 2'd0)
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/coherence/src/IBank.bsv\", line 335, column 36\nI$ only has downgrade req to I");
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/coherence/src/IBank.bsv\", line 343, column 36\nI$ only has downgrade req to I");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_m_sendRsToP_pRq &&
 	  m_pRqMshr$sendRsToP_pRq_getRq[1:0] != 2'd0)
 	$finish(32'd0);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRqTransfer)
-	begin
-	  v__h46042 = $time;
-	  #0;
-	end
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRqTransfer)
-	$write("%t I %m pRqTransfer: ", v__h46042);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRqTransfer)
-	$write("'h%h", m_pRqMshr$getEmptyEntryInit);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRqTransfer) $write(" ; ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRqTransfer) $write("PRqMsg { ", "addr: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRqTransfer)
-	$write("'h%h",
-	       SEL_ARR_m_fromPQ_data_0_58_BITS_65_TO_2_67_m_f_ETC___d470);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRqTransfer) $write(", ", "toState: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRqTransfer &&
-	  SEL_ARR_m_fromPQ_data_0_58_BITS_1_TO_0_71_EQ_0_ETC___d483)
-	$write("I");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRqTransfer &&
-	  !SEL_ARR_m_fromPQ_data_0_58_BITS_1_TO_0_71_EQ_0_ETC___d483 &&
-	  SEL_ARR_m_fromPQ_data_0_58_BITS_1_TO_0_71_EQ_1_ETC___d488)
-	$write("S");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRqTransfer &&
-	  !SEL_ARR_m_fromPQ_data_0_58_BITS_1_TO_0_71_EQ_0_ETC___d483 &&
-	  !SEL_ARR_m_fromPQ_data_0_58_BITS_1_TO_0_71_EQ_1_ETC___d488 &&
-	  SEL_ARR_m_fromPQ_data_0_58_BITS_1_TO_0_71_EQ_2_ETC___d494)
-	$write("E");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRqTransfer &&
-	  !SEL_ARR_m_fromPQ_data_0_58_BITS_1_TO_0_71_EQ_0_ETC___d483 &&
-	  !SEL_ARR_m_fromPQ_data_0_58_BITS_1_TO_0_71_EQ_1_ETC___d488 &&
-	  !SEL_ARR_m_fromPQ_data_0_58_BITS_1_TO_0_71_EQ_2_ETC___d494)
-	$write("M");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRqTransfer) $write(", ", "child: ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRqTransfer) $write("", " }");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_pRqTransfer) $write("\n");
   end
   // synopsys translate_on
 endmodule  // mkIBankWrapper

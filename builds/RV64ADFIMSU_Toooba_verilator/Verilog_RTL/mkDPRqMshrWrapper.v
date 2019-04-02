@@ -647,34 +647,29 @@ module mkDPRqMshrWrapper(CLK,
        MUX_m_m_stateVec_2_dummy2_1$write_1__SEL_2,
        MUX_m_m_stateVec_2_dummy_1_0$wset_1__VAL_1,
        MUX_m_m_stateVec_3_dummy2_1$write_1__SEL_1,
-       MUX_m_m_stateVec_3_dummy_1_0$wset_1__SEL_2,
+       MUX_m_m_stateVec_3_dummy2_1$write_1__SEL_2,
        MUX_m_m_stateVec_3_dummy_1_0$wset_1__VAL_1;
 
-  // declarations used by system tasks
-  // synopsys translate_off
-  reg [63 : 0] v__h30608;
-  // synopsys translate_on
-
   // remaining internal signals
-  reg [63 : 0] SEL_ARR_IF_m_m_reqVec_0_dummy2_0_read__15_AND__ETC___d244,
-	       SEL_ARR_IF_m_m_reqVec_0_dummy2_1_read__16_AND__ETC___d314;
-  reg [1 : 0] SEL_ARR_IF_m_m_reqVec_0_dummy2_0_read__15_AND__ETC___d254,
-	      SEL_ARR_IF_m_m_reqVec_0_dummy2_1_read__16_AND__ETC___d328;
-  reg SEL_ARR_m_m_dataValidVec_0_dummy2_0_read__55_A_ETC___d280;
-  wire [63 : 0] n__read_addr__h42445,
-		n__read_addr__h42530,
-		n__read_addr__h42615,
-		n__read_addr__h42700,
-		n__read_addr__h45298,
-		n__read_addr__h45388,
-		n__read_addr__h45478,
-		n__read_addr__h45568;
+  reg [63 : 0] SEL_ARR_IF_m_m_reqVec_0_dummy2_0_read__14_AND__ETC___d243,
+	       SEL_ARR_IF_m_m_reqVec_0_dummy2_1_read__15_AND__ETC___d313;
+  reg [1 : 0] SEL_ARR_IF_m_m_reqVec_0_dummy2_0_read__14_AND__ETC___d253,
+	      SEL_ARR_IF_m_m_reqVec_0_dummy2_1_read__15_AND__ETC___d327;
+  reg SEL_ARR_m_m_dataValidVec_0_dummy2_0_read__54_A_ETC___d279;
+  wire [63 : 0] n__read_addr__h42426,
+		n__read_addr__h42511,
+		n__read_addr__h42596,
+		n__read_addr__h42681,
+		n__read_addr__h45279,
+		n__read_addr__h45369,
+		n__read_addr__h45459,
+		n__read_addr__h45549;
   wire [1 : 0] IF_m_m_releaseEntryQ_pipelineResp_data_0_lat_0_ETC___d153,
 	       IF_m_m_releaseEntryQ_sendRsToP_pRq_data_0_lat__ETC___d126,
-	       IF_m_m_reqVec_0_dummy2_0_read__15_AND_m_m_reqV_ETC___d246,
-	       IF_m_m_reqVec_1_dummy2_0_read__22_AND_m_m_reqV_ETC___d248,
-	       IF_m_m_reqVec_2_dummy2_0_read__29_AND_m_m_reqV_ETC___d250,
-	       IF_m_m_reqVec_3_dummy2_0_read__36_AND_m_m_reqV_ETC___d252,
+	       IF_m_m_reqVec_0_dummy2_0_read__14_AND_m_m_reqV_ETC___d245,
+	       IF_m_m_reqVec_1_dummy2_0_read__21_AND_m_m_reqV_ETC___d247,
+	       IF_m_m_reqVec_2_dummy2_0_read__28_AND_m_m_reqV_ETC___d249,
+	       IF_m_m_reqVec_3_dummy2_0_read__35_AND_m_m_reqV_ETC___d251,
 	       IF_m_m_stateVec_0_lat_0_whas_THEN_m_m_stateVec_ETC___d8,
 	       IF_m_m_stateVec_1_lat_0_whas__5_THEN_m_m_state_ETC___d18,
 	       IF_m_m_stateVec_2_lat_0_whas__5_THEN_m_m_state_ETC___d28,
@@ -688,13 +683,13 @@ module mkDPRqMshrWrapper(CLK,
 
   // value method sendRsToP_pRq_getRq
   assign sendRsToP_pRq_getRq =
-	     { SEL_ARR_IF_m_m_reqVec_0_dummy2_0_read__15_AND__ETC___d244,
-	       SEL_ARR_IF_m_m_reqVec_0_dummy2_0_read__15_AND__ETC___d254 } ;
+	     { SEL_ARR_IF_m_m_reqVec_0_dummy2_0_read__14_AND__ETC___d243,
+	       SEL_ARR_IF_m_m_reqVec_0_dummy2_0_read__14_AND__ETC___d253 } ;
   assign RDY_sendRsToP_pRq_getRq = 1'd1 ;
 
   // value method sendRsToP_pRq_getData
   assign sendRsToP_pRq_getData =
-	     { SEL_ARR_m_m_dataValidVec_0_dummy2_0_read__55_A_ETC___d280,
+	     { SEL_ARR_m_m_dataValidVec_0_dummy2_0_read__54_A_ETC___d279,
 	       m_m_dataFile$D_OUT_1 } ;
   assign RDY_sendRsToP_pRq_getData = 1'd1 ;
 
@@ -712,8 +707,8 @@ module mkDPRqMshrWrapper(CLK,
 
   // value method pipelineResp_getRq
   assign pipelineResp_getRq =
-	     { SEL_ARR_IF_m_m_reqVec_0_dummy2_1_read__16_AND__ETC___d314,
-	       SEL_ARR_IF_m_m_reqVec_0_dummy2_1_read__16_AND__ETC___d328 } ;
+	     { SEL_ARR_IF_m_m_reqVec_0_dummy2_1_read__15_AND__ETC___d313,
+	       SEL_ARR_IF_m_m_reqVec_0_dummy2_1_read__15_AND__ETC___d327 } ;
   assign RDY_pipelineResp_getRq = 1'd1 ;
 
   // value method pipelineResp_getState
@@ -1335,7 +1330,7 @@ module mkDPRqMshrWrapper(CLK,
   assign MUX_m_m_stateVec_3_dummy2_1$write_1__SEL_1 =
 	     EN_pipelineResp_releaseEntry &&
 	     pipelineResp_releaseEntry_n == 2'd3 ;
-  assign MUX_m_m_stateVec_3_dummy_1_0$wset_1__SEL_2 =
+  assign MUX_m_m_stateVec_3_dummy2_1$write_1__SEL_2 =
 	     EN_pipelineResp_setDone_setData &&
 	     pipelineResp_setDone_setData_n == 2'd3 ;
   assign MUX_m_m_emptyEntryQ$enq_1__VAL_2 =
@@ -1400,7 +1395,7 @@ module mkDPRqMshrWrapper(CLK,
 	     MUX_m_m_stateVec_3_dummy2_1$write_1__SEL_1 ? 2'd0 : 2'd2 ;
   assign m_m_stateVec_3_lat_1$whas =
 	     MUX_m_m_stateVec_3_dummy2_1$write_1__SEL_1 ||
-	     MUX_m_m_stateVec_3_dummy_1_0$wset_1__SEL_2 ;
+	     MUX_m_m_stateVec_3_dummy2_1$write_1__SEL_2 ;
   assign m_m_stateVec_3_lat_2$whas =
 	     EN_getEmptyEntryInit && m_m_emptyEntryQ$D_OUT == 2'd3 ;
   assign m_m_stateVec_3_dummy_1_0$whas =
@@ -1436,7 +1431,7 @@ module mkDPRqMshrWrapper(CLK,
   // register m_m_dataValidVec_3_rl
   assign m_m_dataValidVec_3_rl$D_IN =
 	     !m_m_stateVec_3_lat_2$whas &&
-	     (MUX_m_m_stateVec_3_dummy_1_0$wset_1__SEL_2 ?
+	     (MUX_m_m_stateVec_3_dummy2_1$write_1__SEL_2 ?
 		pipelineResp_setDone_setData_d[512] :
 		m_m_dataValidVec_3_rl) ;
   assign m_m_dataValidVec_3_rl$EN = 1'd1 ;
@@ -1608,7 +1603,7 @@ module mkDPRqMshrWrapper(CLK,
   // submodule m_m_dataValidVec_3_dummy2_1
   assign m_m_dataValidVec_3_dummy2_1$D_IN = 1'd1 ;
   assign m_m_dataValidVec_3_dummy2_1$EN =
-	     MUX_m_m_stateVec_3_dummy_1_0$wset_1__SEL_2 ;
+	     MUX_m_m_stateVec_3_dummy2_1$write_1__SEL_2 ;
 
   // submodule m_m_dataValidVec_3_dummy2_2
   assign m_m_dataValidVec_3_dummy2_2$D_IN = 1'd1 ;
@@ -1857,22 +1852,22 @@ module mkDPRqMshrWrapper(CLK,
 	     EN_sendRsToP_pRq_releaseEntry ?
 	       sendRsToP_pRq_releaseEntry_n :
 	       m_m_releaseEntryQ_sendRsToP_pRq_data_0_rl ;
-  assign IF_m_m_reqVec_0_dummy2_0_read__15_AND_m_m_reqV_ETC___d246 =
+  assign IF_m_m_reqVec_0_dummy2_0_read__14_AND_m_m_reqV_ETC___d245 =
 	     (m_m_reqVec_0_dummy2_0$Q_OUT && m_m_reqVec_0_dummy2_1$Q_OUT &&
 	      m_m_reqVec_0_dummy2_2$Q_OUT) ?
 	       m_m_reqVec_0_rl[1:0] :
 	       2'd0 ;
-  assign IF_m_m_reqVec_1_dummy2_0_read__22_AND_m_m_reqV_ETC___d248 =
+  assign IF_m_m_reqVec_1_dummy2_0_read__21_AND_m_m_reqV_ETC___d247 =
 	     (m_m_reqVec_1_dummy2_0$Q_OUT && m_m_reqVec_1_dummy2_1$Q_OUT &&
 	      m_m_reqVec_1_dummy2_2$Q_OUT) ?
 	       m_m_reqVec_1_rl[1:0] :
 	       2'd0 ;
-  assign IF_m_m_reqVec_2_dummy2_0_read__29_AND_m_m_reqV_ETC___d250 =
+  assign IF_m_m_reqVec_2_dummy2_0_read__28_AND_m_m_reqV_ETC___d249 =
 	     (m_m_reqVec_2_dummy2_0$Q_OUT && m_m_reqVec_2_dummy2_1$Q_OUT &&
 	      m_m_reqVec_2_dummy2_2$Q_OUT) ?
 	       m_m_reqVec_2_rl[1:0] :
 	       2'd0 ;
-  assign IF_m_m_reqVec_3_dummy2_0_read__36_AND_m_m_reqV_ETC___d252 =
+  assign IF_m_m_reqVec_3_dummy2_0_read__35_AND_m_m_reqV_ETC___d251 =
 	     (m_m_reqVec_3_dummy2_0$Q_OUT && m_m_reqVec_3_dummy2_1$Q_OUT &&
 	      m_m_reqVec_3_dummy2_2$Q_OUT) ?
 	       m_m_reqVec_3_rl[1:0] :
@@ -1893,39 +1888,39 @@ module mkDPRqMshrWrapper(CLK,
 	     MUX_m_m_stateVec_3_dummy_1_0$wset_1__VAL_1 ?
 	       2'd0 :
 	       m_m_stateVec_3_rl ;
-  assign n__read_addr__h42445 =
+  assign n__read_addr__h42426 =
 	     (m_m_reqVec_0_dummy2_0$Q_OUT && m_m_reqVec_0_dummy2_1$Q_OUT &&
 	      m_m_reqVec_0_dummy2_2$Q_OUT) ?
 	       m_m_reqVec_0_rl[65:2] :
 	       64'd0 ;
-  assign n__read_addr__h42530 =
+  assign n__read_addr__h42511 =
 	     (m_m_reqVec_1_dummy2_0$Q_OUT && m_m_reqVec_1_dummy2_1$Q_OUT &&
 	      m_m_reqVec_1_dummy2_2$Q_OUT) ?
 	       m_m_reqVec_1_rl[65:2] :
 	       64'd0 ;
-  assign n__read_addr__h42615 =
+  assign n__read_addr__h42596 =
 	     (m_m_reqVec_2_dummy2_0$Q_OUT && m_m_reqVec_2_dummy2_1$Q_OUT &&
 	      m_m_reqVec_2_dummy2_2$Q_OUT) ?
 	       m_m_reqVec_2_rl[65:2] :
 	       64'd0 ;
-  assign n__read_addr__h42700 =
+  assign n__read_addr__h42681 =
 	     (m_m_reqVec_3_dummy2_0$Q_OUT && m_m_reqVec_3_dummy2_1$Q_OUT &&
 	      m_m_reqVec_3_dummy2_2$Q_OUT) ?
 	       m_m_reqVec_3_rl[65:2] :
 	       64'd0 ;
-  assign n__read_addr__h45298 =
+  assign n__read_addr__h45279 =
 	     (m_m_reqVec_0_dummy2_1$Q_OUT && m_m_reqVec_0_dummy2_2$Q_OUT) ?
 	       m_m_reqVec_0_rl[65:2] :
 	       64'd0 ;
-  assign n__read_addr__h45388 =
+  assign n__read_addr__h45369 =
 	     (m_m_reqVec_1_dummy2_1$Q_OUT && m_m_reqVec_1_dummy2_2$Q_OUT) ?
 	       m_m_reqVec_1_rl[65:2] :
 	       64'd0 ;
-  assign n__read_addr__h45478 =
+  assign n__read_addr__h45459 =
 	     (m_m_reqVec_2_dummy2_1$Q_OUT && m_m_reqVec_2_dummy2_2$Q_OUT) ?
 	       m_m_reqVec_2_rl[65:2] :
 	       64'd0 ;
-  assign n__read_addr__h45568 =
+  assign n__read_addr__h45549 =
 	     (m_m_reqVec_3_dummy2_1$Q_OUT && m_m_reqVec_3_dummy2_2$Q_OUT) ?
 	       m_m_reqVec_3_rl[65:2] :
 	       64'd0 ;
@@ -1948,25 +1943,25 @@ module mkDPRqMshrWrapper(CLK,
   begin
     case (sendRsToP_pRq_getData_n)
       2'd0:
-	  SEL_ARR_m_m_dataValidVec_0_dummy2_0_read__55_A_ETC___d280 =
+	  SEL_ARR_m_m_dataValidVec_0_dummy2_0_read__54_A_ETC___d279 =
 	      m_m_dataValidVec_0_dummy2_0$Q_OUT &&
 	      m_m_dataValidVec_0_dummy2_1$Q_OUT &&
 	      m_m_dataValidVec_0_dummy2_2$Q_OUT &&
 	      m_m_dataValidVec_0_rl;
       2'd1:
-	  SEL_ARR_m_m_dataValidVec_0_dummy2_0_read__55_A_ETC___d280 =
+	  SEL_ARR_m_m_dataValidVec_0_dummy2_0_read__54_A_ETC___d279 =
 	      m_m_dataValidVec_1_dummy2_0$Q_OUT &&
 	      m_m_dataValidVec_1_dummy2_1$Q_OUT &&
 	      m_m_dataValidVec_1_dummy2_2$Q_OUT &&
 	      m_m_dataValidVec_1_rl;
       2'd2:
-	  SEL_ARR_m_m_dataValidVec_0_dummy2_0_read__55_A_ETC___d280 =
+	  SEL_ARR_m_m_dataValidVec_0_dummy2_0_read__54_A_ETC___d279 =
 	      m_m_dataValidVec_2_dummy2_0$Q_OUT &&
 	      m_m_dataValidVec_2_dummy2_1$Q_OUT &&
 	      m_m_dataValidVec_2_dummy2_2$Q_OUT &&
 	      m_m_dataValidVec_2_rl;
       2'd3:
-	  SEL_ARR_m_m_dataValidVec_0_dummy2_0_read__55_A_ETC___d280 =
+	  SEL_ARR_m_m_dataValidVec_0_dummy2_0_read__54_A_ETC___d279 =
 	      m_m_dataValidVec_3_dummy2_0$Q_OUT &&
 	      m_m_dataValidVec_3_dummy2_1$Q_OUT &&
 	      m_m_dataValidVec_3_dummy2_2$Q_OUT &&
@@ -1974,64 +1969,64 @@ module mkDPRqMshrWrapper(CLK,
     endcase
   end
   always@(sendRsToP_pRq_getRq_n or
-	  IF_m_m_reqVec_0_dummy2_0_read__15_AND_m_m_reqV_ETC___d246 or
-	  IF_m_m_reqVec_1_dummy2_0_read__22_AND_m_m_reqV_ETC___d248 or
-	  IF_m_m_reqVec_2_dummy2_0_read__29_AND_m_m_reqV_ETC___d250 or
-	  IF_m_m_reqVec_3_dummy2_0_read__36_AND_m_m_reqV_ETC___d252)
+	  n__read_addr__h42426 or
+	  n__read_addr__h42511 or
+	  n__read_addr__h42596 or n__read_addr__h42681)
   begin
     case (sendRsToP_pRq_getRq_n)
       2'd0:
-	  SEL_ARR_IF_m_m_reqVec_0_dummy2_0_read__15_AND__ETC___d254 =
-	      IF_m_m_reqVec_0_dummy2_0_read__15_AND_m_m_reqV_ETC___d246;
+	  SEL_ARR_IF_m_m_reqVec_0_dummy2_0_read__14_AND__ETC___d243 =
+	      n__read_addr__h42426;
       2'd1:
-	  SEL_ARR_IF_m_m_reqVec_0_dummy2_0_read__15_AND__ETC___d254 =
-	      IF_m_m_reqVec_1_dummy2_0_read__22_AND_m_m_reqV_ETC___d248;
+	  SEL_ARR_IF_m_m_reqVec_0_dummy2_0_read__14_AND__ETC___d243 =
+	      n__read_addr__h42511;
       2'd2:
-	  SEL_ARR_IF_m_m_reqVec_0_dummy2_0_read__15_AND__ETC___d254 =
-	      IF_m_m_reqVec_2_dummy2_0_read__29_AND_m_m_reqV_ETC___d250;
+	  SEL_ARR_IF_m_m_reqVec_0_dummy2_0_read__14_AND__ETC___d243 =
+	      n__read_addr__h42596;
       2'd3:
-	  SEL_ARR_IF_m_m_reqVec_0_dummy2_0_read__15_AND__ETC___d254 =
-	      IF_m_m_reqVec_3_dummy2_0_read__36_AND_m_m_reqV_ETC___d252;
+	  SEL_ARR_IF_m_m_reqVec_0_dummy2_0_read__14_AND__ETC___d243 =
+	      n__read_addr__h42681;
     endcase
   end
   always@(sendRsToP_pRq_getRq_n or
-	  n__read_addr__h42445 or
-	  n__read_addr__h42530 or
-	  n__read_addr__h42615 or n__read_addr__h42700)
+	  IF_m_m_reqVec_0_dummy2_0_read__14_AND_m_m_reqV_ETC___d245 or
+	  IF_m_m_reqVec_1_dummy2_0_read__21_AND_m_m_reqV_ETC___d247 or
+	  IF_m_m_reqVec_2_dummy2_0_read__28_AND_m_m_reqV_ETC___d249 or
+	  IF_m_m_reqVec_3_dummy2_0_read__35_AND_m_m_reqV_ETC___d251)
   begin
     case (sendRsToP_pRq_getRq_n)
       2'd0:
-	  SEL_ARR_IF_m_m_reqVec_0_dummy2_0_read__15_AND__ETC___d244 =
-	      n__read_addr__h42445;
+	  SEL_ARR_IF_m_m_reqVec_0_dummy2_0_read__14_AND__ETC___d253 =
+	      IF_m_m_reqVec_0_dummy2_0_read__14_AND_m_m_reqV_ETC___d245;
       2'd1:
-	  SEL_ARR_IF_m_m_reqVec_0_dummy2_0_read__15_AND__ETC___d244 =
-	      n__read_addr__h42530;
+	  SEL_ARR_IF_m_m_reqVec_0_dummy2_0_read__14_AND__ETC___d253 =
+	      IF_m_m_reqVec_1_dummy2_0_read__21_AND_m_m_reqV_ETC___d247;
       2'd2:
-	  SEL_ARR_IF_m_m_reqVec_0_dummy2_0_read__15_AND__ETC___d244 =
-	      n__read_addr__h42615;
+	  SEL_ARR_IF_m_m_reqVec_0_dummy2_0_read__14_AND__ETC___d253 =
+	      IF_m_m_reqVec_2_dummy2_0_read__28_AND_m_m_reqV_ETC___d249;
       2'd3:
-	  SEL_ARR_IF_m_m_reqVec_0_dummy2_0_read__15_AND__ETC___d244 =
-	      n__read_addr__h42700;
+	  SEL_ARR_IF_m_m_reqVec_0_dummy2_0_read__14_AND__ETC___d253 =
+	      IF_m_m_reqVec_3_dummy2_0_read__35_AND_m_m_reqV_ETC___d251;
     endcase
   end
   always@(pipelineResp_getRq_n or
-	  n__read_addr__h45298 or
-	  n__read_addr__h45388 or
-	  n__read_addr__h45478 or n__read_addr__h45568)
+	  n__read_addr__h45279 or
+	  n__read_addr__h45369 or
+	  n__read_addr__h45459 or n__read_addr__h45549)
   begin
     case (pipelineResp_getRq_n)
       2'd0:
-	  SEL_ARR_IF_m_m_reqVec_0_dummy2_1_read__16_AND__ETC___d314 =
-	      n__read_addr__h45298;
+	  SEL_ARR_IF_m_m_reqVec_0_dummy2_1_read__15_AND__ETC___d313 =
+	      n__read_addr__h45279;
       2'd1:
-	  SEL_ARR_IF_m_m_reqVec_0_dummy2_1_read__16_AND__ETC___d314 =
-	      n__read_addr__h45388;
+	  SEL_ARR_IF_m_m_reqVec_0_dummy2_1_read__15_AND__ETC___d313 =
+	      n__read_addr__h45369;
       2'd2:
-	  SEL_ARR_IF_m_m_reqVec_0_dummy2_1_read__16_AND__ETC___d314 =
-	      n__read_addr__h45478;
+	  SEL_ARR_IF_m_m_reqVec_0_dummy2_1_read__15_AND__ETC___d313 =
+	      n__read_addr__h45459;
       2'd3:
-	  SEL_ARR_IF_m_m_reqVec_0_dummy2_1_read__16_AND__ETC___d314 =
-	      n__read_addr__h45568;
+	  SEL_ARR_IF_m_m_reqVec_0_dummy2_1_read__15_AND__ETC___d313 =
+	      n__read_addr__h45549;
     endcase
   end
   always@(pipelineResp_getRq_n or
@@ -2049,22 +2044,22 @@ module mkDPRqMshrWrapper(CLK,
   begin
     case (pipelineResp_getRq_n)
       2'd0:
-	  SEL_ARR_IF_m_m_reqVec_0_dummy2_1_read__16_AND__ETC___d328 =
+	  SEL_ARR_IF_m_m_reqVec_0_dummy2_1_read__15_AND__ETC___d327 =
 	      (m_m_reqVec_0_dummy2_1$Q_OUT && m_m_reqVec_0_dummy2_2$Q_OUT) ?
 		m_m_reqVec_0_rl[1:0] :
 		2'd0;
       2'd1:
-	  SEL_ARR_IF_m_m_reqVec_0_dummy2_1_read__16_AND__ETC___d328 =
+	  SEL_ARR_IF_m_m_reqVec_0_dummy2_1_read__15_AND__ETC___d327 =
 	      (m_m_reqVec_1_dummy2_1$Q_OUT && m_m_reqVec_1_dummy2_2$Q_OUT) ?
 		m_m_reqVec_1_rl[1:0] :
 		2'd0;
       2'd2:
-	  SEL_ARR_IF_m_m_reqVec_0_dummy2_1_read__16_AND__ETC___d328 =
+	  SEL_ARR_IF_m_m_reqVec_0_dummy2_1_read__15_AND__ETC___d327 =
 	      (m_m_reqVec_2_dummy2_1$Q_OUT && m_m_reqVec_2_dummy2_2$Q_OUT) ?
 		m_m_reqVec_2_rl[1:0] :
 		2'd0;
       2'd3:
-	  SEL_ARR_IF_m_m_reqVec_0_dummy2_1_read__16_AND__ETC___d328 =
+	  SEL_ARR_IF_m_m_reqVec_0_dummy2_1_read__15_AND__ETC___d327 =
 	      (m_m_reqVec_3_dummy2_1$Q_OUT && m_m_reqVec_3_dummy2_2$Q_OUT) ?
 		m_m_reqVec_3_rl[1:0] :
 		2'd0;
@@ -2183,24 +2178,6 @@ module mkDPRqMshrWrapper(CLK,
     m_m_stateVec_3_rl = 2'h2;
   end
   `endif // BSV_NO_INITIAL_BLOCKS
-  // synopsys translate_on
-
-  // handling of system tasks
-
-  // synopsys translate_off
-  always@(negedge CLK)
-  begin
-    #0;
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_m_initEmptyEntry && m_m_initIdx == 2'd3)
-	begin
-	  v__h30608 = $time;
-	  #0;
-	end
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_m_m_initEmptyEntry && m_m_initIdx == 2'd3)
-	$display("%t L1PRqMshrSafe %m: init empty entry done", v__h30608);
-  end
   // synopsys translate_on
 endmodule  // mkDPRqMshrWrapper
 

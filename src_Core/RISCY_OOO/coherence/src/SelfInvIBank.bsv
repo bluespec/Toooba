@@ -118,6 +118,8 @@ module mkSelfInvIBank#(
     Add#(TAdd#(tagSz, indexSz), TAdd#(lgBankNum, LgLineSzBytes), AddrSz)
 );
 
+   Bool verbose = False;
+
     ICRqMshr#(cRqNum, wayT, tagT, procRqT, resultT) cRqMshr <- mkICRqMshrLocal;
 
     SelfInvIPipe#(lgBankNum, wayNum, indexT, tagT, cRqIdxT) pipeline <- mkIPipeline;
@@ -198,6 +200,7 @@ module mkSelfInvIBank#(
         // performance counter: cRq type
         incrReqCnt;
 `endif
+       if (verbose)
         $display("%t I %m cRqTransfer: ", $time,
             fshow(n), " ; ",
             fshow(r)
@@ -209,6 +212,7 @@ module mkSelfInvIBank#(
     (* descending_urgency = "pRqTransfer, cRqTransfer" *)
     rule pRqTransfer(fromPQ.first matches tagged PRq .req);
         fromPQ.deq;
+       if (verbose)
         $display("%t I %m pRqTransfer: ", $time, fshow(req));
         doAssert(False, "should not have pRq");
     endrule
@@ -223,6 +227,7 @@ module mkSelfInvIBank#(
             data: resp.data,
             way: resp.id
         }));
+       if (verbose)
         $display("%t I %m pRsTransfer: ", $time, fshow(resp));
         doAssert(resp.toState == S && isValid(resp.data), "I$ must upgrade to S with data");
     endrule
@@ -241,6 +246,7 @@ module mkSelfInvIBank#(
             child: ?
         };
         rqToPQ.enq(cRqToP);
+       if (verbose)
         $display("%t I %m sendRqToP: ", $time, 
             fshow(n), " ; ", 
             fshow(req), " ; ", 
@@ -297,6 +303,7 @@ module mkSelfInvIBank#(
     // function to process cRq hit (MSHR slot may have garbage)
     function Action cRqHit(cRqIdxT n, procRqT req);
     action
+       if (verbose)
         $display("%t I %m pipelineResp: Hit func: ", $time,
             fshow(n), " ; ",
             fshow(req)
@@ -323,6 +330,7 @@ module mkSelfInvIBank#(
         let instResult = readInst(ram.line, req.addr);
         cRqMshr.pipelineResp.setResult(n, instResult);
         cRqMshr.pipelineResp.setStateSlot(n, Done, ?);
+       if (verbose)
         $display("%t I %m pipelineResp: Hit func: update ram: ", $time,
             fshow(succ), " ; ", fshow(instResult)
         );
@@ -337,9 +345,11 @@ module mkSelfInvIBank#(
     endfunction
 
     rule pipelineResp_cRq(pipeOut.cmd matches tagged ICRq .n);
+       if (verbose)
         $display("%t I %m pipelineResp: ", $time, fshow(pipeOut));
 
         procRqT procRq = pipeOutCRq;
+       if (verbose)
         $display("%t I %m pipelineResp: cRq: ", $time, fshow(n), " ; ", fshow(procRq));
         
         // find end of dependency chain
@@ -398,6 +408,7 @@ module mkSelfInvIBank#(
                 doAssert(isValid(cRqEOC), "cRq hit on another cRq, cRqEOC must be true");
                 cRqMshr.pipelineResp.setSucc(fromMaybe(?, cRqEOC), Valid (n));
                 cRqSetDepNoCacheChange;
+	       if (verbose)
                 $display("%t I %m pipelineResp: cRq: own by other cRq ", $time,
                     fshow(cOwner), ", depend on cRq ", fshow(cRqEOC)
                 );
@@ -410,6 +421,7 @@ module mkSelfInvIBank#(
                     "cRq swapped in by previous cRq, tag must match & cs = S"
                 );
                 // Hit
+	       if (verbose)
                 $display("%t I %m pipelineResp: cRq: own by itself, hit", $time);
                 cRqHit(n, procRq);
             end
@@ -418,16 +430,19 @@ module mkSelfInvIBank#(
             // cache has no owner, cRq must just go through tag match
             // check for cRqEOC to append to dependency chain
             if(cRqEOC matches tagged Valid .k) begin
+	       if (verbose)
                 $display("%t I %m pipelineResp: cRq: no owner, depend on cRq ", $time, fshow(k));
                 cRqMshr.pipelineResp.setSucc(k, Valid (n));
                 cRqSetDepNoCacheChange;
             end
             else if(ram.info.cs > I && ram.info.tag == getTag(procRq.addr)) begin
+	       if (verbose)
                 $display("%t I %m pipelineResp: cRq: no owner, hit", $time);
                 cRqHit(n, procRq);
             end
             else begin
                 // can always sliently replace
+	       if (verbose)
                 $display("%t I %m pipelineResp: cRq: no owner, miss no replace", $time);
                 cRqMissNoReplacement;
             end
@@ -435,8 +450,10 @@ module mkSelfInvIBank#(
     endrule
 
     rule pipelineResp_pRs(pipeOut.cmd == IPRs);
+       if (verbose) begin
         $display("%t I %m pipelineResp: ", $time, fshow(pipeOut));
         $display("%t I %m pipelineResp: pRs: ", $time);
+       end
 
         if(ram.info.owner matches tagged Valid .cOwner) begin
             procRqT procRq = pipeOutCRq;
@@ -465,6 +482,7 @@ module mkSelfInvIBank#(
     rule startReconcile(needReconcile && !waitReconcileDone && cRqMshrEmpty);
         pipeline.reconcile;
         waitReconcileDone <= True;
+       if (verbose)
         $display("%t I %m startReconcile", $time);
 `ifdef PERF_COUNT
         if(doStats) begin
@@ -475,6 +493,7 @@ module mkSelfInvIBank#(
     rule completeReconcile(needReconcile && waitReconcileDone && pipeline.reconcile_done);
         needReconcile <= False;
         waitReconcileDone <= False;
+       if (verbose)
         $display("%t I %m completeReconcile", $time);
     endrule
 
@@ -496,6 +515,7 @@ module mkSelfInvIBank#(
             );
                 cRqIndexQ.deq;
                 cRqMshr.sendRsToC.releaseEntry(cRqIndexQ.first); // release MSHR entry
+	       if (verbose)
                 $display("%t I %m sendRsToC: ", $time,
                     fshow(cRqIndexQ.first), " ; ",
                     fshow(inst)

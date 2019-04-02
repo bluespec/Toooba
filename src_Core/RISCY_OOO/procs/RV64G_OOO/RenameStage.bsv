@@ -86,7 +86,7 @@ interface RenameStage;
 endinterface
 
 module mkRenameStage#(RenameInput inIfc)(RenameStage);
-    Bool verbose = True;
+    Bool verbose = False;
 
     // func units
     FetchStage fetchStage = inIfc.fetchIfc;

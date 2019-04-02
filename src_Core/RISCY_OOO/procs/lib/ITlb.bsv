@@ -82,7 +82,7 @@ endmodule
 
 (* synthesize *)
 module mkITlb(ITlb::ITlb);
-    Bool verbose = True;
+    Bool verbose = False;
 
     // TLB array
     ITlbArray tlb <- mkITlbArray;

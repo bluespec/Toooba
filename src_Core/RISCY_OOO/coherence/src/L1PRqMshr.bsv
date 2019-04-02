@@ -92,6 +92,9 @@ module mkL1PRqMshrSafe(
 ) provisos(
     Alias#(pRqIndexT, Bit#(TLog#(pRqNum)))
 );
+
+   Bool verbose = False;
+
     // EHR port
     // We put pipelineResp < transfer to cater for deq < enq of cache pipeline
     Integer sendRsToP_pRq_port = 0;
@@ -121,6 +124,7 @@ module mkL1PRqMshrSafe(
         initIdx <= initIdx + 1;
         if(initIdx == fromInteger(valueOf(pRqNum) - 1)) begin
             inited <= True;
+	   if (verbose)
             $display("%t L1PRqMshrSafe %m: init empty entry done", $time);
         end
     endrule

@@ -47,6 +47,8 @@ module mkXBar#(
     Bits#(dstDataT, _dstDataSz),
     FShow#(dstDataT)
 );
+   Bool verbose = False;
+
     // proposed data transfer by each src
     Vector#(srcNum, Ehr#(2, Maybe#(dstIdxT))) propDstIdx <- replicateM(mkEhr(Invalid));
     Vector#(srcNum, Ehr#(2, dstDataT)) propDstData <- replicateM(mkEhr(?));
@@ -116,6 +118,7 @@ module mkXBar#(
         for(Integer i = 0; i < valueOf(srcNum); i = i+1) begin
             if(isDeqSrc(fromInteger(i))) begin
                 propDstIdx[i][1] <= Invalid;
+	       if (verbose)
                 $display("%t XBar %m: deq src %d", $time, i);
                 doAssert(isValid(propDstIdx[i][1]), "src must be proposing");
             end
@@ -130,6 +133,7 @@ module mkXBar#(
         rule doEnq(enqDst[i][1] matches tagged Valid .d);
             dstIfc[i].put(d);
             enqDst[i][1] <= Invalid; // reset enq command
+	   if (verbose)
             $display("%t XBAR %m: enq dst %d ; ", $time, i, fshow(d));
         endrule
     end

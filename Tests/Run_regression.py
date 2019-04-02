@@ -270,7 +270,7 @@ def do_regular_file_function (level, dirname, basename, args_dict):
         # print ("Ignoring file: " + full_filename)
         return
 
-    TEMPORARY FILTER WHILE DEBUGGING:
+    # TEMPORARY FILTER WHILE DEBUGGING:
     if basename in exclude_list:
         sys.stdout.write ("WARNING: TEMPORARY FILTER IN EFFECT; REMOVE AFTER DEBUGGING\n")
         sys.stdout.write ("    This test is in exclude_list: {0}\n".format (basename))

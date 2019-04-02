@@ -151,7 +151,7 @@ endinterface
 
 (* synthesize *)
 module mkCore#(CoreId coreId)(Core);
-    let verbose = True;
+    let verbose = False;
     Reg#(Bool) outOfReset <- mkReg(False);
     rule rl_outOfReset if (!outOfReset);
         $fwrite(stderr, "mkProc came out of reset\n");
