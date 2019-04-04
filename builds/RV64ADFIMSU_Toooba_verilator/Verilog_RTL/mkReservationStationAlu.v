@@ -334,8 +334,8 @@ module mkReservationStationAlu(CLK,
        m_valid_5_lat_1$whas,
        m_valid_6_lat_0$whas,
        m_valid_6_lat_1$whas,
-       m_valid_7_dummy_1_0$whas,
        m_valid_7_lat_0$whas,
+       m_valid_7_lat_1$whas,
        m_valid_8_dummy_1_0$wget,
        m_valid_8_lat_1$whas,
        m_valid_9_lat_0$whas,
@@ -4100,7 +4100,7 @@ module mkReservationStationAlu(CLK,
   assign m_valid_7_lat_0$whas =
 	     MUX_m_valid_7_dummy2_0$write_1__SEL_1 ||
 	     MUX_m_valid_7_dummy2_0$write_1__SEL_2 ;
-  assign m_valid_7_dummy_1_0$whas = EN_enq && m_enqP_wire$wget[3:0] == 4'd7 ;
+  assign m_valid_7_lat_1$whas = EN_enq && m_enqP_wire$wget[3:0] == 4'd7 ;
   assign m_valid_8_lat_1$whas = EN_enq && m_enqP_wire$wget[3:0] == 4'd8 ;
   assign m_valid_8_dummy_1_0$wget =
 	     MUX_m_valid_8_dummy2_0$write_1__SEL_1 ||
@@ -5684,7 +5684,7 @@ module mkReservationStationAlu(CLK,
 
   // register m_data_7
   assign m_data_7$D_IN = m_data_0$D_IN ;
-  assign m_data_7$EN = m_valid_7_dummy_1_0$whas ;
+  assign m_data_7$EN = m_valid_7_lat_1$whas ;
 
   // register m_data_8
   assign m_data_8$D_IN = m_data_0$D_IN ;
@@ -5748,7 +5748,7 @@ module mkReservationStationAlu(CLK,
 
   // register m_regs_7
   assign m_regs_7$D_IN = enq_x[65:33] ;
-  assign m_regs_7$EN = m_valid_7_dummy_1_0$whas ;
+  assign m_regs_7$EN = m_valid_7_lat_1$whas ;
 
   // register m_regs_8
   assign m_regs_8$D_IN = enq_x[65:33] ;
@@ -5877,7 +5877,7 @@ module mkReservationStationAlu(CLK,
 
   // register m_regs_ready_7_rl
   assign m_regs_ready_7_rl$D_IN =
-	     m_valid_7_dummy_1_0$whas ?
+	     m_valid_7_lat_1$whas ?
 	       enq_x[3:0] :
 	       (EN_setRegReady_4_put ?
 		  m_regs_ready_7_lat_4$wget :
@@ -6068,7 +6068,7 @@ module mkReservationStationAlu(CLK,
 
   // register m_spec_tag_7
   assign m_spec_tag_7$D_IN = enq_x[8:4] ;
-  assign m_spec_tag_7$EN = m_valid_7_dummy_1_0$whas ;
+  assign m_spec_tag_7$EN = m_valid_7_lat_1$whas ;
 
   // register m_spec_tag_8
   assign m_spec_tag_8$D_IN = enq_x[8:4] ;
@@ -6132,7 +6132,7 @@ module mkReservationStationAlu(CLK,
 
   // register m_tag_7
   assign m_tag_7$D_IN = enq_x[32:21] ;
-  assign m_tag_7$EN = m_valid_7_dummy_1_0$whas ;
+  assign m_tag_7$EN = m_valid_7_lat_1$whas ;
 
   // register m_tag_8
   assign m_tag_8$D_IN = enq_x[32:21] ;
@@ -6228,7 +6228,7 @@ module mkReservationStationAlu(CLK,
 
   // register m_valid_7_rl
   assign m_valid_7_rl$D_IN =
-	     m_valid_7_dummy_1_0$whas ||
+	     m_valid_7_lat_1$whas ||
 	     (m_valid_7_lat_0$whas ? 1'd0 : m_valid_7_rl) ;
   assign m_valid_7_rl$EN = 1'd1 ;
 
@@ -6578,7 +6578,7 @@ module mkReservationStationAlu(CLK,
 
   // submodule m_regs_ready_7_dummy2_5
   assign m_regs_ready_7_dummy2_5$D_IN = 1'd1 ;
-  assign m_regs_ready_7_dummy2_5$EN = m_valid_7_dummy_1_0$whas ;
+  assign m_regs_ready_7_dummy2_5$EN = m_valid_7_lat_1$whas ;
 
   // submodule m_regs_ready_8_dummy2_0
   assign m_regs_ready_8_dummy2_0$D_IN = 1'd1 ;
@@ -6734,7 +6734,7 @@ module mkReservationStationAlu(CLK,
 
   // submodule m_spec_bits_7_dummy2_0
   assign m_spec_bits_7_dummy2_0$D_IN = 1'd1 ;
-  assign m_spec_bits_7_dummy2_0$EN = m_valid_7_dummy_1_0$whas ;
+  assign m_spec_bits_7_dummy2_0$EN = m_valid_7_lat_1$whas ;
 
   // submodule m_spec_bits_7_dummy2_1
   assign m_spec_bits_7_dummy2_1$D_IN = 1'd1 ;
@@ -6894,7 +6894,7 @@ module mkReservationStationAlu(CLK,
 
   // submodule m_valid_7_dummy2_1
   assign m_valid_7_dummy2_1$D_IN = 1'd1 ;
-  assign m_valid_7_dummy2_1$EN = m_valid_7_dummy_1_0$whas ;
+  assign m_valid_7_dummy2_1$EN = m_valid_7_lat_1$whas ;
 
   // submodule m_valid_8_dummy2_0
   assign m_valid_8_dummy2_0$D_IN = 1'd1 ;
@@ -8151,7 +8151,7 @@ module mkReservationStationAlu(CLK,
   assign IF_m_spec_bits_6_lat_0_whas__57_THEN_m_spec_bi_ETC___d160 =
 	     m_valid_6_lat_1$whas ? enq_x[20:9] : m_spec_bits_6_rl ;
   assign IF_m_spec_bits_7_lat_0_whas__64_THEN_m_spec_bi_ETC___d167 =
-	     m_valid_7_dummy_1_0$whas ? enq_x[20:9] : m_spec_bits_7_rl ;
+	     m_valid_7_lat_1$whas ? enq_x[20:9] : m_spec_bits_7_rl ;
   assign IF_m_spec_bits_8_lat_0_whas__71_THEN_m_spec_bi_ETC___d174 =
 	     m_valid_8_lat_1$whas ? enq_x[20:9] : m_spec_bits_8_rl ;
   assign IF_m_spec_bits_9_lat_0_whas__78_THEN_m_spec_bi_ETC___d181 =

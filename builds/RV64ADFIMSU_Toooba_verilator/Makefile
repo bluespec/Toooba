@@ -39,7 +39,7 @@ TEST ?= rv64ui-p-add
 #================================================================
 # Parameter settings for MIT RISCY
 
-BSC_COMPILATION_FLAGS += D BSIM \
+BSC_COMPILATION_FLAGS += -D BSIM \
 
 
 include $(REPO)/builds/Resources/Include_RISCY_Config.mk

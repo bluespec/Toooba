@@ -125,14 +125,14 @@ module module_execFpuSimple(execFpuSimple_fpu_inst,
 	       CASE_execFpuSimple_fpu_inst_BITS_3_TO_1_3_IF_g_ETC__q79,
 	       CASE_guard10479_0b0_theResult___fst_exp18440_0_ETC__q18,
 	       CASE_guard10479_0b0_theResult___fst_exp18440_0_ETC__q19,
-	       CASE_guard19787_0b0_theResult___fst_exp28013_0_ETC__q20,
-	       CASE_guard19787_0b0_theResult___fst_exp28013_0_ETC__q21,
-	       CASE_guard28854_0b0_theResult___fst_exp36844_0_ETC__q22,
-	       CASE_guard28854_0b0_theResult___fst_exp36844_0_ETC__q23,
-	       CASE_guard45912_0b0_0_0b1_0_0b10_out_exp46531__ETC__q33,
-	       CASE_guard45912_0b0_0_0b1_theResult___exp46528_ETC__q32,
-	       CASE_guard46642_0b0_x46657_BITS_10_TO_0_0b1_th_ETC__q34,
-	       CASE_guard46642_0b0_x46657_BITS_10_TO_0_0b1_x4_ETC__q35,
+	       CASE_guard19787_0b0_theResult___fst_exp28013_0_ETC__q22,
+	       CASE_guard19787_0b0_theResult___fst_exp28013_0_ETC__q23,
+	       CASE_guard28854_0b0_theResult___fst_exp36844_0_ETC__q20,
+	       CASE_guard28854_0b0_theResult___fst_exp36844_0_ETC__q21,
+	       CASE_guard45912_0b0_0_0b1_0_0b10_out_exp46531__ETC__q35,
+	       CASE_guard45912_0b0_0_0b1_theResult___exp46528_ETC__q34,
+	       CASE_guard46642_0b0_x46657_BITS_10_TO_0_0b1_th_ETC__q32,
+	       CASE_guard46642_0b0_x46657_BITS_10_TO_0_0b1_x4_ETC__q33,
 	       CASE_guard55303_0b0_0_0b1_0_0b10_out_exp55922__ETC__q61,
 	       CASE_guard55303_0b0_0_0b1_theResult___exp55919_ETC__q62,
 	       CASE_guard56032_0b0_x56047_BITS_10_TO_0_0b1_th_ETC__q64,
@@ -1031,7 +1031,6 @@ module module_execFpuSimple(execFpuSimple_fpu_inst,
        _64_MINUS_0_CONCAT_IF_execFpuSimple_rVal1_BIT_6_ETC___d4372,
        _64_MINUS_0_CONCAT_IF_execFpuSimple_rVal1_BIT_6_ETC___d4373,
        _64_MINUS_0_CONCAT_IF_execFpuSimple_rVal1_BIT_6_ETC___d4374,
-       execFpuSimple_fpu_inst_BITS_8_TO_4_EQ_10_4_AND_ETC___d4670,
        execFpuSimple_fpu_inst_BITS_8_TO_4_EQ_14_9_AND_ETC___d2260,
        execFpuSimple_fpu_inst_BITS_8_TO_4_EQ_14_9_AND_ETC___d4650,
        execFpuSimple_rVal1_BITS_22_TO_0_31_ULE_execFp_ETC___d4518,
@@ -1049,8 +1048,6 @@ module module_execFpuSimple(execFpuSimple_fpu_inst,
        execFpuSimple_rVal1_BITS_51_TO_0_3_ULT_execFpu_ETC___d2138,
        execFpuSimple_rVal1_BITS_62_TO_52_1_EQ_2047_2__ETC___d2192,
        execFpuSimple_rVal1_BITS_62_TO_52_1_EQ_2047_2__ETC___d2195,
-       execFpuSimple_rVal1_BITS_62_TO_52_1_EQ_2047_2__ETC___d2244,
-       execFpuSimple_rVal1_BITS_62_TO_52_1_EQ_2047_2__ETC___d2254,
        execFpuSimple_rVal1_BITS_62_TO_52_1_EQ_2047_2__ETC___d59,
        execFpuSimple_rVal1_BITS_62_TO_52_1_EQ_2047_2__ETC___d61,
        execFpuSimple_rVal1_BITS_62_TO_52_1_EQ_execFpu_ETC___d2131,
@@ -1076,7 +1073,6 @@ module module_execFpuSimple(execFpuSimple_fpu_inst,
        guard__h34744,
        saturated_bit__h5747,
        saturated_bit__h96762,
-       value_BIT_52___h25815,
        x__h178868,
        x__h179005,
        x__h179125,
@@ -1135,7 +1131,14 @@ module module_execFpuSimple(execFpuSimple_fpu_inst,
 		 IF_execFpuSimple_fpu_inst_BITS_8_TO_4_EQ_10_4__ETC___d2587 } :
 	       { IF_execFpuSimple_fpu_inst_BITS_8_TO_4_EQ_8_OR__ETC___d4572,
 		 IF_execFpuSimple_fpu_inst_BITS_8_TO_4_EQ_8_OR__ETC___d4658,
-		 execFpuSimple_fpu_inst_BITS_8_TO_4_EQ_10_4_AND_ETC___d4670,
+		 execFpuSimple_fpu_inst[8:4] == 5'd10 &&
+		 (execFpuSimple_rVal1[62:52] != 11'd2047 ||
+		  execFpuSimple_rVal1[51:0] == 52'd0) &&
+		 (execFpuSimple_rVal1[62:52] != 11'd2047 ||
+		  execFpuSimple_rVal1[51:0] != 52'd0) &&
+		 (execFpuSimple_rVal1[62:52] != 11'd0 ||
+		  execFpuSimple_rVal1[51:0] != 52'd0) &&
+		 IF_execFpuSimple_rVal1_BITS_62_TO_52_1_EQ_0_4__ETC___d4666,
 		 execFpuSimple_fpu_inst[8:4] != 5'd8 &&
 		 execFpuSimple_fpu_inst[8:4] != 5'd9 &&
 		 execFpuSimple_fpu_inst[8:4] != 5'd19 &&
@@ -2395,7 +2398,7 @@ module module_execFpuSimple(execFpuSimple_fpu_inst,
 		execFpuSimple_rVal1[51:0] == 52'd0) &&
 	       (execFpuSimple_rVal1[62:52] != 11'd2047 ||
 		execFpuSimple_rVal1[51:0] != 52'd0) &&
-	       (value_BIT_52___h25815 ||
+	       (execFpuSimple_rVal1[62:52] != 11'd0 ||
 		execFpuSimple_rVal1[51:0] != 52'd0) &&
 	       IF_execFpuSimple_rVal1_BITS_62_TO_52_1_EQ_0_4__ETC___d4683 :
 	       execFpuSimple_fpu_inst[8:4] != 5'd11 &&
@@ -2409,7 +2412,7 @@ module module_execFpuSimple(execFpuSimple_fpu_inst,
 		execFpuSimple_rVal1[51:0] == 52'd0) &&
 	       (execFpuSimple_rVal1[62:52] != 11'd2047 ||
 		execFpuSimple_rVal1[51:0] != 52'd0) &&
-	       (value_BIT_52___h25815 ||
+	       (execFpuSimple_rVal1[62:52] != 11'd0 ||
 		execFpuSimple_rVal1[51:0] != 52'd0) &&
 	       IF_execFpuSimple_rVal1_BITS_62_TO_52_1_EQ_0_4__ETC___d4782 :
 	       execFpuSimple_fpu_inst[8:4] != 5'd11 &&
@@ -4078,7 +4081,8 @@ module module_execFpuSimple(execFpuSimple_fpu_inst,
 	     _32_MINUS_0_CONCAT_IF_IF_execFpuSimple_rVal1_BI_ETC___d3863 &&
 	     _32_MINUS_0_CONCAT_IF_IF_execFpuSimple_rVal1_BI_ETC___d3864 ;
   assign NOT_execFpuSimple_rVal1_BITS_62_TO_52_1_EQ_0_4_ETC___d2163 =
-	     (value_BIT_52___h25815 || execFpuSimple_rVal1[51:0] != 52'd0 ||
+	     (execFpuSimple_rVal1[62:52] != 11'd0 ||
+	      execFpuSimple_rVal1[51:0] != 52'd0 ||
 	      execFpuSimple_rVal2[62:52] != 11'd0 ||
 	      execFpuSimple_rVal2[51:0] != 52'd0) &&
 	     (execFpuSimple_rVal1[63] && !execFpuSimple_rVal2[63] ||
@@ -4091,7 +4095,8 @@ module module_execFpuSimple(execFpuSimple_fpu_inst,
 	      execFpuSimple_rVal1[51:0] != 52'd0) &&
 	     int_val_rnd__h96732[115:32] == 84'd0 &&
 	     IF_1075_MINUS_0_CONCAT_execFpuSimple_rVal1_BIT_ETC___d180 &&
-	     (value_BIT_52___h25815 || execFpuSimple_rVal1[51:0] != 52'd0) &&
+	     (execFpuSimple_rVal1[62:52] != 11'd0 ||
+	      execFpuSimple_rVal1[51:0] != 52'd0) &&
 	     int_val__h96728[1:0] != 2'd0 ;
   assign NOT_execFpuSimple_rVal1_BITS_62_TO_52_1_EQ_204_ETC___d2535 =
 	     (execFpuSimple_rVal1[62:52] != 11'd2047 ||
@@ -4100,7 +4105,8 @@ module module_execFpuSimple(execFpuSimple_fpu_inst,
 	      execFpuSimple_rVal1[51:0] != 52'd0) &&
 	     (int_val_rnd__h96732 == 116'd0 || !execFpuSimple_rVal1[63]) &&
 	     int_val_rnd__h96732[115:32] == 84'd0 &&
-	     (value_BIT_52___h25815 || execFpuSimple_rVal1[51:0] != 52'd0) &&
+	     (execFpuSimple_rVal1[62:52] != 11'd0 ||
+	      execFpuSimple_rVal1[51:0] != 52'd0) &&
 	     int_val__h96728[1:0] != 2'd0 ;
   assign NOT_execFpuSimple_rVal1_BITS_62_TO_52_1_EQ_204_ETC___d2539 =
 	     (execFpuSimple_rVal1[62:52] != 11'd2047 ||
@@ -4109,7 +4115,8 @@ module module_execFpuSimple(execFpuSimple_fpu_inst,
 	      execFpuSimple_rVal1[51:0] != 52'd0) &&
 	     int_val_rnd__h96732[115:64] == 52'd0 &&
 	     IF_1075_MINUS_0_CONCAT_execFpuSimple_rVal1_BIT_ETC___d203 &&
-	     (value_BIT_52___h25815 || execFpuSimple_rVal1[51:0] != 52'd0) &&
+	     (execFpuSimple_rVal1[62:52] != 11'd0 ||
+	      execFpuSimple_rVal1[51:0] != 52'd0) &&
 	     int_val__h96728[1:0] != 2'd0 ;
   assign NOT_execFpuSimple_rVal1_BITS_62_TO_52_1_EQ_204_ETC___d2544 =
 	     (execFpuSimple_rVal1[62:52] != 11'd2047 ||
@@ -4118,7 +4125,8 @@ module module_execFpuSimple(execFpuSimple_fpu_inst,
 	      execFpuSimple_rVal1[51:0] != 52'd0) &&
 	     (int_val_rnd__h96732 == 116'd0 || !execFpuSimple_rVal1[63]) &&
 	     int_val_rnd__h96732[115:64] == 52'd0 &&
-	     (value_BIT_52___h25815 || execFpuSimple_rVal1[51:0] != 52'd0) &&
+	     (execFpuSimple_rVal1[62:52] != 11'd0 ||
+	      execFpuSimple_rVal1[51:0] != 52'd0) &&
 	     int_val__h96728[1:0] != 2'd0 ;
   assign NOT_execFpuSimple_rVal1_BITS_62_TO_52_1_ULT_ex_ETC___d2143 =
 	     !execFpuSimple_rVal1_BITS_62_TO_52_1_ULT_execFp_ETC___d2136 &&
@@ -5081,7 +5089,7 @@ module module_execFpuSimple(execFpuSimple_fpu_inst,
 	      execFpuSimple_fpu_inst[3:1] != 3'd2 &&
 	      execFpuSimple_fpu_inst[3:1] != 3'd3 &&
 	      execFpuSimple_fpu_inst[3:1] != 3'd4) ?
-	       CASE_guard19787_0b0_theResult___fst_exp28013_0_ETC__q21 :
+	       CASE_guard19787_0b0_theResult___fst_exp28013_0_ETC__q23 :
 	       IF_execFpuSimple_fpu_inst_BITS_3_TO_1_46_EQ_4__ETC___d748 ;
   assign _theResult___fst_exp__h128843 =
 	     (_theResult___fst_exp__h128013 == 11'd2047) ?
@@ -5112,7 +5120,7 @@ module module_execFpuSimple(execFpuSimple_fpu_inst,
 	      execFpuSimple_fpu_inst[3:1] != 3'd2 &&
 	      execFpuSimple_fpu_inst[3:1] != 3'd3 &&
 	      execFpuSimple_fpu_inst[3:1] != 3'd4) ?
-	       CASE_guard28854_0b0_theResult___fst_exp36844_0_ETC__q23 :
+	       CASE_guard28854_0b0_theResult___fst_exp36844_0_ETC__q21 :
 	       IF_execFpuSimple_fpu_inst_BITS_3_TO_1_46_EQ_4__ETC___d817 ;
   assign _theResult___fst_exp__h137625 =
 	     (_theResult___fst_exp__h136844 == 11'd2047) ?
@@ -5136,14 +5144,14 @@ module module_execFpuSimple(execFpuSimple_fpu_inst,
 	      execFpuSimple_fpu_inst[3:1] != 3'd2 &&
 	      execFpuSimple_fpu_inst[3:1] != 3'd3 &&
 	      execFpuSimple_fpu_inst[3:1] != 3'd4) ?
-	       CASE_guard45912_0b0_0_0b1_0_0b10_out_exp46531__ETC__q33 :
+	       CASE_guard45912_0b0_0_0b1_0_0b10_out_exp46531__ETC__q35 :
 	       IF_execFpuSimple_fpu_inst_BITS_3_TO_1_46_EQ_4__ETC___d1061 ;
   assign _theResult___fst_exp__h147381 =
 	     (execFpuSimple_fpu_inst[3:1] != 3'd1 &&
 	      execFpuSimple_fpu_inst[3:1] != 3'd2 &&
 	      execFpuSimple_fpu_inst[3:1] != 3'd3 &&
 	      execFpuSimple_fpu_inst[3:1] != 3'd4) ?
-	       CASE_guard46642_0b0_x46657_BITS_10_TO_0_0b1_x4_ETC__q35 :
+	       CASE_guard46642_0b0_x46657_BITS_10_TO_0_0b1_x4_ETC__q33 :
 	       IF_execFpuSimple_fpu_inst_BITS_3_TO_1_46_EQ_4__ETC___d1108 ;
   assign _theResult___fst_exp__h147384 =
 	     (x__h146657[10:0] == 11'd2047) ?
@@ -6516,21 +6524,14 @@ module module_execFpuSimple(execFpuSimple_fpu_inst,
   assign dst_sfd__h99166 = { 51'd0, x__h178868 } ;
   assign dst_sfd__h99177 = { 51'd0, x__h179005 } ;
   assign dst_sfd__h99188 = { 51'd0, x__h179125 } ;
-  assign execFpuSimple_fpu_inst_BITS_8_TO_4_EQ_10_4_AND_ETC___d4670 =
-	     execFpuSimple_fpu_inst[8:4] == 5'd10 &&
-	     (execFpuSimple_rVal1[62:52] != 11'd2047 ||
-	      execFpuSimple_rVal1[51:0] == 52'd0) &&
-	     (execFpuSimple_rVal1[62:52] != 11'd2047 ||
-	      execFpuSimple_rVal1[51:0] != 52'd0) &&
-	     (value_BIT_52___h25815 || execFpuSimple_rVal1[51:0] != 52'd0) &&
-	     IF_execFpuSimple_rVal1_BITS_62_TO_52_1_EQ_0_4__ETC___d4666 ;
   assign execFpuSimple_fpu_inst_BITS_8_TO_4_EQ_14_9_AND_ETC___d2260 =
 	     execFpuSimple_fpu_inst[8:4] == 5'd14 &&
 	     (execFpuSimple_rVal1[62:52] == 11'd2047 &&
 	      execFpuSimple_rVal1[51:0] != 52'd0 ||
 	      execFpuSimple_rVal1[62:52] == 11'd2047 &&
 	      execFpuSimple_rVal1[51:0] == 52'd0 ||
-	      (value_BIT_52___h25815 || execFpuSimple_rVal1[51:0] != 52'd0) &&
+	      (execFpuSimple_rVal1[62:52] != 11'd0 ||
+	       execFpuSimple_rVal1[51:0] != 52'd0) &&
 	      (int_val_rnd__h96732 != 116'd0 && execFpuSimple_rVal1[63] ||
 	       int_val_rnd__h96732[115:64] != 52'd0)) ;
   assign execFpuSimple_fpu_inst_BITS_8_TO_4_EQ_14_9_AND_ETC___d4650 =
@@ -6606,18 +6607,6 @@ module module_execFpuSimple(execFpuSimple_fpu_inst,
 	     execFpuSimple_rVal1[51:0] != 52'd0 ||
 	     execFpuSimple_rVal2[62:52] == 11'd2047 &&
 	     execFpuSimple_rVal2[51:0] != 52'd0 ;
-  assign execFpuSimple_rVal1_BITS_62_TO_52_1_EQ_2047_2__ETC___d2244 =
-	     execFpuSimple_rVal1[62:52] == 11'd2047 &&
-	     execFpuSimple_rVal1[51:0] == 52'd0 ||
-	     (value_BIT_52___h25815 || execFpuSimple_rVal1[51:0] != 52'd0) &&
-	     (int_val_rnd__h96732[115:32] != 84'd0 ||
-	      !IF_1075_MINUS_0_CONCAT_execFpuSimple_rVal1_BIT_ETC___d180) ;
-  assign execFpuSimple_rVal1_BITS_62_TO_52_1_EQ_2047_2__ETC___d2254 =
-	     execFpuSimple_rVal1[62:52] == 11'd2047 &&
-	     execFpuSimple_rVal1[51:0] == 52'd0 ||
-	     (value_BIT_52___h25815 || execFpuSimple_rVal1[51:0] != 52'd0) &&
-	     (int_val_rnd__h96732[115:64] != 52'd0 ||
-	      !IF_1075_MINUS_0_CONCAT_execFpuSimple_rVal1_BIT_ETC___d203) ;
   assign execFpuSimple_rVal1_BITS_62_TO_52_1_EQ_2047_2__ETC___d59 =
 	     execFpuSimple_rVal1[62:52] == 11'd2047 &&
 	     execFpuSimple_rVal1[51:0] != 52'd0 &&
@@ -7279,7 +7268,6 @@ module module_execFpuSimple(execFpuSimple_fpu_inst,
 	     (int_val_rnd__h96732 != 116'd0 && execFpuSimple_rVal1[63]) ?
 	       ~int_val_rnd__h96732[31:0] + 32'd1 :
 	       int_val_rnd__h96732[31:0] ;
-  assign value_BIT_52___h25815 = execFpuSimple_rVal1[62:52] != 11'd0 ;
   assign value__h103997 =
 	     { 1'b0,
 	       execFpuSimple_rVal1[30:23] != 8'd0,
@@ -7289,7 +7277,9 @@ module module_execFpuSimple(execFpuSimple_fpu_inst,
 	       -execFpuSimple_rVal1[31:0] :
 	       execFpuSimple_rVal1[31:0] ;
   assign value__h17032 =
-	     { 1'b0, value_BIT_52___h25815, execFpuSimple_rVal1[51:0] } ;
+	     { 1'b0,
+	       execFpuSimple_rVal1[62:52] != 11'd0,
+	       execFpuSimple_rVal1[51:0] } ;
   assign x__h120485 = sfd__h99582 << x__h120518 ;
   assign x__h120518 =
 	     12'd57 -
@@ -7438,7 +7428,7 @@ module module_execFpuSimple(execFpuSimple_fpu_inst,
 	       execFpuSimple_rVal1[51:0] == 52'd0,
 	       !execFpuSimple_rVal1[63] &&
 	       execFpuSimple_rVal1[62:52] != 11'd2047 &&
-	       value_BIT_52___h25815,
+	       execFpuSimple_rVal1[62:52] != 11'd0,
 	       !execFpuSimple_rVal1[63] &&
 	       execFpuSimple_rVal1[62:52] == 11'd0 &&
 	       execFpuSimple_rVal1[51:0] != 52'd0,
@@ -7453,7 +7443,7 @@ module module_execFpuSimple(execFpuSimple_fpu_inst,
 	       execFpuSimple_rVal1[51:0] != 52'd0,
 	       execFpuSimple_rVal1[63] &&
 	       execFpuSimple_rVal1[62:52] != 11'd2047 &&
-	       value_BIT_52___h25815,
+	       execFpuSimple_rVal1[62:52] != 11'd0,
 	       IF_execFpuSimple_rVal1_BIT_63_AND_execFpuSimpl_ETC__q2[0] } ;
   assign x__h96993 = int_val__h96727 & shifted_out_mask__h98620 ;
   assign x__h98865 = 118'h3FFFFFFFFFFFFFFFFFFFFFFFFFFFFF >> amt_abs__h98618 ;
@@ -7583,66 +7573,15 @@ module module_execFpuSimple(execFpuSimple_fpu_inst,
 	      _theResult___exp__h119095;
     endcase
   end
-  always@(guard__h119787 or
-	  _theResult___fst_exp__h128013 or _theResult___exp__h128742)
-  begin
-    case (guard__h119787)
-      2'b0:
-	  CASE_guard19787_0b0_theResult___fst_exp28013_0_ETC__q20 =
-	      _theResult___fst_exp__h128013;
-      2'b01, 2'b10, 2'b11:
-	  CASE_guard19787_0b0_theResult___fst_exp28013_0_ETC__q20 =
-	      _theResult___exp__h128742;
-    endcase
-  end
-  always@(execFpuSimple_fpu_inst or
-	  _theResult___fst_exp__h128013 or
-	  IF_IF_IF_IF_3074_MINUS_SEXT_execFpuSimple_rVal_ETC___d744 or
-	  IF_IF_IF_IF_3074_MINUS_SEXT_execFpuSimple_rVal_ETC___d742 or
-	  CASE_guard19787_0b0_theResult___fst_exp28013_0_ETC__q20)
-  begin
-    case (execFpuSimple_fpu_inst[3:1])
-      3'd1:
-	  IF_execFpuSimple_fpu_inst_BITS_3_TO_1_46_EQ_4__ETC___d748 =
-	      _theResult___fst_exp__h128013;
-      3'd2:
-	  IF_execFpuSimple_fpu_inst_BITS_3_TO_1_46_EQ_4__ETC___d748 =
-	      IF_IF_IF_IF_3074_MINUS_SEXT_execFpuSimple_rVal_ETC___d744;
-      3'd3:
-	  IF_execFpuSimple_fpu_inst_BITS_3_TO_1_46_EQ_4__ETC___d748 =
-	      IF_IF_IF_IF_3074_MINUS_SEXT_execFpuSimple_rVal_ETC___d742;
-      3'd4:
-	  IF_execFpuSimple_fpu_inst_BITS_3_TO_1_46_EQ_4__ETC___d748 =
-	      CASE_guard19787_0b0_theResult___fst_exp28013_0_ETC__q20;
-      default: IF_execFpuSimple_fpu_inst_BITS_3_TO_1_46_EQ_4__ETC___d748 =
-		   11'd0;
-    endcase
-  end
-  always@(guard__h119787 or
-	  _theResult___fst_exp__h128013 or
-	  out_exp__h128745 or _theResult___exp__h128742)
-  begin
-    case (guard__h119787)
-      2'b0, 2'b01:
-	  CASE_guard19787_0b0_theResult___fst_exp28013_0_ETC__q21 =
-	      _theResult___fst_exp__h128013;
-      2'b10:
-	  CASE_guard19787_0b0_theResult___fst_exp28013_0_ETC__q21 =
-	      out_exp__h128745;
-      2'b11:
-	  CASE_guard19787_0b0_theResult___fst_exp28013_0_ETC__q21 =
-	      _theResult___exp__h128742;
-    endcase
-  end
   always@(guard__h128854 or
 	  _theResult___fst_exp__h136844 or _theResult___exp__h137524)
   begin
     case (guard__h128854)
       2'b0:
-	  CASE_guard28854_0b0_theResult___fst_exp36844_0_ETC__q22 =
+	  CASE_guard28854_0b0_theResult___fst_exp36844_0_ETC__q20 =
 	      _theResult___fst_exp__h136844;
       2'b01, 2'b10, 2'b11:
-	  CASE_guard28854_0b0_theResult___fst_exp36844_0_ETC__q22 =
+	  CASE_guard28854_0b0_theResult___fst_exp36844_0_ETC__q20 =
 	      _theResult___exp__h137524;
     endcase
   end
@@ -7650,7 +7589,7 @@ module module_execFpuSimple(execFpuSimple_fpu_inst,
 	  _theResult___fst_exp__h136844 or
 	  IF_IF_IF_execFpuSimple_rVal1_BITS_30_TO_23_28__ETC___d813 or
 	  IF_IF_IF_execFpuSimple_rVal1_BITS_30_TO_23_28__ETC___d811 or
-	  CASE_guard28854_0b0_theResult___fst_exp36844_0_ETC__q22)
+	  CASE_guard28854_0b0_theResult___fst_exp36844_0_ETC__q20)
   begin
     case (execFpuSimple_fpu_inst[3:1])
       3'd1:
@@ -7664,7 +7603,7 @@ module module_execFpuSimple(execFpuSimple_fpu_inst,
 	      IF_IF_IF_execFpuSimple_rVal1_BITS_30_TO_23_28__ETC___d811;
       3'd4:
 	  IF_execFpuSimple_fpu_inst_BITS_3_TO_1_46_EQ_4__ETC___d817 =
-	      CASE_guard28854_0b0_theResult___fst_exp36844_0_ETC__q22;
+	      CASE_guard28854_0b0_theResult___fst_exp36844_0_ETC__q20;
       default: IF_execFpuSimple_fpu_inst_BITS_3_TO_1_46_EQ_4__ETC___d817 =
 		   11'd0;
     endcase
@@ -7675,14 +7614,65 @@ module module_execFpuSimple(execFpuSimple_fpu_inst,
   begin
     case (guard__h128854)
       2'b0, 2'b01:
-	  CASE_guard28854_0b0_theResult___fst_exp36844_0_ETC__q23 =
+	  CASE_guard28854_0b0_theResult___fst_exp36844_0_ETC__q21 =
 	      _theResult___fst_exp__h136844;
       2'b10:
-	  CASE_guard28854_0b0_theResult___fst_exp36844_0_ETC__q23 =
+	  CASE_guard28854_0b0_theResult___fst_exp36844_0_ETC__q21 =
 	      out_exp__h137527;
       2'b11:
-	  CASE_guard28854_0b0_theResult___fst_exp36844_0_ETC__q23 =
+	  CASE_guard28854_0b0_theResult___fst_exp36844_0_ETC__q21 =
 	      _theResult___exp__h137524;
+    endcase
+  end
+  always@(guard__h119787 or
+	  _theResult___fst_exp__h128013 or _theResult___exp__h128742)
+  begin
+    case (guard__h119787)
+      2'b0:
+	  CASE_guard19787_0b0_theResult___fst_exp28013_0_ETC__q22 =
+	      _theResult___fst_exp__h128013;
+      2'b01, 2'b10, 2'b11:
+	  CASE_guard19787_0b0_theResult___fst_exp28013_0_ETC__q22 =
+	      _theResult___exp__h128742;
+    endcase
+  end
+  always@(execFpuSimple_fpu_inst or
+	  _theResult___fst_exp__h128013 or
+	  IF_IF_IF_IF_3074_MINUS_SEXT_execFpuSimple_rVal_ETC___d744 or
+	  IF_IF_IF_IF_3074_MINUS_SEXT_execFpuSimple_rVal_ETC___d742 or
+	  CASE_guard19787_0b0_theResult___fst_exp28013_0_ETC__q22)
+  begin
+    case (execFpuSimple_fpu_inst[3:1])
+      3'd1:
+	  IF_execFpuSimple_fpu_inst_BITS_3_TO_1_46_EQ_4__ETC___d748 =
+	      _theResult___fst_exp__h128013;
+      3'd2:
+	  IF_execFpuSimple_fpu_inst_BITS_3_TO_1_46_EQ_4__ETC___d748 =
+	      IF_IF_IF_IF_3074_MINUS_SEXT_execFpuSimple_rVal_ETC___d744;
+      3'd3:
+	  IF_execFpuSimple_fpu_inst_BITS_3_TO_1_46_EQ_4__ETC___d748 =
+	      IF_IF_IF_IF_3074_MINUS_SEXT_execFpuSimple_rVal_ETC___d742;
+      3'd4:
+	  IF_execFpuSimple_fpu_inst_BITS_3_TO_1_46_EQ_4__ETC___d748 =
+	      CASE_guard19787_0b0_theResult___fst_exp28013_0_ETC__q22;
+      default: IF_execFpuSimple_fpu_inst_BITS_3_TO_1_46_EQ_4__ETC___d748 =
+		   11'd0;
+    endcase
+  end
+  always@(guard__h119787 or
+	  _theResult___fst_exp__h128013 or
+	  out_exp__h128745 or _theResult___exp__h128742)
+  begin
+    case (guard__h119787)
+      2'b0, 2'b01:
+	  CASE_guard19787_0b0_theResult___fst_exp28013_0_ETC__q23 =
+	      _theResult___fst_exp__h128013;
+      2'b10:
+	  CASE_guard19787_0b0_theResult___fst_exp28013_0_ETC__q23 =
+	      out_exp__h128745;
+      2'b11:
+	  CASE_guard19787_0b0_theResult___fst_exp28013_0_ETC__q23 =
+	      _theResult___exp__h128742;
     endcase
   end
   always@(guard__h110479 or
@@ -7836,59 +7826,14 @@ module module_execFpuSimple(execFpuSimple_fpu_inst,
 	      _theResult___sfd__h137525;
     endcase
   end
-  always@(guard__h145912 or _theResult___exp__h146528)
-  begin
-    case (guard__h145912)
-      2'b0: CASE_guard45912_0b0_0_0b1_theResult___exp46528_ETC__q32 = 11'd0;
-      2'b01, 2'b10, 2'b11:
-	  CASE_guard45912_0b0_0_0b1_theResult___exp46528_ETC__q32 =
-	      _theResult___exp__h146528;
-    endcase
-  end
-  always@(execFpuSimple_fpu_inst or
-	  IF_IF_IF_execFpuSimple_rVal1_BIT_31_10_THEN_NE_ETC___d1058 or
-	  guard__h145912 or
-	  execFpuSimple_rVal1 or
-	  _theResult___exp__h146528 or
-	  CASE_guard45912_0b0_0_0b1_theResult___exp46528_ETC__q32)
-  begin
-    case (execFpuSimple_fpu_inst[3:1])
-      3'd2:
-	  IF_execFpuSimple_fpu_inst_BITS_3_TO_1_46_EQ_4__ETC___d1061 =
-	      IF_IF_IF_execFpuSimple_rVal1_BIT_31_10_THEN_NE_ETC___d1058;
-      3'd3:
-	  IF_execFpuSimple_fpu_inst_BITS_3_TO_1_46_EQ_4__ETC___d1061 =
-	      (guard__h145912 == 2'b0 || execFpuSimple_rVal1[31]) ?
-		11'd0 :
-		_theResult___exp__h146528;
-      3'd4:
-	  IF_execFpuSimple_fpu_inst_BITS_3_TO_1_46_EQ_4__ETC___d1061 =
-	      CASE_guard45912_0b0_0_0b1_theResult___exp46528_ETC__q32;
-      default: IF_execFpuSimple_fpu_inst_BITS_3_TO_1_46_EQ_4__ETC___d1061 =
-		   11'd0;
-    endcase
-  end
-  always@(guard__h145912 or out_exp__h146531 or _theResult___exp__h146528)
-  begin
-    case (guard__h145912)
-      2'b0, 2'b01:
-	  CASE_guard45912_0b0_0_0b1_0_0b10_out_exp46531__ETC__q33 = 11'd0;
-      2'b10:
-	  CASE_guard45912_0b0_0_0b1_0_0b10_out_exp46531__ETC__q33 =
-	      out_exp__h146531;
-      2'b11:
-	  CASE_guard45912_0b0_0_0b1_0_0b10_out_exp46531__ETC__q33 =
-	      _theResult___exp__h146528;
-    endcase
-  end
   always@(guard__h146642 or x__h146657 or _theResult___exp__h147284)
   begin
     case (guard__h146642)
       2'b0:
-	  CASE_guard46642_0b0_x46657_BITS_10_TO_0_0b1_th_ETC__q34 =
+	  CASE_guard46642_0b0_x46657_BITS_10_TO_0_0b1_th_ETC__q32 =
 	      x__h146657[10:0];
       2'b01, 2'b10, 2'b11:
-	  CASE_guard46642_0b0_x46657_BITS_10_TO_0_0b1_th_ETC__q34 =
+	  CASE_guard46642_0b0_x46657_BITS_10_TO_0_0b1_th_ETC__q32 =
 	      _theResult___exp__h147284;
     endcase
   end
@@ -7896,7 +7841,7 @@ module module_execFpuSimple(execFpuSimple_fpu_inst,
 	  x__h146657 or
 	  IF_IF_IF_execFpuSimple_rVal1_BIT_31_10_THEN_NE_ETC___d1104 or
 	  IF_IF_IF_execFpuSimple_rVal1_BIT_31_10_THEN_NE_ETC___d1102 or
-	  CASE_guard46642_0b0_x46657_BITS_10_TO_0_0b1_th_ETC__q34)
+	  CASE_guard46642_0b0_x46657_BITS_10_TO_0_0b1_th_ETC__q32)
   begin
     case (execFpuSimple_fpu_inst[3:1])
       3'd1:
@@ -7910,7 +7855,7 @@ module module_execFpuSimple(execFpuSimple_fpu_inst,
 	      IF_IF_IF_execFpuSimple_rVal1_BIT_31_10_THEN_NE_ETC___d1102;
       3'd4:
 	  IF_execFpuSimple_fpu_inst_BITS_3_TO_1_46_EQ_4__ETC___d1108 =
-	      CASE_guard46642_0b0_x46657_BITS_10_TO_0_0b1_th_ETC__q34;
+	      CASE_guard46642_0b0_x46657_BITS_10_TO_0_0b1_th_ETC__q32;
       default: IF_execFpuSimple_fpu_inst_BITS_3_TO_1_46_EQ_4__ETC___d1108 =
 		   11'd0;
     endcase
@@ -7920,14 +7865,59 @@ module module_execFpuSimple(execFpuSimple_fpu_inst,
   begin
     case (guard__h146642)
       2'b0, 2'b01:
-	  CASE_guard46642_0b0_x46657_BITS_10_TO_0_0b1_x4_ETC__q35 =
+	  CASE_guard46642_0b0_x46657_BITS_10_TO_0_0b1_x4_ETC__q33 =
 	      x__h146657[10:0];
       2'b10:
-	  CASE_guard46642_0b0_x46657_BITS_10_TO_0_0b1_x4_ETC__q35 =
+	  CASE_guard46642_0b0_x46657_BITS_10_TO_0_0b1_x4_ETC__q33 =
 	      out_exp__h147287;
       2'b11:
-	  CASE_guard46642_0b0_x46657_BITS_10_TO_0_0b1_x4_ETC__q35 =
+	  CASE_guard46642_0b0_x46657_BITS_10_TO_0_0b1_x4_ETC__q33 =
 	      _theResult___exp__h147284;
+    endcase
+  end
+  always@(guard__h145912 or _theResult___exp__h146528)
+  begin
+    case (guard__h145912)
+      2'b0: CASE_guard45912_0b0_0_0b1_theResult___exp46528_ETC__q34 = 11'd0;
+      2'b01, 2'b10, 2'b11:
+	  CASE_guard45912_0b0_0_0b1_theResult___exp46528_ETC__q34 =
+	      _theResult___exp__h146528;
+    endcase
+  end
+  always@(execFpuSimple_fpu_inst or
+	  IF_IF_IF_execFpuSimple_rVal1_BIT_31_10_THEN_NE_ETC___d1058 or
+	  guard__h145912 or
+	  execFpuSimple_rVal1 or
+	  _theResult___exp__h146528 or
+	  CASE_guard45912_0b0_0_0b1_theResult___exp46528_ETC__q34)
+  begin
+    case (execFpuSimple_fpu_inst[3:1])
+      3'd2:
+	  IF_execFpuSimple_fpu_inst_BITS_3_TO_1_46_EQ_4__ETC___d1061 =
+	      IF_IF_IF_execFpuSimple_rVal1_BIT_31_10_THEN_NE_ETC___d1058;
+      3'd3:
+	  IF_execFpuSimple_fpu_inst_BITS_3_TO_1_46_EQ_4__ETC___d1061 =
+	      (guard__h145912 == 2'b0 || execFpuSimple_rVal1[31]) ?
+		11'd0 :
+		_theResult___exp__h146528;
+      3'd4:
+	  IF_execFpuSimple_fpu_inst_BITS_3_TO_1_46_EQ_4__ETC___d1061 =
+	      CASE_guard45912_0b0_0_0b1_theResult___exp46528_ETC__q34;
+      default: IF_execFpuSimple_fpu_inst_BITS_3_TO_1_46_EQ_4__ETC___d1061 =
+		   11'd0;
+    endcase
+  end
+  always@(guard__h145912 or out_exp__h146531 or _theResult___exp__h146528)
+  begin
+    case (guard__h145912)
+      2'b0, 2'b01:
+	  CASE_guard45912_0b0_0_0b1_0_0b10_out_exp46531__ETC__q35 = 11'd0;
+      2'b10:
+	  CASE_guard45912_0b0_0_0b1_0_0b10_out_exp46531__ETC__q35 =
+	      out_exp__h146531;
+      2'b11:
+	  CASE_guard45912_0b0_0_0b1_0_0b10_out_exp46531__ETC__q35 =
+	      _theResult___exp__h146528;
     endcase
   end
   always@(guard__h145912 or sfd___3__h145902 or _theResult___sfd__h146529)
@@ -8921,10 +8911,9 @@ module module_execFpuSimple(execFpuSimple_fpu_inst,
 	  execFpuSimple_fpu_inst_BITS_8_TO_4_EQ_14_9_AND_ETC___d2260 or
 	  execFpuSimple_rVal1 or
 	  IF_execFpuSimple_rVal1_BITS_30_TO_23_28_EQ_0_3_ETC___d2236 or
-	  execFpuSimple_rVal1_BITS_62_TO_52_1_EQ_2047_2__ETC___d2244 or
-	  value_BIT_52___h25815 or
 	  int_val_rnd__h96732 or
-	  execFpuSimple_rVal1_BITS_62_TO_52_1_EQ_2047_2__ETC___d2254)
+	  IF_1075_MINUS_0_CONCAT_execFpuSimple_rVal1_BIT_ETC___d180 or
+	  IF_1075_MINUS_0_CONCAT_execFpuSimple_rVal1_BIT_ETC___d203)
   begin
     case (execFpuSimple_fpu_inst[8:4])
       5'd10:
@@ -8940,21 +8929,32 @@ module module_execFpuSimple(execFpuSimple_fpu_inst,
 	  IF_execFpuSimple_fpu_inst_BITS_8_TO_4_EQ_10_4__ETC___d2264 =
 	      execFpuSimple_rVal1[62:52] == 11'd2047 &&
 	      execFpuSimple_rVal1[51:0] != 52'd0 ||
-	      execFpuSimple_rVal1_BITS_62_TO_52_1_EQ_2047_2__ETC___d2244;
+	      execFpuSimple_rVal1[62:52] == 11'd2047 &&
+	      execFpuSimple_rVal1[51:0] == 52'd0 ||
+	      (execFpuSimple_rVal1[62:52] != 11'd0 ||
+	       execFpuSimple_rVal1[51:0] != 52'd0) &&
+	      (int_val_rnd__h96732[115:32] != 84'd0 ||
+	       !IF_1075_MINUS_0_CONCAT_execFpuSimple_rVal1_BIT_ETC___d180);
       5'd12:
 	  IF_execFpuSimple_fpu_inst_BITS_8_TO_4_EQ_10_4__ETC___d2264 =
 	      execFpuSimple_rVal1[62:52] == 11'd2047 &&
 	      execFpuSimple_rVal1[51:0] != 52'd0 ||
 	      execFpuSimple_rVal1[62:52] == 11'd2047 &&
 	      execFpuSimple_rVal1[51:0] == 52'd0 ||
-	      (value_BIT_52___h25815 || execFpuSimple_rVal1[51:0] != 52'd0) &&
+	      (execFpuSimple_rVal1[62:52] != 11'd0 ||
+	       execFpuSimple_rVal1[51:0] != 52'd0) &&
 	      (int_val_rnd__h96732 != 116'd0 && execFpuSimple_rVal1[63] ||
 	       int_val_rnd__h96732[115:32] != 84'd0);
       5'd13:
 	  IF_execFpuSimple_fpu_inst_BITS_8_TO_4_EQ_10_4__ETC___d2264 =
 	      execFpuSimple_rVal1[62:52] == 11'd2047 &&
 	      execFpuSimple_rVal1[51:0] != 52'd0 ||
-	      execFpuSimple_rVal1_BITS_62_TO_52_1_EQ_2047_2__ETC___d2254;
+	      execFpuSimple_rVal1[62:52] == 11'd2047 &&
+	      execFpuSimple_rVal1[51:0] == 52'd0 ||
+	      (execFpuSimple_rVal1[62:52] != 11'd0 ||
+	       execFpuSimple_rVal1[51:0] != 52'd0) &&
+	      (int_val_rnd__h96732[115:64] != 52'd0 ||
+	       !IF_1075_MINUS_0_CONCAT_execFpuSimple_rVal1_BIT_ETC___d203);
       default: IF_execFpuSimple_fpu_inst_BITS_8_TO_4_EQ_10_4__ETC___d2264 =
 		   execFpuSimple_fpu_inst_BITS_8_TO_4_EQ_14_9_AND_ETC___d2260;
     endcase
@@ -10629,7 +10629,6 @@ module module_execFpuSimple(execFpuSimple_fpu_inst,
   always@(execFpuSimple_fpu_inst or
 	  execFpuSimple_fpu_inst_BITS_8_TO_4_EQ_14_9_AND_ETC___d4650 or
 	  execFpuSimple_rVal1 or
-	  value_BIT_52___h25815 or
 	  IF_execFpuSimple_rVal1_BITS_62_TO_52_1_EQ_0_4__ETC___d4626 or
 	  int_val_rnd__h5717 or
 	  IF_150_MINUS_0_CONCAT_execFpuSimple_rVal1_BITS_ETC___d2709 or
@@ -10642,7 +10641,8 @@ module module_execFpuSimple(execFpuSimple_fpu_inst,
 	       execFpuSimple_rVal1[51:0] == 52'd0) &&
 	      (execFpuSimple_rVal1[62:52] != 11'd2047 ||
 	       execFpuSimple_rVal1[51:0] != 52'd0) &&
-	      (value_BIT_52___h25815 || execFpuSimple_rVal1[51:0] != 52'd0) &&
+	      (execFpuSimple_rVal1[62:52] != 11'd0 ||
+	       execFpuSimple_rVal1[51:0] != 52'd0) &&
 	      IF_execFpuSimple_rVal1_BITS_62_TO_52_1_EQ_0_4__ETC___d4626;
       5'd11:
 	  IF_execFpuSimple_fpu_inst_BITS_8_TO_4_EQ_10_4__ETC___d4654 =
@@ -10753,7 +10753,6 @@ module module_execFpuSimple(execFpuSimple_fpu_inst,
   always@(execFpuSimple_fpu_inst or
 	  execFpuSimple_rVal1 or
 	  execFpuSimple_rVal1_BIT_63_2_OR_execFpuSimple__ETC___d4880 or
-	  value_BIT_52___h25815 or
 	  IF_execFpuSimple_rVal1_BITS_62_TO_52_1_EQ_0_4__ETC___d4822 or
 	  NOT_execFpuSimple_rVal1_BITS_30_TO_23_28_EQ_25_ETC___d4830 or
 	  NOT_execFpuSimple_rVal1_BITS_30_TO_23_28_EQ_25_ETC___d4836 or
@@ -10770,7 +10769,8 @@ module module_execFpuSimple(execFpuSimple_fpu_inst,
 	       execFpuSimple_rVal1[51:0] == 52'd0) &&
 	      (execFpuSimple_rVal1[62:52] != 11'd2047 ||
 	       execFpuSimple_rVal1[51:0] != 52'd0) &&
-	      (value_BIT_52___h25815 || execFpuSimple_rVal1[51:0] != 52'd0) &&
+	      (execFpuSimple_rVal1[62:52] != 11'd0 ||
+	       execFpuSimple_rVal1[51:0] != 52'd0) &&
 	      IF_execFpuSimple_rVal1_BITS_62_TO_52_1_EQ_0_4__ETC___d4822;
       5'd11:
 	  IF_execFpuSimple_fpu_inst_BITS_8_TO_4_EQ_10_4__ETC___d4890 =

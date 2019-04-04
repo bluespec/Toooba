@@ -1954,7 +1954,7 @@ module mkProc(CLK,
 	     EN_hart0_server_reset_response_get ;
 
   // action method start
-  assign RDY_start = mmioPlatform_state == 2'd0 ;
+  assign RDY_start = CAN_FIRE_start ;
   assign CAN_FIRE_start = mmioPlatform_state == 2'd0 ;
   assign WILL_FIRE_start = EN_start ;
 
@@ -3331,11 +3331,11 @@ module mkProc(CLK,
 	     WILL_FIRE_RL_mmio_axi4_adapter_rl_discard_write_rsp &&
 	     mmio_axi4_adapter_master_xactor_rg_wr_resp[1:0] == 2'b0 ;
   assign MUX_core_0$dCacheToParent_fromP_enq_1__VAL_1 =
-	     { 1'd0, llc$to_child_toC_first[582:1] } ;
-  assign MUX_core_0$dCacheToParent_fromP_enq_1__VAL_2 =
 	     { 1'd1,
 	       llc$to_child_toC_first[582:517],
 	       llc$to_child_toC_first[515:0] } ;
+  assign MUX_core_0$dCacheToParent_fromP_enq_1__VAL_2 =
+	     { 1'd0, llc$to_child_toC_first[582:1] } ;
   assign MUX_core_0$mmioToPlatform_pRq_enq_1__VAL_2 =
 	     { 1'd0,
 	       IF_mmioPlatform_reqFunc_99_BITS_5_TO_4_00_EQ_0_ETC___d440,
@@ -4234,11 +4234,11 @@ module mkProc(CLK,
   assign core_0$coreReq_start_startpc = start_startpc ;
   assign core_0$coreReq_start_toHostAddr = start_tohostAddr ;
   assign core_0$dCacheToParent_fromP_enq_x =
-	     WILL_FIRE_RL_sendPRq ?
+	     WILL_FIRE_RL_sendPRs ?
 	       MUX_core_0$dCacheToParent_fromP_enq_1__VAL_1 :
 	       MUX_core_0$dCacheToParent_fromP_enq_1__VAL_2 ;
   assign core_0$iCacheToParent_fromP_enq_x =
-	     WILL_FIRE_RL_sendPRq_1 ?
+	     WILL_FIRE_RL_sendPRs_1 ?
 	       MUX_core_0$dCacheToParent_fromP_enq_1__VAL_1 :
 	       MUX_core_0$dCacheToParent_fromP_enq_1__VAL_2 ;
   always@(MUX_core_0$mmioToPlatform_pRq_enq_1__SEL_1 or
@@ -4335,11 +4335,11 @@ module mkProc(CLK,
   assign core_0$EN_dCacheToParent_rsToP_deq = CAN_FIRE_RL_srcPropose_2 ;
   assign core_0$EN_dCacheToParent_rqToP_deq = CAN_FIRE_RL_srcPropose ;
   assign core_0$EN_dCacheToParent_fromP_enq =
-	     WILL_FIRE_RL_sendPRq || WILL_FIRE_RL_sendPRs ;
+	     WILL_FIRE_RL_sendPRs || WILL_FIRE_RL_sendPRq ;
   assign core_0$EN_iCacheToParent_rsToP_deq = CAN_FIRE_RL_srcPropose_3 ;
   assign core_0$EN_iCacheToParent_rqToP_deq = CAN_FIRE_RL_srcPropose_1 ;
   assign core_0$EN_iCacheToParent_fromP_enq =
-	     WILL_FIRE_RL_sendPRq_1 || WILL_FIRE_RL_sendPRs_1 ;
+	     WILL_FIRE_RL_sendPRs_1 || WILL_FIRE_RL_sendPRq_1 ;
   assign core_0$EN_tlbToMem_memReq_deq = CAN_FIRE_RL_srcPropose_4 ;
   assign core_0$EN_tlbToMem_respLd_enq = CAN_FIRE_RL_sendLdRespToTlb ;
   assign core_0$EN_mmioToPlatform_cRq_deq =
@@ -4437,11 +4437,11 @@ module mkProc(CLK,
 
   // submodule f_reset_reqs
   assign f_reset_reqs$ENQ = EN_hart0_server_reset_request_put ;
-  assign f_reset_reqs$DEQ = CAN_FIRE_RL_rl_reset ;
+  assign f_reset_reqs$DEQ = f_reset_reqs$EMPTY_N && f_reset_rsps$FULL_N ;
   assign f_reset_reqs$CLR = 1'b0 ;
 
   // submodule f_reset_rsps
-  assign f_reset_rsps$ENQ = CAN_FIRE_RL_rl_reset ;
+  assign f_reset_rsps$ENQ = f_reset_reqs$EMPTY_N && f_reset_rsps$FULL_N ;
   assign f_reset_rsps$DEQ = EN_hart0_server_reset_response_get ;
   assign f_reset_rsps$CLR = 1'b0 ;
 
@@ -4742,15 +4742,6 @@ module mkProc(CLK,
 				    .amoExec_upper_32_bits(mmioPlatform_reqBE_BIT_4___h27543 &&
 							   !mmioPlatform_reqBE_BIT_0___h27583),
 				    .amoExec(x__h32477));
-  module_amoExec instance_amoExec_2(.amoExec_amo_inst({ mmioPlatform_reqFunc[3:0],
-							mmioPlatform_reqBE_BIT_4___h27543 &&
-							mmioPlatform_reqBE_BIT_0___h27583,
-							2'd0 }),
-				    .amoExec_current_data(mmioPlatform_fromHostQ_data_0__h40221),
-				    .amoExec_in_data(mmioPlatform_reqData__h46242),
-				    .amoExec_upper_32_bits(mmioPlatform_reqBE_BIT_4___h27543 &&
-							   !mmioPlatform_reqBE_BIT_0___h27583),
-				    .amoExec(x__h38422));
   module_amoExec instance_amoExec_3(.amoExec_amo_inst({ mmioPlatform_reqFunc[3:0],
 							mmioPlatform_reqBE_BIT_4___h27543 &&
 							mmioPlatform_reqBE_BIT_0___h27583,
@@ -4760,6 +4751,15 @@ module mkProc(CLK,
 				    .amoExec_upper_32_bits(mmioPlatform_reqBE_BIT_4___h27543 &&
 							   !mmioPlatform_reqBE_BIT_0___h27583),
 				    .amoExec(x__h40515));
+  module_amoExec instance_amoExec_2(.amoExec_amo_inst({ mmioPlatform_reqFunc[3:0],
+							mmioPlatform_reqBE_BIT_4___h27543 &&
+							mmioPlatform_reqBE_BIT_0___h27583,
+							2'd0 }),
+				    .amoExec_current_data(mmioPlatform_fromHostQ_data_0__h40221),
+				    .amoExec_in_data(mmioPlatform_reqData__h46242),
+				    .amoExec_upper_32_bits(mmioPlatform_reqBE_BIT_4___h27543 &&
+							   !mmioPlatform_reqBE_BIT_0___h27583),
+				    .amoExec(x__h38422));
   assign DONTCARE_CONCAT_IF_mmioPlatform_reqFunc_99_BIT_ETC___d643 =
 	     { 1'h0,
 	       (mmioPlatform_reqFunc[5:4] == 2'd2) ?
@@ -5624,27 +5624,6 @@ module mkProc(CLK,
     endcase
   end
   always@(mmioPlatform_curReq or
-	  result__h46066 or
-	  result__h46094 or result__h46122 or result__h46150)
-  begin
-    case (mmioPlatform_curReq[2:0])
-      3'h0:
-	  IF_mmioPlatform_curReq_94_BITS_2_TO_0_45_EQ_0x_ETC___d786 =
-	      result__h46066;
-      3'h2:
-	  IF_mmioPlatform_curReq_94_BITS_2_TO_0_45_EQ_0x_ETC___d786 =
-	      result__h46094;
-      3'h4:
-	  IF_mmioPlatform_curReq_94_BITS_2_TO_0_45_EQ_0x_ETC___d786 =
-	      result__h46122;
-      3'h6:
-	  IF_mmioPlatform_curReq_94_BITS_2_TO_0_45_EQ_0x_ETC___d786 =
-	      result__h46150;
-      default: IF_mmioPlatform_curReq_94_BITS_2_TO_0_45_EQ_0x_ETC___d786 =
-		   64'd0;
-    endcase
-  end
-  always@(mmioPlatform_curReq or
 	  result__h45825 or
 	  result__h45853 or
 	  result__h45881 or
@@ -5677,6 +5656,27 @@ module mkProc(CLK,
       3'h7:
 	  IF_mmioPlatform_curReq_94_BITS_2_TO_0_45_EQ_0x_ETC___d773 =
 	      result__h46021;
+    endcase
+  end
+  always@(mmioPlatform_curReq or
+	  result__h46066 or
+	  result__h46094 or result__h46122 or result__h46150)
+  begin
+    case (mmioPlatform_curReq[2:0])
+      3'h0:
+	  IF_mmioPlatform_curReq_94_BITS_2_TO_0_45_EQ_0x_ETC___d786 =
+	      result__h46066;
+      3'h2:
+	  IF_mmioPlatform_curReq_94_BITS_2_TO_0_45_EQ_0x_ETC___d786 =
+	      result__h46094;
+      3'h4:
+	  IF_mmioPlatform_curReq_94_BITS_2_TO_0_45_EQ_0x_ETC___d786 =
+	      result__h46122;
+      3'h6:
+	  IF_mmioPlatform_curReq_94_BITS_2_TO_0_45_EQ_0x_ETC___d786 =
+	      result__h46150;
+      default: IF_mmioPlatform_curReq_94_BITS_2_TO_0_45_EQ_0x_ETC___d786 =
+		   64'd0;
     endcase
   end
   always@(mmioPlatform_curReq or result__h46191 or result__h46219)

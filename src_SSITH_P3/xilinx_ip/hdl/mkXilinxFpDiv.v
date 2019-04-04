@@ -6,9 +6,9 @@
 //
 // Ports:
 // Name                         I/O  size props
-// RDY_request_put                O     1 reg
-// response_get                   O    69 reg
-// RDY_response_get               O     1 reg
+// RDY_request_put                O     1
+// response_get                   O    69
+// RDY_response_get               O     1
 // CLK                            I     1 clock
 // RST_N                          I     1 reset
 // request_put                    I   131
@@ -85,14 +85,14 @@ module mkXilinxFpDiv(CLK,
   assign WILL_FIRE_response_get = EN_response_get ;
 
   // submodule m
-  mkXilinxFpDivSim m(.CLK(CLK),
-		     .RST_N(RST_N),
-		     .request_put(m$request_put),
-		     .EN_request_put(m$EN_request_put),
-		     .EN_response_get(m$EN_response_get),
-		     .RDY_request_put(m$RDY_request_put),
-		     .response_get(m$response_get),
-		     .RDY_response_get(m$RDY_response_get));
+  mkXilinxFpDivIP m(.CLK(CLK),
+		    .RST_N(RST_N),
+		    .request_put(m$request_put),
+		    .EN_request_put(m$EN_request_put),
+		    .EN_response_get(m$EN_response_get),
+		    .RDY_request_put(m$RDY_request_put),
+		    .response_get(m$response_get),
+		    .RDY_response_get(m$RDY_response_get));
 
   // submodule m
   assign m$request_put = request_put ;

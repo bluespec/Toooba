@@ -2672,29 +2672,29 @@ module mkCoreW(CLK,
 
   // rule RL_ClientServerRequest_1
   assign CAN_FIRE_RL_ClientServerRequest_1 =
-	     debug_module$RDY_hart0_gpr_mem_client_request_get &&
-	     dm_gpr_tap_ifc$RDY_server_request_put ;
+	     dm_gpr_tap_ifc$RDY_server_request_put &&
+	     debug_module$RDY_hart0_gpr_mem_client_request_get ;
   assign WILL_FIRE_RL_ClientServerRequest_1 =
 	     CAN_FIRE_RL_ClientServerRequest_1 ;
 
   // rule RL_ClientServerResponse_1
   assign CAN_FIRE_RL_ClientServerResponse_1 =
-	     debug_module$RDY_hart0_gpr_mem_client_response_put &&
-	     dm_gpr_tap_ifc$RDY_server_response_get ;
+	     dm_gpr_tap_ifc$RDY_server_response_get &&
+	     debug_module$RDY_hart0_gpr_mem_client_response_put ;
   assign WILL_FIRE_RL_ClientServerResponse_1 =
 	     CAN_FIRE_RL_ClientServerResponse_1 ;
 
   // rule RL_ClientServerRequest_2
   assign CAN_FIRE_RL_ClientServerRequest_2 =
-	     proc$RDY_hart0_gpr_mem_server_request_put &&
-	     dm_gpr_tap_ifc$RDY_client_request_get ;
+	     dm_gpr_tap_ifc$RDY_client_request_get &&
+	     proc$RDY_hart0_gpr_mem_server_request_put ;
   assign WILL_FIRE_RL_ClientServerRequest_2 =
 	     CAN_FIRE_RL_ClientServerRequest_2 ;
 
   // rule RL_ClientServerResponse_2
   assign CAN_FIRE_RL_ClientServerResponse_2 =
-	     proc$RDY_hart0_gpr_mem_server_response_get &&
-	     dm_gpr_tap_ifc$RDY_client_response_put ;
+	     dm_gpr_tap_ifc$RDY_client_response_put &&
+	     proc$RDY_hart0_gpr_mem_server_response_get ;
   assign WILL_FIRE_RL_ClientServerResponse_2 =
 	     CAN_FIRE_RL_ClientServerResponse_2 ;
 
@@ -2707,29 +2707,29 @@ module mkCoreW(CLK,
 
   // rule RL_ClientServerRequest_3
   assign CAN_FIRE_RL_ClientServerRequest_3 =
-	     debug_module$RDY_hart0_csr_mem_client_request_get &&
-	     dm_csr_tap$RDY_server_request_put ;
+	     dm_csr_tap$RDY_server_request_put &&
+	     debug_module$RDY_hart0_csr_mem_client_request_get ;
   assign WILL_FIRE_RL_ClientServerRequest_3 =
 	     CAN_FIRE_RL_ClientServerRequest_3 ;
 
   // rule RL_ClientServerResponse_3
   assign CAN_FIRE_RL_ClientServerResponse_3 =
-	     debug_module$RDY_hart0_csr_mem_client_response_put &&
-	     dm_csr_tap$RDY_server_response_get ;
+	     dm_csr_tap$RDY_server_response_get &&
+	     debug_module$RDY_hart0_csr_mem_client_response_put ;
   assign WILL_FIRE_RL_ClientServerResponse_3 =
 	     CAN_FIRE_RL_ClientServerResponse_3 ;
 
   // rule RL_ClientServerRequest_4
   assign CAN_FIRE_RL_ClientServerRequest_4 =
-	     proc$RDY_hart0_csr_mem_server_request_put &&
-	     dm_csr_tap$RDY_client_request_get ;
+	     dm_csr_tap$RDY_client_request_get &&
+	     proc$RDY_hart0_csr_mem_server_request_put ;
   assign WILL_FIRE_RL_ClientServerRequest_4 =
 	     CAN_FIRE_RL_ClientServerRequest_4 ;
 
   // rule RL_ClientServerResponse_4
   assign CAN_FIRE_RL_ClientServerResponse_4 =
-	     proc$RDY_hart0_csr_mem_server_response_get &&
-	     dm_csr_tap$RDY_client_response_put ;
+	     dm_csr_tap$RDY_client_response_put &&
+	     proc$RDY_hart0_csr_mem_server_response_get ;
   assign WILL_FIRE_RL_ClientServerResponse_4 =
 	     CAN_FIRE_RL_ClientServerResponse_4 ;
 
@@ -2850,9 +2850,8 @@ module mkCoreW(CLK,
 
   // rule RL_rl_cpu_hart0_reset_from_dm_start
   assign CAN_FIRE_RL_rl_cpu_hart0_reset_from_dm_start =
-	     plic$RDY_server_reset_request_put &&
+	     plic$RDY_server_reset_request_put && fabric_2x3$RDY_reset &&
 	     debug_module$RDY_hart0_get_reset_req_get &&
-	     fabric_2x3$RDY_reset &&
 	     proc$RDY_hart0_server_reset_request_put &&
 	     f_reset_requestor$FULL_N ;
   assign WILL_FIRE_RL_rl_cpu_hart0_reset_from_dm_start =

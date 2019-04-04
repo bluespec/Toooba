@@ -177,6 +177,7 @@ module mkMemLoader(CLK_portalClk,
 
   // inlined wires
   wire [640 : 0] memReqQ_enqReq_lat_0$wget;
+  wire memReqQ_enqReq_lat_0$whas;
 
   // register busy
   reg busy;
@@ -655,46 +656,45 @@ module mkMemLoader(CLK_portalClk,
   wire MUX_busy$write_1__SEL_1,
        MUX_busy$write_1__SEL_2,
        MUX_expectWrData$write_1__SEL_1,
-       MUX_pendStCnt$write_1__SEL_2,
        MUX_writing$write_1__SEL_2;
 
   // remaining internal signals
   wire [72 : 0] x_wget__h5086;
   wire [64 : 0] x_wget__h2376;
-  wire [63 : 0] IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d726,
-		IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d724,
-		IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d721,
-		IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d719,
-		IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d716,
-		IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d714,
-		IF_reqSel_70_EQ_6_93_THEN_hostWrDataQ_q_wDataO_ETC___d711,
-		IF_reqSel_70_EQ_7_71_THEN_hostWrDataQ_q_wDataO_ETC___d709,
-		av_avValue_data__h97164,
-		req_addr__h75832,
+  wire [63 : 0] IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d722,
+		IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d720,
+		IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d717,
+		IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d715,
+		IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d712,
+		IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d710,
+		IF_reqSel_66_EQ_6_89_THEN_hostWrDataQ_q_wDataO_ETC___d707,
+		IF_reqSel_66_EQ_7_67_THEN_hostWrDataQ_q_wDataO_ETC___d705,
+		av_avValue_data__h96991,
+		req_addr__h75765,
 		x_addr__h43806,
 		x_wget__h7793;
-  wire [47 : 0] IF_mmio_req_wrBE_BIT_7_67_THEN_mmio_req_wrData_ETC___d1000;
+  wire [47 : 0] IF_mmio_req_wrBE_BIT_7_61_THEN_mmio_req_wrData_ETC___d994;
   wire [31 : 0] IF_hostStartQ_q_rRdPtr_rsCounter_77_BIT_0_84_X_ETC___d187,
 		IF_hostWrAddrQ_q_rRdPtr_rsCounter_1_BIT_0_8_XO_ETC___d41,
 		IF_hostWrAddrQ_q_rWrPtr_rsCounter_BIT_0_XOR_ho_ETC___d11,
-		IF_hostWrDataQ_q_rRdPtr_rsCounter_04_BIT_0_11__ETC___d114,
 		IF_hostWrDataQ_q_rWrPtr_rsCounter_4_BIT_0_1_XO_ETC___d84,
 		IF_hostWrDoneQ_q_rRdPtr_rsCounter_50_BIT_0_57__ETC___d260,
 		IF_hostWrDoneQ_q_rWrPtr_rsCounter_20_BIT_0_27__ETC___d230,
-		IF_mmio_req_wrBE_BIT_7_67_THEN_mmio_req_wrData_ETC___d993,
+		IF_mmio_req_wrBE_BIT_7_61_THEN_mmio_req_wrData_ETC___d987,
+		x__h4676,
 		x__h6528;
-  wire [7 : 0] IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481,
-	       IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d500,
-	       IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d519,
-	       IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d538,
-	       IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d557,
-	       IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d576,
-	       IF_reqSel_70_EQ_6_93_THEN_hostWrDataQ_q_wDataO_ETC___d595,
-	       IF_reqSel_70_EQ_7_71_THEN_hostWrDataQ_q_wDataO_ETC___d613;
-  wire [1 : 0] hostStartQ_q_rRdPtr_rdCounter_027_BIT_1_028_CO_ETC___d1032,
-	       hostWrAddrQ_q_rRdPtr_rdCounter_045_BIT_1_046_C_ETC___d1050,
-	       hostWrDataQ_q_rRdPtr_rdCounter_059_BIT_1_060_C_ETC___d1064,
-	       hostWrDoneQ_q_rRdPtr_rdCounter_39_BIT_1_40_CON_ETC___d944,
+  wire [7 : 0] IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d477,
+	       IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d496,
+	       IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d515,
+	       IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d534,
+	       IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d553,
+	       IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d572,
+	       IF_reqSel_66_EQ_6_89_THEN_hostWrDataQ_q_wDataO_ETC___d591,
+	       IF_reqSel_66_EQ_7_67_THEN_hostWrDataQ_q_wDataO_ETC___d609;
+  wire [1 : 0] hostStartQ_q_rRdPtr_rdCounter_021_BIT_1_022_CO_ETC___d1026,
+	       hostWrAddrQ_q_rRdPtr_rdCounter_039_BIT_1_040_C_ETC___d1044,
+	       hostWrDataQ_q_rRdPtr_rdCounter_053_BIT_1_054_C_ETC___d1058,
+	       hostWrDoneQ_q_rRdPtr_rdCounter_34_BIT_1_35_CON_ETC___d939,
 	       x__h10885,
 	       x__h1801,
 	       x__h2762,
@@ -724,21 +724,21 @@ module mkMemLoader(CLK_portalClk,
 	       y__h7405,
 	       y__h9257;
   wire IF_memReqQ_enqReq_lat_1_whas__96_THEN_memReqQ__ETC___d305,
-       IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d922,
-       IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d914,
-       IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d906,
-       IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d898,
-       IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d890,
-       IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d882,
-       NOT_IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wD_ETC___d685,
-       NOT_IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wD_ETC___d694,
-       NOT_IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wD_ETC___d677,
-       NOT_IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wD_ETC___d669,
-       NOT_IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wD_ETC___d661,
-       NOT_IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wD_ETC___d653,
-       NOT_IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wD_ETC___d645,
-       NOT_hostStartQ_q_rWrPtr_rsCounter_47_EQ_hostSt_ETC___d1040,
-       NOT_hostWrDoneQ_q_rWrPtr_rsCounter_20_EQ_hostW_ETC___d952,
+       IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d918,
+       IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d910,
+       IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d902,
+       IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d894,
+       IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d886,
+       IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d878,
+       NOT_IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wD_ETC___d681,
+       NOT_IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wD_ETC___d690,
+       NOT_IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wD_ETC___d673,
+       NOT_IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wD_ETC___d665,
+       NOT_IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wD_ETC___d657,
+       NOT_IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wD_ETC___d649,
+       NOT_IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wD_ETC___d641,
+       NOT_hostStartQ_q_rWrPtr_rsCounter_47_EQ_hostSt_ETC___d1034,
+       NOT_hostWrDoneQ_q_rWrPtr_rsCounter_20_EQ_hostW_ETC___d947,
        NOT_memReqQ_clearReq_dummy2_1_read__40_41_OR_I_ETC___d345,
        NOT_memReqQ_enqReq_dummy2_2_read__46_61_OR_IF__ETC___d366,
        NOT_respStQ_enqReq_dummy2_2_read__16_31_OR_IF__ETC___d441,
@@ -755,9 +755,8 @@ module mkMemLoader(CLK_portalClk,
        hostWrDoneQ_q_rRdPtr_rsCounter_50_BIT_1_58_XOR_ETC___d287,
        hostWrDoneQ_q_rWrPtr_rsCounter_20_BIT_0_27_XOR_ETC___d229,
        memReqQ_enqReq_dummy2_2_read__46_AND_IF_memReq_ETC___d358,
-       mmio_req_wrBE_BIT_0_60_OR_mmio_req_wrBE_BIT_1__ETC___d978,
-       reqSel_70_EQ_7_71_OR_hostWrDataQ_q_wDataOut_wg_ETC___d930,
-       reqSel_70_EQ_7_71_OR_hostWrDataQ_q_wDataOut_wg_ETC___d934,
+       mmio_req_wrBE_BIT_0_54_OR_mmio_req_wrBE_BIT_1__ETC___d972,
+       reqSel_66_EQ_7_67_OR_hostWrDataQ_q_wDataOut_wg_ETC___d926,
        respStQ_enqReq_dummy2_2_read__16_AND_IF_respSt_ETC___d428;
 
   // actionvalue method mmio_req
@@ -769,13 +768,13 @@ module mkMemLoader(CLK_portalClk,
 	       !mmio_req_wrBE[6] &&
 	       !mmio_req_wrBE[7] ||
 	       !mmio_req_offset,
-	       av_avValue_data__h97164 } ;
+	       av_avValue_data__h96991 } ;
   assign RDY_mmio_req =
 	     busy ||
-	     NOT_hostStartQ_q_rWrPtr_rsCounter_47_EQ_hostSt_ETC___d1040 ;
+	     NOT_hostStartQ_q_rWrPtr_rsCounter_47_EQ_hostSt_ETC___d1034 ;
   assign CAN_FIRE_mmio_req =
 	     busy ||
-	     NOT_hostStartQ_q_rWrPtr_rsCounter_47_EQ_hostSt_ETC___d1040 ;
+	     NOT_hostStartQ_q_rWrPtr_rsCounter_47_EQ_hostSt_ETC___d1034 ;
   assign WILL_FIRE_mmio_req = EN_mmio_req ;
 
   // value method to_mem_memReq_notEmpty
@@ -803,9 +802,9 @@ module mkMemLoader(CLK_portalClk,
   // action method hostReq_wrAddr
   assign RDY_hostReq_wrAddr =
 	     hostWrAddrQ_q_rWrPtr_rsCounter !=
-	     { hostWrAddrQ_q_rRdPtr_rdCounter_045_BIT_1_046_C_ETC___d1050[1],
-	       hostWrAddrQ_q_rRdPtr_rdCounter_045_BIT_1_046_C_ETC___d1050[1] ^
-	       hostWrAddrQ_q_rRdPtr_rdCounter_045_BIT_1_046_C_ETC___d1050[0] } &&
+	     { hostWrAddrQ_q_rRdPtr_rdCounter_039_BIT_1_040_C_ETC___d1044[1],
+	       hostWrAddrQ_q_rRdPtr_rdCounter_039_BIT_1_040_C_ETC___d1044[1] ^
+	       hostWrAddrQ_q_rRdPtr_rdCounter_039_BIT_1_040_C_ETC___d1044[0] } &&
 	     hostWrAddrQ_srcGuard$IS_READY ;
   assign CAN_FIRE_hostReq_wrAddr = RDY_hostReq_wrAddr ;
   assign WILL_FIRE_hostReq_wrAddr = EN_hostReq_wrAddr ;
@@ -813,9 +812,9 @@ module mkMemLoader(CLK_portalClk,
   // action method hostReq_wrData
   assign RDY_hostReq_wrData =
 	     hostWrDataQ_q_rWrPtr_rsCounter !=
-	     { hostWrDataQ_q_rRdPtr_rdCounter_059_BIT_1_060_C_ETC___d1064[1],
-	       hostWrDataQ_q_rRdPtr_rdCounter_059_BIT_1_060_C_ETC___d1064[1] ^
-	       hostWrDataQ_q_rRdPtr_rdCounter_059_BIT_1_060_C_ETC___d1064[0] } &&
+	     { hostWrDataQ_q_rRdPtr_rdCounter_053_BIT_1_054_C_ETC___d1058[1],
+	       hostWrDataQ_q_rRdPtr_rdCounter_053_BIT_1_054_C_ETC___d1058[1] ^
+	       hostWrDataQ_q_rRdPtr_rdCounter_053_BIT_1_054_C_ETC___d1058[0] } &&
 	     hostWrDataQ_srcGuard$IS_READY ;
   assign CAN_FIRE_hostReq_wrData = RDY_hostReq_wrData ;
   assign WILL_FIRE_hostReq_wrData = EN_hostReq_wrData ;
@@ -1049,7 +1048,7 @@ module mkMemLoader(CLK_portalClk,
   assign CAN_FIRE_RL_doStResp =
 	     !respStQ_empty &&
 	     (pendStCnt != 8'd1 || expectWrData ||
-	      NOT_hostWrDoneQ_q_rWrPtr_rsCounter_20_EQ_hostW_ETC___d952) &&
+	      NOT_hostWrDoneQ_q_rWrPtr_rsCounter_20_EQ_hostW_ETC___d947) &&
 	     writing ;
   assign WILL_FIRE_RL_doStResp = CAN_FIRE_RL_doStResp ;
 
@@ -1126,7 +1125,7 @@ module mkMemLoader(CLK_portalClk,
 	     hostWrDataQ_q_rWrPtr_rdCounter &&
 	     hostWrDataQ_dstGuard$IS_READY &&
 	     (reqSel != 3'd7 && !hostWrDataQ_q_memory$DOB[0] ||
-	      NOT_IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wD_ETC___d694) &&
+	      NOT_IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wD_ETC___d690) &&
 	     writing &&
 	     expectWrData &&
 	     pendStCnt != 8'd255 ;
@@ -1314,12 +1313,9 @@ module mkMemLoader(CLK_portalClk,
 	     WILL_FIRE_RL_doNewWrite && !hostWrAddrQ_q_memory$DOB[64] ;
   assign MUX_busy$write_1__SEL_2 =
 	     EN_mmio_req &&
-	     mmio_req_wrBE_BIT_0_60_OR_mmio_req_wrBE_BIT_1__ETC___d978 ;
+	     mmio_req_wrBE_BIT_0_54_OR_mmio_req_wrBE_BIT_1__ETC___d972 ;
   assign MUX_expectWrData$write_1__SEL_1 =
 	     WILL_FIRE_RL_doNewWrite && hostWrAddrQ_q_memory$DOB[64] ;
-  assign MUX_pendStCnt$write_1__SEL_2 =
-	     WILL_FIRE_RL_doStReq &&
-	     reqSel_70_EQ_7_71_OR_hostWrDataQ_q_wDataOut_wg_ETC___d930 ;
   assign MUX_writing$write_1__SEL_2 =
 	     WILL_FIRE_RL_doStResp && pendStCnt == 8'd1 && !expectWrData ;
   assign MUX_hostStartQ_q_rRdPtr_rsCounter$write_1__VAL_1 =
@@ -1339,7 +1335,7 @@ module mkMemLoader(CLK_portalClk,
 	       hostWrAddrQ_q_rWrPtr_rsCounter | x__h938 :
 	       hostWrAddrQ_q_rWrPtr_rsCounter & y__h1133 ;
   assign MUX_hostWrDataQ_q_rRdPtr_rsCounter$write_1__VAL_1 =
-	     (~hostWrDataQ_q_rRdPtr_rsCounter[IF_hostWrDataQ_q_rRdPtr_rsCounter_04_BIT_0_11__ETC___d114[0]]) ?
+	     (~hostWrDataQ_q_rRdPtr_rsCounter[x__h4676[0]]) ?
 	       hostWrDataQ_q_rRdPtr_rsCounter | x__h4511 :
 	       hostWrDataQ_q_rRdPtr_rsCounter & y__h4698 ;
   assign MUX_hostWrDataQ_q_rWrPtr_rsCounter$write_1__VAL_1 =
@@ -1361,43 +1357,46 @@ module mkMemLoader(CLK_portalClk,
   assign MUX_reqBE$write_1__VAL_2 =
 	     (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) ?
 	       64'd0 :
-	       { IF_reqSel_70_EQ_7_71_THEN_hostWrDataQ_q_wDataO_ETC___d613,
-		 IF_reqSel_70_EQ_6_93_THEN_hostWrDataQ_q_wDataO_ETC___d595,
-		 IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d576,
-		 IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d557,
-		 IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d538,
-		 IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d519,
-		 IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d500,
-		 IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481 } ;
+	       { IF_reqSel_66_EQ_7_67_THEN_hostWrDataQ_q_wDataO_ETC___d609,
+		 IF_reqSel_66_EQ_6_89_THEN_hostWrDataQ_q_wDataO_ETC___d591,
+		 IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d572,
+		 IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d553,
+		 IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d534,
+		 IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d515,
+		 IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d496,
+		 IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d477 } ;
   assign MUX_reqSel$write_1__VAL_2 = reqSel + 3'd1 ;
 
   // inlined wires
   assign memReqQ_enqReq_lat_0$wget =
 	     { 1'd1,
-	       req_addr__h75832,
-	       IF_reqSel_70_EQ_7_71_THEN_hostWrDataQ_q_wDataO_ETC___d613,
-	       IF_reqSel_70_EQ_6_93_THEN_hostWrDataQ_q_wDataO_ETC___d595,
-	       IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d576,
-	       IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d557,
-	       IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d538,
-	       IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d519,
-	       IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d500,
-	       IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481,
-	       IF_reqSel_70_EQ_7_71_THEN_hostWrDataQ_q_wDataO_ETC___d709,
-	       IF_reqSel_70_EQ_6_93_THEN_hostWrDataQ_q_wDataO_ETC___d711,
-	       IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d714,
-	       IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d716,
-	       IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d719,
-	       IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d721,
-	       IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d724,
-	       IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d726 } ;
+	       req_addr__h75765,
+	       IF_reqSel_66_EQ_7_67_THEN_hostWrDataQ_q_wDataO_ETC___d609,
+	       IF_reqSel_66_EQ_6_89_THEN_hostWrDataQ_q_wDataO_ETC___d591,
+	       IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d572,
+	       IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d553,
+	       IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d534,
+	       IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d515,
+	       IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d496,
+	       IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d477,
+	       IF_reqSel_66_EQ_7_67_THEN_hostWrDataQ_q_wDataO_ETC___d705,
+	       IF_reqSel_66_EQ_6_89_THEN_hostWrDataQ_q_wDataO_ETC___d707,
+	       IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d710,
+	       IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d712,
+	       IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d715,
+	       IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d717,
+	       IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d720,
+	       IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d722 } ;
+  assign memReqQ_enqReq_lat_0$whas =
+	     WILL_FIRE_RL_doStReq &&
+	     reqSel_66_EQ_7_67_OR_hostWrDataQ_q_wDataOut_wg_ETC___d926 ;
 
   // register busy
   assign busy$D_IN = !MUX_busy$write_1__SEL_1 ;
   assign busy$EN =
 	     WILL_FIRE_RL_doNewWrite && !hostWrAddrQ_q_memory$DOB[64] ||
 	     EN_mmio_req &&
-	     mmio_req_wrBE_BIT_0_60_OR_mmio_req_wrBE_BIT_1__ETC___d978 ;
+	     mmio_req_wrBE_BIT_0_54_OR_mmio_req_wrBE_BIT_1__ETC___d972 ;
 
   // register expectWrData
   assign expectWrData$D_IN =
@@ -1533,7 +1532,7 @@ module mkMemLoader(CLK_portalClk,
   // register memReqQ_data_0
   assign memReqQ_data_0$D_IN =
 	     { x_addr__h43806,
-	       MUX_pendStCnt$write_1__SEL_2 ?
+	       memReqQ_enqReq_lat_0$whas ?
 		 memReqQ_enqReq_lat_0$wget[575:0] :
 		 memReqQ_enqReq_rl[575:0] } ;
   assign memReqQ_data_0$EN =
@@ -1568,13 +1567,13 @@ module mkMemLoader(CLK_portalClk,
 
   // register pendStCnt
   always@(MUX_expectWrData$write_1__SEL_1 or
-	  MUX_pendStCnt$write_1__SEL_2 or
+	  memReqQ_enqReq_lat_0$whas or
 	  MUX_pendStCnt$write_1__VAL_2 or
 	  WILL_FIRE_RL_doStResp or MUX_pendStCnt$write_1__VAL_3)
   begin
     case (1'b1) // synopsys parallel_case
       MUX_expectWrData$write_1__SEL_1: pendStCnt$D_IN = 8'd0;
-      MUX_pendStCnt$write_1__SEL_2:
+      memReqQ_enqReq_lat_0$whas:
 	  pendStCnt$D_IN = MUX_pendStCnt$write_1__VAL_2;
       WILL_FIRE_RL_doStResp: pendStCnt$D_IN = MUX_pendStCnt$write_1__VAL_3;
       default: pendStCnt$D_IN = 8'b10101010 /* unspecified value */ ;
@@ -1583,7 +1582,7 @@ module mkMemLoader(CLK_portalClk,
   assign pendStCnt$EN =
 	     WILL_FIRE_RL_doNewWrite && hostWrAddrQ_q_memory$DOB[64] ||
 	     WILL_FIRE_RL_doStReq &&
-	     reqSel_70_EQ_7_71_OR_hostWrDataQ_q_wDataOut_wg_ETC___d930 ||
+	     reqSel_66_EQ_7_67_OR_hostWrDataQ_q_wDataOut_wg_ETC___d926 ||
 	     WILL_FIRE_RL_doStResp ;
 
   // register reqAddr
@@ -1606,14 +1605,14 @@ module mkMemLoader(CLK_portalClk,
 
   // register reqData
   assign reqData$D_IN =
-	     { IF_reqSel_70_EQ_7_71_THEN_hostWrDataQ_q_wDataO_ETC___d709,
-	       IF_reqSel_70_EQ_6_93_THEN_hostWrDataQ_q_wDataO_ETC___d711,
-	       IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d714,
-	       IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d716,
-	       IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d719,
-	       IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d721,
-	       IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d724,
-	       IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d726 } ;
+	     { IF_reqSel_66_EQ_7_67_THEN_hostWrDataQ_q_wDataO_ETC___d705,
+	       IF_reqSel_66_EQ_6_89_THEN_hostWrDataQ_q_wDataO_ETC___d707,
+	       IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d710,
+	       IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d712,
+	       IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d715,
+	       IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d717,
+	       IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d720,
+	       IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d722 } ;
   assign reqData$EN = WILL_FIRE_RL_doStReq ;
 
   // register reqSel
@@ -1743,7 +1742,7 @@ module mkMemLoader(CLK_portalClk,
 
   // submodule memReqQ_enqReq_dummy2_0
   assign memReqQ_enqReq_dummy2_0$D_IN = 1'd1 ;
-  assign memReqQ_enqReq_dummy2_0$EN = MUX_pendStCnt$write_1__SEL_2 ;
+  assign memReqQ_enqReq_dummy2_0$EN = memReqQ_enqReq_lat_0$whas ;
 
   // submodule memReqQ_enqReq_dummy2_1
   assign memReqQ_enqReq_dummy2_1$D_IN = 1'b0 ;
@@ -1798,10 +1797,6 @@ module mkMemLoader(CLK_portalClk,
 	     hostWrAddrQ_q_rWrPtr_rsCounter_BIT_0_XOR_hostW_ETC___d10 ?
 	       32'd1 :
 	       32'd0 ;
-  assign IF_hostWrDataQ_q_rRdPtr_rsCounter_04_BIT_0_11__ETC___d114 =
-	     hostWrDataQ_q_rRdPtr_rsCounter_04_BIT_0_11_XOR_ETC___d113 ?
-	       32'd1 :
-	       32'd0 ;
   assign IF_hostWrDataQ_q_rWrPtr_rsCounter_4_BIT_0_1_XO_ETC___d84 =
 	     hostWrDataQ_q_rWrPtr_rsCounter_4_BIT_0_1_XOR_h_ETC___d83 ?
 	       32'd1 :
@@ -1815,18 +1810,10 @@ module mkMemLoader(CLK_portalClk,
 	       32'd1 :
 	       32'd0 ;
   assign IF_memReqQ_enqReq_lat_1_whas__96_THEN_memReqQ__ETC___d305 =
-	     MUX_pendStCnt$write_1__SEL_2 ?
+	     memReqQ_enqReq_lat_0$whas ?
 	       memReqQ_enqReq_lat_0$wget[640] :
 	       memReqQ_enqReq_rl[640] ;
-  assign IF_mmio_req_wrBE_BIT_7_67_THEN_mmio_req_wrData_ETC___d1000 =
-	     { IF_mmio_req_wrBE_BIT_7_67_THEN_mmio_req_wrData_ETC___d993,
-	       mmio_req_wrBE[3] ?
-		 mmio_req_wrData[31:24] :
-		 memStartAddr[31:24],
-	       mmio_req_wrBE[2] ?
-		 mmio_req_wrData[23:16] :
-		 memStartAddr[23:16] } ;
-  assign IF_mmio_req_wrBE_BIT_7_67_THEN_mmio_req_wrData_ETC___d993 =
+  assign IF_mmio_req_wrBE_BIT_7_61_THEN_mmio_req_wrData_ETC___d987 =
 	     { mmio_req_wrBE[7] ?
 		 mmio_req_wrData[63:56] :
 		 memStartAddr[63:56],
@@ -1839,217 +1826,225 @@ module mkMemLoader(CLK_portalClk,
 	       mmio_req_wrBE[4] ?
 		 mmio_req_wrData[39:32] :
 		 memStartAddr[39:32] } ;
-  assign IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481 =
+  assign IF_mmio_req_wrBE_BIT_7_61_THEN_mmio_req_wrData_ETC___d994 =
+	     { IF_mmio_req_wrBE_BIT_7_61_THEN_mmio_req_wrData_ETC___d987,
+	       mmio_req_wrBE[3] ?
+		 mmio_req_wrData[31:24] :
+		 memStartAddr[31:24],
+	       mmio_req_wrBE[2] ?
+		 mmio_req_wrData[23:16] :
+		 memStartAddr[23:16] } ;
+  assign IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d477 =
 	     (reqSel == 3'd0) ? hostWrDataQ_q_memory$DOB[8:1] : reqBE[7:0] ;
-  assign IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d726 =
+  assign IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d722 =
 	     (reqSel == 3'd0) ?
 	       hostWrDataQ_q_memory$DOB[72:9] :
 	       reqData[63:0] ;
-  assign IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d922 =
-	     IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481[7] ||
-	     IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d500[0] ||
-	     IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d500[1] ||
-	     IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d500[2] ||
-	     IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d500[3] ||
-	     IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d500[4] ||
-	     IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d500[5] ||
-	     IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d500[6] ||
-	     IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d914 ;
-  assign IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d500 =
+  assign IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d918 =
+	     IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d477[7] ||
+	     IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d496[0] ||
+	     IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d496[1] ||
+	     IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d496[2] ||
+	     IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d496[3] ||
+	     IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d496[4] ||
+	     IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d496[5] ||
+	     IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d496[6] ||
+	     IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d910 ;
+  assign IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d496 =
 	     (reqSel == 3'd1) ? hostWrDataQ_q_memory$DOB[8:1] : reqBE[15:8] ;
-  assign IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d724 =
+  assign IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d720 =
 	     (reqSel == 3'd1) ?
 	       hostWrDataQ_q_memory$DOB[72:9] :
 	       reqData[127:64] ;
-  assign IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d914 =
-	     IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d500[7] ||
-	     IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d519[0] ||
-	     IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d519[1] ||
-	     IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d519[2] ||
-	     IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d519[3] ||
-	     IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d519[4] ||
-	     IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d519[5] ||
-	     IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d519[6] ||
-	     IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d906 ;
-  assign IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d519 =
+  assign IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d910 =
+	     IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d496[7] ||
+	     IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d515[0] ||
+	     IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d515[1] ||
+	     IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d515[2] ||
+	     IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d515[3] ||
+	     IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d515[4] ||
+	     IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d515[5] ||
+	     IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d515[6] ||
+	     IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d902 ;
+  assign IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d515 =
 	     (reqSel == 3'd2) ? hostWrDataQ_q_memory$DOB[8:1] : reqBE[23:16] ;
-  assign IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d721 =
+  assign IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d717 =
 	     (reqSel == 3'd2) ?
 	       hostWrDataQ_q_memory$DOB[72:9] :
 	       reqData[191:128] ;
-  assign IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d906 =
-	     IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d519[7] ||
-	     IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d538[0] ||
-	     IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d538[1] ||
-	     IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d538[2] ||
-	     IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d538[3] ||
-	     IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d538[4] ||
-	     IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d538[5] ||
-	     IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d538[6] ||
-	     IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d898 ;
-  assign IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d538 =
+  assign IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d902 =
+	     IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d515[7] ||
+	     IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d534[0] ||
+	     IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d534[1] ||
+	     IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d534[2] ||
+	     IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d534[3] ||
+	     IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d534[4] ||
+	     IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d534[5] ||
+	     IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d534[6] ||
+	     IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d894 ;
+  assign IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d534 =
 	     (reqSel == 3'd3) ? hostWrDataQ_q_memory$DOB[8:1] : reqBE[31:24] ;
-  assign IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d719 =
+  assign IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d715 =
 	     (reqSel == 3'd3) ?
 	       hostWrDataQ_q_memory$DOB[72:9] :
 	       reqData[255:192] ;
-  assign IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d898 =
-	     IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d538[7] ||
-	     IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d557[0] ||
-	     IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d557[1] ||
-	     IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d557[2] ||
-	     IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d557[3] ||
-	     IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d557[4] ||
-	     IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d557[5] ||
-	     IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d557[6] ||
-	     IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d890 ;
-  assign IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d557 =
+  assign IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d894 =
+	     IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d534[7] ||
+	     IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d553[0] ||
+	     IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d553[1] ||
+	     IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d553[2] ||
+	     IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d553[3] ||
+	     IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d553[4] ||
+	     IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d553[5] ||
+	     IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d553[6] ||
+	     IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d886 ;
+  assign IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d553 =
 	     (reqSel == 3'd4) ? hostWrDataQ_q_memory$DOB[8:1] : reqBE[39:32] ;
-  assign IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d716 =
+  assign IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d712 =
 	     (reqSel == 3'd4) ?
 	       hostWrDataQ_q_memory$DOB[72:9] :
 	       reqData[319:256] ;
-  assign IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d890 =
-	     IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d557[7] ||
-	     IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d576[0] ||
-	     IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d576[1] ||
-	     IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d576[2] ||
-	     IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d576[3] ||
-	     IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d576[4] ||
-	     IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d576[5] ||
-	     IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d576[6] ||
-	     IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d882 ;
-  assign IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d576 =
+  assign IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d886 =
+	     IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d553[7] ||
+	     IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d572[0] ||
+	     IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d572[1] ||
+	     IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d572[2] ||
+	     IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d572[3] ||
+	     IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d572[4] ||
+	     IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d572[5] ||
+	     IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d572[6] ||
+	     IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d878 ;
+  assign IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d572 =
 	     (reqSel == 3'd5) ? hostWrDataQ_q_memory$DOB[8:1] : reqBE[47:40] ;
-  assign IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d714 =
+  assign IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d710 =
 	     (reqSel == 3'd5) ?
 	       hostWrDataQ_q_memory$DOB[72:9] :
 	       reqData[383:320] ;
-  assign IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d882 =
-	     IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d576[7] ||
-	     IF_reqSel_70_EQ_6_93_THEN_hostWrDataQ_q_wDataO_ETC___d595[0] ||
-	     IF_reqSel_70_EQ_6_93_THEN_hostWrDataQ_q_wDataO_ETC___d595[1] ||
-	     IF_reqSel_70_EQ_6_93_THEN_hostWrDataQ_q_wDataO_ETC___d595[2] ||
-	     IF_reqSel_70_EQ_6_93_THEN_hostWrDataQ_q_wDataO_ETC___d595[3] ||
-	     IF_reqSel_70_EQ_6_93_THEN_hostWrDataQ_q_wDataO_ETC___d595[4] ||
-	     IF_reqSel_70_EQ_6_93_THEN_hostWrDataQ_q_wDataO_ETC___d595[5] ||
-	     IF_reqSel_70_EQ_6_93_THEN_hostWrDataQ_q_wDataO_ETC___d595[6] ||
-	     IF_reqSel_70_EQ_6_93_THEN_hostWrDataQ_q_wDataO_ETC___d595[7] ||
-	     IF_reqSel_70_EQ_7_71_THEN_hostWrDataQ_q_wDataO_ETC___d613[0] ||
-	     IF_reqSel_70_EQ_7_71_THEN_hostWrDataQ_q_wDataO_ETC___d613[1] ||
-	     IF_reqSel_70_EQ_7_71_THEN_hostWrDataQ_q_wDataO_ETC___d613[2] ||
-	     IF_reqSel_70_EQ_7_71_THEN_hostWrDataQ_q_wDataO_ETC___d613[3] ||
-	     IF_reqSel_70_EQ_7_71_THEN_hostWrDataQ_q_wDataO_ETC___d613[4] ||
-	     IF_reqSel_70_EQ_7_71_THEN_hostWrDataQ_q_wDataO_ETC___d613[5] ||
-	     IF_reqSel_70_EQ_7_71_THEN_hostWrDataQ_q_wDataO_ETC___d613[6] ||
-	     IF_reqSel_70_EQ_7_71_THEN_hostWrDataQ_q_wDataO_ETC___d613[7] ;
-  assign IF_reqSel_70_EQ_6_93_THEN_hostWrDataQ_q_wDataO_ETC___d595 =
+  assign IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d878 =
+	     IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d572[7] ||
+	     IF_reqSel_66_EQ_6_89_THEN_hostWrDataQ_q_wDataO_ETC___d591[0] ||
+	     IF_reqSel_66_EQ_6_89_THEN_hostWrDataQ_q_wDataO_ETC___d591[1] ||
+	     IF_reqSel_66_EQ_6_89_THEN_hostWrDataQ_q_wDataO_ETC___d591[2] ||
+	     IF_reqSel_66_EQ_6_89_THEN_hostWrDataQ_q_wDataO_ETC___d591[3] ||
+	     IF_reqSel_66_EQ_6_89_THEN_hostWrDataQ_q_wDataO_ETC___d591[4] ||
+	     IF_reqSel_66_EQ_6_89_THEN_hostWrDataQ_q_wDataO_ETC___d591[5] ||
+	     IF_reqSel_66_EQ_6_89_THEN_hostWrDataQ_q_wDataO_ETC___d591[6] ||
+	     IF_reqSel_66_EQ_6_89_THEN_hostWrDataQ_q_wDataO_ETC___d591[7] ||
+	     IF_reqSel_66_EQ_7_67_THEN_hostWrDataQ_q_wDataO_ETC___d609[0] ||
+	     IF_reqSel_66_EQ_7_67_THEN_hostWrDataQ_q_wDataO_ETC___d609[1] ||
+	     IF_reqSel_66_EQ_7_67_THEN_hostWrDataQ_q_wDataO_ETC___d609[2] ||
+	     IF_reqSel_66_EQ_7_67_THEN_hostWrDataQ_q_wDataO_ETC___d609[3] ||
+	     IF_reqSel_66_EQ_7_67_THEN_hostWrDataQ_q_wDataO_ETC___d609[4] ||
+	     IF_reqSel_66_EQ_7_67_THEN_hostWrDataQ_q_wDataO_ETC___d609[5] ||
+	     IF_reqSel_66_EQ_7_67_THEN_hostWrDataQ_q_wDataO_ETC___d609[6] ||
+	     IF_reqSel_66_EQ_7_67_THEN_hostWrDataQ_q_wDataO_ETC___d609[7] ;
+  assign IF_reqSel_66_EQ_6_89_THEN_hostWrDataQ_q_wDataO_ETC___d591 =
 	     (reqSel == 3'd6) ? hostWrDataQ_q_memory$DOB[8:1] : reqBE[55:48] ;
-  assign IF_reqSel_70_EQ_6_93_THEN_hostWrDataQ_q_wDataO_ETC___d711 =
+  assign IF_reqSel_66_EQ_6_89_THEN_hostWrDataQ_q_wDataO_ETC___d707 =
 	     (reqSel == 3'd6) ?
 	       hostWrDataQ_q_memory$DOB[72:9] :
 	       reqData[447:384] ;
-  assign IF_reqSel_70_EQ_7_71_THEN_hostWrDataQ_q_wDataO_ETC___d613 =
+  assign IF_reqSel_66_EQ_7_67_THEN_hostWrDataQ_q_wDataO_ETC___d609 =
 	     (reqSel == 3'd7) ? hostWrDataQ_q_memory$DOB[8:1] : reqBE[63:56] ;
-  assign IF_reqSel_70_EQ_7_71_THEN_hostWrDataQ_q_wDataO_ETC___d709 =
+  assign IF_reqSel_66_EQ_7_67_THEN_hostWrDataQ_q_wDataO_ETC___d705 =
 	     (reqSel == 3'd7) ?
 	       hostWrDataQ_q_memory$DOB[72:9] :
 	       reqData[511:448] ;
-  assign NOT_IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wD_ETC___d685 =
-	     !IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481[7] &&
-	     !IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d500[0] &&
-	     !IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d500[1] &&
-	     !IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d500[2] &&
-	     !IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d500[3] &&
-	     !IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d500[4] &&
-	     !IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d500[5] &&
-	     !IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d500[6] &&
-	     NOT_IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wD_ETC___d677 ;
-  assign NOT_IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wD_ETC___d694 =
-	     !IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481[0] &&
-	     !IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481[1] &&
-	     !IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481[2] &&
-	     !IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481[3] &&
-	     !IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481[4] &&
-	     !IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481[5] &&
-	     !IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481[6] &&
-	     NOT_IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wD_ETC___d685 ||
+  assign NOT_IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wD_ETC___d681 =
+	     !IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d477[7] &&
+	     !IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d496[0] &&
+	     !IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d496[1] &&
+	     !IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d496[2] &&
+	     !IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d496[3] &&
+	     !IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d496[4] &&
+	     !IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d496[5] &&
+	     !IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d496[6] &&
+	     NOT_IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wD_ETC___d673 ;
+  assign NOT_IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wD_ETC___d690 =
+	     !IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d477[0] &&
+	     !IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d477[1] &&
+	     !IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d477[2] &&
+	     !IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d477[3] &&
+	     !IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d477[4] &&
+	     !IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d477[5] &&
+	     !IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d477[6] &&
+	     NOT_IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wD_ETC___d681 ||
 	     !memReqQ_full ;
-  assign NOT_IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wD_ETC___d677 =
-	     !IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d500[7] &&
-	     !IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d519[0] &&
-	     !IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d519[1] &&
-	     !IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d519[2] &&
-	     !IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d519[3] &&
-	     !IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d519[4] &&
-	     !IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d519[5] &&
-	     !IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d519[6] &&
-	     NOT_IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wD_ETC___d669 ;
-  assign NOT_IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wD_ETC___d669 =
-	     !IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d519[7] &&
-	     !IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d538[0] &&
-	     !IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d538[1] &&
-	     !IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d538[2] &&
-	     !IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d538[3] &&
-	     !IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d538[4] &&
-	     !IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d538[5] &&
-	     !IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d538[6] &&
-	     NOT_IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wD_ETC___d661 ;
-  assign NOT_IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wD_ETC___d661 =
-	     !IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d538[7] &&
-	     !IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d557[0] &&
-	     !IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d557[1] &&
-	     !IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d557[2] &&
-	     !IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d557[3] &&
-	     !IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d557[4] &&
-	     !IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d557[5] &&
-	     !IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d557[6] &&
-	     NOT_IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wD_ETC___d653 ;
-  assign NOT_IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wD_ETC___d653 =
-	     !IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d557[7] &&
-	     !IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d576[0] &&
-	     !IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d576[1] &&
-	     !IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d576[2] &&
-	     !IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d576[3] &&
-	     !IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d576[4] &&
-	     !IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d576[5] &&
-	     !IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d576[6] &&
-	     NOT_IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wD_ETC___d645 ;
-  assign NOT_IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wD_ETC___d645 =
-	     !IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d576[7] &&
-	     !IF_reqSel_70_EQ_6_93_THEN_hostWrDataQ_q_wDataO_ETC___d595[0] &&
-	     !IF_reqSel_70_EQ_6_93_THEN_hostWrDataQ_q_wDataO_ETC___d595[1] &&
-	     !IF_reqSel_70_EQ_6_93_THEN_hostWrDataQ_q_wDataO_ETC___d595[2] &&
-	     !IF_reqSel_70_EQ_6_93_THEN_hostWrDataQ_q_wDataO_ETC___d595[3] &&
-	     !IF_reqSel_70_EQ_6_93_THEN_hostWrDataQ_q_wDataO_ETC___d595[4] &&
-	     !IF_reqSel_70_EQ_6_93_THEN_hostWrDataQ_q_wDataO_ETC___d595[5] &&
-	     !IF_reqSel_70_EQ_6_93_THEN_hostWrDataQ_q_wDataO_ETC___d595[6] &&
-	     !IF_reqSel_70_EQ_6_93_THEN_hostWrDataQ_q_wDataO_ETC___d595[7] &&
-	     !IF_reqSel_70_EQ_7_71_THEN_hostWrDataQ_q_wDataO_ETC___d613[0] &&
-	     !IF_reqSel_70_EQ_7_71_THEN_hostWrDataQ_q_wDataO_ETC___d613[1] &&
-	     !IF_reqSel_70_EQ_7_71_THEN_hostWrDataQ_q_wDataO_ETC___d613[2] &&
-	     !IF_reqSel_70_EQ_7_71_THEN_hostWrDataQ_q_wDataO_ETC___d613[3] &&
-	     !IF_reqSel_70_EQ_7_71_THEN_hostWrDataQ_q_wDataO_ETC___d613[4] &&
-	     !IF_reqSel_70_EQ_7_71_THEN_hostWrDataQ_q_wDataO_ETC___d613[5] &&
-	     !IF_reqSel_70_EQ_7_71_THEN_hostWrDataQ_q_wDataO_ETC___d613[6] &&
-	     !IF_reqSel_70_EQ_7_71_THEN_hostWrDataQ_q_wDataO_ETC___d613[7] ;
-  assign NOT_hostStartQ_q_rWrPtr_rsCounter_47_EQ_hostSt_ETC___d1040 =
+  assign NOT_IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wD_ETC___d673 =
+	     !IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d496[7] &&
+	     !IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d515[0] &&
+	     !IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d515[1] &&
+	     !IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d515[2] &&
+	     !IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d515[3] &&
+	     !IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d515[4] &&
+	     !IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d515[5] &&
+	     !IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d515[6] &&
+	     NOT_IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wD_ETC___d665 ;
+  assign NOT_IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wD_ETC___d665 =
+	     !IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d515[7] &&
+	     !IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d534[0] &&
+	     !IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d534[1] &&
+	     !IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d534[2] &&
+	     !IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d534[3] &&
+	     !IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d534[4] &&
+	     !IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d534[5] &&
+	     !IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d534[6] &&
+	     NOT_IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wD_ETC___d657 ;
+  assign NOT_IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wD_ETC___d657 =
+	     !IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d534[7] &&
+	     !IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d553[0] &&
+	     !IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d553[1] &&
+	     !IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d553[2] &&
+	     !IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d553[3] &&
+	     !IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d553[4] &&
+	     !IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d553[5] &&
+	     !IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d553[6] &&
+	     NOT_IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wD_ETC___d649 ;
+  assign NOT_IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wD_ETC___d649 =
+	     !IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d553[7] &&
+	     !IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d572[0] &&
+	     !IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d572[1] &&
+	     !IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d572[2] &&
+	     !IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d572[3] &&
+	     !IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d572[4] &&
+	     !IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d572[5] &&
+	     !IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d572[6] &&
+	     NOT_IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wD_ETC___d641 ;
+  assign NOT_IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wD_ETC___d641 =
+	     !IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d572[7] &&
+	     !IF_reqSel_66_EQ_6_89_THEN_hostWrDataQ_q_wDataO_ETC___d591[0] &&
+	     !IF_reqSel_66_EQ_6_89_THEN_hostWrDataQ_q_wDataO_ETC___d591[1] &&
+	     !IF_reqSel_66_EQ_6_89_THEN_hostWrDataQ_q_wDataO_ETC___d591[2] &&
+	     !IF_reqSel_66_EQ_6_89_THEN_hostWrDataQ_q_wDataO_ETC___d591[3] &&
+	     !IF_reqSel_66_EQ_6_89_THEN_hostWrDataQ_q_wDataO_ETC___d591[4] &&
+	     !IF_reqSel_66_EQ_6_89_THEN_hostWrDataQ_q_wDataO_ETC___d591[5] &&
+	     !IF_reqSel_66_EQ_6_89_THEN_hostWrDataQ_q_wDataO_ETC___d591[6] &&
+	     !IF_reqSel_66_EQ_6_89_THEN_hostWrDataQ_q_wDataO_ETC___d591[7] &&
+	     !IF_reqSel_66_EQ_7_67_THEN_hostWrDataQ_q_wDataO_ETC___d609[0] &&
+	     !IF_reqSel_66_EQ_7_67_THEN_hostWrDataQ_q_wDataO_ETC___d609[1] &&
+	     !IF_reqSel_66_EQ_7_67_THEN_hostWrDataQ_q_wDataO_ETC___d609[2] &&
+	     !IF_reqSel_66_EQ_7_67_THEN_hostWrDataQ_q_wDataO_ETC___d609[3] &&
+	     !IF_reqSel_66_EQ_7_67_THEN_hostWrDataQ_q_wDataO_ETC___d609[4] &&
+	     !IF_reqSel_66_EQ_7_67_THEN_hostWrDataQ_q_wDataO_ETC___d609[5] &&
+	     !IF_reqSel_66_EQ_7_67_THEN_hostWrDataQ_q_wDataO_ETC___d609[6] &&
+	     !IF_reqSel_66_EQ_7_67_THEN_hostWrDataQ_q_wDataO_ETC___d609[7] ;
+  assign NOT_hostStartQ_q_rWrPtr_rsCounter_47_EQ_hostSt_ETC___d1034 =
 	     hostStartQ_q_rWrPtr_rsCounter !=
-	     { hostStartQ_q_rRdPtr_rdCounter_027_BIT_1_028_CO_ETC___d1032[1],
-	       hostStartQ_q_rRdPtr_rdCounter_027_BIT_1_028_CO_ETC___d1032[1] ^
-	       hostStartQ_q_rRdPtr_rdCounter_027_BIT_1_028_CO_ETC___d1032[0] } &&
+	     { hostStartQ_q_rRdPtr_rdCounter_021_BIT_1_022_CO_ETC___d1026[1],
+	       hostStartQ_q_rRdPtr_rdCounter_021_BIT_1_022_CO_ETC___d1026[1] ^
+	       hostStartQ_q_rRdPtr_rdCounter_021_BIT_1_022_CO_ETC___d1026[0] } &&
 	     hostStartQ_srcGuard$IS_READY ;
-  assign NOT_hostWrDoneQ_q_rWrPtr_rsCounter_20_EQ_hostW_ETC___d952 =
+  assign NOT_hostWrDoneQ_q_rWrPtr_rsCounter_20_EQ_hostW_ETC___d947 =
 	     hostWrDoneQ_q_rWrPtr_rsCounter !=
-	     { hostWrDoneQ_q_rRdPtr_rdCounter_39_BIT_1_40_CON_ETC___d944[1],
-	       hostWrDoneQ_q_rRdPtr_rdCounter_39_BIT_1_40_CON_ETC___d944[1] ^
-	       hostWrDoneQ_q_rRdPtr_rdCounter_39_BIT_1_40_CON_ETC___d944[0] } &&
+	     { hostWrDoneQ_q_rRdPtr_rdCounter_34_BIT_1_35_CON_ETC___d939[1],
+	       hostWrDoneQ_q_rRdPtr_rdCounter_34_BIT_1_35_CON_ETC___d939[1] ^
+	       hostWrDoneQ_q_rRdPtr_rdCounter_34_BIT_1_35_CON_ETC___d939[0] } &&
 	     hostWrDoneQ_srcGuard$IS_READY ;
   assign NOT_memReqQ_clearReq_dummy2_1_read__40_41_OR_I_ETC___d345 =
 	     !memReqQ_clearReq_dummy2_1$Q_OUT || !memReqQ_clearReq_rl ;
   assign NOT_memReqQ_enqReq_dummy2_2_read__46_61_OR_IF__ETC___d366 =
 	     (!memReqQ_enqReq_dummy2_2$Q_OUT ||
-	      (MUX_pendStCnt$write_1__SEL_2 ?
+	      (memReqQ_enqReq_lat_0$whas ?
 		 !memReqQ_enqReq_lat_0$wget[640] :
 		 !memReqQ_enqReq_rl[640])) &&
 	     (memReqQ_deqReq_dummy2_2$Q_OUT &&
@@ -2061,9 +2056,9 @@ module mkMemLoader(CLK_portalClk,
 	     (respStQ_deqReq_dummy2_2$Q_OUT &&
 	      (CAN_FIRE_RL_doStResp || respStQ_deqReq_rl) ||
 	      respStQ_empty) ;
-  assign av_avValue_data__h97164 =
+  assign av_avValue_data__h96991 =
 	     mmio_req_offset ? { 63'd0, busy } : memStartAddr ;
-  assign hostStartQ_q_rRdPtr_rdCounter_027_BIT_1_028_CO_ETC___d1032 =
+  assign hostStartQ_q_rRdPtr_rdCounter_021_BIT_1_022_CO_ETC___d1026 =
 	     x_dReadBin__h7630 + 2'd1 ;
   assign hostStartQ_q_rRdPtr_rsCounter_77_BIT_0_84_XOR__ETC___d186 =
 	     hostStartQ_q_rRdPtr_rsCounter[0] ^
@@ -2074,7 +2069,7 @@ module mkMemLoader(CLK_portalClk,
   assign hostStartQ_q_rWrPtr_rsCounter_47_BIT_0_54_XOR__ETC___d156 =
 	     hostStartQ_q_rWrPtr_rsCounter[0] ^
 	     hostStartQ_q_rWrPtr_rsCounter[1] ;
-  assign hostWrAddrQ_q_rRdPtr_rdCounter_045_BIT_1_046_C_ETC___d1050 =
+  assign hostWrAddrQ_q_rRdPtr_rdCounter_039_BIT_1_040_C_ETC___d1044 =
 	     x_dReadBin__h2213 + 2'd1 ;
   assign hostWrAddrQ_q_rRdPtr_rsCounter_1_BIT_0_8_XOR_h_ETC___d40 =
 	     hostWrAddrQ_q_rRdPtr_rsCounter[0] ^
@@ -2085,7 +2080,7 @@ module mkMemLoader(CLK_portalClk,
   assign hostWrAddrQ_q_rWrPtr_rsCounter_BIT_0_XOR_hostW_ETC___d10 =
 	     hostWrAddrQ_q_rWrPtr_rsCounter[0] ^
 	     hostWrAddrQ_q_rWrPtr_rsCounter[1] ;
-  assign hostWrDataQ_q_rRdPtr_rdCounter_059_BIT_1_060_C_ETC___d1064 =
+  assign hostWrDataQ_q_rRdPtr_rdCounter_053_BIT_1_054_C_ETC___d1058 =
 	     x_dReadBin__h4923 + 2'd1 ;
   assign hostWrDataQ_q_rRdPtr_rsCounter_04_BIT_0_11_XOR_ETC___d113 =
 	     hostWrDataQ_q_rRdPtr_rsCounter[0] ^
@@ -2096,7 +2091,7 @@ module mkMemLoader(CLK_portalClk,
   assign hostWrDataQ_q_rWrPtr_rsCounter_4_BIT_0_1_XOR_h_ETC___d83 =
 	     hostWrDataQ_q_rWrPtr_rsCounter[0] ^
 	     hostWrDataQ_q_rWrPtr_rsCounter[1] ;
-  assign hostWrDoneQ_q_rRdPtr_rdCounter_39_BIT_1_40_CON_ETC___d944 =
+  assign hostWrDoneQ_q_rRdPtr_rdCounter_34_BIT_1_35_CON_ETC___d939 =
 	     x_dReadBin__h10337 + 2'd1 ;
   assign hostWrDoneQ_q_rRdPtr_rsCounter_50_BIT_0_57_XOR_ETC___d259 =
 	     hostWrDoneQ_q_rRdPtr_rsCounter[0] ^
@@ -2113,7 +2108,7 @@ module mkMemLoader(CLK_portalClk,
 	     (!memReqQ_deqReq_dummy2_2$Q_OUT ||
 	      !EN_to_mem_memReq_deq && !memReqQ_deqReq_rl) &&
 	     memReqQ_full ;
-  assign mmio_req_wrBE_BIT_0_60_OR_mmio_req_wrBE_BIT_1__ETC___d978 =
+  assign mmio_req_wrBE_BIT_0_54_OR_mmio_req_wrBE_BIT_1__ETC___d972 =
 	     (mmio_req_wrBE[0] || mmio_req_wrBE[1] || mmio_req_wrBE[2] ||
 	      mmio_req_wrBE[3] ||
 	      mmio_req_wrBE[4] ||
@@ -2122,27 +2117,17 @@ module mkMemLoader(CLK_portalClk,
 	      mmio_req_wrBE[7]) &&
 	     !mmio_req_offset &&
 	     !busy ;
-  assign reqSel_70_EQ_7_71_OR_hostWrDataQ_q_wDataOut_wg_ETC___d930 =
+  assign reqSel_66_EQ_7_67_OR_hostWrDataQ_q_wDataOut_wg_ETC___d926 =
 	     (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	     (IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481[0] ||
-	      IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481[1] ||
-	      IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481[2] ||
-	      IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481[3] ||
-	      IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481[4] ||
-	      IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481[5] ||
-	      IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481[6] ||
-	      IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d922) ;
-  assign reqSel_70_EQ_7_71_OR_hostWrDataQ_q_wDataOut_wg_ETC___d934 =
-	     (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	     !IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481[0] &&
-	     !IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481[1] &&
-	     !IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481[2] &&
-	     !IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481[3] &&
-	     !IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481[4] &&
-	     !IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481[5] &&
-	     !IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481[6] &&
-	     NOT_IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wD_ETC___d685 ;
-  assign req_addr__h75832 = { reqAddr, 6'd0 } ;
+	     (IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d477[0] ||
+	      IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d477[1] ||
+	      IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d477[2] ||
+	      IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d477[3] ||
+	      IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d477[4] ||
+	      IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d477[5] ||
+	      IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d477[6] ||
+	      IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d918) ;
+  assign req_addr__h75765 = { reqAddr, 6'd0 } ;
   assign respStQ_enqReq_dummy2_2_read__16_AND_IF_respSt_ETC___d428 =
 	     respStQ_enqReq_dummy2_2$Q_OUT &&
 	     (EN_to_mem_respSt_enq || respStQ_enqReq_rl) ||
@@ -2157,9 +2142,11 @@ module mkMemLoader(CLK_portalClk,
   assign x__h3656 =
 	     2'd1 <<
 	     IF_hostWrDataQ_q_rWrPtr_rsCounter_4_BIT_0_1_XO_ETC___d84 ;
-  assign x__h4511 =
-	     2'd1 <<
-	     IF_hostWrDataQ_q_rRdPtr_rsCounter_04_BIT_0_11__ETC___d114 ;
+  assign x__h4511 = 2'd1 << x__h4676 ;
+  assign x__h4676 =
+	     hostWrDataQ_q_rRdPtr_rsCounter_04_BIT_0_11_XOR_ETC___d113 ?
+	       32'd1 :
+	       32'd0 ;
   assign x__h5470 = x_sReadBin__h4920 + 2'd1 ;
   assign x__h6363 = 2'd1 << x__h6528 ;
   assign x__h6528 =
@@ -2180,7 +2167,7 @@ module mkMemLoader(CLK_portalClk,
 	     2'd1 <<
 	     IF_hostWrDoneQ_q_rRdPtr_rsCounter_50_BIT_0_57__ETC___d260 ;
   assign x_addr__h43806 =
-	     MUX_pendStCnt$write_1__SEL_2 ?
+	     memReqQ_enqReq_lat_0$whas ?
 	       memReqQ_enqReq_lat_0$wget[639:576] :
 	       memReqQ_enqReq_rl[639:576] ;
   assign x_dReadBin__h10337 =
@@ -2217,7 +2204,7 @@ module mkMemLoader(CLK_portalClk,
 	       hostReq_wrData_byteEn,
 	       hostReq_wrData_last } ;
   assign x_wget__h7793 =
-	     { IF_mmio_req_wrBE_BIT_7_67_THEN_mmio_req_wrData_ETC___d1000,
+	     { IF_mmio_req_wrBE_BIT_7_61_THEN_mmio_req_wrData_ETC___d994,
 	       mmio_req_wrBE[1] ? mmio_req_wrData[15:8] : memStartAddr[15:8],
 	       mmio_req_wrBE[0] ? mmio_req_wrData[7:0] : memStartAddr[7:0] } ;
   assign y__h10112 = ~x__h9925 ;
@@ -2473,13 +2460,6 @@ module mkMemLoader(CLK_portalClk,
 		 pendStCnt,
 		 expectWrData);
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_doStResp && pendStCnt == 8'd0)
-	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_doNewWrite && hostWrAddrQ_q_memory$DOB[64] &&
-	  hostWrAddrQ_q_memory$DOB[2:0] != 3'd0)
-	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
-    if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doNewWrite) $write("[MemLoader doNewWrite] ");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doNewWrite) $write("HostWrAddr { ", "valid: ");
@@ -2570,7 +2550,7 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]))
-	$write("'h%h", req_addr__h75832);
+	$write("'h%h", req_addr__h75765);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]))
@@ -2582,12 +2562,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481[0])
+	  IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d477[0])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481[0])
+	  !IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d477[0])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -2596,12 +2576,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481[1])
+	  IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d477[1])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481[1])
+	  !IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d477[1])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -2610,12 +2590,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481[2])
+	  IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d477[2])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481[2])
+	  !IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d477[2])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -2624,12 +2604,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481[3])
+	  IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d477[3])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481[3])
+	  !IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d477[3])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -2638,12 +2618,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481[4])
+	  IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d477[4])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481[4])
+	  !IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d477[4])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -2652,12 +2632,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481[5])
+	  IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d477[5])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481[5])
+	  !IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d477[5])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -2666,12 +2646,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481[6])
+	  IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d477[6])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481[6])
+	  !IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d477[6])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -2680,12 +2660,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481[7])
+	  IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d477[7])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d481[7])
+	  !IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d477[7])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -2694,12 +2674,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d500[0])
+	  IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d496[0])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d500[0])
+	  !IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d496[0])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -2708,12 +2688,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d500[1])
+	  IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d496[1])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d500[1])
+	  !IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d496[1])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -2722,12 +2702,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d500[2])
+	  IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d496[2])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d500[2])
+	  !IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d496[2])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -2736,12 +2716,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d500[3])
+	  IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d496[3])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d500[3])
+	  !IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d496[3])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -2750,12 +2730,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d500[4])
+	  IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d496[4])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d500[4])
+	  !IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d496[4])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -2764,12 +2744,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d500[5])
+	  IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d496[5])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d500[5])
+	  !IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d496[5])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -2778,12 +2758,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d500[6])
+	  IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d496[6])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d500[6])
+	  !IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d496[6])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -2792,12 +2772,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d500[7])
+	  IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d496[7])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d500[7])
+	  !IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d496[7])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -2806,12 +2786,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d519[0])
+	  IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d515[0])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d519[0])
+	  !IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d515[0])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -2820,12 +2800,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d519[1])
+	  IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d515[1])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d519[1])
+	  !IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d515[1])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -2834,12 +2814,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d519[2])
+	  IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d515[2])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d519[2])
+	  !IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d515[2])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -2848,12 +2828,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d519[3])
+	  IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d515[3])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d519[3])
+	  !IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d515[3])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -2862,12 +2842,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d519[4])
+	  IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d515[4])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d519[4])
+	  !IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d515[4])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -2876,12 +2856,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d519[5])
+	  IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d515[5])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d519[5])
+	  !IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d515[5])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -2890,12 +2870,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d519[6])
+	  IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d515[6])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d519[6])
+	  !IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d515[6])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -2904,12 +2884,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d519[7])
+	  IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d515[7])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d519[7])
+	  !IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d515[7])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -2918,12 +2898,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d538[0])
+	  IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d534[0])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d538[0])
+	  !IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d534[0])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -2932,12 +2912,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d538[1])
+	  IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d534[1])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d538[1])
+	  !IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d534[1])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -2946,12 +2926,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d538[2])
+	  IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d534[2])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d538[2])
+	  !IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d534[2])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -2960,12 +2940,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d538[3])
+	  IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d534[3])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d538[3])
+	  !IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d534[3])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -2974,12 +2954,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d538[4])
+	  IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d534[4])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d538[4])
+	  !IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d534[4])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -2988,12 +2968,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d538[5])
+	  IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d534[5])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d538[5])
+	  !IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d534[5])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -3002,12 +2982,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d538[6])
+	  IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d534[6])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d538[6])
+	  !IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d534[6])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -3016,12 +2996,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d538[7])
+	  IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d534[7])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d538[7])
+	  !IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d534[7])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -3030,12 +3010,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d557[0])
+	  IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d553[0])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d557[0])
+	  !IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d553[0])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -3044,12 +3024,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d557[1])
+	  IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d553[1])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d557[1])
+	  !IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d553[1])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -3058,12 +3038,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d557[2])
+	  IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d553[2])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d557[2])
+	  !IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d553[2])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -3072,12 +3052,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d557[3])
+	  IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d553[3])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d557[3])
+	  !IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d553[3])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -3086,12 +3066,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d557[4])
+	  IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d553[4])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d557[4])
+	  !IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d553[4])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -3100,12 +3080,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d557[5])
+	  IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d553[5])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d557[5])
+	  !IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d553[5])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -3114,12 +3094,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d557[6])
+	  IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d553[6])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d557[6])
+	  !IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d553[6])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -3128,12 +3108,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d557[7])
+	  IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d553[7])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d557[7])
+	  !IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d553[7])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -3142,12 +3122,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d576[0])
+	  IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d572[0])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d576[0])
+	  !IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d572[0])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -3156,12 +3136,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d576[1])
+	  IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d572[1])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d576[1])
+	  !IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d572[1])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -3170,12 +3150,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d576[2])
+	  IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d572[2])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d576[2])
+	  !IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d572[2])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -3184,12 +3164,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d576[3])
+	  IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d572[3])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d576[3])
+	  !IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d572[3])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -3198,12 +3178,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d576[4])
+	  IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d572[4])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d576[4])
+	  !IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d572[4])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -3212,12 +3192,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d576[5])
+	  IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d572[5])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d576[5])
+	  !IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d572[5])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -3226,12 +3206,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d576[6])
+	  IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d572[6])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d576[6])
+	  !IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d572[6])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -3240,12 +3220,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d576[7])
+	  IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d572[7])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d576[7])
+	  !IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d572[7])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -3254,12 +3234,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_6_93_THEN_hostWrDataQ_q_wDataO_ETC___d595[0])
+	  IF_reqSel_66_EQ_6_89_THEN_hostWrDataQ_q_wDataO_ETC___d591[0])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_6_93_THEN_hostWrDataQ_q_wDataO_ETC___d595[0])
+	  !IF_reqSel_66_EQ_6_89_THEN_hostWrDataQ_q_wDataO_ETC___d591[0])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -3268,12 +3248,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_6_93_THEN_hostWrDataQ_q_wDataO_ETC___d595[1])
+	  IF_reqSel_66_EQ_6_89_THEN_hostWrDataQ_q_wDataO_ETC___d591[1])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_6_93_THEN_hostWrDataQ_q_wDataO_ETC___d595[1])
+	  !IF_reqSel_66_EQ_6_89_THEN_hostWrDataQ_q_wDataO_ETC___d591[1])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -3282,12 +3262,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_6_93_THEN_hostWrDataQ_q_wDataO_ETC___d595[2])
+	  IF_reqSel_66_EQ_6_89_THEN_hostWrDataQ_q_wDataO_ETC___d591[2])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_6_93_THEN_hostWrDataQ_q_wDataO_ETC___d595[2])
+	  !IF_reqSel_66_EQ_6_89_THEN_hostWrDataQ_q_wDataO_ETC___d591[2])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -3296,12 +3276,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_6_93_THEN_hostWrDataQ_q_wDataO_ETC___d595[3])
+	  IF_reqSel_66_EQ_6_89_THEN_hostWrDataQ_q_wDataO_ETC___d591[3])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_6_93_THEN_hostWrDataQ_q_wDataO_ETC___d595[3])
+	  !IF_reqSel_66_EQ_6_89_THEN_hostWrDataQ_q_wDataO_ETC___d591[3])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -3310,12 +3290,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_6_93_THEN_hostWrDataQ_q_wDataO_ETC___d595[4])
+	  IF_reqSel_66_EQ_6_89_THEN_hostWrDataQ_q_wDataO_ETC___d591[4])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_6_93_THEN_hostWrDataQ_q_wDataO_ETC___d595[4])
+	  !IF_reqSel_66_EQ_6_89_THEN_hostWrDataQ_q_wDataO_ETC___d591[4])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -3324,12 +3304,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_6_93_THEN_hostWrDataQ_q_wDataO_ETC___d595[5])
+	  IF_reqSel_66_EQ_6_89_THEN_hostWrDataQ_q_wDataO_ETC___d591[5])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_6_93_THEN_hostWrDataQ_q_wDataO_ETC___d595[5])
+	  !IF_reqSel_66_EQ_6_89_THEN_hostWrDataQ_q_wDataO_ETC___d591[5])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -3338,12 +3318,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_6_93_THEN_hostWrDataQ_q_wDataO_ETC___d595[6])
+	  IF_reqSel_66_EQ_6_89_THEN_hostWrDataQ_q_wDataO_ETC___d591[6])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_6_93_THEN_hostWrDataQ_q_wDataO_ETC___d595[6])
+	  !IF_reqSel_66_EQ_6_89_THEN_hostWrDataQ_q_wDataO_ETC___d591[6])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -3352,12 +3332,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_6_93_THEN_hostWrDataQ_q_wDataO_ETC___d595[7])
+	  IF_reqSel_66_EQ_6_89_THEN_hostWrDataQ_q_wDataO_ETC___d591[7])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_6_93_THEN_hostWrDataQ_q_wDataO_ETC___d595[7])
+	  !IF_reqSel_66_EQ_6_89_THEN_hostWrDataQ_q_wDataO_ETC___d591[7])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -3366,12 +3346,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_7_71_THEN_hostWrDataQ_q_wDataO_ETC___d613[0])
+	  IF_reqSel_66_EQ_7_67_THEN_hostWrDataQ_q_wDataO_ETC___d609[0])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_7_71_THEN_hostWrDataQ_q_wDataO_ETC___d613[0])
+	  !IF_reqSel_66_EQ_7_67_THEN_hostWrDataQ_q_wDataO_ETC___d609[0])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -3380,12 +3360,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_7_71_THEN_hostWrDataQ_q_wDataO_ETC___d613[1])
+	  IF_reqSel_66_EQ_7_67_THEN_hostWrDataQ_q_wDataO_ETC___d609[1])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_7_71_THEN_hostWrDataQ_q_wDataO_ETC___d613[1])
+	  !IF_reqSel_66_EQ_7_67_THEN_hostWrDataQ_q_wDataO_ETC___d609[1])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -3394,12 +3374,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_7_71_THEN_hostWrDataQ_q_wDataO_ETC___d613[2])
+	  IF_reqSel_66_EQ_7_67_THEN_hostWrDataQ_q_wDataO_ETC___d609[2])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_7_71_THEN_hostWrDataQ_q_wDataO_ETC___d613[2])
+	  !IF_reqSel_66_EQ_7_67_THEN_hostWrDataQ_q_wDataO_ETC___d609[2])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -3408,12 +3388,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_7_71_THEN_hostWrDataQ_q_wDataO_ETC___d613[3])
+	  IF_reqSel_66_EQ_7_67_THEN_hostWrDataQ_q_wDataO_ETC___d609[3])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_7_71_THEN_hostWrDataQ_q_wDataO_ETC___d613[3])
+	  !IF_reqSel_66_EQ_7_67_THEN_hostWrDataQ_q_wDataO_ETC___d609[3])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -3422,12 +3402,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_7_71_THEN_hostWrDataQ_q_wDataO_ETC___d613[4])
+	  IF_reqSel_66_EQ_7_67_THEN_hostWrDataQ_q_wDataO_ETC___d609[4])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_7_71_THEN_hostWrDataQ_q_wDataO_ETC___d613[4])
+	  !IF_reqSel_66_EQ_7_67_THEN_hostWrDataQ_q_wDataO_ETC___d609[4])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -3436,12 +3416,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_7_71_THEN_hostWrDataQ_q_wDataO_ETC___d613[5])
+	  IF_reqSel_66_EQ_7_67_THEN_hostWrDataQ_q_wDataO_ETC___d609[5])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_7_71_THEN_hostWrDataQ_q_wDataO_ETC___d613[5])
+	  !IF_reqSel_66_EQ_7_67_THEN_hostWrDataQ_q_wDataO_ETC___d609[5])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -3450,12 +3430,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_7_71_THEN_hostWrDataQ_q_wDataO_ETC___d613[6])
+	  IF_reqSel_66_EQ_7_67_THEN_hostWrDataQ_q_wDataO_ETC___d609[6])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_7_71_THEN_hostWrDataQ_q_wDataO_ETC___d613[6])
+	  !IF_reqSel_66_EQ_7_67_THEN_hostWrDataQ_q_wDataO_ETC___d609[6])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -3464,12 +3444,12 @@ module mkMemLoader(CLK_portalClk,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  IF_reqSel_70_EQ_7_71_THEN_hostWrDataQ_q_wDataO_ETC___d613[7])
+	  IF_reqSel_66_EQ_7_67_THEN_hostWrDataQ_q_wDataO_ETC___d609[7])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]) &&
-	  !IF_reqSel_70_EQ_7_71_THEN_hostWrDataQ_q_wDataO_ETC___d613[7])
+	  !IF_reqSel_66_EQ_7_67_THEN_hostWrDataQ_q_wDataO_ETC___d609[7])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -3495,49 +3475,49 @@ module mkMemLoader(CLK_portalClk,
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]))
 	$write("'h%h",
-	       IF_reqSel_70_EQ_0_77_THEN_hostWrDataQ_q_wDataO_ETC___d726,
+	       IF_reqSel_66_EQ_0_73_THEN_hostWrDataQ_q_wDataO_ETC___d722,
 	       " ");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]))
 	$write("'h%h",
-	       IF_reqSel_70_EQ_1_98_THEN_hostWrDataQ_q_wDataO_ETC___d724,
+	       IF_reqSel_66_EQ_1_94_THEN_hostWrDataQ_q_wDataO_ETC___d720,
 	       " ");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]))
 	$write("'h%h",
-	       IF_reqSel_70_EQ_2_17_THEN_hostWrDataQ_q_wDataO_ETC___d721,
+	       IF_reqSel_66_EQ_2_13_THEN_hostWrDataQ_q_wDataO_ETC___d717,
 	       " ");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]))
 	$write("'h%h",
-	       IF_reqSel_70_EQ_3_36_THEN_hostWrDataQ_q_wDataO_ETC___d719,
+	       IF_reqSel_66_EQ_3_32_THEN_hostWrDataQ_q_wDataO_ETC___d715,
 	       " ");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]))
 	$write("'h%h",
-	       IF_reqSel_70_EQ_4_55_THEN_hostWrDataQ_q_wDataO_ETC___d716,
+	       IF_reqSel_66_EQ_4_51_THEN_hostWrDataQ_q_wDataO_ETC___d712,
 	       " ");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]))
 	$write("'h%h",
-	       IF_reqSel_70_EQ_5_74_THEN_hostWrDataQ_q_wDataO_ETC___d714,
+	       IF_reqSel_66_EQ_5_70_THEN_hostWrDataQ_q_wDataO_ETC___d710,
 	       " ");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]))
 	$write("'h%h",
-	       IF_reqSel_70_EQ_6_93_THEN_hostWrDataQ_q_wDataO_ETC___d711,
+	       IF_reqSel_66_EQ_6_89_THEN_hostWrDataQ_q_wDataO_ETC___d707,
 	       " ");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]))
 	$write("'h%h",
-	       IF_reqSel_70_EQ_7_71_THEN_hostWrDataQ_q_wDataO_ETC___d709,
+	       IF_reqSel_66_EQ_7_67_THEN_hostWrDataQ_q_wDataO_ETC___d705,
 	       " ");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_doStReq &&
@@ -3559,10 +3539,6 @@ module mkMemLoader(CLK_portalClk,
       if (WILL_FIRE_RL_doStReq &&
 	  (reqSel == 3'd7 || hostWrDataQ_q_memory$DOB[0]))
 	$write("\n");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_doStReq &&
-	  reqSel_70_EQ_7_71_OR_hostWrDataQ_q_wDataOut_wg_ETC___d934)
-	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
   end
   // synopsys translate_on
 endmodule  // mkMemLoader

@@ -1817,8 +1817,8 @@ module mkReservationStationMem(CLK,
        MUX_m_valid_0_dummy2_0$write_1__SEL_2,
        MUX_m_valid_10_dummy2_0$write_1__SEL_1,
        MUX_m_valid_10_dummy2_0$write_1__SEL_2,
+       MUX_m_valid_11_dummy2_0$write_1__SEL_1,
        MUX_m_valid_11_dummy2_0$write_1__SEL_2,
-       MUX_m_valid_11_lat_0$wset_1__SEL_1,
        MUX_m_valid_12_dummy2_0$write_1__SEL_1,
        MUX_m_valid_12_dummy2_0$write_1__SEL_2,
        MUX_m_valid_13_dummy2_0$write_1__SEL_1,
@@ -3861,12 +3861,12 @@ module mkReservationStationMem(CLK,
 	     EN_specUpdate_incorrectSpeculation &&
 	     (specUpdate_incorrectSpeculation_kill_all ||
 	      bs__h219400[specUpdate_incorrectSpeculation_kill_tag]) ;
+  assign MUX_m_valid_11_dummy2_0$write_1__SEL_1 =
+	     EN_doDispatch && idx__h140768 == 4'd11 ;
   assign MUX_m_valid_11_dummy2_0$write_1__SEL_2 =
 	     EN_specUpdate_incorrectSpeculation &&
 	     (specUpdate_incorrectSpeculation_kill_all ||
 	      bs__h219588[specUpdate_incorrectSpeculation_kill_tag]) ;
-  assign MUX_m_valid_11_lat_0$wset_1__SEL_1 =
-	     EN_doDispatch && idx__h140768 == 4'd11 ;
   assign MUX_m_valid_12_dummy2_0$write_1__SEL_1 =
 	     EN_doDispatch && idx__h140768 == 4'd12 ;
   assign MUX_m_valid_12_dummy2_0$write_1__SEL_2 =
@@ -3993,7 +3993,7 @@ module mkReservationStationMem(CLK,
   assign m_valid_10_lat_1$whas = EN_enq && m_enqP_wire$wget[3:0] == 4'd10 ;
   assign m_valid_11_lat_1$whas = EN_enq && m_enqP_wire$wget[3:0] == 4'd11 ;
   assign m_valid_11_dummy_1_0$wget =
-	     MUX_m_valid_11_lat_0$wset_1__SEL_1 ||
+	     MUX_m_valid_11_dummy2_0$write_1__SEL_1 ||
 	     MUX_m_valid_11_dummy2_0$write_1__SEL_2 ;
   assign m_valid_12_lat_0$whas =
 	     MUX_m_valid_12_dummy2_0$write_1__SEL_1 ||
@@ -11575,71 +11575,6 @@ module mkReservationStationMem(CLK,
     endcase
   end
   always@(idx__h140768 or
-	  m_regs_0 or
-	  m_regs_1 or
-	  m_regs_2 or
-	  m_regs_3 or
-	  m_regs_4 or
-	  m_regs_5 or
-	  m_regs_6 or
-	  m_regs_7 or
-	  m_regs_8 or
-	  m_regs_9 or
-	  m_regs_10 or
-	  m_regs_11 or m_regs_12 or m_regs_13 or m_regs_14 or m_regs_15)
-  begin
-    case (idx__h140768)
-      4'd0:
-	  SEL_ARR_NOT_m_regs_0_429_BIT_8_608_609_NOT_m_r_ETC___d1641 =
-	      !m_regs_0[8];
-      4'd1:
-	  SEL_ARR_NOT_m_regs_0_429_BIT_8_608_609_NOT_m_r_ETC___d1641 =
-	      !m_regs_1[8];
-      4'd2:
-	  SEL_ARR_NOT_m_regs_0_429_BIT_8_608_609_NOT_m_r_ETC___d1641 =
-	      !m_regs_2[8];
-      4'd3:
-	  SEL_ARR_NOT_m_regs_0_429_BIT_8_608_609_NOT_m_r_ETC___d1641 =
-	      !m_regs_3[8];
-      4'd4:
-	  SEL_ARR_NOT_m_regs_0_429_BIT_8_608_609_NOT_m_r_ETC___d1641 =
-	      !m_regs_4[8];
-      4'd5:
-	  SEL_ARR_NOT_m_regs_0_429_BIT_8_608_609_NOT_m_r_ETC___d1641 =
-	      !m_regs_5[8];
-      4'd6:
-	  SEL_ARR_NOT_m_regs_0_429_BIT_8_608_609_NOT_m_r_ETC___d1641 =
-	      !m_regs_6[8];
-      4'd7:
-	  SEL_ARR_NOT_m_regs_0_429_BIT_8_608_609_NOT_m_r_ETC___d1641 =
-	      !m_regs_7[8];
-      4'd8:
-	  SEL_ARR_NOT_m_regs_0_429_BIT_8_608_609_NOT_m_r_ETC___d1641 =
-	      !m_regs_8[8];
-      4'd9:
-	  SEL_ARR_NOT_m_regs_0_429_BIT_8_608_609_NOT_m_r_ETC___d1641 =
-	      !m_regs_9[8];
-      4'd10:
-	  SEL_ARR_NOT_m_regs_0_429_BIT_8_608_609_NOT_m_r_ETC___d1641 =
-	      !m_regs_10[8];
-      4'd11:
-	  SEL_ARR_NOT_m_regs_0_429_BIT_8_608_609_NOT_m_r_ETC___d1641 =
-	      !m_regs_11[8];
-      4'd12:
-	  SEL_ARR_NOT_m_regs_0_429_BIT_8_608_609_NOT_m_r_ETC___d1641 =
-	      !m_regs_12[8];
-      4'd13:
-	  SEL_ARR_NOT_m_regs_0_429_BIT_8_608_609_NOT_m_r_ETC___d1641 =
-	      !m_regs_13[8];
-      4'd14:
-	  SEL_ARR_NOT_m_regs_0_429_BIT_8_608_609_NOT_m_r_ETC___d1641 =
-	      !m_regs_14[8];
-      4'd15:
-	  SEL_ARR_NOT_m_regs_0_429_BIT_8_608_609_NOT_m_r_ETC___d1641 =
-	      !m_regs_15[8];
-    endcase
-  end
-  always@(idx__h140768 or
 	  m_spec_tag_0 or
 	  m_spec_tag_1 or
 	  m_spec_tag_2 or
@@ -11703,6 +11638,71 @@ module mkReservationStationMem(CLK,
       4'd15:
 	  SEL_ARR_NOT_m_spec_tag_0_788_BIT_4_789_790_NOT_ETC___d1837 =
 	      !m_spec_tag_15[4];
+    endcase
+  end
+  always@(idx__h140768 or
+	  m_regs_0 or
+	  m_regs_1 or
+	  m_regs_2 or
+	  m_regs_3 or
+	  m_regs_4 or
+	  m_regs_5 or
+	  m_regs_6 or
+	  m_regs_7 or
+	  m_regs_8 or
+	  m_regs_9 or
+	  m_regs_10 or
+	  m_regs_11 or m_regs_12 or m_regs_13 or m_regs_14 or m_regs_15)
+  begin
+    case (idx__h140768)
+      4'd0:
+	  SEL_ARR_NOT_m_regs_0_429_BIT_8_608_609_NOT_m_r_ETC___d1641 =
+	      !m_regs_0[8];
+      4'd1:
+	  SEL_ARR_NOT_m_regs_0_429_BIT_8_608_609_NOT_m_r_ETC___d1641 =
+	      !m_regs_1[8];
+      4'd2:
+	  SEL_ARR_NOT_m_regs_0_429_BIT_8_608_609_NOT_m_r_ETC___d1641 =
+	      !m_regs_2[8];
+      4'd3:
+	  SEL_ARR_NOT_m_regs_0_429_BIT_8_608_609_NOT_m_r_ETC___d1641 =
+	      !m_regs_3[8];
+      4'd4:
+	  SEL_ARR_NOT_m_regs_0_429_BIT_8_608_609_NOT_m_r_ETC___d1641 =
+	      !m_regs_4[8];
+      4'd5:
+	  SEL_ARR_NOT_m_regs_0_429_BIT_8_608_609_NOT_m_r_ETC___d1641 =
+	      !m_regs_5[8];
+      4'd6:
+	  SEL_ARR_NOT_m_regs_0_429_BIT_8_608_609_NOT_m_r_ETC___d1641 =
+	      !m_regs_6[8];
+      4'd7:
+	  SEL_ARR_NOT_m_regs_0_429_BIT_8_608_609_NOT_m_r_ETC___d1641 =
+	      !m_regs_7[8];
+      4'd8:
+	  SEL_ARR_NOT_m_regs_0_429_BIT_8_608_609_NOT_m_r_ETC___d1641 =
+	      !m_regs_8[8];
+      4'd9:
+	  SEL_ARR_NOT_m_regs_0_429_BIT_8_608_609_NOT_m_r_ETC___d1641 =
+	      !m_regs_9[8];
+      4'd10:
+	  SEL_ARR_NOT_m_regs_0_429_BIT_8_608_609_NOT_m_r_ETC___d1641 =
+	      !m_regs_10[8];
+      4'd11:
+	  SEL_ARR_NOT_m_regs_0_429_BIT_8_608_609_NOT_m_r_ETC___d1641 =
+	      !m_regs_11[8];
+      4'd12:
+	  SEL_ARR_NOT_m_regs_0_429_BIT_8_608_609_NOT_m_r_ETC___d1641 =
+	      !m_regs_12[8];
+      4'd13:
+	  SEL_ARR_NOT_m_regs_0_429_BIT_8_608_609_NOT_m_r_ETC___d1641 =
+	      !m_regs_13[8];
+      4'd14:
+	  SEL_ARR_NOT_m_regs_0_429_BIT_8_608_609_NOT_m_r_ETC___d1641 =
+	      !m_regs_14[8];
+      4'd15:
+	  SEL_ARR_NOT_m_regs_0_429_BIT_8_608_609_NOT_m_r_ETC___d1641 =
+	      !m_regs_15[8];
     endcase
   end
   always@(idx__h140768 or
@@ -12242,71 +12242,6 @@ module mkReservationStationMem(CLK,
   begin
     case (idx__h140768)
       4'd0:
-	  SEL_ARR_m_regs_0_429_BITS_15_TO_9_589_m_regs_1_ETC___d1606 =
-	      m_regs_0[15:9];
-      4'd1:
-	  SEL_ARR_m_regs_0_429_BITS_15_TO_9_589_m_regs_1_ETC___d1606 =
-	      m_regs_1[15:9];
-      4'd2:
-	  SEL_ARR_m_regs_0_429_BITS_15_TO_9_589_m_regs_1_ETC___d1606 =
-	      m_regs_2[15:9];
-      4'd3:
-	  SEL_ARR_m_regs_0_429_BITS_15_TO_9_589_m_regs_1_ETC___d1606 =
-	      m_regs_3[15:9];
-      4'd4:
-	  SEL_ARR_m_regs_0_429_BITS_15_TO_9_589_m_regs_1_ETC___d1606 =
-	      m_regs_4[15:9];
-      4'd5:
-	  SEL_ARR_m_regs_0_429_BITS_15_TO_9_589_m_regs_1_ETC___d1606 =
-	      m_regs_5[15:9];
-      4'd6:
-	  SEL_ARR_m_regs_0_429_BITS_15_TO_9_589_m_regs_1_ETC___d1606 =
-	      m_regs_6[15:9];
-      4'd7:
-	  SEL_ARR_m_regs_0_429_BITS_15_TO_9_589_m_regs_1_ETC___d1606 =
-	      m_regs_7[15:9];
-      4'd8:
-	  SEL_ARR_m_regs_0_429_BITS_15_TO_9_589_m_regs_1_ETC___d1606 =
-	      m_regs_8[15:9];
-      4'd9:
-	  SEL_ARR_m_regs_0_429_BITS_15_TO_9_589_m_regs_1_ETC___d1606 =
-	      m_regs_9[15:9];
-      4'd10:
-	  SEL_ARR_m_regs_0_429_BITS_15_TO_9_589_m_regs_1_ETC___d1606 =
-	      m_regs_10[15:9];
-      4'd11:
-	  SEL_ARR_m_regs_0_429_BITS_15_TO_9_589_m_regs_1_ETC___d1606 =
-	      m_regs_11[15:9];
-      4'd12:
-	  SEL_ARR_m_regs_0_429_BITS_15_TO_9_589_m_regs_1_ETC___d1606 =
-	      m_regs_12[15:9];
-      4'd13:
-	  SEL_ARR_m_regs_0_429_BITS_15_TO_9_589_m_regs_1_ETC___d1606 =
-	      m_regs_13[15:9];
-      4'd14:
-	  SEL_ARR_m_regs_0_429_BITS_15_TO_9_589_m_regs_1_ETC___d1606 =
-	      m_regs_14[15:9];
-      4'd15:
-	  SEL_ARR_m_regs_0_429_BITS_15_TO_9_589_m_regs_1_ETC___d1606 =
-	      m_regs_15[15:9];
-    endcase
-  end
-  always@(idx__h140768 or
-	  m_regs_0 or
-	  m_regs_1 or
-	  m_regs_2 or
-	  m_regs_3 or
-	  m_regs_4 or
-	  m_regs_5 or
-	  m_regs_6 or
-	  m_regs_7 or
-	  m_regs_8 or
-	  m_regs_9 or
-	  m_regs_10 or
-	  m_regs_11 or m_regs_12 or m_regs_13 or m_regs_14 or m_regs_15)
-  begin
-    case (idx__h140768)
-      4'd0:
 	  SEL_ARR_m_regs_0_429_BITS_31_TO_25_480_m_regs__ETC___d1497 =
 	      m_regs_0[31:25];
       4'd1:
@@ -12354,6 +12289,71 @@ module mkReservationStationMem(CLK,
       4'd15:
 	  SEL_ARR_m_regs_0_429_BITS_31_TO_25_480_m_regs__ETC___d1497 =
 	      m_regs_15[31:25];
+    endcase
+  end
+  always@(idx__h140768 or
+	  m_regs_0 or
+	  m_regs_1 or
+	  m_regs_2 or
+	  m_regs_3 or
+	  m_regs_4 or
+	  m_regs_5 or
+	  m_regs_6 or
+	  m_regs_7 or
+	  m_regs_8 or
+	  m_regs_9 or
+	  m_regs_10 or
+	  m_regs_11 or m_regs_12 or m_regs_13 or m_regs_14 or m_regs_15)
+  begin
+    case (idx__h140768)
+      4'd0:
+	  SEL_ARR_m_regs_0_429_BITS_15_TO_9_589_m_regs_1_ETC___d1606 =
+	      m_regs_0[15:9];
+      4'd1:
+	  SEL_ARR_m_regs_0_429_BITS_15_TO_9_589_m_regs_1_ETC___d1606 =
+	      m_regs_1[15:9];
+      4'd2:
+	  SEL_ARR_m_regs_0_429_BITS_15_TO_9_589_m_regs_1_ETC___d1606 =
+	      m_regs_2[15:9];
+      4'd3:
+	  SEL_ARR_m_regs_0_429_BITS_15_TO_9_589_m_regs_1_ETC___d1606 =
+	      m_regs_3[15:9];
+      4'd4:
+	  SEL_ARR_m_regs_0_429_BITS_15_TO_9_589_m_regs_1_ETC___d1606 =
+	      m_regs_4[15:9];
+      4'd5:
+	  SEL_ARR_m_regs_0_429_BITS_15_TO_9_589_m_regs_1_ETC___d1606 =
+	      m_regs_5[15:9];
+      4'd6:
+	  SEL_ARR_m_regs_0_429_BITS_15_TO_9_589_m_regs_1_ETC___d1606 =
+	      m_regs_6[15:9];
+      4'd7:
+	  SEL_ARR_m_regs_0_429_BITS_15_TO_9_589_m_regs_1_ETC___d1606 =
+	      m_regs_7[15:9];
+      4'd8:
+	  SEL_ARR_m_regs_0_429_BITS_15_TO_9_589_m_regs_1_ETC___d1606 =
+	      m_regs_8[15:9];
+      4'd9:
+	  SEL_ARR_m_regs_0_429_BITS_15_TO_9_589_m_regs_1_ETC___d1606 =
+	      m_regs_9[15:9];
+      4'd10:
+	  SEL_ARR_m_regs_0_429_BITS_15_TO_9_589_m_regs_1_ETC___d1606 =
+	      m_regs_10[15:9];
+      4'd11:
+	  SEL_ARR_m_regs_0_429_BITS_15_TO_9_589_m_regs_1_ETC___d1606 =
+	      m_regs_11[15:9];
+      4'd12:
+	  SEL_ARR_m_regs_0_429_BITS_15_TO_9_589_m_regs_1_ETC___d1606 =
+	      m_regs_12[15:9];
+      4'd13:
+	  SEL_ARR_m_regs_0_429_BITS_15_TO_9_589_m_regs_1_ETC___d1606 =
+	      m_regs_13[15:9];
+      4'd14:
+	  SEL_ARR_m_regs_0_429_BITS_15_TO_9_589_m_regs_1_ETC___d1606 =
+	      m_regs_14[15:9];
+      4'd15:
+	  SEL_ARR_m_regs_0_429_BITS_15_TO_9_589_m_regs_1_ETC___d1606 =
+	      m_regs_15[15:9];
     endcase
   end
   always@(idx__h140768 or
@@ -12438,71 +12438,6 @@ module mkReservationStationMem(CLK,
   begin
     case (idx__h140768)
       4'd0:
-	  SEL_ARR_m_data_0_066_BITS_37_TO_6_337_m_data_1_ETC___d1354 =
-	      m_data_0[37:6];
-      4'd1:
-	  SEL_ARR_m_data_0_066_BITS_37_TO_6_337_m_data_1_ETC___d1354 =
-	      m_data_1[37:6];
-      4'd2:
-	  SEL_ARR_m_data_0_066_BITS_37_TO_6_337_m_data_1_ETC___d1354 =
-	      m_data_2[37:6];
-      4'd3:
-	  SEL_ARR_m_data_0_066_BITS_37_TO_6_337_m_data_1_ETC___d1354 =
-	      m_data_3[37:6];
-      4'd4:
-	  SEL_ARR_m_data_0_066_BITS_37_TO_6_337_m_data_1_ETC___d1354 =
-	      m_data_4[37:6];
-      4'd5:
-	  SEL_ARR_m_data_0_066_BITS_37_TO_6_337_m_data_1_ETC___d1354 =
-	      m_data_5[37:6];
-      4'd6:
-	  SEL_ARR_m_data_0_066_BITS_37_TO_6_337_m_data_1_ETC___d1354 =
-	      m_data_6[37:6];
-      4'd7:
-	  SEL_ARR_m_data_0_066_BITS_37_TO_6_337_m_data_1_ETC___d1354 =
-	      m_data_7[37:6];
-      4'd8:
-	  SEL_ARR_m_data_0_066_BITS_37_TO_6_337_m_data_1_ETC___d1354 =
-	      m_data_8[37:6];
-      4'd9:
-	  SEL_ARR_m_data_0_066_BITS_37_TO_6_337_m_data_1_ETC___d1354 =
-	      m_data_9[37:6];
-      4'd10:
-	  SEL_ARR_m_data_0_066_BITS_37_TO_6_337_m_data_1_ETC___d1354 =
-	      m_data_10[37:6];
-      4'd11:
-	  SEL_ARR_m_data_0_066_BITS_37_TO_6_337_m_data_1_ETC___d1354 =
-	      m_data_11[37:6];
-      4'd12:
-	  SEL_ARR_m_data_0_066_BITS_37_TO_6_337_m_data_1_ETC___d1354 =
-	      m_data_12[37:6];
-      4'd13:
-	  SEL_ARR_m_data_0_066_BITS_37_TO_6_337_m_data_1_ETC___d1354 =
-	      m_data_13[37:6];
-      4'd14:
-	  SEL_ARR_m_data_0_066_BITS_37_TO_6_337_m_data_1_ETC___d1354 =
-	      m_data_14[37:6];
-      4'd15:
-	  SEL_ARR_m_data_0_066_BITS_37_TO_6_337_m_data_1_ETC___d1354 =
-	      m_data_15[37:6];
-    endcase
-  end
-  always@(idx__h140768 or
-	  m_data_0 or
-	  m_data_1 or
-	  m_data_2 or
-	  m_data_3 or
-	  m_data_4 or
-	  m_data_5 or
-	  m_data_6 or
-	  m_data_7 or
-	  m_data_8 or
-	  m_data_9 or
-	  m_data_10 or
-	  m_data_11 or m_data_12 or m_data_13 or m_data_14 or m_data_15)
-  begin
-    case (idx__h140768)
-      4'd0:
 	  SEL_ARR_m_data_0_066_BITS_4_TO_0_390_m_data_1__ETC___d1407 =
 	      m_data_0[4:0];
       4'd1:
@@ -12550,6 +12485,71 @@ module mkReservationStationMem(CLK,
       4'd15:
 	  SEL_ARR_m_data_0_066_BITS_4_TO_0_390_m_data_1__ETC___d1407 =
 	      m_data_15[4:0];
+    endcase
+  end
+  always@(idx__h140768 or
+	  m_data_0 or
+	  m_data_1 or
+	  m_data_2 or
+	  m_data_3 or
+	  m_data_4 or
+	  m_data_5 or
+	  m_data_6 or
+	  m_data_7 or
+	  m_data_8 or
+	  m_data_9 or
+	  m_data_10 or
+	  m_data_11 or m_data_12 or m_data_13 or m_data_14 or m_data_15)
+  begin
+    case (idx__h140768)
+      4'd0:
+	  SEL_ARR_m_data_0_066_BITS_37_TO_6_337_m_data_1_ETC___d1354 =
+	      m_data_0[37:6];
+      4'd1:
+	  SEL_ARR_m_data_0_066_BITS_37_TO_6_337_m_data_1_ETC___d1354 =
+	      m_data_1[37:6];
+      4'd2:
+	  SEL_ARR_m_data_0_066_BITS_37_TO_6_337_m_data_1_ETC___d1354 =
+	      m_data_2[37:6];
+      4'd3:
+	  SEL_ARR_m_data_0_066_BITS_37_TO_6_337_m_data_1_ETC___d1354 =
+	      m_data_3[37:6];
+      4'd4:
+	  SEL_ARR_m_data_0_066_BITS_37_TO_6_337_m_data_1_ETC___d1354 =
+	      m_data_4[37:6];
+      4'd5:
+	  SEL_ARR_m_data_0_066_BITS_37_TO_6_337_m_data_1_ETC___d1354 =
+	      m_data_5[37:6];
+      4'd6:
+	  SEL_ARR_m_data_0_066_BITS_37_TO_6_337_m_data_1_ETC___d1354 =
+	      m_data_6[37:6];
+      4'd7:
+	  SEL_ARR_m_data_0_066_BITS_37_TO_6_337_m_data_1_ETC___d1354 =
+	      m_data_7[37:6];
+      4'd8:
+	  SEL_ARR_m_data_0_066_BITS_37_TO_6_337_m_data_1_ETC___d1354 =
+	      m_data_8[37:6];
+      4'd9:
+	  SEL_ARR_m_data_0_066_BITS_37_TO_6_337_m_data_1_ETC___d1354 =
+	      m_data_9[37:6];
+      4'd10:
+	  SEL_ARR_m_data_0_066_BITS_37_TO_6_337_m_data_1_ETC___d1354 =
+	      m_data_10[37:6];
+      4'd11:
+	  SEL_ARR_m_data_0_066_BITS_37_TO_6_337_m_data_1_ETC___d1354 =
+	      m_data_11[37:6];
+      4'd12:
+	  SEL_ARR_m_data_0_066_BITS_37_TO_6_337_m_data_1_ETC___d1354 =
+	      m_data_12[37:6];
+      4'd13:
+	  SEL_ARR_m_data_0_066_BITS_37_TO_6_337_m_data_1_ETC___d1354 =
+	      m_data_13[37:6];
+      4'd14:
+	  SEL_ARR_m_data_0_066_BITS_37_TO_6_337_m_data_1_ETC___d1354 =
+	      m_data_14[37:6];
+      4'd15:
+	  SEL_ARR_m_data_0_066_BITS_37_TO_6_337_m_data_1_ETC___d1354 =
+	      m_data_15[37:6];
     endcase
   end
   always@(idx__h140768 or

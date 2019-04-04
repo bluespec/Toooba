@@ -449,18 +449,18 @@ module mkRobRowSynth(CLK,
 	      CASE_write_enq_x_BITS_101_TO_98_0_write_enq_x__ETC__q5,
 	      CASE_write_enq_x_BITS_101_TO_98_0_write_enq_x__ETC__q6;
   reg [1 : 0] CASE_write_enq_x_BITS_97_TO_96_0_write_enq_x_B_ETC__q7;
-  wire [117 : 0] m_csr_42_BIT_12_43_CONCAT_IF_m_csr_42_BIT_12_4_ETC___d614;
-  wire [103 : 0] m_trap_dummy2_0_read__19_AND_m_trap_dummy2_1_r_ETC___d613;
-  wire [65 : 0] IF_NOT_m_ppc_vaddr_csrData_dummy2_0_read__83_8_ETC___d559;
+  wire [117 : 0] m_csr_38_BIT_12_39_CONCAT_IF_m_csr_38_BIT_12_3_ETC___d610;
+  wire [103 : 0] m_trap_dummy2_0_read__15_AND_m_trap_dummy2_1_r_ETC___d609;
+  wire [65 : 0] IF_NOT_m_ppc_vaddr_csrData_dummy2_0_read__83_8_ETC___d555;
   wire [63 : 0] IF_m_ppc_vaddr_csrData_dummy2_0_read__83_AND_m_ETC___d298,
 		IF_m_ppc_vaddr_csrData_lat_1_whas__65_THEN_m_p_ETC___d197,
 		IF_m_ppc_vaddr_csrData_lat_3_whas__57_THEN_m_p_ETC___d199;
   wire [11 : 0] IF_m_spec_bits_lat_1_whas__75_THEN_m_spec_bits_ETC___d281,
-		bs__h30160,
-		sb__h30195,
+		bs__h29463,
+		sb__h29498,
 		upd__h16356;
   wire [4 : 0] IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d154,
-	       x_read_deq_fflags__h23487;
+	       x_read_deq_fflags__h23190;
   wire [3 : 0] IF_IF_m_trap_lat_2_whas_THEN_NOT_m_trap_lat_2__ETC___d153,
 	       IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d131,
 	       IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d132,
@@ -492,8 +492,7 @@ module mkRobRowSynth(CLK,
        IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d81,
        IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d95,
        NOT_m_ppc_vaddr_csrData_dummy2_0_read__83_84_O_ETC___d293,
-       m_rob_inst_state_dummy2_0_read__65_AND_m_rob_i_ETC___d576,
-       m_trap_dummy2_0_read__19_AND_m_trap_dummy2_1_r_ETC___d524;
+       m_rob_inst_state_dummy2_0_read__61_AND_m_rob_i_ETC___d572;
 
   // action method write_enq
   assign RDY_write_enq = 1'd1 ;
@@ -504,7 +503,7 @@ module mkRobRowSynth(CLK,
   assign read_deq =
 	     { m_pc,
 	       m_iType,
-	       m_csr_42_BIT_12_43_CONCAT_IF_m_csr_42_BIT_12_4_ETC___d614 } ;
+	       m_csr_38_BIT_12_39_CONCAT_IF_m_csr_38_BIT_12_3_ETC___d610 } ;
   assign RDY_read_deq = 1'd1 ;
 
   // action method setLSQAtCommitNotified
@@ -553,7 +552,7 @@ module mkRobRowSynth(CLK,
   assign RDY_getOrigPredPC = 1'd1 ;
 
   // value method dependsOn_wrongSpec
-  assign dependsOn_wrongSpec = bs__h30160[dependsOn_wrongSpec_tag] ;
+  assign dependsOn_wrongSpec = bs__h29463[dependsOn_wrongSpec_tag] ;
   assign RDY_dependsOn_wrongSpec = 1'd1 ;
 
   // action method correctSpeculation
@@ -1097,7 +1096,7 @@ module mkRobRowSynth(CLK,
 	       (IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d53 ?
 		  4'd1 :
 		  IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d150) ;
-  assign IF_NOT_m_ppc_vaddr_csrData_dummy2_0_read__83_8_ETC___d559 =
+  assign IF_NOT_m_ppc_vaddr_csrData_dummy2_0_read__83_8_ETC___d555 =
 	     (NOT_m_ppc_vaddr_csrData_dummy2_0_read__83_84_O_ETC___d293 ||
 	      m_ppc_vaddr_csrData_rl[65:64] == 2'd0) ?
 	       { 2'd0,
@@ -1238,17 +1237,17 @@ module mkRobRowSynth(CLK,
 	     !m_ppc_vaddr_csrData_dummy2_1$Q_OUT ||
 	     !m_ppc_vaddr_csrData_dummy2_2$Q_OUT ||
 	     !m_ppc_vaddr_csrData_dummy2_3$Q_OUT ;
-  assign bs__h30160 =
+  assign bs__h29463 =
 	     (m_spec_bits_dummy2_0$Q_OUT && m_spec_bits_dummy2_1$Q_OUT &&
 	      m_spec_bits_dummy2_2$Q_OUT) ?
 	       m_spec_bits_rl :
 	       12'd0 ;
-  assign m_csr_42_BIT_12_43_CONCAT_IF_m_csr_42_BIT_12_4_ETC___d614 =
+  assign m_csr_38_BIT_12_39_CONCAT_IF_m_csr_38_BIT_12_3_ETC___d610 =
 	     { m_csr[12],
 	       CASE_m_csr_BITS_11_TO_0_1_m_csr_BITS_11_TO_0_2_ETC__q3,
 	       m_claimed_phy_reg,
-	       m_trap_dummy2_0_read__19_AND_m_trap_dummy2_1_r_ETC___d613 } ;
-  assign m_rob_inst_state_dummy2_0_read__65_AND_m_rob_i_ETC___d576 =
+	       m_trap_dummy2_0_read__15_AND_m_trap_dummy2_1_r_ETC___d609 } ;
+  assign m_rob_inst_state_dummy2_0_read__61_AND_m_rob_i_ETC___d572 =
 	     m_rob_inst_state_dummy2_0$Q_OUT &&
 	     m_rob_inst_state_dummy2_1$Q_OUT &&
 	     m_rob_inst_state_dummy2_2$Q_OUT &&
@@ -1256,20 +1255,18 @@ module mkRobRowSynth(CLK,
 	     m_rob_inst_state_dummy2_4$Q_OUT &&
 	     m_rob_inst_state_dummy2_5$Q_OUT &&
 	     m_rob_inst_state_rl ;
-  assign m_trap_dummy2_0_read__19_AND_m_trap_dummy2_1_r_ETC___d524 =
-	     m_trap_dummy2_0$Q_OUT && m_trap_dummy2_1$Q_OUT &&
-	     m_trap_dummy2_2$Q_OUT &&
-	     m_trap_rl[5] ;
-  assign m_trap_dummy2_0_read__19_AND_m_trap_dummy2_1_r_ETC___d613 =
-	     { m_trap_dummy2_0_read__19_AND_m_trap_dummy2_1_r_ETC___d524,
+  assign m_trap_dummy2_0_read__15_AND_m_trap_dummy2_1_r_ETC___d609 =
+	     { m_trap_dummy2_0$Q_OUT && m_trap_dummy2_1$Q_OUT &&
+	       m_trap_dummy2_2$Q_OUT &&
+	       m_trap_rl[5],
 	       m_trap_rl[4],
 	       m_trap_rl[4] ?
 		 CASE_m_trap_rl_BITS_3_TO_0_0_m_trap_rl_BITS_3__ETC__q1 :
 		 CASE_m_trap_rl_BITS_3_TO_0_0_m_trap_rl_BITS_3__ETC__q2,
-	       IF_NOT_m_ppc_vaddr_csrData_dummy2_0_read__83_8_ETC___d559,
-	       x_read_deq_fflags__h23487,
+	       IF_NOT_m_ppc_vaddr_csrData_dummy2_0_read__83_8_ETC___d555,
+	       x_read_deq_fflags__h23190,
 	       m_will_dirty_fpu_state,
-	       m_rob_inst_state_dummy2_0_read__65_AND_m_rob_i_ETC___d576,
+	       m_rob_inst_state_dummy2_0_read__61_AND_m_rob_i_ETC___d572,
 	       m_lsqTag,
 	       m_ldKilled_dummy2_0$Q_OUT && m_ldKilled_dummy2_1$Q_OUT &&
 	       m_ldKilled_rl[2],
@@ -1285,13 +1282,13 @@ module mkRobRowSynth(CLK,
 	       m_nonMMIOStDone_dummy2_1$Q_OUT &&
 	       m_nonMMIOStDone_rl,
 	       m_epochIncremented,
-	       bs__h30160 } ;
-  assign sb__h30195 =
+	       bs__h29463 } ;
+  assign sb__h29498 =
 	     m_spec_bits_dummy2_2$Q_OUT ?
 	       IF_m_spec_bits_lat_1_whas__75_THEN_m_spec_bits_ETC___d281 :
 	       12'd0 ;
-  assign upd__h16356 = sb__h30195 & correctSpeculation_mask ;
-  assign x_read_deq_fflags__h23487 =
+  assign upd__h16356 = sb__h29498 & correctSpeculation_mask ;
+  assign x_read_deq_fflags__h23190 =
 	     (m_fflags_dummy2_0$Q_OUT && m_fflags_dummy2_1$Q_OUT) ?
 	       m_fflags_rl :
 	       5'd0 ;
@@ -1552,49 +1549,6 @@ module mkRobRowSynth(CLK,
     m_will_dirty_fpu_state = 1'h0;
   end
   `endif // BSV_NO_INITIAL_BLOCKS
-  // synopsys translate_on
-
-  // handling of system tasks
-
-  // synopsys translate_off
-  always@(negedge CLK)
-  begin
-    #0;
-    if (RST_N != `BSV_RESET_VALUE)
-      if (EN_setExecuted_doFinishAlu_0_set &&
-	  m_csr[12] != setExecuted_doFinishAlu_0_set_csrData[64])
-	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (EN_setExecuted_doFinishAlu_1_set &&
-	  m_csr[12] != setExecuted_doFinishAlu_1_set_csrData[64])
-	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (EN_setExecuted_deqLSQ &&
-	  m_trap_dummy2_0_read__19_AND_m_trap_dummy2_1_r_ETC___d524)
-	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (EN_setExecuted_doFinishMem &&
-	  setExecuted_doFinishMem_access_at_commit &&
-	  setExecuted_doFinishMem_non_mmio_st_done)
-	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (EN_setExecuted_doFinishMem &&
-	  setExecuted_doFinishMem_non_mmio_st_done &&
-	  m_iType != 5'd5)
-	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (EN_write_enq && write_enq_x[18])
-	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (EN_write_enq && write_enq_x[15])
-	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (EN_write_enq && write_enq_x[14])
-	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (EN_write_enq && write_enq_x[13])
-	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
-  end
   // synopsys translate_on
 endmodule  // mkRobRowSynth
 

@@ -15,7 +15,7 @@
 // notEmpty                       O     1
 // RDY_notEmpty                   O     1 const
 // CLK_srcClk                     I     1 clock
-// RST_N_srcRst                   I     1 reset
+// RST_N_srcRst                   I     1 unused
 // CLK_dstClk                     I     1 clock
 // enq_sendData                   I    32
 // EN_enq                         I     1
@@ -93,50 +93,47 @@ module mkSyncFifo_w32_d16(CLK_srcClk,
        notFull;
 
   // ports of submodule q
-  wire [31 : 0] q$dD_OUT, q$sD_IN;
-  wire q$dDEQ, q$dEMPTY_N, q$sENQ, q$sFULL_N;
+  wire [31 : 0] q$din, q$dout;
+  wire q$empty, q$full, q$rd_en, q$wr_en;
 
   // rule scheduling signals
   wire CAN_FIRE_deq, CAN_FIRE_enq, WILL_FIRE_deq, WILL_FIRE_enq;
 
   // action method enq
-  assign RDY_enq = q$sFULL_N ;
-  assign CAN_FIRE_enq = q$sFULL_N ;
+  assign RDY_enq = !q$full ;
+  assign CAN_FIRE_enq = !q$full ;
   assign WILL_FIRE_enq = EN_enq ;
 
   // action method deq
-  assign RDY_deq = q$dEMPTY_N ;
-  assign CAN_FIRE_deq = q$dEMPTY_N ;
+  assign RDY_deq = !q$empty ;
+  assign CAN_FIRE_deq = !q$empty ;
   assign WILL_FIRE_deq = EN_deq ;
 
   // value method first
-  assign first = q$dD_OUT ;
-  assign RDY_first = q$dEMPTY_N ;
+  assign first = q$dout ;
+  assign RDY_first = !q$empty ;
 
   // value method notFull
-  assign notFull = q$sFULL_N ;
+  assign notFull = !q$full ;
   assign RDY_notFull = 1'd1 ;
 
   // value method notEmpty
-  assign notEmpty = q$dEMPTY_N ;
+  assign notEmpty = !q$empty ;
   assign RDY_notEmpty = 1'd1 ;
 
   // submodule q
-  SyncFIFO #(.dataWidth(32'd32),
-	     .depth(32'd16),
-	     .indxWidth(32'd4)) q(.sCLK(CLK_srcClk),
-				  .dCLK(CLK_dstClk),
-				  .sRST(RST_N_srcRst),
-				  .sD_IN(q$sD_IN),
-				  .sENQ(q$sENQ),
-				  .dDEQ(q$dDEQ),
-				  .sFULL_N(q$sFULL_N),
-				  .dEMPTY_N(q$dEMPTY_N),
-				  .dD_OUT(q$dD_OUT));
+  sync_fifo_w32_d16 q(.wr_clk(CLK_srcClk),
+		      .rd_clk(CLK_dstClk),
+		      .din(q$din),
+		      .wr_en(q$wr_en),
+		      .rd_en(q$rd_en),
+		      .full(q$full),
+		      .empty(q$empty),
+		      .dout(q$dout));
 
   // submodule q
-  assign q$sD_IN = enq_sendData ;
-  assign q$sENQ = EN_enq ;
-  assign q$dDEQ = EN_deq ;
+  assign q$din = enq_sendData ;
+  assign q$wr_en = EN_enq ;
+  assign q$rd_en = EN_deq ;
 endmodule  // mkSyncFifo_w32_d16
 
