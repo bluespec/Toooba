@@ -24,6 +24,7 @@ import FIFOF         :: *;
 import GetPut        :: *;
 import ClientServer  :: *;
 import Connectable   :: *;
+import Clocks        :: *;
 
 // ----------------
 // BSV additional libs
@@ -62,11 +63,20 @@ import TV_Taps  :: *;
 `endif
 `endif
 
+import DM_CPU_Req_Rsp ::*;
+
 // ================================================================
 // The Core module
 
 (* synthesize *)
 module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
+
+`ifdef EXTERNAL_DEBUG_MODULE
+   let clk <- exposeCurrentClock;
+   let cpu_reset <- mkReset(50, True, clk);
+   let cpu_halt <- mkReset(50, True, clk);
+   let cpu_reset_either <- mkResetEither(cpu_reset.new_rst, cpu_halt.new_rst);
+`endif
 
    // ================================================================
    // STATE
@@ -75,7 +85,11 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
    SoC_Map_IFC  soc_map  <- mkSoC_Map;
 
    // McStriiv processor
+`ifdef EXTERNAL_DEBUG_MODULE
+   Proc_IFC proc <- mkProc(reset_by cpu_reset_either);
+`else
    Proc_IFC proc <- mkProc;
+`endif
 
    // A 2x3 fabric for connecting {CPU, Debug_Module} to {Fabric, PLIC}
    Fabric_2x3_IFC  fabric_2x3 <- mkFabric_2x3;
@@ -122,18 +136,25 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
    rule rl_cpu_hart0_reset_from_soc_start;
       let req <- pop (f_reset_reqs);
 
+`ifdef EXTERNAL_DEBUG_MODULE
+      cpu_reset.assertReset;
+`else
       proc.hart0_server_reset.request.put (?);     // CPU
+`endif
       plic.server_reset.request.put (?);           // PLIC
       fabric_2x3.reset;                            // Local 2x3 Fabric
 
 `ifdef INCLUDE_GDB_CONTROL
+`ifndef EXTERNAL_DEBUG_MODULE
       // Remember the requestor, so we can respond to it
       f_reset_requestor.enq (reset_requestor_soc);
+`endif
 `endif
       $display ("%0d: Core.rl_cpu_hart0_reset_from_soc_start", cur_cycle);
    endrule
 
 `ifdef INCLUDE_GDB_CONTROL
+`ifndef EXTERNAL_DEBUG_MODULE
    // Reset-hart0 from Debug Module
    rule rl_cpu_hart0_reset_from_dm_start;
       let req <- debug_module.hart0_get_reset_req.get;
@@ -147,9 +168,14 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
       $display ("%0d: Core.rl_cpu_hart0_reset_from_dm_start", cur_cycle);
    endrule
 `endif
+`endif
 
+`ifdef EXTERNAL_DEBUG_MODULE
+   rule rl_cpu_hart0_reset_complete(!cpu_reset.isAsserted);
+`else
    rule rl_cpu_hart0_reset_complete;
       let rsp1 <- proc.hart0_server_reset.response.get;     // CPU
+`endif
       let rsp3 <- plic.server_reset.response.get;           // PLIC
 
       plic.set_addr_map (zeroExtend (soc_map.m_plic_addr_base),
@@ -157,7 +183,9 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
 
       Bit #(1) requestor = reset_requestor_soc;
 `ifdef INCLUDE_GDB_CONTROL
+`ifndef EXTERNAL_DEBUG_MODULE
       requestor <- pop (f_reset_requestor);
+`endif
 `endif
       if (requestor == reset_requestor_soc)
 	 f_reset_rsps.enq (?);
@@ -174,9 +202,72 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
    // Direct DM-to-CPU connections
 
 `ifdef INCLUDE_GDB_CONTROL
+`ifndef EXTERNAL_DEBUG_MODULE
    // DM to CPU connections for run-control and other misc requests
    mkConnection (debug_module.hart0_client_run_halt, proc.hart0_server_run_halt);
    mkConnection (debug_module.hart0_get_other_req,   proc.hart0_put_other_req);
+`endif
+`endif
+
+   // external debug module connections
+`ifdef INCLUDE_GDB_CONTROL
+`ifdef EXTERNAL_DEBUG_MODULE
+
+   Reg#(Bool) once <- mkReg(False, reset_by cpu_reset_either);
+
+   rule rl_once(!once && !cpu_reset.isAsserted && !cpu_halt.isAsserted);
+      proc.hart0_server_reset.request.put(?);
+      once <= True;
+   endrule
+
+   rule rl_hart0_server_reset;
+      let tmp <- proc.hart0_server_reset.response.get;
+   endrule
+
+   rule rl_hart0_server_run_halt;
+      let tmp <- proc.hart0_server_run_halt.response.get;
+   endrule
+
+   Reg#(Bool) hart0_halt <- mkReg(False);
+
+   rule rl_halt_reset(hart0_halt);
+      cpu_halt.assertReset;
+   endrule
+
+   rule rl_halt;
+      let halt <- debug_module.hart0_client_run_halt.request.get;
+      hart0_halt <= !halt;
+      debug_module.hart0_client_run_halt.response.put(halt);
+   endrule
+
+   rule rl_gpr;
+      let req <- debug_module.hart0_gpr_mem_client.request.get;
+      debug_module.hart0_gpr_mem_client.response.put(DM_CPU_Rsp { ok: True, data: 0 });
+   endrule
+
+`ifdef ISA_F
+   rule rl_fpr;
+      let req <- debug_module.hart0_fpr_mem_client.request.get;
+      debug_module.hart0_fpr_mem_client.response.put(DM_CPU_Rsp { ok: True, data: 0 });
+   endrule
+`endif
+
+   rule rl_csr;
+      let req <- debug_module.hart0_csr_mem_client.request.get;
+      debug_module.hart0_csr_mem_client.response.put(DM_CPU_Rsp { ok: True, data: 0 });
+   endrule
+
+   rule rl_cpu_hart0_reset_from_dm_start;
+      let req <- debug_module.hart0_get_reset_req.get;
+      cpu_reset.assertReset;
+      f_reset_requestor.enq (reset_requestor_dm);
+   endrule
+
+   rule rl_cpu_hart0_reset_from_dm_complete (f_reset_requestor.first == reset_requestor_dm && !cpu_reset.isAsserted);
+      f_reset_requestor.deq;
+   endrule
+
+`endif
 `endif
 
    // ================================================================
@@ -216,6 +307,7 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
       f_trace_data_merged.enq (tmp);
    endrule
 
+`ifndef EXTERNAL_DEBUG_MODULE
    // Create a tap for DM's GPR writes to the CPU, and merge-in the trace data.
    DM_GPR_Tap_IFC  dm_gpr_tap_ifc <- mkDM_GPR_Tap;
    mkConnection (debug_module.hart0_gpr_mem_client, dm_gpr_tap_ifc.server);
@@ -254,6 +346,7 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
       let tmp <- dm_csr_tap.trace_data_out.get;
       f_trace_data_merged.enq(tmp);
    endrule
+`endif
 
    // END SECTION: GDB and TV
 `else
@@ -261,6 +354,7 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
    // ----------------------------------------------------------------
    // BEGIN SECTION: GDB and no TV
 
+`ifndef EXTERNAL_DEBUG_MODULE
    // Connect DM's GPR interface directly to CPU
    mkConnection (debug_module.hart0_gpr_mem_client, proc.hart0_gpr_mem_server);
 
@@ -271,6 +365,7 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
 
    // Connect DM's CSR interface directly to CPU
    mkConnection (debug_module.hart0_csr_mem_client, proc.hart0_csr_mem_server);
+`endif
 
    // DM's bus master is directly the bus master
    let dm_master_local = debug_module.master;

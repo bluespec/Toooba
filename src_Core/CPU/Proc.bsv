@@ -85,6 +85,10 @@ import DM_CPU_Req_Rsp  :: *;
 import TV_Info  :: *;
 `endif
 
+`ifdef EXTERNAL_DEBUG_MODULE
+`undef INCLUDE_GDB_CONTROL
+`endif
+
 // ================================================================
 
 (* synthesize *)
