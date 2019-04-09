@@ -68,7 +68,6 @@ module RegFile(CLK,
    input [addr_width - 1 : 0]  ADDR_5;
    output [data_width - 1 : 0] D_OUT_5;
 
-   (* RAM_STYLE = "DISTRIBUTED" *)
    reg [data_width - 1 : 0]    arr[lo:hi];
 
 
@@ -77,7 +76,7 @@ module RegFile(CLK,
    // synopsys translate_off
    initial
      begin : init_block
-        integer                     i;          // temporary for generate reset value
+        integer                     i; 		// temporary for generate reset value
         for (i = lo; i <= hi; i = i + 1) begin
            arr[i] = {((data_width + 1)/2){2'b10}} ;
         end

@@ -59,12 +59,9 @@ module MakeClock ( CLK, RST,
 
    output CLK_VAL_OUT;
    output COND_OUT;
-   (* CLOCK_SIGNAL = "YES" *)
-   (* BUFFER_TYPE = "BUFG" *)
    output CLK_OUT;
    output CLK_GATE_OUT;
 
-   (* KEEP = "TRUE" *)
    reg current_clk;
    reg CLK_VAL_OUT;
    reg current_gate;
