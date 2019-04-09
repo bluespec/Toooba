@@ -123,7 +123,11 @@ typedef struct {
 } CommitTrap deriving(Bits, Eq, FShow);
 
 module mkCommitStage#(CommitInput inIfc)(CommitStage);
+    Bool verbose = False;
+
+    // Bluespec: for lightweight verbosity trace
     Integer verbosity = 0;
+    Reg #(Bit #(64)) rg_instret <- mkReg (0);
 
     // func units
     ReorderBufferSynth rob = inIfc.robIfc;
@@ -345,18 +349,26 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
     );
         rob.deqPort[0].deq;
         let x = rob.deqPort[0].deq_data;
-        if (verbosity > 0) $display("[doCommitTrap] ", fshow(x));
+        if(verbose) $display("[doCommitTrap] ", fshow(x));
 
         // record trap info
         Addr vaddr = ?;
         if(x.ppc_vaddr_csrData matches tagged VAddr .va) begin
             vaddr = va;
         end
-        commitTrap <= Valid (CommitTrap {
+        let commitTrap_val = Valid (CommitTrap {
             trap: trap,
             pc: x.pc,
             addr: vaddr
-        });
+	});
+        commitTrap <= commitTrap_val;
+
+        if (verbosity > 0) begin
+	   $display ("instret:%0d  PC:0x%0h  instr:0x%08h", rg_instret, x.pc, x.orig_inst,
+		     "  iType:", fshow (x.iType), "    [doCommitTrap]");
+	   $display ("CommitStage.doCommitTrap: deq_data:   ", fshow (x));
+	   $display ("CommitStage.doCommitTrap: commitTrap: ", fshow (commitTrap_val));
+	end
 
         // flush everything. Only increment epoch and stall fetch when we haven
         // not done it yet (we may have already done them at rename stage)
@@ -415,7 +427,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
     );
         rob.deqPort[0].deq;
         let x = rob.deqPort[0].deq_data;
-        if (verbosity > 1) $display("[doCommitKilledLd] ", fshow(x));
+        if(verbose) $display("[doCommitKilledLd] ", fshow(x));
 
         // kill everything, redirect, and increment epoch
         inIfc.killAll;
@@ -451,7 +463,12 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
     );
         rob.deqPort[0].deq;
         let x = rob.deqPort[0].deq_data;
-        if (verbosity > 0) $display("[doCommitSystemInst] ", fshow(x));
+        if(verbose) $display("[doCommitSystemInst] ", fshow(x));
+        if (verbosity > 0) begin
+	   $display("instret:%0d  PC:0x%0h  instr:0x%08h", rg_instret, x.pc, x.orig_inst,
+		    "   iType:", fshow (x.iType), "    [doCommitSystemInst]");
+	   rg_instret <= rg_instret + 1;
+	end
 
         // we claim a phy reg for every inst, so commit its renaming
         regRenamingTable.commit[0].commit;
@@ -510,7 +527,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
             comSysCnt.incr(1);
             // inst count stats
             instCnt.incr(1);
-            if(csrf.decodeInfo.prv == 0) begin
+            if(csrf.decodeInfo.prv == prvU) begin
                 userInstCnt.incr(1);
             end
         end
@@ -553,7 +570,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
     );
         let x = rob.deqPort[0].deq_data;
         let inst_tag = rob.deqPort[0].getDeqInstTag;
-        if (verbosity > 1) $display("[notifyLSQCommit] ", fshow(x), "; ", fshow(inst_tag));
+        if(verbose) $display("[notifyLSQCommit] ", fshow(x), "; ", fshow(inst_tag));
 
         // notify LSQ, and record in ROB that notification is done
         setLSQAtCommit[0].wset(x.lsqTag);
@@ -593,6 +610,8 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         SupCnt amoCnt = 0;
 `endif
 
+        Bit #(64) instret = 0;
+
         // compute what actions to take
         for(Integer i = 0; i < valueof(SupSize); i = i+1) begin
             if(!stop && rob.deqPort[i].canDeq) begin
@@ -605,7 +624,13 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                     stop = True;
                 end
                 else begin
-                    if (verbosity > 0) $display("[doCommitNormalInst - %d] ", i, fshow(inst_tag), " ; ", fshow(x));
+                    if (verbose) $display("[doCommitNormalInst - %d] ", i, fshow(inst_tag), " ; ", fshow(x));
+
+		    if (verbosity > 0) begin
+		       $display("instret:%0d  PC:0x%0h  instr:0x%08h", rg_instret + instret, x.pc, x.orig_inst,
+				"   iType:", fshow (x.iType), "    [doCommitNormalInst [%0d]]", i);
+		       instret = instret + 1;
+		    end
 
                     // inst can be committed, deq it
                     rob.deqPort[i].deq;
@@ -658,6 +683,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                 end
             end
         end
+        rg_instret <= rg_instret + instret;
 
         // write FPU csr
         if(csrf.fpuInstNeedWr(fflags, will_dirty_fpu_state)) begin

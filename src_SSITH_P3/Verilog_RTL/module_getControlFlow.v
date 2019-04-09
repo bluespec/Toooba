@@ -12,13 +12,15 @@
 // getControlFlow_rVal2           I    64
 // getControlFlow_pc              I    64
 // getControlFlow_ppc             I    64
+// getControlFlow_orig_inst       I    32
 //
 // Combinational paths from inputs to outputs:
 //   (getControlFlow_dInst,
 //    getControlFlow_rVal1,
 //    getControlFlow_rVal2,
 //    getControlFlow_pc,
-//    getControlFlow_ppc) -> getControlFlow
+//    getControlFlow_ppc,
+//    getControlFlow_orig_inst) -> getControlFlow
 //
 //
 
@@ -40,6 +42,7 @@ module module_getControlFlow(getControlFlow_dInst,
 			     getControlFlow_rVal2,
 			     getControlFlow_pc,
 			     getControlFlow_ppc,
+			     getControlFlow_orig_inst,
 			     getControlFlow);
   // value method getControlFlow
   input  [71 : 0] getControlFlow_dInst;
@@ -47,22 +50,23 @@ module module_getControlFlow(getControlFlow_dInst,
   input  [63 : 0] getControlFlow_rVal2;
   input  [63 : 0] getControlFlow_pc;
   input  [63 : 0] getControlFlow_ppc;
+  input  [31 : 0] getControlFlow_orig_inst;
   output [129 : 0] getControlFlow;
 
   // signals for module outputs
   wire [129 : 0] getControlFlow;
 
   // remaining internal signals
-  wire [63 : 0] x__h50;
-  wire [31 : 0] x__h114;
+  wire [63 : 0] x__h51;
+  wire [31 : 0] x__h115;
   wire aluBr___d9;
 
   // value method getControlFlow
   assign getControlFlow =
 	     { getControlFlow_pc,
-	       x__h50,
+	       x__h51,
 	       getControlFlow_dInst[66:64] == 3'd1 && aluBr___d9,
-	       x__h50 != getControlFlow_ppc } ;
+	       x__h51 != getControlFlow_ppc } ;
 
   // remaining internal signals
   module_aluBr instance_aluBr_0(.aluBr_a(getControlFlow_rVal1),
@@ -72,12 +76,13 @@ module module_getControlFlow(getControlFlow_dInst,
   module_brAddrCalc instance_brAddrCalc_1(.brAddrCalc_pc(getControlFlow_pc),
 					  .brAddrCalc_val(getControlFlow_rVal1),
 					  .brAddrCalc_iType(getControlFlow_dInst[71:67]),
-					  .brAddrCalc_imm({ {32{x__h114[31]}},
-							    x__h114 }),
+					  .brAddrCalc_imm({ {32{x__h115[31]}},
+							    x__h115 }),
 					  .brAddrCalc_taken(getControlFlow_dInst[66:64] ==
 							    3'd1 &&
 							    aluBr___d9),
-					  .brAddrCalc(x__h50));
-  assign x__h114 = getControlFlow_dInst[31:0] ;
+					  .brAddrCalc_orig_inst(getControlFlow_orig_inst),
+					  .brAddrCalc(x__h51));
+  assign x__h115 = getControlFlow_dInst[31:0] ;
 endmodule  // module_getControlFlow
 

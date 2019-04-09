@@ -7,7 +7,7 @@
 // Ports:
 // Name                         I/O  size props
 // RDY_write_enq                  O     1 const
-// read_deq                       O   187
+// read_deq                       O   219
 // RDY_read_deq                   O     1 const
 // RDY_setLSQAtCommitNotified     O     1 const
 // RDY_setExecuted_deqLSQ         O     1 const
@@ -19,12 +19,14 @@
 // RDY_getOrigPC                  O     1 const
 // getOrigPredPC                  O    64
 // RDY_getOrigPredPC              O     1 const
+// getOrig_Inst                   O    32 reg
+// RDY_getOrig_Inst               O     1 const
 // dependsOn_wrongSpec            O     1
 // RDY_dependsOn_wrongSpec        O     1 const
 // RDY_correctSpeculation         O     1 const
 // CLK                            I     1 clock
 // RST_N                          I     1 reset
-// write_enq_x                    I   187
+// write_enq_x                    I   219
 // setExecuted_deqLSQ_cause       I     5
 // setExecuted_deqLSQ_ld_killed   I     3
 // setExecuted_doFinishAlu_0_set_csrData  I    65
@@ -108,6 +110,9 @@ module mkRobRowSynth(CLK,
 		     getOrigPredPC,
 		     RDY_getOrigPredPC,
 
+		     getOrig_Inst,
+		     RDY_getOrig_Inst,
+
 		     dependsOn_wrongSpec_tag,
 		     dependsOn_wrongSpec,
 		     RDY_dependsOn_wrongSpec,
@@ -119,12 +124,12 @@ module mkRobRowSynth(CLK,
   input  RST_N;
 
   // action method write_enq
-  input  [186 : 0] write_enq_x;
+  input  [218 : 0] write_enq_x;
   input  EN_write_enq;
   output RDY_write_enq;
 
   // value method read_deq
-  output [186 : 0] read_deq;
+  output [218 : 0] read_deq;
   output RDY_read_deq;
 
   // action method setLSQAtCommitNotified
@@ -169,6 +174,10 @@ module mkRobRowSynth(CLK,
   output [63 : 0] getOrigPredPC;
   output RDY_getOrigPredPC;
 
+  // value method getOrig_Inst
+  output [31 : 0] getOrig_Inst;
+  output RDY_getOrig_Inst;
+
   // value method dependsOn_wrongSpec
   input  [3 : 0] dependsOn_wrongSpec_tag;
   output dependsOn_wrongSpec;
@@ -180,12 +189,14 @@ module mkRobRowSynth(CLK,
   output RDY_correctSpeculation;
 
   // signals for module outputs
-  wire [186 : 0] read_deq;
+  wire [218 : 0] read_deq;
   wire [63 : 0] getOrigPC, getOrigPredPC;
+  wire [31 : 0] getOrig_Inst;
   wire RDY_correctSpeculation,
        RDY_dependsOn_wrongSpec,
        RDY_getOrigPC,
        RDY_getOrigPredPC,
+       RDY_getOrig_Inst,
        RDY_read_deq,
        RDY_setExecuted_deqLSQ,
        RDY_setExecuted_doFinishAlu_0_set,
@@ -248,6 +259,11 @@ module mkRobRowSynth(CLK,
   // register m_nonMMIOStDone_rl
   reg m_nonMMIOStDone_rl;
   wire m_nonMMIOStDone_rl$D_IN, m_nonMMIOStDone_rl$EN;
+
+  // register m_orig_inst
+  reg [31 : 0] m_orig_inst;
+  wire [31 : 0] m_orig_inst$D_IN;
+  wire m_orig_inst$EN;
 
   // register m_pc
   reg [63 : 0] m_pc;
@@ -449,18 +465,18 @@ module mkRobRowSynth(CLK,
 	      CASE_write_enq_x_BITS_101_TO_98_0_write_enq_x__ETC__q5,
 	      CASE_write_enq_x_BITS_101_TO_98_0_write_enq_x__ETC__q6;
   reg [1 : 0] CASE_write_enq_x_BITS_97_TO_96_0_write_enq_x_B_ETC__q7;
-  wire [117 : 0] m_csr_38_BIT_12_39_CONCAT_IF_m_csr_38_BIT_12_3_ETC___d610;
-  wire [103 : 0] m_trap_dummy2_0_read__15_AND_m_trap_dummy2_1_r_ETC___d609;
-  wire [65 : 0] IF_NOT_m_ppc_vaddr_csrData_dummy2_0_read__83_8_ETC___d555;
+  wire [122 : 0] m_iType_39_CONCAT_m_csr_40_BIT_12_41_CONCAT_IF_ETC___d615;
+  wire [104 : 0] m_claimed_phy_reg_17_CONCAT_m_trap_dummy2_0_re_ETC___d614;
+  wire [65 : 0] IF_NOT_m_ppc_vaddr_csrData_dummy2_0_read__83_8_ETC___d559;
   wire [63 : 0] IF_m_ppc_vaddr_csrData_dummy2_0_read__83_AND_m_ETC___d298,
 		IF_m_ppc_vaddr_csrData_lat_1_whas__65_THEN_m_p_ETC___d197,
 		IF_m_ppc_vaddr_csrData_lat_3_whas__57_THEN_m_p_ETC___d199;
   wire [11 : 0] IF_m_spec_bits_lat_1_whas__75_THEN_m_spec_bits_ETC___d281,
-		bs__h29463,
-		sb__h29498,
-		upd__h16356;
+		bs__h29532,
+		sb__h29567,
+		upd__h16390;
   wire [4 : 0] IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d154,
-	       x_read_deq_fflags__h23190;
+	       x_read_deq_fflags__h23257;
   wire [3 : 0] IF_IF_m_trap_lat_2_whas_THEN_NOT_m_trap_lat_2__ETC___d153,
 	       IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d131,
 	       IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d132,
@@ -492,7 +508,7 @@ module mkRobRowSynth(CLK,
        IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d81,
        IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d95,
        NOT_m_ppc_vaddr_csrData_dummy2_0_read__83_84_O_ETC___d293,
-       m_rob_inst_state_dummy2_0_read__61_AND_m_rob_i_ETC___d572;
+       m_rob_inst_state_dummy2_0_read__65_AND_m_rob_i_ETC___d576;
 
   // action method write_enq
   assign RDY_write_enq = 1'd1 ;
@@ -502,8 +518,8 @@ module mkRobRowSynth(CLK,
   // value method read_deq
   assign read_deq =
 	     { m_pc,
-	       m_iType,
-	       m_csr_38_BIT_12_39_CONCAT_IF_m_csr_38_BIT_12_3_ETC___d610 } ;
+	       m_orig_inst,
+	       m_iType_39_CONCAT_m_csr_40_BIT_12_41_CONCAT_IF_ETC___d615 } ;
   assign RDY_read_deq = 1'd1 ;
 
   // action method setLSQAtCommitNotified
@@ -551,8 +567,12 @@ module mkRobRowSynth(CLK,
 	       64'd0 ;
   assign RDY_getOrigPredPC = 1'd1 ;
 
+  // value method getOrig_Inst
+  assign getOrig_Inst = m_orig_inst ;
+  assign RDY_getOrig_Inst = 1'd1 ;
+
   // value method dependsOn_wrongSpec
-  assign dependsOn_wrongSpec = bs__h29463[dependsOn_wrongSpec_tag] ;
+  assign dependsOn_wrongSpec = bs__h29532[dependsOn_wrongSpec_tag] ;
   assign RDY_dependsOn_wrongSpec = 1'd1 ;
 
   // action method correctSpeculation
@@ -855,8 +875,12 @@ module mkRobRowSynth(CLK,
 		m_nonMMIOStDone_rl) ;
   assign m_nonMMIOStDone_rl$EN = 1'd1 ;
 
+  // register m_orig_inst
+  assign m_orig_inst$D_IN = write_enq_x[154:123] ;
+  assign m_orig_inst$EN = EN_write_enq ;
+
   // register m_pc
-  assign m_pc$D_IN = write_enq_x[186:123] ;
+  assign m_pc$D_IN = write_enq_x[218:155] ;
   assign m_pc$EN = EN_write_enq ;
 
   // register m_ppc_vaddr_csrData_rl
@@ -880,7 +904,7 @@ module mkRobRowSynth(CLK,
   // register m_spec_bits_rl
   assign m_spec_bits_rl$D_IN =
 	     EN_correctSpeculation ?
-	       upd__h16356 :
+	       upd__h16390 :
 	       IF_m_spec_bits_lat_1_whas__75_THEN_m_spec_bits_ETC___d281 ;
   assign m_spec_bits_rl$EN = 1'd1 ;
 
@@ -1096,7 +1120,7 @@ module mkRobRowSynth(CLK,
 	       (IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d53 ?
 		  4'd1 :
 		  IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d150) ;
-  assign IF_NOT_m_ppc_vaddr_csrData_dummy2_0_read__83_8_ETC___d555 =
+  assign IF_NOT_m_ppc_vaddr_csrData_dummy2_0_read__83_8_ETC___d559 =
 	     (NOT_m_ppc_vaddr_csrData_dummy2_0_read__83_84_O_ETC___d293 ||
 	      m_ppc_vaddr_csrData_rl[65:64] == 2'd0) ?
 	       { 2'd0,
@@ -1237,36 +1261,24 @@ module mkRobRowSynth(CLK,
 	     !m_ppc_vaddr_csrData_dummy2_1$Q_OUT ||
 	     !m_ppc_vaddr_csrData_dummy2_2$Q_OUT ||
 	     !m_ppc_vaddr_csrData_dummy2_3$Q_OUT ;
-  assign bs__h29463 =
+  assign bs__h29532 =
 	     (m_spec_bits_dummy2_0$Q_OUT && m_spec_bits_dummy2_1$Q_OUT &&
 	      m_spec_bits_dummy2_2$Q_OUT) ?
 	       m_spec_bits_rl :
 	       12'd0 ;
-  assign m_csr_38_BIT_12_39_CONCAT_IF_m_csr_38_BIT_12_3_ETC___d610 =
-	     { m_csr[12],
-	       CASE_m_csr_BITS_11_TO_0_1_m_csr_BITS_11_TO_0_2_ETC__q3,
-	       m_claimed_phy_reg,
-	       m_trap_dummy2_0_read__15_AND_m_trap_dummy2_1_r_ETC___d609 } ;
-  assign m_rob_inst_state_dummy2_0_read__61_AND_m_rob_i_ETC___d572 =
-	     m_rob_inst_state_dummy2_0$Q_OUT &&
-	     m_rob_inst_state_dummy2_1$Q_OUT &&
-	     m_rob_inst_state_dummy2_2$Q_OUT &&
-	     m_rob_inst_state_dummy2_3$Q_OUT &&
-	     m_rob_inst_state_dummy2_4$Q_OUT &&
-	     m_rob_inst_state_dummy2_5$Q_OUT &&
-	     m_rob_inst_state_rl ;
-  assign m_trap_dummy2_0_read__15_AND_m_trap_dummy2_1_r_ETC___d609 =
-	     { m_trap_dummy2_0$Q_OUT && m_trap_dummy2_1$Q_OUT &&
+  assign m_claimed_phy_reg_17_CONCAT_m_trap_dummy2_0_re_ETC___d614 =
+	     { m_claimed_phy_reg,
+	       m_trap_dummy2_0$Q_OUT && m_trap_dummy2_1$Q_OUT &&
 	       m_trap_dummy2_2$Q_OUT &&
 	       m_trap_rl[5],
 	       m_trap_rl[4],
 	       m_trap_rl[4] ?
 		 CASE_m_trap_rl_BITS_3_TO_0_0_m_trap_rl_BITS_3__ETC__q1 :
 		 CASE_m_trap_rl_BITS_3_TO_0_0_m_trap_rl_BITS_3__ETC__q2,
-	       IF_NOT_m_ppc_vaddr_csrData_dummy2_0_read__83_8_ETC___d555,
-	       x_read_deq_fflags__h23190,
+	       IF_NOT_m_ppc_vaddr_csrData_dummy2_0_read__83_8_ETC___d559,
+	       x_read_deq_fflags__h23257,
 	       m_will_dirty_fpu_state,
-	       m_rob_inst_state_dummy2_0_read__61_AND_m_rob_i_ETC___d572,
+	       m_rob_inst_state_dummy2_0_read__65_AND_m_rob_i_ETC___d576,
 	       m_lsqTag,
 	       m_ldKilled_dummy2_0$Q_OUT && m_ldKilled_dummy2_1$Q_OUT &&
 	       m_ldKilled_rl[2],
@@ -1282,13 +1294,26 @@ module mkRobRowSynth(CLK,
 	       m_nonMMIOStDone_dummy2_1$Q_OUT &&
 	       m_nonMMIOStDone_rl,
 	       m_epochIncremented,
-	       bs__h29463 } ;
-  assign sb__h29498 =
+	       bs__h29532 } ;
+  assign m_iType_39_CONCAT_m_csr_40_BIT_12_41_CONCAT_IF_ETC___d615 =
+	     { m_iType,
+	       m_csr[12],
+	       CASE_m_csr_BITS_11_TO_0_1_m_csr_BITS_11_TO_0_2_ETC__q3,
+	       m_claimed_phy_reg_17_CONCAT_m_trap_dummy2_0_re_ETC___d614 } ;
+  assign m_rob_inst_state_dummy2_0_read__65_AND_m_rob_i_ETC___d576 =
+	     m_rob_inst_state_dummy2_0$Q_OUT &&
+	     m_rob_inst_state_dummy2_1$Q_OUT &&
+	     m_rob_inst_state_dummy2_2$Q_OUT &&
+	     m_rob_inst_state_dummy2_3$Q_OUT &&
+	     m_rob_inst_state_dummy2_4$Q_OUT &&
+	     m_rob_inst_state_dummy2_5$Q_OUT &&
+	     m_rob_inst_state_rl ;
+  assign sb__h29567 =
 	     m_spec_bits_dummy2_2$Q_OUT ?
 	       IF_m_spec_bits_lat_1_whas__75_THEN_m_spec_bits_ETC___d281 :
 	       12'd0 ;
-  assign upd__h16356 = sb__h29498 & correctSpeculation_mask ;
-  assign x_read_deq_fflags__h23190 =
+  assign upd__h16390 = sb__h29567 & correctSpeculation_mask ;
+  assign x_read_deq_fflags__h23257 =
 	     (m_fflags_dummy2_0$Q_OUT && m_fflags_dummy2_1$Q_OUT) ?
 	       m_fflags_rl :
 	       5'd0 ;
@@ -1520,6 +1545,7 @@ module mkRobRowSynth(CLK,
       m_epochIncremented <= `BSV_ASSIGNMENT_DELAY m_epochIncremented$D_IN;
     if (m_iType$EN) m_iType <= `BSV_ASSIGNMENT_DELAY m_iType$D_IN;
     if (m_lsqTag$EN) m_lsqTag <= `BSV_ASSIGNMENT_DELAY m_lsqTag$D_IN;
+    if (m_orig_inst$EN) m_orig_inst <= `BSV_ASSIGNMENT_DELAY m_orig_inst$D_IN;
     if (m_pc$EN) m_pc <= `BSV_ASSIGNMENT_DELAY m_pc$D_IN;
     if (m_will_dirty_fpu_state$EN)
       m_will_dirty_fpu_state <= `BSV_ASSIGNMENT_DELAY
@@ -1541,6 +1567,7 @@ module mkRobRowSynth(CLK,
     m_lsqTag = 6'h2A;
     m_memAccessAtCommit_rl = 1'h0;
     m_nonMMIOStDone_rl = 1'h0;
+    m_orig_inst = 32'hAAAAAAAA;
     m_pc = 64'hAAAAAAAAAAAAAAAA;
     m_ppc_vaddr_csrData_rl = 66'h2AAAAAAAAAAAAAAAA;
     m_rob_inst_state_rl = 1'h0;

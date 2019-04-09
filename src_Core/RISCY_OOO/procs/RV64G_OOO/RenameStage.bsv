@@ -226,6 +226,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         fetchStage.pipelines[0].deq;
         let x = fetchStage.pipelines[0].first;
         let pc = x.pc;
+        let orig_inst = x.orig_inst;
         let ppc = x.ppc;
         let main_epoch = x.main_epoch;
         let dpTrain = x.dpTrain;
@@ -233,6 +234,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         let dInst = x.dInst;
         let arch_regs = x.regs;
         let cause = x.cause;
+
         if(verbose) $display("[doRenaming] trap: ", fshow(x));
 
         // update prev epoch
@@ -242,6 +244,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         incrEpochStallFetch;
         // just place it in the reorder buffer
         let y = ToReorderBuffer{pc: pc,
+				orig_inst: orig_inst,
                                 iType: dInst.iType,
                                 csr: dInst.csr,
                                 claimed_phy_reg: False, // no renaming is done
@@ -327,6 +330,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         fetchStage.pipelines[0].deq;
         let x = fetchStage.pipelines[0].first;
         let pc = x.pc;
+        let orig_inst = x.orig_inst;
         let ppc = x.ppc;
         let main_epoch = x.main_epoch;
         let dpTrain = x.dpTrain;
@@ -400,6 +404,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         end
         RobInstState rob_inst_state = to_exec ? NotDone : Executed;
         let y = ToReorderBuffer{pc: pc,
+				orig_inst: orig_inst,
                                 iType: dInst.iType,
                                 csr: dInst.csr,
                                 claimed_phy_reg: True, // XXX we always claim a free reg in rename
@@ -467,6 +472,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         fetchStage.pipelines[0].deq;
         let x = fetchStage.pipelines[0].first;
         let pc = x.pc;
+        let orig_inst = x.orig_inst;
         let ppc = x.ppc;
         let main_epoch = x.main_epoch;
         let dpTrain = x.dpTrain;
@@ -475,6 +481,8 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         let arch_regs = x.regs;
         let cause = x.cause;
         if(verbose) $display("[doRenaming] mem inst: ", fshow(x));
+
+        Addr fallthrough_pc = ((orig_inst[1:0] == 2'b11) ? pc + 4 : pc + 2);
 
         // update prev epoch
         epochManager.updatePrevEpoch[0].update(main_epoch);
@@ -526,7 +534,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                         regs_ready: regs_ready_aggr // mem currently recv bypass
                     });
                 end
-                doAssert(ppc == pc + 4, "Mem next PC is not PC+4");
+	        doAssert(ppc == fallthrough_pc, "Mem next PC is not PC+4/PC+2");
                 doAssert(!isValid(dInst.csr), "Mem never explicitly read/write CSR");
                 doAssert((dInst.iType != Fence) == isValid(dInst.imm),
                          "Mem (non-Fence) needs imm for virtual addr");
@@ -554,6 +562,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         end
         RobInstState rob_inst_state = NotDone; // mem inst always needs execution
         let y = ToReorderBuffer{pc: pc,
+				orig_inst: orig_inst,
                                 iType: dInst.iType,
                                 csr: dInst.csr,
                                 claimed_phy_reg: True, // XXX we always claim a free reg in rename
@@ -661,6 +670,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
             if(!stop && fetchStage.pipelines[i].canDeq) begin
                 let x = fetchStage.pipelines[i].first; // don't deq now, inst may not have resource
                 let pc = x.pc;
+	        let orig_inst = x.orig_inst;
                 let ppc = x.ppc;
                 let main_epoch = x.main_epoch;
                 let dpTrain = x.dpTrain;
@@ -668,6 +678,8 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                 let dInst = x.dInst;
                 let arch_regs = x.regs;
                 let cause = x.cause;
+
+                Addr fallthrough_pc = ((orig_inst[1:0] == 2'b11) ? pc + 4 : pc + 2);
 
                 // check for wrong path, if wrong path, don't process it, leave to the other rule in next cycle
                 if(!epochManager.checkEpoch[i].check(main_epoch)) begin
@@ -797,7 +809,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                 spec_tag: spec_tag,
                                 regs_ready: regs_ready_aggr // fpu mul div recv bypass
                             });
-                            doAssert(ppc == pc + 4, "FpuMulDiv next PC is not PC+4");
+                            doAssert(ppc == fallthrough_pc, "FpuMulDiv next PC is not PC+4/PC+2");
                             doAssert(!isValid(dInst.csr), "FpuMulDiv never explicitly read/write CSR");
                             doAssert(!isValid(spec_tag), "should not have spec tag");
                         end
@@ -829,7 +841,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                         regs_ready: regs_ready_aggr // mem currently recv bypass
                                     });
                                 end
-                                doAssert(ppc == pc + 4, "Mem next PC is not PC+4");
+                                doAssert(ppc == fallthrough_pc, "Mem next PC is not PC+4/PC+2");
                                 doAssert(!isValid(dInst.csr), "Mem never explicitly read/write CSR");
                                 doAssert((dInst.iType != Fence) == isValid(dInst.imm),
                                          "Mem (non-Fence) needs imm for virtual addr");
@@ -887,6 +899,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                         RobInstState rob_inst_state = (to_exec || to_mem || to_FpuMulDiv) ? NotDone : Executed;
 
                         let y = ToReorderBuffer{pc: pc,
+						orig_inst: orig_inst,
                                                 iType: dInst.iType,
                                                 csr: dInst.csr,
                                                 claimed_phy_reg: True, // XXX we always claim a free reg in rename

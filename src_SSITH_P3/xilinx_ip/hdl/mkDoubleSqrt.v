@@ -6,9 +6,9 @@
 //
 // Ports:
 // Name                         I/O  size props
-// RDY_request_put                O     1
-// response_get                   O    69
-// RDY_response_get               O     1
+// RDY_request_put                O     1 reg
+// response_get                   O    69 reg
+// RDY_response_get               O     1 reg
 // CLK                            I     1 clock
 // RST_N                          I     1 reset
 // request_put                    I    67

@@ -67,6 +67,7 @@ typedef struct {
     Data rVal2;
     Addr pc;
     Addr ppc;
+    Bit #(32) orig_inst;
     // specualtion
     Maybe#(SpecTag) spec_tag;
 } AluRegReadToExe deriving(Bits, Eq, FShow);
@@ -135,6 +136,7 @@ interface AluExeInput;
     // ROB
     method Addr rob_getPC(InstTag t);
     method Addr rob_getPredPC(InstTag t);
+    method Bit #(32) rob_getOrig_Inst (InstTag t);
     method Action rob_setExecuted(InstTag t, Maybe#(Data) csrData, ControlFlow cf);
     // Fetch stage
     method Action fetch_train_predictors(FetchTrainBP train);
@@ -165,6 +167,7 @@ endinterface
 
 module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
     Bool verbose = False;
+    Integer verbosity = 0;
 
     // alu reservation station
     ReservationStationAlu rsAlu <- mkReservationStationAlu;
@@ -235,6 +238,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
         // get PC and PPC
         let pc = inIfc.rob_getPC(x.tag);
         let ppc = inIfc.rob_getPredPC(x.tag);
+        let orig_inst = inIfc.rob_getOrig_Inst (x.tag);
 
         // go to next stage
         regToExeQ.enq(ToSpecFifo {
@@ -247,6 +251,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
                 rVal2: rVal2,
                 pc: pc,
                 ppc: ppc,
+	        orig_inst: orig_inst,
                 spec_tag: x.spec_tag
             },
             spec_bits: dispToReg.spec_bits
@@ -260,7 +265,12 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
         if(verbose) $display("[doExeAlu] ", fshow(regToExe));
 
         // execution
-        ExecResult exec_result = basicExec(x.dInst, x.rVal1, x.rVal2, x.pc, x.ppc);
+        ExecResult exec_result = basicExec(x.dInst, x.rVal1, x.rVal2, x.pc, x.ppc, x.orig_inst);
+
+        if (verbosity > 0) begin
+           $display ("AluExePipeline.doExeAlu: regToExe    = ", fshow (regToExe));
+           $display ("AluExePipeline.doExeAlu: exec_result = ", fshow (exec_result));
+	end
 
         // when inst needs to store csrData in ROB, it must have iType = Csr, cannot mispredict
         if(isValid(x.dInst.csr)) begin

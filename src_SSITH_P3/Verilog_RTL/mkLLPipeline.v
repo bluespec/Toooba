@@ -10517,75 +10517,6 @@ module mkLLPipeline(CLK,
     endcase
   end
   always@(way__h173542 or
-	  IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3218 or
-	  IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3224 or
-	  IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3230 or
-	  IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3236 or
-	  IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3242 or
-	  IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3248 or
-	  IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3254 or
-	  IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3260 or
-	  IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3266 or
-	  IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3272 or
-	  IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3278 or
-	  IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3284 or
-	  IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3290 or
-	  IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3296 or
-	  IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3302 or
-	  IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3308)
-  begin
-    case (way__h173542)
-      4'd0:
-	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__576_A_ETC___d3310 =
-	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3218;
-      4'd1:
-	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__576_A_ETC___d3310 =
-	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3224;
-      4'd2:
-	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__576_A_ETC___d3310 =
-	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3230;
-      4'd3:
-	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__576_A_ETC___d3310 =
-	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3236;
-      4'd4:
-	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__576_A_ETC___d3310 =
-	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3242;
-      4'd5:
-	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__576_A_ETC___d3310 =
-	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3248;
-      4'd6:
-	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__576_A_ETC___d3310 =
-	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3254;
-      4'd7:
-	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__576_A_ETC___d3310 =
-	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3260;
-      4'd8:
-	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__576_A_ETC___d3310 =
-	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3266;
-      4'd9:
-	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__576_A_ETC___d3310 =
-	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3272;
-      4'd10:
-	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__576_A_ETC___d3310 =
-	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3278;
-      4'd11:
-	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__576_A_ETC___d3310 =
-	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3284;
-      4'd12:
-	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__576_A_ETC___d3310 =
-	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3290;
-      4'd13:
-	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__576_A_ETC___d3310 =
-	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3296;
-      4'd14:
-	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__576_A_ETC___d3310 =
-	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3302;
-      4'd15:
-	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__576_A_ETC___d3310 =
-	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3308;
-    endcase
-  end
-  always@(way__h173542 or
 	  IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d2311 or
 	  IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d2336 or
 	  IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d2352 or
@@ -10652,6 +10583,75 @@ module mkLLPipeline(CLK,
       4'd15:
 	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__576_A_ETC___d3111 =
 	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d2626;
+    endcase
+  end
+  always@(way__h173542 or
+	  IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3218 or
+	  IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3224 or
+	  IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3230 or
+	  IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3236 or
+	  IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3242 or
+	  IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3248 or
+	  IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3254 or
+	  IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3260 or
+	  IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3266 or
+	  IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3272 or
+	  IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3278 or
+	  IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3284 or
+	  IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3290 or
+	  IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3296 or
+	  IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3302 or
+	  IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3308)
+  begin
+    case (way__h173542)
+      4'd0:
+	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__576_A_ETC___d3310 =
+	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3218;
+      4'd1:
+	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__576_A_ETC___d3310 =
+	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3224;
+      4'd2:
+	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__576_A_ETC___d3310 =
+	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3230;
+      4'd3:
+	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__576_A_ETC___d3310 =
+	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3236;
+      4'd4:
+	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__576_A_ETC___d3310 =
+	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3242;
+      4'd5:
+	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__576_A_ETC___d3310 =
+	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3248;
+      4'd6:
+	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__576_A_ETC___d3310 =
+	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3254;
+      4'd7:
+	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__576_A_ETC___d3310 =
+	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3260;
+      4'd8:
+	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__576_A_ETC___d3310 =
+	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3266;
+      4'd9:
+	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__576_A_ETC___d3310 =
+	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3272;
+      4'd10:
+	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__576_A_ETC___d3310 =
+	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3278;
+      4'd11:
+	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__576_A_ETC___d3310 =
+	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3284;
+      4'd12:
+	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__576_A_ETC___d3310 =
+	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3290;
+      4'd13:
+	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__576_A_ETC___d3310 =
+	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3296;
+      4'd14:
+	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__576_A_ETC___d3310 =
+	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3302;
+      4'd15:
+	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__576_A_ETC___d3310 =
+	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3308;
     endcase
   end
   always@(way__h173542 or

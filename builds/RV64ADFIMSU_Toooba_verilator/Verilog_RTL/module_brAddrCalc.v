@@ -12,13 +12,15 @@
 // brAddrCalc_iType               I     5
 // brAddrCalc_imm                 I    64
 // brAddrCalc_taken               I     1
+// brAddrCalc_orig_inst           I    32
 //
 // Combinational paths from inputs to outputs:
 //   (brAddrCalc_pc,
 //    brAddrCalc_val,
 //    brAddrCalc_iType,
 //    brAddrCalc_imm,
-//    brAddrCalc_taken) -> brAddrCalc
+//    brAddrCalc_taken,
+//    brAddrCalc_orig_inst) -> brAddrCalc
 //
 //
 
@@ -40,6 +42,7 @@ module module_brAddrCalc(brAddrCalc_pc,
 			 brAddrCalc_iType,
 			 brAddrCalc_imm,
 			 brAddrCalc_taken,
+			 brAddrCalc_orig_inst,
 			 brAddrCalc);
   // value method brAddrCalc
   input  [63 : 0] brAddrCalc_pc;
@@ -47,6 +50,7 @@ module module_brAddrCalc(brAddrCalc_pc,
   input  [4 : 0] brAddrCalc_iType;
   input  [63 : 0] brAddrCalc_imm;
   input  brAddrCalc_taken;
+  input  [31 : 0] brAddrCalc_orig_inst;
   output [63 : 0] brAddrCalc;
 
   // signals for module outputs
@@ -55,11 +59,12 @@ module module_brAddrCalc(brAddrCalc_pc,
   // remaining internal signals
   wire [63 : 0] brAddrCalc_pc_PLUS_brAddrCalc_imm___d2,
 		brAddrCalc_val_PLUS_brAddrCalc_imm__q1,
-		pcPlus4__h27;
+		fallthrough_incr__h28,
+		pcPlusN__h29;
 
   // value method brAddrCalc
   always@(brAddrCalc_iType or
-	  pcPlus4__h27 or
+	  pcPlusN__h29 or
 	  brAddrCalc_pc_PLUS_brAddrCalc_imm___d2 or
 	  brAddrCalc_val_PLUS_brAddrCalc_imm__q1 or brAddrCalc_taken)
   begin
@@ -71,8 +76,8 @@ module module_brAddrCalc(brAddrCalc_pc,
 	  brAddrCalc =
 	      brAddrCalc_taken ?
 		brAddrCalc_pc_PLUS_brAddrCalc_imm___d2 :
-		pcPlus4__h27;
-      default: brAddrCalc = pcPlus4__h27;
+		pcPlusN__h29;
+      default: brAddrCalc = pcPlusN__h29;
     endcase
   end
 
@@ -81,6 +86,8 @@ module module_brAddrCalc(brAddrCalc_pc,
 	     brAddrCalc_pc + brAddrCalc_imm ;
   assign brAddrCalc_val_PLUS_brAddrCalc_imm__q1 =
 	     brAddrCalc_val + brAddrCalc_imm ;
-  assign pcPlus4__h27 = brAddrCalc_pc + 64'd4 ;
+  assign fallthrough_incr__h28 =
+	     (brAddrCalc_orig_inst[1:0] == 2'b11) ? 64'd4 : 64'd2 ;
+  assign pcPlusN__h29 = brAddrCalc_pc + fallthrough_incr__h28 ;
 endmodule  // module_brAddrCalc
 

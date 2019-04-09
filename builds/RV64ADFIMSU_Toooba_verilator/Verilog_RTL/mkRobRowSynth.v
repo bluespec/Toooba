@@ -7,7 +7,7 @@
 // Ports:
 // Name                         I/O  size props
 // RDY_write_enq                  O     1 const
-// read_deq                       O   187
+// read_deq                       O   219
 // RDY_read_deq                   O     1 const
 // RDY_setLSQAtCommitNotified     O     1 const
 // RDY_setExecuted_deqLSQ         O     1 const
@@ -19,12 +19,14 @@
 // RDY_getOrigPC                  O     1 const
 // getOrigPredPC                  O    64
 // RDY_getOrigPredPC              O     1 const
+// getOrig_Inst                   O    32 reg
+// RDY_getOrig_Inst               O     1 const
 // dependsOn_wrongSpec            O     1
 // RDY_dependsOn_wrongSpec        O     1 const
 // RDY_correctSpeculation         O     1 const
 // CLK                            I     1 clock
 // RST_N                          I     1 reset
-// write_enq_x                    I   187
+// write_enq_x                    I   219
 // setExecuted_deqLSQ_cause       I     5
 // setExecuted_deqLSQ_ld_killed   I     3
 // setExecuted_doFinishAlu_0_set_csrData  I    65
@@ -108,6 +110,9 @@ module mkRobRowSynth(CLK,
 		     getOrigPredPC,
 		     RDY_getOrigPredPC,
 
+		     getOrig_Inst,
+		     RDY_getOrig_Inst,
+
 		     dependsOn_wrongSpec_tag,
 		     dependsOn_wrongSpec,
 		     RDY_dependsOn_wrongSpec,
@@ -119,12 +124,12 @@ module mkRobRowSynth(CLK,
   input  RST_N;
 
   // action method write_enq
-  input  [186 : 0] write_enq_x;
+  input  [218 : 0] write_enq_x;
   input  EN_write_enq;
   output RDY_write_enq;
 
   // value method read_deq
-  output [186 : 0] read_deq;
+  output [218 : 0] read_deq;
   output RDY_read_deq;
 
   // action method setLSQAtCommitNotified
@@ -169,6 +174,10 @@ module mkRobRowSynth(CLK,
   output [63 : 0] getOrigPredPC;
   output RDY_getOrigPredPC;
 
+  // value method getOrig_Inst
+  output [31 : 0] getOrig_Inst;
+  output RDY_getOrig_Inst;
+
   // value method dependsOn_wrongSpec
   input  [3 : 0] dependsOn_wrongSpec_tag;
   output dependsOn_wrongSpec;
@@ -180,12 +189,14 @@ module mkRobRowSynth(CLK,
   output RDY_correctSpeculation;
 
   // signals for module outputs
-  wire [186 : 0] read_deq;
+  wire [218 : 0] read_deq;
   wire [63 : 0] getOrigPC, getOrigPredPC;
+  wire [31 : 0] getOrig_Inst;
   wire RDY_correctSpeculation,
        RDY_dependsOn_wrongSpec,
        RDY_getOrigPC,
        RDY_getOrigPredPC,
+       RDY_getOrig_Inst,
        RDY_read_deq,
        RDY_setExecuted_deqLSQ,
        RDY_setExecuted_doFinishAlu_0_set,
@@ -248,6 +259,11 @@ module mkRobRowSynth(CLK,
   // register m_nonMMIOStDone_rl
   reg m_nonMMIOStDone_rl;
   wire m_nonMMIOStDone_rl$D_IN, m_nonMMIOStDone_rl$EN;
+
+  // register m_orig_inst
+  reg [31 : 0] m_orig_inst;
+  wire [31 : 0] m_orig_inst$D_IN;
+  wire m_orig_inst$EN;
 
   // register m_pc
   reg [63 : 0] m_pc;
@@ -449,18 +465,18 @@ module mkRobRowSynth(CLK,
 	      CASE_write_enq_x_BITS_101_TO_98_0_write_enq_x__ETC__q5,
 	      CASE_write_enq_x_BITS_101_TO_98_0_write_enq_x__ETC__q6;
   reg [1 : 0] CASE_write_enq_x_BITS_97_TO_96_0_write_enq_x_B_ETC__q7;
-  wire [117 : 0] m_csr_42_BIT_12_43_CONCAT_IF_m_csr_42_BIT_12_4_ETC___d614;
-  wire [103 : 0] m_trap_dummy2_0_read__19_AND_m_trap_dummy2_1_r_ETC___d613;
-  wire [65 : 0] IF_NOT_m_ppc_vaddr_csrData_dummy2_0_read__83_8_ETC___d559;
+  wire [122 : 0] m_iType_43_CONCAT_m_csr_44_BIT_12_45_CONCAT_IF_ETC___d619;
+  wire [104 : 0] m_claimed_phy_reg_21_CONCAT_m_trap_dummy2_0_re_ETC___d618;
+  wire [65 : 0] IF_NOT_m_ppc_vaddr_csrData_dummy2_0_read__83_8_ETC___d563;
   wire [63 : 0] IF_m_ppc_vaddr_csrData_dummy2_0_read__83_AND_m_ETC___d298,
 		IF_m_ppc_vaddr_csrData_lat_1_whas__65_THEN_m_p_ETC___d197,
 		IF_m_ppc_vaddr_csrData_lat_3_whas__57_THEN_m_p_ETC___d199;
   wire [11 : 0] IF_m_spec_bits_lat_1_whas__75_THEN_m_spec_bits_ETC___d281,
-		bs__h30484,
-		sb__h30519,
-		upd__h16356;
+		bs__h30553,
+		sb__h30588,
+		upd__h16390;
   wire [4 : 0] IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d154,
-	       x_read_deq_fflags__h23633;
+	       x_read_deq_fflags__h23700;
   wire [3 : 0] IF_IF_m_trap_lat_2_whas_THEN_NOT_m_trap_lat_2__ETC___d153,
 	       IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d131,
 	       IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d132,
@@ -491,11 +507,11 @@ module mkRobRowSynth(CLK,
        IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d74,
        IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d81,
        IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d95,
-       NOT_m_csr_42_BIT_12_43_EQ_setExecuted_doFinish_ETC___d655,
-       NOT_m_csr_42_BIT_12_43_EQ_setExecuted_doFinish_ETC___d663,
+       NOT_m_csr_44_BIT_12_45_EQ_setExecuted_doFinish_ETC___d660,
+       NOT_m_csr_44_BIT_12_45_EQ_setExecuted_doFinish_ETC___d668,
        NOT_m_ppc_vaddr_csrData_dummy2_0_read__83_84_O_ETC___d293,
-       m_rob_inst_state_dummy2_0_read__65_AND_m_rob_i_ETC___d576,
-       m_trap_dummy2_0_read__19_AND_m_trap_dummy2_1_r_ETC___d524;
+       m_rob_inst_state_dummy2_0_read__69_AND_m_rob_i_ETC___d580,
+       m_trap_dummy2_0_read__22_AND_m_trap_dummy2_1_r_ETC___d527;
 
   // action method write_enq
   assign RDY_write_enq = 1'd1 ;
@@ -505,8 +521,8 @@ module mkRobRowSynth(CLK,
   // value method read_deq
   assign read_deq =
 	     { m_pc,
-	       m_iType,
-	       m_csr_42_BIT_12_43_CONCAT_IF_m_csr_42_BIT_12_4_ETC___d614 } ;
+	       m_orig_inst,
+	       m_iType_43_CONCAT_m_csr_44_BIT_12_45_CONCAT_IF_ETC___d619 } ;
   assign RDY_read_deq = 1'd1 ;
 
   // action method setLSQAtCommitNotified
@@ -554,8 +570,12 @@ module mkRobRowSynth(CLK,
 	       64'd0 ;
   assign RDY_getOrigPredPC = 1'd1 ;
 
+  // value method getOrig_Inst
+  assign getOrig_Inst = m_orig_inst ;
+  assign RDY_getOrig_Inst = 1'd1 ;
+
   // value method dependsOn_wrongSpec
-  assign dependsOn_wrongSpec = bs__h30484[dependsOn_wrongSpec_tag] ;
+  assign dependsOn_wrongSpec = bs__h30553[dependsOn_wrongSpec_tag] ;
   assign RDY_dependsOn_wrongSpec = 1'd1 ;
 
   // action method correctSpeculation
@@ -858,8 +878,12 @@ module mkRobRowSynth(CLK,
 		m_nonMMIOStDone_rl) ;
   assign m_nonMMIOStDone_rl$EN = 1'd1 ;
 
+  // register m_orig_inst
+  assign m_orig_inst$D_IN = write_enq_x[154:123] ;
+  assign m_orig_inst$EN = EN_write_enq ;
+
   // register m_pc
-  assign m_pc$D_IN = write_enq_x[186:123] ;
+  assign m_pc$D_IN = write_enq_x[218:155] ;
   assign m_pc$EN = EN_write_enq ;
 
   // register m_ppc_vaddr_csrData_rl
@@ -883,7 +907,7 @@ module mkRobRowSynth(CLK,
   // register m_spec_bits_rl
   assign m_spec_bits_rl$D_IN =
 	     EN_correctSpeculation ?
-	       upd__h16356 :
+	       upd__h16390 :
 	       IF_m_spec_bits_lat_1_whas__75_THEN_m_spec_bits_ETC___d281 ;
   assign m_spec_bits_rl$EN = 1'd1 ;
 
@@ -1099,7 +1123,7 @@ module mkRobRowSynth(CLK,
 	       (IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d53 ?
 		  4'd1 :
 		  IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d150) ;
-  assign IF_NOT_m_ppc_vaddr_csrData_dummy2_0_read__83_8_ETC___d559 =
+  assign IF_NOT_m_ppc_vaddr_csrData_dummy2_0_read__83_8_ETC___d563 =
 	     (NOT_m_ppc_vaddr_csrData_dummy2_0_read__83_84_O_ETC___d293 ||
 	      m_ppc_vaddr_csrData_rl[65:64] == 2'd0) ?
 	       { 2'd0,
@@ -1235,47 +1259,31 @@ module mkRobRowSynth(CLK,
 	       (m_trap_lat_0$whas ?
 		  m_trap_lat_0$wget[3:0] == 4'd7 :
 		  m_trap_rl[3:0] == 4'd7) ;
-  assign NOT_m_csr_42_BIT_12_43_EQ_setExecuted_doFinish_ETC___d655 =
+  assign NOT_m_csr_44_BIT_12_45_EQ_setExecuted_doFinish_ETC___d660 =
 	     m_csr[12] != setExecuted_doFinishAlu_0_set_csrData[64] ;
-  assign NOT_m_csr_42_BIT_12_43_EQ_setExecuted_doFinish_ETC___d663 =
+  assign NOT_m_csr_44_BIT_12_45_EQ_setExecuted_doFinish_ETC___d668 =
 	     m_csr[12] != setExecuted_doFinishAlu_1_set_csrData[64] ;
   assign NOT_m_ppc_vaddr_csrData_dummy2_0_read__83_84_O_ETC___d293 =
 	     !m_ppc_vaddr_csrData_dummy2_0$Q_OUT ||
 	     !m_ppc_vaddr_csrData_dummy2_1$Q_OUT ||
 	     !m_ppc_vaddr_csrData_dummy2_2$Q_OUT ||
 	     !m_ppc_vaddr_csrData_dummy2_3$Q_OUT ;
-  assign bs__h30484 =
+  assign bs__h30553 =
 	     (m_spec_bits_dummy2_0$Q_OUT && m_spec_bits_dummy2_1$Q_OUT &&
 	      m_spec_bits_dummy2_2$Q_OUT) ?
 	       m_spec_bits_rl :
 	       12'd0 ;
-  assign m_csr_42_BIT_12_43_CONCAT_IF_m_csr_42_BIT_12_4_ETC___d614 =
-	     { m_csr[12],
-	       CASE_m_csr_BITS_11_TO_0_1_m_csr_BITS_11_TO_0_2_ETC__q3,
-	       m_claimed_phy_reg,
-	       m_trap_dummy2_0_read__19_AND_m_trap_dummy2_1_r_ETC___d613 } ;
-  assign m_rob_inst_state_dummy2_0_read__65_AND_m_rob_i_ETC___d576 =
-	     m_rob_inst_state_dummy2_0$Q_OUT &&
-	     m_rob_inst_state_dummy2_1$Q_OUT &&
-	     m_rob_inst_state_dummy2_2$Q_OUT &&
-	     m_rob_inst_state_dummy2_3$Q_OUT &&
-	     m_rob_inst_state_dummy2_4$Q_OUT &&
-	     m_rob_inst_state_dummy2_5$Q_OUT &&
-	     m_rob_inst_state_rl ;
-  assign m_trap_dummy2_0_read__19_AND_m_trap_dummy2_1_r_ETC___d524 =
-	     m_trap_dummy2_0$Q_OUT && m_trap_dummy2_1$Q_OUT &&
-	     m_trap_dummy2_2$Q_OUT &&
-	     m_trap_rl[5] ;
-  assign m_trap_dummy2_0_read__19_AND_m_trap_dummy2_1_r_ETC___d613 =
-	     { m_trap_dummy2_0_read__19_AND_m_trap_dummy2_1_r_ETC___d524,
+  assign m_claimed_phy_reg_21_CONCAT_m_trap_dummy2_0_re_ETC___d618 =
+	     { m_claimed_phy_reg,
+	       m_trap_dummy2_0_read__22_AND_m_trap_dummy2_1_r_ETC___d527,
 	       m_trap_rl[4],
 	       m_trap_rl[4] ?
 		 CASE_m_trap_rl_BITS_3_TO_0_0_m_trap_rl_BITS_3__ETC__q1 :
 		 CASE_m_trap_rl_BITS_3_TO_0_0_m_trap_rl_BITS_3__ETC__q2,
-	       IF_NOT_m_ppc_vaddr_csrData_dummy2_0_read__83_8_ETC___d559,
-	       x_read_deq_fflags__h23633,
+	       IF_NOT_m_ppc_vaddr_csrData_dummy2_0_read__83_8_ETC___d563,
+	       x_read_deq_fflags__h23700,
 	       m_will_dirty_fpu_state,
-	       m_rob_inst_state_dummy2_0_read__65_AND_m_rob_i_ETC___d576,
+	       m_rob_inst_state_dummy2_0_read__69_AND_m_rob_i_ETC___d580,
 	       m_lsqTag,
 	       m_ldKilled_dummy2_0$Q_OUT && m_ldKilled_dummy2_1$Q_OUT &&
 	       m_ldKilled_rl[2],
@@ -1291,13 +1299,30 @@ module mkRobRowSynth(CLK,
 	       m_nonMMIOStDone_dummy2_1$Q_OUT &&
 	       m_nonMMIOStDone_rl,
 	       m_epochIncremented,
-	       bs__h30484 } ;
-  assign sb__h30519 =
+	       bs__h30553 } ;
+  assign m_iType_43_CONCAT_m_csr_44_BIT_12_45_CONCAT_IF_ETC___d619 =
+	     { m_iType,
+	       m_csr[12],
+	       CASE_m_csr_BITS_11_TO_0_1_m_csr_BITS_11_TO_0_2_ETC__q3,
+	       m_claimed_phy_reg_21_CONCAT_m_trap_dummy2_0_re_ETC___d618 } ;
+  assign m_rob_inst_state_dummy2_0_read__69_AND_m_rob_i_ETC___d580 =
+	     m_rob_inst_state_dummy2_0$Q_OUT &&
+	     m_rob_inst_state_dummy2_1$Q_OUT &&
+	     m_rob_inst_state_dummy2_2$Q_OUT &&
+	     m_rob_inst_state_dummy2_3$Q_OUT &&
+	     m_rob_inst_state_dummy2_4$Q_OUT &&
+	     m_rob_inst_state_dummy2_5$Q_OUT &&
+	     m_rob_inst_state_rl ;
+  assign m_trap_dummy2_0_read__22_AND_m_trap_dummy2_1_r_ETC___d527 =
+	     m_trap_dummy2_0$Q_OUT && m_trap_dummy2_1$Q_OUT &&
+	     m_trap_dummy2_2$Q_OUT &&
+	     m_trap_rl[5] ;
+  assign sb__h30588 =
 	     m_spec_bits_dummy2_2$Q_OUT ?
 	       IF_m_spec_bits_lat_1_whas__75_THEN_m_spec_bits_ETC___d281 :
 	       12'd0 ;
-  assign upd__h16356 = sb__h30519 & correctSpeculation_mask ;
-  assign x_read_deq_fflags__h23633 =
+  assign upd__h16390 = sb__h30588 & correctSpeculation_mask ;
+  assign x_read_deq_fflags__h23700 =
 	     (m_fflags_dummy2_0$Q_OUT && m_fflags_dummy2_1$Q_OUT) ?
 	       m_fflags_rl :
 	       5'd0 ;
@@ -1529,6 +1554,7 @@ module mkRobRowSynth(CLK,
       m_epochIncremented <= `BSV_ASSIGNMENT_DELAY m_epochIncremented$D_IN;
     if (m_iType$EN) m_iType <= `BSV_ASSIGNMENT_DELAY m_iType$D_IN;
     if (m_lsqTag$EN) m_lsqTag <= `BSV_ASSIGNMENT_DELAY m_lsqTag$D_IN;
+    if (m_orig_inst$EN) m_orig_inst <= `BSV_ASSIGNMENT_DELAY m_orig_inst$D_IN;
     if (m_pc$EN) m_pc <= `BSV_ASSIGNMENT_DELAY m_pc$D_IN;
     if (m_will_dirty_fpu_state$EN)
       m_will_dirty_fpu_state <= `BSV_ASSIGNMENT_DELAY
@@ -1550,6 +1576,7 @@ module mkRobRowSynth(CLK,
     m_lsqTag = 6'h2A;
     m_memAccessAtCommit_rl = 1'h0;
     m_nonMMIOStDone_rl = 1'h0;
+    m_orig_inst = 32'hAAAAAAAA;
     m_pc = 64'hAAAAAAAAAAAAAAAA;
     m_ppc_vaddr_csrData_rl = 66'h2AAAAAAAAAAAAAAAA;
     m_rob_inst_state_rl = 1'h0;
@@ -1568,39 +1595,39 @@ module mkRobRowSynth(CLK,
     #0;
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_setExecuted_doFinishAlu_0_set &&
-	  NOT_m_csr_42_BIT_12_43_EQ_setExecuted_doFinish_ETC___d655)
+	  NOT_m_csr_44_BIT_12_45_EQ_setExecuted_doFinish_ETC___d660)
 	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_setExecuted_doFinishAlu_0_set &&
-	  NOT_m_csr_42_BIT_12_43_EQ_setExecuted_doFinish_ETC___d655)
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/lib/ReorderBuffer.bsv\", line 205, column 60\ncsr valid should match");
+	  NOT_m_csr_44_BIT_12_45_EQ_setExecuted_doFinish_ETC___d660)
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/lib/ReorderBuffer.bsv\", line 208, column 60\ncsr valid should match");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_setExecuted_doFinishAlu_0_set &&
-	  NOT_m_csr_42_BIT_12_43_EQ_setExecuted_doFinish_ETC___d655)
+	  NOT_m_csr_44_BIT_12_45_EQ_setExecuted_doFinish_ETC___d660)
 	$finish(32'd0);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_setExecuted_doFinishAlu_1_set &&
-	  NOT_m_csr_42_BIT_12_43_EQ_setExecuted_doFinish_ETC___d663)
+	  NOT_m_csr_44_BIT_12_45_EQ_setExecuted_doFinish_ETC___d668)
 	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_setExecuted_doFinishAlu_1_set &&
-	  NOT_m_csr_42_BIT_12_43_EQ_setExecuted_doFinish_ETC___d663)
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/lib/ReorderBuffer.bsv\", line 205, column 60\ncsr valid should match");
+	  NOT_m_csr_44_BIT_12_45_EQ_setExecuted_doFinish_ETC___d668)
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/lib/ReorderBuffer.bsv\", line 208, column 60\ncsr valid should match");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_setExecuted_doFinishAlu_1_set &&
-	  NOT_m_csr_42_BIT_12_43_EQ_setExecuted_doFinish_ETC___d663)
+	  NOT_m_csr_44_BIT_12_45_EQ_setExecuted_doFinish_ETC___d668)
 	$finish(32'd0);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_setExecuted_deqLSQ &&
-	  m_trap_dummy2_0_read__19_AND_m_trap_dummy2_1_r_ETC___d524)
+	  m_trap_dummy2_0_read__22_AND_m_trap_dummy2_1_r_ETC___d527)
 	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_setExecuted_deqLSQ &&
-	  m_trap_dummy2_0_read__19_AND_m_trap_dummy2_1_r_ETC___d524)
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/lib/ReorderBuffer.bsv\", line 312, column 52\ncannot have trap");
+	  m_trap_dummy2_0_read__22_AND_m_trap_dummy2_1_r_ETC___d527)
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/lib/ReorderBuffer.bsv\", line 318, column 52\ncannot have trap");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_setExecuted_deqLSQ &&
-	  m_trap_dummy2_0_read__19_AND_m_trap_dummy2_1_r_ETC___d524)
+	  m_trap_dummy2_0_read__22_AND_m_trap_dummy2_1_r_ETC___d527)
 	$finish(32'd0);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_setExecuted_doFinishMem &&
@@ -1611,7 +1638,7 @@ module mkRobRowSynth(CLK,
       if (EN_setExecuted_doFinishMem &&
 	  setExecuted_doFinishMem_access_at_commit &&
 	  setExecuted_doFinishMem_non_mmio_st_done)
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/lib/ReorderBuffer.bsv\", line 231, column 18\ncannot both be true");
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/lib/ReorderBuffer.bsv\", line 235, column 18\ncannot both be true");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_setExecuted_doFinishMem &&
 	  setExecuted_doFinishMem_access_at_commit &&
@@ -1626,7 +1653,7 @@ module mkRobRowSynth(CLK,
       if (EN_setExecuted_doFinishMem &&
 	  setExecuted_doFinishMem_non_mmio_st_done &&
 	  m_iType != 5'd5)
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/lib/ReorderBuffer.bsv\", line 235, column 35\nmust be St");
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/lib/ReorderBuffer.bsv\", line 239, column 35\nmust be St");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_setExecuted_doFinishMem &&
 	  setExecuted_doFinishMem_non_mmio_st_done &&
@@ -1637,7 +1664,7 @@ module mkRobRowSynth(CLK,
 	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_write_enq && write_enq_x[18])
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/lib/ReorderBuffer.bsv\", line 277, column 40\nld killed must be false");
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/lib/ReorderBuffer.bsv\", line 282, column 40\nld killed must be false");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_write_enq && write_enq_x[18]) $finish(32'd0);
     if (RST_N != `BSV_RESET_VALUE)
@@ -1645,7 +1672,7 @@ module mkRobRowSynth(CLK,
 	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_write_enq && write_enq_x[15])
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/lib/ReorderBuffer.bsv\", line 278, column 48\nmem access at commit must be false");
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/lib/ReorderBuffer.bsv\", line 283, column 48\nmem access at commit must be false");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_write_enq && write_enq_x[15]) $finish(32'd0);
     if (RST_N != `BSV_RESET_VALUE)
@@ -1653,7 +1680,7 @@ module mkRobRowSynth(CLK,
 	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_write_enq && write_enq_x[14])
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/lib/ReorderBuffer.bsv\", line 279, column 42\nlsq notified must be false");
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/lib/ReorderBuffer.bsv\", line 284, column 42\nlsq notified must be false");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_write_enq && write_enq_x[14]) $finish(32'd0);
     if (RST_N != `BSV_RESET_VALUE)
@@ -1661,7 +1688,7 @@ module mkRobRowSynth(CLK,
 	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_write_enq && write_enq_x[13])
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/lib/ReorderBuffer.bsv\", line 280, column 36\nnon mmio st must be false");
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/lib/ReorderBuffer.bsv\", line 285, column 36\nnon mmio st must be false");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_write_enq && write_enq_x[13]) $finish(32'd0);
   end

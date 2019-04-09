@@ -85,10 +85,10 @@ module module_decode(decode_inst,
   wire [31 : 0] immB__h34, immI__h32, immJ__h36, immS__h33, immU__h35;
   wire [20 : 0] IF_NOT_decode_inst_BITS_6_TO_0_EQ_51_39_AND_NO_ETC___d406,
 		IF_decode_inst_BITS_6_TO_0_EQ_19_OR_decode_ins_ETC___d408,
-		x__h10143;
+		x__h10144;
   wire [14 : 0] IF_decode_inst_BITS_6_TO_0_EQ_3_5_OR_decode_in_ETC___d328;
-  wire [12 : 0] x__h10231;
-  wire [11 : 0] decode_inst_BITS_31_TO_20__q1, x__h10318;
+  wire [12 : 0] x__h10232;
+  wire [11 : 0] decode_inst_BITS_31_TO_20__q1, x__h10319;
   wire [4 : 0] IF_NOT_decode_inst_BITS_26_TO_25_4_EQ_0b0_5_6__ETC___d30,
 	       IF_SEXT_decode_inst_BITS_31_TO_20_7_8_BIT_10_0_ETC___d103;
   wire decode_inst_BIT_23_4_OR_decode_inst_BIT_21_5___d46,
@@ -293,26 +293,26 @@ module module_decode(decode_inst,
 	     decode_inst[23] | decode_inst[21] ;
   assign decode_inst_BIT_26_7_OR_decode_inst_BIT_24_8___d49 =
 	     decode_inst[26] | decode_inst[24] ;
-  assign immB__h34 = { {19{x__h10231[12]}}, x__h10231 } ;
+  assign immB__h34 = { {19{x__h10232[12]}}, x__h10232 } ;
   assign immI__h32 =
 	     { {20{decode_inst_BITS_31_TO_20__q1[11]}},
 	       decode_inst_BITS_31_TO_20__q1 } ;
-  assign immJ__h36 = { {11{x__h10143[20]}}, x__h10143 } ;
-  assign immS__h33 = { {20{x__h10318[11]}}, x__h10318 } ;
+  assign immJ__h36 = { {11{x__h10144[20]}}, x__h10144 } ;
+  assign immS__h33 = { {20{x__h10319[11]}}, x__h10319 } ;
   assign immU__h35 = { decode_inst[31:12], 12'b0 } ;
-  assign x__h10143 =
+  assign x__h10144 =
 	     { decode_inst[31],
 	       decode_inst[19:12],
 	       decode_inst[20],
 	       decode_inst[30:21],
 	       1'b0 } ;
-  assign x__h10231 =
+  assign x__h10232 =
 	     { decode_inst[31],
 	       decode_inst[7],
 	       decode_inst[30:25],
 	       decode_inst[11:8],
 	       1'b0 } ;
-  assign x__h10318 = { decode_inst[31:25], decode_inst[11:7] } ;
+  assign x__h10319 = { decode_inst[31:25], decode_inst[11:7] } ;
   always@(decode_inst or
 	  decode_inst_BIT_23_4_OR_decode_inst_BIT_21_5___d46 or
 	  decode_inst_BIT_26_7_OR_decode_inst_BIT_24_8___d49)

@@ -3628,8 +3628,8 @@ module mkProc(CLK,
 	     CAN_FIRE_RL_llc_axi4_adapter_rl_discard_write_rsp ;
 
   // rule RL_rl_reset
-  assign CAN_FIRE_RL_rl_reset = WILL_FIRE_RL_rl_reset ;
-  assign WILL_FIRE_RL_rl_reset = f_reset_reqs$EMPTY_N && f_reset_rsps$FULL_N ;
+  assign CAN_FIRE_RL_rl_reset = f_reset_reqs$EMPTY_N && f_reset_rsps$FULL_N ;
+  assign WILL_FIRE_RL_rl_reset = CAN_FIRE_RL_rl_reset ;
 
   // inputs to muxes for submodule ports
   assign MUX_core_0$mmioToPlatform_pRq_enq_1__SEL_1 =
@@ -3970,7 +3970,7 @@ module mkProc(CLK,
 	       mmio_axi4_adapter_ctr_wr_rsps_pending_crg$port1__write_1 :
 	       b__h3158 ;
   assign mmio_axi4_adapter_ctr_wr_rsps_pending_crg$port3__read =
-	     WILL_FIRE_RL_rl_reset ?
+	     CAN_FIRE_RL_rl_reset ?
 	       4'd0 :
 	       mmio_axi4_adapter_ctr_wr_rsps_pending_crg$port2__read ;
   assign llc_axi4_adapter_master_xactor_crg_wr_addr_full$EN_port1__write =
@@ -4027,7 +4027,7 @@ module mkProc(CLK,
 	       llc_axi4_adapter_ctr_wr_rsps_pending_crg$port1__write_1 :
 	       b__h111153 ;
   assign llc_axi4_adapter_ctr_wr_rsps_pending_crg$port3__read =
-	     WILL_FIRE_RL_rl_reset ?
+	     CAN_FIRE_RL_rl_reset ?
 	       4'd0 :
 	       llc_axi4_adapter_ctr_wr_rsps_pending_crg$port2__read ;
 
@@ -4036,7 +4036,7 @@ module mkProc(CLK,
 	     EN_hart0_put_other_req_put ?
 	       hart0_put_other_req_put :
 	       set_verbosity_verbosity ;
-  assign cfg_verbosity$EN = EN_set_verbosity || EN_hart0_put_other_req_put ;
+  assign cfg_verbosity$EN = EN_hart0_put_other_req_put || EN_set_verbosity ;
 
   // register enqDst_0_rl
   assign enqDst_0_rl$D_IN =
@@ -4854,11 +4854,11 @@ module mkProc(CLK,
 
   // submodule f_reset_reqs
   assign f_reset_reqs$ENQ = EN_hart0_server_reset_request_put ;
-  assign f_reset_reqs$DEQ = WILL_FIRE_RL_rl_reset ;
+  assign f_reset_reqs$DEQ = CAN_FIRE_RL_rl_reset ;
   assign f_reset_reqs$CLR = 1'b0 ;
 
   // submodule f_reset_rsps
-  assign f_reset_rsps$ENQ = WILL_FIRE_RL_rl_reset ;
+  assign f_reset_rsps$ENQ = CAN_FIRE_RL_rl_reset ;
   assign f_reset_rsps$DEQ = EN_hart0_server_reset_response_get ;
   assign f_reset_rsps$CLR = 1'b0 ;
 
@@ -6160,27 +6160,6 @@ module mkProc(CLK,
     endcase
   end
   always@(mmioPlatform_curReq or
-	  result__h47077 or
-	  result__h47104 or result__h47131 or result__h47158)
-  begin
-    case (mmioPlatform_curReq[2:0])
-      3'h0:
-	  IF_mmioPlatform_curReq_94_BITS_2_TO_0_37_EQ_0x_ETC___d829 =
-	      result__h47077;
-      3'h2:
-	  IF_mmioPlatform_curReq_94_BITS_2_TO_0_37_EQ_0x_ETC___d829 =
-	      result__h47104;
-      3'h4:
-	  IF_mmioPlatform_curReq_94_BITS_2_TO_0_37_EQ_0x_ETC___d829 =
-	      result__h47131;
-      3'h6:
-	  IF_mmioPlatform_curReq_94_BITS_2_TO_0_37_EQ_0x_ETC___d829 =
-	      result__h47158;
-      default: IF_mmioPlatform_curReq_94_BITS_2_TO_0_37_EQ_0x_ETC___d829 =
-		   64'd0;
-    endcase
-  end
-  always@(mmioPlatform_curReq or
 	  result__h46844 or
 	  result__h46871 or
 	  result__h46898 or
@@ -6213,6 +6192,27 @@ module mkProc(CLK,
       3'h7:
 	  IF_mmioPlatform_curReq_94_BITS_2_TO_0_37_EQ_0x_ETC___d817 =
 	      result__h47033;
+    endcase
+  end
+  always@(mmioPlatform_curReq or
+	  result__h47077 or
+	  result__h47104 or result__h47131 or result__h47158)
+  begin
+    case (mmioPlatform_curReq[2:0])
+      3'h0:
+	  IF_mmioPlatform_curReq_94_BITS_2_TO_0_37_EQ_0x_ETC___d829 =
+	      result__h47077;
+      3'h2:
+	  IF_mmioPlatform_curReq_94_BITS_2_TO_0_37_EQ_0x_ETC___d829 =
+	      result__h47104;
+      3'h4:
+	  IF_mmioPlatform_curReq_94_BITS_2_TO_0_37_EQ_0x_ETC___d829 =
+	      result__h47131;
+      3'h6:
+	  IF_mmioPlatform_curReq_94_BITS_2_TO_0_37_EQ_0x_ETC___d829 =
+	      result__h47158;
+      default: IF_mmioPlatform_curReq_94_BITS_2_TO_0_37_EQ_0x_ETC___d829 =
+		   64'd0;
     endcase
   end
   always@(mmioPlatform_curReq or result__h47198 or result__h47225)

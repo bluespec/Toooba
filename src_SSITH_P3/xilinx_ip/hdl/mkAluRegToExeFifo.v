@@ -8,13 +8,13 @@
 // Name                         I/O  size props
 // RDY_enq                        O     1
 // RDY_deq                        O     1
-// first                          O   390
+// first                          O   422
 // RDY_first                      O     1
 // RDY_specUpdate_incorrectSpeculation  O     1 const
 // RDY_specUpdate_correctSpeculation  O     1 const
 // CLK                            I     1 clock
 // RST_N                          I     1 reset
-// enq_x                          I   390
+// enq_x                          I   422
 // specUpdate_incorrectSpeculation_kill_all  I     1
 // specUpdate_incorrectSpeculation_kill_tag  I     4
 // specUpdate_correctSpeculation_mask  I    12
@@ -69,7 +69,7 @@ module mkAluRegToExeFifo(CLK,
   input  RST_N;
 
   // action method enq
-  input  [389 : 0] enq_x;
+  input  [421 : 0] enq_x;
   input  EN_enq;
   output RDY_enq;
 
@@ -78,7 +78,7 @@ module mkAluRegToExeFifo(CLK,
   output RDY_deq;
 
   // value method first
-  output [389 : 0] first;
+  output [421 : 0] first;
   output RDY_first;
 
   // action method specUpdate_incorrectSpeculation
@@ -93,7 +93,7 @@ module mkAluRegToExeFifo(CLK,
   output RDY_specUpdate_correctSpeculation;
 
   // signals for module outputs
-  wire [389 : 0] first;
+  wire [421 : 0] first;
   wire RDY_deq,
        RDY_enq,
        RDY_first,
@@ -105,8 +105,8 @@ module mkAluRegToExeFifo(CLK,
   wire m_m_valid_0_lat_0$whas;
 
   // register m_m_row_0
-  reg [377 : 0] m_m_row_0;
-  wire [377 : 0] m_m_row_0$D_IN;
+  reg [409 : 0] m_m_row_0;
+  wire [409 : 0] m_m_row_0$D_IN;
   wire m_m_row_0$EN;
 
   // register m_m_specBits_0_rl
@@ -162,15 +162,15 @@ module mkAluRegToExeFifo(CLK,
   wire MUX_m_m_valid_0_dummy2_0$write_1__SEL_1;
 
   // remaining internal signals
-  reg [20 : 0] CASE_enq_x_BITS_384_TO_382_0_enq_x_BITS_384_TO_ETC__q2,
-	       CASE_m_m_row_0_BITS_372_TO_370_0_m_m_row_0_BIT_ETC__q5;
-  reg [11 : 0] CASE_enq_x_BITS_362_TO_351_1_enq_x_BITS_362_TO_ETC__q3,
-	       CASE_m_m_row_0_BITS_350_TO_339_1_m_m_row_0_BIT_ETC__q6;
-  reg [2 : 0] CASE_enq_x_BITS_367_TO_365_0_enq_x_BITS_367_TO_ETC__q1,
-	      CASE_m_m_row_0_BITS_355_TO_353_0_m_m_row_0_BIT_ETC__q4;
+  reg [20 : 0] CASE_enq_x_BITS_416_TO_414_0_enq_x_BITS_416_TO_ETC__q2,
+	       CASE_m_m_row_0_BITS_404_TO_402_0_m_m_row_0_BIT_ETC__q5;
+  reg [11 : 0] CASE_enq_x_BITS_394_TO_383_1_enq_x_BITS_394_TO_ETC__q3,
+	       CASE_m_m_row_0_BITS_382_TO_371_1_m_m_row_0_BIT_ETC__q6;
+  reg [2 : 0] CASE_enq_x_BITS_399_TO_397_0_enq_x_BITS_399_TO_ETC__q1,
+	      CASE_m_m_row_0_BITS_387_TO_385_0_m_m_row_0_BIT_ETC__q4;
   wire [11 : 0] IF_m_m_specBits_0_dummy2_0_read__61_AND_m_m_sp_ETC___d264,
 		IF_m_m_specBits_0_lat_0_whas__0_THEN_m_m_specB_ETC___d13,
-		sb__h10132,
+		sb__h10143,
 		upd__h2322;
 
   // action method enq
@@ -191,11 +191,11 @@ module mkAluRegToExeFifo(CLK,
 
   // value method first
   assign first =
-	     { m_m_row_0[377:373],
-	       CASE_m_m_row_0_BITS_372_TO_370_0_m_m_row_0_BIT_ETC__q5,
-	       m_m_row_0[351],
-	       CASE_m_m_row_0_BITS_350_TO_339_1_m_m_row_0_BIT_ETC__q6,
-	       m_m_row_0[338:0],
+	     { m_m_row_0[409:405],
+	       CASE_m_m_row_0_BITS_404_TO_402_0_m_m_row_0_BIT_ETC__q5,
+	       m_m_row_0[383],
+	       CASE_m_m_row_0_BITS_382_TO_371_1_m_m_row_0_BIT_ETC__q6,
+	       m_m_row_0[370:0],
 	       IF_m_m_specBits_0_dummy2_0_read__61_AND_m_m_sp_ETC___d264 } ;
   assign RDY_first = RDY_deq ;
 
@@ -265,15 +265,15 @@ module mkAluRegToExeFifo(CLK,
   assign m_m_valid_0_lat_0$whas =
 	     MUX_m_m_valid_0_dummy2_0$write_1__SEL_1 || EN_deq ;
   assign m_m_specBits_0_lat_1$wget =
-	     sb__h10132 & specUpdate_correctSpeculation_mask ;
+	     sb__h10143 & specUpdate_correctSpeculation_mask ;
 
   // register m_m_row_0
   assign m_m_row_0$D_IN =
-	     { enq_x[389:385],
-	       CASE_enq_x_BITS_384_TO_382_0_enq_x_BITS_384_TO_ETC__q2,
-	       enq_x[363],
-	       CASE_enq_x_BITS_362_TO_351_1_enq_x_BITS_362_TO_ETC__q3,
-	       enq_x[350:12] } ;
+	     { enq_x[421:417],
+	       CASE_enq_x_BITS_416_TO_414_0_enq_x_BITS_416_TO_ETC__q2,
+	       enq_x[395],
+	       CASE_enq_x_BITS_394_TO_383_1_enq_x_BITS_394_TO_ETC__q3,
+	       enq_x[382:12] } ;
   assign m_m_row_0$EN = EN_enq ;
 
   // register m_m_specBits_0_rl
@@ -321,40 +321,40 @@ module mkAluRegToExeFifo(CLK,
 	       12'd0 ;
   assign IF_m_m_specBits_0_lat_0_whas__0_THEN_m_m_specB_ETC___d13 =
 	     EN_enq ? enq_x[11:0] : m_m_specBits_0_rl ;
-  assign sb__h10132 =
+  assign sb__h10143 =
 	     m_m_specBits_0_dummy2_1$Q_OUT ?
 	       IF_m_m_specBits_0_lat_0_whas__0_THEN_m_m_specB_ETC___d13 :
 	       12'd0 ;
   assign upd__h2322 = m_m_specBits_0_lat_1$wget ;
   always@(enq_x)
   begin
-    case (enq_x[367:365])
+    case (enq_x[399:397])
       3'd0, 3'd1, 3'd2, 3'd3, 3'd4:
-	  CASE_enq_x_BITS_367_TO_365_0_enq_x_BITS_367_TO_ETC__q1 =
-	      enq_x[367:365];
-      default: CASE_enq_x_BITS_367_TO_365_0_enq_x_BITS_367_TO_ETC__q1 = 3'd7;
+	  CASE_enq_x_BITS_399_TO_397_0_enq_x_BITS_399_TO_ETC__q1 =
+	      enq_x[399:397];
+      default: CASE_enq_x_BITS_399_TO_397_0_enq_x_BITS_399_TO_ETC__q1 = 3'd7;
     endcase
   end
-  always@(enq_x or CASE_enq_x_BITS_367_TO_365_0_enq_x_BITS_367_TO_ETC__q1)
+  always@(enq_x or CASE_enq_x_BITS_399_TO_397_0_enq_x_BITS_399_TO_ETC__q1)
   begin
-    case (enq_x[384:382])
+    case (enq_x[416:414])
       3'd0, 3'd1, 3'd2, 3'd3:
-	  CASE_enq_x_BITS_384_TO_382_0_enq_x_BITS_384_TO_ETC__q2 =
-	      enq_x[384:364];
+	  CASE_enq_x_BITS_416_TO_414_0_enq_x_BITS_416_TO_ETC__q2 =
+	      enq_x[416:396];
       3'd4:
-	  CASE_enq_x_BITS_384_TO_382_0_enq_x_BITS_384_TO_ETC__q2 =
-	      { enq_x[384:382],
+	  CASE_enq_x_BITS_416_TO_414_0_enq_x_BITS_416_TO_ETC__q2 =
+	      { enq_x[416:414],
 		9'h0AA,
-		enq_x[372:368],
-		CASE_enq_x_BITS_367_TO_365_0_enq_x_BITS_367_TO_ETC__q1,
-		enq_x[364] };
-      default: CASE_enq_x_BITS_384_TO_382_0_enq_x_BITS_384_TO_ETC__q2 =
+		enq_x[404:400],
+		CASE_enq_x_BITS_399_TO_397_0_enq_x_BITS_399_TO_ETC__q1,
+		enq_x[396] };
+      default: CASE_enq_x_BITS_416_TO_414_0_enq_x_BITS_416_TO_ETC__q2 =
 		   21'd1485482;
     endcase
   end
   always@(enq_x)
   begin
-    case (enq_x[362:351])
+    case (enq_x[394:383])
       12'd1,
       12'd2,
       12'd3,
@@ -391,41 +391,41 @@ module mkAluRegToExeFifo(CLK,
       12'd3858,
       12'd3859,
       12'd3860:
-	  CASE_enq_x_BITS_362_TO_351_1_enq_x_BITS_362_TO_ETC__q3 =
-	      enq_x[362:351];
-      default: CASE_enq_x_BITS_362_TO_351_1_enq_x_BITS_362_TO_ETC__q3 =
+	  CASE_enq_x_BITS_394_TO_383_1_enq_x_BITS_394_TO_ETC__q3 =
+	      enq_x[394:383];
+      default: CASE_enq_x_BITS_394_TO_383_1_enq_x_BITS_394_TO_ETC__q3 =
 		   12'd2303;
     endcase
   end
   always@(m_m_row_0)
   begin
-    case (m_m_row_0[355:353])
+    case (m_m_row_0[387:385])
       3'd0, 3'd1, 3'd2, 3'd3, 3'd4:
-	  CASE_m_m_row_0_BITS_355_TO_353_0_m_m_row_0_BIT_ETC__q4 =
-	      m_m_row_0[355:353];
-      default: CASE_m_m_row_0_BITS_355_TO_353_0_m_m_row_0_BIT_ETC__q4 = 3'd7;
+	  CASE_m_m_row_0_BITS_387_TO_385_0_m_m_row_0_BIT_ETC__q4 =
+	      m_m_row_0[387:385];
+      default: CASE_m_m_row_0_BITS_387_TO_385_0_m_m_row_0_BIT_ETC__q4 = 3'd7;
     endcase
   end
-  always@(m_m_row_0 or CASE_m_m_row_0_BITS_355_TO_353_0_m_m_row_0_BIT_ETC__q4)
+  always@(m_m_row_0 or CASE_m_m_row_0_BITS_387_TO_385_0_m_m_row_0_BIT_ETC__q4)
   begin
-    case (m_m_row_0[372:370])
+    case (m_m_row_0[404:402])
       3'd0, 3'd1, 3'd2, 3'd3:
-	  CASE_m_m_row_0_BITS_372_TO_370_0_m_m_row_0_BIT_ETC__q5 =
-	      m_m_row_0[372:352];
+	  CASE_m_m_row_0_BITS_404_TO_402_0_m_m_row_0_BIT_ETC__q5 =
+	      m_m_row_0[404:384];
       3'd4:
-	  CASE_m_m_row_0_BITS_372_TO_370_0_m_m_row_0_BIT_ETC__q5 =
-	      { m_m_row_0[372:370],
+	  CASE_m_m_row_0_BITS_404_TO_402_0_m_m_row_0_BIT_ETC__q5 =
+	      { m_m_row_0[404:402],
 		9'h0AA,
-		m_m_row_0[360:356],
-		CASE_m_m_row_0_BITS_355_TO_353_0_m_m_row_0_BIT_ETC__q4,
-		m_m_row_0[352] };
-      default: CASE_m_m_row_0_BITS_372_TO_370_0_m_m_row_0_BIT_ETC__q5 =
+		m_m_row_0[392:388],
+		CASE_m_m_row_0_BITS_387_TO_385_0_m_m_row_0_BIT_ETC__q4,
+		m_m_row_0[384] };
+      default: CASE_m_m_row_0_BITS_404_TO_402_0_m_m_row_0_BIT_ETC__q5 =
 		   21'd1485482;
     endcase
   end
   always@(m_m_row_0)
   begin
-    case (m_m_row_0[350:339])
+    case (m_m_row_0[382:371])
       12'd1,
       12'd2,
       12'd3,
@@ -462,9 +462,9 @@ module mkAluRegToExeFifo(CLK,
       12'd3858,
       12'd3859,
       12'd3860:
-	  CASE_m_m_row_0_BITS_350_TO_339_1_m_m_row_0_BIT_ETC__q6 =
-	      m_m_row_0[350:339];
-      default: CASE_m_m_row_0_BITS_350_TO_339_1_m_m_row_0_BIT_ETC__q6 =
+	  CASE_m_m_row_0_BITS_382_TO_371_1_m_m_row_0_BIT_ETC__q6 =
+	      m_m_row_0[382:371];
+      default: CASE_m_m_row_0_BITS_382_TO_371_1_m_m_row_0_BIT_ETC__q6 =
 		   12'd2303;
     endcase
   end
@@ -494,7 +494,7 @@ module mkAluRegToExeFifo(CLK,
   initial
   begin
     m_m_row_0 =
-	378'h2AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA;
+	410'h2AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA;
     m_m_specBits_0_rl = 12'hAAA;
     m_m_valid_0_rl = 1'h0;
   end

@@ -26,8 +26,8 @@ import ProcTypes::*;
 import Vector::*;
 
 (* noinline *)
-function Maybe#(Addr) decodeBrPred( Addr pc, DecodedInst dInst, Bool histTaken );
-  Addr pcPlus4 = pc + 4;
+function Maybe#(Addr) decodeBrPred( Addr pc, DecodedInst dInst, Bool histTaken, Bool is_32b_inst);
+  Addr pcPlusN = pc + (is_32b_inst ? 4 : 2);
   Data imm_val = fromMaybe(?, getDInstImm(dInst));
   Maybe#(Addr) nextPc = tagged Invalid;
   if( dInst.iType == J ) begin
@@ -37,13 +37,13 @@ function Maybe#(Addr) decodeBrPred( Addr pc, DecodedInst dInst, Bool histTaken )
     if( histTaken ) begin
       nextPc = tagged Valid (pc + imm_val);
     end else begin
-      nextPc = tagged Valid pcPlus4;
+      nextPc = tagged Valid pcPlusN;
     end
   end else if( dInst.iType == Jr ) begin
     // target is unknown until RegFetch
     nextPc = tagged Invalid;
   end else begin
-    nextPc = tagged Valid pcPlus4;
+    nextPc = tagged Valid pcPlusN;
   end
   return nextPc;
 endfunction

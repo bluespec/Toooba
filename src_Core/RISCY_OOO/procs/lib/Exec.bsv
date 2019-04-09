@@ -70,23 +70,24 @@ function Bool aluBr(Data a, Data b, BrFunc brFunc);
 endfunction
 
 (* noinline *)
-function Addr brAddrCalc(Addr pc, Data val, IType iType, Data imm, Bool taken);
-    Addr pcPlus4 = pc + 4;
+function Addr brAddrCalc(Addr pc, Data val, IType iType, Data imm, Bool taken, Bit #(32) orig_inst);
+    Addr fallthrough_incr = ((orig_inst [1:0] == 2'b11) ? 4 : 2);
+    Addr pcPlusN = pc + fallthrough_incr;
     Addr targetAddr = (case (iType)
             J       : (pc + imm);
             Jr      : {(val + imm)[valueOf(AddrSz)-1:1], 1'b0};
-            Br      : (taken? pc + imm : pcPlus4);
-            default : pcPlus4;
+            Br      : (taken? pc + imm : pcPlusN);
+            default : pcPlusN;
         endcase);
     return targetAddr;
 endfunction
 
 (* noinline *)
-function ControlFlow getControlFlow(DecodedInst dInst, Data rVal1, Data rVal2, Addr pc, Addr ppc);
+function ControlFlow getControlFlow(DecodedInst dInst, Data rVal1, Data rVal2, Addr pc, Addr ppc, Bit #(32) orig_inst);
     ControlFlow cf = unpack(0);
 
     Bool taken = dInst.execFunc matches tagged Br .br_f ? aluBr(rVal1, rVal2, br_f) : False;
-    Addr nextPc = brAddrCalc(pc, rVal1, dInst.iType, validValue(getDInstImm(dInst)), taken);
+    Addr nextPc = brAddrCalc(pc, rVal1, dInst.iType, validValue(getDInstImm(dInst)), taken, orig_inst);
     Bool mispredict = nextPc != ppc;
 
     cf.pc = pc;
@@ -98,7 +99,7 @@ function ControlFlow getControlFlow(DecodedInst dInst, Data rVal1, Data rVal2, A
 endfunction
 
 (* noinline *)
-function ExecResult basicExec(DecodedInst dInst, Data rVal1, Data rVal2, Addr pc, Addr ppc);
+function ExecResult basicExec(DecodedInst dInst, Data rVal1, Data rVal2, Addr pc, Addr ppc, Bit #(32) orig_inst);
     // just data, addr, and control flow
     Data data = 0;
     Data csr_data = 0;
@@ -113,12 +114,14 @@ function ExecResult basicExec(DecodedInst dInst, Data rVal1, Data rVal2, Addr pc
     // Default branch function is not taken
     BrFunc br_f = dInst.execFunc matches tagged Br .br_f ? br_f : NT;
     cf.taken = aluBr(rVal1, rVal2, br_f);
-    cf.nextPc = brAddrCalc(pc, rVal1, dInst.iType, validValue(getDInstImm(dInst)), cf.taken);
+    cf.nextPc = brAddrCalc(pc, rVal1, dInst.iType, validValue(getDInstImm(dInst)), cf.taken, orig_inst);
     cf.mispredict = cf.nextPc != ppc;
+
+    Addr fallthrough_incr = ((orig_inst [1:0] == 2'b11) ? 4 : 2);
 
     data = (case (dInst.iType)
             St, Sc, Amo : rVal2;
-            J, Jr       : (pc + 4); // could be computed with alu
+            J, Jr       : (pc + fallthrough_incr); // could be computed with alu
             Auipc       : (pc + fromMaybe(?, getDInstImm(dInst))); // could be computed with alu
             Csr         : rVal1;
             default     : alu_result;

@@ -96,7 +96,7 @@ endinterface
 // this module should be clocked under user domain
 (* synthesize *)
 module mkMemLoader#(Clock portalClk, Reset portalRst)(MemLoader);
-    Bool verbose = True;
+    Bool verbose = False;
 
     // MMIO regs
     Reg#(Addr) memStartAddr <- mkReg(0);

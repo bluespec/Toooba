@@ -12,13 +12,15 @@
 // basicExec_rVal2                I    64
 // basicExec_pc                   I    64
 // basicExec_ppc                  I    64
+// basicExec_orig_inst            I    32
 //
 // Combinational paths from inputs to outputs:
 //   (basicExec_dInst,
 //    basicExec_rVal1,
 //    basicExec_rVal2,
 //    basicExec_pc,
-//    basicExec_ppc) -> basicExec
+//    basicExec_ppc,
+//    basicExec_orig_inst) -> basicExec
 //
 //
 
@@ -40,6 +42,7 @@ module module_basicExec(basicExec_dInst,
 			basicExec_rVal2,
 			basicExec_pc,
 			basicExec_ppc,
+			basicExec_orig_inst,
 			basicExec);
   // value method basicExec
   input  [71 : 0] basicExec_dInst;
@@ -47,84 +50,91 @@ module module_basicExec(basicExec_dInst,
   input  [63 : 0] basicExec_rVal2;
   input  [63 : 0] basicExec_pc;
   input  [63 : 0] basicExec_ppc;
+  input  [31 : 0] basicExec_orig_inst;
   output [321 : 0] basicExec;
 
   // signals for module outputs
   wire [321 : 0] basicExec;
 
   // remaining internal signals
-  reg [63 : 0] x__h23, x__h263;
-  wire [193 : 0] IF_basicExec_dInst_BITS_71_TO_67_EQ_4_8_OR_bas_ETC___d43;
-  wire [63 : 0] SEXT_basicExec_dInst_BITS_31_TO_0_3___d14,
-		aluVal2__h33,
-		alu_result__h35,
-		basicExec_pc_PLUS_4___d10,
-		cf_nextPc__h294;
+  reg [63 : 0] x__h24, x__h302;
+  wire [193 : 0] IF_basicExec_dInst_BITS_71_TO_67_EQ_4_1_OR_bas_ETC___d46;
+  wire [63 : 0] SEXT_basicExec_dInst_BITS_31_TO_0_6___d17,
+		aluVal2__h34,
+		alu_result__h36,
+		basicExec_pc_PLUS_IF_basicExec_orig_inst_BITS__ETC___d13,
+		cf_nextPc__h333,
+		fallthrough_incr__h41;
   wire [31 : 0] basicExec_dInst_BITS_31_TO_0__q1;
-  wire aluBr___d37;
+  wire aluBr___d40;
 
   // value method basicExec
   assign basicExec =
-	     { x__h23,
-	       alu_result__h35,
-	       IF_basicExec_dInst_BITS_71_TO_67_EQ_4_8_OR_bas_ETC___d43 } ;
+	     { x__h24,
+	       alu_result__h36,
+	       IF_basicExec_dInst_BITS_71_TO_67_EQ_4_1_OR_bas_ETC___d46 } ;
 
   // remaining internal signals
   module_alu instance_alu_1(.alu_a(basicExec_rVal1),
-			    .alu_b(aluVal2__h33),
+			    .alu_b(aluVal2__h34),
 			    .alu_func((basicExec_dInst[66:64] == 3'd0) ?
 					basicExec_dInst[50:46] :
 					5'd0),
-			    .alu(alu_result__h35));
+			    .alu(alu_result__h36));
   module_aluBr instance_aluBr_0(.aluBr_a(basicExec_rVal1),
 				.aluBr_b(basicExec_rVal2),
 				.aluBr_brFunc((basicExec_dInst[66:64] ==
 					       3'd1) ?
 						basicExec_dInst[48:46] :
 						3'd7),
-				.aluBr(aluBr___d37));
+				.aluBr(aluBr___d40));
   module_brAddrCalc instance_brAddrCalc_2(.brAddrCalc_pc(basicExec_pc),
 					  .brAddrCalc_val(basicExec_rVal1),
 					  .brAddrCalc_iType(basicExec_dInst[71:67]),
-					  .brAddrCalc_imm(SEXT_basicExec_dInst_BITS_31_TO_0_3___d14),
-					  .brAddrCalc_taken(aluBr___d37),
-					  .brAddrCalc(cf_nextPc__h294));
-  assign IF_basicExec_dInst_BITS_71_TO_67_EQ_4_8_OR_bas_ETC___d43 =
-	     { x__h263,
+					  .brAddrCalc_imm(SEXT_basicExec_dInst_BITS_31_TO_0_6___d17),
+					  .brAddrCalc_taken(aluBr___d40),
+					  .brAddrCalc_orig_inst(basicExec_orig_inst),
+					  .brAddrCalc(cf_nextPc__h333));
+  assign IF_basicExec_dInst_BITS_71_TO_67_EQ_4_1_OR_bas_ETC___d46 =
+	     { x__h302,
 	       basicExec_pc,
-	       cf_nextPc__h294,
-	       aluBr___d37,
-	       cf_nextPc__h294 != basicExec_ppc } ;
-  assign SEXT_basicExec_dInst_BITS_31_TO_0_3___d14 =
+	       cf_nextPc__h333,
+	       aluBr___d40,
+	       cf_nextPc__h333 != basicExec_ppc } ;
+  assign SEXT_basicExec_dInst_BITS_31_TO_0_6___d17 =
 	     { {32{basicExec_dInst_BITS_31_TO_0__q1[31]}},
 	       basicExec_dInst_BITS_31_TO_0__q1 } ;
-  assign aluVal2__h33 =
+  assign aluVal2__h34 =
 	     basicExec_dInst[32] ?
-	       SEXT_basicExec_dInst_BITS_31_TO_0_3___d14 :
+	       SEXT_basicExec_dInst_BITS_31_TO_0_6___d17 :
 	       basicExec_rVal2 ;
   assign basicExec_dInst_BITS_31_TO_0__q1 = basicExec_dInst[31:0] ;
-  assign basicExec_pc_PLUS_4___d10 = basicExec_pc + 64'd4 ;
-  always@(basicExec_dInst or
-	  alu_result__h35 or
-	  basicExec_rVal2 or
-	  basicExec_pc_PLUS_4___d10 or
-	  basicExec_pc or
-	  SEXT_basicExec_dInst_BITS_31_TO_0_3___d14 or basicExec_rVal1)
+  assign basicExec_pc_PLUS_IF_basicExec_orig_inst_BITS__ETC___d13 =
+	     basicExec_pc + fallthrough_incr__h41 ;
+  assign fallthrough_incr__h41 =
+	     (basicExec_orig_inst[1:0] == 2'b11) ? 64'd4 : 64'd2 ;
+  always@(basicExec_dInst or cf_nextPc__h333 or alu_result__h36)
   begin
     case (basicExec_dInst[71:67])
-      5'd2, 5'd5, 5'd7: x__h23 = basicExec_rVal2;
-      5'd8, 5'd9: x__h23 = basicExec_pc_PLUS_4___d10;
-      5'd11:
-	  x__h23 = basicExec_pc + SEXT_basicExec_dInst_BITS_31_TO_0_3___d14;
-      5'd13: x__h23 = basicExec_rVal1;
-      default: x__h23 = alu_result__h35;
+      5'd2, 5'd4, 5'd5, 5'd6, 5'd7: x__h302 = alu_result__h36;
+      default: x__h302 = cf_nextPc__h333;
     endcase
   end
-  always@(basicExec_dInst or cf_nextPc__h294 or alu_result__h35)
+  always@(basicExec_dInst or
+	  alu_result__h36 or
+	  basicExec_rVal2 or
+	  basicExec_pc_PLUS_IF_basicExec_orig_inst_BITS__ETC___d13 or
+	  basicExec_pc or
+	  SEXT_basicExec_dInst_BITS_31_TO_0_6___d17 or basicExec_rVal1)
   begin
     case (basicExec_dInst[71:67])
-      5'd2, 5'd4, 5'd5, 5'd6, 5'd7: x__h263 = alu_result__h35;
-      default: x__h263 = cf_nextPc__h294;
+      5'd2, 5'd5, 5'd7: x__h24 = basicExec_rVal2;
+      5'd8, 5'd9:
+	  x__h24 = basicExec_pc_PLUS_IF_basicExec_orig_inst_BITS__ETC___d13;
+      5'd11:
+	  x__h24 = basicExec_pc + SEXT_basicExec_dInst_BITS_31_TO_0_6___d17;
+      5'd13: x__h24 = basicExec_rVal1;
+      default: x__h24 = alu_result__h36;
     endcase
   end
 endmodule  // module_basicExec

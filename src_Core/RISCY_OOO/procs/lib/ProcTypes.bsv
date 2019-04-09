@@ -93,6 +93,7 @@ typedef struct {
     Bool a;
     Bool f;
     Bool d;
+    Bool c;
 } RiscVISASubset deriving (Bits, Eq, FShow);
 
 instance DefaultValue#(RiscVISASubset);
@@ -111,6 +112,7 @@ function Bit#(26) getExtensionBits(RiscVISASubset isa);
     if (isa.a) ext = ext | 26'b00000000000000000000000001;
     if (isa.f) ext = ext | 26'b00000000000000000000100000;
     if (isa.d) ext = ext | 26'b00000000000000000000001000;
+    if (isa.c) ext = ext | 26'b00000000000000000000000100;
     return ext;
 endfunction
 

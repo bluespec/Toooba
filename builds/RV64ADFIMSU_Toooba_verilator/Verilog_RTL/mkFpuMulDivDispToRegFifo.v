@@ -101,7 +101,6 @@ module mkFpuMulDivDispToRegFifo(CLK,
        RDY_specUpdate_incorrectSpeculation;
 
   // inlined wires
-  wire [11 : 0] m_m_specBits_0_lat_1$wget;
   wire m_m_valid_0_lat_0$whas;
 
   // register m_m_row_0
@@ -260,8 +259,6 @@ module mkFpuMulDivDispToRegFifo(CLK,
   // inlined wires
   assign m_m_valid_0_lat_0$whas =
 	     MUX_m_m_valid_0_dummy2_0$write_1__SEL_1 || EN_deq ;
-  assign m_m_specBits_0_lat_1$wget =
-	     sb__h9495 & specUpdate_correctSpeculation_mask ;
 
   // register m_m_row_0
   assign m_m_row_0$D_IN =
@@ -321,7 +318,7 @@ module mkFpuMulDivDispToRegFifo(CLK,
 	     m_m_specBits_0_dummy2_1$Q_OUT ?
 	       IF_m_m_specBits_0_lat_0_whas__0_THEN_m_m_specB_ETC___d13 :
 	       12'd0 ;
-  assign upd__h2327 = m_m_specBits_0_lat_1$wget ;
+  assign upd__h2327 = sb__h9495 & specUpdate_correctSpeculation_mask ;
   always@(enq_x)
   begin
     case (enq_x[60:58])
