@@ -374,7 +374,6 @@ module mkMMIOInst(CLK,
        WILL_FIRE_toCore_setHtifAddrs;
 
   // remaining internal signals
-  wire [1 : 0] IF_NOT_getFetchTarget_phyPc_BITS_63_TO_3_61_UL_ETC___d276;
   wire IF_reqQ_enqReq_lat_1_whas_THEN_reqQ_enqReq_lat_ETC___d13,
        IF_respQ_enqReq_lat_1_whas__2_THEN_respQ_enqRe_ETC___d91,
        NOT_pendQ_enqReq_dummy2_2_read__34_49_OR_IF_pe_ETC___d259,
@@ -391,7 +390,12 @@ module mkMMIOInst(CLK,
 	     (getFetchTarget_phyPc[63:3] >= 61'd512 &&
 	      getFetchTarget_phyPc[63:3] < 61'd1024) ?
 	       2'd1 :
-	       IF_NOT_getFetchTarget_phyPc_BITS_63_TO_3_61_UL_ETC___d276 ;
+	       ((getFetchTarget_phyPc[63:3] >= 61'd268435456 &&
+		 getFetchTarget_phyPc[63:3] < 61'd301989888 &&
+		 getFetchTarget_phyPc[63:3] != toHostAddr &&
+		 getFetchTarget_phyPc[63:3] != fromHostAddr) ?
+		  2'd0 :
+		  2'd2) ;
   assign RDY_getFetchTarget = 1'd1 ;
 
   // action method bootRomReq
@@ -839,12 +843,6 @@ module mkMMIOInst(CLK,
   assign respQ_enqReq_dummy2_2$EN = 1'd1 ;
 
   // remaining internal signals
-  assign IF_NOT_getFetchTarget_phyPc_BITS_63_TO_3_61_UL_ETC___d276 =
-	     (getFetchTarget_phyPc[63:3] >= 61'd268435456 &&
-	      getFetchTarget_phyPc[63:3] != toHostAddr &&
-	      getFetchTarget_phyPc[63:3] != fromHostAddr) ?
-	       2'd0 :
-	       2'd2 ;
   assign IF_reqQ_enqReq_lat_1_whas_THEN_reqQ_enqReq_lat_ETC___d13 =
 	     EN_bootRomReq ? reqQ_enqReq_lat_0$wget[65] : reqQ_enqReq_rl[65] ;
   assign IF_respQ_enqReq_lat_1_whas__2_THEN_respQ_enqRe_ETC___d91 =

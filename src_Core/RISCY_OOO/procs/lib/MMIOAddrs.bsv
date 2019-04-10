@@ -60,6 +60,8 @@ DataAlignedAddr mainMemBaseAddr   = getDataAlignedAddr(soc_map_struct.mem0_contr
 // (aligned to Data)
 DataAlignedAddr bootRomBoundAddr   = bootRomBaseAddr +
                                      fromInteger(valueof(TExp#(LgBootRomSzData)));
+DataAlignedAddr mainMemBoundAddr   = (mainMemBaseAddr +
+				      getDataAlignedAddr(soc_map_struct.mem0_controller_addr_size));
 DataAlignedAddr msipBoundAddr      = msipBaseAddr +
                                      fromInteger(valueof(TDiv#(CoreNum, 2)));
 DataAlignedAddr mtimecmpBoundAddr  = mtimecmpBaseAddr +

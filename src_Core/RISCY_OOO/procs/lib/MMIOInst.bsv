@@ -76,7 +76,7 @@ module mkMMIOInst(MMIOInst);
         if(addr >= bootRomBaseAddr && addr < bootRomBoundAddr) begin
             return BootRom;
         end
-        else if(addr >= mainMemBaseAddr &&
+        else if(addr >= mainMemBaseAddr && (addr < mainMemBoundAddr) &&
                 addr != toHostAddr && addr != fromHostAddr) begin
             return MainMem;
         end

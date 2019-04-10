@@ -170,7 +170,7 @@ module mkMMIOCore#(MMIOCoreInput inIfc)(MMIOCore);
 
     method Bool isMMIOAddr(Addr addr);
         let a = getDataAlignedAddr(addr);
-        return a < mainMemBaseAddr || a == toHostAddr || a == fromHostAddr;
+        return a < mainMemBaseAddr || (a >= mainMemBoundAddr) || a == toHostAddr || a == fromHostAddr;
     endmethod
 
     method Action dataReq(MMIOCRq r);
