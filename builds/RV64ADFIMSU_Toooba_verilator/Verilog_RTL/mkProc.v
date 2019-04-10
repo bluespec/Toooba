@@ -4746,15 +4746,6 @@ module mkProc(CLK,
 				    .amoExec_upper_32_bits(mmioPlatform_reqBE_BIT_4___h27543 &&
 							   !mmioPlatform_reqBE_BIT_0___h27583),
 				    .amoExec(x__h32477));
-  module_amoExec instance_amoExec_3(.amoExec_amo_inst({ mmioPlatform_reqFunc[3:0],
-							mmioPlatform_reqBE_BIT_4___h27543 &&
-							mmioPlatform_reqBE_BIT_0___h27583,
-							2'd0 }),
-				    .amoExec_current_data(64'd0),
-				    .amoExec_in_data(mmioPlatform_reqData__h46242),
-				    .amoExec_upper_32_bits(mmioPlatform_reqBE_BIT_4___h27543 &&
-							   !mmioPlatform_reqBE_BIT_0___h27583),
-				    .amoExec(x__h40515));
   module_amoExec instance_amoExec_2(.amoExec_amo_inst({ mmioPlatform_reqFunc[3:0],
 							mmioPlatform_reqBE_BIT_4___h27543 &&
 							mmioPlatform_reqBE_BIT_0___h27583,
@@ -4764,6 +4755,15 @@ module mkProc(CLK,
 				    .amoExec_upper_32_bits(mmioPlatform_reqBE_BIT_4___h27543 &&
 							   !mmioPlatform_reqBE_BIT_0___h27583),
 				    .amoExec(x__h38422));
+  module_amoExec instance_amoExec_3(.amoExec_amo_inst({ mmioPlatform_reqFunc[3:0],
+							mmioPlatform_reqBE_BIT_4___h27543 &&
+							mmioPlatform_reqBE_BIT_0___h27583,
+							2'd0 }),
+				    .amoExec_current_data(64'd0),
+				    .amoExec_in_data(mmioPlatform_reqData__h46242),
+				    .amoExec_upper_32_bits(mmioPlatform_reqBE_BIT_4___h27543 &&
+							   !mmioPlatform_reqBE_BIT_0___h27583),
+				    .amoExec(x__h40515));
   assign DONTCARE_CONCAT_IF_mmioPlatform_reqFunc_99_BIT_ETC___d643 =
 	     { 1'h0,
 	       (mmioPlatform_reqFunc[5:4] == 2'd2) ?
@@ -5628,6 +5628,27 @@ module mkProc(CLK,
     endcase
   end
   always@(mmioPlatform_curReq or
+	  result__h46066 or
+	  result__h46094 or result__h46122 or result__h46150)
+  begin
+    case (mmioPlatform_curReq[2:0])
+      3'h0:
+	  IF_mmioPlatform_curReq_94_BITS_2_TO_0_45_EQ_0x_ETC___d786 =
+	      result__h46066;
+      3'h2:
+	  IF_mmioPlatform_curReq_94_BITS_2_TO_0_45_EQ_0x_ETC___d786 =
+	      result__h46094;
+      3'h4:
+	  IF_mmioPlatform_curReq_94_BITS_2_TO_0_45_EQ_0x_ETC___d786 =
+	      result__h46122;
+      3'h6:
+	  IF_mmioPlatform_curReq_94_BITS_2_TO_0_45_EQ_0x_ETC___d786 =
+	      result__h46150;
+      default: IF_mmioPlatform_curReq_94_BITS_2_TO_0_45_EQ_0x_ETC___d786 =
+		   64'd0;
+    endcase
+  end
+  always@(mmioPlatform_curReq or
 	  result__h45825 or
 	  result__h45853 or
 	  result__h45881 or
@@ -5660,27 +5681,6 @@ module mkProc(CLK,
       3'h7:
 	  IF_mmioPlatform_curReq_94_BITS_2_TO_0_45_EQ_0x_ETC___d773 =
 	      result__h46021;
-    endcase
-  end
-  always@(mmioPlatform_curReq or
-	  result__h46066 or
-	  result__h46094 or result__h46122 or result__h46150)
-  begin
-    case (mmioPlatform_curReq[2:0])
-      3'h0:
-	  IF_mmioPlatform_curReq_94_BITS_2_TO_0_45_EQ_0x_ETC___d786 =
-	      result__h46066;
-      3'h2:
-	  IF_mmioPlatform_curReq_94_BITS_2_TO_0_45_EQ_0x_ETC___d786 =
-	      result__h46094;
-      3'h4:
-	  IF_mmioPlatform_curReq_94_BITS_2_TO_0_45_EQ_0x_ETC___d786 =
-	      result__h46122;
-      3'h6:
-	  IF_mmioPlatform_curReq_94_BITS_2_TO_0_45_EQ_0x_ETC___d786 =
-	      result__h46150;
-      default: IF_mmioPlatform_curReq_94_BITS_2_TO_0_45_EQ_0x_ETC___d786 =
-		   64'd0;
     endcase
   end
   always@(mmioPlatform_curReq or result__h46191 or result__h46219)

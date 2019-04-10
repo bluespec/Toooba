@@ -126,7 +126,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
     Bool verbose = False;
 
     // Bluespec: for lightweight verbosity trace
-    Integer verbosity = 0;
+    Integer verbosity = 1;
     Reg #(Bit #(64)) rg_instret <- mkReg (0);
 
     // func units
