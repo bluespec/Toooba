@@ -267,13 +267,13 @@ module mkSoC_Map(CLK,
 
   // value method m_is_mem_addr
   assign m_is_mem_addr =
-	     m_is_mem_addr_addr >= 64'h0000000000001000 &&
-	     m_is_mem_addr_addr < 64'd8192 ||
 	     m_is_mem_addr_addr >= 64'h0000000080000000 &&
 	     m_is_mem_addr_addr < 64'h0000000090000000 ;
 
   // value method m_is_IO_addr
   assign m_is_IO_addr =
+	     m_is_IO_addr_addr >= 64'h0000000000001000 &&
+	     m_is_IO_addr_addr < 64'd8192 ||
 	     m_is_IO_addr_addr >= 64'h0000000002000000 &&
 	     m_is_IO_addr_addr < 64'd33603584 ||
 	     m_is_IO_addr_addr >= 64'h000000000C000000 &&

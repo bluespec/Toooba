@@ -337,6 +337,12 @@ module mkMMIOInst(CLK,
        respQ_enqReq_dummy2_2$EN,
        respQ_enqReq_dummy2_2$Q_OUT;
 
+  // ports of submodule soc_map
+  wire [63 : 0] soc_map$m_is_IO_addr_addr,
+		soc_map$m_is_mem_addr_addr,
+		soc_map$m_is_near_mem_IO_addr_addr;
+  wire soc_map$m_is_IO_addr;
+
   // rule scheduling signals
   wire CAN_FIRE_RL_pendQ_canonicalize,
        CAN_FIRE_RL_pendQ_clearReq_canon,
@@ -387,8 +393,7 @@ module mkMMIOInst(CLK,
 
   // value method getFetchTarget
   assign getFetchTarget =
-	     (getFetchTarget_phyPc[63:3] >= 61'd512 &&
-	      getFetchTarget_phyPc[63:3] < 61'd1024) ?
+	     soc_map$m_is_IO_addr ?
 	       2'd1 :
 	       ((getFetchTarget_phyPc[63:3] >= 61'd268435456 &&
 		 getFetchTarget_phyPc[63:3] < 61'd301989888 &&
@@ -583,6 +588,37 @@ module mkMMIOInst(CLK,
 								.D_IN(respQ_enqReq_dummy2_2$D_IN),
 								.EN(respQ_enqReq_dummy2_2$EN),
 								.Q_OUT(respQ_enqReq_dummy2_2$Q_OUT));
+
+  // submodule soc_map
+  mkSoC_Map soc_map(.CLK(CLK),
+		    .RST_N(RST_N),
+		    .m_is_IO_addr_addr(soc_map$m_is_IO_addr_addr),
+		    .m_is_mem_addr_addr(soc_map$m_is_mem_addr_addr),
+		    .m_is_near_mem_IO_addr_addr(soc_map$m_is_near_mem_IO_addr_addr),
+		    .m_near_mem_io_addr_base(),
+		    .m_near_mem_io_addr_size(),
+		    .m_near_mem_io_addr_lim(),
+		    .m_plic_addr_base(),
+		    .m_plic_addr_size(),
+		    .m_plic_addr_lim(),
+		    .m_uart0_addr_base(),
+		    .m_uart0_addr_size(),
+		    .m_uart0_addr_lim(),
+		    .m_boot_rom_addr_base(),
+		    .m_boot_rom_addr_size(),
+		    .m_boot_rom_addr_lim(),
+		    .m_mem0_controller_addr_base(),
+		    .m_mem0_controller_addr_size(),
+		    .m_mem0_controller_addr_lim(),
+		    .m_tcm_addr_base(),
+		    .m_tcm_addr_size(),
+		    .m_tcm_addr_lim(),
+		    .m_is_mem_addr(),
+		    .m_is_IO_addr(soc_map$m_is_IO_addr),
+		    .m_is_near_mem_IO_addr(),
+		    .m_pc_reset_value(),
+		    .m_mtvec_reset_value(),
+		    .m_nmivec_reset_value());
 
   // rule RL_reqQ_canonicalize
   assign CAN_FIRE_RL_reqQ_canonicalize = 1'd1 ;
@@ -841,6 +877,11 @@ module mkMMIOInst(CLK,
   // submodule respQ_enqReq_dummy2_2
   assign respQ_enqReq_dummy2_2$D_IN = 1'd1 ;
   assign respQ_enqReq_dummy2_2$EN = 1'd1 ;
+
+  // submodule soc_map
+  assign soc_map$m_is_IO_addr_addr = getFetchTarget_phyPc ;
+  assign soc_map$m_is_mem_addr_addr = 64'h0 ;
+  assign soc_map$m_is_near_mem_IO_addr_addr = 64'h0 ;
 
   // remaining internal signals
   assign IF_reqQ_enqReq_lat_1_whas_THEN_reqQ_enqReq_lat_ETC___d13 =

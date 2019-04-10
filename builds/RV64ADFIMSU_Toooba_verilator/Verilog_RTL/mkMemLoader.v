@@ -673,10 +673,10 @@ module mkMemLoader(CLK_portalClk,
 		IF_hostWrAddrQ_q_rRdPtr_rsCounter_1_BIT_0_8_XO_ETC___d41,
 		IF_hostWrAddrQ_q_rWrPtr_rsCounter_BIT_0_XOR_ho_ETC___d11,
 		IF_hostWrDataQ_q_rRdPtr_rsCounter_04_BIT_0_11__ETC___d114,
-		IF_hostWrDataQ_q_rWrPtr_rsCounter_4_BIT_0_1_XO_ETC___d84,
-		IF_hostWrDoneQ_q_rRdPtr_rsCounter_50_BIT_0_57__ETC___d260,
 		IF_hostWrDoneQ_q_rWrPtr_rsCounter_20_BIT_0_27__ETC___d230,
 		IF_mmio_req_wrBE_BIT_7_38_THEN_mmio_req_wrData_ETC___d864,
+		x__h10090,
+		x__h3821,
 		x__h6528;
   wire [7 : 0] IF_reqSel_69_EQ_0_76_THEN_hostWrDataQ_q_wDataO_ETC___d480,
 	       IF_reqSel_69_EQ_1_97_THEN_hostWrDataQ_q_wDataO_ETC___d499,
@@ -1338,11 +1338,11 @@ module mkMemLoader(CLK_portalClk,
 	       hostWrDataQ_q_rRdPtr_rsCounter | x__h4511 :
 	       hostWrDataQ_q_rRdPtr_rsCounter & y__h4698 ;
   assign MUX_hostWrDataQ_q_rWrPtr_rsCounter$write_1__VAL_1 =
-	     (~hostWrDataQ_q_rWrPtr_rsCounter[IF_hostWrDataQ_q_rWrPtr_rsCounter_4_BIT_0_1_XO_ETC___d84[0]]) ?
+	     (~hostWrDataQ_q_rWrPtr_rsCounter[x__h3821[0]]) ?
 	       hostWrDataQ_q_rWrPtr_rsCounter | x__h3656 :
 	       hostWrDataQ_q_rWrPtr_rsCounter & y__h3843 ;
   assign MUX_hostWrDoneQ_q_rRdPtr_rsCounter$write_1__VAL_1 =
-	     (~hostWrDoneQ_q_rRdPtr_rsCounter[IF_hostWrDoneQ_q_rRdPtr_rsCounter_50_BIT_0_57__ETC___d260[0]]) ?
+	     (~hostWrDoneQ_q_rRdPtr_rsCounter[x__h10090[0]]) ?
 	       hostWrDoneQ_q_rRdPtr_rsCounter | x__h9925 :
 	       hostWrDoneQ_q_rRdPtr_rsCounter & y__h10112 ;
   assign MUX_hostWrDoneQ_q_rWrPtr_rsCounter$write_1__VAL_1 =
@@ -1783,14 +1783,6 @@ module mkMemLoader(CLK_portalClk,
 	     hostWrDataQ_q_rRdPtr_rsCounter_04_BIT_0_11_XOR_ETC___d113 ?
 	       32'd1 :
 	       32'd0 ;
-  assign IF_hostWrDataQ_q_rWrPtr_rsCounter_4_BIT_0_1_XO_ETC___d84 =
-	     hostWrDataQ_q_rWrPtr_rsCounter_4_BIT_0_1_XOR_h_ETC___d83 ?
-	       32'd1 :
-	       32'd0 ;
-  assign IF_hostWrDoneQ_q_rRdPtr_rsCounter_50_BIT_0_57__ETC___d260 =
-	     hostWrDoneQ_q_rRdPtr_rsCounter_50_BIT_0_57_XOR_ETC___d259 ?
-	       32'd1 :
-	       32'd0 ;
   assign IF_hostWrDoneQ_q_rWrPtr_rsCounter_20_BIT_0_27__ETC___d230 =
 	     hostWrDoneQ_q_rWrPtr_rsCounter_20_BIT_0_27_XOR_ETC___d229 ?
 	       32'd1 :
@@ -2127,14 +2119,20 @@ module mkMemLoader(CLK_portalClk,
 	     (!respStQ_deqReq_dummy2_2$Q_OUT ||
 	      !CAN_FIRE_RL_doStResp && !respStQ_deqReq_rl) &&
 	     respStQ_full ;
+  assign x__h10090 =
+	     hostWrDoneQ_q_rRdPtr_rsCounter_50_BIT_0_57_XOR_ETC___d259 ?
+	       32'd1 :
+	       32'd0 ;
   assign x__h10885 = x_sReadBin__h10334 + 2'd1 ;
   assign x__h1801 =
 	     2'd1 <<
 	     IF_hostWrAddrQ_q_rRdPtr_rsCounter_1_BIT_0_8_XO_ETC___d41 ;
   assign x__h2762 = x_sReadBin__h2210 + 2'd1 ;
-  assign x__h3656 =
-	     2'd1 <<
-	     IF_hostWrDataQ_q_rWrPtr_rsCounter_4_BIT_0_1_XO_ETC___d84 ;
+  assign x__h3656 = 2'd1 << x__h3821 ;
+  assign x__h3821 =
+	     hostWrDataQ_q_rWrPtr_rsCounter_4_BIT_0_1_XOR_h_ETC___d83 ?
+	       32'd1 :
+	       32'd0 ;
   assign x__h4511 =
 	     2'd1 <<
 	     IF_hostWrDataQ_q_rRdPtr_rsCounter_04_BIT_0_11__ETC___d114 ;
@@ -2154,9 +2152,7 @@ module mkMemLoader(CLK_portalClk,
   assign x__h938 =
 	     2'd1 <<
 	     IF_hostWrAddrQ_q_rWrPtr_rsCounter_BIT_0_XOR_ho_ETC___d11 ;
-  assign x__h9925 =
-	     2'd1 <<
-	     IF_hostWrDoneQ_q_rRdPtr_rsCounter_50_BIT_0_57__ETC___d260 ;
+  assign x__h9925 = 2'd1 << x__h10090 ;
   assign x_addr__h43806 =
 	     MUX_pendStCnt$write_1__SEL_2 ?
 	       memReqQ_enqReq_lat_0$wget[639:576] :

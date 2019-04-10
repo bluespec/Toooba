@@ -209,8 +209,7 @@ module mkSoC_Map (SoC_Map_IFC);
    // (Caches need this information to cache these addresses.)
 
    function Bool fn_is_mem_addr (Fabric_Addr addr);
-      return (   fn_is_boot_rom_addr (addr)
-	      || fn_is_mem0_controller_addr (addr)
+      return (   fn_is_mem0_controller_addr (addr)
 	      || fn_is_tcm_addr (addr)
 	      );
    endfunction
@@ -221,7 +220,8 @@ module mkSoC_Map (SoC_Map_IFC);
    // (Caches need this information to avoid cacheing these addresses.)
 
    function Bool fn_is_IO_addr (Fabric_Addr addr);
-      return (   fn_is_near_mem_io_addr (addr)
+      return (   fn_is_boot_rom_addr (addr)
+	      || fn_is_near_mem_io_addr (addr)
 	      || fn_is_plic_addr (addr)
 	      || fn_is_uart0_addr  (addr)
 	      );

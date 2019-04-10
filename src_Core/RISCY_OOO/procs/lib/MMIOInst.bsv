@@ -30,6 +30,8 @@ import CCTypes::*;
 import CacheUtils::*;
 import MMIOAddrs::*;
 
+import SoC_Map :: *;    // Bluespec setup
+
 interface MMIOInstToCore;
     interface FifoDeq#(Tuple2#(Addr, SupWaySel)) instReq;
     interface FifoEnq#(Vector#(SupSize, Maybe#(Instruction))) instResp;
@@ -38,7 +40,7 @@ endinterface
 
 typedef enum {
     MainMem,
-    BootRom,
+    IODevice,    // BootRom, Flash, ...    (Bluespec setup)
     Fault
 } InstFetchTarget deriving(Bits, Eq, FShow);
 
@@ -71,10 +73,12 @@ module mkMMIOInst(MMIOInst);
     // respQ, no affecting other MMIO accesses.
     Fifo#(1, void) pendQ <- mkCFFifo;
 
+    SoC_Map_IFC soc_map <- mkSoC_Map;    // Bluespec setup
+
     method InstFetchTarget getFetchTarget(Addr phyPc);
         let addr = getDataAlignedAddr(phyPc);
-        if(addr >= bootRomBaseAddr && addr < bootRomBoundAddr) begin
-            return BootRom;
+        if (soc_map.m_is_IO_addr (phyPc)) begin
+            return IODevice;
         end
         else if(addr >= mainMemBaseAddr && (addr < mainMemBoundAddr) &&
                 addr != toHostAddr && addr != fromHostAddr) begin

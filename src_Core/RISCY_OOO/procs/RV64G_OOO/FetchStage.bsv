@@ -478,7 +478,7 @@ module mkFetchStage(FetchStage);
                     // Send ICache request
                     mem_server.request.put(phys_pc);
                 end
-                BootRom: begin
+                IODevice: begin
                     // Send MMIO req. Luckily boot rom is also aligned with
                     // cache line size, so all nbSup+1 insts can be fetched
                     // from boot rom. It won't happen that insts fetched from
