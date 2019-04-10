@@ -28,6 +28,13 @@ The directory `src_Core/RISCY_OOO` contains sources copied from MIT's
 [Note: MIT's repository is on an MIT git server, which can only be
  accessed with credentials; hence the local copy in of these files.]
 
+Bluespec's modifications to files in src_Core/RISCY_OOO are relatively
+small and mostly additive:
+
+- To add the RISC-V 'C' extension (compressed instructions)
+- To add support for Bluespec's Tandem Verification
+- To add support for Bluespec's Debug Module.
+
 ----------------------------------------------------------------
 ### Building and running Tooba
 

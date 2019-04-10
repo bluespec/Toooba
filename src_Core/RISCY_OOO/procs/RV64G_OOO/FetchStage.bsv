@@ -110,10 +110,15 @@ typedef struct {
     Addr phys_pc;
     Addr pred_next_pc;
     Maybe#(Exception) cause;
+    Addr tval;                 // in case of exception
     Bool access_mmio; // inst fetch from MMIO
     Bool decode_epoch;
     Epoch main_epoch;
 } Fetch2ToFetch3 deriving(Bits, Eq, FShow);
+
+// TODO: this name 'Fetch3ToDecode' is a misnomer.
+// The struct passed from doFetch3 to doDecode is Fetch2ToFetch3 (same type as doFetch2 to doFetch3),
+// and Fetch3ToDecode is used purely internally in doDecode.
 
 typedef struct {
   Addr pc;
@@ -134,6 +139,7 @@ typedef struct {
   Bit #(32) orig_inst;    // original 16b or 32b instruction ([1:0] will distinguish 16b or 32b)
   ArchRegs regs;
   Maybe#(Exception) cause;
+  Addr              tval;    // in case of exception
 } FromFetchStage deriving (Bits, Eq, FShow);
 
 // train next addr pred (BTB)
@@ -462,6 +468,7 @@ module mkFetchStage(FetchStage);
 
         // Get TLB response
         match {.phys_pc, .cause} <- tlb_server.response.get;
+        Addr tval =  0;
 
         // Access main mem or boot rom if no TLB exception
         Bool access_mmio = False;
@@ -485,12 +492,18 @@ module mkFetchStage(FetchStage);
                 end
             endcase
         end
+        else begin
+	   // TLB exception: record the request address
+           Addr align32b_mask = 'h3;
+           tval = (in.pc & (~ align32b_mask));
+	end
 
         let out = Fetch2ToFetch3 {
             pc: in.pc,
             phys_pc: phys_pc,
             pred_next_pc: in.pred_next_pc,
             cause: cause,
+	    tval: tval,
             access_mmio: access_mmio,
             decode_epoch: in.decode_epoch,
             main_epoch: in.main_epoch };
@@ -645,6 +658,7 @@ module mkFetchStage(FetchStage);
 		  cause: fetch3In.cause
 		  };
 	       let cause = in.cause;
+	       Addr tval = fetch3In.tval;
 	       if (verbose)
 		  $display("Decode: %0d in = ", i, fshow (in));
 
@@ -655,9 +669,10 @@ module mkFetchStage(FetchStage);
 
 		  let decode_result = decode(in.inst);    // Decode 32b inst, or 32b expansion of 16b inst
 
-		  // update cause if there was not an earlier detected exception
+		  // update cause and tval if decode exception and no earlier (TLB) exception
 		  if (!isValid(cause)) begin
 		     cause = decode_result.illegalInst ? tagged Valid IllegalInst : tagged Invalid;
+		     tval  = fetch3In.tval;
 		  end
 
                   let dInst = decode_result.dInst;
@@ -744,7 +759,8 @@ module mkFetchStage(FetchStage);
 					   dInst: dInst,
 					   orig_inst: inst_data[i].orig_inst,
 					   regs: decode_result.regs,
-					   cause: cause };
+					   cause: cause,
+					   tval:  tval};
 		  out_fifo.enqS[i].enq(out);
                   if (verbosity > 0)
 		     $display("Decode: ", fshow(out));

@@ -41,8 +41,7 @@ num_executed = 0
 num_passed   = 0
 
 # DEBUGGING ONLY: This exclude list allows skipping some specific test
-# Tuba seems to hang on this test
-exclude_list = ["rv64ud-p-move"]
+exclude_list = []
 
 # ================================================================
 

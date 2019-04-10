@@ -9085,24 +9085,6 @@ module mkDTlbSynth(CLK,
   begin
     case (idx__h124884)
       2'd0:
-	  SEL_ARR_m_pendInst_0_23_BIT_70_309_m_pendInst__ETC___d3314 =
-	      m_pendInst_0[70];
-      2'd1:
-	  SEL_ARR_m_pendInst_0_23_BIT_70_309_m_pendInst__ETC___d3314 =
-	      m_pendInst_1[70];
-      2'd2:
-	  SEL_ARR_m_pendInst_0_23_BIT_70_309_m_pendInst__ETC___d3314 =
-	      m_pendInst_2[70];
-      2'd3:
-	  SEL_ARR_m_pendInst_0_23_BIT_70_309_m_pendInst__ETC___d3314 =
-	      m_pendInst_3[70];
-    endcase
-  end
-  always@(idx__h124884 or
-	  m_pendInst_0 or m_pendInst_1 or m_pendInst_2 or m_pendInst_3)
-  begin
-    case (idx__h124884)
-      2'd0:
 	  SEL_ARR_m_pendInst_0_23_BIT_71_302_m_pendInst__ETC___d3307 =
 	      m_pendInst_0[71];
       2'd1:
@@ -9114,6 +9096,24 @@ module mkDTlbSynth(CLK,
       2'd3:
 	  SEL_ARR_m_pendInst_0_23_BIT_71_302_m_pendInst__ETC___d3307 =
 	      m_pendInst_3[71];
+    endcase
+  end
+  always@(idx__h124884 or
+	  m_pendInst_0 or m_pendInst_1 or m_pendInst_2 or m_pendInst_3)
+  begin
+    case (idx__h124884)
+      2'd0:
+	  SEL_ARR_m_pendInst_0_23_BIT_70_309_m_pendInst__ETC___d3314 =
+	      m_pendInst_0[70];
+      2'd1:
+	  SEL_ARR_m_pendInst_0_23_BIT_70_309_m_pendInst__ETC___d3314 =
+	      m_pendInst_1[70];
+      2'd2:
+	  SEL_ARR_m_pendInst_0_23_BIT_70_309_m_pendInst__ETC___d3314 =
+	      m_pendInst_2[70];
+      2'd3:
+	  SEL_ARR_m_pendInst_0_23_BIT_70_309_m_pendInst__ETC___d3314 =
+	      m_pendInst_3[70];
     endcase
   end
   always@(idx__h124884 or

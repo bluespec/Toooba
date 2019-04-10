@@ -16,7 +16,7 @@ ALL_RISCY_DIRS = $(RISCY_DIRS):$(CONNECTAL_DIRS)
 # ================================================================
 
 REPO ?= ../..
-ARCH ?= RV64ADFIMSU
+ARCH ?= RV64ACDFIMSU
 
 # ================================================================
 # RISC-V config macros passed into Bluespec 'bsc' compiler

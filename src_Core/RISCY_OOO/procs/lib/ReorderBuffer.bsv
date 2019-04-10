@@ -51,6 +51,7 @@ typedef struct {
     Maybe#(CSR)        csr;
     Bool               claimed_phy_reg; // whether we need to commmit renaming
     Maybe#(Trap)       trap;
+    Addr               tval;    // in case of trap
     PPCVAddrCSRData    ppc_vaddr_csrData;
     Bit#(5)            fflags;
     Bool               will_dirty_fpu_state; // True means 2'b11 will be written to FS
@@ -173,6 +174,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     Reg#(Maybe#(CSR))                                               csr                  <- mkRegU;
     Reg#(Bool)                                                      claimed_phy_reg      <- mkRegU;
     Ehr#(3, Maybe#(Trap))                                           trap                 <- mkEhr(?);
+    Ehr#(3, Addr)                                                   tval                 <- mkEhr(?);
     Ehr#(TAdd#(2, aluExeNum), PPCVAddrCSRData)                      ppc_vaddr_csrData    <- mkEhr(?);
     Ehr#(TAdd#(1, fpuMulDivExeNum), Bit#(5))                        fflags               <- mkEhr(?);
     Reg#(Bool)                                                      will_dirty_fpu_state <- mkRegU;
@@ -261,6 +263,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         csr <= x.csr;
         claimed_phy_reg <= x.claimed_phy_reg;
         trap[trap_enq_port] <= x.trap;
+        tval[trap_enq_port] <= x.tval;
         ppc_vaddr_csrData[pvc_enq_port] <= x.ppc_vaddr_csrData;
         fflags[fflags_enq_port] <= x.fflags;
         will_dirty_fpu_state <= x.will_dirty_fpu_state;
@@ -293,6 +296,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
             csr: csr,
             claimed_phy_reg: claimed_phy_reg,
             trap: trap[trap_deq_port],
+            tval: tval[trap_deq_port],
             ppc_vaddr_csrData: ppc_vaddr_csrData[pvc_deq_port],
             fflags: fflags[fflags_deq_port],
             will_dirty_fpu_state: will_dirty_fpu_state,
@@ -318,6 +322,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         doAssert(!isValid(trap[trap_deqLSQ_port]), "cannot have trap");
         if(cause matches tagged Valid .e) begin
             trap[trap_deqLSQ_port] <= Valid (Exception (e));
+	    // TODO: shouldn't we record tval here as well?
         end
         // record ld misspeculation
         ldKilled[ldKill_deqLSQ_port] <= ld_killed;

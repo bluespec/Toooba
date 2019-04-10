@@ -353,7 +353,11 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
         // record trap info
         Addr vaddr = ?;
-        if(x.ppc_vaddr_csrData matches tagged VAddr .va) begin
+        if (   (trap == tagged Exception InstAccessFault)
+	    || (trap == tagged Exception InstPageFault)) begin
+	    vaddr = x.tval;
+	end
+        else if(x.ppc_vaddr_csrData matches tagged VAddr .va) begin
             vaddr = va;
         end
         let commitTrap_val = Valid (CommitTrap {
@@ -366,8 +370,10 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         if (verbosity > 0) begin
 	   $display ("instret:%0d  PC:0x%0h  instr:0x%08h", rg_instret, x.pc, x.orig_inst,
 		     "  iType:", fshow (x.iType), "    [doCommitTrap]");
-	   $display ("CommitStage.doCommitTrap: deq_data:   ", fshow (x));
-	   $display ("CommitStage.doCommitTrap: commitTrap: ", fshow (commitTrap_val));
+	end
+        if (verbose) begin
+	   $display ("CommitStage.doCommitTrap_flush: deq_data:   ", fshow (x));
+	   $display ("CommitStage.doCommitTrap_flush: commitTrap: ", fshow (commitTrap_val));
 	end
 
         // flush everything. Only increment epoch and stall fetch when we haven
