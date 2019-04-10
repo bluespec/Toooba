@@ -190,10 +190,12 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
       if (requestor == reset_requestor_soc)
 	 f_reset_rsps.enq (?);
 
+`ifndef EXTERNAL_DEBUG_MODULE
       // Start running the cores
       proc.start (soc_map_struct.pc_reset_value,
 		  rg_tohost_addr,
 		  rg_fromhost_addr);
+`endif
 
       $display ("%0d: Core.rl_cpu_hart0_reset_complete; started running proc", cur_cycle);
    endrule
@@ -222,6 +224,10 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
 
    rule rl_hart0_server_reset;
       let tmp <- proc.hart0_server_reset.response.get;
+
+      proc.start (soc_map_struct.pc_reset_value,
+		  rg_tohost_addr,
+		  rg_fromhost_addr);
    endrule
 
    rule rl_hart0_server_run_halt;
