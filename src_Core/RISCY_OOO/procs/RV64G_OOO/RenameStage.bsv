@@ -182,12 +182,51 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
 `endif
     endrule
 
+   function Bool fn_ArchReg_is_FpuReg (Maybe #(ArchRIndx) m_arch_r_indx);
+      Bool result = False;
+      if (m_arch_r_indx matches tagged Valid .arch_r_indx)
+	 if (arch_r_indx matches tagged Fpu .fpu_r_index)
+	    result = True;
+      return result;
+   endfunction
+
     // check for exceptions and interrupts
     function Maybe#(Trap) getTrap(FromFetchStage x);
         Maybe#(Trap) trap = tagged Invalid;
         let csr_state = csrf.decodeInfo;
         let pending_interrupt = csrf.pending_interrupt;
         let new_exception = checkForException(x.dInst, x.regs, csr_state);
+
+        // If Fpu regs are accessed, trap if mstatus_fs is "Off" (2'b00)
+        Bool fpr_access = (   fn_ArchReg_is_FpuReg (x.regs.src1)
+			   || fn_ArchReg_is_FpuReg (x.regs.src2)
+			   || isValid (x.regs.src3)
+			   || fn_ArchReg_is_FpuReg (x.regs.dst));
+        let mstatus   = csrf.rd (CSRmstatus);
+        Bool fs_trap = ((mstatus [14:13] == 2'b00) && fpr_access);
+
+        // Check CSR access permission
+        Bool csr_access_trap = False;
+        if (x.dInst.iType == Csr) begin
+	   Bit #(12) csr_addr  = case (x.dInst.csr) matches
+				    tagged Valid .c: pack (c);
+				    default:         12'hCFF;
+				 endcase;
+	   let rs1 = case (x.regs.src2) matches
+			tagged Valid (tagged Gpr .r) : r;
+			default: 0;
+		     endcase;
+	   let imm = case (x.dInst.imm) matches
+			tagged Valid .n: n;
+			default: 0;
+		     endcase;
+	   Bool writes_csr = ((x.dInst.execFunc == tagged Alu Csrw) || (rs1 != 0) || (imm != 0));
+	   Bool read_only  = (csr_addr [11:10] == 2'b11);
+           Bool write_deny = (writes_csr && read_only);
+	   Bool priv_deny  = (csrf.decodeInfo.prv < csr_addr [9:8]);
+	   csr_access_trap = (write_deny || priv_deny);
+	end
+
         if (isValid(x.cause)) begin
             // previously found exception
             trap = tagged Valid (tagged Exception fromMaybe(?, x.cause));
@@ -198,6 +237,9 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
             // newly found exception
             trap = tagged Valid (tagged Exception fromMaybe(?, new_exception));
         end
+	else if (fs_trap || csr_access_trap) begin
+            trap = tagged Valid (tagged Exception IllegalInst);
+	end
         return trap;
     endfunction
 
@@ -411,6 +453,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                 csr: dInst.csr,
                                 claimed_phy_reg: True, // XXX we always claim a free reg in rename
                                 trap: Invalid, // no trap
+	                        tval: 0,
                                 // default values of FullResult
                                 ppc_vaddr_csrData: PPC (ppc), // default use PPC
                                 fflags: 0,
@@ -906,6 +949,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                                 csr: dInst.csr,
                                                 claimed_phy_reg: True, // XXX we always claim a free reg in rename
                                                 trap: Invalid, // no trap
+						tval: 0,
                                                 // default values of FullResult
                                                 ppc_vaddr_csrData: PPC (ppc), // default use PPC
                                                 fflags: 0,

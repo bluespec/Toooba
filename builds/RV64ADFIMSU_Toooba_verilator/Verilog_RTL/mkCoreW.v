@@ -2009,16 +2009,17 @@ module mkCoreW(CLK,
 
   // rule RL_rl_cpu_hart0_reset_from_soc_start
   assign CAN_FIRE_RL_rl_cpu_hart0_reset_from_soc_start =
-	     plic$RDY_server_reset_request_put && fabric_2x3$RDY_reset &&
 	     proc$RDY_hart0_server_reset_request_put &&
+	     plic$RDY_server_reset_request_put &&
+	     fabric_2x3$RDY_reset &&
 	     f_reset_reqs$EMPTY_N ;
   assign WILL_FIRE_RL_rl_cpu_hart0_reset_from_soc_start =
 	     CAN_FIRE_RL_rl_cpu_hart0_reset_from_soc_start ;
 
   // rule RL_rl_cpu_hart0_reset_complete
   assign CAN_FIRE_RL_rl_cpu_hart0_reset_complete =
-	     plic$RDY_server_reset_response_get && proc$RDY_start &&
-	     proc$RDY_hart0_server_reset_response_get &&
+	     proc$RDY_start && proc$RDY_hart0_server_reset_response_get &&
+	     plic$RDY_server_reset_response_get &&
 	     f_reset_rsps$FULL_N ;
   assign WILL_FIRE_RL_rl_cpu_hart0_reset_complete =
 	     CAN_FIRE_RL_rl_cpu_hart0_reset_complete ;
@@ -2038,15 +2039,16 @@ module mkCoreW(CLK,
   // submodule f_reset_reqs
   assign f_reset_reqs$ENQ = EN_cpu_reset_server_request_put ;
   assign f_reset_reqs$DEQ =
-	     plic$RDY_server_reset_request_put && fabric_2x3$RDY_reset &&
 	     proc$RDY_hart0_server_reset_request_put &&
+	     plic$RDY_server_reset_request_put &&
+	     fabric_2x3$RDY_reset &&
 	     f_reset_reqs$EMPTY_N ;
   assign f_reset_reqs$CLR = 1'b0 ;
 
   // submodule f_reset_rsps
   assign f_reset_rsps$ENQ =
-	     plic$RDY_server_reset_response_get && proc$RDY_start &&
-	     proc$RDY_hart0_server_reset_response_get &&
+	     proc$RDY_start && proc$RDY_hart0_server_reset_response_get &&
+	     plic$RDY_server_reset_response_get &&
 	     f_reset_rsps$FULL_N ;
   assign f_reset_rsps$DEQ = EN_cpu_reset_server_response_get ;
   assign f_reset_rsps$CLR = 1'b0 ;
