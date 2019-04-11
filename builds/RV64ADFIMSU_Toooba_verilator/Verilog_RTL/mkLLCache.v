@@ -1661,7 +1661,7 @@ module mkLLCache(CLK,
 	       CASE_cache_toMQ_deqP_0_cache_toMQ_data_0_BITS__ETC__q255,
 	       CASE_cache_toMQ_deqP_0_cache_toMQ_data_0_BITS__ETC__q256,
 	       CASE_cache_toMQ_deqP_0_cache_toMQ_data_0_BITS__ETC__q261,
-	       CASE_cache_toMQ_deqP_0_cache_toMQ_data_0_BITS__ETC__q263,
+	       CASE_cache_toMQ_deqP_0_cache_toMQ_data_0_BITS__ETC__q262,
 	       SEL_ARR_cache_toCQ_data_0_110_BITS_66_TO_3_119_ETC___d4122,
 	       addr__h237776,
 	       addr__h253620;
@@ -1826,7 +1826,7 @@ module mkLLCache(CLK,
       CASE_cache_rsStToDmaQ_deqP_0_cache_rsStToDmaQ__ETC__q4,
       CASE_cache_toCQ_deqP_0_NOT_cache_toCQ_data_0_B_ETC__q250,
       CASE_cache_toMInfoQD_OUT_BITS_1_TO_0_0_NOT_ca_ETC__q273,
-      CASE_cache_toMQ_deqP_0_cache_toMQ_data_0_BIT_4_ETC__q262,
+      CASE_cache_toMQ_deqP_0_cache_toMQ_data_0_BIT_4_ETC__q263,
       CASE_cache_toMQ_deqP_0_cache_toMQ_data_0_BIT_5_ETC__q106,
       CASE_cache_toMQ_deqP_0_cache_toMQ_data_0_BIT_5_ETC__q107,
       CASE_cache_toMQ_deqP_0_cache_toMQ_data_0_BIT_5_ETC__q108,
@@ -5692,8 +5692,8 @@ module mkLLCache(CLK,
 	       x__h416797 } ;
   assign DONTCARE_CONCAT_SEL_ARR_cache_toMQ_data_0_275__ETC___d4297 =
 	     { 571'h2AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA,
-	       CASE_cache_toMQ_deqP_0_cache_toMQ_data_0_BITS__ETC__q261,
-	       CASE_cache_toMQ_deqP_0_cache_toMQ_data_0_BIT_4_ETC__q262,
+	       CASE_cache_toMQ_deqP_0_cache_toMQ_data_0_BITS__ETC__q262,
+	       CASE_cache_toMQ_deqP_0_cache_toMQ_data_0_BIT_4_ETC__q263,
 	       x__h429440 } ;
   assign IF_IF_NOT_cache_cRqMshr_sendRqToC_getSlot_IF_c_ETC___d2862 =
 	     (cache_cRqMshr$sendRqToC_getSlot[3:2] == 2'd1 &&
@@ -7523,7 +7523,7 @@ module mkLLCache(CLK,
 	       CASE_cache_toMQ_deqP_0_cache_toMQ_data_0_BITS__ETC__q255,
 	       CASE_cache_toMQ_deqP_0_cache_toMQ_data_0_BITS__ETC__q256 } ;
   assign SEL_ARR_cache_toMQ_data_0_275_BITS_639_TO_576__ETC___d4626 =
-	     { CASE_cache_toMQ_deqP_0_cache_toMQ_data_0_BITS__ETC__q263,
+	     { CASE_cache_toMQ_deqP_0_cache_toMQ_data_0_BITS__ETC__q261,
 	       SEL_ARR_cache_toMQ_data_0_275_BIT_575_302_cach_ETC___d4589,
 	       SEL_ARR_cache_toMQ_data_0_275_BITS_511_TO_448__ETC___d4625 } ;
   assign SEL_ARR_cache_toMQ_data_0_275_BIT_575_302_cach_ETC___d4319 =
@@ -8187,6 +8187,22 @@ module mkLLCache(CLK,
 	      cache_rsStToDmaQ_data_1[2:0];
     endcase
   end
+  always@(cache_rqFromCQ_deqP or
+	  cache_rqFromCQ_data_0 or cache_rqFromCQ_data_1)
+  begin
+    case (cache_rqFromCQ_deqP)
+      1'd0: x__h237718 = cache_rqFromCQ_data_0[3:1];
+      1'd1: x__h237718 = cache_rqFromCQ_data_1[3:1];
+    endcase
+  end
+  always@(cache_rqFromCQ_deqP or
+	  cache_rqFromCQ_data_0 or cache_rqFromCQ_data_1)
+  begin
+    case (cache_rqFromCQ_deqP)
+      1'd0: x__h231129 = cache_rqFromCQ_data_0[0];
+      1'd1: x__h231129 = cache_rqFromCQ_data_1[0];
+    endcase
+  end
   always@(cache_cRqRetryIndexQ_deqP or
 	  cache_cRqRetryIndexQ_data_0 or
 	  cache_cRqRetryIndexQ_data_1 or
@@ -8221,22 +8237,6 @@ module mkLLCache(CLK,
       4'd13: x__h230768 = cache_cRqRetryIndexQ_data_13;
       4'd14: x__h230768 = cache_cRqRetryIndexQ_data_14;
       4'd15: x__h230768 = cache_cRqRetryIndexQ_data_15;
-    endcase
-  end
-  always@(cache_rqFromCQ_deqP or
-	  cache_rqFromCQ_data_0 or cache_rqFromCQ_data_1)
-  begin
-    case (cache_rqFromCQ_deqP)
-      1'd0: x__h237718 = cache_rqFromCQ_data_0[3:1];
-      1'd1: x__h237718 = cache_rqFromCQ_data_1[3:1];
-    endcase
-  end
-  always@(cache_rqFromCQ_deqP or
-	  cache_rqFromCQ_data_0 or cache_rqFromCQ_data_1)
-  begin
-    case (cache_rqFromCQ_deqP)
-      1'd0: x__h231129 = cache_rqFromCQ_data_0[0];
-      1'd1: x__h231129 = cache_rqFromCQ_data_1[0];
     endcase
   end
   always@(cache_rqFromCQ_deqP or
@@ -11377,9 +11377,20 @@ module mkLLCache(CLK,
     case (cache_toMQ_deqP)
       1'd0:
 	  CASE_cache_toMQ_deqP_0_cache_toMQ_data_0_BITS__ETC__q261 =
-	      cache_toMQ_data_0[68:5];
+	      cache_toMQ_data_0[639:576];
       1'd1:
 	  CASE_cache_toMQ_deqP_0_cache_toMQ_data_0_BITS__ETC__q261 =
+	      cache_toMQ_data_1[639:576];
+    endcase
+  end
+  always@(cache_toMQ_deqP or cache_toMQ_data_0 or cache_toMQ_data_1)
+  begin
+    case (cache_toMQ_deqP)
+      1'd0:
+	  CASE_cache_toMQ_deqP_0_cache_toMQ_data_0_BITS__ETC__q262 =
+	      cache_toMQ_data_0[68:5];
+      1'd1:
+	  CASE_cache_toMQ_deqP_0_cache_toMQ_data_0_BITS__ETC__q262 =
 	      cache_toMQ_data_1[68:5];
     endcase
   end
@@ -11387,22 +11398,11 @@ module mkLLCache(CLK,
   begin
     case (cache_toMQ_deqP)
       1'd0:
-	  CASE_cache_toMQ_deqP_0_cache_toMQ_data_0_BIT_4_ETC__q262 =
+	  CASE_cache_toMQ_deqP_0_cache_toMQ_data_0_BIT_4_ETC__q263 =
 	      cache_toMQ_data_0[4];
       1'd1:
-	  CASE_cache_toMQ_deqP_0_cache_toMQ_data_0_BIT_4_ETC__q262 =
+	  CASE_cache_toMQ_deqP_0_cache_toMQ_data_0_BIT_4_ETC__q263 =
 	      cache_toMQ_data_1[4];
-    endcase
-  end
-  always@(cache_toMQ_deqP or cache_toMQ_data_0 or cache_toMQ_data_1)
-  begin
-    case (cache_toMQ_deqP)
-      1'd0:
-	  CASE_cache_toMQ_deqP_0_cache_toMQ_data_0_BITS__ETC__q263 =
-	      cache_toMQ_data_0[639:576];
-      1'd1:
-	  CASE_cache_toMQ_deqP_0_cache_toMQ_data_0_BITS__ETC__q263 =
-	      cache_toMQ_data_1[639:576];
     endcase
   end
   always@(child__h292214 or cache_cRqMshr$sendRqToC_getSlot)
