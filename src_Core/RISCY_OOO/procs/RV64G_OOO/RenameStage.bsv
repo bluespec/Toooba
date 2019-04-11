@@ -227,6 +227,13 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
 	   csr_access_trap = (write_deny || priv_deny);
 	end
 
+        // Check WFI trap (using a time-out of 0)
+        Bit #(32) inst_WFI = 32'h_1050_0073;
+        Bit #(1) mstatus_tw = mstatus [21];
+        Bool wfi_trap = (   (x.inst == inst_WFI)
+			 && (mstatus_tw == 1'b1)
+			 && (csrf.decodeInfo.prv < prvM));
+
         if (isValid(x.cause)) begin
             // previously found exception
             trap = tagged Valid (tagged Exception fromMaybe(?, x.cause));
@@ -237,7 +244,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
             // newly found exception
             trap = tagged Valid (tagged Exception fromMaybe(?, new_exception));
         end
-	else if (fs_trap || csr_access_trap) begin
+	else if (fs_trap || csr_access_trap || wfi_trap) begin
             trap = tagged Valid (tagged Exception IllegalInst);
 	end
         return trap;

@@ -4100,7 +4100,7 @@ module mkCore(CLK,
 	       curData__h194026,
 	       rVal1__h614263,
 	       rVal1__h638559,
-	       trap_val__h705462,
+	       trap_val__h705552,
 	       x__h199069;
   reg [51 : 0] CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q10,
 	       CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q12,
@@ -4111,18 +4111,18 @@ module mkCore(CLK,
 	       CASE_guard15979_0b0_theResult___snd23915_BITS__ETC__q212,
 	       CASE_guard36399_0b0_theResult___snd44311_BITS__ETC__q197,
 	       CASE_guard36399_0b0_theResult___snd44311_BITS__ETC__q198,
-	       CASE_guard45711_0b0_sfdin53931_BITS_56_TO_5_0b_ETC__q201,
-	       CASE_guard45711_0b0_sfdin53931_BITS_56_TO_5_0b_ETC__q202,
-	       CASE_guard54780_0b0_theResult___snd62716_BITS__ETC__q199,
-	       CASE_guard54780_0b0_theResult___snd62716_BITS__ETC__q200,
+	       CASE_guard45711_0b0_sfdin53931_BITS_56_TO_5_0b_ETC__q199,
+	       CASE_guard45711_0b0_sfdin53931_BITS_56_TO_5_0b_ETC__q200,
+	       CASE_guard54780_0b0_theResult___snd62716_BITS__ETC__q201,
+	       CASE_guard54780_0b0_theResult___snd62716_BITS__ETC__q202,
 	       CASE_guard75600_0b0_theResult___snd83512_BITS__ETC__q213,
 	       CASE_guard75600_0b0_theResult___snd83512_BITS__ETC__q214,
 	       CASE_guard84912_0b0_sfdin93132_BITS_56_TO_5_0b_ETC__q215,
 	       CASE_guard84912_0b0_sfdin93132_BITS_56_TO_5_0b_ETC__q216,
 	       CASE_guard93981_0b0_theResult___snd01917_BITS__ETC__q217,
 	       CASE_guard93981_0b0_theResult___snd01917_BITS__ETC__q218,
-	       CASE_guard97598_0b0_theResult___snd05510_BITS__ETC__q207,
-	       CASE_guard97598_0b0_theResult___snd05510_BITS__ETC__q208,
+	       CASE_guard97598_0b0_theResult___snd05510_BITS__ETC__q205,
+	       CASE_guard97598_0b0_theResult___snd05510_BITS__ETC__q206,
 	       IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d10693,
 	       IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d10719,
 	       IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d10738,
@@ -4182,7 +4182,7 @@ module mkCore(CLK,
 	       CASE_coreFix_fpuMulDivExe_0_dispToRegQfirst_B_ETC__q284,
 	       CASE_coreFix_fpuMulDivExe_0_rsFpuMulDivdispat_ETC__q280,
 	       IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d12961,
-	       IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d13589;
+	       IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d13601;
   reg [15 : 0] SEL_ARR_coreFix_memExe_respLrScAmoQ_data_0_073_ETC___d1367,
 	       SEL_ARR_mmio_dataRespQ_data_0_109_BITS_15_TO_0_ETC___d1417;
   reg [11 : 0] CASE_coreFix_aluExe_0_dispToRegQfirst_BITS_13_ETC__q272,
@@ -4198,8 +4198,8 @@ module mkCore(CLK,
 	       CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q9,
 	       CASE_guard06910_0b0_theResult___fst_exp15136_0_ETC__q203,
 	       CASE_guard06910_0b0_theResult___fst_exp15136_0_ETC__q204,
-	       CASE_guard15979_0b0_theResult___fst_exp23969_0_ETC__q205,
-	       CASE_guard15979_0b0_theResult___fst_exp23969_0_ETC__q206,
+	       CASE_guard15979_0b0_theResult___fst_exp23969_0_ETC__q207,
+	       CASE_guard15979_0b0_theResult___fst_exp23969_0_ETC__q208,
 	       CASE_guard36399_0b0_theResult___fst_exp44360_0_ETC__q175,
 	       CASE_guard36399_0b0_theResult___fst_exp44360_0_ETC__q176,
 	       CASE_guard45711_0b0_theResult___fst_exp53937_0_ETC__q177,
@@ -4208,10 +4208,10 @@ module mkCore(CLK,
 	       CASE_guard54780_0b0_theResult___fst_exp62770_0_ETC__q180,
 	       CASE_guard75600_0b0_theResult___fst_exp83561_0_ETC__q152,
 	       CASE_guard75600_0b0_theResult___fst_exp83561_0_ETC__q153,
-	       CASE_guard84912_0b0_theResult___fst_exp93138_0_ETC__q181,
-	       CASE_guard84912_0b0_theResult___fst_exp93138_0_ETC__q182,
-	       CASE_guard93981_0b0_theResult___fst_exp01971_0_ETC__q183,
-	       CASE_guard93981_0b0_theResult___fst_exp01971_0_ETC__q184,
+	       CASE_guard84912_0b0_theResult___fst_exp93138_0_ETC__q183,
+	       CASE_guard84912_0b0_theResult___fst_exp93138_0_ETC__q184,
+	       CASE_guard93981_0b0_theResult___fst_exp01971_0_ETC__q181,
+	       CASE_guard93981_0b0_theResult___fst_exp01971_0_ETC__q182,
 	       CASE_guard97598_0b0_theResult___fst_exp05559_0_ETC__q135,
 	       CASE_guard97598_0b0_theResult___fst_exp05559_0_ETC__q136,
 	       IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d10598,
@@ -4267,9 +4267,9 @@ module mkCore(CLK,
   reg [5 : 0] CASE_mmioToPlatform_pRq_enq_x_BITS_37_TO_36_0__ETC__q266,
 	      CASE_mmio_cRqQ_data_0_BITS_77_TO_76_0_mmio_cRq_ETC__q1,
 	      CASE_mmio_dataReqQ_data_0_BITS_77_TO_76_0_mmio_ETC__q263,
-	      IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637;
-  reg [4 : 0] IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d14101,
-	      IF_fetchStage_pipelines_1_first__2844_BITS_191_ETC___d14263;
+	      IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658;
+  reg [4 : 0] IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d14122,
+	      IF_fetchStage_pipelines_1_first__2844_BITS_191_ETC___d14284;
   reg [3 : 0] CASE_IF_NOT_IF_IF_NOT_csrf_prv_reg_read__2863__ETC__q227,
 	      CASE_checkForException_3069_BITS_3_TO_0_0_chec_ETC__q226,
 	      CASE_coreFix_memExe_dTlbprocResp_BITS_105_TO__ETC__q13,
@@ -4278,11 +4278,11 @@ module mkCore(CLK,
 	      CASE_coreFix_memExe_lsqfirstSt_BITS_3_TO_0_0__ETC__q264,
 	      CASE_robdeqPort_0_deq_data_BITS_165_TO_162_0__ETC__q260,
 	      CASE_robdeqPort_0_deq_data_BITS_165_TO_162_0__ETC__q261,
-	      IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d14104,
-	      IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13174,
-	      IF_fetchStage_pipelines_1_first__2844_BITS_191_ETC___d14264,
-	      i__h704446,
-	      i__h704606;
+	      IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d14125,
+	      IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13179,
+	      IF_fetchStage_pipelines_1_first__2844_BITS_191_ETC___d14285,
+	      i__h704536,
+	      i__h704696;
   reg [2 : 0] CASE_coreFix_aluExe_0_dispToRegQfirst_BITS_13_ETC__q270,
 	      CASE_coreFix_aluExe_0_regToExeQfirst_BITS_399_ETC__q222,
 	      CASE_coreFix_aluExe_0_rsAludispatchData_BITS__ETC__q267,
@@ -4324,7 +4324,7 @@ module mkCore(CLK,
       CASE_coreFix_memExe_dMem_cache_m_banks_0_fromP_ETC__q259,
       CASE_coreFix_memExe_dMem_cache_m_banks_0_rqToP_ETC__q254,
       CASE_coreFix_memExe_dMem_cache_m_banks_0_rsToP_ETC__q249,
-      CASE_fetchStagepipelines_0_canDeq_AND_NOT_fet_ETC__q234,
+      CASE_fetchStage_pipelines_0_canDeq__2833_AND_N_ETC__q234,
       CASE_fetchStagepipelines_0_first_BITS_191_TO__ETC__q232,
       CASE_fetchStagepipelines_1_first_BITS_191_TO__ETC__q230,
       CASE_fetchStagepipelines_1_first_BITS_191_TO__ETC__q231,
@@ -4337,18 +4337,18 @@ module mkCore(CLK,
       CASE_guard15979_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q141,
       CASE_guard21627_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q90,
       CASE_guard21627_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q89,
-      CASE_guard36399_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q193,
-      CASE_guard36399_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q187,
-      CASE_guard40842_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q118,
-      CASE_guard40842_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q119,
+      CASE_guard36399_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q195,
+      CASE_guard36399_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q185,
+      CASE_guard40842_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q119,
+      CASE_guard40842_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q118,
       CASE_guard45711_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q191,
-      CASE_guard45711_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q185,
+      CASE_guard45711_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q189,
       CASE_guard49462_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q49,
       CASE_guard49462_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q48,
       CASE_guard49549_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q121,
       CASE_guard49549_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q120,
-      CASE_guard54780_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q195,
-      CASE_guard54780_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q189,
+      CASE_guard54780_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q193,
+      CASE_guard54780_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q187,
       CASE_guard58171_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q51,
       CASE_guard58171_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q50,
       CASE_guard58479_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q123,
@@ -4368,7 +4368,7 @@ module mkCore(CLK,
       CASE_guard95154_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q84,
       CASE_guard95154_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q83,
       CASE_guard97598_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q137,
-      CASE_k71298_0_coreFix_aluExe_0_rsAluRDY_enq_1_ETC__q233,
+      CASE_k71356_0_coreFix_aluExe_0_rsAluRDY_enq_1_ETC__q233,
       IF_coreFix_fpuMulDivExe_0_fpuExec_divQ_first_d_ETC___d6542,
       IF_coreFix_fpuMulDivExe_0_fpuExec_divQ_first_d_ETC___d6555,
       IF_coreFix_fpuMulDivExe_0_fpuExec_divQ_first_d_ETC___d6559,
@@ -4406,31 +4406,31 @@ module mkCore(CLK,
       IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d11114,
       IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d8507,
       IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d8520,
-      IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13469,
-      IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13524,
-      IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d14095,
-      IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d14098,
-      IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13473,
-      IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13497,
-      IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13529,
-      IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13820,
+      IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13480,
+      IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13536,
+      IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d14116,
+      IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d14119,
+      IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13484,
+      IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13508,
+      IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13541,
       IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13841,
-      IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13858,
-      IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13911,
-      IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13913,
-      IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13927,
+      IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13862,
+      IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13879,
+      IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13932,
       IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13934,
-      IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d14003,
-      IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d14014,
-      IF_fetchStage_pipelines_1_first__2844_BITS_191_ETC___d14261,
-      IF_fetchStage_pipelines_1_first__2844_BITS_191_ETC___d14262,
-      IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d13869,
-      IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d14000,
-      IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d14025,
-      SEL_ARR_NOT_coreFix_aluExe_0_rsAlu_canEnq__344_ETC___d13490,
-      SEL_ARR_NOT_fetchStage_pipelines_0_canDeq__283_ETC___d13961,
-      SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3447_co_ETC___d13457,
-      SEL_ARR_fetchStage_pipelines_0_canDeq__2833_AN_ETC___d13750;
+      IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13948,
+      IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13955,
+      IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d14024,
+      IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d14035,
+      IF_fetchStage_pipelines_1_first__2844_BITS_191_ETC___d14282,
+      IF_fetchStage_pipelines_1_first__2844_BITS_191_ETC___d14283,
+      IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d13890,
+      IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d14021,
+      IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d14046,
+      SEL_ARR_NOT_coreFix_aluExe_0_rsAlu_canEnq__345_ETC___d13501,
+      SEL_ARR_NOT_fetchStage_pipelines_0_canDeq__283_ETC___d13982,
+      SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3458_co_ETC___d13468,
+      SEL_ARR_fetchStage_pipelines_0_canDeq__2833_AN_ETC___d13768;
   wire [581 : 0] IF_coreFix_memExe_dMem_cache_m_banks_0_fromPQ__ETC___d3343;
   wire [569 : 0] IF_NOT_coreFix_memExe_dMem_cache_m_banks_0_pip_ETC___d2538,
 		 IF_coreFix_memExe_dMem_cache_m_banks_0_cRqMshr_ETC___d2549,
@@ -4439,16 +4439,16 @@ module mkCore(CLK,
   wire [517 : 0] SEL_ARR_coreFix_memExe_dMem_cache_m_banks_0_fr_ETC___d3038;
   wire [511 : 0] IF_coreFix_memExe_dMem_cache_m_banks_0_cRqMshr_ETC___d2236,
 		 SEL_ARR_coreFix_memExe_dMem_cache_m_banks_0_fr_ETC___d3031,
-		 SEL_ARR_coreFix_memExe_dMem_cache_m_banks_0_rs_ETC___d15164;
+		 SEL_ARR_coreFix_memExe_dMem_cache_m_banks_0_rs_ETC___d15185;
   wire [447 : 0] IF_coreFix_memExe_dMem_cache_m_banks_0_process_ETC___d2033;
   wire [383 : 0] IF_coreFix_memExe_dMem_cache_m_banks_0_cRqMshr_ETC___d2231,
 		 SEL_ARR_coreFix_memExe_dMem_cache_m_banks_0_fr_ETC___d3022,
-		 SEL_ARR_coreFix_memExe_dMem_cache_m_banks_0_rs_ETC___d15155;
+		 SEL_ARR_coreFix_memExe_dMem_cache_m_banks_0_rs_ETC___d15176;
   wire [321 : 0] basicExec___d12049, basicExec___d12686;
   wire [319 : 0] IF_coreFix_memExe_dMem_cache_m_banks_0_process_ETC___d2028;
   wire [255 : 0] IF_coreFix_memExe_dMem_cache_m_banks_0_cRqMshr_ETC___d2226,
 		 SEL_ARR_coreFix_memExe_dMem_cache_m_banks_0_fr_ETC___d3013,
-		 SEL_ARR_coreFix_memExe_dMem_cache_m_banks_0_rs_ETC___d15146,
+		 SEL_ARR_coreFix_memExe_dMem_cache_m_banks_0_rs_ETC___d15167,
 		 SEXT_IF_coreFix_fpuMulDivExe_0_regToExeQ_first_ETC___d11168,
 		 SEXT_IF_coreFix_fpuMulDivExe_0_regToExeQ_first_ETC___d11181,
 		 _0_CONCAT_IF_coreFix_fpuMulDivExe_0_regToExeQ_f_ETC___d11174;
@@ -4486,7 +4486,7 @@ module mkCore(CLK,
 		IF_coreFix_memExe_lsq_firstLd__285_BIT_96_350__ETC___d1386,
 		IF_coreFix_memExe_lsq_firstLd__285_BIT_96_350__ETC___d1435,
 		IF_csrf_minstret_ehr_data_lat_0_whas_THEN_csrf_ETC___d8,
-		IF_rob_deqPort_0_canDeq__4852_THEN_IF_NOT_rob__ETC___d14961,
+		IF_rob_deqPort_0_canDeq__4873_THEN_IF_NOT_rob__ETC___d14982,
 		_theResult___fst__h607308,
 		_theResult___snd__h607309,
 		a___1__h606922,
@@ -4496,14 +4496,14 @@ module mkCore(CLK,
 		b___1__h606923,
 		b___1__h607374,
 		b__h606761,
-		base__h707033,
-		base__h707236,
+		base__h707123,
+		base__h707326,
 		data___1__h478472,
 		data___1__h479402,
 		data__h477960,
 		data__h478890,
-		fallthrough_pc__h667687,
-		fallthrough_pc__h683150,
+		fallthrough_pc__h667716,
+		fallthrough_pc__h683208,
 		fcsr_csr__read__h614541,
 		fflags_csr__read__h614516,
 		frm_csr__read__h614527,
@@ -4520,8 +4520,8 @@ module mkCore(CLK,
 		n__read__h6134,
 		n__read__h616532,
 		n__read__h616723,
-		n__read__h715911,
-		next_pc__h715152,
+		n__read__h716001,
+		next_pc__h715242,
 		q___1__h479477,
 		q__h607918,
 		rVal1__h485839,
@@ -4535,7 +4535,7 @@ module mkCore(CLK,
 		res_data__h432622,
 		res_data__h432627,
 		resp_addr__h295350,
-		rob_deqPort_0_deq_data__4334_BITS_282_TO_219_4_ETC___d14820,
+		rob_deqPort_0_deq_data__4355_BITS_282_TO_219_4_ETC___d14841,
 		robdeqPort_0_deq_data_BITS_95_TO_32__q262,
 		satp_csr__read__h615242,
 		scause_csr__read__h615040,
@@ -4570,14 +4570,14 @@ module mkCore(CLK,
 		x__h621539,
 		x__h643521,
 		x__h643522,
-		x__h700760,
+		x__h700850,
 		x_addr__h317447,
 		x_quotient__h478656,
 		x_reg_ifc__read__h614646,
 		x_remainder__h478657,
 		y__h624308,
 		y__h645998,
-		y__h719083,
+		y__h719173,
 		y_avValue__h183367,
 		y_avValue__h184086,
 		y_avValue__h482808,
@@ -4587,11 +4587,11 @@ module mkCore(CLK,
 		y_avValue__h619580,
 		y_avValue__h638504,
 		y_avValue__h641573,
-		y_avValue__h705309,
-		y_avValue__h707070,
-		y_avValue_snd_snd_snd_snd_snd__h718483,
-		y_avValue_snd_snd_snd_snd_snd__h719136,
-		y_avValue_snd_snd_snd_snd_snd__h719165;
+		y_avValue__h705399,
+		y_avValue__h707160,
+		y_avValue_snd_snd_snd_snd_snd__h718573,
+		y_avValue_snd_snd_snd_snd_snd__h719226,
+		y_avValue_snd_snd_snd_snd_snd__h719255;
   wire [62 : 0] IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d10746,
 		IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d9983,
 		r1__read__h617230,
@@ -4936,14 +4936,14 @@ module mkCore(CLK,
   wire [42 : 0] r1__read__h618473;
   wire [41 : 0] r1__read__h618475;
   wire [40 : 0] r1__read__h618477;
-  wire [37 : 0] IF_fetchStage_pipelines_0_first__2835_BIT_160__ETC___d14107,
-		IF_fetchStage_pipelines_1_first__2844_BIT_160__ETC___d14267;
+  wire [37 : 0] IF_fetchStage_pipelines_0_first__2835_BIT_160__ETC___d14128,
+		IF_fetchStage_pipelines_1_first__2844_BIT_160__ETC___d14288;
   wire [31 : 0] coreFix_fpuMulDivExe_0_regToExeQfirst_BITS_10_ETC__q4,
 		coreFix_fpuMulDivExe_0_regToExeQfirst_BITS_17_ETC__q3,
 		coreFix_memExe_regToExeQfirst_BITS_189_TO_158__q5,
 		data77960_BITS_31_TO_0__q2,
 		data78890_BITS_31_TO_0__q6,
-		imm__h659256,
+		imm__h659258,
 		r1__read__h617256,
 		r1__read__h618479,
 		x__h194789,
@@ -4952,11 +4952,11 @@ module mkCore(CLK,
 		x__h432634,
 		x__h75524,
 		x_data__h65373,
-		x_data_imm__h678579,
-		x_data_imm__h694200;
+		x_data_imm__h678637,
+		x_data_imm__h694287;
   wire [29 : 0] r1__read__h617258, r1__read__h618481;
   wire [27 : 0] r1__read__h618483;
-  wire [24 : 0] NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d14153,
+  wire [24 : 0] NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d14174,
 		sfd__h357655,
 		sfd__h366237,
 		sfd__h375421,
@@ -5055,13 +5055,13 @@ module mkCore(CLK,
 		out_sfd__h475863;
   wire [19 : 0] r1__read__h618418;
   wire [14 : 0] IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904,
-		_theResult____h655200,
-		enabled_ints___1__h655697,
-		enabled_ints__h655744,
-		pend_ints__h655198,
-		y__h655709;
-  wire [12 : 0] fetchStage_pipelines_1_first__2844_BIT_173_359_ETC___d13665,
-		r1__read_BITS_12_TO_0___h655720;
+		_theResult____h655202,
+		enabled_ints___1__h655699,
+		enabled_ints__h655746,
+		pend_ints__h655200,
+		y__h655711;
+  wire [12 : 0] fetchStage_pipelines_1_first__2844_BIT_173_360_ETC___d13677,
+		r1__read_BITS_12_TO_0___h655722;
   wire [11 : 0] IF_SEXT_coreFix_fpuMulDivExe_0_regToExeQ_first_ETC___d10525,
 		IF_SEXT_coreFix_fpuMulDivExe_0_regToExeQ_first_ETC___d9052,
 		IF_SEXT_coreFix_fpuMulDivExe_0_regToExeQ_first_ETC___d9762,
@@ -5091,10 +5091,10 @@ module mkCore(CLK,
 		_3970_MINUS_SEXT_coreFix_fpuMulDivExe_0_fpuExec_ETC___d4650,
 		_3970_MINUS_SEXT_coreFix_fpuMulDivExe_0_fpuExec_ETC___d6042,
 		_3970_MINUS_SEXT_coreFix_fpuMulDivExe_0_fpuExec_ETC___d7434,
-		renaming_spec_bits__h686479,
+		renaming_spec_bits__h686566,
 		result__h650909,
 		result__h650960,
-		spec_bits__h689574,
+		spec_bits__h689661,
 		w__h650904,
 		x__h367834,
 		x__h413524,
@@ -5105,10 +5105,10 @@ module mkCore(CLK,
 		x__h650908,
 		x__h650959,
 		y__h650938,
-		y__h689587,
-		y_avValue_fst__h683000,
-		y_avValue_snd_fst__h683274,
-		y_avValue_snd_fst__h683309;
+		y__h689674,
+		y_avValue_fst__h683058,
+		y_avValue_snd_fst__h683332,
+		y_avValue_snd_fst__h683367;
   wire [10 : 0] IF_IF_IF_IF_3074_MINUS_SEXT_coreFix_fpuMulDivE_ETC___d10630,
 		IF_IF_IF_IF_3074_MINUS_SEXT_coreFix_fpuMulDivE_ETC___d10632,
 		IF_IF_IF_IF_3074_MINUS_SEXT_coreFix_fpuMulDivE_ETC___d9162,
@@ -5392,11 +5392,11 @@ module mkCore(CLK,
 	       IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d8689,
 	       IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d9414,
 	       IF_coreFix_memExe_dMem_cache_m_banks_0_pipelin_ETC___d2172,
-	       SEL_ARR_coreFix_memExe_dMem_cache_m_banks_0_rq_ETC___d15190,
+	       SEL_ARR_coreFix_memExe_dMem_cache_m_banks_0_rq_ETC___d15211,
 	       x__h184461,
-	       x__h707048;
-  wire [4 : 0] IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d14320,
-	       IF_rob_deqPort_0_canDeq__4852_THEN_IF_NOT_rob__ETC___d15050,
+	       x__h707138;
+  wire [4 : 0] IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d14341,
+	       IF_rob_deqPort_0_canDeq__4873_THEN_IF_NOT_rob__ETC___d15071,
 	       _0_CONCAT_IF_IF_0b0_CONCAT_NOT_coreFix_fpuMulDi_ETC___d5265,
 	       _0_CONCAT_IF_IF_0b0_CONCAT_NOT_coreFix_fpuMulDi_ETC___d6657,
 	       _0_CONCAT_IF_IF_0b0_CONCAT_NOT_coreFix_fpuMulDi_ETC___d8049,
@@ -5413,30 +5413,25 @@ module mkCore(CLK,
 	       _0_CONCAT_IF_coreFix_fpuMulDivExe_0_regToExeQ_f_ETC___d10874,
 	       _0_CONCAT_IF_coreFix_fpuMulDivExe_0_regToExeQ_f_ETC___d10918,
 	       checkForException___d13069,
-	       checkForException___d13686,
-	       fflags__h719060,
+	       checkForException___d13698,
+	       fflags__h719150,
 	       res_fflags__h341240,
 	       res_fflags__h386935,
 	       res_fflags__h432623,
-	       rs1__h659255,
+	       rs1__h659257,
 	       x__h154744,
 	       x__h158291,
 	       x__h161107,
 	       x__h290547,
-	       y_avValue_snd_fst__h718467,
-	       y_avValue_snd_fst__h719120,
-	       y_avValue_snd_fst__h719149;
+	       y_avValue_snd_fst__h718557,
+	       y_avValue_snd_fst__h719210,
+	       y_avValue_snd_fst__h719239;
   wire [3 : 0] IF_IF_coreFix_memExe_dTlb_procResp__740_BIT_11_ETC___d1875,
 	       IF_IF_coreFix_memExe_dTlb_procResp__740_BIT_11_ETC___d1877,
 	       IF_IF_coreFix_memExe_dTlb_procResp__740_BIT_11_ETC___d1879,
 	       IF_IF_coreFix_memExe_dTlb_procResp__740_BIT_11_ETC___d1881,
 	       IF_IF_coreFix_memExe_dTlb_procResp__740_BIT_11_ETC___d1883,
 	       IF_IF_coreFix_memExe_dTlb_procResp__740_BIT_11_ETC___d1885,
-	       IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13242,
-	       IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13243,
-	       IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13244,
-	       IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13245,
-	       IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13246,
 	       IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13247,
 	       IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13248,
 	       IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13249,
@@ -5445,14 +5440,19 @@ module mkCore(CLK,
 	       IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13252,
 	       IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13253,
 	       IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13254,
-	       IF_NOT_IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3__ETC___d13280,
+	       IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13255,
+	       IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13256,
+	       IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13257,
+	       IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13258,
+	       IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13259,
+	       IF_NOT_IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3__ETC___d13285,
 	       IF_NOT_coreFix_memExe_dTlb_procResp__740_BIT_1_ETC___d1819,
-	       IF_checkForException_3069_BIT_4_3070_THEN_IF_c_ETC___d13203,
+	       IF_checkForException_3069_BIT_4_3070_THEN_IF_c_ETC___d13208,
 	       IF_coreFix_memExe_dMem_cache_m_banks_0_rqFromC_ETC___d2929,
 	       IF_coreFix_memExe_dTlb_procResp__740_BITS_105__ETC___d1820,
 	       IF_coreFix_memExe_reqLrScAmoQ_data_0_dummy2_1__ETC___d1263,
-	       IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13299,
-	       cause_code__h704431,
+	       IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13304,
+	       cause_code__h704521,
 	       vm_mode_reg__read__h618424;
   wire [2 : 0] IF_coreFix_memExe_dMem_cache_m_banks_0_cRqMshr_ETC___d2567,
 	       IF_coreFix_memExe_dMem_cache_m_banks_0_rqFromC_ETC___d2886,
@@ -5462,10 +5462,10 @@ module mkCore(CLK,
 	       v__h299314,
 	       v__h299545,
 	       x__h305524,
-	       x_decodeInfo_frm__h658939;
+	       x_decodeInfo_frm__h658941;
   wire [1 : 0] IF_coreFix_memExe_dMem_cache_m_banks_0_rqFromC_ETC___d2882,
 	       IF_coreFix_memExe_reqLrScAmoQ_data_0_dummy2_1__ETC___d1216,
-	       IF_rob_deqPort_0_canDeq__4852_THEN_IF_NOT_rob__ETC___d15071,
+	       IF_rob_deqPort_0_canDeq__4873_THEN_IF_NOT_rob__ETC___d15092,
 	       IF_sfdin03247_BIT_33_THEN_2_ELSE_0__q57,
 	       IF_sfdin15130_BIT_4_THEN_2_ELSE_0__q131,
 	       IF_sfdin21013_BIT_33_THEN_2_ELSE_0__q67,
@@ -5508,18 +5508,18 @@ module mkCore(CLK,
 	       guard__h575600,
 	       guard__h584912,
 	       guard__h593981,
-	       prv__h720574,
-	       prv__h720618,
-	       r1__read_BITS_13_TO_12___h659124,
+	       prv__h720664,
+	       prv__h720708,
+	       r1__read_BITS_13_TO_12___h659126,
 	       sbIdx__h158170,
 	       v__h607989,
 	       v__h607999,
 	       v__h609057,
-	       x__h715321,
-	       x__h719307,
-	       y_avValue_snd_snd_snd_fst__h718477,
-	       y_avValue_snd_snd_snd_fst__h719130,
-	       y_avValue_snd_snd_snd_fst__h719159;
+	       x__h715411,
+	       x__h719397,
+	       y_avValue_snd_snd_snd_fst__h718567,
+	       y_avValue_snd_snd_snd_fst__h719220,
+	       y_avValue_snd_snd_snd_fst__h719249;
   wire IF_3074_MINUS_0_CONCAT_IF_coreFix_fpuMulDivExe_ETC___d5165,
        IF_3074_MINUS_0_CONCAT_IF_coreFix_fpuMulDivExe_ETC___d5215,
        IF_3074_MINUS_0_CONCAT_IF_coreFix_fpuMulDivExe_ETC___d6557,
@@ -5533,7 +5533,9 @@ module mkCore(CLK,
        IF_IF_IF_3074_MINUS_SEXT_coreFix_fpuMulDivExe__ETC___d10783,
        IF_IF_IF_3074_MINUS_SEXT_coreFix_fpuMulDivExe__ETC___d9045,
        IF_IF_IF_3074_MINUS_SEXT_coreFix_fpuMulDivExe__ETC___d9755,
-       IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d13106,
+       IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d13111,
+       IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d13753,
+       IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d13789,
        IF_IF_coreFix_fpuMulDivExe_0_regToExeQ_first___ETC___d10006,
        IF_IF_coreFix_fpuMulDivExe_0_regToExeQ_first___ETC___d10033,
        IF_IF_coreFix_fpuMulDivExe_0_regToExeQ_first___ETC___d10564,
@@ -5582,11 +5584,11 @@ module mkCore(CLK,
        IF_NOT_coreFix_memExe_bypassWire_0_whas__584_5_ETC___d1667,
        IF_NOT_coreFix_memExe_dMem_cache_m_banks_0_pip_ETC___d2114,
        IF_NOT_coreFix_memExe_dMem_cache_m_banks_0_pip_ETC___d2131,
-       IF_NOT_fetchStage_pipelines_0_canDeq__2833_283_ETC___d13875,
-       IF_NOT_fetchStage_pipelines_0_canDeq__2833_283_ETC___d13883,
-       IF_NOT_fetchStage_pipelines_1_first__2844_BITS_ETC___d13805,
-       IF_NOT_fetchStage_pipelines_1_first__2844_BITS_ETC___d13882,
-       IF_NOT_rob_deqPort_1_deq_data__4859_BIT_25_486_ETC___d15062,
+       IF_NOT_fetchStage_pipelines_0_canDeq__2833_283_ETC___d13896,
+       IF_NOT_fetchStage_pipelines_0_canDeq__2833_283_ETC___d13904,
+       IF_NOT_fetchStage_pipelines_1_first__2844_BITS_ETC___d13826,
+       IF_NOT_fetchStage_pipelines_1_first__2844_BITS_ETC___d13903,
+       IF_NOT_rob_deqPort_1_deq_data__4880_BIT_25_488_ETC___d15083,
        IF_SEXT_coreFix_fpuMulDivExe_0_fpuExec_double__ETC___d5195,
        IF_SEXT_coreFix_fpuMulDivExe_0_fpuExec_double__ETC___d5232,
        IF_SEXT_coreFix_fpuMulDivExe_0_fpuExec_double__ETC___d5323,
@@ -5716,30 +5718,30 @@ module mkCore(CLK,
        IF_coreFix_memExe_memRespLdQ_deqReq_lat_1_whas_ETC___d3745,
        IF_coreFix_memExe_memRespLdQ_enqReq_lat_1_whas_ETC___d3730,
        IF_coreFix_memExe_respLrScAmoQ_enqReq_lat_1_wh_ETC___d3654,
-       IF_fetchStage_RDY_pipelines_0_first__2832_AND__ETC___d13444,
-       IF_fetchStage_RDY_pipelines_1_first__2843_AND__ETC___d13807,
-       IF_fetchStage_RDY_pipelines_1_first__2843_AND__ETC___d13872,
-       IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13920,
-       IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d14041,
+       IF_fetchStage_RDY_pipelines_0_first__2832_AND__ETC___d13455,
+       IF_fetchStage_RDY_pipelines_1_first__2843_AND__ETC___d13828,
+       IF_fetchStage_RDY_pipelines_1_first__2843_AND__ETC___d13893,
+       IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13941,
+       IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d14062,
        IF_mmio_cRqQ_enqReq_lat_1_whas__30_THEN_mmio_c_ETC___d339,
        IF_mmio_cRsQ_enqReq_lat_1_whas__74_THEN_mmio_c_ETC___d783,
        IF_mmio_dataReqQ_enqReq_lat_1_whas__7_THEN_mmi_ETC___d46,
        IF_mmio_dataRespQ_enqReq_lat_1_whas__92_THEN_m_ETC___d201,
        IF_mmio_pRqQ_enqReq_lat_1_whas__33_THEN_mmio_p_ETC___d642,
        IF_mmio_pRsQ_enqReq_lat_1_whas__82_THEN_mmio_p_ETC___d491,
-       IF_rob_deqPort_1_canDeq__4856_THEN_IF_NOT_rob__ETC___d15063,
+       IF_rob_deqPort_1_canDeq__4877_THEN_IF_NOT_rob__ETC___d15084,
        NOT_3074_MINUS_0_CONCAT_IF_coreFix_fpuMulDivEx_ETC___d5317,
        NOT_3074_MINUS_0_CONCAT_IF_coreFix_fpuMulDivEx_ETC___d5345,
        NOT_3074_MINUS_0_CONCAT_IF_coreFix_fpuMulDivEx_ETC___d6709,
        NOT_3074_MINUS_0_CONCAT_IF_coreFix_fpuMulDivEx_ETC___d6737,
        NOT_3074_MINUS_0_CONCAT_IF_coreFix_fpuMulDivEx_ETC___d8101,
        NOT_3074_MINUS_0_CONCAT_IF_coreFix_fpuMulDivEx_ETC___d8129,
-       NOT_IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_286_ETC___d13348,
-       NOT_IF_NOT_rob_deqPort_0_canDeq__4852_4853_OR__ETC___d15068,
-       NOT_IF_rob_deqPort_0_deq_data__4334_BITS_97_TO_ETC___d14823,
-       NOT_SEL_ARR_NOT_coreFix_aluExe_0_rsAlu_canEnq__ETC___d13492,
-       NOT_checkForException_3069_BIT_4_3070_3322_AND_ETC___d13431,
-       NOT_checkForException_3686_BIT_4_3687_3688_AND_ETC___d13706,
+       NOT_IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_286_ETC___d13358,
+       NOT_IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_286_ETC___d13443,
+       NOT_IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_286_ETC___d13725,
+       NOT_IF_NOT_rob_deqPort_0_canDeq__4873_4874_OR__ETC___d15089,
+       NOT_IF_rob_deqPort_0_deq_data__4355_BITS_97_TO_ETC___d14844,
+       NOT_SEL_ARR_NOT_coreFix_aluExe_0_rsAlu_canEnq__ETC___d13503,
        NOT_coreFix_aluExe_0_bypassWire_0_whas__2301_2_ETC___d12328,
        NOT_coreFix_aluExe_0_bypassWire_0_whas__2301_2_ETC___d12358,
        NOT_coreFix_aluExe_1_bypassWire_0_whas__1478_1_ETC___d11505,
@@ -5764,7 +5766,7 @@ module mkCore(CLK,
        NOT_coreFix_fpuMulDivExe_0_regToExeQ_first__48_ETC___d8540,
        NOT_coreFix_fpuMulDivExe_0_regToExeQ_first__48_ETC___d8662,
        NOT_coreFix_fpuMulDivExe_0_regToExeQ_first__48_ETC___d9387,
-       NOT_coreFix_fpuMulDivExe_0_rsFpuMulDiv_canEnq__ETC___d13816,
+       NOT_coreFix_fpuMulDivExe_0_rsFpuMulDiv_canEnq__ETC___d13837,
        NOT_coreFix_memExe_bypassWire_0_whas__584_590__ETC___d1611,
        NOT_coreFix_memExe_bypassWire_0_whas__584_590__ETC___d1640,
        NOT_coreFix_memExe_dMem_cache_m_banks_0_cRqMsh_ETC___d2554,
@@ -5813,51 +5815,45 @@ module mkCore(CLK,
        NOT_coreFix_memExe_respLrScAmoQ_clearReq_dummy_ETC___d3643,
        NOT_coreFix_memExe_respLrScAmoQ_enqReq_dummy2__ETC___d3685,
        NOT_coreFix_memExe_respLrScAmoQ_full_977_978_A_ETC___d2110,
-       NOT_coreFix_memExe_rsMem_canEnq__3460_3521_OR__ETC___d13817,
-       NOT_csrf_fs_reg_read__1686_EQ_0_3058_3059_OR_N_ETC___d13346,
-       NOT_csrf_prv_reg_read__2863_ULE_1_4475_4539_OR_ETC___d14543,
-       NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13532,
-       NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13788,
-       NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13799,
-       NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13823,
-       NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13838,
-       NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13852,
-       NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13855,
-       NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13976,
-       NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13995,
-       NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14047,
-       NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14178,
-       NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14180,
-       NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14191,
-       NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14227,
-       NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14252,
-       NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14255,
-       NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14299,
-       NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13342,
-       NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13437,
-       NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13474,
-       NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13486,
-       NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13711,
-       NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13725,
-       NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13731,
-       NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13842,
-       NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13859,
-       NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13877,
-       NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13880,
-       NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13969,
-       NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d14053,
-       NOT_fetchStage_pipelines_0_first__2835_BITS_32_ETC___d14077,
-       NOT_fetchStage_pipelines_0_first__2835_BIT_68__ETC___d13433,
+       NOT_coreFix_memExe_rsMem_canEnq__3471_3533_OR__ETC___d13838,
+       NOT_csrf_fs_reg_read__1686_EQ_0_3058_3059_OR_N_ETC___d13351,
+       NOT_csrf_fs_reg_read__1686_EQ_0_3058_3059_OR_N_ETC___d13441,
+       NOT_csrf_fs_reg_read__1686_EQ_0_3058_3059_OR_N_ETC___d13723,
+       NOT_csrf_prv_reg_read__2863_ULE_1_4496_4560_OR_ETC___d14564,
+       NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13809,
+       NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13820,
+       NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13859,
+       NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13876,
+       NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13997,
+       NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14016,
+       NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14068,
+       NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14199,
+       NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14201,
+       NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14212,
+       NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14248,
+       NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14268,
+       NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14276,
+       NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14297,
+       NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14320,
+       NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13347,
+       NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13448,
+       NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13485,
+       NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13743,
+       NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13749,
+       NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13901,
+       NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d14074,
+       NOT_fetchStage_pipelines_0_first__2835_BITS_32_ETC___d14098,
+       NOT_fetchStage_pipelines_0_first__2835_BIT_68__ETC___d13496,
        NOT_fetchStage_pipelines_1_canDeq__2841_2842_O_ETC___d12850,
-       NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13716,
-       NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13718,
-       NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13826,
+       NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13734,
+       NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13736,
        NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13847,
-       NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13864,
-       NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d14186,
-       NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d14188,
-       NOT_fetchStage_pipelines_1_first__2844_BITS_32_ETC___d14242,
-       NOT_fetchStage_pipelines_1_first__2844_BIT_68__ETC___d13708,
+       NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13868,
+       NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13885,
+       NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d14209,
+       NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d14271,
+       NOT_fetchStage_pipelines_1_first__2844_BITS_32_ETC___d14263,
+       NOT_fetchStage_pipelines_1_first__2844_BIT_68__ETC___d14206,
        NOT_mmio_cRqQ_clearReq_dummy2_1_read__26_27_OR_ETC___d431,
        NOT_mmio_cRqQ_enqReq_dummy2_2_read__32_47_OR_I_ETC___d452,
        NOT_mmio_cRsQ_clearReq_dummy2_1_read__18_19_OR_ETC___d823,
@@ -5873,16 +5869,18 @@ module mkCore(CLK,
        NOT_mmio_pRqQ_enqReq_dummy2_2_read__35_50_OR_I_ETC___d755,
        NOT_mmio_pRsQ_clearReq_dummy2_1_read__88_89_OR_ETC___d593,
        NOT_mmio_pRsQ_enqReq_dummy2_2_read__94_09_OR_I_ETC___d614,
-       NOT_regRenamingTable_rename_0_canRename__3418__ETC___d13832,
-       NOT_regRenamingTable_rename_0_canRename__3418__ETC___d13887,
-       NOT_rob_deqPort_0_canDeq__4852_4853_OR_regRena_ETC___d14891,
-       NOT_rob_deqPort_0_canDeq__4852_4853_OR_rob_deq_ETC___d15044,
-       NOT_rob_deqPort_0_deq_data__4334_BITS_186_TO_1_ETC___d14647,
-       NOT_rob_deqPort_0_deq_data__4334_BITS_186_TO_1_ETC___d14833,
-       NOT_rob_deqPort_1_deq_data__4859_BIT_25_4860_4_ETC___d14888,
-       NOT_specTagManager_canClaim__3416_3500_OR_NOT__ETC___d13966,
-       NOT_specTagManager_canClaim__3416_3500_OR_NOT__ETC___d14031,
-       SEL_ARR_fetchStage_pipelines_0_canDeq__2833_AN_ETC___d13777,
+       NOT_regRenamingTable_rename_0_canRename__3428__ETC___d13527,
+       NOT_regRenamingTable_rename_0_canRename__3428__ETC___d13853,
+       NOT_regRenamingTable_rename_0_canRename__3428__ETC___d13908,
+       NOT_regRenamingTable_rename_1_canRename__3547__ETC___d13966,
+       NOT_rob_deqPort_0_canDeq__4873_4874_OR_regRena_ETC___d14912,
+       NOT_rob_deqPort_0_canDeq__4873_4874_OR_rob_deq_ETC___d15065,
+       NOT_rob_deqPort_0_deq_data__4355_BITS_186_TO_1_ETC___d14668,
+       NOT_rob_deqPort_0_deq_data__4355_BITS_186_TO_1_ETC___d14854,
+       NOT_rob_deqPort_1_deq_data__4880_BIT_25_4881_4_ETC___d14909,
+       NOT_specTagManager_canClaim__3426_3511_OR_NOT__ETC___d13987,
+       NOT_specTagManager_canClaim__3426_3511_OR_NOT__ETC___d14052,
+       SEL_ARR_fetchStage_pipelines_0_canDeq__2833_AN_ETC___d13798,
        SEXT_coreFix_fpuMulDivExe_0_fpuExec_double_div_ETC___d6040,
        SEXT_coreFix_fpuMulDivExe_0_fpuExec_double_div_ETC___d6041,
        SEXT_coreFix_fpuMulDivExe_0_fpuExec_double_fma_ETC___d4648,
@@ -5916,11 +5914,11 @@ module mkCore(CLK,
        _0_CONCAT_IF_coreFix_fpuMulDivExe_0_regToExeQ_f_ETC___d9053,
        _0_CONCAT_IF_coreFix_fpuMulDivExe_0_regToExeQ_f_ETC___d9416,
        _0_CONCAT_IF_coreFix_fpuMulDivExe_0_regToExeQ_f_ETC___d9763,
-       _0_OR_NOT_fetchStage_pipelines_0_first__2835_BI_ETC___d13894,
-       _0_OR_NOT_fetchStage_pipelines_1_first__2844_BI_ETC___d13979,
-       _0_OR_fetchStage_RDY_pipelines_0_first__2832_38_ETC___d13802,
-       _0b0_CONCAT_csrf_medeleg_15_reg_read__1793_1794_ETC___d14513,
-       _0b0_CONCAT_csrf_mideleg_11_reg_read__1801_1802_ETC___d14495,
+       _0_OR_NOT_fetchStage_pipelines_0_first__2835_BI_ETC___d13915,
+       _0_OR_NOT_fetchStage_pipelines_1_first__2844_BI_ETC___d14000,
+       _0_OR_fetchStage_RDY_pipelines_0_first__2832_38_ETC___d13823,
+       _0b0_CONCAT_csrf_medeleg_15_reg_read__1793_1794_ETC___d14534,
+       _0b0_CONCAT_csrf_mideleg_11_reg_read__1801_1802_ETC___d14516,
        _3074_MINUS_0_CONCAT_IF_coreFix_fpuMulDivExe_0__ETC___d4108,
        _3074_MINUS_0_CONCAT_IF_coreFix_fpuMulDivExe_0__ETC___d4109,
        _3074_MINUS_0_CONCAT_IF_coreFix_fpuMulDivExe_0__ETC___d5280,
@@ -5945,7 +5943,7 @@ module mkCore(CLK,
        _dfoo12,
        _dfoo18,
        _dfoo2,
-       _dfoo22,
+       _dfoo20,
        _dfoo28,
        _dfoo7,
        _dor1coreFix_aluExe_0_bypassWire_2$EN_wset,
@@ -5977,8 +5975,6 @@ module mkCore(CLK,
        _theResult_____2__h321738,
        _theResult_____2__h332082,
        _theResult_____2__h335307,
-       checkForException_3069_BIT_4_3070_OR_csrf_fs_r_ETC___d13509,
-       checkForException_3686_BIT_4_3687_OR_csrf_fs_r_ETC___d13767,
        coreFix_aluExe_0_bypassWire_0_wget__2302_BITS__ETC___d12304,
        coreFix_aluExe_0_bypassWire_0_wget__2302_BITS__ETC___d12345,
        coreFix_aluExe_0_bypassWire_1_wget__2315_BITS__ETC___d12317,
@@ -5989,7 +5985,7 @@ module mkCore(CLK,
        coreFix_aluExe_0_bypassWire_3_wget__2330_BITS__ETC___d12359,
        coreFix_aluExe_0_dispToRegQ_RDY_first__2279_AN_ETC___d12370,
        coreFix_aluExe_0_exeToFinQ_RDY_first__2719_AND_ETC___d12758,
-       coreFix_aluExe_0_rsAlu_approximateCount__3451__ETC___d13453,
+       coreFix_aluExe_0_rsAlu_approximateCount__3462__ETC___d13464,
        coreFix_aluExe_1_bypassWire_0_wget__1479_BITS__ETC___d11481,
        coreFix_aluExe_1_bypassWire_0_wget__1479_BITS__ETC___d11522,
        coreFix_aluExe_1_bypassWire_1_wget__1492_BITS__ETC___d11494,
@@ -6023,7 +6019,7 @@ module mkCore(CLK,
        coreFix_fpuMulDivExe_0_regToExeQ_first__482_BI_ETC___d11028,
        coreFix_fpuMulDivExe_0_regToExeQ_first__482_BI_ETC___d11070,
        coreFix_fpuMulDivExe_0_regToExeQ_first__482_BI_ETC___d11112,
-       coreFix_fpuMulDivExe_0_rsFpuMulDiv_RDY_enq__38_ETC___d13986,
+       coreFix_fpuMulDivExe_0_rsFpuMulDiv_RDY_enq__39_ETC___d14007,
        coreFix_memExe_bypassWire_0_wget__585_BITS_70__ETC___d1587,
        coreFix_memExe_bypassWire_0_wget__585_BITS_70__ETC___d1627,
        coreFix_memExe_bypassWire_1_wget__598_BITS_70__ETC___d1600,
@@ -6095,57 +6091,56 @@ module mkCore(CLK,
        coreFix_memExe_reqLrScAmoQ_data_0_dummy2_1_rea_ETC___d1271,
        coreFix_memExe_reqLrScAmoQ_data_0_dummy2_1_rea_ETC___d1275,
        coreFix_memExe_respLrScAmoQ_enqReq_dummy2_2_re_ETC___d3670,
-       coreFix_memExe_stb_isEmpty__011_AND_coreFix_me_ETC___d14652,
+       coreFix_memExe_stb_isEmpty__011_AND_coreFix_me_ETC___d14673,
        csrf_fs_reg_read__1686_EQ_0_3058_AND_fetchStag_ETC___d13104,
-       csrf_prv_reg_read__2863_ULE_1_4475_AND_IF_comm_ETC___d14515,
-       csrf_prv_reg_read__2863_ULE_1___d14475,
+       csrf_fs_reg_read__1686_EQ_0_3058_AND_fetchStag_ETC___d13520,
+       csrf_fs_reg_read__1686_EQ_0_3058_AND_fetchStag_ETC___d13787,
+       csrf_prv_reg_read__2863_ULE_1_4496_AND_IF_comm_ETC___d14536,
+       csrf_prv_reg_read__2863_ULE_1___d14496,
        csrf_prv_reg_read__2863_ULT_IF_fetchStage_pipe_ETC___d13101,
-       fetchStage_RDY_pipelines_0_first__2832_AND_NOT_ETC___d13440,
-       fetchStage_RDY_pipelines_0_first__2832_AND_epo_ETC___d13320,
-       fetchStage_RDY_pipelines_0_first__2832_AND_fet_ETC___d13506,
-       fetchStage_pipelines_0_canDeq__2833_AND_NOT_fe_ETC___d14056,
-       fetchStage_pipelines_0_canDeq__2833_AND_NOT_fe_ETC___d14174,
-       fetchStage_pipelines_0_canDeq__2833_AND_fetchS_ETC___d14045,
-       fetchStage_pipelines_0_canDeq__2833_AND_regRen_ETC___d13983,
-       fetchStage_pipelines_0_canDeq__2833_AND_regRen_ETC___d13989,
-       fetchStage_pipelines_0_canDeq__2833_AND_regRen_ETC___d13990,
+       fetchStage_RDY_pipelines_0_first__2832_AND_NOT_ETC___d13451,
+       fetchStage_RDY_pipelines_0_first__2832_AND_epo_ETC___d13325,
+       fetchStage_RDY_pipelines_0_first__2832_AND_fet_ETC___d13517,
+       fetchStage_pipelines_0_canDeq__2833_AND_NOT_fe_ETC___d13998,
+       fetchStage_pipelines_0_canDeq__2833_AND_NOT_fe_ETC___d14077,
+       fetchStage_pipelines_0_canDeq__2833_AND_NOT_fe_ETC___d14195,
+       fetchStage_pipelines_0_canDeq__2833_AND_fetchS_ETC___d14066,
+       fetchStage_pipelines_0_canDeq__2833_AND_regRen_ETC___d14004,
        fetchStage_pipelines_0_canDeq__2833_AND_regRen_ETC___d14011,
-       fetchStage_pipelines_0_canDeq__2833_AND_regRen_ETC___d14310,
-       fetchStage_pipelines_0_canDeq__2833_AND_specTa_ETC___d14139,
+       fetchStage_pipelines_0_canDeq__2833_AND_regRen_ETC___d14032,
+       fetchStage_pipelines_0_canDeq__2833_AND_regRen_ETC___d14043,
+       fetchStage_pipelines_0_canDeq__2833_AND_regRen_ETC___d14331,
+       fetchStage_pipelines_0_canDeq__2833_AND_specTa_ETC___d14160,
        fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13099,
-       fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13724,
-       fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13745,
-       fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13814,
-       fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13922,
-       fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13928,
-       fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13950,
-       fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13957,
-       fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d14004,
-       fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d14015,
-       fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d14169,
-       fetchStage_pipelines_0_first__2835_BITS_199_TO_ETC___d13514,
-       fetchStage_pipelines_0_first__2835_BITS_199_TO_ETC___d13738,
-       fetchStage_pipelines_0_first__2835_BIT_68_2862_ETC___d13736,
-       fetchStage_pipelines_1_first__2844_BITS_194_TO_ETC___d13939,
-       fetchStage_pipelines_1_first__2844_BITS_199_TO_ETC___d13774,
-       fetchStage_pipelines_1_first__2844_BITS_199_TO_ETC___d13944,
-       fetchStage_pipelines_1_first__2844_BIT_68_3563_ETC___d13769,
+       fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13742,
+       fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13763,
+       fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13835,
+       fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13943,
+       fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13949,
+       fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13971,
+       fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13978,
+       fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d14190,
+       fetchStage_pipelines_0_first__2835_BITS_199_TO_ETC___d13756,
+       fetchStage_pipelines_0_first__2835_BIT_68_2862_ETC___d13525,
+       fetchStage_pipelines_1_first__2844_BITS_194_TO_ETC___d13960,
+       fetchStage_pipelines_1_first__2844_BITS_199_TO_ETC___d13795,
+       fetchStage_pipelines_1_first__2844_BIT_68_3575_ETC___d13964,
        guard__h367699,
        guard__h413389,
        guard__h459077,
        guard__h507508,
        guard__h546309,
        guard__h585510,
-       idx__h686610,
-       k__h671298,
+       idx__h686697,
+       k__h671356,
        mmio_cRqQ_enqReq_dummy2_2_read__32_AND_IF_mmio_ETC___d444,
        mmio_cRsQ_enqReq_dummy2_2_read__24_AND_IF_mmio_ETC___d836,
        mmio_dataPendQ_enqReq_dummy2_2_read__00_AND_IF_ETC___d312,
        mmio_dataReqQ_enqReq_dummy2_2_read__41_AND_IF__ETC___d153,
        mmio_dataRespQ_enqReq_dummy2_2_read__42_AND_IF_ETC___d254,
-       mmio_pRqQ_empty_53_AND_epochManager_checkEpoch_ETC___d13110,
-       mmio_pRqQ_empty_53_AND_epochManager_checkEpoch_ETC___d13367,
-       mmio_pRqQ_empty_53_AND_epochManager_checkEpoch_ETC___d14050,
+       mmio_pRqQ_empty_53_AND_epochManager_checkEpoch_ETC___d13115,
+       mmio_pRqQ_empty_53_AND_epochManager_checkEpoch_ETC___d13377,
+       mmio_pRqQ_empty_53_AND_epochManager_checkEpoch_ETC___d14071,
        mmio_pRqQ_enqReq_dummy2_2_read__35_AND_IF_mmio_ETC___d747,
        mmio_pRsQ_enqReq_dummy2_2_read__94_AND_IF_mmio_ETC___d606,
        msip__h75409,
@@ -6154,29 +6149,31 @@ module mkCore(CLK,
        next_deqP___1__h322304,
        next_deqP___1__h332361,
        next_deqP___1__h335586,
+       r1__read_BIT_20___h659754,
        r__h617262,
-       regRenamingTable_RDY_rename_0_getRename__3311__ETC___d13907,
-       regRenamingTable_RDY_rename_1_getRename__3963__ETC___d13981,
-       regRenamingTable_rename_0_canRename__3418_AND__ETC___d13501,
-       regRenamingTable_rename_0_canRename__3418_AND__ETC___d13785,
-       regRenamingTable_rename_0_canRename__3418_AND__ETC___d13797,
-       regRenamingTable_rename_0_canRename__3418_AND__ETC___d13936,
-       regRenamingTable_rename_0_canRename__3418_AND__ETC___d14068,
-       regRenamingTable_rename_0_canRename__3418_AND__ETC___d14081,
-       regRenamingTable_rename_0_canRename__3418_AND__ETC___d14086,
-       regRenamingTable_rename_0_canRename__3418_AND__ETC___d14091,
-       regRenamingTable_rename_0_canRename__3418_AND__ETC___d14111,
-       regRenamingTable_rename_0_canRename__3418_AND__ETC___d14115,
-       regRenamingTable_rename_0_canRename__3418_AND__ETC___d14121,
-       regRenamingTable_rename_0_canRename__3418_AND__ETC___d14125,
-       regRenamingTable_rename_0_canRename__3418_AND__ETC___d14133,
-       regRenamingTable_rename_0_canRename__3418_AND__ETC___d14308,
-       regRenamingTable_rename_1_canRename__3535_AND__ETC___d14231,
-       regRenamingTable_rename_1_canRename__3535_AND__ETC___d14246,
-       regRenamingTable_rename_1_canRename__3535_AND__ETC___d14271,
-       regRenamingTable_rename_1_canRename__3535_AND__ETC___d14275,
-       regRenamingTable_rename_1_canRename__3535_AND__ETC___d14281,
-       rob_RDY_enqPort_1_enq__4027_AND_NOT_fetchStage_ETC___d14035,
+       regRenamingTable_RDY_rename_0_getRename__3316__ETC___d13928,
+       regRenamingTable_RDY_rename_1_getRename__3984__ETC___d14002,
+       regRenamingTable_rename_0_canRename__3428_AND__ETC___d13498,
+       regRenamingTable_rename_0_canRename__3428_AND__ETC___d13512,
+       regRenamingTable_rename_0_canRename__3428_AND__ETC___d13818,
+       regRenamingTable_rename_0_canRename__3428_AND__ETC___d13957,
+       regRenamingTable_rename_0_canRename__3428_AND__ETC___d14089,
+       regRenamingTable_rename_0_canRename__3428_AND__ETC___d14102,
+       regRenamingTable_rename_0_canRename__3428_AND__ETC___d14107,
+       regRenamingTable_rename_0_canRename__3428_AND__ETC___d14112,
+       regRenamingTable_rename_0_canRename__3428_AND__ETC___d14132,
+       regRenamingTable_rename_0_canRename__3428_AND__ETC___d14136,
+       regRenamingTable_rename_0_canRename__3428_AND__ETC___d14142,
+       regRenamingTable_rename_0_canRename__3428_AND__ETC___d14146,
+       regRenamingTable_rename_0_canRename__3428_AND__ETC___d14154,
+       regRenamingTable_rename_0_canRename__3428_AND__ETC___d14329,
+       regRenamingTable_rename_1_canRename__3547_AND__ETC___d14208,
+       regRenamingTable_rename_1_canRename__3547_AND__ETC___d14292,
+       regRenamingTable_rename_1_canRename__3547_AND__ETC___d14302,
+       rob_RDY_enqPort_1_enq__4048_AND_NOT_fetchStage_ETC___d14056,
+       rob_enqPort_1_canEnq__3727_AND_epochManager_ch_ETC___d13732,
+       rob_enqPort_1_canEnq__3727_AND_epochManager_ch_ETC___d13866,
+       rob_enqPort_1_canEnq__3727_AND_epochManager_ch_ETC___d13883,
        v__h302659,
        v__h303177,
        v__h313173,
@@ -6228,7 +6225,7 @@ module mkCore(CLK,
 	     { CASE_coreFix_memExe_dMem_cache_m_banks_0_rsToP_ETC__q247,
 	       CASE_coreFix_memExe_dMem_cache_m_banks_0_rsToP_ETC__q248,
 	       !CASE_coreFix_memExe_dMem_cache_m_banks_0_rsToP_ETC__q249,
-	       SEL_ARR_coreFix_memExe_dMem_cache_m_banks_0_rs_ETC___d15164 } ;
+	       SEL_ARR_coreFix_memExe_dMem_cache_m_banks_0_rs_ETC___d15185 } ;
   assign RDY_dCacheToParent_rsToP_first =
 	     !coreFix_memExe_dMem_cache_m_banks_0_rsToPQ_empty ;
 
@@ -6248,7 +6245,7 @@ module mkCore(CLK,
   assign dCacheToParent_rqToP_first =
 	     { CASE_coreFix_memExe_dMem_cache_m_banks_0_rqToP_ETC__q256,
 	       CASE_coreFix_memExe_dMem_cache_m_banks_0_rqToP_ETC__q257,
-	       SEL_ARR_coreFix_memExe_dMem_cache_m_banks_0_rq_ETC___d15190 } ;
+	       SEL_ARR_coreFix_memExe_dMem_cache_m_banks_0_rq_ETC___d15211 } ;
   assign RDY_dCacheToParent_rqToP_first =
 	     !coreFix_memExe_dMem_cache_m_banks_0_rqToPQ_empty ;
 
@@ -9628,7 +9625,7 @@ module mkCore(CLK,
 
   // rule RL_commitStage_doCommitSystemInst
   assign CAN_FIRE_RL_commitStage_doCommitSystemInst =
-	     coreFix_memExe_stb_isEmpty__011_AND_coreFix_me_ETC___d14652 &&
+	     coreFix_memExe_stb_isEmpty__011_AND_coreFix_me_ETC___d14673 &&
 	     !commitStage_commitTrap[133] &&
 	     !rob$deqPort_0_deq_data[167] &&
 	     !rob$deqPort_0_deq_data[18] &&
@@ -9673,7 +9670,7 @@ module mkCore(CLK,
   // rule RL_commitStage_doCommitNormalInst
   assign CAN_FIRE_RL_commitStage_doCommitNormalInst =
 	     rob$RDY_deqPort_0_deq_data &&
-	     NOT_rob_deqPort_0_canDeq__4852_4853_OR_regRena_ETC___d14891 &&
+	     NOT_rob_deqPort_0_canDeq__4873_4874_OR_regRena_ETC___d14912 &&
 	     !commitStage_commitTrap[133] &&
 	     !rob$deqPort_0_deq_data[167] &&
 	     !rob$deqPort_0_deq_data[18] &&
@@ -10592,7 +10589,7 @@ module mkCore(CLK,
 	     fetchStage$RDY_pipelines_0_first &&
 	     epochManager$RDY_incrementEpoch &&
 	     rob$RDY_enqPort_0_enq &&
-	     mmio_pRqQ_empty_53_AND_epochManager_checkEpoch_ETC___d13110 ;
+	     mmio_pRqQ_empty_53_AND_epochManager_checkEpoch_ETC___d13115 ;
   assign WILL_FIRE_RL_renameStage_doRenaming_Trap =
 	     CAN_FIRE_RL_renameStage_doRenaming_Trap &&
 	     !WILL_FIRE_RL_coreFix_aluExe_0_doFinishAlu_T &&
@@ -10601,8 +10598,8 @@ module mkCore(CLK,
   // rule RL_renameStage_doRenaming_SystemInst
   assign CAN_FIRE_RL_renameStage_doRenaming_SystemInst =
 	     fetchStage$RDY_pipelines_0_deq &&
-	     fetchStage_RDY_pipelines_0_first__2832_AND_epo_ETC___d13320 &&
-	     mmio_pRqQ_empty_53_AND_epochManager_checkEpoch_ETC___d13367 &&
+	     fetchStage_RDY_pipelines_0_first__2832_AND_epo_ETC___d13325 &&
+	     mmio_pRqQ_empty_53_AND_epochManager_checkEpoch_ETC___d13377 &&
 	     rob$isEmpty ;
   assign WILL_FIRE_RL_renameStage_doRenaming_SystemInst =
 	     CAN_FIRE_RL_renameStage_doRenaming_SystemInst &&
@@ -10643,11 +10640,11 @@ module mkCore(CLK,
   // rule RL_renameStage_doRenaming
   assign CAN_FIRE_RL_renameStage_doRenaming =
 	     (!fetchStage$pipelines_0_canDeq ||
-	      IF_fetchStage_RDY_pipelines_0_first__2832_AND__ETC___d13444) &&
-	     IF_NOT_fetchStage_pipelines_0_canDeq__2833_283_ETC___d13875 &&
-	     IF_NOT_fetchStage_pipelines_0_canDeq__2833_283_ETC___d13883 &&
-	     NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14047 &&
-	     mmio_pRqQ_empty_53_AND_epochManager_checkEpoch_ETC___d14050 ;
+	      IF_fetchStage_RDY_pipelines_0_first__2832_AND__ETC___d13455) &&
+	     IF_NOT_fetchStage_pipelines_0_canDeq__2833_283_ETC___d13896 &&
+	     IF_NOT_fetchStage_pipelines_0_canDeq__2833_283_ETC___d13904 &&
+	     NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14068 &&
+	     mmio_pRqQ_empty_53_AND_epochManager_checkEpoch_ETC___d14071 ;
   assign WILL_FIRE_RL_renameStage_doRenaming =
 	     CAN_FIRE_RL_renameStage_doRenaming &&
 	     !WILL_FIRE_RL_coreFix_aluExe_0_doFinishAlu_T &&
@@ -10881,41 +10878,41 @@ module mkCore(CLK,
   assign MUX_csrf_debug_int_pend$write_1__SEL_1 =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd29 ;
   assign MUX_csrf_external_int_pend_vec_1$write_1__SEL_1 =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     (IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     (IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	      6'd16 ||
-	      IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	      IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	      6'd29) ;
   assign MUX_csrf_fflags_reg$write_1__SEL_1 =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     (IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     (IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	      6'd0 ||
-	      IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	      IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	      6'd2) ;
   assign MUX_csrf_fs_reg$write_1__SEL_1 =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     (IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     (IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	      6'd0 ||
-	      IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	      IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	      6'd1 ||
-	      IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	      IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	      6'd2 ||
-	      IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	      IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	      6'd8 ||
-	      IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	      IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	      6'd18) ;
   assign MUX_csrf_ie_vec_1$write_1__SEL_1 =
 	     WILL_FIRE_RL_commitStage_doCommitTrap_handle &&
-	     csrf_prv_reg_read__2863_ULE_1_4475_AND_IF_comm_ETC___d14515 ;
+	     csrf_prv_reg_read__2863_ULE_1_4496_AND_IF_comm_ETC___d14536 ;
   assign MUX_csrf_ie_vec_3$write_1__SEL_1 =
 	     WILL_FIRE_RL_commitStage_doCommitTrap_handle &&
-	     NOT_csrf_prv_reg_read__2863_ULE_1_4475_4539_OR_ETC___d14543 ;
+	     NOT_csrf_prv_reg_read__2863_ULE_1_4496_4560_OR_ETC___d14564 ;
   assign MUX_csrf_prv_reg$write_1__SEL_1 =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     (rob$deqPort_0_deq_data[186:182] == 5'd19 ||
@@ -10923,13 +10920,13 @@ module mkCore(CLK,
   assign MUX_epochManager$updatePrevEpoch_0_update_1__SEL_2 =
 	     WILL_FIRE_RL_renameStage_doRenaming &&
 	     fetchStage$pipelines_0_canDeq &&
-	     NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d14053 &&
-	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13497 ;
+	     NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d14074 &&
+	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13508 ;
   assign MUX_epochManager$updatePrevEpoch_1_update_1__SEL_2 =
 	     WILL_FIRE_RL_renameStage_doRenaming &&
-	     NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14178 &&
-	     NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d14188 &&
-	     IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d13869 ;
+	     NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14199 &&
+	     NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d14209 &&
+	     IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d13890 ;
   assign MUX_flush_reservation$write_1__SEL_1 =
 	     WILL_FIRE_RL_prepareCachesAndTlbs && flush_reservation ;
   assign MUX_flush_tlbs$write_1__SEL_1 =
@@ -10976,7 +10973,7 @@ module mkCore(CLK,
   assign MUX_commitStage_commitTrap$write_1__VAL_2 =
 	     { 1'd1,
 	       rob$deqPort_0_deq_data[282:219],
-	       x__h700760,
+	       x__h700850,
 	       rob$deqPort_0_deq_data[166],
 	       rob$deqPort_0_deq_data[166] ?
 		 CASE_robdeqPort_0_deq_data_BITS_165_TO_162_0__ETC__q260 :
@@ -10984,7 +10981,7 @@ module mkCore(CLK,
   assign MUX_commitStage_rg_instret$write_1__VAL_1 =
 	     commitStage_rg_instret + 64'd1 ;
   assign MUX_commitStage_rg_instret$write_1__VAL_2 =
-	     commitStage_rg_instret + y__h719083 ;
+	     commitStage_rg_instret + y__h719173 ;
   assign MUX_coreFix_aluExe_0_rsAlu$enq_1__VAL_1 =
 	     { fetchStage$pipelines_0_first[199:195],
 	       IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d12961,
@@ -10998,8 +10995,8 @@ module mkCore(CLK,
 	       5'd10,
 	       sbAggr$eagerLookup_0_get } ;
   assign MUX_coreFix_aluExe_0_rsAlu$enq_1__VAL_2 =
-	     (k__h671298 == 1'd0 &&
-	      fetchStage_pipelines_0_canDeq__2833_AND_NOT_fe_ETC___d14056) ?
+	     (k__h671356 == 1'd0 &&
+	      fetchStage_pipelines_0_canDeq__2833_AND_NOT_fe_ETC___d14077) ?
 	       { fetchStage$pipelines_0_first[199:195],
 		 IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d12961,
 		 fetchStage$pipelines_0_first[173],
@@ -11013,13 +11010,13 @@ module mkCore(CLK,
 		 specTagManager$nextSpecTag,
 		 sbAggr$eagerLookup_0_get } :
 	       { fetchStage$pipelines_1_first[199:195],
-		 IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d13589,
-		 fetchStage_pipelines_1_first__2844_BIT_173_359_ETC___d13665,
+		 IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d13601,
+		 fetchStage_pipelines_1_first__2844_BIT_173_360_ETC___d13677,
 		 fetchStage$pipelines_1_first[160:128],
 		 fetchStage$pipelines_1_first[255:232],
 		 regRenamingTable$rename_1_getRename,
 		 rob$enqPort_1_getEnqInstTag,
-		 renaming_spec_bits__h686479,
+		 renaming_spec_bits__h686566,
 		 fetchStage$pipelines_1_first[194:192] == 3'd1,
 		 specTagManager$nextSpecTag,
 		 sbAggr$eagerLookup_1_get } ;
@@ -11322,11 +11319,11 @@ module mkCore(CLK,
 	     MUX_csrInstOrInterruptInflight_dummy2_0$write_1__SEL_1 ||
 	     MUX_csrInstOrInterruptInflight_dummy2_0$write_1__SEL_2 ;
   assign MUX_csrf_fflags_reg$write_1__VAL_2 =
-	     csrf_fflags_reg | fflags__h719060 ;
-  always@(IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 or
+	     csrf_fflags_reg | fflags__h719150 ;
+  always@(IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 or
 	  robdeqPort_0_deq_data_BITS_95_TO_32__q262)
   begin
-    case (IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637)
+    case (IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658)
       6'd0, 6'd1, 6'd2: MUX_csrf_fs_reg$write_1__VAL_1 = 2'b11;
       default: MUX_csrf_fs_reg$write_1__VAL_1 =
 		   robdeqPort_0_deq_data_BITS_95_TO_32__q262[14:13];
@@ -11334,50 +11331,50 @@ module mkCore(CLK,
   end
   assign MUX_csrf_ie_vec_1$write_1__VAL_2 =
 	     (rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	      (IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	      (IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	       6'd8 ||
-	       IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	       IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	       6'd18)) ?
 	       robdeqPort_0_deq_data_BITS_95_TO_32__q262[1] :
 	       csrf_prev_ie_vec_1 ;
   assign MUX_csrf_ie_vec_3$write_1__VAL_2 =
 	     (rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	      IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	      IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	      6'd18) ?
 	       robdeqPort_0_deq_data_BITS_95_TO_32__q262[3] :
 	       csrf_prev_ie_vec_3 ;
   assign MUX_csrf_mepc_csr$write_1__VAL_2 = rob$deqPort_0_deq_data[95:32] ;
   assign MUX_csrf_minstret_ehr_data_lat_1$wset_1__VAL_1 =
-	     n__read__h715911 + 64'd1 ;
+	     n__read__h716001 + 64'd1 ;
   assign MUX_csrf_minstret_ehr_data_lat_1$wset_1__VAL_2 =
-	     n__read__h715911 + { 62'd0, x__h719307 } ;
+	     n__read__h716001 + { 62'd0, x__h719397 } ;
   assign MUX_csrf_mpp_reg$write_1__VAL_2 =
 	     (rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	      IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	      IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	      6'd18) ?
 	       MUX_csrf_mepc_csr$write_1__VAL_2[12:11] :
 	       2'd0 ;
   assign MUX_csrf_mtval_csr$write_1__VAL_1 =
-	     commitStage_commitTrap[4] ? 64'd0 : trap_val__h705462 ;
+	     commitStage_commitTrap[4] ? 64'd0 : trap_val__h705552 ;
   assign MUX_csrf_mtval_csr$write_1__VAL_2 = rob$deqPort_0_deq_data[95:32] ;
   assign MUX_csrf_prev_ie_vec_1$write_1__VAL_2 =
 	     rob$deqPort_0_deq_data[186:182] != 5'd13 ||
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 !=
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 !=
 	     6'd8 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 !=
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 !=
 	     6'd18 ||
 	     MUX_csrf_mtval_csr$write_1__VAL_2[5] ;
   assign MUX_csrf_prev_ie_vec_3$write_1__VAL_2 =
 	     rob$deqPort_0_deq_data[186:182] != 5'd13 ||
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 !=
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 !=
 	     6'd18 ||
 	     MUX_csrf_mtval_csr$write_1__VAL_2[7] ;
   assign MUX_csrf_prv_reg$write_1__VAL_1 =
 	     (rob$deqPort_0_deq_data[186:182] == 5'd19) ?
-	       x__h715321 :
+	       x__h715411 :
 	       csrf_mpp_reg ;
   assign MUX_csrf_prv_reg$write_1__VAL_2 =
-	     csrf_prv_reg_read__2863_ULE_1_4475_AND_IF_comm_ETC___d14515 ?
+	     csrf_prv_reg_read__2863_ULE_1_4496_AND_IF_comm_ETC___d14536 ?
 	       2'd1 :
 	       2'd3 ;
   assign MUX_csrf_sepc_csr$write_1__VAL_2 = rob$deqPort_0_deq_data[95:32] ;
@@ -11387,22 +11384,22 @@ module mkCore(CLK,
 	       amoExec___d882[0] ;
   assign MUX_csrf_spp_reg$write_1__VAL_2 =
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     (IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     (IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	      6'd8 ||
-	      IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	      IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	      6'd18) &&
 	     MUX_csrf_sepc_csr$write_1__VAL_2[8] ;
   assign MUX_fetchStage$redirect_1__VAL_4 =
-	     csrf_prv_reg_read__2863_ULE_1_4475_AND_IF_comm_ETC___d14515 ?
-	       y_avValue__h705309 :
-	       y_avValue__h707070 ;
+	     csrf_prv_reg_read__2863_ULE_1_4496_AND_IF_comm_ETC___d14536 ?
+	       y_avValue__h705399 :
+	       y_avValue__h707160 ;
   always@(rob$deqPort_0_deq_data or
-	  next_pc__h715152 or csrf_sepc_csr or csrf_mepc_csr)
+	  next_pc__h715242 or csrf_sepc_csr or csrf_mepc_csr)
   begin
     case (rob$deqPort_0_deq_data[186:182])
       5'd19: MUX_fetchStage$redirect_1__VAL_5 = csrf_sepc_csr;
       5'd20: MUX_fetchStage$redirect_1__VAL_5 = csrf_mepc_csr;
-      default: MUX_fetchStage$redirect_1__VAL_5 = next_pc__h715152;
+      default: MUX_fetchStage$redirect_1__VAL_5 = next_pc__h715242;
     endcase
   end
   assign MUX_l2Tlb$toChildren_rqFromC_put_1__VAL_1 =
@@ -11479,7 +11476,7 @@ module mkCore(CLK,
 	       fetchStage$pipelines_0_first[194:192] != 3'd2 &&
 	       fetchStage$pipelines_0_first[194:192] != 3'd3 &&
 	       fetchStage$pipelines_0_first[194:192] != 3'd4,
-	       NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d14153 } ;
+	       NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d14174 } ;
   assign MUX_rob$enqPort_0_enq_1__VAL_2 =
 	     { fetchStage$pipelines_0_first[387:324],
 	       fetchStage$pipelines_0_first[127:96],
@@ -11503,7 +11500,7 @@ module mkCore(CLK,
 		IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[12] ||
 		IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[13] ||
 		IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[14]),
-	       IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13299,
+	       IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13304,
 	       fetchStage$pipelines_0_first[63:0],
 	       2'd0,
 	       fetchStage$pipelines_0_first[323:260],
@@ -11546,7 +11543,7 @@ module mkCore(CLK,
   assign csrf_minstret_ehr_data_lat_0$whas =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd31 ;
   assign csrf_minstret_ehr_data_lat_1$whas =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst ||
@@ -11558,7 +11555,7 @@ module mkCore(CLK,
   assign csrf_mcycle_ehr_data_lat_0$whas =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd30 ;
   assign csrInstOrInterruptInflight_lat_1$whas =
 	     WILL_FIRE_RL_renameStage_doRenaming_SystemInst &&
@@ -12610,7 +12607,7 @@ module mkCore(CLK,
   assign csrf_debug_int_pend$EN =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd29 ||
 	     EN_setDEIP ;
 
@@ -12620,9 +12617,9 @@ module mkCore(CLK,
   assign csrf_external_int_en_vec_0$EN =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     (IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     (IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	      6'd9 ||
-	      IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	      IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	      6'd22) ;
 
   // register csrf_external_int_en_vec_1
@@ -12631,9 +12628,9 @@ module mkCore(CLK,
   assign csrf_external_int_en_vec_1$EN =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     (IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     (IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	      6'd9 ||
-	      IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	      IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	      6'd22) ;
 
   // register csrf_external_int_en_vec_3
@@ -12642,7 +12639,7 @@ module mkCore(CLK,
   assign csrf_external_int_en_vec_3$EN =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd22 ;
 
   // register csrf_external_int_pend_vec_0
@@ -12667,7 +12664,7 @@ module mkCore(CLK,
   assign csrf_external_int_pend_vec_3$EN =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd29 ||
 	     EN_setMEIP ;
 
@@ -12679,25 +12676,25 @@ module mkCore(CLK,
   assign csrf_fflags_reg$EN =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     (IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     (IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	      6'd0 ||
-	      IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	      IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	      6'd2) ||
 	     WILL_FIRE_RL_commitStage_doCommitNormalInst &&
-	     NOT_IF_NOT_rob_deqPort_0_canDeq__4852_4853_OR__ETC___d15068 ;
+	     NOT_IF_NOT_rob_deqPort_0_canDeq__4873_4874_OR__ETC___d15089 ;
 
   // register csrf_frm_reg
   assign csrf_frm_reg$D_IN =
-	     (IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     (IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	      6'd1) ?
 	       csrf_mcycle_ehr_data_lat_0$wget[2:0] :
 	       csrf_mcycle_ehr_data_lat_0$wget[7:5] ;
   assign csrf_frm_reg$EN =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     (IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     (IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	      6'd1 ||
-	      IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	      IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	      6'd2) ;
 
   // register csrf_fs_reg
@@ -12708,16 +12705,16 @@ module mkCore(CLK,
   assign csrf_fs_reg$EN =
 	     MUX_csrf_fs_reg$write_1__SEL_1 ||
 	     WILL_FIRE_RL_commitStage_doCommitNormalInst &&
-	     NOT_IF_NOT_rob_deqPort_0_canDeq__4852_4853_OR__ETC___d15068 ;
+	     NOT_IF_NOT_rob_deqPort_0_canDeq__4873_4874_OR__ETC___d15089 ;
 
   // register csrf_ie_vec_0
   assign csrf_ie_vec_0$D_IN = csrf_mcycle_ehr_data_lat_0$wget[0] ;
   assign csrf_ie_vec_0$EN =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     (IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     (IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	      6'd8 ||
-	      IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	      IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	      6'd18) ;
 
   // register csrf_ie_vec_1
@@ -12726,7 +12723,7 @@ module mkCore(CLK,
 	     MUX_csrf_ie_vec_1$write_1__VAL_2 ;
   assign csrf_ie_vec_1$EN =
 	     WILL_FIRE_RL_commitStage_doCommitTrap_handle &&
-	     csrf_prv_reg_read__2863_ULE_1_4475_AND_IF_comm_ETC___d14515 ||
+	     csrf_prv_reg_read__2863_ULE_1_4496_AND_IF_comm_ETC___d14536 ||
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst && _dfoo28 ;
 
   // register csrf_ie_vec_3
@@ -12735,20 +12732,20 @@ module mkCore(CLK,
 	     MUX_csrf_ie_vec_3$write_1__VAL_2 ;
   assign csrf_ie_vec_3$EN =
 	     WILL_FIRE_RL_commitStage_doCommitTrap_handle &&
-	     NOT_csrf_prv_reg_read__2863_ULE_1_4475_4539_OR_ETC___d14543 ||
-	     WILL_FIRE_RL_commitStage_doCommitSystemInst && _dfoo22 ;
+	     NOT_csrf_prv_reg_read__2863_ULE_1_4496_4560_OR_ETC___d14564 ||
+	     WILL_FIRE_RL_commitStage_doCommitSystemInst && _dfoo20 ;
 
   // register csrf_mcause_code_reg
   assign csrf_mcause_code_reg$D_IN =
 	     MUX_csrf_ie_vec_3$write_1__SEL_1 ?
-	       cause_code__h704431 :
+	       cause_code__h704521 :
 	       csrf_mcycle_ehr_data_lat_0$wget[3:0] ;
   assign csrf_mcause_code_reg$EN =
 	     WILL_FIRE_RL_commitStage_doCommitTrap_handle &&
-	     NOT_csrf_prv_reg_read__2863_ULE_1_4475_4539_OR_ETC___d14543 ||
+	     NOT_csrf_prv_reg_read__2863_ULE_1_4496_4560_OR_ETC___d14564 ||
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd27 ;
 
   // register csrf_mcause_interrupt_reg
@@ -12758,10 +12755,10 @@ module mkCore(CLK,
 	       csrf_mcycle_ehr_data_lat_0$wget[63] ;
   assign csrf_mcause_interrupt_reg$EN =
 	     WILL_FIRE_RL_commitStage_doCommitTrap_handle &&
-	     NOT_csrf_prv_reg_read__2863_ULE_1_4475_4539_OR_ETC___d14543 ||
+	     NOT_csrf_prv_reg_read__2863_ULE_1_4496_4560_OR_ETC___d14564 ||
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd27 ;
 
   // register csrf_mcounteren_cy_reg
@@ -12769,7 +12766,7 @@ module mkCore(CLK,
   assign csrf_mcounteren_cy_reg$EN =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd24 ;
 
   // register csrf_mcounteren_ir_reg
@@ -12777,7 +12774,7 @@ module mkCore(CLK,
   assign csrf_mcounteren_ir_reg$EN =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd24 ;
 
   // register csrf_mcounteren_tm_reg
@@ -12785,7 +12782,7 @@ module mkCore(CLK,
   assign csrf_mcounteren_tm_reg$EN =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd24 ;
 
   // register csrf_mcycle_ehr_data_rl
@@ -12798,7 +12795,7 @@ module mkCore(CLK,
   assign csrf_medeleg_13_11_reg$EN =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd20 ;
 
   // register csrf_medeleg_15_reg
@@ -12806,7 +12803,7 @@ module mkCore(CLK,
   assign csrf_medeleg_15_reg$EN =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd20 ;
 
   // register csrf_medeleg_9_0_reg
@@ -12814,7 +12811,7 @@ module mkCore(CLK,
   assign csrf_medeleg_9_0_reg$EN =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd20 ;
 
   // register csrf_mepc_csr
@@ -12824,10 +12821,10 @@ module mkCore(CLK,
 	       rob$deqPort_0_deq_data[95:32] ;
   assign csrf_mepc_csr$EN =
 	     WILL_FIRE_RL_commitStage_doCommitTrap_handle &&
-	     NOT_csrf_prv_reg_read__2863_ULE_1_4475_4539_OR_ETC___d14543 ||
+	     NOT_csrf_prv_reg_read__2863_ULE_1_4496_4560_OR_ETC___d14564 ||
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd26 ;
 
   // register csrf_mideleg_11_reg
@@ -12835,7 +12832,7 @@ module mkCore(CLK,
   assign csrf_mideleg_11_reg$EN =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd21 ;
 
   // register csrf_mideleg_1_0_reg
@@ -12843,7 +12840,7 @@ module mkCore(CLK,
   assign csrf_mideleg_1_0_reg$EN =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd21 ;
 
   // register csrf_mideleg_5_3_reg
@@ -12851,7 +12848,7 @@ module mkCore(CLK,
   assign csrf_mideleg_5_3_reg$EN =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd21 ;
 
   // register csrf_mideleg_9_7_reg
@@ -12859,7 +12856,7 @@ module mkCore(CLK,
   assign csrf_mideleg_9_7_reg$EN =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd21 ;
 
   // register csrf_minstret_ehr_data_rl
@@ -12876,15 +12873,15 @@ module mkCore(CLK,
 	       MUX_csrf_mpp_reg$write_1__VAL_2 ;
   assign csrf_mpp_reg$EN =
 	     WILL_FIRE_RL_commitStage_doCommitTrap_handle &&
-	     NOT_csrf_prv_reg_read__2863_ULE_1_4475_4539_OR_ETC___d14543 ||
-	     WILL_FIRE_RL_commitStage_doCommitSystemInst && _dfoo22 ;
+	     NOT_csrf_prv_reg_read__2863_ULE_1_4496_4560_OR_ETC___d14564 ||
+	     WILL_FIRE_RL_commitStage_doCommitSystemInst && _dfoo20 ;
 
   // register csrf_mprv_reg
   assign csrf_mprv_reg$D_IN = csrf_mcycle_ehr_data_lat_0$wget[17] ;
   assign csrf_mprv_reg$EN =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd18 ;
 
   // register csrf_mscratch_csr
@@ -12892,7 +12889,7 @@ module mkCore(CLK,
   assign csrf_mscratch_csr$EN =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd25 ;
 
   // register csrf_mtval_csr
@@ -12902,10 +12899,10 @@ module mkCore(CLK,
 	       rob$deqPort_0_deq_data[95:32] ;
   assign csrf_mtval_csr$EN =
 	     WILL_FIRE_RL_commitStage_doCommitTrap_handle &&
-	     NOT_csrf_prv_reg_read__2863_ULE_1_4475_4539_OR_ETC___d14543 ||
+	     NOT_csrf_prv_reg_read__2863_ULE_1_4496_4560_OR_ETC___d14564 ||
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd28 ;
 
   // register csrf_mtvec_base_hi_reg
@@ -12913,7 +12910,7 @@ module mkCore(CLK,
   assign csrf_mtvec_base_hi_reg$EN =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd23 ;
 
   // register csrf_mtvec_mode_low_reg
@@ -12921,7 +12918,7 @@ module mkCore(CLK,
   assign csrf_mtvec_mode_low_reg$EN =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd23 ;
 
   // register csrf_mxr_reg
@@ -12929,9 +12926,9 @@ module mkCore(CLK,
   assign csrf_mxr_reg$EN =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     (IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     (IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	      6'd8 ||
-	      IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	      IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	      6'd18) ;
 
   // register csrf_ppn_reg
@@ -12939,7 +12936,7 @@ module mkCore(CLK,
   assign csrf_ppn_reg$EN =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd17 ;
 
   // register csrf_prev_ie_vec_0
@@ -12947,9 +12944,9 @@ module mkCore(CLK,
   assign csrf_prev_ie_vec_0$EN =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     (IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     (IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	      6'd8 ||
-	      IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	      IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	      6'd18) ;
 
   // register csrf_prev_ie_vec_1
@@ -12959,7 +12956,7 @@ module mkCore(CLK,
 	       MUX_csrf_prev_ie_vec_1$write_1__VAL_2 ;
   assign csrf_prev_ie_vec_1$EN =
 	     WILL_FIRE_RL_commitStage_doCommitTrap_handle &&
-	     csrf_prv_reg_read__2863_ULE_1_4475_AND_IF_comm_ETC___d14515 ||
+	     csrf_prv_reg_read__2863_ULE_1_4496_AND_IF_comm_ETC___d14536 ||
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst && _dfoo28 ;
 
   // register csrf_prev_ie_vec_3
@@ -12969,8 +12966,8 @@ module mkCore(CLK,
 	       MUX_csrf_prev_ie_vec_3$write_1__VAL_2 ;
   assign csrf_prev_ie_vec_3$EN =
 	     WILL_FIRE_RL_commitStage_doCommitTrap_handle &&
-	     NOT_csrf_prv_reg_read__2863_ULE_1_4475_4539_OR_ETC___d14543 ||
-	     WILL_FIRE_RL_commitStage_doCommitSystemInst && _dfoo22 ;
+	     NOT_csrf_prv_reg_read__2863_ULE_1_4496_4560_OR_ETC___d14564 ||
+	     WILL_FIRE_RL_commitStage_doCommitSystemInst && _dfoo20 ;
 
   // register csrf_prv_reg
   assign csrf_prv_reg$D_IN =
@@ -12986,14 +12983,14 @@ module mkCore(CLK,
   // register csrf_scause_code_reg
   assign csrf_scause_code_reg$D_IN =
 	     MUX_csrf_ie_vec_1$write_1__SEL_1 ?
-	       cause_code__h704431 :
+	       cause_code__h704521 :
 	       csrf_mscratch_csr$D_IN[3:0] ;
   assign csrf_scause_code_reg$EN =
 	     WILL_FIRE_RL_commitStage_doCommitTrap_handle &&
-	     csrf_prv_reg_read__2863_ULE_1_4475_AND_IF_comm_ETC___d14515 ||
+	     csrf_prv_reg_read__2863_ULE_1_4496_AND_IF_comm_ETC___d14536 ||
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd14 ;
 
   // register csrf_scause_interrupt_reg
@@ -13003,10 +13000,10 @@ module mkCore(CLK,
 	       csrf_mscratch_csr$D_IN[63] ;
   assign csrf_scause_interrupt_reg$EN =
 	     WILL_FIRE_RL_commitStage_doCommitTrap_handle &&
-	     csrf_prv_reg_read__2863_ULE_1_4475_AND_IF_comm_ETC___d14515 ||
+	     csrf_prv_reg_read__2863_ULE_1_4496_AND_IF_comm_ETC___d14536 ||
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd14 ;
 
   // register csrf_scounteren_cy_reg
@@ -13014,7 +13011,7 @@ module mkCore(CLK,
   assign csrf_scounteren_cy_reg$EN =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd11 ;
 
   // register csrf_scounteren_ir_reg
@@ -13022,7 +13019,7 @@ module mkCore(CLK,
   assign csrf_scounteren_ir_reg$EN =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd11 ;
 
   // register csrf_scounteren_tm_reg
@@ -13030,7 +13027,7 @@ module mkCore(CLK,
   assign csrf_scounteren_tm_reg$EN =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd11 ;
 
   // register csrf_sepc_csr
@@ -13040,10 +13037,10 @@ module mkCore(CLK,
 	       rob$deqPort_0_deq_data[95:32] ;
   assign csrf_sepc_csr$EN =
 	     WILL_FIRE_RL_commitStage_doCommitTrap_handle &&
-	     csrf_prv_reg_read__2863_ULE_1_4475_AND_IF_comm_ETC___d14515 ||
+	     csrf_prv_reg_read__2863_ULE_1_4496_AND_IF_comm_ETC___d14536 ||
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd13 ;
 
   // register csrf_software_int_en_vec_0
@@ -13051,9 +13048,9 @@ module mkCore(CLK,
   assign csrf_software_int_en_vec_0$EN =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     (IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     (IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	      6'd9 ||
-	      IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	      IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	      6'd22) ;
 
   // register csrf_software_int_en_vec_1
@@ -13061,9 +13058,9 @@ module mkCore(CLK,
   assign csrf_software_int_en_vec_1$EN =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     (IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     (IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	      6'd9 ||
-	      IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	      IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	      6'd22) ;
 
   // register csrf_software_int_en_vec_3
@@ -13071,7 +13068,7 @@ module mkCore(CLK,
   assign csrf_software_int_en_vec_3$EN =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd22 ;
 
   // register csrf_software_int_pend_vec_0
@@ -13095,7 +13092,7 @@ module mkCore(CLK,
 	     mmio_pRqQ_data_0[37:36] != 2'd1 ||
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd29 ;
 
   // register csrf_spp_reg
@@ -13105,7 +13102,7 @@ module mkCore(CLK,
 	       MUX_csrf_spp_reg$write_1__VAL_2 ;
   assign csrf_spp_reg$EN =
 	     WILL_FIRE_RL_commitStage_doCommitTrap_handle &&
-	     csrf_prv_reg_read__2863_ULE_1_4475_AND_IF_comm_ETC___d14515 ||
+	     csrf_prv_reg_read__2863_ULE_1_4496_AND_IF_comm_ETC___d14536 ||
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst && _dfoo28 ;
 
   // register csrf_sscratch_csr
@@ -13113,7 +13110,7 @@ module mkCore(CLK,
   assign csrf_sscratch_csr$EN =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd12 ;
 
   // register csrf_stats_module_doStats
@@ -13127,10 +13124,10 @@ module mkCore(CLK,
 	       rob$deqPort_0_deq_data[95:32] ;
   assign csrf_stval_csr$EN =
 	     WILL_FIRE_RL_commitStage_doCommitTrap_handle &&
-	     csrf_prv_reg_read__2863_ULE_1_4475_AND_IF_comm_ETC___d14515 ||
+	     csrf_prv_reg_read__2863_ULE_1_4496_AND_IF_comm_ETC___d14536 ||
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd15 ;
 
   // register csrf_stvec_base_hi_reg
@@ -13138,7 +13135,7 @@ module mkCore(CLK,
   assign csrf_stvec_base_hi_reg$EN =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd10 ;
 
   // register csrf_stvec_mode_low_reg
@@ -13146,7 +13143,7 @@ module mkCore(CLK,
   assign csrf_stvec_mode_low_reg$EN =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd10 ;
 
   // register csrf_sum_reg
@@ -13154,9 +13151,9 @@ module mkCore(CLK,
   assign csrf_sum_reg$EN =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     (IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     (IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	      6'd8 ||
-	      IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	      IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	      6'd18) ;
 
   // register csrf_time_reg
@@ -13168,9 +13165,9 @@ module mkCore(CLK,
   assign csrf_timer_int_en_vec_0$EN =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     (IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     (IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	      6'd9 ||
-	      IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	      IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	      6'd22) ;
 
   // register csrf_timer_int_en_vec_1
@@ -13178,9 +13175,9 @@ module mkCore(CLK,
   assign csrf_timer_int_en_vec_1$EN =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     (IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     (IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	      6'd9 ||
-	      IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	      IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	      6'd22) ;
 
   // register csrf_timer_int_en_vec_3
@@ -13188,7 +13185,7 @@ module mkCore(CLK,
   assign csrf_timer_int_en_vec_3$EN =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd22 ;
 
   // register csrf_timer_int_pend_vec_0
@@ -13212,7 +13209,7 @@ module mkCore(CLK,
   assign csrf_tsr_reg$EN =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd18 ;
 
   // register csrf_tvm_reg
@@ -13220,7 +13217,7 @@ module mkCore(CLK,
   assign csrf_tvm_reg$EN =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd18 ;
 
   // register csrf_tw_reg
@@ -13228,7 +13225,7 @@ module mkCore(CLK,
   assign csrf_tw_reg$EN =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd18 ;
 
   // register csrf_vm_mode_sv39_reg
@@ -13236,7 +13233,7 @@ module mkCore(CLK,
   assign csrf_vm_mode_sv39_reg$EN =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd17 ;
 
   // register flush_reservation
@@ -13253,7 +13250,7 @@ module mkCore(CLK,
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     (rob$deqPort_0_deq_data[186:182] == 5'd16 ||
 	      rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	      IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	      IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	      6'd17) ;
 
   // register mmio_cRqQ_clearReq_rl
@@ -13976,8 +13973,8 @@ module mkCore(CLK,
 
   // submodule coreFix_aluExe_1_rsAlu
   assign coreFix_aluExe_1_rsAlu$enq_x =
-	     (k__h671298 == 1'd1 &&
-	      fetchStage_pipelines_0_canDeq__2833_AND_NOT_fe_ETC___d14056) ?
+	     (k__h671356 == 1'd1 &&
+	      fetchStage_pipelines_0_canDeq__2833_AND_NOT_fe_ETC___d14077) ?
 	       { fetchStage$pipelines_0_first[199:195],
 		 IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d12961,
 		 fetchStage$pipelines_0_first[173],
@@ -13991,13 +13988,13 @@ module mkCore(CLK,
 		 specTagManager$nextSpecTag,
 		 sbAggr$eagerLookup_0_get } :
 	       { fetchStage$pipelines_1_first[199:195],
-		 IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d13589,
-		 fetchStage_pipelines_1_first__2844_BIT_173_359_ETC___d13665,
+		 IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d13601,
+		 fetchStage_pipelines_1_first__2844_BIT_173_360_ETC___d13677,
 		 fetchStage$pipelines_1_first[160:128],
 		 fetchStage$pipelines_1_first[255:232],
 		 regRenamingTable$rename_1_getRename,
 		 rob$enqPort_1_getEnqInstTag,
-		 renaming_spec_bits__h686479,
+		 renaming_spec_bits__h686566,
 		 fetchStage$pipelines_1_first[194:192] == 3'd1,
 		 specTagManager$nextSpecTag,
 		 sbAggr$eagerLookup_1_get } ;
@@ -14095,11 +14092,11 @@ module mkCore(CLK,
   end
   assign coreFix_aluExe_1_rsAlu$EN_enq =
 	     WILL_FIRE_RL_renameStage_doRenaming &&
-	     (k__h671298 == 1'd1 &&
-	      fetchStage_pipelines_0_canDeq__2833_AND_NOT_fe_ETC___d14056 ||
-	      fetchStage_pipelines_0_canDeq__2833_AND_NOT_fe_ETC___d14174 ==
+	     (k__h671356 == 1'd1 &&
+	      fetchStage_pipelines_0_canDeq__2833_AND_NOT_fe_ETC___d14077 ||
+	      fetchStage_pipelines_0_canDeq__2833_AND_NOT_fe_ETC___d14195 ==
 	      1'd1 &&
-	      NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14191) ;
+	      NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14212) ;
   assign coreFix_aluExe_1_rsAlu$EN_setRobEnqTime = 1'd1 ;
   assign coreFix_aluExe_1_rsAlu$EN_doDispatch =
 	     WILL_FIRE_RL_coreFix_aluExe_1_doDispatchAlu ;
@@ -14638,7 +14635,7 @@ module mkCore(CLK,
   // submodule coreFix_fpuMulDivExe_0_rsFpuMulDiv
   assign coreFix_fpuMulDivExe_0_rsFpuMulDiv$enq_x =
 	     (fetchStage$pipelines_0_canDeq &&
-	      regRenamingTable_rename_0_canRename__3418_AND__ETC___d14068) ?
+	      regRenamingTable_rename_0_canRename__3428_AND__ETC___d14089) ?
 	       { IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d12961,
 		 regRenamingTable$rename_0_getRename,
 		 rob$enqPort_0_getEnqInstTag,
@@ -14646,10 +14643,10 @@ module mkCore(CLK,
 		 fetchStage$pipelines_0_first[194:192] == 3'd1,
 		 specTagManager$nextSpecTag,
 		 sbAggr$eagerLookup_0_get } :
-	       { IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d13589,
+	       { IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d13601,
 		 regRenamingTable$rename_1_getRename,
 		 rob$enqPort_1_getEnqInstTag,
-		 renaming_spec_bits__h686479,
+		 renaming_spec_bits__h686566,
 		 fetchStage$pipelines_1_first[194:192] == 3'd1,
 		 specTagManager$nextSpecTag,
 		 sbAggr$eagerLookup_1_get } ;
@@ -14748,9 +14745,13 @@ module mkCore(CLK,
   assign coreFix_fpuMulDivExe_0_rsFpuMulDiv$EN_enq =
 	     WILL_FIRE_RL_renameStage_doRenaming &&
 	     (fetchStage$pipelines_0_canDeq &&
-	      regRenamingTable_rename_0_canRename__3418_AND__ETC___d14068 ||
-	      NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14178 &&
-	      regRenamingTable_rename_1_canRename__3535_AND__ETC___d14231) ;
+	      regRenamingTable_rename_0_canRename__3428_AND__ETC___d14089 ||
+	      NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14199 &&
+	      regRenamingTable_rename_1_canRename__3547_AND__ETC___d14208 &&
+	      (fetchStage$pipelines_1_first[194:192] == 3'd3 ||
+	       fetchStage$pipelines_1_first[194:192] == 3'd4) &&
+	      NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14248 &&
+	      coreFix_fpuMulDivExe_0_rsFpuMulDiv$canEnq) ;
   assign coreFix_fpuMulDivExe_0_rsFpuMulDiv$EN_setRobEnqTime = 1'd1 ;
   assign coreFix_fpuMulDivExe_0_rsFpuMulDiv$EN_doDispatch =
 	     WILL_FIRE_RL_coreFix_fpuMulDivExe_0_doDispatchFpuMulDiv ;
@@ -15494,8 +15495,8 @@ module mkCore(CLK,
 	     { l2Tlb$toChildren_rsToC_first[80:0],
 	       l2Tlb$toChildren_rsToC_first[82:81] } ;
   assign coreFix_memExe_dTlb$updateVMInfo_vm =
-	     { prv__h720618,
-	       prv__h720618 != 2'd3 && csrf_vm_mode_sv39_reg,
+	     { prv__h720708,
+	       prv__h720708 != 2'd3 && csrf_vm_mode_sv39_reg,
 	       csrf_mxr_reg,
 	       csrf_sum_reg,
 	       csrf_ppn_reg } ;
@@ -15603,44 +15604,44 @@ module mkCore(CLK,
   // submodule coreFix_memExe_lsq
   assign coreFix_memExe_lsq$enqLd_dst =
 	     (fetchStage$pipelines_0_canDeq &&
-	      regRenamingTable_rename_0_canRename__3418_AND__ETC___d14125) ?
+	      regRenamingTable_rename_0_canRename__3428_AND__ETC___d14146) ?
 	       regRenamingTable$rename_0_getRename[8:0] :
 	       regRenamingTable$rename_1_getRename[8:0] ;
   assign coreFix_memExe_lsq$enqLd_inst_tag =
 	     (fetchStage$pipelines_0_canDeq &&
-	      regRenamingTable_rename_0_canRename__3418_AND__ETC___d14125) ?
+	      regRenamingTable_rename_0_canRename__3428_AND__ETC___d14146) ?
 	       rob$enqPort_0_getEnqInstTag :
 	       rob$enqPort_1_getEnqInstTag ;
   assign coreFix_memExe_lsq$enqLd_mem_inst =
 	     (fetchStage$pipelines_0_canDeq &&
-	      regRenamingTable_rename_0_canRename__3418_AND__ETC___d14125) ?
+	      regRenamingTable_rename_0_canRename__3428_AND__ETC___d14146) ?
 	       fetchStage$pipelines_0_first[191:174] :
 	       fetchStage$pipelines_1_first[191:174] ;
   assign coreFix_memExe_lsq$enqLd_spec_bits =
 	     (fetchStage$pipelines_0_canDeq &&
-	      regRenamingTable_rename_0_canRename__3418_AND__ETC___d14125) ?
+	      regRenamingTable_rename_0_canRename__3428_AND__ETC___d14146) ?
 	       specTagManager$currentSpecBits :
-	       renaming_spec_bits__h686479 ;
+	       renaming_spec_bits__h686566 ;
   assign coreFix_memExe_lsq$enqSt_dst =
 	     (fetchStage$pipelines_0_canDeq &&
-	      regRenamingTable_rename_0_canRename__3418_AND__ETC___d14133) ?
+	      regRenamingTable_rename_0_canRename__3428_AND__ETC___d14154) ?
 	       regRenamingTable$rename_0_getRename[8:0] :
 	       regRenamingTable$rename_1_getRename[8:0] ;
   assign coreFix_memExe_lsq$enqSt_inst_tag =
 	     (fetchStage$pipelines_0_canDeq &&
-	      regRenamingTable_rename_0_canRename__3418_AND__ETC___d14133) ?
+	      regRenamingTable_rename_0_canRename__3428_AND__ETC___d14154) ?
 	       rob$enqPort_0_getEnqInstTag :
 	       rob$enqPort_1_getEnqInstTag ;
   assign coreFix_memExe_lsq$enqSt_mem_inst =
 	     (fetchStage$pipelines_0_canDeq &&
-	      regRenamingTable_rename_0_canRename__3418_AND__ETC___d14133) ?
+	      regRenamingTable_rename_0_canRename__3428_AND__ETC___d14154) ?
 	       fetchStage$pipelines_0_first[191:174] :
 	       fetchStage$pipelines_1_first[191:174] ;
   assign coreFix_memExe_lsq$enqSt_spec_bits =
 	     (fetchStage$pipelines_0_canDeq &&
-	      regRenamingTable_rename_0_canRename__3418_AND__ETC___d14133) ?
+	      regRenamingTable_rename_0_canRename__3428_AND__ETC___d14154) ?
 	       specTagManager$currentSpecBits :
-	       renaming_spec_bits__h686479 ;
+	       renaming_spec_bits__h686566 ;
   assign coreFix_memExe_lsq$getHit_t =
 	     MUX_coreFix_memExe_lsq$getHit_1__SEL_1 ?
 	       MUX_coreFix_memExe_lsq$getHit_1__VAL_1 :
@@ -16072,9 +16073,9 @@ module mkCore(CLK,
   // submodule coreFix_memExe_rsMem
   assign coreFix_memExe_rsMem$enq_x =
 	     (fetchStage$pipelines_0_canDeq &&
-	      regRenamingTable_rename_0_canRename__3418_AND__ETC___d14091) ?
+	      regRenamingTable_rename_0_canRename__3428_AND__ETC___d14112) ?
 	       { fetchStage$pipelines_0_first[191:189],
-		 IF_fetchStage_pipelines_0_first__2835_BIT_160__ETC___d14107,
+		 IF_fetchStage_pipelines_0_first__2835_BIT_160__ETC___d14128,
 		 regRenamingTable$rename_0_getRename,
 		 rob$enqPort_0_getEnqInstTag,
 		 specTagManager$currentSpecBits,
@@ -16082,10 +16083,10 @@ module mkCore(CLK,
 		 specTagManager$nextSpecTag,
 		 sbAggr$eagerLookup_0_get } :
 	       { fetchStage$pipelines_1_first[191:189],
-		 IF_fetchStage_pipelines_1_first__2844_BIT_160__ETC___d14267,
+		 IF_fetchStage_pipelines_1_first__2844_BIT_160__ETC___d14288,
 		 regRenamingTable$rename_1_getRename,
 		 rob$enqPort_1_getEnqInstTag,
-		 renaming_spec_bits__h686479,
+		 renaming_spec_bits__h686566,
 		 fetchStage$pipelines_1_first[194:192] == 3'd1,
 		 specTagManager$nextSpecTag,
 		 sbAggr$eagerLookup_1_get } ;
@@ -16330,7 +16331,7 @@ module mkCore(CLK,
   assign csrf_stats_module_writeQ$ENQ =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd7 ;
   assign csrf_stats_module_writeQ$DEQ = EN_sendDoStats ;
   assign csrf_stats_module_writeQ$CLR = 1'b0 ;
@@ -16339,7 +16340,7 @@ module mkCore(CLK,
   assign csrf_terminate_module_terminateQ$ENQ =
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd6 ;
   assign csrf_terminate_module_terminateQ$DEQ = EN_coreIndInv_terminate ;
   assign csrf_terminate_module_terminateQ$CLR = 1'b0 ;
@@ -16358,8 +16359,8 @@ module mkCore(CLK,
 	     fetchStage$pipelines_0_canDeq ||
 	     WILL_FIRE_RL_renameStage_doRenaming &&
 	     fetchStage$pipelines_0_canDeq &&
-	     NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d14053 &&
-	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13497 ||
+	     NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d14074 &&
+	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13508 ||
 	     WILL_FIRE_RL_renameStage_doRenaming_SystemInst ||
 	     WILL_FIRE_RL_renameStage_doRenaming_Trap ;
   assign epochManager$EN_updatePrevEpoch_1_update =
@@ -16367,9 +16368,9 @@ module mkCore(CLK,
 	     fetchStage$pipelines_1_canDeq &&
 	     !epochManager$checkEpoch_1_check ||
 	     WILL_FIRE_RL_renameStage_doRenaming &&
-	     NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14178 &&
-	     NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d14188 &&
-	     IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d13869 ;
+	     NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14199 &&
+	     NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d14209 &&
+	     IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d13890 ;
   assign epochManager$EN_incrementEpoch =
 	     WILL_FIRE_RL_commitStage_doCommitTrap_flush &&
 	     !rob$deqPort_0_deq_data[12] ||
@@ -16458,8 +16459,8 @@ module mkCore(CLK,
 	     fetchStage$pipelines_0_canDeq ||
 	     WILL_FIRE_RL_renameStage_doRenaming &&
 	     fetchStage$pipelines_0_canDeq &&
-	     NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d14053 &&
-	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13497 ||
+	     NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d14074 &&
+	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13508 ||
 	     WILL_FIRE_RL_renameStage_doRenaming_SystemInst ||
 	     WILL_FIRE_RL_renameStage_doRenaming_Trap ;
   assign fetchStage$EN_pipelines_1_deq =
@@ -16467,9 +16468,9 @@ module mkCore(CLK,
 	     fetchStage$pipelines_1_canDeq &&
 	     !epochManager$checkEpoch_1_check ||
 	     WILL_FIRE_RL_renameStage_doRenaming &&
-	     NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14178 &&
-	     NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d14188 &&
-	     IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d13869 ;
+	     NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14199 &&
+	     NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d14209 &&
+	     IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d13890 ;
   assign fetchStage$EN_iTlbIfc_flush = MUX_flush_tlbs$write_1__SEL_1 ;
   assign fetchStage$EN_iTlbIfc_updateVMInfo =
 	     MUX_update_vm_info$write_1__SEL_1 ;
@@ -16794,7 +16795,7 @@ module mkCore(CLK,
   assign regRenamingTable$rename_1_claimRename_r =
 	     fetchStage$pipelines_1_first[95:69] ;
   assign regRenamingTable$rename_1_claimRename_sb =
-	     renaming_spec_bits__h686479 ;
+	     renaming_spec_bits__h686566 ;
   assign regRenamingTable$rename_1_getRename_r =
 	     fetchStage$pipelines_1_first[95:69] ;
   assign regRenamingTable$specUpdate_correctSpeculation_mask =
@@ -16824,8 +16825,8 @@ module mkCore(CLK,
   assign regRenamingTable$EN_rename_0_claimRename =
 	     WILL_FIRE_RL_renameStage_doRenaming &&
 	     fetchStage$pipelines_0_canDeq &&
-	     NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d14053 &&
-	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13497 ||
+	     NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d14074 &&
+	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13508 ||
 	     WILL_FIRE_RL_renameStage_doRenaming_SystemInst ;
   assign regRenamingTable$EN_rename_1_claimRename =
 	     MUX_epochManager$updatePrevEpoch_1_update_1__SEL_2 ;
@@ -17037,7 +17038,7 @@ module mkCore(CLK,
 	     { fetchStage$pipelines_1_first[387:324],
 	       fetchStage$pipelines_1_first[127:96],
 	       fetchStage$pipelines_1_first[199:195],
-	       fetchStage_pipelines_1_first__2844_BIT_173_359_ETC___d13665,
+	       fetchStage_pipelines_1_first__2844_BIT_173_360_ETC___d13677,
 	       73'h1280000000000000000,
 	       fetchStage$pipelines_1_first[323:260],
 	       5'd0,
@@ -17049,11 +17050,11 @@ module mkCore(CLK,
 	       fetchStage$pipelines_1_first[194:192] != 3'd3 &&
 	       fetchStage$pipelines_1_first[194:192] != 3'd4,
 	       fetchStage$pipelines_1_first[194:192] != 3'd2 ||
-	       fetchStage_pipelines_0_canDeq__2833_AND_regRen_ETC___d14310 ||
-	       IF_fetchStage_pipelines_1_first__2844_BITS_191_ETC___d14261,
-	       IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d14320,
+	       fetchStage_pipelines_0_canDeq__2833_AND_regRen_ETC___d14331 ||
+	       IF_fetchStage_pipelines_1_first__2844_BITS_191_ETC___d14282,
+	       IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d14341,
 	       7'd32,
-	       renaming_spec_bits__h686479 } ;
+	       renaming_spec_bits__h686566 } ;
   assign rob$getOrigPC_0_get_x = coreFix_aluExe_0_dispToRegQ$first[52:41] ;
   assign rob$getOrigPC_1_get_x = coreFix_aluExe_1_dispToRegQ$first[52:41] ;
   assign rob$getOrigPC_2_get_x = 12'h0 ;
@@ -17242,8 +17243,8 @@ module mkCore(CLK,
   assign rob$EN_enqPort_0_enq =
 	     WILL_FIRE_RL_renameStage_doRenaming &&
 	     fetchStage$pipelines_0_canDeq &&
-	     NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d14053 &&
-	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13497 ||
+	     NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d14074 &&
+	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13508 ||
 	     WILL_FIRE_RL_renameStage_doRenaming_Trap ||
 	     WILL_FIRE_RL_renameStage_doRenaming_SystemInst ;
   assign rob$EN_enqPort_1_enq =
@@ -17368,8 +17369,8 @@ module mkCore(CLK,
   assign sbAggr$EN_setBusy_0_set =
 	     WILL_FIRE_RL_renameStage_doRenaming &&
 	     fetchStage$pipelines_0_canDeq &&
-	     NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d14053 &&
-	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13497 ||
+	     NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d14074 &&
+	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13508 ||
 	     WILL_FIRE_RL_renameStage_doRenaming_SystemInst ;
   assign sbAggr$EN_setBusy_1_set =
 	     MUX_epochManager$updatePrevEpoch_1_update_1__SEL_2 ;
@@ -17481,8 +17482,8 @@ module mkCore(CLK,
   assign sbCons$EN_setBusy_0_set =
 	     WILL_FIRE_RL_renameStage_doRenaming &&
 	     fetchStage$pipelines_0_canDeq &&
-	     NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d14053 &&
-	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13497 ||
+	     NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d14074 &&
+	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13508 ||
 	     WILL_FIRE_RL_renameStage_doRenaming_SystemInst ;
   assign sbCons$EN_setBusy_1_set =
 	     MUX_epochManager$updatePrevEpoch_1_update_1__SEL_2 ;
@@ -17543,9 +17544,9 @@ module mkCore(CLK,
   end
   assign specTagManager$EN_claimSpecTag =
 	     WILL_FIRE_RL_renameStage_doRenaming &&
-	     (fetchStage_pipelines_0_canDeq__2833_AND_specTa_ETC___d14139 ||
-	      NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14178 &&
-	      NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14299) ;
+	     (fetchStage_pipelines_0_canDeq__2833_AND_specTa_ETC___d14160 ||
+	      NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14199 &&
+	      NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14320) ;
   assign specTagManager$EN_specUpdate_incorrectSpeculation =
 	     WILL_FIRE_RL_coreFix_aluExe_1_doFinishAlu_T ||
 	     WILL_FIRE_RL_coreFix_aluExe_0_doFinishAlu_T ||
@@ -17595,7 +17596,7 @@ module mkCore(CLK,
 										   { { fetchStage$pipelines_0_first[173],
 										       IF_fetchStage_pipelines_0_first__2835_BITS_172_ETC___d13035 },
 										     fetchStage$pipelines_0_first[160],
-										     x_data_imm__h678579 } }),
+										     x_data_imm__h678637 } }),
 							.checkForException_regs({ fetchStage$pipelines_0_first[95],
 										  fetchStage$pipelines_0_first[94:89],
 										  { fetchStage$pipelines_0_first[88],
@@ -17604,12 +17605,12 @@ module mkCore(CLK,
 										    fetchStage$pipelines_0_first[80:76],
 										    fetchStage$pipelines_0_first[75],
 										    fetchStage$pipelines_0_first[74:69] } }),
-							.checkForException_csrState({ x_decodeInfo_frm__h658939,
-										      r1__read_BITS_13_TO_12___h659124 !=
+							.checkForException_csrState({ x_decodeInfo_frm__h658941,
+										      r1__read_BITS_13_TO_12___h659126 !=
 										      2'd0,
-										      { prv__h720574,
+										      { prv__h720664,
 											csrf_tvm_reg,
-											{ csrf_tw_reg,
+											{ r1__read_BIT_20___h659754,
 											  csrf_tsr_reg,
 											  { csrf_mcounteren_cy_reg,
 											    csrf_mcounteren_cy_reg &&
@@ -17622,10 +17623,10 @@ module mkCore(CLK,
 												csrf_scounteren_tm_reg } } } } } }),
 							.checkForException(checkForException___d13069));
   module_checkForException instance_checkForException_1(.checkForException_dInst({ fetchStage$pipelines_1_first[199:195],
-										   IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d13589,
-										   { fetchStage_pipelines_1_first__2844_BIT_173_359_ETC___d13665,
+										   IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d13601,
+										   { fetchStage_pipelines_1_first__2844_BIT_173_360_ETC___d13677,
 										     fetchStage$pipelines_1_first[160],
-										     x_data_imm__h694200 } }),
+										     x_data_imm__h694287 } }),
 							.checkForException_regs({ fetchStage$pipelines_1_first[95],
 										  fetchStage$pipelines_1_first[94:89],
 										  { fetchStage$pipelines_1_first[88],
@@ -17634,12 +17635,12 @@ module mkCore(CLK,
 										    fetchStage$pipelines_1_first[80:76],
 										    fetchStage$pipelines_1_first[75],
 										    fetchStage$pipelines_1_first[74:69] } }),
-							.checkForException_csrState({ x_decodeInfo_frm__h658939,
-										      r1__read_BITS_13_TO_12___h659124 !=
+							.checkForException_csrState({ x_decodeInfo_frm__h658941,
+										      r1__read_BITS_13_TO_12___h659126 !=
 										      2'd0,
-										      { prv__h720574,
+										      { prv__h720664,
 											csrf_tvm_reg,
-											{ csrf_tw_reg,
+											{ r1__read_BIT_20___h659754,
 											  csrf_tsr_reg,
 											  { csrf_mcounteren_cy_reg,
 											    csrf_mcounteren_cy_reg &&
@@ -17650,7 +17651,7 @@ module mkCore(CLK,
 											      { csrf_mcounteren_tm_reg,
 												csrf_mcounteren_tm_reg &&
 												csrf_scounteren_tm_reg } } } } } }),
-							.checkForException(checkForException___d13686));
+							.checkForException(checkForException___d13698));
   module_execFpuSimple instance_execFpuSimple_4(.execFpuSimple_fpu_inst({ coreFix_fpuMulDivExe_0_regToExeQ$first[233:229],
 									  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q242,
 									  coreFix_fpuMulDivExe_0_regToExeQ$first[225] }),
@@ -18870,8 +18871,8 @@ module mkCore(CLK,
 		 coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd2 &&
 		 coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd3 &&
 		 coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd4) ?
-		  CASE_guard45711_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q185 :
-		  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q186) ;
+		  CASE_guard45711_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q189 :
+		  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q190) ;
   assign IF_IF_IF_3074_MINUS_SEXT_coreFix_fpuMulDivExe__ETC___d10783 =
 	     (_theResult___fst_exp__h553937 == 11'd2047) ?
 	       !coreFix_fpuMulDivExe_0_regToExeQ$first[107] :
@@ -19362,12 +19363,12 @@ module mkCore(CLK,
 		  _theResult___sfd__h602652 :
 		  _theResult___snd__h601917[56:5]) ;
   assign IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904 =
-	     (_theResult____h655200 == 15'd0 &&
+	     (_theResult____h655202 == 15'd0 &&
 	      (csrf_prv_reg == 2'd0 ||
 	       csrf_prv_reg == 2'd1 && csrf_ie_vec_1)) ?
-	       enabled_ints__h655744 :
-	       _theResult____h655200 ;
-  assign IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d13106 =
+	       enabled_ints__h655746 :
+	       _theResult____h655202 ;
+  assign IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d13111 =
 	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[0] ||
 	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[1] ||
 	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[2] ||
@@ -19384,7 +19385,46 @@ module mkCore(CLK,
 	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[13] ||
 	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[14] ||
 	     checkForException___d13069[4] ||
-	     csrf_fs_reg_read__1686_EQ_0_3058_AND_fetchStag_ETC___d13104 ;
+	     csrf_fs_reg_read__1686_EQ_0_3058_AND_fetchStag_ETC___d13104 ||
+	     fetchStage$pipelines_0_first[231:200] == 32'h10500073 &&
+	     csrf_tw_reg &&
+	     csrf_prv_reg != 2'd3 ;
+  assign IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d13753 =
+	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[0] ||
+	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[1] ||
+	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[2] ||
+	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[3] ||
+	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[4] ||
+	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[5] ||
+	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[6] ||
+	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[7] ||
+	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[8] ||
+	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[9] ||
+	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[10] ||
+	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[11] ||
+	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[12] ||
+	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[13] ||
+	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[14] ||
+	     checkForException___d13069[4] ||
+	     csrf_fs_reg_read__1686_EQ_0_3058_AND_fetchStag_ETC___d13520 ;
+  assign IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d13789 =
+	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[0] ||
+	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[1] ||
+	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[2] ||
+	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[3] ||
+	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[4] ||
+	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[5] ||
+	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[6] ||
+	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[7] ||
+	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[8] ||
+	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[9] ||
+	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[10] ||
+	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[11] ||
+	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[12] ||
+	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[13] ||
+	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[14] ||
+	     checkForException___d13698[4] ||
+	     csrf_fs_reg_read__1686_EQ_0_3058_AND_fetchStag_ETC___d13787 ;
   assign IF_IF_coreFix_fpuMulDivExe_0_regToExeQ_first___ETC___d10006 =
 	     (_theResult___fst_exp__h583561 == 11'd2047) ?
 	       !coreFix_fpuMulDivExe_0_regToExeQ$first[43] :
@@ -19410,8 +19450,8 @@ module mkCore(CLK,
 		 coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd2 &&
 		 coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd3 &&
 		 coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd4) ?
-		  CASE_guard54780_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q189 :
-		  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q190) ;
+		  CASE_guard54780_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q187 :
+		  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q188) ;
   assign IF_IF_coreFix_fpuMulDivExe_0_regToExeQ_first___ETC___d10768 =
 	     (_theResult___fst_exp__h544360 == 11'd2047) ?
 	       !coreFix_fpuMulDivExe_0_regToExeQ$first[107] :
@@ -19419,8 +19459,8 @@ module mkCore(CLK,
 		 coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd2 &&
 		 coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd3 &&
 		 coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd4) ?
-		  CASE_guard36399_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q193 :
-		  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q194) ;
+		  CASE_guard36399_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q195 :
+		  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q196) ;
   assign IF_IF_coreFix_fpuMulDivExe_0_regToExeQ_first___ETC___d10795 =
 	     (_theResult___fst_exp__h562770 == 11'd2047) ?
 	       !coreFix_fpuMulDivExe_0_regToExeQ$first[107] :
@@ -19428,8 +19468,8 @@ module mkCore(CLK,
 		 coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd2 &&
 		 coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd3 &&
 		 coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd4) ?
-		  CASE_guard54780_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q195 :
-		  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q196) ;
+		  CASE_guard54780_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q193 :
+		  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q194) ;
   assign IF_IF_coreFix_fpuMulDivExe_0_regToExeQ_first___ETC___d9091 =
 	     (_theResult___fst_exp__h523969 == 11'd2047) ?
 	       coreFix_fpuMulDivExe_0_regToExeQ$first[171] :
@@ -19486,110 +19526,110 @@ module mkCore(CLK,
 	       (IF_coreFix_memExe_dTlb_procResp__740_BIT_110_7_ETC___d1828 ?
 		  4'd1 :
 		  IF_IF_coreFix_memExe_dTlb_procResp__740_BIT_11_ETC___d1883) ;
-  assign IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13242 =
+  assign IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13247 =
 	     (fetchStage$pipelines_0_first[68] ?
-		IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13174 ==
+		IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13179 ==
 		4'd12 :
-		IF_checkForException_3069_BIT_4_3070_THEN_IF_c_ETC___d13203 ==
+		IF_checkForException_3069_BIT_4_3070_THEN_IF_c_ETC___d13208 ==
 		4'd12) ?
 	       4'd13 :
 	       4'd15 ;
-  assign IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13243 =
-	     (fetchStage$pipelines_0_first[68] ?
-		IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13174 ==
-		4'd11 :
-		IF_checkForException_3069_BIT_4_3070_THEN_IF_c_ETC___d13203 ==
-		4'd11) ?
-	       4'd12 :
-	       IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13242 ;
-  assign IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13244 =
-	     (fetchStage$pipelines_0_first[68] ?
-		IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13174 ==
-		4'd10 :
-		IF_checkForException_3069_BIT_4_3070_THEN_IF_c_ETC___d13203 ==
-		4'd10) ?
-	       4'd11 :
-	       IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13243 ;
-  assign IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13245 =
-	     (fetchStage$pipelines_0_first[68] ?
-		IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13174 ==
-		4'd9 :
-		IF_checkForException_3069_BIT_4_3070_THEN_IF_c_ETC___d13203 ==
-		4'd9) ?
-	       4'd9 :
-	       IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13244 ;
-  assign IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13246 =
-	     (fetchStage$pipelines_0_first[68] ?
-		IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13174 ==
-		4'd8 :
-		IF_checkForException_3069_BIT_4_3070_THEN_IF_c_ETC___d13203 ==
-		4'd8) ?
-	       4'd8 :
-	       IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13245 ;
-  assign IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13247 =
-	     (fetchStage$pipelines_0_first[68] ?
-		IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13174 ==
-		4'd7 :
-		IF_checkForException_3069_BIT_4_3070_THEN_IF_c_ETC___d13203 ==
-		4'd7) ?
-	       4'd7 :
-	       IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13246 ;
   assign IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13248 =
 	     (fetchStage$pipelines_0_first[68] ?
-		IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13174 ==
-		4'd6 :
-		IF_checkForException_3069_BIT_4_3070_THEN_IF_c_ETC___d13203 ==
-		4'd6) ?
-	       4'd6 :
+		IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13179 ==
+		4'd11 :
+		IF_checkForException_3069_BIT_4_3070_THEN_IF_c_ETC___d13208 ==
+		4'd11) ?
+	       4'd12 :
 	       IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13247 ;
   assign IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13249 =
 	     (fetchStage$pipelines_0_first[68] ?
-		IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13174 ==
-		4'd5 :
-		IF_checkForException_3069_BIT_4_3070_THEN_IF_c_ETC___d13203 ==
-		4'd5) ?
-	       4'd5 :
+		IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13179 ==
+		4'd10 :
+		IF_checkForException_3069_BIT_4_3070_THEN_IF_c_ETC___d13208 ==
+		4'd10) ?
+	       4'd11 :
 	       IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13248 ;
   assign IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13250 =
 	     (fetchStage$pipelines_0_first[68] ?
-		IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13174 ==
-		4'd4 :
-		IF_checkForException_3069_BIT_4_3070_THEN_IF_c_ETC___d13203 ==
-		4'd4) ?
-	       4'd4 :
+		IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13179 ==
+		4'd9 :
+		IF_checkForException_3069_BIT_4_3070_THEN_IF_c_ETC___d13208 ==
+		4'd9) ?
+	       4'd9 :
 	       IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13249 ;
   assign IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13251 =
 	     (fetchStage$pipelines_0_first[68] ?
-		IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13174 ==
-		4'd3 :
-		IF_checkForException_3069_BIT_4_3070_THEN_IF_c_ETC___d13203 ==
-		4'd3) ?
-	       4'd3 :
+		IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13179 ==
+		4'd8 :
+		IF_checkForException_3069_BIT_4_3070_THEN_IF_c_ETC___d13208 ==
+		4'd8) ?
+	       4'd8 :
 	       IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13250 ;
   assign IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13252 =
 	     (fetchStage$pipelines_0_first[68] ?
-		IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13174 ==
-		4'd2 :
-		IF_checkForException_3069_BIT_4_3070_THEN_IF_c_ETC___d13203 ==
-		4'd2) ?
-	       4'd2 :
+		IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13179 ==
+		4'd7 :
+		IF_checkForException_3069_BIT_4_3070_THEN_IF_c_ETC___d13208 ==
+		4'd7) ?
+	       4'd7 :
 	       IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13251 ;
   assign IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13253 =
 	     (fetchStage$pipelines_0_first[68] ?
-		IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13174 ==
-		4'd1 :
-		IF_checkForException_3069_BIT_4_3070_THEN_IF_c_ETC___d13203 ==
-		4'd1) ?
-	       4'd1 :
+		IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13179 ==
+		4'd6 :
+		IF_checkForException_3069_BIT_4_3070_THEN_IF_c_ETC___d13208 ==
+		4'd6) ?
+	       4'd6 :
 	       IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13252 ;
   assign IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13254 =
 	     (fetchStage$pipelines_0_first[68] ?
-		IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13174 ==
+		IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13179 ==
+		4'd5 :
+		IF_checkForException_3069_BIT_4_3070_THEN_IF_c_ETC___d13208 ==
+		4'd5) ?
+	       4'd5 :
+	       IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13253 ;
+  assign IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13255 =
+	     (fetchStage$pipelines_0_first[68] ?
+		IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13179 ==
+		4'd4 :
+		IF_checkForException_3069_BIT_4_3070_THEN_IF_c_ETC___d13208 ==
+		4'd4) ?
+	       4'd4 :
+	       IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13254 ;
+  assign IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13256 =
+	     (fetchStage$pipelines_0_first[68] ?
+		IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13179 ==
+		4'd3 :
+		IF_checkForException_3069_BIT_4_3070_THEN_IF_c_ETC___d13208 ==
+		4'd3) ?
+	       4'd3 :
+	       IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13255 ;
+  assign IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13257 =
+	     (fetchStage$pipelines_0_first[68] ?
+		IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13179 ==
+		4'd2 :
+		IF_checkForException_3069_BIT_4_3070_THEN_IF_c_ETC___d13208 ==
+		4'd2) ?
+	       4'd2 :
+	       IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13256 ;
+  assign IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13258 =
+	     (fetchStage$pipelines_0_first[68] ?
+		IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13179 ==
+		4'd1 :
+		IF_checkForException_3069_BIT_4_3070_THEN_IF_c_ETC___d13208 ==
+		4'd1) ?
+	       4'd1 :
+	       IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13257 ;
+  assign IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13259 =
+	     (fetchStage$pipelines_0_first[68] ?
+		IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13179 ==
 		4'd0 :
-		IF_checkForException_3069_BIT_4_3070_THEN_IF_c_ETC___d13203 ==
+		IF_checkForException_3069_BIT_4_3070_THEN_IF_c_ETC___d13208 ==
 		4'd0) ?
 	       4'd0 :
-	       IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13253 ;
+	       IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13258 ;
   assign IF_IF_mmio_cRqQ_enqReq_lat_1_whas__30_THEN_mmi_ETC___d463 =
 	     { (mmio_cRqQ_enqReq_lat_0$whas ?
 		  mmio_cRqQ_enqReq_lat_0$wget[77:76] == 2'd1 :
@@ -19658,8 +19698,8 @@ module mkCore(CLK,
 		 coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd2 &&
 		 coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd3 &&
 		 coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd4) ?
-		  CASE_guard36399_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q187 :
-		  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q188) ;
+		  CASE_guard36399_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q185 :
+		  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q186) ;
   assign IF_NOT_3970_MINUS_0_CONCAT_IF_coreFix_fpuMulDi_ETC___d8750 =
 	     (!_3970_MINUS_0_CONCAT_IF_coreFix_fpuMulDivExe_0__ETC___d8616 ||
 	      _3970_MINUS_0_CONCAT_IF_coreFix_fpuMulDivExe_0__ETC___d8618 ||
@@ -19682,7 +19722,7 @@ module mkCore(CLK,
 		 coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd4) ?
 		  CASE_guard75600_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q154 :
 		  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q155) ;
-  assign IF_NOT_IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3__ETC___d13280 =
+  assign IF_NOT_IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3__ETC___d13285 =
 	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[0] ?
 	       4'd0 :
 	       (IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[1] ?
@@ -20092,42 +20132,45 @@ module mkCore(CLK,
 	      coreFix_memExe_dTlb$procResp[12]) ?
 	       CASE_coreFix_memExe_dTlbprocResp_BITS_105_TO__ETC__q13 :
 	       CASE_coreFix_memExe_dTlbprocResp_BITS_109_TO__ETC__q14 ;
-  assign IF_NOT_fetchStage_pipelines_0_canDeq__2833_283_ETC___d13875 =
+  assign IF_NOT_fetchStage_pipelines_0_canDeq__2833_283_ETC___d13896 =
 	     ((!fetchStage$pipelines_0_canDeq ||
-	       NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13474) &&
+	       NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13485) &&
 	      fetchStage$pipelines_1_canDeq) ?
 	       fetchStage$RDY_pipelines_1_first &&
 	       (fetchStage$pipelines_1_first[194:192] != 3'd1 ||
 		!fetchStage$pipelines_0_canDeq ||
 		fetchStage$RDY_pipelines_0_first) &&
-	       IF_fetchStage_RDY_pipelines_1_first__2843_AND__ETC___d13872 :
+	       IF_fetchStage_RDY_pipelines_1_first__2843_AND__ETC___d13893 :
 	       !fetchStage$pipelines_0_canDeq ||
 	       fetchStage$RDY_pipelines_0_first ;
-  assign IF_NOT_fetchStage_pipelines_0_canDeq__2833_283_ETC___d13883 =
+  assign IF_NOT_fetchStage_pipelines_0_canDeq__2833_283_ETC___d13904 =
 	     ((!fetchStage$pipelines_0_canDeq ||
-	       NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13474) &&
+	       NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13485) &&
 	      fetchStage$pipelines_1_canDeq) ?
-	       IF_NOT_fetchStage_pipelines_1_first__2844_BITS_ETC___d13882 :
+	       IF_NOT_fetchStage_pipelines_1_first__2844_BITS_ETC___d13903 :
 	       fetchStage$pipelines_0_canDeq &&
-	       NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13880 ;
-  assign IF_NOT_fetchStage_pipelines_1_first__2844_BITS_ETC___d13805 =
+	       NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13901 ;
+  assign IF_NOT_fetchStage_pipelines_1_first__2844_BITS_ETC___d13826 =
 	     (fetchStage$pipelines_1_first[194:192] == 3'd3 ||
 	      fetchStage$pipelines_1_first[194:192] == 3'd4) ?
-	       NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13788 :
+	       NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13809 :
 	       ((fetchStage$pipelines_1_first[194:192] == 3'd2) ?
-		  NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13799 :
+		  NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13820 :
 		  (fetchStage$pipelines_1_first[194:192] != 3'd1 ||
 		   !fetchStage$pipelines_0_canDeq ||
 		   fetchStage$RDY_pipelines_0_first) &&
-		  _0_OR_fetchStage_RDY_pipelines_0_first__2832_38_ETC___d13802) ;
-  assign IF_NOT_fetchStage_pipelines_1_first__2844_BITS_ETC___d13882 =
-	     NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13718 ?
-	       IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d13869 ||
+		  _0_OR_fetchStage_RDY_pipelines_0_first__2832_38_ETC___d13823) ;
+  assign IF_NOT_fetchStage_pipelines_1_first__2844_BITS_ETC___d13903 =
+	     NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13736 ?
+	       IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d13890 ||
 	       fetchStage$pipelines_0_canDeq &&
-	       NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13877 :
+	       (fetchStage$pipelines_0_first[194:192] != 3'd1 ||
+		specTagManager$canClaim) &&
+	       regRenamingTable_rename_0_canRename__3428_AND__ETC___d13498 &&
+	       IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13508 :
 	       fetchStage$pipelines_0_canDeq &&
-	       NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13880 ;
-  assign IF_NOT_rob_deqPort_1_deq_data__4859_BIT_25_486_ETC___d15062 =
+	       NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13901 ;
+  assign IF_NOT_rob_deqPort_1_deq_data__4880_BIT_25_488_ETC___d15083 =
 	     (!rob$deqPort_1_deq_data[25] || rob$deqPort_1_deq_data[18] ||
 	      rob$deqPort_1_deq_data[167] ||
 	      rob$deqPort_1_deq_data[186:182] == 5'd0 ||
@@ -20352,7 +20395,7 @@ module mkCore(CLK,
 		  IF_IF_IF_3074_MINUS_SEXT_coreFix_fpuMulDivExe__ETC___d9755 :
 		  IF_IF_coreFix_fpuMulDivExe_0_regToExeQ_first___ETC___d9801) :
 	       coreFix_fpuMulDivExe_0_regToExeQ$first[43] ;
-  assign IF_checkForException_3069_BIT_4_3070_THEN_IF_c_ETC___d13203 =
+  assign IF_checkForException_3069_BIT_4_3070_THEN_IF_c_ETC___d13208 =
 	     checkForException___d13069[4] ?
 	       CASE_checkForException_3069_BITS_3_TO_0_0_chec_ETC__q226 :
 	       4'd2 ;
@@ -21892,53 +21935,53 @@ module mkCore(CLK,
 	     csrf_minstret_ehr_data_lat_0$whas ?
 	       rob$deqPort_0_deq_data[95:32] :
 	       csrf_minstret_ehr_data_rl ;
-  assign IF_fetchStage_RDY_pipelines_0_first__2832_AND__ETC___d13444 =
-	     fetchStage_RDY_pipelines_0_first__2832_AND_NOT_ETC___d13440 ?
+  assign IF_fetchStage_RDY_pipelines_0_first__2832_AND__ETC___d13455 =
+	     fetchStage_RDY_pipelines_0_first__2832_AND_NOT_ETC___d13451 ?
 	       fetchStage$RDY_pipelines_0_first :
 	       !regRenamingTable$rename_0_canRename ||
 	       fetchStage$RDY_pipelines_0_first ;
-  assign IF_fetchStage_RDY_pipelines_1_first__2843_AND__ETC___d13807 =
+  assign IF_fetchStage_RDY_pipelines_1_first__2843_AND__ETC___d13828 =
 	     (fetchStage$RDY_pipelines_1_first &&
 	      (fetchStage$pipelines_1_first[194:192] == 3'd0 ||
 	       fetchStage$pipelines_1_first[194:192] == 3'd1)) ?
 	       (!fetchStage$pipelines_0_canDeq ||
 		fetchStage$RDY_pipelines_0_first) &&
-	       SEL_ARR_fetchStage_pipelines_0_canDeq__2833_AN_ETC___d13777 :
+	       SEL_ARR_fetchStage_pipelines_0_canDeq__2833_AN_ETC___d13798 :
 	       fetchStage$RDY_pipelines_1_first &&
-	       IF_NOT_fetchStage_pipelines_1_first__2844_BITS_ETC___d13805 ;
-  assign IF_fetchStage_RDY_pipelines_1_first__2843_AND__ETC___d13872 =
+	       IF_NOT_fetchStage_pipelines_1_first__2844_BITS_ETC___d13826 ;
+  assign IF_fetchStage_RDY_pipelines_1_first__2843_AND__ETC___d13893 =
 	     (fetchStage$RDY_pipelines_1_first &&
 	      (fetchStage$pipelines_1_first[194:192] != 3'd1 ||
 	       !fetchStage$pipelines_0_canDeq ||
 	       fetchStage$RDY_pipelines_0_first) &&
-	      fetchStage_RDY_pipelines_0_first__2832_AND_fet_ETC___d13506 &&
-	      NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13718) ?
-	       IF_fetchStage_RDY_pipelines_1_first__2843_AND__ETC___d13807 &&
-	       (IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d13869 ||
+	      fetchStage_RDY_pipelines_0_first__2832_AND_fet_ETC___d13517 &&
+	      NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13736) ?
+	       IF_fetchStage_RDY_pipelines_1_first__2843_AND__ETC___d13828 &&
+	       (IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d13890 ||
 		!fetchStage$pipelines_0_canDeq ||
 		fetchStage$RDY_pipelines_0_first) :
 	       !fetchStage$pipelines_0_canDeq ||
 	       fetchStage$RDY_pipelines_0_first ;
-  assign IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13920 =
-	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13913 ||
+  assign IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13941 =
+	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13934 ||
 	     fetchStage$RDY_pipelines_0_deq &&
 	     regRenamingTable$RDY_rename_0_getRename &&
 	     regRenamingTable$RDY_rename_0_claimRename &&
 	     rob$RDY_enqPort_0_enq &&
 	     (fetchStage$pipelines_0_first[194:192] != 3'd1 ||
 	      specTagManager$RDY_claimSpecTag) ;
-  assign IF_fetchStage_pipelines_0_first__2835_BIT_160__ETC___d14107 =
+  assign IF_fetchStage_pipelines_0_first__2835_BIT_160__ETC___d14128 =
 	     { fetchStage$pipelines_0_first[159:128],
-	       IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d14095,
-	       IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d14098 ?
-		 IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d14101 :
+	       IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d14116,
+	       IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d14119 ?
+		 IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d14122 :
 		 { 1'h0,
-		   IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d14104 } } ;
+		   IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d14125 } } ;
   assign IF_fetchStage_pipelines_0_first__2835_BIT_173__ETC___d13096 =
 	     fetchStage$pipelines_0_first[173] ?
 	       IF_fetchStage_pipelines_0_first__2835_BITS_172_ETC___d13035 :
 	       12'hCFF ;
-  assign IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13299 =
+  assign IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13304 =
 	     (fetchStage$pipelines_0_first[68] ||
 	      !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[0] &&
 	      !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[1] &&
@@ -21955,30 +21998,30 @@ module mkCore(CLK,
 	      !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[12] &&
 	      !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[13] &&
 	      !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[14]) ?
-	       IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13254 :
+	       IF_IF_fetchStage_pipelines_0_first__2835_BIT_6_ETC___d13259 :
 	       CASE_IF_NOT_IF_IF_NOT_csrf_prv_reg_read__2863__ETC__q227 ;
-  assign IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d14041 =
-	     IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d14000 &&
-	     IF_fetchStage_RDY_pipelines_1_first__2843_AND__ETC___d13807 &&
-	     (IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d14025 ||
+  assign IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d14062 =
+	     IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d14021 &&
+	     IF_fetchStage_RDY_pipelines_1_first__2843_AND__ETC___d13828 &&
+	     (IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d14046 ||
 	      fetchStage$RDY_pipelines_1_deq &&
 	      regRenamingTable$RDY_rename_1_getRename &&
 	      regRenamingTable$RDY_rename_1_claimRename &&
-	      rob_RDY_enqPort_1_enq__4027_AND_NOT_fetchStage_ETC___d14035) ;
-  assign IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d14320 =
+	      rob_RDY_enqPort_1_enq__4048_AND_NOT_fetchStage_ETC___d14056) ;
+  assign IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d14341 =
 	     (fetchStage$pipelines_1_first[194:192] == 3'd2 &&
-	      NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14255 &&
-	      IF_fetchStage_pipelines_1_first__2844_BITS_191_ETC___d14262) ?
-	       IF_fetchStage_pipelines_1_first__2844_BITS_191_ETC___d14263 :
+	      NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14276 &&
+	      IF_fetchStage_pipelines_1_first__2844_BITS_191_ETC___d14283) ?
+	       IF_fetchStage_pipelines_1_first__2844_BITS_191_ETC___d14284 :
 	       { 1'h0,
-		 IF_fetchStage_pipelines_1_first__2844_BITS_191_ETC___d14264 } ;
-  assign IF_fetchStage_pipelines_1_first__2844_BIT_160__ETC___d14267 =
+		 IF_fetchStage_pipelines_1_first__2844_BITS_191_ETC___d14285 } ;
+  assign IF_fetchStage_pipelines_1_first__2844_BIT_160__ETC___d14288 =
 	     { fetchStage$pipelines_1_first[159:128],
-	       IF_fetchStage_pipelines_1_first__2844_BITS_191_ETC___d14261,
-	       IF_fetchStage_pipelines_1_first__2844_BITS_191_ETC___d14262 ?
-		 IF_fetchStage_pipelines_1_first__2844_BITS_191_ETC___d14263 :
+	       IF_fetchStage_pipelines_1_first__2844_BITS_191_ETC___d14282,
+	       IF_fetchStage_pipelines_1_first__2844_BITS_191_ETC___d14283 ?
+		 IF_fetchStage_pipelines_1_first__2844_BITS_191_ETC___d14284 :
 		 { 1'h0,
-		   IF_fetchStage_pipelines_1_first__2844_BITS_191_ETC___d14264 } } ;
+		   IF_fetchStage_pipelines_1_first__2844_BITS_191_ETC___d14285 } } ;
   assign IF_mmio_cRqQ_enqReq_lat_1_whas__30_THEN_mmio_c_ETC___d339 =
 	     mmio_cRqQ_enqReq_lat_0$whas ?
 	       mmio_cRqQ_enqReq_lat_0$wget[142] :
@@ -22003,19 +22046,19 @@ module mkCore(CLK,
 	     EN_mmioToPlatform_pRs_enq ?
 	       mmio_pRsQ_enqReq_lat_0$wget[67] :
 	       mmio_pRsQ_enqReq_rl[67] ;
-  assign IF_rob_deqPort_0_canDeq__4852_THEN_IF_NOT_rob__ETC___d14961 =
+  assign IF_rob_deqPort_0_canDeq__4873_THEN_IF_NOT_rob__ETC___d14982 =
 	     rob$deqPort_0_canDeq ?
-	       y_avValue_snd_snd_snd_snd_snd__h718483 :
+	       y_avValue_snd_snd_snd_snd_snd__h718573 :
 	       64'd0 ;
-  assign IF_rob_deqPort_0_canDeq__4852_THEN_IF_NOT_rob__ETC___d15050 =
-	     rob$deqPort_0_canDeq ? y_avValue_snd_fst__h718467 : 5'd0 ;
-  assign IF_rob_deqPort_0_canDeq__4852_THEN_IF_NOT_rob__ETC___d15071 =
+  assign IF_rob_deqPort_0_canDeq__4873_THEN_IF_NOT_rob__ETC___d15071 =
+	     rob$deqPort_0_canDeq ? y_avValue_snd_fst__h718557 : 5'd0 ;
+  assign IF_rob_deqPort_0_canDeq__4873_THEN_IF_NOT_rob__ETC___d15092 =
 	     rob$deqPort_0_canDeq ?
-	       y_avValue_snd_snd_snd_fst__h718477 :
+	       y_avValue_snd_snd_snd_fst__h718567 :
 	       2'd0 ;
-  assign IF_rob_deqPort_1_canDeq__4856_THEN_IF_NOT_rob__ETC___d15063 =
+  assign IF_rob_deqPort_1_canDeq__4877_THEN_IF_NOT_rob__ETC___d15084 =
 	     rob$deqPort_1_canDeq ?
-	       IF_NOT_rob_deqPort_1_deq_data__4859_BIT_25_486_ETC___d15062 :
+	       IF_NOT_rob_deqPort_1_deq_data__4880_BIT_25_488_ETC___d15083 :
 	       rob$deqPort_0_canDeq && rob$deqPort_0_deq_data[26] ;
   assign IF_sfdin03247_BIT_33_THEN_2_ELSE_0__q57 =
 	     sfdin__h403247[33] ? 2'd2 : 2'd0 ;
@@ -22089,7 +22132,7 @@ module mkCore(CLK,
 	     (_3074_MINUS_0_CONCAT_IF_coreFix_fpuMulDivExe_0__ETC___d6893 ?
 		_0_CONCAT_IF_IF_0b0_CONCAT_NOT_coreFix_fpuMulDi_ETC___d8049[0] :
 		_0_CONCAT_IF_coreFix_fpuMulDivExe_0_fpuExec_dou_ETC___d8061[0]) ;
-  assign NOT_IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_286_ETC___d13348 =
+  assign NOT_IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_286_ETC___d13358 =
 	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[0] &&
 	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[1] &&
 	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[2] &&
@@ -22106,41 +22149,60 @@ module mkCore(CLK,
 	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[13] &&
 	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[14] &&
 	     !checkForException___d13069[4] &&
-	     NOT_csrf_fs_reg_read__1686_EQ_0_3058_3059_OR_N_ETC___d13346 ;
-  assign NOT_IF_NOT_rob_deqPort_0_canDeq__4852_4853_OR__ETC___d15068 =
-	     (fflags__h719060 & csrf_fflags_reg) != fflags__h719060 ||
+	     NOT_csrf_fs_reg_read__1686_EQ_0_3058_3059_OR_N_ETC___d13351 &&
+	     (fetchStage$pipelines_0_first[231:200] != 32'h10500073 ||
+	      !csrf_tw_reg ||
+	      csrf_prv_reg == 2'd3) ;
+  assign NOT_IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_286_ETC___d13443 =
+	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[0] &&
+	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[1] &&
+	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[2] &&
+	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[3] &&
+	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[4] &&
+	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[5] &&
+	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[6] &&
+	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[7] &&
+	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[8] &&
+	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[9] &&
+	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[10] &&
+	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[11] &&
+	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[12] &&
+	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[13] &&
+	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[14] &&
+	     !checkForException___d13069[4] &&
+	     NOT_csrf_fs_reg_read__1686_EQ_0_3058_3059_OR_N_ETC___d13441 ;
+  assign NOT_IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_286_ETC___d13725 =
+	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[0] &&
+	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[1] &&
+	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[2] &&
+	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[3] &&
+	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[4] &&
+	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[5] &&
+	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[6] &&
+	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[7] &&
+	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[8] &&
+	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[9] &&
+	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[10] &&
+	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[11] &&
+	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[12] &&
+	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[13] &&
+	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[14] &&
+	     !checkForException___d13698[4] &&
+	     NOT_csrf_fs_reg_read__1686_EQ_0_3058_3059_OR_N_ETC___d13723 ;
+  assign NOT_IF_NOT_rob_deqPort_0_canDeq__4873_4874_OR__ETC___d15089 =
+	     (fflags__h719150 & csrf_fflags_reg) != fflags__h719150 ||
 	     !r__h617262 &&
-	     (IF_rob_deqPort_1_canDeq__4856_THEN_IF_NOT_rob__ETC___d15063 ||
-	      fflags__h719060 != 5'd0) ;
-  assign NOT_IF_rob_deqPort_0_deq_data__4334_BITS_97_TO_ETC___d14823 =
-	     next_pc__h715152 !=
-	     rob_deqPort_0_deq_data__4334_BITS_282_TO_219_4_ETC___d14820 ;
-  assign NOT_SEL_ARR_NOT_coreFix_aluExe_0_rsAlu_canEnq__ETC___d13492 =
-	     !SEL_ARR_NOT_coreFix_aluExe_0_rsAlu_canEnq__344_ETC___d13490 &&
+	     (IF_rob_deqPort_1_canDeq__4877_THEN_IF_NOT_rob__ETC___d15084 ||
+	      fflags__h719150 != 5'd0) ;
+  assign NOT_IF_rob_deqPort_0_deq_data__4355_BITS_97_TO_ETC___d14844 =
+	     next_pc__h715242 !=
+	     rob_deqPort_0_deq_data__4355_BITS_282_TO_219_4_ETC___d14841 ;
+  assign NOT_SEL_ARR_NOT_coreFix_aluExe_0_rsAlu_canEnq__ETC___d13503 =
+	     !SEL_ARR_NOT_coreFix_aluExe_0_rsAlu_canEnq__345_ETC___d13501 &&
 	     (fetchStage$pipelines_0_first[194:192] != 3'd1 ||
 	      specTagManager$canClaim) &&
 	     regRenamingTable$rename_0_canRename &&
-	     NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13437 ;
-  assign NOT_checkForException_3069_BIT_4_3070_3322_AND_ETC___d13431 =
-	     !checkForException___d13069[4] &&
-	     (csrf_fs_reg != 2'd0 ||
-	      (!fetchStage$pipelines_0_first[95] ||
-	       !fetchStage$pipelines_0_first[94]) &&
-	      (!fetchStage$pipelines_0_first[88] ||
-	       !fetchStage$pipelines_0_first[87]) &&
-	      !fetchStage$pipelines_0_first[81] &&
-	      (!fetchStage$pipelines_0_first[75] ||
-	       !fetchStage$pipelines_0_first[74])) ;
-  assign NOT_checkForException_3686_BIT_4_3687_3688_AND_ETC___d13706 =
-	     !checkForException___d13686[4] &&
-	     (csrf_fs_reg != 2'd0 ||
-	      (!fetchStage$pipelines_1_first[95] ||
-	       !fetchStage$pipelines_1_first[94]) &&
-	      (!fetchStage$pipelines_1_first[88] ||
-	       !fetchStage$pipelines_1_first[87]) &&
-	      !fetchStage$pipelines_1_first[81] &&
-	      (!fetchStage$pipelines_1_first[75] ||
-	       !fetchStage$pipelines_1_first[74])) ;
+	     NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13448 ;
   assign NOT_coreFix_aluExe_0_bypassWire_0_whas__2301_2_ETC___d12328 =
 	     (!coreFix_aluExe_0_bypassWire_0$whas ||
 	      !coreFix_aluExe_0_bypassWire_0_wget__2302_BITS__ETC___d12304) &&
@@ -22506,7 +22568,7 @@ module mkCore(CLK,
 	     !coreFix_fpuMulDivExe_0_regToExeQ$first[14] &&
 	     !coreFix_fpuMulDivExe_0_regToExeQ$first[13] &&
 	     !coreFix_fpuMulDivExe_0_regToExeQ$first[12] ;
-  assign NOT_coreFix_fpuMulDivExe_0_rsFpuMulDiv_canEnq__ETC___d13816 =
+  assign NOT_coreFix_fpuMulDivExe_0_rsFpuMulDiv_canEnq__ETC___d13837 =
 	     !coreFix_fpuMulDivExe_0_rsFpuMulDiv$canEnq ||
 	     fetchStage$pipelines_0_first[68] ||
 	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[0] ||
@@ -22865,9 +22927,9 @@ module mkCore(CLK,
 	     coreFix_memExe_dMem_cache_m_banks_0_cRqMshr$RDY_pipelineResp_releaseEntry &&
 	     (!coreFix_memExe_dMem_cache_m_banks_0_cRqMshr$pipelineResp_getSucc[3] ||
 	      !coreFix_memExe_dMem_cache_m_banks_0_cRqRetryIndexQ_full) ;
-  assign NOT_coreFix_memExe_rsMem_canEnq__3460_3521_OR__ETC___d13817 =
+  assign NOT_coreFix_memExe_rsMem_canEnq__3471_3533_OR__ETC___d13838 =
 	     !coreFix_memExe_rsMem$canEnq ||
-	     IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13524 ||
+	     IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13536 ||
 	     fetchStage$pipelines_0_first[68] ||
 	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[0] ||
 	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[1] ||
@@ -22884,7 +22946,7 @@ module mkCore(CLK,
 	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[12] ||
 	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[13] ||
 	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[14] ;
-  assign NOT_csrf_fs_reg_read__1686_EQ_0_3058_3059_OR_N_ETC___d13346 =
+  assign NOT_csrf_fs_reg_read__1686_EQ_0_3058_3059_OR_N_ETC___d13351 =
 	     (csrf_fs_reg != 2'd0 ||
 	      (!fetchStage$pipelines_0_first[95] ||
 	       !fetchStage$pipelines_0_first[94]) &&
@@ -22894,145 +22956,142 @@ module mkCore(CLK,
 	      (!fetchStage$pipelines_0_first[75] ||
 	       !fetchStage$pipelines_0_first[74])) &&
 	     (fetchStage$pipelines_0_first[199:195] != 5'd13 ||
-	      NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13342 &&
+	      NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13347 &&
 	      !csrf_prv_reg_read__2863_ULT_IF_fetchStage_pipe_ETC___d13101) ;
-  assign NOT_csrf_prv_reg_read__2863_ULE_1_4475_4539_OR_ETC___d14543 =
-	     !csrf_prv_reg_read__2863_ULE_1___d14475 ||
+  assign NOT_csrf_fs_reg_read__1686_EQ_0_3058_3059_OR_N_ETC___d13441 =
+	     (csrf_fs_reg != 2'd0 ||
+	      (!fetchStage$pipelines_0_first[95] ||
+	       !fetchStage$pipelines_0_first[94]) &&
+	      (!fetchStage$pipelines_0_first[88] ||
+	       !fetchStage$pipelines_0_first[87]) &&
+	      !fetchStage$pipelines_0_first[81] &&
+	      (!fetchStage$pipelines_0_first[75] ||
+	       !fetchStage$pipelines_0_first[74])) &&
+	     (fetchStage$pipelines_0_first[231:200] != 32'h10500073 ||
+	      !csrf_tw_reg ||
+	      csrf_prv_reg == 2'd3) ;
+  assign NOT_csrf_fs_reg_read__1686_EQ_0_3058_3059_OR_N_ETC___d13723 =
+	     (csrf_fs_reg != 2'd0 ||
+	      (!fetchStage$pipelines_1_first[95] ||
+	       !fetchStage$pipelines_1_first[94]) &&
+	      (!fetchStage$pipelines_1_first[88] ||
+	       !fetchStage$pipelines_1_first[87]) &&
+	      !fetchStage$pipelines_1_first[81] &&
+	      (!fetchStage$pipelines_1_first[75] ||
+	       !fetchStage$pipelines_1_first[74])) &&
+	     (fetchStage$pipelines_1_first[231:200] != 32'h10500073 ||
+	      !csrf_tw_reg ||
+	      csrf_prv_reg == 2'd3) ;
+  assign NOT_csrf_prv_reg_read__2863_ULE_1_4496_4560_OR_ETC___d14564 =
+	     !csrf_prv_reg_read__2863_ULE_1___d14496 ||
 	     (commitStage_commitTrap[4] ?
-		!_0b0_CONCAT_csrf_mideleg_11_reg_read__1801_1802_ETC___d14495 :
-		!_0b0_CONCAT_csrf_medeleg_15_reg_read__1793_1794_ETC___d14513) ;
-  assign NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13532 =
-	     !fetchStage$pipelines_0_canDeq ||
-	     !regRenamingTable$rename_0_canRename ||
-	     fetchStage_pipelines_0_first__2835_BITS_199_TO_ETC___d13514 ||
-	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13529 ||
-	     fetchStage$pipelines_0_first[194:192] != 3'd1 ;
-  assign NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13788 =
+		!_0b0_CONCAT_csrf_mideleg_11_reg_read__1801_1802_ETC___d14516 :
+		!_0b0_CONCAT_csrf_medeleg_15_reg_read__1793_1794_ETC___d14534) ;
+  assign NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13809 =
 	     (!fetchStage$pipelines_0_canDeq ||
 	      fetchStage$RDY_pipelines_0_first) &&
-	     (regRenamingTable_rename_0_canRename__3418_AND__ETC___d13785 ||
+	     (regRenamingTable_rename_0_canRename__3428_AND__ETC___d13498 &&
+	      (fetchStage$pipelines_0_first[194:192] == 3'd3 ||
+	       fetchStage$pipelines_0_first[194:192] == 3'd4) ||
+	      !coreFix_fpuMulDivExe_0_rsFpuMulDiv$canEnq ||
 	      !regRenamingTable$rename_1_canRename ||
-	      fetchStage_pipelines_1_first__2844_BITS_199_TO_ETC___d13774) ;
-  assign NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13799 =
+	      fetchStage_pipelines_1_first__2844_BITS_199_TO_ETC___d13795) ;
+  assign NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13820 =
 	     (!fetchStage$pipelines_0_canDeq ||
 	      fetchStage$RDY_pipelines_0_first) &&
-	     (regRenamingTable_rename_0_canRename__3418_AND__ETC___d13797 ||
+	     (regRenamingTable_rename_0_canRename__3428_AND__ETC___d13818 ||
 	      !regRenamingTable$rename_1_canRename ||
-	      fetchStage_pipelines_1_first__2844_BITS_199_TO_ETC___d13774) ;
-  assign NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13823 =
+	      fetchStage_pipelines_1_first__2844_BITS_199_TO_ETC___d13795) ;
+  assign NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13859 =
 	     !fetchStage$pipelines_0_canDeq ||
-	     !regRenamingTable$rename_0_canRename ||
-	     fetchStage_pipelines_0_first__2835_BITS_199_TO_ETC___d13514 ||
-	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13820 ||
-	     fetchStage$pipelines_0_first[194:192] != 3'd1 ;
-  assign NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13838 =
-	     !fetchStage$pipelines_0_canDeq ||
-	     NOT_regRenamingTable_rename_0_canRename__3418__ETC___d13832 ||
+	     NOT_regRenamingTable_rename_0_canRename__3428__ETC___d13853 ||
 	     fetchStage$pipelines_0_first[194:192] != 3'd3 &&
 	     fetchStage$pipelines_0_first[194:192] != 3'd4 ;
-  assign NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13852 =
-	     !fetchStage$pipelines_0_canDeq ||
-	     !regRenamingTable$rename_0_canRename ||
-	     fetchStage_pipelines_0_first__2835_BITS_199_TO_ETC___d13514 ||
-	     fetchStage$pipelines_0_first[194:192] != 3'd2 ||
-	     IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13524 ;
-  assign NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13855 =
-	     NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13852 &&
+  assign NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13876 =
+	     (!fetchStage$pipelines_0_canDeq ||
+	      NOT_regRenamingTable_rename_0_canRename__3428__ETC___d13527 ||
+	      fetchStage$pipelines_0_first[194:192] != 3'd2 ||
+	      IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13536) &&
 	     coreFix_memExe_rsMem$canEnq &&
 	     CASE_fetchStagepipelines_1_first_BITS_191_TO__ETC__q231 ;
-  assign NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13976 =
+  assign NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13997 =
 	     (!fetchStage$pipelines_0_canDeq ||
 	      fetchStage$pipelines_0_first[194:192] == 3'd1 &&
 	      !specTagManager$canClaim ||
-	      NOT_regRenamingTable_rename_0_canRename__3418__ETC___d13832 ||
+	      NOT_regRenamingTable_rename_0_canRename__3428__ETC___d13853 ||
 	      fetchStage$pipelines_0_first[194:192] != 3'd0 &&
 	      fetchStage$pipelines_0_first[194:192] != 3'd1 ||
-	      !SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3447_co_ETC___d13457) &&
+	      !SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3458_co_ETC___d13468) &&
 	     coreFix_aluExe_1_rsAlu$canEnq &&
-	     !coreFix_aluExe_0_rsAlu_approximateCount__3451__ETC___d13453 ;
-  assign NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13995 =
+	     !coreFix_aluExe_0_rsAlu_approximateCount__3462__ETC___d13464 ;
+  assign NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14016 =
 	     (!fetchStage$pipelines_0_canDeq ||
-	      NOT_specTagManager_canClaim__3416_3500_OR_NOT__ETC___d13966) &&
+	      NOT_specTagManager_canClaim__3426_3511_OR_NOT__ETC___d13987) &&
 	     CASE_fetchStagepipelines_1_first_BITS_191_TO__ETC__q235 &&
 	     (fetchStage$pipelines_1_first[199:195] == 5'd14 ||
 	      coreFix_memExe_rsMem$RDY_enq) ;
-  assign NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14047 =
+  assign NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14068 =
 	     (!fetchStage$pipelines_0_canDeq ||
-	      fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13922 &&
-	      IF_fetchStage_RDY_pipelines_0_first__2832_AND__ETC___d13444) &&
+	      fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13943 &&
+	      IF_fetchStage_RDY_pipelines_0_first__2832_AND__ETC___d13455) &&
 	     fetchStage$RDY_pipelines_0_first &&
-	     fetchStage_pipelines_0_canDeq__2833_AND_fetchS_ETC___d14045 ;
-  assign NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14178 =
+	     fetchStage_pipelines_0_canDeq__2833_AND_fetchS_ETC___d14066 ;
+  assign NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14199 =
 	     (!fetchStage$pipelines_0_canDeq ||
-	      NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d14053 &&
-	      IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13473) &&
+	      NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d14074 &&
+	      IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13484) &&
 	     fetchStage$pipelines_1_canDeq ;
-  assign NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14180 =
+  assign NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14201 =
 	     !fetchStage$pipelines_0_canDeq ||
-	     NOT_regRenamingTable_rename_0_canRename__3418__ETC___d13887 ||
-	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13529 ||
+	     NOT_regRenamingTable_rename_0_canRename__3428__ETC___d13908 ||
+	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13541 ||
 	     fetchStage$pipelines_0_first[194:192] != 3'd1 ;
-  assign NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14191 =
-	     NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14178 &&
-	     NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d14188 &&
+  assign NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14212 =
+	     NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14199 &&
+	     NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d14209 &&
 	     (fetchStage$pipelines_1_first[194:192] == 3'd0 ||
 	      fetchStage$pipelines_1_first[194:192] == 3'd1) &&
-	     SEL_ARR_NOT_fetchStage_pipelines_0_canDeq__283_ETC___d13961 ;
-  assign NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14227 =
+	     SEL_ARR_NOT_fetchStage_pipelines_0_canDeq__283_ETC___d13982 ;
+  assign NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14248 =
 	     !fetchStage$pipelines_0_canDeq ||
-	     NOT_regRenamingTable_rename_0_canRename__3418__ETC___d13887 ||
+	     NOT_regRenamingTable_rename_0_canRename__3428__ETC___d13908 ||
 	     fetchStage$pipelines_0_first[194:192] != 3'd3 &&
 	     fetchStage$pipelines_0_first[194:192] != 3'd4 ;
-  assign NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14252 =
-	     NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14178 &&
-	     regRenamingTable$rename_1_canRename &&
-	     NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d14186 &&
+  assign NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14268 =
+	     NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14199 &&
+	     regRenamingTable_rename_1_canRename__3547_AND__ETC___d14208 &&
 	     (fetchStage$pipelines_1_first[194:192] == 3'd3 ||
 	      fetchStage$pipelines_1_first[194:192] == 3'd4) &&
-	     NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14227 &&
+	     NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14248 &&
 	     coreFix_fpuMulDivExe_0_rsFpuMulDiv$canEnq &&
-	     fetchStage$pipelines_1_first[173] ;
-  assign NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14255 =
+	     NOT_fetchStage_pipelines_1_first__2844_BITS_32_ETC___d14263 ;
+  assign NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14276 =
 	     (!fetchStage$pipelines_0_canDeq ||
-	      NOT_regRenamingTable_rename_0_canRename__3418__ETC___d13887 ||
+	      NOT_regRenamingTable_rename_0_canRename__3428__ETC___d13908 ||
 	      fetchStage$pipelines_0_first[194:192] != 3'd2 ||
-	      IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13524) &&
+	      IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13536) &&
 	     coreFix_memExe_rsMem$canEnq &&
 	     CASE_fetchStagepipelines_1_first_BITS_191_TO__ETC__q231 ;
-  assign NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14299 =
-	     NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14180 &&
+  assign NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14297 =
+	     NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14199 &&
+	     regRenamingTable_rename_1_canRename__3547_AND__ETC___d14208 &&
+	     fetchStage$pipelines_1_first[194:192] == 3'd2 &&
+	     NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14276 &&
+	     fetchStage$pipelines_1_first[173] ;
+  assign NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14320 =
+	     NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14201 &&
 	     specTagManager$canClaim &&
-	     regRenamingTable$rename_1_canRename &&
-	     NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d14186 &&
-	     IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d13869 &&
+	     regRenamingTable_rename_1_canRename__3547_AND__ETC___d14208 &&
+	     IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d13890 &&
 	     fetchStage$pipelines_1_first[194:192] == 3'd1 ;
-  assign NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13342 =
+  assign NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13347 =
 	     (fetchStage$pipelines_0_first[194:192] != 3'd0 ||
 	      fetchStage$pipelines_0_first[178:174] != 5'd15) &&
-	     rs1__h659255 == 5'd0 &&
-	     imm__h659256 == 32'd0 ||
+	     rs1__h659257 == 5'd0 &&
+	     imm__h659258 == 32'd0 ||
 	     IF_fetchStage_pipelines_0_first__2835_BIT_173__ETC___d13096[11:10] !=
 	     2'b11 ;
-  assign NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13437 =
-	     fetchStage$pipelines_0_first[199:195] != 5'd0 &&
-	     fetchStage$pipelines_0_first[199:195] != 5'd21 &&
-	     fetchStage$pipelines_0_first[199:195] != 5'd17 &&
-	     fetchStage$pipelines_0_first[199:195] != 5'd18 &&
-	     fetchStage$pipelines_0_first[199:195] != 5'd13 &&
-	     fetchStage$pipelines_0_first[199:195] != 5'd16 &&
-	     fetchStage$pipelines_0_first[199:195] != 5'd15 &&
-	     fetchStage$pipelines_0_first[199:195] != 5'd19 &&
-	     fetchStage$pipelines_0_first[199:195] != 5'd20 &&
-	     NOT_fetchStage_pipelines_0_first__2835_BIT_68__ETC___d13433 &&
-	     rob$enqPort_0_canEnq &&
-	     epochManager$checkEpoch_0_check ;
-  assign NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13474 =
-	     (fetchStage$pipelines_0_first[194:192] != 3'd1 ||
-	      specTagManager$canClaim) &&
-	     regRenamingTable$rename_0_canRename &&
-	     NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13437 &&
-	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13473 ;
-  assign NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13486 =
+  assign NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13448 =
 	     fetchStage$pipelines_0_first[199:195] != 5'd0 &&
 	     fetchStage$pipelines_0_first[199:195] != 5'd21 &&
 	     fetchStage$pipelines_0_first[199:195] != 5'd17 &&
@@ -23043,165 +23102,72 @@ module mkCore(CLK,
 	     fetchStage$pipelines_0_first[199:195] != 5'd19 &&
 	     fetchStage$pipelines_0_first[199:195] != 5'd20 &&
 	     !fetchStage$pipelines_0_first[68] &&
-	     NOT_checkForException_3069_BIT_4_3070_3322_AND_ETC___d13431 &&
+	     NOT_IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_286_ETC___d13443 &&
 	     rob$enqPort_0_canEnq &&
 	     epochManager$checkEpoch_0_check ;
-  assign NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13711 =
+  assign NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13485 =
 	     (fetchStage$pipelines_0_first[194:192] != 3'd1 ||
 	      specTagManager$canClaim) &&
 	     regRenamingTable$rename_0_canRename &&
-	     NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13486 &&
-	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13473 ;
-  assign NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13725 =
+	     NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13448 &&
+	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13484 ;
+  assign NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13743 =
 	     (fetchStage$pipelines_0_first[194:192] != 3'd1 ||
 	      specTagManager$canClaim) &&
 	     regRenamingTable$rename_0_canRename &&
-	     NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13437 &&
-	     fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13724 ;
-  assign NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13731 =
+	     NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13448 &&
+	     fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13742 ;
+  assign NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13749 =
 	     (fetchStage$pipelines_0_first[194:192] != 3'd1 ||
 	      specTagManager$canClaim) &&
 	     regRenamingTable$rename_0_canRename &&
-	     NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13437 &&
+	     NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13448 &&
 	     (fetchStage$pipelines_0_first[194:192] == 3'd0 ||
 	      fetchStage$pipelines_0_first[194:192] == 3'd1) &&
-	     SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3447_co_ETC___d13457 &&
+	     SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3458_co_ETC___d13468 &&
 	     (!coreFix_aluExe_0_rsAlu$canEnq ||
-	      !coreFix_aluExe_0_rsAlu_approximateCount__3451__ETC___d13453) ;
-  assign NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13842 =
+	      !coreFix_aluExe_0_rsAlu_approximateCount__3462__ETC___d13464) ;
+  assign NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13901 =
 	     (fetchStage$pipelines_0_first[194:192] != 3'd1 ||
 	      specTagManager$canClaim) &&
 	     regRenamingTable$rename_0_canRename &&
-	     NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13486 &&
-	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13841 ;
-  assign NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13859 =
-	     (fetchStage$pipelines_0_first[194:192] != 3'd1 ||
-	      specTagManager$canClaim) &&
-	     regRenamingTable$rename_0_canRename &&
-	     NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13486 &&
-	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13858 ;
-  assign NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13877 =
-	     (fetchStage$pipelines_0_first[194:192] != 3'd1 ||
-	      specTagManager$canClaim) &&
-	     regRenamingTable$rename_0_canRename &&
-	     NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13486 &&
-	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13497 ;
-  assign NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13880 =
-	     (fetchStage$pipelines_0_first[194:192] != 3'd1 ||
-	      specTagManager$canClaim) &&
-	     regRenamingTable$rename_0_canRename &&
-	     NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13437 &&
-	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13497 ;
-  assign NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13969 =
-	     (fetchStage$pipelines_0_first[194:192] != 3'd1 ||
-	      specTagManager$canClaim) &&
-	     regRenamingTable$rename_0_canRename &&
-	     NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13486 &&
-	     fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13724 ;
-  assign NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d14053 =
+	     NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13448 &&
+	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13508 ;
+  assign NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d14074 =
 	     (fetchStage$pipelines_0_first[194:192] != 3'd1 ||
 	      specTagManager$canClaim) &&
 	     regRenamingTable$rename_0_canRename &&
 	     !checkForException___d13069[4] &&
 	     rob$enqPort_0_canEnq ;
-  assign NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d14153 =
+  assign NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d14174 =
 	     { fetchStage$pipelines_0_first[194:192] != 3'd2 ||
 	       !coreFix_memExe_rsMem$canEnq ||
-	       IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13524 ||
-	       IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d14095,
+	       IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13536 ||
+	       IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d14116,
 	       (fetchStage$pipelines_0_first[194:192] == 3'd2 &&
 		coreFix_memExe_rsMem$canEnq &&
-		IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13469 &&
-		IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d14098) ?
-		 IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d14101 :
+		IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13480 &&
+		IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d14119) ?
+		 IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d14122 :
 		 { 1'h0,
-		   IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d14104 },
+		   IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d14125 },
 	       7'd32,
 	       specTagManager$currentSpecBits } ;
-  assign NOT_fetchStage_pipelines_0_first__2835_BITS_32_ETC___d14077 =
+  assign NOT_fetchStage_pipelines_0_first__2835_BITS_32_ETC___d14098 =
 	     fetchStage$pipelines_0_first[323:260] !=
-	     fallthrough_pc__h667687 ;
-  assign NOT_fetchStage_pipelines_0_first__2835_BIT_68__ETC___d13433 =
+	     fallthrough_pc__h667716 ;
+  assign NOT_fetchStage_pipelines_0_first__2835_BIT_68__ETC___d13496 =
 	     !fetchStage$pipelines_0_first[68] &&
-	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[0] &&
-	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[1] &&
-	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[2] &&
-	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[3] &&
-	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[4] &&
-	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[5] &&
-	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[6] &&
-	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[7] &&
-	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[8] &&
-	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[9] &&
-	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[10] &&
-	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[11] &&
-	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[12] &&
-	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[13] &&
-	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[14] &&
-	     NOT_checkForException_3069_BIT_4_3070_3322_AND_ETC___d13431 ;
+	     !checkForException___d13069[4] &&
+	     NOT_csrf_fs_reg_read__1686_EQ_0_3058_3059_OR_N_ETC___d13441 &&
+	     rob$enqPort_0_canEnq &&
+	     epochManager$checkEpoch_0_check ;
   assign NOT_fetchStage_pipelines_1_canDeq__2841_2842_O_ETC___d12850 =
 	     !fetchStage$pipelines_1_canDeq ||
 	     fetchStage$RDY_pipelines_1_first &&
 	     (epochManager$checkEpoch_1_check ||
 	      fetchStage$RDY_pipelines_1_deq) ;
-  assign NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13716 =
-	     fetchStage$pipelines_1_first[199:195] != 5'd0 &&
-	     fetchStage$pipelines_1_first[199:195] != 5'd21 &&
-	     fetchStage$pipelines_1_first[199:195] != 5'd17 &&
-	     fetchStage$pipelines_1_first[199:195] != 5'd18 &&
-	     fetchStage$pipelines_1_first[199:195] != 5'd13 &&
-	     fetchStage$pipelines_1_first[199:195] != 5'd16 &&
-	     fetchStage$pipelines_1_first[199:195] != 5'd15 &&
-	     fetchStage$pipelines_1_first[199:195] != 5'd19 &&
-	     fetchStage$pipelines_1_first[199:195] != 5'd20 &&
-	     NOT_fetchStage_pipelines_1_first__2844_BIT_68__ETC___d13708 &&
-	     rob$enqPort_1_canEnq &&
-	     epochManager$checkEpoch_1_check &&
-	     (!fetchStage$pipelines_0_canDeq ||
-	      NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13711) ;
-  assign NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13718 =
-	     (fetchStage$pipelines_1_first[194:192] != 3'd1 ||
-	      NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13532 &&
-	      specTagManager$canClaim) &&
-	     regRenamingTable$rename_1_canRename &&
-	     NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13716 ;
-  assign NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13826 =
-	     (fetchStage$pipelines_1_first[194:192] != 3'd1 ||
-	      NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13823 &&
-	      specTagManager$canClaim) &&
-	     regRenamingTable$rename_1_canRename &&
-	     NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13716 ;
-  assign NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13847 =
-	     fetchStage$pipelines_1_first[199:195] != 5'd0 &&
-	     fetchStage$pipelines_1_first[199:195] != 5'd21 &&
-	     fetchStage$pipelines_1_first[199:195] != 5'd17 &&
-	     fetchStage$pipelines_1_first[199:195] != 5'd18 &&
-	     fetchStage$pipelines_1_first[199:195] != 5'd13 &&
-	     fetchStage$pipelines_1_first[199:195] != 5'd16 &&
-	     fetchStage$pipelines_1_first[199:195] != 5'd15 &&
-	     fetchStage$pipelines_1_first[199:195] != 5'd19 &&
-	     fetchStage$pipelines_1_first[199:195] != 5'd20 &&
-	     NOT_fetchStage_pipelines_1_first__2844_BIT_68__ETC___d13708 &&
-	     rob$enqPort_1_canEnq &&
-	     epochManager$checkEpoch_1_check &&
-	     (!fetchStage$pipelines_0_canDeq ||
-	      NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13842) ;
-  assign NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13864 =
-	     fetchStage$pipelines_1_first[199:195] != 5'd0 &&
-	     fetchStage$pipelines_1_first[199:195] != 5'd21 &&
-	     fetchStage$pipelines_1_first[199:195] != 5'd17 &&
-	     fetchStage$pipelines_1_first[199:195] != 5'd18 &&
-	     fetchStage$pipelines_1_first[199:195] != 5'd13 &&
-	     fetchStage$pipelines_1_first[199:195] != 5'd16 &&
-	     fetchStage$pipelines_1_first[199:195] != 5'd15 &&
-	     fetchStage$pipelines_1_first[199:195] != 5'd19 &&
-	     fetchStage$pipelines_1_first[199:195] != 5'd20 &&
-	     NOT_fetchStage_pipelines_1_first__2844_BIT_68__ETC___d13708 &&
-	     rob$enqPort_1_canEnq &&
-	     epochManager$checkEpoch_1_check &&
-	     (!fetchStage$pipelines_0_canDeq ||
-	      NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13859) ;
-  assign NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d14186 =
+  assign NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13734 =
 	     fetchStage$pipelines_1_first[199:195] != 5'd0 &&
 	     fetchStage$pipelines_1_first[199:195] != 5'd21 &&
 	     fetchStage$pipelines_1_first[199:195] != 5'd17 &&
@@ -23212,36 +23178,72 @@ module mkCore(CLK,
 	     fetchStage$pipelines_1_first[199:195] != 5'd19 &&
 	     fetchStage$pipelines_1_first[199:195] != 5'd20 &&
 	     !fetchStage$pipelines_1_first[68] &&
-	     NOT_checkForException_3686_BIT_4_3687_3688_AND_ETC___d13706 &&
+	     NOT_IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_286_ETC___d13725 &&
+	     rob_enqPort_1_canEnq__3727_AND_epochManager_ch_ETC___d13732 ;
+  assign NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13736 =
+	     (fetchStage$pipelines_1_first[194:192] != 3'd1 ||
+	      (!fetchStage$pipelines_0_canDeq ||
+	       NOT_regRenamingTable_rename_0_canRename__3428__ETC___d13527 ||
+	       IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13541 ||
+	       fetchStage$pipelines_0_first[194:192] != 3'd1) &&
+	      specTagManager$canClaim) &&
+	     regRenamingTable$rename_1_canRename &&
+	     NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13734 ;
+  assign NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13847 =
+	     (fetchStage$pipelines_1_first[194:192] != 3'd1 ||
+	      (!fetchStage$pipelines_0_canDeq ||
+	       NOT_regRenamingTable_rename_0_canRename__3428__ETC___d13527 ||
+	       IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13841 ||
+	       fetchStage$pipelines_0_first[194:192] != 3'd1) &&
+	      specTagManager$canClaim) &&
+	     regRenamingTable$rename_1_canRename &&
+	     NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13734 ;
+  assign NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13868 =
+	     fetchStage$pipelines_1_first[199:195] != 5'd0 &&
+	     fetchStage$pipelines_1_first[199:195] != 5'd21 &&
+	     fetchStage$pipelines_1_first[199:195] != 5'd17 &&
+	     fetchStage$pipelines_1_first[199:195] != 5'd18 &&
+	     fetchStage$pipelines_1_first[199:195] != 5'd13 &&
+	     fetchStage$pipelines_1_first[199:195] != 5'd16 &&
+	     fetchStage$pipelines_1_first[199:195] != 5'd15 &&
+	     fetchStage$pipelines_1_first[199:195] != 5'd19 &&
+	     fetchStage$pipelines_1_first[199:195] != 5'd20 &&
+	     !fetchStage$pipelines_1_first[68] &&
+	     NOT_IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_286_ETC___d13725 &&
+	     rob_enqPort_1_canEnq__3727_AND_epochManager_ch_ETC___d13866 ;
+  assign NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13885 =
+	     fetchStage$pipelines_1_first[199:195] != 5'd0 &&
+	     fetchStage$pipelines_1_first[199:195] != 5'd21 &&
+	     fetchStage$pipelines_1_first[199:195] != 5'd17 &&
+	     fetchStage$pipelines_1_first[199:195] != 5'd18 &&
+	     fetchStage$pipelines_1_first[199:195] != 5'd13 &&
+	     fetchStage$pipelines_1_first[199:195] != 5'd16 &&
+	     fetchStage$pipelines_1_first[199:195] != 5'd15 &&
+	     fetchStage$pipelines_1_first[199:195] != 5'd19 &&
+	     fetchStage$pipelines_1_first[199:195] != 5'd20 &&
+	     !fetchStage$pipelines_1_first[68] &&
+	     NOT_IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_286_ETC___d13725 &&
+	     rob_enqPort_1_canEnq__3727_AND_epochManager_ch_ETC___d13883 ;
+  assign NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d14209 =
+	     (fetchStage$pipelines_1_first[194:192] != 3'd1 ||
+	      NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14201 &&
+	      specTagManager$canClaim) &&
+	     regRenamingTable_rename_1_canRename__3547_AND__ETC___d14208 ;
+  assign NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d14271 =
+	     (fetchStage$pipelines_1_first[194:192] == 3'd3 ||
+	      fetchStage$pipelines_1_first[194:192] == 3'd4) &&
+	     NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14248 &&
+	     coreFix_fpuMulDivExe_0_rsFpuMulDiv$canEnq &&
+	     fetchStage$pipelines_1_first[173] ;
+  assign NOT_fetchStage_pipelines_1_first__2844_BITS_32_ETC___d14263 =
+	     fetchStage$pipelines_1_first[323:260] !=
+	     fallthrough_pc__h683208 ;
+  assign NOT_fetchStage_pipelines_1_first__2844_BIT_68__ETC___d14206 =
+	     !fetchStage$pipelines_1_first[68] &&
+	     !checkForException___d13698[4] &&
+	     NOT_csrf_fs_reg_read__1686_EQ_0_3058_3059_OR_N_ETC___d13723 &&
 	     rob$enqPort_1_canEnq &&
 	     epochManager$checkEpoch_1_check ;
-  assign NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d14188 =
-	     (fetchStage$pipelines_1_first[194:192] != 3'd1 ||
-	      NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14180 &&
-	      specTagManager$canClaim) &&
-	     regRenamingTable$rename_1_canRename &&
-	     NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d14186 ;
-  assign NOT_fetchStage_pipelines_1_first__2844_BITS_32_ETC___d14242 =
-	     fetchStage$pipelines_1_first[323:260] !=
-	     fallthrough_pc__h683150 ;
-  assign NOT_fetchStage_pipelines_1_first__2844_BIT_68__ETC___d13708 =
-	     !fetchStage$pipelines_1_first[68] &&
-	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[0] &&
-	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[1] &&
-	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[2] &&
-	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[3] &&
-	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[4] &&
-	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[5] &&
-	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[6] &&
-	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[7] &&
-	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[8] &&
-	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[9] &&
-	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[10] &&
-	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[11] &&
-	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[12] &&
-	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[13] &&
-	     !IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[14] &&
-	     NOT_checkForException_3686_BIT_4_3687_3688_AND_ETC___d13706 ;
   assign NOT_mmio_cRqQ_clearReq_dummy2_1_read__26_27_OR_ETC___d431 =
 	     !mmio_cRqQ_clearReq_dummy2_1$Q_OUT || !mmio_cRqQ_clearReq_rl ;
   assign NOT_mmio_cRqQ_enqReq_dummy2_2_read__32_47_OR_I_ETC___d452 =
@@ -23321,7 +23323,7 @@ module mkCore(CLK,
 	     (mmio_pRsQ_deqReq_dummy2_2$Q_OUT &&
 	      (mmio_pRsQ_deqReq_lat_0$whas || mmio_pRsQ_deqReq_rl) ||
 	      mmio_pRsQ_empty) ;
-  assign NOT_regRenamingTable_rename_0_canRename__3418__ETC___d13832 =
+  assign NOT_regRenamingTable_rename_0_canRename__3428__ETC___d13527 =
 	     !regRenamingTable$rename_0_canRename ||
 	     fetchStage$pipelines_0_first[199:195] == 5'd0 ||
 	     fetchStage$pipelines_0_first[199:195] == 5'd21 ||
@@ -23332,23 +23334,44 @@ module mkCore(CLK,
 	     fetchStage$pipelines_0_first[199:195] == 5'd15 ||
 	     fetchStage$pipelines_0_first[199:195] == 5'd19 ||
 	     fetchStage$pipelines_0_first[199:195] == 5'd20 ||
-	     fetchStage$pipelines_0_first[68] ||
-	     checkForException_3069_BIT_4_3070_OR_csrf_fs_r_ETC___d13509 ||
-	     !rob$enqPort_0_canEnq ||
-	     !epochManager$checkEpoch_0_check ;
-  assign NOT_regRenamingTable_rename_0_canRename__3418__ETC___d13887 =
+	     fetchStage_pipelines_0_first__2835_BIT_68_2862_ETC___d13525 ;
+  assign NOT_regRenamingTable_rename_0_canRename__3428__ETC___d13853 =
+	     !regRenamingTable$rename_0_canRename ||
+	     fetchStage$pipelines_0_first[199:195] == 5'd0 ||
+	     fetchStage$pipelines_0_first[199:195] == 5'd21 ||
+	     fetchStage$pipelines_0_first[199:195] == 5'd17 ||
+	     fetchStage$pipelines_0_first[199:195] == 5'd18 ||
+	     fetchStage$pipelines_0_first[199:195] == 5'd13 ||
+	     fetchStage$pipelines_0_first[199:195] == 5'd16 ||
+	     fetchStage$pipelines_0_first[199:195] == 5'd15 ||
+	     fetchStage$pipelines_0_first[199:195] == 5'd19 ||
+	     fetchStage$pipelines_0_first[199:195] == 5'd20 ||
+	     fetchStage_pipelines_0_first__2835_BIT_68_2862_ETC___d13525 ;
+  assign NOT_regRenamingTable_rename_0_canRename__3428__ETC___d13908 =
 	     !regRenamingTable$rename_0_canRename ||
 	     fetchStage$pipelines_0_first[68] ||
 	     checkForException___d13069[4] ||
 	     !rob$enqPort_0_canEnq ;
-  assign NOT_rob_deqPort_0_canDeq__4852_4853_OR_regRena_ETC___d14891 =
+  assign NOT_regRenamingTable_rename_1_canRename__3547__ETC___d13966 =
+	     !regRenamingTable$rename_1_canRename ||
+	     fetchStage$pipelines_1_first[199:195] == 5'd0 ||
+	     fetchStage$pipelines_1_first[199:195] == 5'd21 ||
+	     fetchStage$pipelines_1_first[199:195] == 5'd17 ||
+	     fetchStage$pipelines_1_first[199:195] == 5'd18 ||
+	     fetchStage$pipelines_1_first[199:195] == 5'd13 ||
+	     fetchStage$pipelines_1_first[199:195] == 5'd16 ||
+	     fetchStage$pipelines_1_first[199:195] == 5'd15 ||
+	     fetchStage$pipelines_1_first[199:195] == 5'd19 ||
+	     fetchStage$pipelines_1_first[199:195] == 5'd20 ||
+	     fetchStage_pipelines_1_first__2844_BIT_68_3575_ETC___d13964 ;
+  assign NOT_rob_deqPort_0_canDeq__4873_4874_OR_regRena_ETC___d14912 =
 	     (!rob$deqPort_0_canDeq ||
 	      regRenamingTable$RDY_commit_0_commit &&
 	      rob$RDY_deqPort_0_deq) &&
 	     (!rob$deqPort_1_canDeq ||
 	      rob$RDY_deqPort_1_deq_data &&
-	      NOT_rob_deqPort_1_deq_data__4859_BIT_25_4860_4_ETC___d14888) ;
-  assign NOT_rob_deqPort_0_canDeq__4852_4853_OR_rob_deq_ETC___d15044 =
+	      NOT_rob_deqPort_1_deq_data__4880_BIT_25_4881_4_ETC___d14909) ;
+  assign NOT_rob_deqPort_0_canDeq__4873_4874_OR_rob_deq_ETC___d15065 =
 	     (!rob$deqPort_0_canDeq ||
 	      rob$deqPort_0_deq_data[25] && !rob$deqPort_0_deq_data[18] &&
 	      !rob$deqPort_0_deq_data[167] &&
@@ -23362,18 +23385,18 @@ module mkCore(CLK,
 	      rob$deqPort_0_deq_data[186:182] != 5'd19 &&
 	      rob$deqPort_0_deq_data[186:182] != 5'd20) &&
 	     rob$deqPort_1_canDeq ;
-  assign NOT_rob_deqPort_0_deq_data__4334_BITS_186_TO_1_ETC___d14647 =
+  assign NOT_rob_deqPort_0_deq_data__4355_BITS_186_TO_1_ETC___d14668 =
 	     rob$deqPort_0_deq_data[186:182] != 5'd13 ||
-	     (IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 !=
+	     (IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 !=
 	      6'd7 ||
 	      csrf_stats_module_writeQ$FULL_N) &&
-	     (IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 !=
+	     (IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 !=
 	      6'd6 ||
 	      csrf_terminate_module_terminateQ$FULL_N) ;
-  assign NOT_rob_deqPort_0_deq_data__4334_BITS_186_TO_1_ETC___d14833 =
+  assign NOT_rob_deqPort_0_deq_data__4355_BITS_186_TO_1_ETC___d14854 =
 	     (rob$deqPort_0_deq_data[186:182] == 5'd13) !=
 	     rob$deqPort_0_deq_data[181] ;
-  assign NOT_rob_deqPort_1_deq_data__4859_BIT_25_4860_4_ETC___d14888 =
+  assign NOT_rob_deqPort_1_deq_data__4880_BIT_25_4881_4_ETC___d14909 =
 	     !rob$deqPort_1_deq_data[25] || rob$deqPort_1_deq_data[18] ||
 	     rob$deqPort_1_deq_data[167] ||
 	     rob$deqPort_1_deq_data[186:182] == 5'd0 ||
@@ -23386,16 +23409,16 @@ module mkCore(CLK,
 	     rob$deqPort_1_deq_data[186:182] == 5'd19 ||
 	     rob$deqPort_1_deq_data[186:182] == 5'd20 ||
 	     regRenamingTable$RDY_commit_1_commit && rob$RDY_deqPort_1_deq ;
-  assign NOT_specTagManager_canClaim__3416_3500_OR_NOT__ETC___d13966 =
+  assign NOT_specTagManager_canClaim__3426_3511_OR_NOT__ETC___d13987 =
 	     !specTagManager$canClaim ||
-	     NOT_regRenamingTable_rename_0_canRename__3418__ETC___d13832 ||
-	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13913 ||
+	     NOT_regRenamingTable_rename_0_canRename__3428__ETC___d13853 ||
+	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13934 ||
 	     fetchStage$pipelines_0_first[194:192] != 3'd1 ||
 	     specTagManager$RDY_nextSpecTag ;
-  assign NOT_specTagManager_canClaim__3416_3500_OR_NOT__ETC___d14031 =
+  assign NOT_specTagManager_canClaim__3426_3511_OR_NOT__ETC___d14052 =
 	     !specTagManager$canClaim ||
-	     NOT_regRenamingTable_rename_0_canRename__3418__ETC___d13887 ||
-	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13913 ||
+	     NOT_regRenamingTable_rename_0_canRename__3428__ETC___d13908 ||
+	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13934 ||
 	     fetchStage$pipelines_0_first[194:192] != 3'd1 ||
 	     specTagManager$RDY_nextSpecTag ;
   assign SEL_ARR_coreFix_memExe_dMem_cache_m_banks_0_fr_ETC___d3013 =
@@ -23416,29 +23439,29 @@ module mkCore(CLK,
 	       !CASE_coreFix_memExe_dMem_cache_m_banks_0_fromP_ETC__q251,
 	       SEL_ARR_coreFix_memExe_dMem_cache_m_banks_0_fr_ETC___d3031,
 	       x__h294884 } ;
-  assign SEL_ARR_coreFix_memExe_dMem_cache_m_banks_0_rq_ETC___d15190 =
+  assign SEL_ARR_coreFix_memExe_dMem_cache_m_banks_0_rq_ETC___d15211 =
 	     { CASE_coreFix_memExe_dMem_cache_m_banks_0_rqToP_ETC__q253,
 	       CASE_coreFix_memExe_dMem_cache_m_banks_0_rqToP_ETC__q254,
 	       CASE_coreFix_memExe_dMem_cache_m_banks_0_rqToP_ETC__q255 } ;
-  assign SEL_ARR_coreFix_memExe_dMem_cache_m_banks_0_rs_ETC___d15146 =
+  assign SEL_ARR_coreFix_memExe_dMem_cache_m_banks_0_rs_ETC___d15167 =
 	     { CASE_coreFix_memExe_dMem_cache_m_banks_0_rsToP_ETC__q236,
 	       CASE_coreFix_memExe_dMem_cache_m_banks_0_rsToP_ETC__q237,
 	       CASE_coreFix_memExe_dMem_cache_m_banks_0_rsToP_ETC__q238,
 	       CASE_coreFix_memExe_dMem_cache_m_banks_0_rsToP_ETC__q239 } ;
-  assign SEL_ARR_coreFix_memExe_dMem_cache_m_banks_0_rs_ETC___d15155 =
-	     { SEL_ARR_coreFix_memExe_dMem_cache_m_banks_0_rs_ETC___d15146,
+  assign SEL_ARR_coreFix_memExe_dMem_cache_m_banks_0_rs_ETC___d15176 =
+	     { SEL_ARR_coreFix_memExe_dMem_cache_m_banks_0_rs_ETC___d15167,
 	       CASE_coreFix_memExe_dMem_cache_m_banks_0_rsToP_ETC__q240,
 	       CASE_coreFix_memExe_dMem_cache_m_banks_0_rsToP_ETC__q241 } ;
-  assign SEL_ARR_coreFix_memExe_dMem_cache_m_banks_0_rs_ETC___d15164 =
-	     { SEL_ARR_coreFix_memExe_dMem_cache_m_banks_0_rs_ETC___d15155,
+  assign SEL_ARR_coreFix_memExe_dMem_cache_m_banks_0_rs_ETC___d15185 =
+	     { SEL_ARR_coreFix_memExe_dMem_cache_m_banks_0_rs_ETC___d15176,
 	       CASE_coreFix_memExe_dMem_cache_m_banks_0_rsToP_ETC__q245,
 	       CASE_coreFix_memExe_dMem_cache_m_banks_0_rsToP_ETC__q246 } ;
-  assign SEL_ARR_fetchStage_pipelines_0_canDeq__2833_AN_ETC___d13777 =
-	     SEL_ARR_fetchStage_pipelines_0_canDeq__2833_AN_ETC___d13750 ||
+  assign SEL_ARR_fetchStage_pipelines_0_canDeq__2833_AN_ETC___d13798 =
+	     SEL_ARR_fetchStage_pipelines_0_canDeq__2833_AN_ETC___d13768 ||
 	     fetchStage$pipelines_1_first[194:192] == 3'd1 &&
-	     regRenamingTable_rename_0_canRename__3418_AND__ETC___d13501 ||
+	     regRenamingTable_rename_0_canRename__3428_AND__ETC___d13512 ||
 	     !regRenamingTable$rename_1_canRename ||
-	     fetchStage_pipelines_1_first__2844_BITS_199_TO_ETC___d13774 ;
+	     fetchStage_pipelines_1_first__2844_BITS_199_TO_ETC___d13795 ;
   assign SEXT_IF_coreFix_fpuMulDivExe_0_regToExeQ_first_ETC___d11168 =
 	     b__h606908 * b__h606984 ;
   assign SEXT_IF_coreFix_fpuMulDivExe_0_regToExeQ_first_ETC___d11181 =
@@ -23823,20 +23846,20 @@ module mkCore(CLK,
 	      12'h800) <=
 	     (IF_SEXT_coreFix_fpuMulDivExe_0_regToExeQ_first_ETC___d9762 ^
 	      12'h800) ;
-  assign _0_OR_NOT_fetchStage_pipelines_0_first__2835_BI_ETC___d13894 =
+  assign _0_OR_NOT_fetchStage_pipelines_0_first__2835_BI_ETC___d13915 =
 	     (fetchStage$pipelines_0_first[194:192] != 3'd1 ||
 	      specTagManager$RDY_nextSpecTag) &&
-	     CASE_k71298_0_coreFix_aluExe_0_rsAluRDY_enq_1_ETC__q233 ;
-  assign _0_OR_NOT_fetchStage_pipelines_1_first__2844_BI_ETC___d13979 =
+	     CASE_k71356_0_coreFix_aluExe_0_rsAluRDY_enq_1_ETC__q233 ;
+  assign _0_OR_NOT_fetchStage_pipelines_1_first__2844_BI_ETC___d14000 =
 	     (fetchStage$pipelines_1_first[194:192] != 3'd1 ||
 	      specTagManager$RDY_nextSpecTag) &&
-	     CASE_fetchStagepipelines_0_canDeq_AND_NOT_fet_ETC__q234 ;
-  assign _0_OR_fetchStage_RDY_pipelines_0_first__2832_38_ETC___d13802 =
+	     CASE_fetchStage_pipelines_0_canDeq__2833_AND_N_ETC__q234 ;
+  assign _0_OR_fetchStage_RDY_pipelines_0_first__2832_38_ETC___d13823 =
 	     fetchStage$RDY_pipelines_0_first &&
 	     fetchStage$pipelines_1_first[194:192] == 3'd1 &&
-	     regRenamingTable_rename_0_canRename__3418_AND__ETC___d13501 ||
+	     regRenamingTable_rename_0_canRename__3428_AND__ETC___d13512 ||
 	     !regRenamingTable$rename_1_canRename ||
-	     fetchStage_pipelines_1_first__2844_BITS_199_TO_ETC___d13774 ;
+	     fetchStage_pipelines_1_first__2844_BITS_199_TO_ETC___d13795 ;
   assign _0b0_CONCAT_NOT_coreFix_fpuMulDivExe_0_fpuExec__ETC___d4654 =
 	     sfd__h341847 >>
 	     (_3970_MINUS_SEXT_coreFix_fpuMulDivExe_0_fpuExec_ETC___d4650[11] ?
@@ -23861,10 +23884,10 @@ module mkCore(CLK,
   assign _0b0_CONCAT_NOT_coreFix_fpuMulDivExe_0_regToExe_ETC___d9469 =
 	     sfd__h564701 >>
 	     _3074_MINUS_SEXT_coreFix_fpuMulDivExe_0_regToEx_ETC___d9465 ;
-  assign _0b0_CONCAT_csrf_medeleg_15_reg_read__1793_1794_ETC___d14513 =
-	     medeleg_csr__read__h615533[i__h704446] ;
-  assign _0b0_CONCAT_csrf_mideleg_11_reg_read__1801_1802_ETC___d14495 =
-	     mideleg_csr__read__h615628[i__h704606] ;
+  assign _0b0_CONCAT_csrf_medeleg_15_reg_read__1793_1794_ETC___d14534 =
+	     medeleg_csr__read__h615533[i__h704536] ;
+  assign _0b0_CONCAT_csrf_mideleg_11_reg_read__1801_1802_ETC___d14516 =
+	     mideleg_csr__read__h615628[i__h704696] ;
   assign _3074_MINUS_0_CONCAT_IF_coreFix_fpuMulDivExe_0__ETC___d4107 =
 	     12'd3074 -
 	     { 6'd0,
@@ -24452,49 +24475,46 @@ module mkCore(CLK,
 	     SEXT_coreFix_fpuMulDivExe_0_fpuExec_double_sqr_ETC___d7431 ;
   assign _dfoo12 =
 	     fetchStage$pipelines_0_canDeq &&
-	     regRenamingTable_rename_0_canRename__3418_AND__ETC___d14091 ||
-	     NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14178 &&
-	     regRenamingTable$rename_1_canRename &&
-	     NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d14186 &&
+	     regRenamingTable_rename_0_canRename__3428_AND__ETC___d14112 ||
+	     NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14199 &&
+	     regRenamingTable_rename_1_canRename__3547_AND__ETC___d14208 &&
 	     fetchStage$pipelines_1_first[194:192] == 3'd2 &&
-	     NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14255 &&
+	     NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14276 &&
 	     fetchStage$pipelines_1_first[199:195] != 5'd14 ;
   assign _dfoo18 =
-	     k__h671298 == 1'd0 &&
-	     fetchStage_pipelines_0_canDeq__2833_AND_NOT_fe_ETC___d14056 ||
-	     fetchStage_pipelines_0_canDeq__2833_AND_NOT_fe_ETC___d14174 ==
+	     k__h671356 == 1'd0 &&
+	     fetchStage_pipelines_0_canDeq__2833_AND_NOT_fe_ETC___d14077 ||
+	     fetchStage_pipelines_0_canDeq__2833_AND_NOT_fe_ETC___d14195 ==
 	     1'd0 &&
-	     NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14191 ;
+	     NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14212 ;
   assign _dfoo2 =
 	     fetchStage$pipelines_0_canDeq &&
-	     regRenamingTable_rename_0_canRename__3418_AND__ETC___d14133 ||
-	     NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14178 &&
-	     regRenamingTable$rename_1_canRename &&
-	     NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d14186 &&
+	     regRenamingTable_rename_0_canRename__3428_AND__ETC___d14154 ||
+	     NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14199 &&
+	     regRenamingTable_rename_1_canRename__3547_AND__ETC___d14208 &&
 	     fetchStage$pipelines_1_first[194:192] == 3'd2 &&
-	     NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14255 &&
+	     NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14276 &&
 	     fetchStage$pipelines_1_first[191:189] != 3'd0 &&
 	     fetchStage$pipelines_1_first[191:189] != 3'd2 ;
-  assign _dfoo22 =
+  assign _dfoo20 =
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	     6'd18 ||
 	     rob$deqPort_0_deq_data[186:182] == 5'd20 ;
   assign _dfoo28 =
 	     rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	     (IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	     (IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	      6'd8 ||
-	      IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 ==
+	      IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 ==
 	      6'd18) ||
 	     rob$deqPort_0_deq_data[186:182] == 5'd19 ;
   assign _dfoo7 =
 	     fetchStage$pipelines_0_canDeq &&
-	     regRenamingTable_rename_0_canRename__3418_AND__ETC___d14125 ||
-	     NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14178 &&
-	     regRenamingTable$rename_1_canRename &&
-	     NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d14186 &&
+	     regRenamingTable_rename_0_canRename__3428_AND__ETC___d14146 ||
+	     NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14199 &&
+	     regRenamingTable_rename_1_canRename__3547_AND__ETC___d14208 &&
 	     fetchStage$pipelines_1_first[194:192] == 3'd2 &&
-	     NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14255 &&
+	     NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14276 &&
 	     (fetchStage$pipelines_1_first[191:189] == 3'd0 ||
 	      fetchStage$pipelines_1_first[191:189] == 3'd2) ;
   assign _dor1coreFix_aluExe_0_bypassWire_2$EN_wset =
@@ -24641,9 +24661,9 @@ module mkCore(CLK,
 	      12'd2105) ?
 	       result__h585515 :
 	       ((value__h569118 == 25'd0) ? sfd__h564701 : 57'd1) ;
-  assign _theResult____h655200 =
+  assign _theResult____h655202 =
 	     (csrf_prv_reg != 2'd3 || csrf_ie_vec_3) ?
-	       enabled_ints___1__h655697 :
+	       enabled_ints___1__h655699 :
 	       15'd0 ;
   assign _theResult___exp__h358079 =
 	     sfd__h357655[24] ?
@@ -25630,7 +25650,7 @@ module mkCore(CLK,
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd2 &&
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd3 &&
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd4) ?
-	       CASE_guard15979_0b0_theResult___fst_exp23969_0_ETC__q206 :
+	       CASE_guard15979_0b0_theResult___fst_exp23969_0_ETC__q208 :
 	       IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d9199 ;
   assign _theResult___fst_exp__h524752 =
 	     (_theResult___fst_exp__h523969 == 11'd2047) ?
@@ -25917,7 +25937,7 @@ module mkCore(CLK,
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd2 &&
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd3 &&
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd4) ?
-	       CASE_guard84912_0b0_theResult___fst_exp93138_0_ETC__q182 :
+	       CASE_guard84912_0b0_theResult___fst_exp93138_0_ETC__q184 :
 	       IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d9873 ;
   assign _theResult___fst_exp__h593970 =
 	     (_theResult___fst_exp__h593138 == 11'd2047) ?
@@ -25948,7 +25968,7 @@ module mkCore(CLK,
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd2 &&
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd3 &&
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd4) ?
-	       CASE_guard93981_0b0_theResult___fst_exp01971_0_ETC__q184 :
+	       CASE_guard93981_0b0_theResult___fst_exp01971_0_ETC__q182 :
 	       IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d9904 ;
   assign _theResult___fst_exp__h602754 =
 	     (_theResult___fst_exp__h601971 == 11'd2047) ?
@@ -26080,7 +26100,7 @@ module mkCore(CLK,
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd2 &&
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd3 &&
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd4) ?
-	       CASE_guard97598_0b0_theResult___snd05510_BITS__ETC__q208 :
+	       CASE_guard97598_0b0_theResult___snd05510_BITS__ETC__q206 :
 	       IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d9225 ;
   assign _theResult___fst_sfd__h506318 =
 	     (_theResult___fst_exp__h505559 == 11'd2047) ?
@@ -26144,7 +26164,7 @@ module mkCore(CLK,
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd2 &&
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd3 &&
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd4) ?
-	       CASE_guard45711_0b0_sfdin53931_BITS_56_TO_5_0b_ETC__q202 :
+	       CASE_guard45711_0b0_sfdin53931_BITS_56_TO_5_0b_ETC__q200 :
 	       IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d10719 ;
   assign _theResult___fst_sfd__h554770 =
 	     (_theResult___fst_exp__h553937 == 11'd2047) ?
@@ -26155,7 +26175,7 @@ module mkCore(CLK,
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd2 &&
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd3 &&
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd4) ?
-	       CASE_guard54780_0b0_theResult___snd62716_BITS__ETC__q200 :
+	       CASE_guard54780_0b0_theResult___snd62716_BITS__ETC__q202 :
 	       IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d10738 ;
   assign _theResult___fst_sfd__h563554 =
 	     (_theResult___fst_exp__h562770 == 11'd2047) ?
@@ -27382,30 +27402,10 @@ module mkCore(CLK,
   assign b__h606984 = { {64{b__h606761[63]}}, b__h606761 } ;
   assign b__h607085 = { 64'd0, a__h606760 } ;
   assign b__h607097 = { 64'd0, b__h606761 } ;
-  assign base__h707033 = { csrf_stvec_base_hi_reg, 2'b0 } ;
-  assign base__h707236 = { csrf_mtvec_base_hi_reg, 2'b0 } ;
-  assign cause_code__h704431 =
-	     commitStage_commitTrap[4] ? i__h704606 : i__h704446 ;
-  assign checkForException_3069_BIT_4_3070_OR_csrf_fs_r_ETC___d13509 =
-	     checkForException___d13069[4] ||
-	     csrf_fs_reg == 2'd0 &&
-	     (fetchStage$pipelines_0_first[95] &&
-	      fetchStage$pipelines_0_first[94] ||
-	      fetchStage$pipelines_0_first[88] &&
-	      fetchStage$pipelines_0_first[87] ||
-	      fetchStage$pipelines_0_first[81] ||
-	      fetchStage$pipelines_0_first[75] &&
-	      fetchStage$pipelines_0_first[74]) ;
-  assign checkForException_3686_BIT_4_3687_OR_csrf_fs_r_ETC___d13767 =
-	     checkForException___d13686[4] ||
-	     csrf_fs_reg == 2'd0 &&
-	     (fetchStage$pipelines_1_first[95] &&
-	      fetchStage$pipelines_1_first[94] ||
-	      fetchStage$pipelines_1_first[88] &&
-	      fetchStage$pipelines_1_first[87] ||
-	      fetchStage$pipelines_1_first[81] ||
-	      fetchStage$pipelines_1_first[75] &&
-	      fetchStage$pipelines_1_first[74]) ;
+  assign base__h707123 = { csrf_stvec_base_hi_reg, 2'b0 } ;
+  assign base__h707326 = { csrf_mtvec_base_hi_reg, 2'b0 } ;
+  assign cause_code__h704521 =
+	     commitStage_commitTrap[4] ? i__h704696 : i__h704536 ;
   assign coreFix_aluExe_0_bypassWire_0_wget__2302_BITS__ETC___d12304 =
 	     coreFix_aluExe_0_bypassWire_0$wget[70:64] ==
 	     coreFix_aluExe_0_dispToRegQ$first[84:78] ;
@@ -27447,7 +27447,7 @@ module mkCore(CLK,
 	     (coreFix_aluExe_0_exeToFinQ$first[325:321] != 5'd9 &&
 	      coreFix_aluExe_0_exeToFinQ$first[325:321] != 5'd10 ||
 	      coreFix_trainBPQ_0$FULL_N) ;
-  assign coreFix_aluExe_0_rsAlu_approximateCount__3451__ETC___d13453 =
+  assign coreFix_aluExe_0_rsAlu_approximateCount__3462__ETC___d13464 =
 	     coreFix_aluExe_0_rsAlu$approximateCount <
 	     coreFix_aluExe_1_rsAlu$approximateCount ;
   assign coreFix_aluExe_1_bypassWire_0_wget__1479_BITS__ETC___d11481 =
@@ -27655,11 +27655,11 @@ module mkCore(CLK,
 	     coreFix_fpuMulDivExe_0_regToExeQ$first[171:140] ;
   assign coreFix_fpuMulDivExe_0_regToExeQfirst_BITS_42_ETC__q145 =
 	     coreFix_fpuMulDivExe_0_regToExeQ$first[42:35] - 8'd127 ;
-  assign coreFix_fpuMulDivExe_0_rsFpuMulDiv_RDY_enq__38_ETC___d13986 =
+  assign coreFix_fpuMulDivExe_0_rsFpuMulDiv_RDY_enq__39_ETC___d14007 =
 	     coreFix_fpuMulDivExe_0_rsFpuMulDiv$RDY_enq &&
 	     regRenamingTable$RDY_rename_1_getRename &&
 	     (!fetchStage$pipelines_0_canDeq ||
-	      NOT_specTagManager_canClaim__3416_3500_OR_NOT__ETC___d13966) ;
+	      NOT_specTagManager_canClaim__3426_3511_OR_NOT__ETC___d13987) ;
   assign coreFix_memExe_bypassWire_0_wget__585_BITS_70__ETC___d1587 =
 	     coreFix_aluExe_0_bypassWire_0$wget[70:64] ==
 	     coreFix_memExe_dispToRegQ$first[61:55] ;
@@ -28046,14 +28046,14 @@ module mkCore(CLK,
 	      !coreFix_memExe_respLrScAmoQ_deqReq_lat_0$whas &&
 	      !coreFix_memExe_respLrScAmoQ_deqReq_rl) &&
 	     coreFix_memExe_respLrScAmoQ_full ;
-  assign coreFix_memExe_stb_isEmpty__011_AND_coreFix_me_ETC___d14652 =
+  assign coreFix_memExe_stb_isEmpty__011_AND_coreFix_me_ETC___d14673 =
 	     coreFix_memExe_stb$isEmpty && coreFix_memExe_lsq$stqEmpty &&
 	     regRenamingTable$RDY_commit_0_commit &&
 	     rob$RDY_deqPort_0_deq &&
 	     rob$RDY_deqPort_0_deq_data &&
 	     fetchStage$iTlbIfc_noPendingReq &&
 	     coreFix_memExe_dTlb$noPendingReq &&
-	     NOT_rob_deqPort_0_deq_data__4334_BITS_186_TO_1_ETC___d14647 ;
+	     NOT_rob_deqPort_0_deq_data__4355_BITS_186_TO_1_ETC___d14668 ;
   assign csrf_debug_int_pend_read__1844_CONCAT_0b0_2867_ETC___d12872 =
 	     { csrf_debug_int_pend,
 	       2'b0,
@@ -28079,12 +28079,36 @@ module mkCore(CLK,
 	     fetchStage$pipelines_0_first[199:195] == 5'd13 &&
 	     (fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13099 ||
 	      csrf_prv_reg_read__2863_ULT_IF_fetchStage_pipe_ETC___d13101) ;
-  assign csrf_prv_reg_read__2863_ULE_1_4475_AND_IF_comm_ETC___d14515 =
-	     csrf_prv_reg_read__2863_ULE_1___d14475 &&
+  assign csrf_fs_reg_read__1686_EQ_0_3058_AND_fetchStag_ETC___d13520 =
+	     csrf_fs_reg == 2'd0 &&
+	     (fetchStage$pipelines_0_first[95] &&
+	      fetchStage$pipelines_0_first[94] ||
+	      fetchStage$pipelines_0_first[88] &&
+	      fetchStage$pipelines_0_first[87] ||
+	      fetchStage$pipelines_0_first[81] ||
+	      fetchStage$pipelines_0_first[75] &&
+	      fetchStage$pipelines_0_first[74]) ||
+	     fetchStage$pipelines_0_first[231:200] == 32'h10500073 &&
+	     csrf_tw_reg &&
+	     csrf_prv_reg != 2'd3 ;
+  assign csrf_fs_reg_read__1686_EQ_0_3058_AND_fetchStag_ETC___d13787 =
+	     csrf_fs_reg == 2'd0 &&
+	     (fetchStage$pipelines_1_first[95] &&
+	      fetchStage$pipelines_1_first[94] ||
+	      fetchStage$pipelines_1_first[88] &&
+	      fetchStage$pipelines_1_first[87] ||
+	      fetchStage$pipelines_1_first[81] ||
+	      fetchStage$pipelines_1_first[75] &&
+	      fetchStage$pipelines_1_first[74]) ||
+	     fetchStage$pipelines_1_first[231:200] == 32'h10500073 &&
+	     csrf_tw_reg &&
+	     csrf_prv_reg != 2'd3 ;
+  assign csrf_prv_reg_read__2863_ULE_1_4496_AND_IF_comm_ETC___d14536 =
+	     csrf_prv_reg_read__2863_ULE_1___d14496 &&
 	     (commitStage_commitTrap[4] ?
-		_0b0_CONCAT_csrf_mideleg_11_reg_read__1801_1802_ETC___d14495 :
-		_0b0_CONCAT_csrf_medeleg_15_reg_read__1793_1794_ETC___d14513) ;
-  assign csrf_prv_reg_read__2863_ULE_1___d14475 = csrf_prv_reg <= 2'd1 ;
+		_0b0_CONCAT_csrf_mideleg_11_reg_read__1801_1802_ETC___d14516 :
+		_0b0_CONCAT_csrf_medeleg_15_reg_read__1793_1794_ETC___d14534) ;
+  assign csrf_prv_reg_read__2863_ULE_1___d14496 = csrf_prv_reg <= 2'd1 ;
   assign csrf_prv_reg_read__2863_ULT_IF_fetchStage_pipe_ETC___d13101 =
 	     csrf_prv_reg <
 	     IF_fetchStage_pipelines_0_first__2835_BIT_173__ETC___d13096[9:8] ;
@@ -28127,26 +28151,26 @@ module mkCore(CLK,
   assign din_inc___2_exp__h602811 = _theResult___fst_exp__h583561 + 11'd1 ;
   assign din_inc___2_exp__h602846 = _theResult___fst_exp__h593138 + 11'd1 ;
   assign din_inc___2_exp__h602872 = _theResult___fst_exp__h601971 + 11'd1 ;
-  assign enabled_ints___1__h655697 = pend_ints__h655198 & y__h655709 ;
-  assign enabled_ints__h655744 =
-	     pend_ints__h655198 &
-	     { r1__read_BITS_12_TO_0___h655720, csrf_mideleg_1_0_reg } ;
-  assign fallthrough_pc__h667687 =
+  assign enabled_ints___1__h655699 = pend_ints__h655200 & y__h655711 ;
+  assign enabled_ints__h655746 =
+	     pend_ints__h655200 &
+	     { r1__read_BITS_12_TO_0___h655722, csrf_mideleg_1_0_reg } ;
+  assign fallthrough_pc__h667716 =
 	     (fetchStage$pipelines_0_first[97:96] == 2'b11) ?
 	       fetchStage$pipelines_0_first[387:324] + 64'd4 :
 	       fetchStage$pipelines_0_first[387:324] + 64'd2 ;
-  assign fallthrough_pc__h683150 =
+  assign fallthrough_pc__h683208 =
 	     (fetchStage$pipelines_1_first[97:96] == 2'b11) ?
 	       fetchStage$pipelines_1_first[387:324] + 64'd4 :
 	       fetchStage$pipelines_1_first[387:324] + 64'd2 ;
   assign fcsr_csr__read__h614541 = { 56'd0, x__h617215 } ;
-  assign fetchStage_RDY_pipelines_0_first__2832_AND_NOT_ETC___d13440 =
+  assign fetchStage_RDY_pipelines_0_first__2832_AND_NOT_ETC___d13451 =
 	     fetchStage$RDY_pipelines_0_first &&
 	     (fetchStage$pipelines_0_first[194:192] != 3'd1 ||
 	      specTagManager$canClaim) &&
 	     regRenamingTable$rename_0_canRename &&
-	     NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13437 ;
-  assign fetchStage_RDY_pipelines_0_first__2832_AND_epo_ETC___d13320 =
+	     NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13448 ;
+  assign fetchStage_RDY_pipelines_0_first__2832_AND_epo_ETC___d13325 =
 	     fetchStage$RDY_pipelines_0_first &&
 	     epochManager$RDY_incrementEpoch &&
 	     regRenamingTable$RDY_rename_0_getRename &&
@@ -28154,96 +28178,109 @@ module mkCore(CLK,
 	     rob$RDY_enqPort_0_enq &&
 	     (fetchStage$pipelines_0_first[194:192] != 3'd0 ||
 	      coreFix_aluExe_0_rsAlu$RDY_enq) ;
-  assign fetchStage_RDY_pipelines_0_first__2832_AND_fet_ETC___d13506 =
+  assign fetchStage_RDY_pipelines_0_first__2832_AND_fet_ETC___d13517 =
 	     fetchStage$RDY_pipelines_0_first &&
 	     fetchStage$pipelines_1_first[194:192] == 3'd1 &&
-	     regRenamingTable_rename_0_canRename__3418_AND__ETC___d13501 ||
+	     regRenamingTable_rename_0_canRename__3428_AND__ETC___d13512 ||
 	     !fetchStage$pipelines_0_canDeq ||
 	     fetchStage$RDY_pipelines_0_first &&
-	     IF_fetchStage_RDY_pipelines_0_first__2832_AND__ETC___d13444 ;
-  assign fetchStage_pipelines_0_canDeq__2833_AND_NOT_fe_ETC___d14056 =
+	     IF_fetchStage_RDY_pipelines_0_first__2832_AND__ETC___d13455 ;
+  assign fetchStage_pipelines_0_canDeq__2833_AND_NOT_fe_ETC___d13998 =
 	     fetchStage$pipelines_0_canDeq &&
-	     NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d14053 &&
+	     (fetchStage$pipelines_0_first[194:192] != 3'd1 ||
+	      specTagManager$canClaim) &&
+	     regRenamingTable_rename_0_canRename__3428_AND__ETC___d13498 &&
+	     fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13742 ||
+	     !coreFix_aluExe_0_rsAlu$canEnq ||
+	     NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13997 ;
+  assign fetchStage_pipelines_0_canDeq__2833_AND_NOT_fe_ETC___d14077 =
+	     fetchStage$pipelines_0_canDeq &&
+	     NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d14074 &&
 	     (fetchStage$pipelines_0_first[194:192] == 3'd0 ||
 	      fetchStage$pipelines_0_first[194:192] == 3'd1) &&
-	     SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3447_co_ETC___d13457 ;
-  assign fetchStage_pipelines_0_canDeq__2833_AND_NOT_fe_ETC___d14174 =
+	     SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3458_co_ETC___d13468 ;
+  assign fetchStage_pipelines_0_canDeq__2833_AND_NOT_fe_ETC___d14195 =
 	     fetchStage$pipelines_0_canDeq &&
-	     NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d14053 &&
-	     fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13724 ||
+	     NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d14074 &&
+	     fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13742 ||
 	     !coreFix_aluExe_0_rsAlu$canEnq ||
 	     (!fetchStage$pipelines_0_canDeq ||
-	      fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d14169 ||
+	      fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d14190 ||
 	      fetchStage$pipelines_0_first[194:192] != 3'd0 &&
 	      fetchStage$pipelines_0_first[194:192] != 3'd1 ||
-	      !SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3447_co_ETC___d13457) &&
+	      !SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3458_co_ETC___d13468) &&
 	     coreFix_aluExe_1_rsAlu$canEnq &&
-	     !coreFix_aluExe_0_rsAlu_approximateCount__3451__ETC___d13453 ;
-  assign fetchStage_pipelines_0_canDeq__2833_AND_fetchS_ETC___d14045 =
+	     !coreFix_aluExe_0_rsAlu_approximateCount__3462__ETC___d13464 ;
+  assign fetchStage_pipelines_0_canDeq__2833_AND_fetchS_ETC___d14066 =
 	     fetchStage$pipelines_0_canDeq &&
-	     fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13928 ||
+	     fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13949 ||
 	     !fetchStage$pipelines_1_canDeq ||
 	     fetchStage$RDY_pipelines_1_first &&
-	     (fetchStage_pipelines_1_first__2844_BITS_194_TO_ETC___d13939 ||
-	      !regRenamingTable$rename_1_canRename ||
-	      fetchStage_pipelines_1_first__2844_BITS_199_TO_ETC___d13944 ||
-	      IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d14041) &&
-	     IF_fetchStage_RDY_pipelines_1_first__2843_AND__ETC___d13872 ;
-  assign fetchStage_pipelines_0_canDeq__2833_AND_regRen_ETC___d13983 =
+	     (fetchStage_pipelines_1_first__2844_BITS_194_TO_ETC___d13960 ||
+	      NOT_regRenamingTable_rename_1_canRename__3547__ETC___d13966 ||
+	      IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d14062) &&
+	     IF_fetchStage_RDY_pipelines_1_first__2843_AND__ETC___d13893 ;
+  assign fetchStage_pipelines_0_canDeq__2833_AND_regRen_ETC___d14004 =
 	     fetchStage$pipelines_0_canDeq &&
-	     regRenamingTable$rename_0_canRename &&
-	     NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13486 &&
+	     regRenamingTable_rename_0_canRename__3428_AND__ETC___d13498 &&
 	     (fetchStage$pipelines_0_first[194:192] == 3'd3 ||
 	      fetchStage$pipelines_0_first[194:192] == 3'd4) ;
-  assign fetchStage_pipelines_0_canDeq__2833_AND_regRen_ETC___d13989 =
+  assign fetchStage_pipelines_0_canDeq__2833_AND_regRen_ETC___d14011 =
 	     fetchStage$pipelines_0_canDeq &&
-	     regRenamingTable$rename_0_canRename &&
-	     NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13486 &&
+	     regRenamingTable_rename_0_canRename__3428_AND__ETC___d13498 &&
 	     fetchStage$pipelines_0_first[194:192] == 3'd2 &&
-	     IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13469 ;
-  assign fetchStage_pipelines_0_canDeq__2833_AND_regRen_ETC___d13990 =
-	     fetchStage_pipelines_0_canDeq__2833_AND_regRen_ETC___d13989 ||
+	     IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13480 ||
 	     !coreFix_memExe_rsMem$canEnq ||
 	     CASE_fetchStagepipelines_1_first_BITS_191_TO__ETC__q230 ;
-  assign fetchStage_pipelines_0_canDeq__2833_AND_regRen_ETC___d14011 =
-	     fetchStage_pipelines_0_canDeq__2833_AND_regRen_ETC___d13983 ||
+  assign fetchStage_pipelines_0_canDeq__2833_AND_regRen_ETC___d14032 =
+	     fetchStage_pipelines_0_canDeq__2833_AND_regRen_ETC___d14004 ||
 	     !coreFix_fpuMulDivExe_0_rsFpuMulDiv$canEnq ||
 	     fetchStage$pipelines_0_canDeq &&
-	     fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d14004 ;
-  assign fetchStage_pipelines_0_canDeq__2833_AND_regRen_ETC___d14310 =
+	     (fetchStage$pipelines_0_first[194:192] == 3'd1 &&
+	      !specTagManager$canClaim ||
+	      NOT_regRenamingTable_rename_0_canRename__3428__ETC___d13527 ||
+	      IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d14024) ;
+  assign fetchStage_pipelines_0_canDeq__2833_AND_regRen_ETC___d14043 =
+	     fetchStage_pipelines_0_canDeq__2833_AND_regRen_ETC___d14011 ||
 	     fetchStage$pipelines_0_canDeq &&
-	     regRenamingTable_rename_0_canRename__3418_AND__ETC___d14308 ||
+	     (fetchStage$pipelines_0_first[194:192] == 3'd1 &&
+	      !specTagManager$canClaim ||
+	      NOT_regRenamingTable_rename_0_canRename__3428__ETC___d13527 ||
+	      IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d14035) ;
+  assign fetchStage_pipelines_0_canDeq__2833_AND_regRen_ETC___d14331 =
+	     fetchStage$pipelines_0_canDeq &&
+	     regRenamingTable_rename_0_canRename__3428_AND__ETC___d14329 ||
 	     !coreFix_memExe_rsMem$canEnq ||
 	     CASE_fetchStagepipelines_1_first_BITS_191_TO__ETC__q230 ;
-  assign fetchStage_pipelines_0_canDeq__2833_AND_specTa_ETC___d14139 =
+  assign fetchStage_pipelines_0_canDeq__2833_AND_specTa_ETC___d14160 =
 	     fetchStage$pipelines_0_canDeq && specTagManager$canClaim &&
 	     regRenamingTable$rename_0_canRename &&
 	     !checkForException___d13069[4] &&
 	     rob$enqPort_0_canEnq &&
-	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13497 &&
+	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13508 &&
 	     fetchStage$pipelines_0_first[194:192] == 3'd1 ;
   assign fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13099 =
 	     (fetchStage$pipelines_0_first[194:192] == 3'd0 &&
 	      fetchStage$pipelines_0_first[178:174] == 5'd15 ||
-	      rs1__h659255 != 5'd0 ||
-	      imm__h659256 != 32'd0) &&
+	      rs1__h659257 != 5'd0 ||
+	      imm__h659258 != 32'd0) &&
 	     IF_fetchStage_pipelines_0_first__2835_BIT_173__ETC___d13096[11:10] ==
 	     2'b11 ;
-  assign fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13724 =
+  assign fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13742 =
 	     (fetchStage$pipelines_0_first[194:192] == 3'd0 ||
 	      fetchStage$pipelines_0_first[194:192] == 3'd1) &&
-	     SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3447_co_ETC___d13457 &&
+	     SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3458_co_ETC___d13468 &&
 	     (!coreFix_aluExe_1_rsAlu$canEnq ||
-	      coreFix_aluExe_0_rsAlu_approximateCount__3451__ETC___d13453) ;
-  assign fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13745 =
+	      coreFix_aluExe_0_rsAlu_approximateCount__3462__ETC___d13464) ;
+  assign fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13763 =
 	     fetchStage$pipelines_0_first[194:192] == 3'd1 &&
 	     !specTagManager$canClaim ||
 	     !regRenamingTable$rename_0_canRename ||
-	     fetchStage_pipelines_0_first__2835_BITS_199_TO_ETC___d13738 ||
+	     fetchStage_pipelines_0_first__2835_BITS_199_TO_ETC___d13756 ||
 	     fetchStage$pipelines_0_first[194:192] != 3'd0 &&
 	     fetchStage$pipelines_0_first[194:192] != 3'd1 ||
-	     !SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3447_co_ETC___d13457 ;
-  assign fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13814 =
+	     !SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3458_co_ETC___d13468 ;
+  assign fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13835 =
 	     fetchStage$pipelines_0_first[194:192] == 3'd1 &&
 	     !specTagManager$canClaim ||
 	     fetchStage$pipelines_0_first[68] ||
@@ -28262,57 +28299,45 @@ module mkCore(CLK,
 	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[12] ||
 	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[13] ||
 	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[14] ;
-  assign fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13922 =
+  assign fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13943 =
 	     fetchStage$pipelines_0_first[194:192] == 3'd1 &&
 	     !specTagManager$canClaim ||
-	     NOT_regRenamingTable_rename_0_canRename__3418__ETC___d13887 ||
-	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13911 &&
-	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13920 ;
-  assign fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13928 =
+	     NOT_regRenamingTable_rename_0_canRename__3428__ETC___d13908 ||
+	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13932 &&
+	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13941 ;
+  assign fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13949 =
 	     fetchStage$pipelines_0_first[194:192] == 3'd1 &&
 	     !specTagManager$canClaim ||
-	     NOT_regRenamingTable_rename_0_canRename__3418__ETC___d13887 ||
-	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13927 ;
-  assign fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13950 =
+	     NOT_regRenamingTable_rename_0_canRename__3428__ETC___d13908 ||
+	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13948 ;
+  assign fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13971 =
 	     fetchStage$pipelines_0_first[194:192] == 3'd1 &&
 	     !specTagManager$canClaim ||
 	     !regRenamingTable$rename_0_canRename ||
-	     fetchStage_pipelines_0_first__2835_BITS_199_TO_ETC___d13738 ||
+	     fetchStage_pipelines_0_first__2835_BITS_199_TO_ETC___d13756 ||
 	     fetchStage$pipelines_0_first[194:192] != 3'd0 &&
 	     fetchStage$pipelines_0_first[194:192] != 3'd1 ||
-	     !SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3447_co_ETC___d13457 ||
+	     !SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3458_co_ETC___d13468 ||
 	     coreFix_aluExe_1_rsAlu$canEnq &&
-	     !coreFix_aluExe_0_rsAlu_approximateCount__3451__ETC___d13453 ;
-  assign fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13957 =
+	     !coreFix_aluExe_0_rsAlu_approximateCount__3462__ETC___d13464 ;
+  assign fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13978 =
 	     fetchStage$pipelines_0_first[194:192] == 3'd1 &&
 	     !specTagManager$canClaim ||
 	     !regRenamingTable$rename_0_canRename ||
-	     fetchStage_pipelines_0_first__2835_BITS_199_TO_ETC___d13738 ||
+	     fetchStage_pipelines_0_first__2835_BITS_199_TO_ETC___d13756 ||
 	     fetchStage$pipelines_0_first[194:192] != 3'd0 &&
 	     fetchStage$pipelines_0_first[194:192] != 3'd1 ||
-	     !SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3447_co_ETC___d13457 ||
+	     !SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3458_co_ETC___d13468 ||
 	     coreFix_aluExe_0_rsAlu$canEnq &&
-	     coreFix_aluExe_0_rsAlu_approximateCount__3451__ETC___d13453 ;
-  assign fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d14004 =
-	     fetchStage$pipelines_0_first[194:192] == 3'd1 &&
-	     !specTagManager$canClaim ||
-	     !regRenamingTable$rename_0_canRename ||
-	     fetchStage_pipelines_0_first__2835_BITS_199_TO_ETC___d13514 ||
-	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d14003 ;
-  assign fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d14015 =
-	     fetchStage$pipelines_0_first[194:192] == 3'd1 &&
-	     !specTagManager$canClaim ||
-	     !regRenamingTable$rename_0_canRename ||
-	     fetchStage_pipelines_0_first__2835_BITS_199_TO_ETC___d13514 ||
-	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d14014 ;
-  assign fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d14169 =
+	     coreFix_aluExe_0_rsAlu_approximateCount__3462__ETC___d13464 ;
+  assign fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d14190 =
 	     fetchStage$pipelines_0_first[194:192] == 3'd1 &&
 	     !specTagManager$canClaim ||
 	     !regRenamingTable$rename_0_canRename ||
 	     fetchStage$pipelines_0_first[68] ||
 	     checkForException___d13069[4] ||
 	     !rob$enqPort_0_canEnq ;
-  assign fetchStage_pipelines_0_first__2835_BITS_199_TO_ETC___d13514 =
+  assign fetchStage_pipelines_0_first__2835_BITS_199_TO_ETC___d13756 =
 	     fetchStage$pipelines_0_first[199:195] == 5'd0 ||
 	     fetchStage$pipelines_0_first[199:195] == 5'd21 ||
 	     fetchStage$pipelines_0_first[199:195] == 5'd17 ||
@@ -28323,46 +28348,21 @@ module mkCore(CLK,
 	     fetchStage$pipelines_0_first[199:195] == 5'd19 ||
 	     fetchStage$pipelines_0_first[199:195] == 5'd20 ||
 	     fetchStage$pipelines_0_first[68] ||
-	     checkForException_3069_BIT_4_3070_OR_csrf_fs_r_ETC___d13509 ||
+	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d13753 ||
 	     !rob$enqPort_0_canEnq ||
 	     !epochManager$checkEpoch_0_check ;
-  assign fetchStage_pipelines_0_first__2835_BITS_199_TO_ETC___d13738 =
-	     fetchStage$pipelines_0_first[199:195] == 5'd0 ||
-	     fetchStage$pipelines_0_first[199:195] == 5'd21 ||
-	     fetchStage$pipelines_0_first[199:195] == 5'd17 ||
-	     fetchStage$pipelines_0_first[199:195] == 5'd18 ||
-	     fetchStage$pipelines_0_first[199:195] == 5'd13 ||
-	     fetchStage$pipelines_0_first[199:195] == 5'd16 ||
-	     fetchStage$pipelines_0_first[199:195] == 5'd15 ||
-	     fetchStage$pipelines_0_first[199:195] == 5'd19 ||
-	     fetchStage$pipelines_0_first[199:195] == 5'd20 ||
-	     fetchStage_pipelines_0_first__2835_BIT_68_2862_ETC___d13736 ||
-	     !rob$enqPort_0_canEnq ||
-	     !epochManager$checkEpoch_0_check ;
-  assign fetchStage_pipelines_0_first__2835_BIT_68_2862_ETC___d13736 =
+  assign fetchStage_pipelines_0_first__2835_BIT_68_2862_ETC___d13525 =
 	     fetchStage$pipelines_0_first[68] ||
-	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[0] ||
-	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[1] ||
-	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[2] ||
-	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[3] ||
-	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[4] ||
-	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[5] ||
-	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[6] ||
-	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[7] ||
-	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[8] ||
-	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[9] ||
-	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[10] ||
-	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[11] ||
-	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[12] ||
-	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[13] ||
-	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[14] ||
-	     checkForException_3069_BIT_4_3070_OR_csrf_fs_r_ETC___d13509 ;
-  assign fetchStage_pipelines_1_first__2844_BITS_194_TO_ETC___d13939 =
+	     checkForException___d13069[4] ||
+	     csrf_fs_reg_read__1686_EQ_0_3058_AND_fetchStag_ETC___d13520 ||
+	     !rob$enqPort_0_canEnq ||
+	     !epochManager$checkEpoch_0_check ;
+  assign fetchStage_pipelines_1_first__2844_BITS_194_TO_ETC___d13960 =
 	     fetchStage$pipelines_1_first[194:192] == 3'd1 &&
 	     (fetchStage$pipelines_0_canDeq &&
-	      regRenamingTable_rename_0_canRename__3418_AND__ETC___d13936 ||
+	      regRenamingTable_rename_0_canRename__3428_AND__ETC___d13957 ||
 	      !specTagManager$canClaim) ;
-  assign fetchStage_pipelines_1_first__2844_BITS_199_TO_ETC___d13774 =
+  assign fetchStage_pipelines_1_first__2844_BITS_199_TO_ETC___d13795 =
 	     fetchStage$pipelines_1_first[199:195] == 5'd0 ||
 	     fetchStage$pipelines_1_first[199:195] == 5'd21 ||
 	     fetchStage$pipelines_1_first[199:195] == 5'd17 ||
@@ -28372,53 +28372,28 @@ module mkCore(CLK,
 	     fetchStage$pipelines_1_first[199:195] == 5'd15 ||
 	     fetchStage$pipelines_1_first[199:195] == 5'd19 ||
 	     fetchStage$pipelines_1_first[199:195] == 5'd20 ||
-	     fetchStage_pipelines_1_first__2844_BIT_68_3563_ETC___d13769 ||
+	     fetchStage$pipelines_1_first[68] ||
+	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d13789 ||
 	     !rob$enqPort_1_canEnq ||
 	     !epochManager$checkEpoch_1_check ||
 	     !fetchStage$pipelines_0_canDeq ||
 	     fetchStage$RDY_pipelines_0_first &&
-	     IF_fetchStage_RDY_pipelines_0_first__2832_AND__ETC___d13444 ;
-  assign fetchStage_pipelines_1_first__2844_BITS_199_TO_ETC___d13944 =
-	     fetchStage$pipelines_1_first[199:195] == 5'd0 ||
-	     fetchStage$pipelines_1_first[199:195] == 5'd21 ||
-	     fetchStage$pipelines_1_first[199:195] == 5'd17 ||
-	     fetchStage$pipelines_1_first[199:195] == 5'd18 ||
-	     fetchStage$pipelines_1_first[199:195] == 5'd13 ||
-	     fetchStage$pipelines_1_first[199:195] == 5'd16 ||
-	     fetchStage$pipelines_1_first[199:195] == 5'd15 ||
-	     fetchStage$pipelines_1_first[199:195] == 5'd19 ||
-	     fetchStage$pipelines_1_first[199:195] == 5'd20 ||
+	     IF_fetchStage_RDY_pipelines_0_first__2832_AND__ETC___d13455 ;
+  assign fetchStage_pipelines_1_first__2844_BIT_173_360_ETC___d13677 =
+	     { fetchStage$pipelines_1_first[173],
+	       CASE_fetchStagepipelines_1_first_BITS_172_TO__ETC__q228 } ;
+  assign fetchStage_pipelines_1_first__2844_BIT_68_3575_ETC___d13964 =
 	     fetchStage$pipelines_1_first[68] ||
-	     checkForException_3686_BIT_4_3687_OR_csrf_fs_r_ETC___d13767 ||
+	     checkForException___d13698[4] ||
+	     csrf_fs_reg_read__1686_EQ_0_3058_AND_fetchStag_ETC___d13787 ||
 	     !rob$enqPort_1_canEnq ||
 	     !epochManager$checkEpoch_1_check ||
 	     fetchStage$pipelines_0_canDeq &&
-	     fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13928 ;
-  assign fetchStage_pipelines_1_first__2844_BIT_173_359_ETC___d13665 =
-	     { fetchStage$pipelines_1_first[173],
-	       CASE_fetchStagepipelines_1_first_BITS_172_TO__ETC__q228 } ;
-  assign fetchStage_pipelines_1_first__2844_BIT_68_3563_ETC___d13769 =
-	     fetchStage$pipelines_1_first[68] ||
-	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[0] ||
-	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[1] ||
-	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[2] ||
-	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[3] ||
-	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[4] ||
-	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[5] ||
-	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[6] ||
-	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[7] ||
-	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[8] ||
-	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[9] ||
-	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[10] ||
-	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[11] ||
-	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[12] ||
-	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[13] ||
-	     IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[14] ||
-	     checkForException_3686_BIT_4_3687_OR_csrf_fs_r_ETC___d13767 ;
-  assign fflags__h719060 =
-	     NOT_rob_deqPort_0_canDeq__4852_4853_OR_rob_deq_ETC___d15044 ?
-	       y_avValue_snd_fst__h719120 :
-	       IF_rob_deqPort_0_canDeq__4852_THEN_IF_NOT_rob__ETC___d15050 ;
+	     fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13949 ;
+  assign fflags__h719150 =
+	     NOT_rob_deqPort_0_canDeq__4873_4874_OR_rob_deq_ETC___d15065 ?
+	       y_avValue_snd_fst__h719210 :
+	       IF_rob_deqPort_0_canDeq__4873_THEN_IF_NOT_rob__ETC___d15071 ;
   assign fflags_csr__read__h614516 = { 59'd0, csrf_fflags_reg } ;
   assign frm_csr__read__h614527 = { 61'd0, csrf_frm_reg } ;
   assign guard__h349462 =
@@ -28490,22 +28465,22 @@ module mkCore(CLK,
   assign guard__h593981 =
 	     { IF_theResult___snd01917_BIT_4_THEN_2_ELSE_0__q151[1],
 	       { _theResult___snd__h601917[3:0], 52'd0 } != 56'd0 } ;
-  assign idx__h686610 =
+  assign idx__h686697 =
 	     fetchStage$pipelines_0_canDeq &&
-	     NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13725 ||
+	     NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13743 ||
 	     !coreFix_aluExe_0_rsAlu$canEnq ||
 	     (!fetchStage$pipelines_0_canDeq ||
-	      fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13745) &&
+	      fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13763) &&
 	     coreFix_aluExe_1_rsAlu$canEnq &&
-	     !coreFix_aluExe_0_rsAlu_approximateCount__3451__ETC___d13453 ;
-  assign imm__h659256 =
+	     !coreFix_aluExe_0_rsAlu_approximateCount__3462__ETC___d13464 ;
+  assign imm__h659258 =
 	     fetchStage$pipelines_0_first[160] ?
 	       fetchStage$pipelines_0_first[159:128] :
 	       32'd0 ;
-  assign k__h671298 =
+  assign k__h671356 =
 	     !coreFix_aluExe_0_rsAlu$canEnq ||
 	     coreFix_aluExe_1_rsAlu$canEnq &&
-	     !coreFix_aluExe_0_rsAlu_approximateCount__3451__ETC___d13453 ;
+	     !coreFix_aluExe_0_rsAlu_approximateCount__3462__ETC___d13464 ;
   assign mcause_csr__read__h616188 =
 	     { r1__read__h618755, csrf_mcause_code_reg } ;
   assign mcounteren_csr__read__h615933 =
@@ -28550,15 +28525,15 @@ module mkCore(CLK,
 	      !mmio_dataRespQ_deqReq_lat_0$whas &&
 	      !mmio_dataRespQ_deqReq_rl) &&
 	     mmio_dataRespQ_full ;
-  assign mmio_pRqQ_empty_53_AND_epochManager_checkEpoch_ETC___d13110 =
+  assign mmio_pRqQ_empty_53_AND_epochManager_checkEpoch_ETC___d13115 =
 	     mmio_pRqQ_empty && epochManager$checkEpoch_0_check &&
 	     (fetchStage$pipelines_0_first[68] ||
-	      IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d13106) &&
+	      IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d13111) &&
 	     rob$isEmpty ;
-  assign mmio_pRqQ_empty_53_AND_epochManager_checkEpoch_ETC___d13367 =
+  assign mmio_pRqQ_empty_53_AND_epochManager_checkEpoch_ETC___d13377 =
 	     mmio_pRqQ_empty && epochManager$checkEpoch_0_check &&
 	     !fetchStage$pipelines_0_first[68] &&
-	     NOT_IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_286_ETC___d13348 &&
+	     NOT_IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_286_ETC___d13358 &&
 	     (fetchStage$pipelines_0_first[199:195] == 5'd0 ||
 	      fetchStage$pipelines_0_first[199:195] == 5'd21 ||
 	      fetchStage$pipelines_0_first[199:195] == 5'd17 ||
@@ -28568,9 +28543,10 @@ module mkCore(CLK,
 	      fetchStage$pipelines_0_first[199:195] == 5'd15 ||
 	      fetchStage$pipelines_0_first[199:195] == 5'd19 ||
 	      fetchStage$pipelines_0_first[199:195] == 5'd20) ;
-  assign mmio_pRqQ_empty_53_AND_epochManager_checkEpoch_ETC___d14050 =
+  assign mmio_pRqQ_empty_53_AND_epochManager_checkEpoch_ETC___d14071 =
 	     mmio_pRqQ_empty && epochManager$checkEpoch_0_check &&
-	     NOT_fetchStage_pipelines_0_first__2835_BIT_68__ETC___d13433 &&
+	     !fetchStage$pipelines_0_first[68] &&
+	     NOT_IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_286_ETC___d13443 &&
 	     fetchStage$pipelines_0_first[199:195] != 5'd0 &&
 	     fetchStage$pipelines_0_first[199:195] != 5'd21 &&
 	     fetchStage$pipelines_0_first[199:195] != 5'd17 &&
@@ -28637,7 +28613,7 @@ module mkCore(CLK,
 	      csrf_minstret_ehr_data_dummy2_1$Q_OUT) ?
 	       csrf_minstret_ehr_data_rl :
 	       64'd0 ;
-  assign n__read__h715911 =
+  assign n__read__h716001 =
 	     csrf_minstret_ehr_data_dummy2_1$Q_OUT ?
 	       IF_csrf_minstret_ehr_data_lat_0_whas_THEN_csrf_ETC___d8 :
 	       64'd0 ;
@@ -28655,10 +28631,10 @@ module mkCore(CLK,
 	     coreFix_memExe_dMem_cache_m_banks_0_rsToPQ_deqP + 1'd1 ;
   assign next_deqP___1__h332361 = coreFix_memExe_memRespLdQ_deqP + 1'd1 ;
   assign next_deqP___1__h335586 = coreFix_memExe_forwardQ_deqP + 1'd1 ;
-  assign next_pc__h715152 =
+  assign next_pc__h715242 =
 	     (rob$deqPort_0_deq_data[97:96] == 2'd0) ?
 	       rob$deqPort_0_deq_data[95:32] :
-	       rob_deqPort_0_deq_data__4334_BITS_282_TO_219_4_ETC___d14820 ;
+	       rob_deqPort_0_deq_data__4355_BITS_282_TO_219_4_ETC___d14841 ;
   assign out___1_sfd__h486261 =
 	     { coreFix_fpuMulDivExe_0_regToExeQ$first[162:140], 29'd0 } ;
   assign out___1_sfd__h525203 =
@@ -28869,21 +28845,21 @@ module mkCore(CLK,
 	     _theResult___snd__h601917[5] ?
 	       _theResult___sfd__h602652 :
 	       _theResult___snd__h601917[56:5] ;
-  assign pend_ints__h655198 =
+  assign pend_ints__h655200 =
 	     { csrf_debug_int_pend_read__1844_CONCAT_0b0_2867_ETC___d12877,
 	       csrf_software_int_en_vec_3 & csrf_software_int_pend_vec_3,
 	       1'd0,
 	       csrf_software_int_en_vec_1 & csrf_software_int_pend_vec_1,
 	       csrf_software_int_en_vec_0 & csrf_software_int_pend_vec_0 } ;
-  assign prv__h720574 = csrf_prv_reg ;
-  assign prv__h720618 = csrf_mprv_reg ? csrf_mpp_reg : csrf_prv_reg ;
+  assign prv__h720664 = csrf_prv_reg ;
+  assign prv__h720708 = csrf_mprv_reg ? csrf_mpp_reg : csrf_prv_reg ;
   assign q___1__h479477 =
 	     64'd0 -
 	     coreFix_fpuMulDivExe_0_mulDivExec_divUnit_divIfc_respQ$D_OUT[203:140] ;
   assign q__h607918 =
 	     coreFix_fpuMulDivExe_0_mulDivExec_divUnit_divIfc_dividendQ$D_OUT[139:76] /
 	     coreFix_fpuMulDivExe_0_mulDivExec_divUnit_divIfc_divisorQ$D_OUT ;
-  assign r1__read_BITS_12_TO_0___h655720 =
+  assign r1__read_BITS_12_TO_0___h655722 =
 	     { 3'd0,
 	       csrf_mideleg_11_reg,
 	       1'b0,
@@ -28891,7 +28867,8 @@ module mkCore(CLK,
 	       1'b0,
 	       csrf_mideleg_5_3_reg,
 	       1'b0 } ;
-  assign r1__read_BITS_13_TO_12___h659124 = csrf_fs_reg ;
+  assign r1__read_BITS_13_TO_12___h659126 = csrf_fs_reg ;
+  assign r1__read_BIT_20___h659754 = csrf_tw_reg ;
   assign r1__read__h617230 = { r1__read__h617232, csrf_ie_vec_1 } ;
   assign r1__read__h617232 = { r1__read__h617234, 2'b0 } ;
   assign r1__read__h617234 = { r1__read__h617236, csrf_prev_ie_vec_0 } ;
@@ -29013,57 +28990,61 @@ module mkCore(CLK,
 	     coreFix_fpuMulDivExe_0_mulDivExec_divUnit_divIfc_dividendQ$D_OUT[139:76] %
 	     coreFix_fpuMulDivExe_0_mulDivExec_divUnit_divIfc_divisorQ$D_OUT ;
   assign r__h617262 = csrf_fs_reg == 2'b11 ;
-  assign regRenamingTable_RDY_rename_0_getRename__3311__ETC___d13907 =
+  assign regRenamingTable_RDY_rename_0_getRename__3316__ETC___d13928 =
 	     regRenamingTable$RDY_rename_0_getRename &&
 	     CASE_fetchStagepipelines_0_first_BITS_191_TO__ETC__q232 &&
 	     (fetchStage$pipelines_0_first[199:195] == 5'd14 ||
 	      coreFix_memExe_rsMem$RDY_enq) ;
-  assign regRenamingTable_RDY_rename_1_getRename__3963__ETC___d13981 =
+  assign regRenamingTable_RDY_rename_1_getRename__3984__ETC___d14002 =
 	     regRenamingTable$RDY_rename_1_getRename &&
 	     (!fetchStage$pipelines_0_canDeq ||
-	      NOT_specTagManager_canClaim__3416_3500_OR_NOT__ETC___d13966) &&
-	     _0_OR_NOT_fetchStage_pipelines_1_first__2844_BI_ETC___d13979 ;
-  assign regRenamingTable_rename_0_canRename__3418_AND__ETC___d13501 =
+	      NOT_specTagManager_canClaim__3426_3511_OR_NOT__ETC___d13987) &&
+	     _0_OR_NOT_fetchStage_pipelines_1_first__2844_BI_ETC___d14000 ;
+  assign regRenamingTable_rename_0_canRename__3428_AND__ETC___d13498 =
 	     regRenamingTable$rename_0_canRename &&
-	     NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13486 &&
-	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13497 &&
+	     fetchStage$pipelines_0_first[199:195] != 5'd0 &&
+	     fetchStage$pipelines_0_first[199:195] != 5'd21 &&
+	     fetchStage$pipelines_0_first[199:195] != 5'd17 &&
+	     fetchStage$pipelines_0_first[199:195] != 5'd18 &&
+	     fetchStage$pipelines_0_first[199:195] != 5'd13 &&
+	     fetchStage$pipelines_0_first[199:195] != 5'd16 &&
+	     fetchStage$pipelines_0_first[199:195] != 5'd15 &&
+	     fetchStage$pipelines_0_first[199:195] != 5'd19 &&
+	     fetchStage$pipelines_0_first[199:195] != 5'd20 &&
+	     NOT_fetchStage_pipelines_0_first__2835_BIT_68__ETC___d13496 ;
+  assign regRenamingTable_rename_0_canRename__3428_AND__ETC___d13512 =
+	     regRenamingTable_rename_0_canRename__3428_AND__ETC___d13498 &&
+	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13508 &&
 	     fetchStage$pipelines_0_first[194:192] == 3'd1 ||
 	     !specTagManager$canClaim ;
-  assign regRenamingTable_rename_0_canRename__3418_AND__ETC___d13785 =
-	     regRenamingTable$rename_0_canRename &&
-	     NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13486 &&
-	     (fetchStage$pipelines_0_first[194:192] == 3'd3 ||
-	      fetchStage$pipelines_0_first[194:192] == 3'd4) ||
-	     !coreFix_fpuMulDivExe_0_rsFpuMulDiv$canEnq ;
-  assign regRenamingTable_rename_0_canRename__3418_AND__ETC___d13797 =
-	     regRenamingTable$rename_0_canRename &&
-	     NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13486 &&
+  assign regRenamingTable_rename_0_canRename__3428_AND__ETC___d13818 =
+	     regRenamingTable_rename_0_canRename__3428_AND__ETC___d13498 &&
 	     fetchStage$pipelines_0_first[194:192] == 3'd2 &&
-	     IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13469 ||
+	     IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13480 ||
 	     !coreFix_memExe_rsMem$canEnq ||
 	     CASE_fetchStagepipelines_1_first_BITS_191_TO__ETC__q230 ;
-  assign regRenamingTable_rename_0_canRename__3418_AND__ETC___d13936 =
+  assign regRenamingTable_rename_0_canRename__3428_AND__ETC___d13957 =
 	     regRenamingTable$rename_0_canRename &&
 	     !checkForException___d13069[4] &&
 	     rob$enqPort_0_canEnq &&
-	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13934 &&
+	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13955 &&
 	     fetchStage$pipelines_0_first[194:192] == 3'd1 ;
-  assign regRenamingTable_rename_0_canRename__3418_AND__ETC___d14068 =
+  assign regRenamingTable_rename_0_canRename__3428_AND__ETC___d14089 =
 	     regRenamingTable$rename_0_canRename &&
 	     !checkForException___d13069[4] &&
 	     rob$enqPort_0_canEnq &&
 	     (fetchStage$pipelines_0_first[194:192] == 3'd3 ||
 	      fetchStage$pipelines_0_first[194:192] == 3'd4) &&
 	     coreFix_fpuMulDivExe_0_rsFpuMulDiv$canEnq ;
-  assign regRenamingTable_rename_0_canRename__3418_AND__ETC___d14081 =
+  assign regRenamingTable_rename_0_canRename__3428_AND__ETC___d14102 =
 	     regRenamingTable$rename_0_canRename &&
 	     !checkForException___d13069[4] &&
 	     rob$enqPort_0_canEnq &&
 	     (fetchStage$pipelines_0_first[194:192] == 3'd3 ||
 	      fetchStage$pipelines_0_first[194:192] == 3'd4) &&
 	     coreFix_fpuMulDivExe_0_rsFpuMulDiv$canEnq &&
-	     NOT_fetchStage_pipelines_0_first__2835_BITS_32_ETC___d14077 ;
-  assign regRenamingTable_rename_0_canRename__3418_AND__ETC___d14086 =
+	     NOT_fetchStage_pipelines_0_first__2835_BITS_32_ETC___d14098 ;
+  assign regRenamingTable_rename_0_canRename__3428_AND__ETC___d14107 =
 	     regRenamingTable$rename_0_canRename &&
 	     !checkForException___d13069[4] &&
 	     rob$enqPort_0_canEnq &&
@@ -29071,100 +29052,89 @@ module mkCore(CLK,
 	      fetchStage$pipelines_0_first[194:192] == 3'd4) &&
 	     coreFix_fpuMulDivExe_0_rsFpuMulDiv$canEnq &&
 	     fetchStage$pipelines_0_first[173] ;
-  assign regRenamingTable_rename_0_canRename__3418_AND__ETC___d14091 =
+  assign regRenamingTable_rename_0_canRename__3428_AND__ETC___d14112 =
 	     regRenamingTable$rename_0_canRename &&
 	     !checkForException___d13069[4] &&
 	     rob$enqPort_0_canEnq &&
 	     fetchStage$pipelines_0_first[194:192] == 3'd2 &&
 	     coreFix_memExe_rsMem$canEnq &&
-	     IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13469 &&
+	     IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13480 &&
 	     fetchStage$pipelines_0_first[199:195] != 5'd14 ;
-  assign regRenamingTable_rename_0_canRename__3418_AND__ETC___d14111 =
+  assign regRenamingTable_rename_0_canRename__3428_AND__ETC___d14132 =
 	     regRenamingTable$rename_0_canRename &&
 	     !checkForException___d13069[4] &&
 	     rob$enqPort_0_canEnq &&
 	     fetchStage$pipelines_0_first[194:192] == 3'd2 &&
 	     coreFix_memExe_rsMem$canEnq &&
-	     IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13469 &&
-	     NOT_fetchStage_pipelines_0_first__2835_BITS_32_ETC___d14077 ;
-  assign regRenamingTable_rename_0_canRename__3418_AND__ETC___d14115 =
+	     IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13480 &&
+	     NOT_fetchStage_pipelines_0_first__2835_BITS_32_ETC___d14098 ;
+  assign regRenamingTable_rename_0_canRename__3428_AND__ETC___d14136 =
 	     regRenamingTable$rename_0_canRename &&
 	     !checkForException___d13069[4] &&
 	     rob$enqPort_0_canEnq &&
 	     fetchStage$pipelines_0_first[194:192] == 3'd2 &&
 	     coreFix_memExe_rsMem$canEnq &&
-	     IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13469 &&
+	     IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13480 &&
 	     fetchStage$pipelines_0_first[173] ;
-  assign regRenamingTable_rename_0_canRename__3418_AND__ETC___d14121 =
+  assign regRenamingTable_rename_0_canRename__3428_AND__ETC___d14142 =
 	     regRenamingTable$rename_0_canRename &&
 	     !checkForException___d13069[4] &&
 	     rob$enqPort_0_canEnq &&
 	     fetchStage$pipelines_0_first[194:192] == 3'd2 &&
 	     coreFix_memExe_rsMem$canEnq &&
-	     IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13469 &&
+	     IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13480 &&
 	     (fetchStage$pipelines_0_first[199:195] != 5'd14) !=
 	     fetchStage$pipelines_0_first[160] ;
-  assign regRenamingTable_rename_0_canRename__3418_AND__ETC___d14125 =
+  assign regRenamingTable_rename_0_canRename__3428_AND__ETC___d14146 =
 	     regRenamingTable$rename_0_canRename &&
 	     !checkForException___d13069[4] &&
 	     rob$enqPort_0_canEnq &&
 	     fetchStage$pipelines_0_first[194:192] == 3'd2 &&
 	     coreFix_memExe_rsMem$canEnq &&
-	     IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13469 &&
+	     IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13480 &&
 	     (fetchStage$pipelines_0_first[191:189] == 3'd0 ||
 	      fetchStage$pipelines_0_first[191:189] == 3'd2) ;
-  assign regRenamingTable_rename_0_canRename__3418_AND__ETC___d14133 =
+  assign regRenamingTable_rename_0_canRename__3428_AND__ETC___d14154 =
 	     regRenamingTable$rename_0_canRename &&
 	     !checkForException___d13069[4] &&
 	     rob$enqPort_0_canEnq &&
 	     fetchStage$pipelines_0_first[194:192] == 3'd2 &&
 	     coreFix_memExe_rsMem$canEnq &&
-	     IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13469 &&
+	     IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13480 &&
 	     fetchStage$pipelines_0_first[191:189] != 3'd0 &&
 	     fetchStage$pipelines_0_first[191:189] != 3'd2 ;
-  assign regRenamingTable_rename_0_canRename__3418_AND__ETC___d14308 =
+  assign regRenamingTable_rename_0_canRename__3428_AND__ETC___d14329 =
 	     regRenamingTable$rename_0_canRename &&
 	     !checkForException___d13069[4] &&
 	     rob$enqPort_0_canEnq &&
 	     fetchStage$pipelines_0_first[194:192] == 3'd2 &&
-	     IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13469 ;
-  assign regRenamingTable_rename_1_canRename__3535_AND__ETC___d14231 =
+	     IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13480 ;
+  assign regRenamingTable_rename_1_canRename__3547_AND__ETC___d14208 =
 	     regRenamingTable$rename_1_canRename &&
-	     NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d14186 &&
-	     (fetchStage$pipelines_1_first[194:192] == 3'd3 ||
-	      fetchStage$pipelines_1_first[194:192] == 3'd4) &&
-	     NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14227 &&
-	     coreFix_fpuMulDivExe_0_rsFpuMulDiv$canEnq ;
-  assign regRenamingTable_rename_1_canRename__3535_AND__ETC___d14246 =
-	     regRenamingTable$rename_1_canRename &&
-	     NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d14186 &&
-	     (fetchStage$pipelines_1_first[194:192] == 3'd3 ||
-	      fetchStage$pipelines_1_first[194:192] == 3'd4) &&
-	     NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14227 &&
-	     coreFix_fpuMulDivExe_0_rsFpuMulDiv$canEnq &&
-	     NOT_fetchStage_pipelines_1_first__2844_BITS_32_ETC___d14242 ;
-  assign regRenamingTable_rename_1_canRename__3535_AND__ETC___d14271 =
-	     regRenamingTable$rename_1_canRename &&
-	     NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d14186 &&
+	     fetchStage$pipelines_1_first[199:195] != 5'd0 &&
+	     fetchStage$pipelines_1_first[199:195] != 5'd21 &&
+	     fetchStage$pipelines_1_first[199:195] != 5'd17 &&
+	     fetchStage$pipelines_1_first[199:195] != 5'd18 &&
+	     fetchStage$pipelines_1_first[199:195] != 5'd13 &&
+	     fetchStage$pipelines_1_first[199:195] != 5'd16 &&
+	     fetchStage$pipelines_1_first[199:195] != 5'd15 &&
+	     fetchStage$pipelines_1_first[199:195] != 5'd19 &&
+	     fetchStage$pipelines_1_first[199:195] != 5'd20 &&
+	     NOT_fetchStage_pipelines_1_first__2844_BIT_68__ETC___d14206 ;
+  assign regRenamingTable_rename_1_canRename__3547_AND__ETC___d14292 =
+	     regRenamingTable_rename_1_canRename__3547_AND__ETC___d14208 &&
 	     fetchStage$pipelines_1_first[194:192] == 3'd2 &&
-	     NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14255 &&
-	     NOT_fetchStage_pipelines_1_first__2844_BITS_32_ETC___d14242 ;
-  assign regRenamingTable_rename_1_canRename__3535_AND__ETC___d14275 =
-	     regRenamingTable$rename_1_canRename &&
-	     NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d14186 &&
+	     NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14276 &&
+	     NOT_fetchStage_pipelines_1_first__2844_BITS_32_ETC___d14263 ;
+  assign regRenamingTable_rename_1_canRename__3547_AND__ETC___d14302 =
+	     regRenamingTable_rename_1_canRename__3547_AND__ETC___d14208 &&
 	     fetchStage$pipelines_1_first[194:192] == 3'd2 &&
-	     NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14255 &&
-	     fetchStage$pipelines_1_first[173] ;
-  assign regRenamingTable_rename_1_canRename__3535_AND__ETC___d14281 =
-	     regRenamingTable$rename_1_canRename &&
-	     NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d14186 &&
-	     fetchStage$pipelines_1_first[194:192] == 3'd2 &&
-	     NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14255 &&
+	     NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14276 &&
 	     (fetchStage$pipelines_1_first[199:195] != 5'd14) !=
 	     fetchStage$pipelines_1_first[160] ;
-  assign renaming_spec_bits__h686479 =
+  assign renaming_spec_bits__h686566 =
 	     fetchStage$pipelines_0_canDeq ?
-	       y_avValue_snd_fst__h683274 :
+	       y_avValue_snd_fst__h683332 :
 	       specTagManager$currentSpecBits ;
   assign res_data__h341239 = { 32'd0, x__h341251 } ;
   assign res_data__h341244 =
@@ -29441,17 +29411,38 @@ module mkCore(CLK,
 	       guard__h585510 } ;
   assign result__h650909 = w__h650904 & y__h650938 ;
   assign result__h650960 = ~x__h650959 ;
-  assign rob_RDY_enqPort_1_enq__4027_AND_NOT_fetchStage_ETC___d14035 =
+  assign rob_RDY_enqPort_1_enq__4048_AND_NOT_fetchStage_ETC___d14056 =
 	     rob$RDY_enqPort_1_enq &&
 	     (!fetchStage$pipelines_0_canDeq ||
-	      NOT_specTagManager_canClaim__3416_3500_OR_NOT__ETC___d14031) &&
+	      NOT_specTagManager_canClaim__3426_3511_OR_NOT__ETC___d14052) &&
 	     (fetchStage$pipelines_1_first[194:192] != 3'd1 ||
 	      specTagManager$RDY_claimSpecTag) ;
-  assign rob_deqPort_0_deq_data__4334_BITS_282_TO_219_4_ETC___d14820 =
+  assign rob_deqPort_0_deq_data__4355_BITS_282_TO_219_4_ETC___d14841 =
 	     rob$deqPort_0_deq_data[282:219] + 64'd4 ;
+  assign rob_enqPort_1_canEnq__3727_AND_epochManager_ch_ETC___d13732 =
+	     rob$enqPort_1_canEnq && epochManager$checkEpoch_1_check &&
+	     (!fetchStage$pipelines_0_canDeq ||
+	      (fetchStage$pipelines_0_first[194:192] != 3'd1 ||
+	       specTagManager$canClaim) &&
+	      regRenamingTable_rename_0_canRename__3428_AND__ETC___d13498 &&
+	      IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13484) ;
+  assign rob_enqPort_1_canEnq__3727_AND_epochManager_ch_ETC___d13866 =
+	     rob$enqPort_1_canEnq && epochManager$checkEpoch_1_check &&
+	     (!fetchStage$pipelines_0_canDeq ||
+	      (fetchStage$pipelines_0_first[194:192] != 3'd1 ||
+	       specTagManager$canClaim) &&
+	      regRenamingTable_rename_0_canRename__3428_AND__ETC___d13498 &&
+	      IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13862) ;
+  assign rob_enqPort_1_canEnq__3727_AND_epochManager_ch_ETC___d13883 =
+	     rob$enqPort_1_canEnq && epochManager$checkEpoch_1_check &&
+	     (!fetchStage$pipelines_0_canDeq ||
+	      (fetchStage$pipelines_0_first[194:192] != 3'd1 ||
+	       specTagManager$canClaim) &&
+	      regRenamingTable_rename_0_canRename__3428_AND__ETC___d13498 &&
+	      IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13879) ;
   assign robdeqPort_0_deq_data_BITS_95_TO_32__q262 =
 	     rob$deqPort_0_deq_data[95:32] ;
-  assign rs1__h659255 =
+  assign rs1__h659257 =
 	     (fetchStage$pipelines_0_first[88] &&
 	      !fetchStage$pipelines_0_first[87]) ?
 	       fetchStage$pipelines_0_first[86:82] :
@@ -29620,7 +29611,7 @@ module mkCore(CLK,
 	     { r1__read__h617634, csrf_software_int_en_vec_0 } ;
   assign sip_csr__read__h615179 =
 	     { r1__read__h618188, csrf_software_int_pend_vec_0 } ;
-  assign spec_bits__h689574 = specTagManager$currentSpecBits | y__h689587 ;
+  assign spec_bits__h689661 = specTagManager$currentSpecBits | y__h689674 ;
   assign sstatus_csr__read__h614737 = { r1__read__h617230, csrf_ie_vec_0 } ;
   assign stvec_csr__read__h614849 =
 	     { r1__read__h618164, csrf_stvec_mode_low_reg } ;
@@ -29873,18 +29864,18 @@ module mkCore(CLK,
 	     sbCons$lazyLookup_0_get[2] ? rf$read_0_rd2 : y_avValue__h641573 ;
   assign x__h650908 = 12'd1 << coreFix_aluExe_1_exeToFinQ$first[15:12] ;
   assign x__h650959 = 12'd1 << coreFix_aluExe_0_exeToFinQ$first[15:12] ;
-  assign x__h700760 =
+  assign x__h700850 =
 	     (!rob$deqPort_0_deq_data[166] &&
 	      (rob$deqPort_0_deq_data[165:162] == 4'd1 ||
 	       rob$deqPort_0_deq_data[165:162] == 4'd12)) ?
 	       rob$deqPort_0_deq_data[161:98] :
 	       rob$deqPort_0_deq_data[95:32] ;
-  assign x__h707048 = { cause_code__h704431, 2'b0 } ;
-  assign x__h715321 = { 1'b0, csrf_spp_reg } ;
-  assign x__h719307 =
-	     NOT_rob_deqPort_0_canDeq__4852_4853_OR_rob_deq_ETC___d15044 ?
-	       y_avValue_snd_snd_snd_fst__h719130 :
-	       IF_rob_deqPort_0_canDeq__4852_THEN_IF_NOT_rob__ETC___d15071 ;
+  assign x__h707138 = { cause_code__h704521, 2'b0 } ;
+  assign x__h715411 = { 1'b0, csrf_spp_reg } ;
+  assign x__h719397 =
+	     NOT_rob_deqPort_0_canDeq__4873_4874_OR_rob_deq_ETC___d15065 ?
+	       y_avValue_snd_snd_snd_fst__h719220 :
+	       IF_rob_deqPort_0_canDeq__4873_THEN_IF_NOT_rob__ETC___d15092 ;
   assign x__h75524 = mmio_pRqQ_data_0[31:0] ;
   assign x_addr__h317447 =
 	     coreFix_memExe_dMem_cache_m_banks_0_rsToPQ_enqReq_lat_0$whas ?
@@ -29894,9 +29885,9 @@ module mkCore(CLK,
 	     EN_mmioToPlatform_pRq_enq ?
 	       mmio_pRqQ_enqReq_lat_0$wget[31:0] :
 	       mmio_pRqQ_enqReq_rl[31:0] ;
-  assign x_data_imm__h678579 = fetchStage$pipelines_0_first[159:128] ;
-  assign x_data_imm__h694200 = fetchStage$pipelines_1_first[159:128] ;
-  assign x_decodeInfo_frm__h658939 = csrf_frm_reg ;
+  assign x_data_imm__h678637 = fetchStage$pipelines_0_first[159:128] ;
+  assign x_data_imm__h694287 = fetchStage$pipelines_1_first[159:128] ;
+  assign x_decodeInfo_frm__h658941 = csrf_frm_reg ;
   assign x_quotient__h478656 =
 	     coreFix_fpuMulDivExe_0_mulDivExec_divUnit_divIfc_respQ$D_OUT[75] ?
 	       64'hFFFFFFFFFFFFFFFF :
@@ -29918,7 +29909,7 @@ module mkCore(CLK,
   assign y__h624308 = coreFix_aluExe_1_regToExeQ$first[176:113] + 64'd4 ;
   assign y__h645998 = coreFix_aluExe_0_regToExeQ$first[176:113] + 64'd4 ;
   assign y__h650938 = ~x__h650908 ;
-  assign y__h655709 =
+  assign y__h655711 =
 	     { 3'd7,
 	       ~csrf_mideleg_11_reg,
 	       1'd1,
@@ -29927,11 +29918,11 @@ module mkCore(CLK,
 	       ~csrf_mideleg_5_3_reg,
 	       1'd1,
 	       ~csrf_mideleg_1_0_reg } ;
-  assign y__h689587 = 12'd1 << specTagManager$nextSpecTag ;
-  assign y__h719083 =
-	     NOT_rob_deqPort_0_canDeq__4852_4853_OR_rob_deq_ETC___d15044 ?
-	       y_avValue_snd_snd_snd_snd_snd__h719136 :
-	       IF_rob_deqPort_0_canDeq__4852_THEN_IF_NOT_rob__ETC___d14961 ;
+  assign y__h689674 = 12'd1 << specTagManager$nextSpecTag ;
+  assign y__h719173 =
+	     NOT_rob_deqPort_0_canDeq__4873_4874_OR_rob_deq_ETC___d15065 ?
+	       y_avValue_snd_snd_snd_snd_snd__h719226 :
+	       IF_rob_deqPort_0_canDeq__4873_THEN_IF_NOT_rob__ETC___d14982 ;
   assign y_avValue__h183367 =
 	     NOT_coreFix_memExe_bypassWire_0_whas__584_590__ETC___d1611 ?
 	       coreFix_aluExe_0_bypassWire_3$wget[63:0] :
@@ -29968,30 +29959,30 @@ module mkCore(CLK,
 	     NOT_coreFix_aluExe_0_bypassWire_0_whas__2301_2_ETC___d12358 ?
 	       coreFix_aluExe_0_bypassWire_3$wget[63:0] :
 	       IF_NOT_coreFix_aluExe_0_bypassWire_0_whas__230_ETC___d12545 ;
-  assign y_avValue__h705309 =
+  assign y_avValue__h705399 =
 	     (csrf_stvec_mode_low_reg && commitStage_commitTrap[4]) ?
-	       base__h707033 + { 58'd0, x__h707048 } :
-	       base__h707033 ;
-  assign y_avValue__h707070 =
+	       base__h707123 + { 58'd0, x__h707138 } :
+	       base__h707123 ;
+  assign y_avValue__h707160 =
 	     (csrf_mtvec_mode_low_reg && commitStage_commitTrap[4]) ?
-	       base__h707236 + { 58'd0, x__h707048 } :
-	       base__h707236 ;
-  assign y_avValue_fst__h683000 =
+	       base__h707326 + { 58'd0, x__h707138 } :
+	       base__h707326 ;
+  assign y_avValue_fst__h683058 =
 	     (fetchStage$pipelines_0_first[194:192] == 3'd1) ?
-	       spec_bits__h689574 :
+	       spec_bits__h689661 :
 	       specTagManager$currentSpecBits ;
-  assign y_avValue_snd_fst__h683274 =
+  assign y_avValue_snd_fst__h683332 =
 	     ((fetchStage$pipelines_0_first[194:192] != 3'd1 ||
 	       specTagManager$canClaim) &&
 	      regRenamingTable$rename_0_canRename &&
-	      NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13437) ?
-	       y_avValue_snd_fst__h683309 :
+	      NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13448) ?
+	       y_avValue_snd_fst__h683367 :
 	       specTagManager$currentSpecBits ;
-  assign y_avValue_snd_fst__h683309 =
-	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13497 ?
-	       y_avValue_fst__h683000 :
+  assign y_avValue_snd_fst__h683367 =
+	     IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13508 ?
+	       y_avValue_fst__h683058 :
 	       specTagManager$currentSpecBits ;
-  assign y_avValue_snd_fst__h718467 =
+  assign y_avValue_snd_fst__h718557 =
 	     (!rob$deqPort_0_deq_data[25] || rob$deqPort_0_deq_data[18] ||
 	      rob$deqPort_0_deq_data[167] ||
 	      rob$deqPort_0_deq_data[186:182] == 5'd0 ||
@@ -30005,7 +29996,7 @@ module mkCore(CLK,
 	      rob$deqPort_0_deq_data[186:182] == 5'd20) ?
 	       5'd0 :
 	       rob$deqPort_0_deq_data[31:27] ;
-  assign y_avValue_snd_fst__h719120 =
+  assign y_avValue_snd_fst__h719210 =
 	     (!rob$deqPort_1_deq_data[25] || rob$deqPort_1_deq_data[18] ||
 	      rob$deqPort_1_deq_data[167] ||
 	      rob$deqPort_1_deq_data[186:182] == 5'd0 ||
@@ -30017,12 +30008,12 @@ module mkCore(CLK,
 	      rob$deqPort_1_deq_data[186:182] == 5'd15 ||
 	      rob$deqPort_1_deq_data[186:182] == 5'd19 ||
 	      rob$deqPort_1_deq_data[186:182] == 5'd20) ?
-	       IF_rob_deqPort_0_canDeq__4852_THEN_IF_NOT_rob__ETC___d15050 :
-	       y_avValue_snd_fst__h719149 ;
-  assign y_avValue_snd_fst__h719149 =
-	     IF_rob_deqPort_0_canDeq__4852_THEN_IF_NOT_rob__ETC___d15050 |
+	       IF_rob_deqPort_0_canDeq__4873_THEN_IF_NOT_rob__ETC___d15071 :
+	       y_avValue_snd_fst__h719239 ;
+  assign y_avValue_snd_fst__h719239 =
+	     IF_rob_deqPort_0_canDeq__4873_THEN_IF_NOT_rob__ETC___d15071 |
 	     rob$deqPort_1_deq_data[31:27] ;
-  assign y_avValue_snd_snd_snd_fst__h718477 =
+  assign y_avValue_snd_snd_snd_fst__h718567 =
 	     (!rob$deqPort_0_deq_data[25] || rob$deqPort_0_deq_data[18] ||
 	      rob$deqPort_0_deq_data[167] ||
 	      rob$deqPort_0_deq_data[186:182] == 5'd0 ||
@@ -30036,7 +30027,7 @@ module mkCore(CLK,
 	      rob$deqPort_0_deq_data[186:182] == 5'd20) ?
 	       2'd0 :
 	       2'd1 ;
-  assign y_avValue_snd_snd_snd_fst__h719130 =
+  assign y_avValue_snd_snd_snd_fst__h719220 =
 	     (!rob$deqPort_1_deq_data[25] || rob$deqPort_1_deq_data[18] ||
 	      rob$deqPort_1_deq_data[167] ||
 	      rob$deqPort_1_deq_data[186:182] == 5'd0 ||
@@ -30048,12 +30039,12 @@ module mkCore(CLK,
 	      rob$deqPort_1_deq_data[186:182] == 5'd15 ||
 	      rob$deqPort_1_deq_data[186:182] == 5'd19 ||
 	      rob$deqPort_1_deq_data[186:182] == 5'd20) ?
-	       IF_rob_deqPort_0_canDeq__4852_THEN_IF_NOT_rob__ETC___d15071 :
-	       y_avValue_snd_snd_snd_fst__h719159 ;
-  assign y_avValue_snd_snd_snd_fst__h719159 =
-	     IF_rob_deqPort_0_canDeq__4852_THEN_IF_NOT_rob__ETC___d15071 +
+	       IF_rob_deqPort_0_canDeq__4873_THEN_IF_NOT_rob__ETC___d15092 :
+	       y_avValue_snd_snd_snd_fst__h719249 ;
+  assign y_avValue_snd_snd_snd_fst__h719249 =
+	     IF_rob_deqPort_0_canDeq__4873_THEN_IF_NOT_rob__ETC___d15092 +
 	     2'd1 ;
-  assign y_avValue_snd_snd_snd_snd_snd__h718483 =
+  assign y_avValue_snd_snd_snd_snd_snd__h718573 =
 	     (!rob$deqPort_0_deq_data[25] || rob$deqPort_0_deq_data[18] ||
 	      rob$deqPort_0_deq_data[167] ||
 	      rob$deqPort_0_deq_data[186:182] == 5'd0 ||
@@ -30067,7 +30058,7 @@ module mkCore(CLK,
 	      rob$deqPort_0_deq_data[186:182] == 5'd20) ?
 	       64'd0 :
 	       64'd1 ;
-  assign y_avValue_snd_snd_snd_snd_snd__h719136 =
+  assign y_avValue_snd_snd_snd_snd_snd__h719226 =
 	     (!rob$deqPort_1_deq_data[25] || rob$deqPort_1_deq_data[18] ||
 	      rob$deqPort_1_deq_data[167] ||
 	      rob$deqPort_1_deq_data[186:182] == 5'd0 ||
@@ -30079,10 +30070,10 @@ module mkCore(CLK,
 	      rob$deqPort_1_deq_data[186:182] == 5'd15 ||
 	      rob$deqPort_1_deq_data[186:182] == 5'd19 ||
 	      rob$deqPort_1_deq_data[186:182] == 5'd20) ?
-	       IF_rob_deqPort_0_canDeq__4852_THEN_IF_NOT_rob__ETC___d14961 :
-	       y_avValue_snd_snd_snd_snd_snd__h719165 ;
-  assign y_avValue_snd_snd_snd_snd_snd__h719165 =
-	     IF_rob_deqPort_0_canDeq__4852_THEN_IF_NOT_rob__ETC___d14961 +
+	       IF_rob_deqPort_0_canDeq__4873_THEN_IF_NOT_rob__ETC___d14982 :
+	       y_avValue_snd_snd_snd_snd_snd__h719255 ;
+  assign y_avValue_snd_snd_snd_snd_snd__h719255 =
+	     IF_rob_deqPort_0_canDeq__4873_THEN_IF_NOT_rob__ETC___d14982 +
 	     64'd1 ;
   always@(mmio_cRqQ_data_0)
   begin
@@ -30208,8 +30199,8 @@ module mkCore(CLK,
   always@(commitStage_commitTrap)
   begin
     case (commitStage_commitTrap[3:0])
-      4'd0, 4'd3: trap_val__h705462 = commitStage_commitTrap[132:69];
-      default: trap_val__h705462 =
+      4'd0, 4'd3: trap_val__h705552 = commitStage_commitTrap[132:69];
+      default: trap_val__h705552 =
 		   (commitStage_commitTrap[3:0] != 4'd2 &&
 		    commitStage_commitTrap[3:0] != 4'd8 &&
 		    commitStage_commitTrap[3:0] != 4'd9 &&
@@ -30591,16 +30582,16 @@ module mkCore(CLK,
       4'd11,
       4'd12,
       4'd13:
-	  i__h704446 = commitStage_commitTrap[3:0];
-      default: i__h704446 = 4'd15;
+	  i__h704536 = commitStage_commitTrap[3:0];
+      default: i__h704536 = 4'd15;
     endcase
   end
   always@(commitStage_commitTrap)
   begin
     case (commitStage_commitTrap[3:0])
       4'd0, 4'd1, 4'd3, 4'd4, 4'd5, 4'd7, 4'd8, 4'd9, 4'd11:
-	  i__h704606 = commitStage_commitTrap[3:0];
-      default: i__h704606 = 4'd14;
+	  i__h704696 = commitStage_commitTrap[3:0];
+      default: i__h704696 = 4'd14;
     endcase
   end
   always@(coreFix_memExe_lsq$firstLd or coreFix_memExe_respLrScAmoQ_data_0)
@@ -32312,51 +32303,6 @@ module mkCore(CLK,
 		   !coreFix_fpuMulDivExe_0_fpuExec_double_div$response_get[68];
     endcase
   end
-  always@(fetchStage$pipelines_0_first)
-  begin
-    case (fetchStage$pipelines_0_first[172:161])
-      12'd1,
-      12'd2,
-      12'd3,
-      12'd256,
-      12'd260,
-      12'd261,
-      12'd262,
-      12'd320,
-      12'd321,
-      12'd322,
-      12'd323,
-      12'd324,
-      12'd384,
-      12'd768,
-      12'd769,
-      12'd770,
-      12'd771,
-      12'd772,
-      12'd773,
-      12'd774,
-      12'd832,
-      12'd833,
-      12'd834,
-      12'd835,
-      12'd836,
-      12'd2048,
-      12'd2049,
-      12'd2816,
-      12'd2818,
-      12'd3072,
-      12'd3073,
-      12'd3074,
-      12'd3857,
-      12'd3858,
-      12'd3859,
-      12'd3860:
-	  IF_fetchStage_pipelines_0_first__2835_BITS_172_ETC___d13035 =
-	      fetchStage$pipelines_0_first[172:161];
-      default: IF_fetchStage_pipelines_0_first__2835_BITS_172_ETC___d13035 =
-		   12'd2303;
-    endcase
-  end
   always@(guard__h449549 or
 	  _theResult___fst_exp__h457597 or
 	  out_exp__h458042 or _theResult___exp__h458039)
@@ -32774,61 +32720,23 @@ module mkCore(CLK,
   begin
     case (guard__h440842)
       2'b0, 2'b01, 2'b10:
-	  CASE_guard40842_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q118 =
-	      !coreFix_fpuMulDivExe_0_fpuExec_double_sqrt$response_get[68];
-      2'd3:
-	  CASE_guard40842_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q118 =
-	      guard__h440842 != 2'b11 ||
-	      !coreFix_fpuMulDivExe_0_fpuExec_double_sqrt$response_get[68];
-    endcase
-  end
-  always@(coreFix_fpuMulDivExe_0_fpuExec_sqrtQ$first_data or
-	  coreFix_fpuMulDivExe_0_fpuExec_double_sqrt$response_get or
-	  CASE_guard40842_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q118 or
-	  guard__h440842)
-  begin
-    case (coreFix_fpuMulDivExe_0_fpuExec_sqrtQ$first_data[42:40])
-      3'd0:
-	  IF_coreFix_fpuMulDivExe_0_fpuExec_sqrtQ_first__ETC___d7934 =
-	      CASE_guard40842_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q118;
-      3'd1:
-	  IF_coreFix_fpuMulDivExe_0_fpuExec_sqrtQ_first__ETC___d7934 =
-	      (guard__h440842 == 2'b0) ?
-		!coreFix_fpuMulDivExe_0_fpuExec_double_sqrt$response_get[68] :
-		guard__h440842 != 2'b01 && guard__h440842 != 2'b10 &&
-		guard__h440842 != 2'b11 ||
-		!coreFix_fpuMulDivExe_0_fpuExec_double_sqrt$response_get[68];
-      3'd2, 3'd3:
-	  IF_coreFix_fpuMulDivExe_0_fpuExec_sqrtQ_first__ETC___d7934 =
-	      !coreFix_fpuMulDivExe_0_fpuExec_double_sqrt$response_get[68];
-      default: IF_coreFix_fpuMulDivExe_0_fpuExec_sqrtQ_first__ETC___d7934 =
-		   coreFix_fpuMulDivExe_0_fpuExec_sqrtQ$first_data[42:40] !=
-		   3'd4 ||
-		   !coreFix_fpuMulDivExe_0_fpuExec_double_sqrt$response_get[68];
-    endcase
-  end
-  always@(guard__h440842 or
-	  coreFix_fpuMulDivExe_0_fpuExec_double_sqrt$response_get)
-  begin
-    case (guard__h440842)
-      2'b0, 2'b01, 2'b10:
-	  CASE_guard40842_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q119 =
+	  CASE_guard40842_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q118 =
 	      coreFix_fpuMulDivExe_0_fpuExec_double_sqrt$response_get[68];
       2'd3:
-	  CASE_guard40842_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q119 =
+	  CASE_guard40842_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q118 =
 	      guard__h440842 == 2'b11 &&
 	      coreFix_fpuMulDivExe_0_fpuExec_double_sqrt$response_get[68];
     endcase
   end
   always@(coreFix_fpuMulDivExe_0_fpuExec_sqrtQ$first_data or
 	  coreFix_fpuMulDivExe_0_fpuExec_double_sqrt$response_get or
-	  CASE_guard40842_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q119 or
+	  CASE_guard40842_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q118 or
 	  guard__h440842)
   begin
     case (coreFix_fpuMulDivExe_0_fpuExec_sqrtQ$first_data[42:40])
       3'd0:
 	  IF_coreFix_fpuMulDivExe_0_fpuExec_sqrtQ_first__ETC___d7990 =
-	      CASE_guard40842_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q119;
+	      CASE_guard40842_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q118;
       3'd1:
 	  IF_coreFix_fpuMulDivExe_0_fpuExec_sqrtQ_first__ETC___d7990 =
 	      (guard__h440842 == 2'b0) ?
@@ -32843,6 +32751,44 @@ module mkCore(CLK,
 		   coreFix_fpuMulDivExe_0_fpuExec_sqrtQ$first_data[42:40] ==
 		   3'd4 &&
 		   coreFix_fpuMulDivExe_0_fpuExec_double_sqrt$response_get[68];
+    endcase
+  end
+  always@(guard__h440842 or
+	  coreFix_fpuMulDivExe_0_fpuExec_double_sqrt$response_get)
+  begin
+    case (guard__h440842)
+      2'b0, 2'b01, 2'b10:
+	  CASE_guard40842_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q119 =
+	      !coreFix_fpuMulDivExe_0_fpuExec_double_sqrt$response_get[68];
+      2'd3:
+	  CASE_guard40842_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q119 =
+	      guard__h440842 != 2'b11 ||
+	      !coreFix_fpuMulDivExe_0_fpuExec_double_sqrt$response_get[68];
+    endcase
+  end
+  always@(coreFix_fpuMulDivExe_0_fpuExec_sqrtQ$first_data or
+	  coreFix_fpuMulDivExe_0_fpuExec_double_sqrt$response_get or
+	  CASE_guard40842_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q119 or
+	  guard__h440842)
+  begin
+    case (coreFix_fpuMulDivExe_0_fpuExec_sqrtQ$first_data[42:40])
+      3'd0:
+	  IF_coreFix_fpuMulDivExe_0_fpuExec_sqrtQ_first__ETC___d7934 =
+	      CASE_guard40842_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q119;
+      3'd1:
+	  IF_coreFix_fpuMulDivExe_0_fpuExec_sqrtQ_first__ETC___d7934 =
+	      (guard__h440842 == 2'b0) ?
+		!coreFix_fpuMulDivExe_0_fpuExec_double_sqrt$response_get[68] :
+		guard__h440842 != 2'b01 && guard__h440842 != 2'b10 &&
+		guard__h440842 != 2'b11 ||
+		!coreFix_fpuMulDivExe_0_fpuExec_double_sqrt$response_get[68];
+      3'd2, 3'd3:
+	  IF_coreFix_fpuMulDivExe_0_fpuExec_sqrtQ_first__ETC___d7934 =
+	      !coreFix_fpuMulDivExe_0_fpuExec_double_sqrt$response_get[68];
+      default: IF_coreFix_fpuMulDivExe_0_fpuExec_sqrtQ_first__ETC___d7934 =
+		   coreFix_fpuMulDivExe_0_fpuExec_sqrtQ$first_data[42:40] !=
+		   3'd4 ||
+		   !coreFix_fpuMulDivExe_0_fpuExec_double_sqrt$response_get[68];
     endcase
   end
   always@(guard__h449549 or
@@ -33644,66 +33590,15 @@ module mkCore(CLK,
 	      _theResult___exp__h563450;
     endcase
   end
-  always@(guard__h584912 or
-	  _theResult___fst_exp__h593138 or _theResult___exp__h593867)
-  begin
-    case (guard__h584912)
-      2'b0:
-	  CASE_guard84912_0b0_theResult___fst_exp93138_0_ETC__q181 =
-	      _theResult___fst_exp__h593138;
-      2'b01, 2'b10, 2'b11:
-	  CASE_guard84912_0b0_theResult___fst_exp93138_0_ETC__q181 =
-	      _theResult___exp__h593867;
-    endcase
-  end
-  always@(coreFix_fpuMulDivExe_0_regToExeQ$first or
-	  _theResult___fst_exp__h593138 or
-	  IF_IF_IF_IF_3074_MINUS_SEXT_coreFix_fpuMulDivE_ETC___d9869 or
-	  IF_IF_IF_IF_3074_MINUS_SEXT_coreFix_fpuMulDivE_ETC___d9867 or
-	  CASE_guard84912_0b0_theResult___fst_exp93138_0_ETC__q181)
-  begin
-    case (coreFix_fpuMulDivExe_0_regToExeQ$first[228:226])
-      3'd1:
-	  IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d9873 =
-	      _theResult___fst_exp__h593138;
-      3'd2:
-	  IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d9873 =
-	      IF_IF_IF_IF_3074_MINUS_SEXT_coreFix_fpuMulDivE_ETC___d9869;
-      3'd3:
-	  IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d9873 =
-	      IF_IF_IF_IF_3074_MINUS_SEXT_coreFix_fpuMulDivE_ETC___d9867;
-      3'd4:
-	  IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d9873 =
-	      CASE_guard84912_0b0_theResult___fst_exp93138_0_ETC__q181;
-      default: IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d9873 =
-		   11'd0;
-    endcase
-  end
-  always@(guard__h584912 or
-	  _theResult___fst_exp__h593138 or
-	  out_exp__h593870 or _theResult___exp__h593867)
-  begin
-    case (guard__h584912)
-      2'b0, 2'b01:
-	  CASE_guard84912_0b0_theResult___fst_exp93138_0_ETC__q182 =
-	      _theResult___fst_exp__h593138;
-      2'b10:
-	  CASE_guard84912_0b0_theResult___fst_exp93138_0_ETC__q182 =
-	      out_exp__h593870;
-      2'b11:
-	  CASE_guard84912_0b0_theResult___fst_exp93138_0_ETC__q182 =
-	      _theResult___exp__h593867;
-    endcase
-  end
   always@(guard__h593981 or
 	  _theResult___fst_exp__h601971 or _theResult___exp__h602651)
   begin
     case (guard__h593981)
       2'b0:
-	  CASE_guard93981_0b0_theResult___fst_exp01971_0_ETC__q183 =
+	  CASE_guard93981_0b0_theResult___fst_exp01971_0_ETC__q181 =
 	      _theResult___fst_exp__h601971;
       2'b01, 2'b10, 2'b11:
-	  CASE_guard93981_0b0_theResult___fst_exp01971_0_ETC__q183 =
+	  CASE_guard93981_0b0_theResult___fst_exp01971_0_ETC__q181 =
 	      _theResult___exp__h602651;
     endcase
   end
@@ -33711,7 +33606,7 @@ module mkCore(CLK,
 	  _theResult___fst_exp__h601971 or
 	  IF_IF_IF_coreFix_fpuMulDivExe_0_regToExeQ_firs_ETC___d9900 or
 	  IF_IF_IF_coreFix_fpuMulDivExe_0_regToExeQ_firs_ETC___d9898 or
-	  CASE_guard93981_0b0_theResult___fst_exp01971_0_ETC__q183)
+	  CASE_guard93981_0b0_theResult___fst_exp01971_0_ETC__q181)
   begin
     case (coreFix_fpuMulDivExe_0_regToExeQ$first[228:226])
       3'd1:
@@ -33725,7 +33620,7 @@ module mkCore(CLK,
 	      IF_IF_IF_coreFix_fpuMulDivExe_0_regToExeQ_firs_ETC___d9898;
       3'd4:
 	  IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d9904 =
-	      CASE_guard93981_0b0_theResult___fst_exp01971_0_ETC__q183;
+	      CASE_guard93981_0b0_theResult___fst_exp01971_0_ETC__q181;
       default: IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d9904 =
 		   11'd0;
     endcase
@@ -33736,54 +33631,75 @@ module mkCore(CLK,
   begin
     case (guard__h593981)
       2'b0, 2'b01:
-	  CASE_guard93981_0b0_theResult___fst_exp01971_0_ETC__q184 =
+	  CASE_guard93981_0b0_theResult___fst_exp01971_0_ETC__q182 =
 	      _theResult___fst_exp__h601971;
       2'b10:
-	  CASE_guard93981_0b0_theResult___fst_exp01971_0_ETC__q184 =
+	  CASE_guard93981_0b0_theResult___fst_exp01971_0_ETC__q182 =
 	      out_exp__h602654;
       2'b11:
-	  CASE_guard93981_0b0_theResult___fst_exp01971_0_ETC__q184 =
+	  CASE_guard93981_0b0_theResult___fst_exp01971_0_ETC__q182 =
 	      _theResult___exp__h602651;
     endcase
   end
-  always@(guard__h545711 or coreFix_fpuMulDivExe_0_regToExeQ$first)
+  always@(guard__h584912 or
+	  _theResult___fst_exp__h593138 or _theResult___exp__h593867)
   begin
-    case (guard__h545711)
-      2'b0, 2'b01, 2'b10:
-	  CASE_guard45711_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q185 =
-	      coreFix_fpuMulDivExe_0_regToExeQ$first[107];
-      2'd3:
-	  CASE_guard45711_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q185 =
-	      guard__h545711 == 2'b11 &&
-	      coreFix_fpuMulDivExe_0_regToExeQ$first[107];
+    case (guard__h584912)
+      2'b0:
+	  CASE_guard84912_0b0_theResult___fst_exp93138_0_ETC__q183 =
+	      _theResult___fst_exp__h593138;
+      2'b01, 2'b10, 2'b11:
+	  CASE_guard84912_0b0_theResult___fst_exp93138_0_ETC__q183 =
+	      _theResult___exp__h593867;
     endcase
   end
-  always@(coreFix_fpuMulDivExe_0_regToExeQ$first or guard__h545711)
+  always@(coreFix_fpuMulDivExe_0_regToExeQ$first or
+	  _theResult___fst_exp__h593138 or
+	  IF_IF_IF_IF_3074_MINUS_SEXT_coreFix_fpuMulDivE_ETC___d9869 or
+	  IF_IF_IF_IF_3074_MINUS_SEXT_coreFix_fpuMulDivE_ETC___d9867 or
+	  CASE_guard84912_0b0_theResult___fst_exp93138_0_ETC__q183)
   begin
     case (coreFix_fpuMulDivExe_0_regToExeQ$first[228:226])
-      3'd2, 3'd3:
-	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q186 =
-	      coreFix_fpuMulDivExe_0_regToExeQ$first[107];
+      3'd1:
+	  IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d9873 =
+	      _theResult___fst_exp__h593138;
+      3'd2:
+	  IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d9873 =
+	      IF_IF_IF_IF_3074_MINUS_SEXT_coreFix_fpuMulDivE_ETC___d9869;
+      3'd3:
+	  IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d9873 =
+	      IF_IF_IF_IF_3074_MINUS_SEXT_coreFix_fpuMulDivE_ETC___d9867;
       3'd4:
-	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q186 =
-	      (guard__h545711 == 2'b0) ?
-		coreFix_fpuMulDivExe_0_regToExeQ$first[107] :
-		(guard__h545711 == 2'b01 || guard__h545711 == 2'b10 ||
-		 guard__h545711 == 2'b11) &&
-		coreFix_fpuMulDivExe_0_regToExeQ$first[107];
-      default: CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q186 =
-		   coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] == 3'd1 &&
-		   coreFix_fpuMulDivExe_0_regToExeQ$first[107];
+	  IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d9873 =
+	      CASE_guard84912_0b0_theResult___fst_exp93138_0_ETC__q183;
+      default: IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d9873 =
+		   11'd0;
+    endcase
+  end
+  always@(guard__h584912 or
+	  _theResult___fst_exp__h593138 or
+	  out_exp__h593870 or _theResult___exp__h593867)
+  begin
+    case (guard__h584912)
+      2'b0, 2'b01:
+	  CASE_guard84912_0b0_theResult___fst_exp93138_0_ETC__q184 =
+	      _theResult___fst_exp__h593138;
+      2'b10:
+	  CASE_guard84912_0b0_theResult___fst_exp93138_0_ETC__q184 =
+	      out_exp__h593870;
+      2'b11:
+	  CASE_guard84912_0b0_theResult___fst_exp93138_0_ETC__q184 =
+	      _theResult___exp__h593867;
     endcase
   end
   always@(guard__h536399 or coreFix_fpuMulDivExe_0_regToExeQ$first)
   begin
     case (guard__h536399)
       2'b0, 2'b01, 2'b10:
-	  CASE_guard36399_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q187 =
+	  CASE_guard36399_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q185 =
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[107];
       2'd3:
-	  CASE_guard36399_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q187 =
+	  CASE_guard36399_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q185 =
 	      guard__h536399 == 2'b11 &&
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[107];
     endcase
@@ -33792,16 +33708,16 @@ module mkCore(CLK,
   begin
     case (coreFix_fpuMulDivExe_0_regToExeQ$first[228:226])
       3'd2, 3'd3:
-	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q188 =
+	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q186 =
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[107];
       3'd4:
-	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q188 =
+	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q186 =
 	      (guard__h536399 == 2'b0) ?
 		coreFix_fpuMulDivExe_0_regToExeQ$first[107] :
 		(guard__h536399 == 2'b01 || guard__h536399 == 2'b10 ||
 		 guard__h536399 == 2'b11) &&
 		coreFix_fpuMulDivExe_0_regToExeQ$first[107];
-      default: CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q188 =
+      default: CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q186 =
 		   coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] == 3'd1 &&
 		   coreFix_fpuMulDivExe_0_regToExeQ$first[107];
     endcase
@@ -33810,10 +33726,10 @@ module mkCore(CLK,
   begin
     case (guard__h554780)
       2'b0, 2'b01, 2'b10:
-	  CASE_guard54780_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q189 =
+	  CASE_guard54780_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q187 =
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[107];
       2'd3:
-	  CASE_guard54780_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q189 =
+	  CASE_guard54780_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q187 =
 	      guard__h554780 == 2'b11 &&
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[107];
     endcase
@@ -33822,14 +33738,44 @@ module mkCore(CLK,
   begin
     case (coreFix_fpuMulDivExe_0_regToExeQ$first[228:226])
       3'd2, 3'd3:
-	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q190 =
+	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q188 =
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[107];
       3'd4:
-	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q190 =
+	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q188 =
 	      (guard__h554780 == 2'b0) ?
 		coreFix_fpuMulDivExe_0_regToExeQ$first[107] :
 		(guard__h554780 == 2'b01 || guard__h554780 == 2'b10 ||
 		 guard__h554780 == 2'b11) &&
+		coreFix_fpuMulDivExe_0_regToExeQ$first[107];
+      default: CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q188 =
+		   coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] == 3'd1 &&
+		   coreFix_fpuMulDivExe_0_regToExeQ$first[107];
+    endcase
+  end
+  always@(guard__h545711 or coreFix_fpuMulDivExe_0_regToExeQ$first)
+  begin
+    case (guard__h545711)
+      2'b0, 2'b01, 2'b10:
+	  CASE_guard45711_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q189 =
+	      coreFix_fpuMulDivExe_0_regToExeQ$first[107];
+      2'd3:
+	  CASE_guard45711_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q189 =
+	      guard__h545711 == 2'b11 &&
+	      coreFix_fpuMulDivExe_0_regToExeQ$first[107];
+    endcase
+  end
+  always@(coreFix_fpuMulDivExe_0_regToExeQ$first or guard__h545711)
+  begin
+    case (coreFix_fpuMulDivExe_0_regToExeQ$first[228:226])
+      3'd2, 3'd3:
+	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q190 =
+	      coreFix_fpuMulDivExe_0_regToExeQ$first[107];
+      3'd4:
+	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q190 =
+	      (guard__h545711 == 2'b0) ?
+		coreFix_fpuMulDivExe_0_regToExeQ$first[107] :
+		(guard__h545711 == 2'b01 || guard__h545711 == 2'b10 ||
+		 guard__h545711 == 2'b11) &&
 		coreFix_fpuMulDivExe_0_regToExeQ$first[107];
       default: CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q190 =
 		   coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] == 3'd1 &&
@@ -33866,44 +33812,14 @@ module mkCore(CLK,
 		   !coreFix_fpuMulDivExe_0_regToExeQ$first[107];
     endcase
   end
-  always@(guard__h536399 or coreFix_fpuMulDivExe_0_regToExeQ$first)
-  begin
-    case (guard__h536399)
-      2'b0, 2'b01, 2'b10:
-	  CASE_guard36399_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q193 =
-	      !coreFix_fpuMulDivExe_0_regToExeQ$first[107];
-      2'd3:
-	  CASE_guard36399_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q193 =
-	      guard__h536399 != 2'b11 ||
-	      !coreFix_fpuMulDivExe_0_regToExeQ$first[107];
-    endcase
-  end
-  always@(coreFix_fpuMulDivExe_0_regToExeQ$first or guard__h536399)
-  begin
-    case (coreFix_fpuMulDivExe_0_regToExeQ$first[228:226])
-      3'd2, 3'd3:
-	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q194 =
-	      !coreFix_fpuMulDivExe_0_regToExeQ$first[107];
-      3'd4:
-	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q194 =
-	      (guard__h536399 == 2'b0) ?
-		!coreFix_fpuMulDivExe_0_regToExeQ$first[107] :
-		guard__h536399 != 2'b01 && guard__h536399 != 2'b10 &&
-		guard__h536399 != 2'b11 ||
-		!coreFix_fpuMulDivExe_0_regToExeQ$first[107];
-      default: CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q194 =
-		   coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd1 ||
-		   !coreFix_fpuMulDivExe_0_regToExeQ$first[107];
-    endcase
-  end
   always@(guard__h554780 or coreFix_fpuMulDivExe_0_regToExeQ$first)
   begin
     case (guard__h554780)
       2'b0, 2'b01, 2'b10:
-	  CASE_guard54780_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q195 =
+	  CASE_guard54780_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q193 =
 	      !coreFix_fpuMulDivExe_0_regToExeQ$first[107];
       2'd3:
-	  CASE_guard54780_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q195 =
+	  CASE_guard54780_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q193 =
 	      guard__h554780 != 2'b11 ||
 	      !coreFix_fpuMulDivExe_0_regToExeQ$first[107];
     endcase
@@ -33912,14 +33828,44 @@ module mkCore(CLK,
   begin
     case (coreFix_fpuMulDivExe_0_regToExeQ$first[228:226])
       3'd2, 3'd3:
-	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q196 =
+	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q194 =
 	      !coreFix_fpuMulDivExe_0_regToExeQ$first[107];
       3'd4:
-	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q196 =
+	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q194 =
 	      (guard__h554780 == 2'b0) ?
 		!coreFix_fpuMulDivExe_0_regToExeQ$first[107] :
 		guard__h554780 != 2'b01 && guard__h554780 != 2'b10 &&
 		guard__h554780 != 2'b11 ||
+		!coreFix_fpuMulDivExe_0_regToExeQ$first[107];
+      default: CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q194 =
+		   coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd1 ||
+		   !coreFix_fpuMulDivExe_0_regToExeQ$first[107];
+    endcase
+  end
+  always@(guard__h536399 or coreFix_fpuMulDivExe_0_regToExeQ$first)
+  begin
+    case (guard__h536399)
+      2'b0, 2'b01, 2'b10:
+	  CASE_guard36399_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q195 =
+	      !coreFix_fpuMulDivExe_0_regToExeQ$first[107];
+      2'd3:
+	  CASE_guard36399_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q195 =
+	      guard__h536399 != 2'b11 ||
+	      !coreFix_fpuMulDivExe_0_regToExeQ$first[107];
+    endcase
+  end
+  always@(coreFix_fpuMulDivExe_0_regToExeQ$first or guard__h536399)
+  begin
+    case (coreFix_fpuMulDivExe_0_regToExeQ$first[228:226])
+      3'd2, 3'd3:
+	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q196 =
+	      !coreFix_fpuMulDivExe_0_regToExeQ$first[107];
+      3'd4:
+	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q196 =
+	      (guard__h536399 == 2'b0) ?
+		!coreFix_fpuMulDivExe_0_regToExeQ$first[107] :
+		guard__h536399 != 2'b01 && guard__h536399 != 2'b10 &&
+		guard__h536399 != 2'b11 ||
 		!coreFix_fpuMulDivExe_0_regToExeQ$first[107];
       default: CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q196 =
 		   coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd1 ||
@@ -33977,65 +33923,14 @@ module mkCore(CLK,
 	      _theResult___sfd__h545016;
     endcase
   end
-  always@(guard__h554780 or
-	  _theResult___snd__h562716 or _theResult___sfd__h563451)
-  begin
-    case (guard__h554780)
-      2'b0:
-	  CASE_guard54780_0b0_theResult___snd62716_BITS__ETC__q199 =
-	      _theResult___snd__h562716[56:5];
-      2'b01, 2'b10, 2'b11:
-	  CASE_guard54780_0b0_theResult___snd62716_BITS__ETC__q199 =
-	      _theResult___sfd__h563451;
-    endcase
-  end
-  always@(coreFix_fpuMulDivExe_0_regToExeQ$first or
-	  _theResult___snd__h562716 or
-	  IF_IF_IF_coreFix_fpuMulDivExe_0_regToExeQ_firs_ETC___d10734 or
-	  IF_IF_IF_coreFix_fpuMulDivExe_0_regToExeQ_firs_ETC___d10732 or
-	  CASE_guard54780_0b0_theResult___snd62716_BITS__ETC__q199)
-  begin
-    case (coreFix_fpuMulDivExe_0_regToExeQ$first[228:226])
-      3'd1:
-	  IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d10738 =
-	      _theResult___snd__h562716[56:5];
-      3'd2:
-	  IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d10738 =
-	      IF_IF_IF_coreFix_fpuMulDivExe_0_regToExeQ_firs_ETC___d10734;
-      3'd3:
-	  IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d10738 =
-	      IF_IF_IF_coreFix_fpuMulDivExe_0_regToExeQ_firs_ETC___d10732;
-      3'd4:
-	  IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d10738 =
-	      CASE_guard54780_0b0_theResult___snd62716_BITS__ETC__q199;
-      default: IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d10738 =
-		   52'd0;
-    endcase
-  end
-  always@(guard__h554780 or
-	  _theResult___snd__h562716 or
-	  out_sfd__h563454 or _theResult___sfd__h563451)
-  begin
-    case (guard__h554780)
-      2'b0, 2'b01:
-	  CASE_guard54780_0b0_theResult___snd62716_BITS__ETC__q200 =
-	      _theResult___snd__h562716[56:5];
-      2'b10:
-	  CASE_guard54780_0b0_theResult___snd62716_BITS__ETC__q200 =
-	      out_sfd__h563454;
-      2'b11:
-	  CASE_guard54780_0b0_theResult___snd62716_BITS__ETC__q200 =
-	      _theResult___sfd__h563451;
-    endcase
-  end
   always@(guard__h545711 or sfdin__h553931 or _theResult___sfd__h554667)
   begin
     case (guard__h545711)
       2'b0:
-	  CASE_guard45711_0b0_sfdin53931_BITS_56_TO_5_0b_ETC__q201 =
+	  CASE_guard45711_0b0_sfdin53931_BITS_56_TO_5_0b_ETC__q199 =
 	      sfdin__h553931[56:5];
       2'b01, 2'b10, 2'b11:
-	  CASE_guard45711_0b0_sfdin53931_BITS_56_TO_5_0b_ETC__q201 =
+	  CASE_guard45711_0b0_sfdin53931_BITS_56_TO_5_0b_ETC__q199 =
 	      _theResult___sfd__h554667;
     endcase
   end
@@ -34043,7 +33938,7 @@ module mkCore(CLK,
 	  sfdin__h553931 or
 	  IF_IF_IF_IF_3074_MINUS_SEXT_coreFix_fpuMulDivE_ETC___d10715 or
 	  IF_IF_IF_IF_3074_MINUS_SEXT_coreFix_fpuMulDivE_ETC___d10713 or
-	  CASE_guard45711_0b0_sfdin53931_BITS_56_TO_5_0b_ETC__q201)
+	  CASE_guard45711_0b0_sfdin53931_BITS_56_TO_5_0b_ETC__q199)
   begin
     case (coreFix_fpuMulDivExe_0_regToExeQ$first[228:226])
       3'd1:
@@ -34057,7 +33952,7 @@ module mkCore(CLK,
 	      IF_IF_IF_IF_3074_MINUS_SEXT_coreFix_fpuMulDivE_ETC___d10713;
       3'd4:
 	  IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d10719 =
-	      CASE_guard45711_0b0_sfdin53931_BITS_56_TO_5_0b_ETC__q201;
+	      CASE_guard45711_0b0_sfdin53931_BITS_56_TO_5_0b_ETC__q199;
       default: IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d10719 =
 		   52'd0;
     endcase
@@ -34067,14 +33962,65 @@ module mkCore(CLK,
   begin
     case (guard__h545711)
       2'b0, 2'b01:
-	  CASE_guard45711_0b0_sfdin53931_BITS_56_TO_5_0b_ETC__q202 =
+	  CASE_guard45711_0b0_sfdin53931_BITS_56_TO_5_0b_ETC__q200 =
 	      sfdin__h553931[56:5];
       2'b10:
-	  CASE_guard45711_0b0_sfdin53931_BITS_56_TO_5_0b_ETC__q202 =
+	  CASE_guard45711_0b0_sfdin53931_BITS_56_TO_5_0b_ETC__q200 =
 	      out_sfd__h554670;
       2'b11:
-	  CASE_guard45711_0b0_sfdin53931_BITS_56_TO_5_0b_ETC__q202 =
+	  CASE_guard45711_0b0_sfdin53931_BITS_56_TO_5_0b_ETC__q200 =
 	      _theResult___sfd__h554667;
+    endcase
+  end
+  always@(guard__h554780 or
+	  _theResult___snd__h562716 or _theResult___sfd__h563451)
+  begin
+    case (guard__h554780)
+      2'b0:
+	  CASE_guard54780_0b0_theResult___snd62716_BITS__ETC__q201 =
+	      _theResult___snd__h562716[56:5];
+      2'b01, 2'b10, 2'b11:
+	  CASE_guard54780_0b0_theResult___snd62716_BITS__ETC__q201 =
+	      _theResult___sfd__h563451;
+    endcase
+  end
+  always@(coreFix_fpuMulDivExe_0_regToExeQ$first or
+	  _theResult___snd__h562716 or
+	  IF_IF_IF_coreFix_fpuMulDivExe_0_regToExeQ_firs_ETC___d10734 or
+	  IF_IF_IF_coreFix_fpuMulDivExe_0_regToExeQ_firs_ETC___d10732 or
+	  CASE_guard54780_0b0_theResult___snd62716_BITS__ETC__q201)
+  begin
+    case (coreFix_fpuMulDivExe_0_regToExeQ$first[228:226])
+      3'd1:
+	  IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d10738 =
+	      _theResult___snd__h562716[56:5];
+      3'd2:
+	  IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d10738 =
+	      IF_IF_IF_coreFix_fpuMulDivExe_0_regToExeQ_firs_ETC___d10734;
+      3'd3:
+	  IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d10738 =
+	      IF_IF_IF_coreFix_fpuMulDivExe_0_regToExeQ_firs_ETC___d10732;
+      3'd4:
+	  IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d10738 =
+	      CASE_guard54780_0b0_theResult___snd62716_BITS__ETC__q201;
+      default: IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d10738 =
+		   52'd0;
+    endcase
+  end
+  always@(guard__h554780 or
+	  _theResult___snd__h562716 or
+	  out_sfd__h563454 or _theResult___sfd__h563451)
+  begin
+    case (guard__h554780)
+      2'b0, 2'b01:
+	  CASE_guard54780_0b0_theResult___snd62716_BITS__ETC__q202 =
+	      _theResult___snd__h562716[56:5];
+      2'b10:
+	  CASE_guard54780_0b0_theResult___snd62716_BITS__ETC__q202 =
+	      out_sfd__h563454;
+      2'b11:
+	  CASE_guard54780_0b0_theResult___snd62716_BITS__ETC__q202 =
+	      _theResult___sfd__h563451;
     endcase
   end
   always@(guard__h506910 or
@@ -34128,66 +34074,15 @@ module mkCore(CLK,
 	      _theResult___exp__h515865;
     endcase
   end
-  always@(guard__h515979 or
-	  _theResult___fst_exp__h523969 or _theResult___exp__h524649)
-  begin
-    case (guard__h515979)
-      2'b0:
-	  CASE_guard15979_0b0_theResult___fst_exp23969_0_ETC__q205 =
-	      _theResult___fst_exp__h523969;
-      2'b01, 2'b10, 2'b11:
-	  CASE_guard15979_0b0_theResult___fst_exp23969_0_ETC__q205 =
-	      _theResult___exp__h524649;
-    endcase
-  end
-  always@(coreFix_fpuMulDivExe_0_regToExeQ$first or
-	  _theResult___fst_exp__h523969 or
-	  IF_IF_IF_coreFix_fpuMulDivExe_0_regToExeQ_firs_ETC___d9195 or
-	  IF_IF_IF_coreFix_fpuMulDivExe_0_regToExeQ_firs_ETC___d9193 or
-	  CASE_guard15979_0b0_theResult___fst_exp23969_0_ETC__q205)
-  begin
-    case (coreFix_fpuMulDivExe_0_regToExeQ$first[228:226])
-      3'd1:
-	  IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d9199 =
-	      _theResult___fst_exp__h523969;
-      3'd2:
-	  IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d9199 =
-	      IF_IF_IF_coreFix_fpuMulDivExe_0_regToExeQ_firs_ETC___d9195;
-      3'd3:
-	  IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d9199 =
-	      IF_IF_IF_coreFix_fpuMulDivExe_0_regToExeQ_firs_ETC___d9193;
-      3'd4:
-	  IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d9199 =
-	      CASE_guard15979_0b0_theResult___fst_exp23969_0_ETC__q205;
-      default: IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d9199 =
-		   11'd0;
-    endcase
-  end
-  always@(guard__h515979 or
-	  _theResult___fst_exp__h523969 or
-	  out_exp__h524652 or _theResult___exp__h524649)
-  begin
-    case (guard__h515979)
-      2'b0, 2'b01:
-	  CASE_guard15979_0b0_theResult___fst_exp23969_0_ETC__q206 =
-	      _theResult___fst_exp__h523969;
-      2'b10:
-	  CASE_guard15979_0b0_theResult___fst_exp23969_0_ETC__q206 =
-	      out_exp__h524652;
-      2'b11:
-	  CASE_guard15979_0b0_theResult___fst_exp23969_0_ETC__q206 =
-	      _theResult___exp__h524649;
-    endcase
-  end
   always@(guard__h497598 or
 	  _theResult___snd__h505510 or _theResult___sfd__h506215)
   begin
     case (guard__h497598)
       2'b0:
-	  CASE_guard97598_0b0_theResult___snd05510_BITS__ETC__q207 =
+	  CASE_guard97598_0b0_theResult___snd05510_BITS__ETC__q205 =
 	      _theResult___snd__h505510[56:5];
       2'b01, 2'b10, 2'b11:
-	  CASE_guard97598_0b0_theResult___snd05510_BITS__ETC__q207 =
+	  CASE_guard97598_0b0_theResult___snd05510_BITS__ETC__q205 =
 	      _theResult___sfd__h506215;
     endcase
   end
@@ -34195,7 +34090,7 @@ module mkCore(CLK,
 	  _theResult___snd__h505510 or
 	  IF_IF_IF_coreFix_fpuMulDivExe_0_regToExeQ_firs_ETC___d9221 or
 	  IF_IF_IF_coreFix_fpuMulDivExe_0_regToExeQ_firs_ETC___d9219 or
-	  CASE_guard97598_0b0_theResult___snd05510_BITS__ETC__q207)
+	  CASE_guard97598_0b0_theResult___snd05510_BITS__ETC__q205)
   begin
     case (coreFix_fpuMulDivExe_0_regToExeQ$first[228:226])
       3'd1:
@@ -34209,7 +34104,7 @@ module mkCore(CLK,
 	      IF_IF_IF_coreFix_fpuMulDivExe_0_regToExeQ_firs_ETC___d9219;
       3'd4:
 	  IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d9225 =
-	      CASE_guard97598_0b0_theResult___snd05510_BITS__ETC__q207;
+	      CASE_guard97598_0b0_theResult___snd05510_BITS__ETC__q205;
       default: IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d9225 =
 		   52'd0;
     endcase
@@ -34220,14 +34115,65 @@ module mkCore(CLK,
   begin
     case (guard__h497598)
       2'b0, 2'b01:
-	  CASE_guard97598_0b0_theResult___snd05510_BITS__ETC__q208 =
+	  CASE_guard97598_0b0_theResult___snd05510_BITS__ETC__q206 =
 	      _theResult___snd__h505510[56:5];
       2'b10:
-	  CASE_guard97598_0b0_theResult___snd05510_BITS__ETC__q208 =
+	  CASE_guard97598_0b0_theResult___snd05510_BITS__ETC__q206 =
 	      out_sfd__h506218;
       2'b11:
-	  CASE_guard97598_0b0_theResult___snd05510_BITS__ETC__q208 =
+	  CASE_guard97598_0b0_theResult___snd05510_BITS__ETC__q206 =
 	      _theResult___sfd__h506215;
+    endcase
+  end
+  always@(guard__h515979 or
+	  _theResult___fst_exp__h523969 or _theResult___exp__h524649)
+  begin
+    case (guard__h515979)
+      2'b0:
+	  CASE_guard15979_0b0_theResult___fst_exp23969_0_ETC__q207 =
+	      _theResult___fst_exp__h523969;
+      2'b01, 2'b10, 2'b11:
+	  CASE_guard15979_0b0_theResult___fst_exp23969_0_ETC__q207 =
+	      _theResult___exp__h524649;
+    endcase
+  end
+  always@(coreFix_fpuMulDivExe_0_regToExeQ$first or
+	  _theResult___fst_exp__h523969 or
+	  IF_IF_IF_coreFix_fpuMulDivExe_0_regToExeQ_firs_ETC___d9195 or
+	  IF_IF_IF_coreFix_fpuMulDivExe_0_regToExeQ_firs_ETC___d9193 or
+	  CASE_guard15979_0b0_theResult___fst_exp23969_0_ETC__q207)
+  begin
+    case (coreFix_fpuMulDivExe_0_regToExeQ$first[228:226])
+      3'd1:
+	  IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d9199 =
+	      _theResult___fst_exp__h523969;
+      3'd2:
+	  IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d9199 =
+	      IF_IF_IF_coreFix_fpuMulDivExe_0_regToExeQ_firs_ETC___d9195;
+      3'd3:
+	  IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d9199 =
+	      IF_IF_IF_coreFix_fpuMulDivExe_0_regToExeQ_firs_ETC___d9193;
+      3'd4:
+	  IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d9199 =
+	      CASE_guard15979_0b0_theResult___fst_exp23969_0_ETC__q207;
+      default: IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d9199 =
+		   11'd0;
+    endcase
+  end
+  always@(guard__h515979 or
+	  _theResult___fst_exp__h523969 or
+	  out_exp__h524652 or _theResult___exp__h524649)
+  begin
+    case (guard__h515979)
+      2'b0, 2'b01:
+	  CASE_guard15979_0b0_theResult___fst_exp23969_0_ETC__q208 =
+	      _theResult___fst_exp__h523969;
+      2'b10:
+	  CASE_guard15979_0b0_theResult___fst_exp23969_0_ETC__q208 =
+	      out_exp__h524652;
+      2'b11:
+	  CASE_guard15979_0b0_theResult___fst_exp23969_0_ETC__q208 =
+	      _theResult___exp__h524649;
     endcase
   end
   always@(guard__h506910 or sfdin__h515130 or _theResult___sfd__h515866)
@@ -34707,17 +34653,62 @@ module mkCore(CLK,
   end
   always@(fetchStage$pipelines_0_first)
   begin
+    case (fetchStage$pipelines_0_first[172:161])
+      12'd1,
+      12'd2,
+      12'd3,
+      12'd256,
+      12'd260,
+      12'd261,
+      12'd262,
+      12'd320,
+      12'd321,
+      12'd322,
+      12'd323,
+      12'd324,
+      12'd384,
+      12'd768,
+      12'd769,
+      12'd770,
+      12'd771,
+      12'd772,
+      12'd773,
+      12'd774,
+      12'd832,
+      12'd833,
+      12'd834,
+      12'd835,
+      12'd836,
+      12'd2048,
+      12'd2049,
+      12'd2816,
+      12'd2818,
+      12'd3072,
+      12'd3073,
+      12'd3074,
+      12'd3857,
+      12'd3858,
+      12'd3859,
+      12'd3860:
+	  IF_fetchStage_pipelines_0_first__2835_BITS_172_ETC___d13035 =
+	      fetchStage$pipelines_0_first[172:161];
+      default: IF_fetchStage_pipelines_0_first__2835_BITS_172_ETC___d13035 =
+		   12'd2303;
+    endcase
+  end
+  always@(fetchStage$pipelines_0_first)
+  begin
     case (fetchStage$pipelines_0_first[67:64])
       4'd0, 4'd1, 4'd2, 4'd3, 4'd4, 4'd5, 4'd6, 4'd7, 4'd8, 4'd9:
-	  IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13174 =
+	  IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13179 =
 	      fetchStage$pipelines_0_first[67:64];
       4'd11:
-	  IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13174 = 4'd10;
+	  IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13179 = 4'd10;
       4'd12:
-	  IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13174 = 4'd11;
+	  IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13179 = 4'd11;
       4'd13:
-	  IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13174 = 4'd12;
-      default: IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13174 =
+	  IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13179 = 4'd12;
+      default: IF_fetchStage_pipelines_0_first__2835_BIT_68_2_ETC___d13179 =
 		   4'd13;
     endcase
   end
@@ -34761,12 +34752,12 @@ module mkCore(CLK,
 		   4'd13;
     endcase
   end
-  always@(IF_NOT_IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3__ETC___d13280)
+  always@(IF_NOT_IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3__ETC___d13285)
   begin
-    case (IF_NOT_IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3__ETC___d13280)
+    case (IF_NOT_IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3__ETC___d13285)
       4'd0, 4'd1:
 	  CASE_IF_NOT_IF_IF_NOT_csrf_prv_reg_read__2863__ETC__q227 =
-	      IF_NOT_IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3__ETC___d13280;
+	      IF_NOT_IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3__ETC___d13285;
       4'd2: CASE_IF_NOT_IF_IF_NOT_csrf_prv_reg_read__2863__ETC__q227 = 4'd3;
       4'd3: CASE_IF_NOT_IF_IF_NOT_csrf_prv_reg_read__2863__ETC__q227 = 4'd4;
       4'd4: CASE_IF_NOT_IF_IF_NOT_csrf_prv_reg_read__2863__ETC__q227 = 4'd5;
@@ -34778,15 +34769,15 @@ module mkCore(CLK,
 		   4'd14;
     endcase
   end
-  always@(k__h671298 or
+  always@(k__h671356 or
 	  coreFix_aluExe_0_rsAlu$canEnq or coreFix_aluExe_1_rsAlu$canEnq)
   begin
-    case (k__h671298)
+    case (k__h671356)
       1'd0:
-	  SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3447_co_ETC___d13457 =
+	  SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3458_co_ETC___d13468 =
 	      coreFix_aluExe_0_rsAlu$canEnq;
       1'd1:
-	  SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3447_co_ETC___d13457 =
+	  SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3458_co_ETC___d13468 =
 	      coreFix_aluExe_1_rsAlu$canEnq;
     endcase
   end
@@ -34795,69 +34786,69 @@ module mkCore(CLK,
   begin
     case (fetchStage$pipelines_0_first[191:189])
       3'd0, 3'd2:
-	  IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13469 =
+	  IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13480 =
 	      coreFix_memExe_lsq$enqLdTag[6];
-      default: IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13469 =
+      default: IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13480 =
 		   coreFix_memExe_lsq$enqStTag[6];
     endcase
   end
   always@(fetchStage$pipelines_0_first or
 	  coreFix_memExe_rsMem$canEnq or
-	  IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13469 or
-	  SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3447_co_ETC___d13457 or
+	  IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13480 or
+	  SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3458_co_ETC___d13468 or
 	  coreFix_fpuMulDivExe_0_rsFpuMulDiv$canEnq)
   begin
     case (fetchStage$pipelines_0_first[194:192])
       3'd0, 3'd1:
-	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13473 =
-	      SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3447_co_ETC___d13457;
+	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13484 =
+	      SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3458_co_ETC___d13468;
       3'd3, 3'd4:
-	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13473 =
+	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13484 =
 	      coreFix_fpuMulDivExe_0_rsFpuMulDiv$canEnq;
-      default: IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13473 =
+      default: IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13484 =
 		   fetchStage$pipelines_0_first[194:192] != 3'd2 ||
 		   coreFix_memExe_rsMem$canEnq &&
-		   IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13469;
+		   IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13480;
     endcase
   end
-  always@(k__h671298 or
+  always@(k__h671356 or
 	  coreFix_aluExe_0_rsAlu$canEnq or coreFix_aluExe_1_rsAlu$canEnq)
   begin
-    case (k__h671298)
+    case (k__h671356)
       1'd0:
-	  SEL_ARR_NOT_coreFix_aluExe_0_rsAlu_canEnq__344_ETC___d13490 =
+	  SEL_ARR_NOT_coreFix_aluExe_0_rsAlu_canEnq__345_ETC___d13501 =
 	      !coreFix_aluExe_0_rsAlu$canEnq;
       1'd1:
-	  SEL_ARR_NOT_coreFix_aluExe_0_rsAlu_canEnq__344_ETC___d13490 =
+	  SEL_ARR_NOT_coreFix_aluExe_0_rsAlu_canEnq__345_ETC___d13501 =
 	      !coreFix_aluExe_1_rsAlu$canEnq;
     endcase
   end
   always@(fetchStage$pipelines_0_first or
 	  regRenamingTable$rename_0_canRename or
-	  NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13437 or
-	  NOT_SEL_ARR_NOT_coreFix_aluExe_0_rsAlu_canEnq__ETC___d13492 or
+	  NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13448 or
+	  NOT_SEL_ARR_NOT_coreFix_aluExe_0_rsAlu_canEnq__ETC___d13503 or
 	  coreFix_memExe_rsMem$canEnq or
-	  IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13469 or
+	  IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13480 or
 	  coreFix_fpuMulDivExe_0_rsFpuMulDiv$canEnq)
   begin
     case (fetchStage$pipelines_0_first[194:192])
       3'd0, 3'd1:
-	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13497 =
-	      NOT_SEL_ARR_NOT_coreFix_aluExe_0_rsAlu_canEnq__ETC___d13492;
+	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13508 =
+	      NOT_SEL_ARR_NOT_coreFix_aluExe_0_rsAlu_canEnq__ETC___d13503;
       3'd2:
-	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13497 =
+	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13508 =
 	      coreFix_memExe_rsMem$canEnq &&
-	      IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13469 &&
+	      IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13480 &&
 	      regRenamingTable$rename_0_canRename &&
-	      NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13437;
+	      NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13448;
       3'd3, 3'd4:
-	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13497 =
+	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13508 =
 	      coreFix_fpuMulDivExe_0_rsFpuMulDiv$canEnq &&
 	      regRenamingTable$rename_0_canRename &&
-	      NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13437;
-      default: IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13497 =
+	      NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13448;
+      default: IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13508 =
 		   regRenamingTable$rename_0_canRename &&
-		   NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13437;
+		   NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13448;
     endcase
   end
   always@(fetchStage$pipelines_0_first or
@@ -34865,32 +34856,32 @@ module mkCore(CLK,
   begin
     case (fetchStage$pipelines_0_first[191:189])
       3'd0, 3'd2:
-	  IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13524 =
+	  IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13536 =
 	      !coreFix_memExe_lsq$enqLdTag[6];
-      default: IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13524 =
+      default: IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13536 =
 		   !coreFix_memExe_lsq$enqStTag[6];
     endcase
   end
   always@(fetchStage$pipelines_0_first or
 	  coreFix_memExe_rsMem$canEnq or
-	  IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13524 or
-	  SEL_ARR_NOT_coreFix_aluExe_0_rsAlu_canEnq__344_ETC___d13490 or
+	  IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13536 or
+	  SEL_ARR_NOT_coreFix_aluExe_0_rsAlu_canEnq__345_ETC___d13501 or
 	  specTagManager$canClaim or
 	  coreFix_fpuMulDivExe_0_rsFpuMulDiv$canEnq)
   begin
     case (fetchStage$pipelines_0_first[194:192])
       3'd0, 3'd1:
-	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13529 =
-	      SEL_ARR_NOT_coreFix_aluExe_0_rsAlu_canEnq__344_ETC___d13490 ||
+	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13541 =
+	      SEL_ARR_NOT_coreFix_aluExe_0_rsAlu_canEnq__345_ETC___d13501 ||
 	      fetchStage$pipelines_0_first[194:192] == 3'd1 &&
 	      !specTagManager$canClaim;
       3'd3, 3'd4:
-	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13529 =
+	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13541 =
 	      !coreFix_fpuMulDivExe_0_rsFpuMulDiv$canEnq;
-      default: IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13529 =
+      default: IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13541 =
 		   fetchStage$pipelines_0_first[194:192] == 3'd2 &&
 		   (!coreFix_memExe_rsMem$canEnq ||
-		    IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13524);
+		    IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13536);
     endcase
   end
   always@(fetchStage$pipelines_1_first)
@@ -34952,36 +34943,36 @@ module mkCore(CLK,
   begin
     case (fetchStage$pipelines_1_first[194:192])
       3'd0, 3'd1, 3'd2, 3'd3:
-	  IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d13589 =
+	  IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d13601 =
 	      fetchStage$pipelines_1_first[194:174];
       3'd4:
-	  IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d13589 =
+	  IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d13601 =
 	      { fetchStage$pipelines_1_first[194:192],
 		9'h0AA,
 		fetchStage$pipelines_1_first[182:178],
 		CASE_fetchStagepipelines_1_first_BITS_177_TO__ETC__q229,
 		fetchStage$pipelines_1_first[174] };
-      default: IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d13589 =
+      default: IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d13601 =
 		   21'd1485482;
     endcase
   end
-  always@(idx__h686610 or
+  always@(idx__h686697 or
 	  fetchStage$pipelines_0_canDeq or
-	  NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13725 or
+	  NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13743 or
 	  coreFix_aluExe_0_rsAlu$canEnq or
-	  NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13731 or
+	  NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13749 or
 	  coreFix_aluExe_1_rsAlu$canEnq)
   begin
-    case (idx__h686610)
+    case (idx__h686697)
       1'd0:
-	  SEL_ARR_fetchStage_pipelines_0_canDeq__2833_AN_ETC___d13750 =
+	  SEL_ARR_fetchStage_pipelines_0_canDeq__2833_AN_ETC___d13768 =
 	      fetchStage$pipelines_0_canDeq &&
-	      NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13725 ||
+	      NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13743 ||
 	      !coreFix_aluExe_0_rsAlu$canEnq;
       1'd1:
-	  SEL_ARR_fetchStage_pipelines_0_canDeq__2833_AN_ETC___d13750 =
+	  SEL_ARR_fetchStage_pipelines_0_canDeq__2833_AN_ETC___d13768 =
 	      fetchStage$pipelines_0_canDeq &&
-	      NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13731 ||
+	      NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13749 ||
 	      !coreFix_aluExe_1_rsAlu$canEnq;
     endcase
   end
@@ -34998,23 +34989,23 @@ module mkCore(CLK,
   end
   always@(fetchStage$pipelines_0_first or
 	  IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904 or
-	  SEL_ARR_NOT_coreFix_aluExe_0_rsAlu_canEnq__344_ETC___d13490 or
-	  fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13814 or
-	  NOT_coreFix_memExe_rsMem_canEnq__3460_3521_OR__ETC___d13817 or
-	  NOT_coreFix_fpuMulDivExe_0_rsFpuMulDiv_canEnq__ETC___d13816)
+	  SEL_ARR_NOT_coreFix_aluExe_0_rsAlu_canEnq__345_ETC___d13501 or
+	  fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13835 or
+	  NOT_coreFix_memExe_rsMem_canEnq__3471_3533_OR__ETC___d13838 or
+	  NOT_coreFix_fpuMulDivExe_0_rsFpuMulDiv_canEnq__ETC___d13837)
   begin
     case (fetchStage$pipelines_0_first[194:192])
       3'd0, 3'd1:
-	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13820 =
-	      SEL_ARR_NOT_coreFix_aluExe_0_rsAlu_canEnq__344_ETC___d13490 ||
-	      fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13814;
+	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13841 =
+	      SEL_ARR_NOT_coreFix_aluExe_0_rsAlu_canEnq__345_ETC___d13501 ||
+	      fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13835;
       3'd2:
-	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13820 =
-	      NOT_coreFix_memExe_rsMem_canEnq__3460_3521_OR__ETC___d13817;
+	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13841 =
+	      NOT_coreFix_memExe_rsMem_canEnq__3471_3533_OR__ETC___d13838;
       3'd3, 3'd4:
-	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13820 =
-	      NOT_coreFix_fpuMulDivExe_0_rsFpuMulDiv_canEnq__ETC___d13816;
-      default: IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13820 =
+	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13841 =
+	      NOT_coreFix_fpuMulDivExe_0_rsFpuMulDiv_canEnq__ETC___d13837;
+      default: IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13841 =
 		   fetchStage$pipelines_0_first[68] ||
 		   IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[0] ||
 		   IF_IF_NOT_csrf_prv_reg_read__2863_EQ_3_2864_28_ETC___d12904[1] ||
@@ -35035,34 +35026,34 @@ module mkCore(CLK,
   end
   always@(fetchStage$pipelines_0_first or
 	  coreFix_memExe_rsMem$canEnq or
-	  IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13469 or
-	  SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3447_co_ETC___d13457)
+	  IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13480 or
+	  SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3458_co_ETC___d13468)
   begin
     case (fetchStage$pipelines_0_first[194:192])
       3'd0, 3'd1:
-	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13841 =
-	      SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3447_co_ETC___d13457;
-      default: IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13841 =
+	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13862 =
+	      SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3458_co_ETC___d13468;
+      default: IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13862 =
 		   fetchStage$pipelines_0_first[194:192] != 3'd2 ||
 		   coreFix_memExe_rsMem$canEnq &&
-		   IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13469;
+		   IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13480;
     endcase
   end
   always@(fetchStage$pipelines_0_first or
-	  IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13469 or
-	  SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3447_co_ETC___d13457 or
+	  IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13480 or
+	  SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3458_co_ETC___d13468 or
 	  coreFix_fpuMulDivExe_0_rsFpuMulDiv$canEnq)
   begin
     case (fetchStage$pipelines_0_first[194:192])
       3'd0, 3'd1:
-	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13858 =
-	      SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3447_co_ETC___d13457;
+	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13879 =
+	      SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3458_co_ETC___d13468;
       3'd3, 3'd4:
-	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13858 =
+	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13879 =
 	      coreFix_fpuMulDivExe_0_rsFpuMulDiv$canEnq;
-      default: IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13858 =
+      default: IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13879 =
 		   fetchStage$pipelines_0_first[194:192] != 3'd2 ||
-		   IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13469;
+		   IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13480;
     endcase
   end
   always@(fetchStage$pipelines_1_first or
@@ -35078,34 +35069,34 @@ module mkCore(CLK,
   end
   always@(fetchStage$pipelines_1_first or
 	  regRenamingTable$rename_1_canRename or
-	  NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13716 or
-	  SEL_ARR_fetchStage_pipelines_0_canDeq__2833_AN_ETC___d13750 or
-	  NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13826 or
-	  NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13855 or
-	  NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13864 or
-	  NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13838 or
+	  NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13734 or
+	  SEL_ARR_fetchStage_pipelines_0_canDeq__2833_AN_ETC___d13768 or
+	  NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13847 or
+	  NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13876 or
+	  NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13885 or
+	  NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13859 or
 	  coreFix_fpuMulDivExe_0_rsFpuMulDiv$canEnq or
-	  NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13847)
+	  NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13868)
   begin
     case (fetchStage$pipelines_1_first[194:192])
       3'd0, 3'd1:
-	  IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d13869 =
-	      !SEL_ARR_fetchStage_pipelines_0_canDeq__2833_AN_ETC___d13750 &&
-	      NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13826;
+	  IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d13890 =
+	      !SEL_ARR_fetchStage_pipelines_0_canDeq__2833_AN_ETC___d13768 &&
+	      NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13847;
       3'd2:
-	  IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d13869 =
-	      NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13855 &&
+	  IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d13890 =
+	      NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13876 &&
 	      regRenamingTable$rename_1_canRename &&
-	      NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13864;
+	      NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13885;
       3'd3, 3'd4:
-	  IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d13869 =
-	      NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13838 &&
+	  IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d13890 =
+	      NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13859 &&
 	      coreFix_fpuMulDivExe_0_rsFpuMulDiv$canEnq &&
 	      regRenamingTable$rename_1_canRename &&
-	      NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13847;
-      default: IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d13869 =
+	      NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13868;
+      default: IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d13890 =
 		   regRenamingTable$rename_1_canRename &&
-		   NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13716;
+		   NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d13734;
     endcase
   end
   always@(fetchStage$pipelines_0_first or
@@ -35119,141 +35110,135 @@ module mkCore(CLK,
 		   coreFix_memExe_lsq$RDY_enqSt;
     endcase
   end
-  always@(k__h671298 or
+  always@(k__h671356 or
 	  coreFix_aluExe_0_rsAlu$RDY_enq or coreFix_aluExe_1_rsAlu$RDY_enq)
   begin
-    case (k__h671298)
+    case (k__h671356)
       1'd0:
-	  CASE_k71298_0_coreFix_aluExe_0_rsAluRDY_enq_1_ETC__q233 =
+	  CASE_k71356_0_coreFix_aluExe_0_rsAluRDY_enq_1_ETC__q233 =
 	      coreFix_aluExe_0_rsAlu$RDY_enq;
       1'd1:
-	  CASE_k71298_0_coreFix_aluExe_0_rsAluRDY_enq_1_ETC__q233 =
+	  CASE_k71356_0_coreFix_aluExe_0_rsAluRDY_enq_1_ETC__q233 =
 	      coreFix_aluExe_1_rsAlu$RDY_enq;
     endcase
   end
   always@(fetchStage$pipelines_0_first or
 	  coreFix_memExe_rsMem$canEnq or
-	  IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13524 or
-	  SEL_ARR_NOT_coreFix_aluExe_0_rsAlu_canEnq__344_ETC___d13490 or
+	  IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13536 or
+	  SEL_ARR_NOT_coreFix_aluExe_0_rsAlu_canEnq__345_ETC___d13501 or
 	  coreFix_fpuMulDivExe_0_rsFpuMulDiv$canEnq)
   begin
     case (fetchStage$pipelines_0_first[194:192])
       3'd0, 3'd1:
-	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13913 =
-	      SEL_ARR_NOT_coreFix_aluExe_0_rsAlu_canEnq__344_ETC___d13490;
+	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13934 =
+	      SEL_ARR_NOT_coreFix_aluExe_0_rsAlu_canEnq__345_ETC___d13501;
       3'd3, 3'd4:
-	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13913 =
+	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13934 =
 	      !coreFix_fpuMulDivExe_0_rsFpuMulDiv$canEnq;
-      default: IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13913 =
+      default: IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13934 =
 		   fetchStage$pipelines_0_first[194:192] == 3'd2 &&
 		   (!coreFix_memExe_rsMem$canEnq ||
-		    IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13524);
+		    IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13536);
     endcase
   end
   always@(fetchStage$pipelines_0_first or
 	  coreFix_memExe_rsMem$canEnq or
-	  IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13524 or
-	  regRenamingTable_RDY_rename_0_getRename__3311__ETC___d13907 or
-	  SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3447_co_ETC___d13457 or
+	  IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13536 or
+	  regRenamingTable_RDY_rename_0_getRename__3316__ETC___d13928 or
+	  SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3458_co_ETC___d13468 or
 	  regRenamingTable$RDY_rename_0_getRename or
-	  _0_OR_NOT_fetchStage_pipelines_0_first__2835_BI_ETC___d13894 or
+	  _0_OR_NOT_fetchStage_pipelines_0_first__2835_BI_ETC___d13915 or
 	  coreFix_fpuMulDivExe_0_rsFpuMulDiv$canEnq or
 	  coreFix_fpuMulDivExe_0_rsFpuMulDiv$RDY_enq)
   begin
     case (fetchStage$pipelines_0_first[194:192])
       3'd0, 3'd1:
-	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13911 =
-	      !SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3447_co_ETC___d13457 ||
+	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13932 =
+	      !SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3458_co_ETC___d13468 ||
 	      regRenamingTable$RDY_rename_0_getRename &&
-	      _0_OR_NOT_fetchStage_pipelines_0_first__2835_BI_ETC___d13894;
+	      _0_OR_NOT_fetchStage_pipelines_0_first__2835_BI_ETC___d13915;
       3'd3, 3'd4:
-	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13911 =
+	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13932 =
 	      !coreFix_fpuMulDivExe_0_rsFpuMulDiv$canEnq ||
 	      coreFix_fpuMulDivExe_0_rsFpuMulDiv$RDY_enq &&
 	      regRenamingTable$RDY_rename_0_getRename;
-      default: IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13911 =
+      default: IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13932 =
 		   fetchStage$pipelines_0_first[194:192] != 3'd2 ||
 		   !coreFix_memExe_rsMem$canEnq ||
-		   IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13524 ||
-		   regRenamingTable_RDY_rename_0_getRename__3311__ETC___d13907;
+		   IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13536 ||
+		   regRenamingTable_RDY_rename_0_getRename__3316__ETC___d13928;
     endcase
   end
   always@(fetchStage$pipelines_0_first or
 	  coreFix_memExe_rsMem$canEnq or
-	  IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13524 or
-	  SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3447_co_ETC___d13457 or
+	  IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13536 or
+	  SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3458_co_ETC___d13468 or
 	  coreFix_fpuMulDivExe_0_rsFpuMulDiv$canEnq)
   begin
     case (fetchStage$pipelines_0_first[194:192])
       3'd0, 3'd1:
-	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13927 =
-	      !SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3447_co_ETC___d13457;
+	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13948 =
+	      !SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3458_co_ETC___d13468;
       3'd3, 3'd4:
-	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13927 =
+	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13948 =
 	      !coreFix_fpuMulDivExe_0_rsFpuMulDiv$canEnq;
-      default: IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13927 =
+      default: IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13948 =
 		   fetchStage$pipelines_0_first[194:192] == 3'd2 &&
 		   (!coreFix_memExe_rsMem$canEnq ||
-		    IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13524);
+		    IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13536);
     endcase
   end
   always@(fetchStage$pipelines_0_first or
 	  coreFix_memExe_rsMem$canEnq or
-	  IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13469 or
-	  SEL_ARR_NOT_coreFix_aluExe_0_rsAlu_canEnq__344_ETC___d13490 or
+	  IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13480 or
+	  SEL_ARR_NOT_coreFix_aluExe_0_rsAlu_canEnq__345_ETC___d13501 or
 	  specTagManager$canClaim or
 	  coreFix_fpuMulDivExe_0_rsFpuMulDiv$canEnq)
   begin
     case (fetchStage$pipelines_0_first[194:192])
       3'd0, 3'd1:
-	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13934 =
-	      !SEL_ARR_NOT_coreFix_aluExe_0_rsAlu_canEnq__344_ETC___d13490 &&
+	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13955 =
+	      !SEL_ARR_NOT_coreFix_aluExe_0_rsAlu_canEnq__345_ETC___d13501 &&
 	      (fetchStage$pipelines_0_first[194:192] != 3'd1 ||
 	       specTagManager$canClaim);
       3'd3, 3'd4:
-	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13934 =
+	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13955 =
 	      coreFix_fpuMulDivExe_0_rsFpuMulDiv$canEnq;
-      default: IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13934 =
+      default: IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d13955 =
 		   fetchStage$pipelines_0_first[194:192] != 3'd2 ||
 		   coreFix_memExe_rsMem$canEnq &&
-		   IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13469;
+		   IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13480;
     endcase
   end
-  always@(idx__h686610 or
+  always@(idx__h686697 or
 	  fetchStage$pipelines_0_canDeq or
-	  fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13950 or
+	  fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13971 or
 	  coreFix_aluExe_0_rsAlu$canEnq or
-	  fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13957 or
+	  fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13978 or
 	  coreFix_aluExe_1_rsAlu$canEnq)
   begin
-    case (idx__h686610)
+    case (idx__h686697)
       1'd0:
-	  SEL_ARR_NOT_fetchStage_pipelines_0_canDeq__283_ETC___d13961 =
+	  SEL_ARR_NOT_fetchStage_pipelines_0_canDeq__283_ETC___d13982 =
 	      (!fetchStage$pipelines_0_canDeq ||
-	       fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13950) &&
+	       fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13971) &&
 	      coreFix_aluExe_0_rsAlu$canEnq;
       1'd1:
-	  SEL_ARR_NOT_fetchStage_pipelines_0_canDeq__283_ETC___d13961 =
+	  SEL_ARR_NOT_fetchStage_pipelines_0_canDeq__283_ETC___d13982 =
 	      (!fetchStage$pipelines_0_canDeq ||
-	       fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13957) &&
+	       fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d13978) &&
 	      coreFix_aluExe_1_rsAlu$canEnq;
     endcase
   end
-  always@(fetchStage$pipelines_0_canDeq or
-	  NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13969 or
-	  coreFix_aluExe_0_rsAlu$canEnq or
-	  NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13976 or
+  always@(fetchStage_pipelines_0_canDeq__2833_AND_NOT_fe_ETC___d13998 or
 	  coreFix_aluExe_0_rsAlu$RDY_enq or coreFix_aluExe_1_rsAlu$RDY_enq)
   begin
-    case (fetchStage$pipelines_0_canDeq &&
-	  NOT_fetchStage_pipelines_0_first__2835_BITS_19_ETC___d13969 ||
-	  !coreFix_aluExe_0_rsAlu$canEnq ||
-	  NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13976)
+    case (fetchStage_pipelines_0_canDeq__2833_AND_NOT_fe_ETC___d13998)
       1'd0:
-	  CASE_fetchStagepipelines_0_canDeq_AND_NOT_fet_ETC__q234 =
+	  CASE_fetchStage_pipelines_0_canDeq__2833_AND_N_ETC__q234 =
 	      coreFix_aluExe_0_rsAlu$RDY_enq;
       1'd1:
-	  CASE_fetchStagepipelines_0_canDeq_AND_NOT_fet_ETC__q234 =
+	  CASE_fetchStage_pipelines_0_canDeq__2833_AND_N_ETC__q234 =
 	      coreFix_aluExe_1_rsAlu$RDY_enq;
     endcase
   end
@@ -35270,82 +35255,78 @@ module mkCore(CLK,
   end
   always@(fetchStage$pipelines_0_first or
 	  coreFix_memExe_rsMem$canEnq or
-	  IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13524 or
-	  SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3447_co_ETC___d13457)
+	  IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13536 or
+	  SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3458_co_ETC___d13468)
   begin
     case (fetchStage$pipelines_0_first[194:192])
       3'd0, 3'd1:
-	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d14003 =
-	      !SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3447_co_ETC___d13457;
-      default: IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d14003 =
+	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d14024 =
+	      !SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3458_co_ETC___d13468;
+      default: IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d14024 =
 		   fetchStage$pipelines_0_first[194:192] == 3'd2 &&
 		   (!coreFix_memExe_rsMem$canEnq ||
-		    IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13524);
+		    IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13536);
     endcase
   end
   always@(fetchStage$pipelines_0_first or
-	  IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13524 or
-	  SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3447_co_ETC___d13457 or
+	  IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13536 or
+	  SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3458_co_ETC___d13468 or
 	  coreFix_fpuMulDivExe_0_rsFpuMulDiv$canEnq)
   begin
     case (fetchStage$pipelines_0_first[194:192])
       3'd0, 3'd1:
-	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d14014 =
-	      !SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3447_co_ETC___d13457;
+	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d14035 =
+	      !SEL_ARR_coreFix_aluExe_0_rsAlu_canEnq__3458_co_ETC___d13468;
       3'd3, 3'd4:
-	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d14014 =
+	  IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d14035 =
 	      !coreFix_fpuMulDivExe_0_rsFpuMulDiv$canEnq;
-      default: IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d14014 =
+      default: IF_fetchStage_pipelines_0_first__2835_BITS_194_ETC___d14035 =
 		   fetchStage$pipelines_0_first[194:192] == 3'd2 &&
-		   IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13524;
+		   IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d13536;
     endcase
   end
   always@(fetchStage$pipelines_1_first or
-	  fetchStage_pipelines_0_canDeq__2833_AND_regRen_ETC___d13990 or
-	  fetchStage$pipelines_0_canDeq or
-	  fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d14015 or
-	  SEL_ARR_fetchStage_pipelines_0_canDeq__2833_AN_ETC___d13750 or
-	  fetchStage_pipelines_0_canDeq__2833_AND_regRen_ETC___d14011)
+	  fetchStage_pipelines_0_canDeq__2833_AND_regRen_ETC___d14043 or
+	  SEL_ARR_fetchStage_pipelines_0_canDeq__2833_AN_ETC___d13768 or
+	  fetchStage_pipelines_0_canDeq__2833_AND_regRen_ETC___d14032)
   begin
     case (fetchStage$pipelines_1_first[194:192])
       3'd0, 3'd1:
-	  IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d14025 =
-	      SEL_ARR_fetchStage_pipelines_0_canDeq__2833_AN_ETC___d13750;
+	  IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d14046 =
+	      SEL_ARR_fetchStage_pipelines_0_canDeq__2833_AN_ETC___d13768;
       3'd3, 3'd4:
-	  IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d14025 =
-	      fetchStage_pipelines_0_canDeq__2833_AND_regRen_ETC___d14011;
-      default: IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d14025 =
+	  IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d14046 =
+	      fetchStage_pipelines_0_canDeq__2833_AND_regRen_ETC___d14032;
+      default: IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d14046 =
 		   fetchStage$pipelines_1_first[194:192] == 3'd2 &&
-		   (fetchStage_pipelines_0_canDeq__2833_AND_regRen_ETC___d13990 ||
-		    fetchStage$pipelines_0_canDeq &&
-		    fetchStage_pipelines_0_first__2835_BITS_194_TO_ETC___d14015);
+		   fetchStage_pipelines_0_canDeq__2833_AND_regRen_ETC___d14043;
     endcase
   end
   always@(fetchStage$pipelines_1_first or
-	  fetchStage_pipelines_0_canDeq__2833_AND_regRen_ETC___d13990 or
+	  fetchStage_pipelines_0_canDeq__2833_AND_regRen_ETC___d14011 or
 	  regRenamingTable$RDY_rename_1_getRename or
-	  NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13995 or
-	  SEL_ARR_NOT_fetchStage_pipelines_0_canDeq__283_ETC___d13961 or
-	  regRenamingTable_RDY_rename_1_getRename__3963__ETC___d13981 or
-	  fetchStage_pipelines_0_canDeq__2833_AND_regRen_ETC___d13983 or
+	  NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14016 or
+	  SEL_ARR_NOT_fetchStage_pipelines_0_canDeq__283_ETC___d13982 or
+	  regRenamingTable_RDY_rename_1_getRename__3984__ETC___d14002 or
+	  fetchStage_pipelines_0_canDeq__2833_AND_regRen_ETC___d14004 or
 	  coreFix_fpuMulDivExe_0_rsFpuMulDiv$canEnq or
-	  coreFix_fpuMulDivExe_0_rsFpuMulDiv_RDY_enq__38_ETC___d13986)
+	  coreFix_fpuMulDivExe_0_rsFpuMulDiv_RDY_enq__39_ETC___d14007)
   begin
     case (fetchStage$pipelines_1_first[194:192])
       3'd0, 3'd1:
-	  IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d14000 =
-	      !SEL_ARR_NOT_fetchStage_pipelines_0_canDeq__283_ETC___d13961 ||
-	      regRenamingTable_RDY_rename_1_getRename__3963__ETC___d13981;
+	  IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d14021 =
+	      !SEL_ARR_NOT_fetchStage_pipelines_0_canDeq__283_ETC___d13982 ||
+	      regRenamingTable_RDY_rename_1_getRename__3984__ETC___d14002;
       3'd3, 3'd4:
-	  IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d14000 =
-	      fetchStage_pipelines_0_canDeq__2833_AND_regRen_ETC___d13983 ||
+	  IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d14021 =
+	      fetchStage_pipelines_0_canDeq__2833_AND_regRen_ETC___d14004 ||
 	      !coreFix_fpuMulDivExe_0_rsFpuMulDiv$canEnq ||
-	      coreFix_fpuMulDivExe_0_rsFpuMulDiv_RDY_enq__38_ETC___d13986;
-      default: IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d14000 =
+	      coreFix_fpuMulDivExe_0_rsFpuMulDiv_RDY_enq__39_ETC___d14007;
+      default: IF_fetchStage_pipelines_1_first__2844_BITS_194_ETC___d14021 =
 		   fetchStage$pipelines_1_first[194:192] != 3'd2 ||
-		   fetchStage_pipelines_0_canDeq__2833_AND_regRen_ETC___d13990 ||
+		   fetchStage_pipelines_0_canDeq__2833_AND_regRen_ETC___d14011 ||
 		   regRenamingTable$RDY_rename_1_getRename &&
-		   NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d13995;
+		   NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14016;
     endcase
   end
   always@(fetchStage$pipelines_0_first or
@@ -35353,9 +35334,9 @@ module mkCore(CLK,
   begin
     case (fetchStage$pipelines_0_first[191:189])
       3'd0, 3'd2:
-	  IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d14098 =
+	  IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d14119 =
 	      !coreFix_memExe_lsq$enqLdTag[5];
-      default: IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d14098 =
+      default: IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d14119 =
 		   !coreFix_memExe_lsq$enqStTag[5];
     endcase
   end
@@ -35364,20 +35345,9 @@ module mkCore(CLK,
   begin
     case (fetchStage$pipelines_0_first[191:189])
       3'd0, 3'd2:
-	  IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d14104 =
-	      coreFix_memExe_lsq$enqLdTag[3:0];
-      default: IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d14104 =
-		   coreFix_memExe_lsq$enqStTag[3:0];
-    endcase
-  end
-  always@(fetchStage$pipelines_0_first or
-	  coreFix_memExe_lsq$enqStTag or coreFix_memExe_lsq$enqLdTag)
-  begin
-    case (fetchStage$pipelines_0_first[191:189])
-      3'd0, 3'd2:
-	  IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d14095 =
+	  IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d14116 =
 	      coreFix_memExe_lsq$enqLdTag[5];
-      default: IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d14095 =
+      default: IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d14116 =
 		   coreFix_memExe_lsq$enqStTag[5];
     endcase
   end
@@ -35386,20 +35356,20 @@ module mkCore(CLK,
   begin
     case (fetchStage$pipelines_0_first[191:189])
       3'd0, 3'd2:
-	  IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d14101 =
+	  IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d14122 =
 	      coreFix_memExe_lsq$enqLdTag[4:0];
-      default: IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d14101 =
+      default: IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d14122 =
 		   coreFix_memExe_lsq$enqStTag[4:0];
     endcase
   end
-  always@(fetchStage$pipelines_1_first or
+  always@(fetchStage$pipelines_0_first or
 	  coreFix_memExe_lsq$enqStTag or coreFix_memExe_lsq$enqLdTag)
   begin
-    case (fetchStage$pipelines_1_first[191:189])
+    case (fetchStage$pipelines_0_first[191:189])
       3'd0, 3'd2:
-	  IF_fetchStage_pipelines_1_first__2844_BITS_191_ETC___d14264 =
+	  IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d14125 =
 	      coreFix_memExe_lsq$enqLdTag[3:0];
-      default: IF_fetchStage_pipelines_1_first__2844_BITS_191_ETC___d14264 =
+      default: IF_fetchStage_pipelines_0_first__2835_BITS_191_ETC___d14125 =
 		   coreFix_memExe_lsq$enqStTag[3:0];
     endcase
   end
@@ -35408,9 +35378,20 @@ module mkCore(CLK,
   begin
     case (fetchStage$pipelines_1_first[191:189])
       3'd0, 3'd2:
-	  IF_fetchStage_pipelines_1_first__2844_BITS_191_ETC___d14262 =
+	  IF_fetchStage_pipelines_1_first__2844_BITS_191_ETC___d14285 =
+	      coreFix_memExe_lsq$enqLdTag[3:0];
+      default: IF_fetchStage_pipelines_1_first__2844_BITS_191_ETC___d14285 =
+		   coreFix_memExe_lsq$enqStTag[3:0];
+    endcase
+  end
+  always@(fetchStage$pipelines_1_first or
+	  coreFix_memExe_lsq$enqStTag or coreFix_memExe_lsq$enqLdTag)
+  begin
+    case (fetchStage$pipelines_1_first[191:189])
+      3'd0, 3'd2:
+	  IF_fetchStage_pipelines_1_first__2844_BITS_191_ETC___d14283 =
 	      !coreFix_memExe_lsq$enqLdTag[5];
-      default: IF_fetchStage_pipelines_1_first__2844_BITS_191_ETC___d14262 =
+      default: IF_fetchStage_pipelines_1_first__2844_BITS_191_ETC___d14283 =
 		   !coreFix_memExe_lsq$enqStTag[5];
     endcase
   end
@@ -35419,9 +35400,9 @@ module mkCore(CLK,
   begin
     case (fetchStage$pipelines_1_first[191:189])
       3'd0, 3'd2:
-	  IF_fetchStage_pipelines_1_first__2844_BITS_191_ETC___d14261 =
+	  IF_fetchStage_pipelines_1_first__2844_BITS_191_ETC___d14282 =
 	      coreFix_memExe_lsq$enqLdTag[5];
-      default: IF_fetchStage_pipelines_1_first__2844_BITS_191_ETC___d14261 =
+      default: IF_fetchStage_pipelines_1_first__2844_BITS_191_ETC___d14282 =
 		   coreFix_memExe_lsq$enqStTag[5];
     endcase
   end
@@ -35430,9 +35411,9 @@ module mkCore(CLK,
   begin
     case (fetchStage$pipelines_1_first[191:189])
       3'd0, 3'd2:
-	  IF_fetchStage_pipelines_1_first__2844_BITS_191_ETC___d14263 =
+	  IF_fetchStage_pipelines_1_first__2844_BITS_191_ETC___d14284 =
 	      coreFix_memExe_lsq$enqLdTag[4:0];
-      default: IF_fetchStage_pipelines_1_first__2844_BITS_191_ETC___d14263 =
+      default: IF_fetchStage_pipelines_1_first__2844_BITS_191_ETC___d14284 =
 		   coreFix_memExe_lsq$enqStTag[4:0];
     endcase
   end
@@ -35440,78 +35421,78 @@ module mkCore(CLK,
   begin
     case (rob$deqPort_0_deq_data[180:169])
       12'd1:
-	  IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 = 6'd0;
+	  IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 = 6'd0;
       12'd2:
-	  IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 = 6'd1;
+	  IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 = 6'd1;
       12'd3:
-	  IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 = 6'd2;
+	  IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 = 6'd2;
       12'd256:
-	  IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 = 6'd8;
+	  IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 = 6'd8;
       12'd260:
-	  IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 = 6'd9;
+	  IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 = 6'd9;
       12'd261:
-	  IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 = 6'd10;
+	  IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 = 6'd10;
       12'd262:
-	  IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 = 6'd11;
+	  IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 = 6'd11;
       12'd320:
-	  IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 = 6'd12;
+	  IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 = 6'd12;
       12'd321:
-	  IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 = 6'd13;
+	  IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 = 6'd13;
       12'd322:
-	  IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 = 6'd14;
+	  IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 = 6'd14;
       12'd323:
-	  IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 = 6'd15;
+	  IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 = 6'd15;
       12'd324:
-	  IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 = 6'd16;
+	  IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 = 6'd16;
       12'd384:
-	  IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 = 6'd17;
+	  IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 = 6'd17;
       12'd768:
-	  IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 = 6'd18;
+	  IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 = 6'd18;
       12'd769:
-	  IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 = 6'd19;
+	  IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 = 6'd19;
       12'd770:
-	  IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 = 6'd20;
+	  IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 = 6'd20;
       12'd771:
-	  IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 = 6'd21;
+	  IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 = 6'd21;
       12'd772:
-	  IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 = 6'd22;
+	  IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 = 6'd22;
       12'd773:
-	  IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 = 6'd23;
+	  IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 = 6'd23;
       12'd774:
-	  IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 = 6'd24;
+	  IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 = 6'd24;
       12'd832:
-	  IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 = 6'd25;
+	  IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 = 6'd25;
       12'd833:
-	  IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 = 6'd26;
+	  IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 = 6'd26;
       12'd834:
-	  IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 = 6'd27;
+	  IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 = 6'd27;
       12'd835:
-	  IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 = 6'd28;
+	  IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 = 6'd28;
       12'd836:
-	  IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 = 6'd29;
+	  IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 = 6'd29;
       12'd2048:
-	  IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 = 6'd6;
+	  IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 = 6'd6;
       12'd2049:
-	  IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 = 6'd7;
+	  IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 = 6'd7;
       12'd2816:
-	  IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 = 6'd30;
+	  IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 = 6'd30;
       12'd2818:
-	  IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 = 6'd31;
+	  IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 = 6'd31;
       12'd3072:
-	  IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 = 6'd3;
+	  IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 = 6'd3;
       12'd3073:
-	  IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 = 6'd4;
+	  IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 = 6'd4;
       12'd3074:
-	  IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 = 6'd5;
+	  IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 = 6'd5;
       12'd3857:
-	  IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 = 6'd32;
+	  IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 = 6'd32;
       12'd3858:
-	  IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 = 6'd33;
+	  IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 = 6'd33;
       12'd3859:
-	  IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 = 6'd34;
+	  IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 = 6'd34;
       12'd3860:
-	  IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 = 6'd35;
-      default: IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 =
+	  IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 = 6'd35;
+      default: IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 =
 		   6'd36;
     endcase
   end
@@ -38167,21 +38148,21 @@ module mkCore(CLK,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_commitStage_doCommitSystemInst &&
 	  rob$deqPort_0_deq_data[186:182] == 5'd13 &&
-	  IF_rob_deqPort_0_deq_data__4334_BIT_181_4563_T_ETC___d14637 == 6'd6)
+	  IF_rob_deqPort_0_deq_data__4355_BIT_181_4584_T_ETC___d14658 == 6'd6)
 	$display("[Terminate CSR] being written (val = %x), ",
 		 "send terminate signal to host",
 		 rob$deqPort_0_deq_data[95:32]);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_commitStage_doCommitSystemInst &&
-	  NOT_IF_rob_deqPort_0_deq_data__4334_BITS_97_TO_ETC___d14823)
+	  NOT_IF_rob_deqPort_0_deq_data__4355_BITS_97_TO_ETC___d14844)
 	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_commitStage_doCommitSystemInst &&
-	  NOT_IF_rob_deqPort_0_deq_data__4334_BITS_97_TO_ETC___d14823)
+	  NOT_IF_rob_deqPort_0_deq_data__4355_BITS_97_TO_ETC___d14844)
 	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/RV64G_OOO/CommitStage.bsv\", line 506, column 39\nppc must be pc + 4");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_commitStage_doCommitSystemInst &&
-	  NOT_IF_rob_deqPort_0_deq_data__4334_BITS_97_TO_ETC___d14823)
+	  NOT_IF_rob_deqPort_0_deq_data__4355_BITS_97_TO_ETC___d14844)
 	$finish(32'd0);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_commitStage_doCommitSystemInst &&
@@ -38197,15 +38178,15 @@ module mkCore(CLK,
 	$finish(32'd0);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_commitStage_doCommitSystemInst &&
-	  NOT_rob_deqPort_0_deq_data__4334_BITS_186_TO_1_ETC___d14833)
+	  NOT_rob_deqPort_0_deq_data__4355_BITS_186_TO_1_ETC___d14854)
 	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_commitStage_doCommitSystemInst &&
-	  NOT_rob_deqPort_0_deq_data__4334_BITS_186_TO_1_ETC___d14833)
+	  NOT_rob_deqPort_0_deq_data__4355_BITS_186_TO_1_ETC___d14854)
 	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/RV64G_OOO/CommitStage.bsv\", line 550, column 54\nonly CSR has valid csr idx");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_commitStage_doCommitSystemInst &&
-	  NOT_rob_deqPort_0_deq_data__4334_BITS_186_TO_1_ETC___d14833)
+	  NOT_rob_deqPort_0_deq_data__4355_BITS_186_TO_1_ETC___d14854)
 	$finish(32'd0);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_commitStage_doCommitSystemInst &&
@@ -38370,7 +38351,7 @@ module mkCore(CLK,
 	  rob$deqPort_1_deq_data[186:182] != 5'd20)
 	$write("instret:%0d  PC:0x%0h  instr:0x%08h",
 	       commitStage_rg_instret +
-	       IF_rob_deqPort_0_canDeq__4852_THEN_IF_NOT_rob__ETC___d14961,
+	       IF_rob_deqPort_0_canDeq__4873_THEN_IF_NOT_rob__ETC___d14982,
 	       rob$deqPort_1_deq_data[282:219],
 	       rob$deqPort_1_deq_data[218:187],
 	       "   iType:");
@@ -39541,7 +39522,7 @@ module mkCore(CLK,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_renameStage_doRenaming_SystemInst &&
 	  specTagManager$currentSpecBits != 12'd0)
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/RV64G_OOO/RenameStage.bsv\", line 394, column 34\ncannot have spec bits");
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/RV64G_OOO/RenameStage.bsv\", line 401, column 34\ncannot have spec bits");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_renameStage_doRenaming_SystemInst &&
 	  specTagManager$currentSpecBits != 12'd0)
@@ -39555,7 +39536,7 @@ module mkCore(CLK,
       if (WILL_FIRE_RL_renameStage_doRenaming_SystemInst &&
 	  fetchStage$pipelines_0_first[194:192] == 3'd0 &&
 	  fetchStage$pipelines_0_first[199:195] != 5'd13)
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/RV64G_OOO/RenameStage.bsv\", line 419, column 42\nonly CSR inst send to exe");
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/RV64G_OOO/RenameStage.bsv\", line 426, column 42\nonly CSR inst send to exe");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_renameStage_doRenaming_SystemInst &&
 	  fetchStage$pipelines_0_first[194:192] == 3'd0 &&
@@ -39576,7 +39557,7 @@ module mkCore(CLK,
 	  fetchStage$pipelines_0_first[199:195] != 5'd16 &&
 	  fetchStage$pipelines_0_first[199:195] != 5'd19 &&
 	  fetchStage$pipelines_0_first[199:195] != 5'd20)
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/RV64G_OOO/RenameStage.bsv\", line 426, column 22\nnon-CSR inst not send to exe");
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/RV64G_OOO/RenameStage.bsv\", line 433, column 22\nnon-CSR inst not send to exe");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_renameStage_doRenaming_SystemInst &&
 	  fetchStage$pipelines_0_first[194:192] != 3'd0 &&
@@ -39600,7 +39581,7 @@ module mkCore(CLK,
 	   fetchStage$pipelines_0_first[194:192] == 3'd2 ||
 	   fetchStage$pipelines_0_first[194:192] == 3'd3 ||
 	   fetchStage$pipelines_0_first[194:192] == 3'd4))
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/RV64G_OOO/RenameStage.bsv\", line 428, column 22\nnon-exe inst exec func is other");
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/RV64G_OOO/RenameStage.bsv\", line 435, column 22\nnon-exe inst exec func is other");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_renameStage_doRenaming_SystemInst &&
 	  fetchStage$pipelines_0_first[194:192] != 3'd0 &&
@@ -39618,7 +39599,7 @@ module mkCore(CLK,
       if (WILL_FIRE_RL_renameStage_doRenaming_SystemInst &&
 	  fetchStage$pipelines_0_first[75] &&
 	  fetchStage$pipelines_0_first[74])
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/RV64G_OOO/RenameStage.bsv\", line 447, column 29\nsystem inst never touches FP regs");
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/RV64G_OOO/RenameStage.bsv\", line 454, column 29\nsystem inst never touches FP regs");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_renameStage_doRenaming_SystemInst &&
 	  fetchStage$pipelines_0_first[75] &&
@@ -39627,149 +39608,149 @@ module mkCore(CLK,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_renameStage_doRenaming &&
 	  fetchStage$pipelines_0_canDeq &&
-	  regRenamingTable_rename_0_canRename__3418_AND__ETC___d14081)
+	  regRenamingTable_rename_0_canRename__3428_AND__ETC___d14102)
 	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_renameStage_doRenaming &&
 	  fetchStage$pipelines_0_canDeq &&
-	  regRenamingTable_rename_0_canRename__3418_AND__ETC___d14081)
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/RV64G_OOO/RenameStage.bsv\", line 857, column 61\nFpuMulDiv next PC is not PC+4/PC+2");
+	  regRenamingTable_rename_0_canRename__3428_AND__ETC___d14102)
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/RV64G_OOO/RenameStage.bsv\", line 864, column 61\nFpuMulDiv next PC is not PC+4/PC+2");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_renameStage_doRenaming &&
 	  fetchStage$pipelines_0_canDeq &&
-	  regRenamingTable_rename_0_canRename__3418_AND__ETC___d14081)
+	  regRenamingTable_rename_0_canRename__3428_AND__ETC___d14102)
 	$finish(32'd0);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_renameStage_doRenaming &&
 	  fetchStage$pipelines_0_canDeq &&
-	  regRenamingTable_rename_0_canRename__3418_AND__ETC___d14086)
+	  regRenamingTable_rename_0_canRename__3428_AND__ETC___d14107)
 	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_renameStage_doRenaming &&
 	  fetchStage$pipelines_0_canDeq &&
-	  regRenamingTable_rename_0_canRename__3418_AND__ETC___d14086)
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/RV64G_OOO/RenameStage.bsv\", line 858, column 59\nFpuMulDiv never explicitly read/write CSR");
+	  regRenamingTable_rename_0_canRename__3428_AND__ETC___d14107)
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/RV64G_OOO/RenameStage.bsv\", line 865, column 59\nFpuMulDiv never explicitly read/write CSR");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_renameStage_doRenaming &&
 	  fetchStage$pipelines_0_canDeq &&
-	  regRenamingTable_rename_0_canRename__3418_AND__ETC___d14086)
+	  regRenamingTable_rename_0_canRename__3428_AND__ETC___d14107)
 	$finish(32'd0);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_renameStage_doRenaming &&
 	  fetchStage$pipelines_0_canDeq &&
-	  regRenamingTable_rename_0_canRename__3418_AND__ETC___d14111)
+	  regRenamingTable_rename_0_canRename__3428_AND__ETC___d14132)
 	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_renameStage_doRenaming &&
 	  fetchStage$pipelines_0_canDeq &&
-	  regRenamingTable_rename_0_canRename__3418_AND__ETC___d14111)
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/RV64G_OOO/RenameStage.bsv\", line 889, column 65\nMem next PC is not PC+4/PC+2");
+	  regRenamingTable_rename_0_canRename__3428_AND__ETC___d14132)
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/RV64G_OOO/RenameStage.bsv\", line 896, column 65\nMem next PC is not PC+4/PC+2");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_renameStage_doRenaming &&
 	  fetchStage$pipelines_0_canDeq &&
-	  regRenamingTable_rename_0_canRename__3418_AND__ETC___d14111)
+	  regRenamingTable_rename_0_canRename__3428_AND__ETC___d14132)
 	$finish(32'd0);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_renameStage_doRenaming &&
 	  fetchStage$pipelines_0_canDeq &&
-	  regRenamingTable_rename_0_canRename__3418_AND__ETC___d14115)
+	  regRenamingTable_rename_0_canRename__3428_AND__ETC___d14136)
 	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_renameStage_doRenaming &&
 	  fetchStage$pipelines_0_canDeq &&
-	  regRenamingTable_rename_0_canRename__3418_AND__ETC___d14115)
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/RV64G_OOO/RenameStage.bsv\", line 890, column 63\nMem never explicitly read/write CSR");
+	  regRenamingTable_rename_0_canRename__3428_AND__ETC___d14136)
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/RV64G_OOO/RenameStage.bsv\", line 897, column 63\nMem never explicitly read/write CSR");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_renameStage_doRenaming &&
 	  fetchStage$pipelines_0_canDeq &&
-	  regRenamingTable_rename_0_canRename__3418_AND__ETC___d14115)
+	  regRenamingTable_rename_0_canRename__3428_AND__ETC___d14136)
 	$finish(32'd0);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_renameStage_doRenaming &&
 	  fetchStage$pipelines_0_canDeq &&
-	  regRenamingTable_rename_0_canRename__3418_AND__ETC___d14121)
+	  regRenamingTable_rename_0_canRename__3428_AND__ETC___d14142)
 	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_renameStage_doRenaming &&
 	  fetchStage$pipelines_0_canDeq &&
-	  regRenamingTable_rename_0_canRename__3418_AND__ETC___d14121)
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/RV64G_OOO/RenameStage.bsv\", line 892, column 42\nMem (non-Fence) needs imm for virtual addr");
+	  regRenamingTable_rename_0_canRename__3428_AND__ETC___d14142)
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/RV64G_OOO/RenameStage.bsv\", line 899, column 42\nMem (non-Fence) needs imm for virtual addr");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_renameStage_doRenaming &&
 	  fetchStage$pipelines_0_canDeq &&
-	  regRenamingTable_rename_0_canRename__3418_AND__ETC___d14121)
+	  regRenamingTable_rename_0_canRename__3428_AND__ETC___d14142)
 	$finish(32'd0);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_renameStage_doRenaming &&
-	  NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14178 &&
-	  regRenamingTable_rename_1_canRename__3535_AND__ETC___d14246)
+	  NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14268)
 	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_renameStage_doRenaming &&
-	  NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14178 &&
-	  regRenamingTable_rename_1_canRename__3535_AND__ETC___d14246)
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/RV64G_OOO/RenameStage.bsv\", line 857, column 61\nFpuMulDiv next PC is not PC+4/PC+2");
+	  NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14268)
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/RV64G_OOO/RenameStage.bsv\", line 864, column 61\nFpuMulDiv next PC is not PC+4/PC+2");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_renameStage_doRenaming &&
-	  NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14178 &&
-	  regRenamingTable_rename_1_canRename__3535_AND__ETC___d14246)
+	  NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14268)
 	$finish(32'd0);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_renameStage_doRenaming &&
-	  NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14252)
+	  NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14199 &&
+	  regRenamingTable_rename_1_canRename__3547_AND__ETC___d14208 &&
+	  NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d14271)
 	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_renameStage_doRenaming &&
-	  NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14252)
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/RV64G_OOO/RenameStage.bsv\", line 858, column 59\nFpuMulDiv never explicitly read/write CSR");
+	  NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14199 &&
+	  regRenamingTable_rename_1_canRename__3547_AND__ETC___d14208 &&
+	  NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d14271)
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/RV64G_OOO/RenameStage.bsv\", line 865, column 59\nFpuMulDiv never explicitly read/write CSR");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_renameStage_doRenaming &&
-	  NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14252)
+	  NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14199 &&
+	  regRenamingTable_rename_1_canRename__3547_AND__ETC___d14208 &&
+	  NOT_fetchStage_pipelines_1_first__2844_BITS_19_ETC___d14271)
 	$finish(32'd0);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_renameStage_doRenaming &&
-	  NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14178 &&
-	  regRenamingTable_rename_1_canRename__3535_AND__ETC___d14271)
+	  NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14199 &&
+	  regRenamingTable_rename_1_canRename__3547_AND__ETC___d14292)
 	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_renameStage_doRenaming &&
-	  NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14178 &&
-	  regRenamingTable_rename_1_canRename__3535_AND__ETC___d14271)
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/RV64G_OOO/RenameStage.bsv\", line 889, column 65\nMem next PC is not PC+4/PC+2");
+	  NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14199 &&
+	  regRenamingTable_rename_1_canRename__3547_AND__ETC___d14292)
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/RV64G_OOO/RenameStage.bsv\", line 896, column 65\nMem next PC is not PC+4/PC+2");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_renameStage_doRenaming &&
-	  NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14178 &&
-	  regRenamingTable_rename_1_canRename__3535_AND__ETC___d14271)
+	  NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14199 &&
+	  regRenamingTable_rename_1_canRename__3547_AND__ETC___d14292)
 	$finish(32'd0);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_renameStage_doRenaming &&
-	  NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14178 &&
-	  regRenamingTable_rename_1_canRename__3535_AND__ETC___d14275)
+	  NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14297)
 	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_renameStage_doRenaming &&
-	  NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14178 &&
-	  regRenamingTable_rename_1_canRename__3535_AND__ETC___d14275)
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/RV64G_OOO/RenameStage.bsv\", line 890, column 63\nMem never explicitly read/write CSR");
+	  NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14297)
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/RV64G_OOO/RenameStage.bsv\", line 897, column 63\nMem never explicitly read/write CSR");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_renameStage_doRenaming &&
-	  NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14178 &&
-	  regRenamingTable_rename_1_canRename__3535_AND__ETC___d14275)
+	  NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14297)
 	$finish(32'd0);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_renameStage_doRenaming &&
-	  NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14178 &&
-	  regRenamingTable_rename_1_canRename__3535_AND__ETC___d14281)
+	  NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14199 &&
+	  regRenamingTable_rename_1_canRename__3547_AND__ETC___d14302)
 	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_renameStage_doRenaming &&
-	  NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14178 &&
-	  regRenamingTable_rename_1_canRename__3535_AND__ETC___d14281)
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/RV64G_OOO/RenameStage.bsv\", line 892, column 42\nMem (non-Fence) needs imm for virtual addr");
+	  NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14199 &&
+	  regRenamingTable_rename_1_canRename__3547_AND__ETC___d14302)
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/RV64G_OOO/RenameStage.bsv\", line 899, column 42\nMem (non-Fence) needs imm for virtual addr");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_renameStage_doRenaming &&
-	  NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14178 &&
-	  regRenamingTable_rename_1_canRename__3535_AND__ETC___d14281)
+	  NOT_fetchStage_pipelines_0_canDeq__2833_2834_O_ETC___d14199 &&
+	  regRenamingTable_rename_1_canRename__3547_AND__ETC___d14302)
 	$finish(32'd0);
   end
   // synopsys translate_on
