@@ -341,7 +341,6 @@ module mkMMIOInst(CLK,
   wire [63 : 0] soc_map$m_is_IO_addr_addr,
 		soc_map$m_is_mem_addr_addr,
 		soc_map$m_is_near_mem_IO_addr_addr;
-  wire soc_map$m_is_IO_addr;
 
   // rule scheduling signals
   wire CAN_FIRE_RL_pendQ_canonicalize,
@@ -393,14 +392,12 @@ module mkMMIOInst(CLK,
 
   // value method getFetchTarget
   assign getFetchTarget =
-	     soc_map$m_is_IO_addr ?
-	       2'd1 :
-	       ((getFetchTarget_phyPc[63:3] >= 61'd268435456 &&
-		 getFetchTarget_phyPc[63:3] < 61'd301989888 &&
-		 getFetchTarget_phyPc[63:3] != toHostAddr &&
-		 getFetchTarget_phyPc[63:3] != fromHostAddr) ?
-		  2'd0 :
-		  2'd2) ;
+	     (getFetchTarget_phyPc[63:3] >= 61'd268435456 &&
+	      getFetchTarget_phyPc[63:3] < 61'd301989888 &&
+	      getFetchTarget_phyPc[63:3] != toHostAddr &&
+	      getFetchTarget_phyPc[63:3] != fromHostAddr) ?
+	       2'd0 :
+	       2'd1 ;
   assign RDY_getFetchTarget = 1'd1 ;
 
   // action method bootRomReq
@@ -614,7 +611,7 @@ module mkMMIOInst(CLK,
 		    .m_tcm_addr_size(),
 		    .m_tcm_addr_lim(),
 		    .m_is_mem_addr(),
-		    .m_is_IO_addr(soc_map$m_is_IO_addr),
+		    .m_is_IO_addr(),
 		    .m_is_near_mem_IO_addr(),
 		    .m_pc_reset_value(),
 		    .m_mtvec_reset_value(),
@@ -879,7 +876,7 @@ module mkMMIOInst(CLK,
   assign respQ_enqReq_dummy2_2$EN = 1'd1 ;
 
   // submodule soc_map
-  assign soc_map$m_is_IO_addr_addr = getFetchTarget_phyPc ;
+  assign soc_map$m_is_IO_addr_addr = 64'h0 ;
   assign soc_map$m_is_mem_addr_addr = 64'h0 ;
   assign soc_map$m_is_near_mem_IO_addr_addr = 64'h0 ;
 

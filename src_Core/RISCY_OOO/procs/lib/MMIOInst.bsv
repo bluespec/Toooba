@@ -77,15 +77,13 @@ module mkMMIOInst(MMIOInst);
 
     method InstFetchTarget getFetchTarget(Addr phyPc);
         let addr = getDataAlignedAddr(phyPc);
-        if (soc_map.m_is_IO_addr (phyPc)) begin
-            return IODevice;
-        end
-        else if(addr >= mainMemBaseAddr && (addr < mainMemBoundAddr) &&
-                addr != toHostAddr && addr != fromHostAddr) begin
-            return MainMem;
-        end
+        if(addr >= mainMemBaseAddr && (addr < mainMemBoundAddr) &&
+	   addr != toHostAddr && addr != fromHostAddr)
+	   begin
+	      return MainMem;
+           end
         else begin
-            return Fault;
+           return IODevice;
         end
     endmethod
 
