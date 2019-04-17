@@ -350,7 +350,7 @@ module mkSoC_Top (SoC_Top_IFC);
    method Action set_watch_tohost (Bool  watch_tohost, Fabric_Addr  tohost_addr);
       mem0_controller.set_watch_tohost (watch_tohost, tohost_addr);
       if (watch_tohost) begin
-	 let fromhost_addr = 0;
+	 let fromhost_addr = 'h_8000_1040;
 	 corew.set_htif_addrs (tohost_addr, fromhost_addr);
       end
    endmethod

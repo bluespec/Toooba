@@ -285,6 +285,7 @@ module mkCore#(CoreId coreId)(Core);
                 method csrf_rd = csrf.rd;
                 method rob_getPC = rob.getOrigPC[i].get;
                 method rob_getPredPC = rob.getOrigPredPC[i].get;
+                method rob_getOrig_Inst = rob.getOrig_Inst[i].get;
                 method rob_setExecuted = rob.setExecuted_doFinishAlu[i].set;
                 method fetch_train_predictors = toPut(trainBPQ[i]).put;
                 method setRegReadyAggr = writeAggr(aluWrAggrPort(i));

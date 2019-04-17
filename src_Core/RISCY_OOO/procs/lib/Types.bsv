@@ -33,6 +33,10 @@ typedef Bit#(DataSz) Data;
 typedef 32 InstSz;
 typedef Bit#(InstSz) Instruction;
 
+// Compressed instructions (16-bit)
+typedef 16 Inst16_Sz;
+typedef Bit #(Inst16_Sz) Instruction16;
+
 typedef 0 AsidSz; // not really implement ASID
 typedef Bit#(AsidSz) Asid;
 

@@ -397,8 +397,8 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
 	    // process valid req
 	    state <= ProcessReq;
 	    if(verbosity > 0) begin
-	       $display("[Platform - SelectReq] new req, core %d, req ",
-			i, fshow(req), ", type ", fshow(newReq));
+	       $display("[Platform - SelectReq] core %d, req ", i, fshow(req));
+	       $display("    req type ", fshow(newReq));
 	    end
          end
       end
@@ -983,13 +983,15 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
 				      &&& (state == ProcessReq)
 				      &&& isInstFetch);
       // Note: addr may not be FabricData-aligned; result will be Data that contains addr
+      // TODO: currently assumes superscalarity fits in fabric width
       Addr addr1 = { addr [63:3], 3'b_000 };
       let req = MMIOCRq {addr:addr1, func: tagged Ld, byteEn: ?, data: ? };
       mmio_fabric_adapter_core_side.request.put (req);
       state <= WaitResp;
 
       if (verbosity > 0) begin
-	 $display ("MMIOPlatform.rl_mmio_to_fabric_ifetch_req: addr 0x%0h", addr);
+	 $display ("MMIOPlatform.rl_mmio_to_fabric_ifetch_req: addr 0x%0h  fetchingWay %0d",
+		   addr, fetchingWay);
 	 $display ("    ", fshow (req));
       end
    endrule
@@ -1000,11 +1002,24 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
       MMIODataPRs dprs <- mmio_fabric_adapter_core_side.response.get;
       if (! dprs.valid) begin
 	 // Access fault
-	 let prs = tagged DataAccess dprs;
-	 cores[reqCore].pRs.enq (prs);
-	 state <= SelectReq;
+         Vector #(SupSize, Maybe #(Instruction)) resp = replicate (Invalid);
+         for(Integer i = 0; i < valueof (SupSize); i = i+1) begin
+	    if (fromInteger (i) < fetchingWay)
+	       resp [i] = Valid (fetchedInsts [i]);
+            else if (fromInteger (i) == fetchingWay)
+	       resp [i] = tagged Invalid;
+         end
+         cores[reqCore].pRs.enq (tagged InstFetch (resp));
+         state <= SelectReq;
+
+	 if (verbosity > 0) begin
+	    $display ("MMIOPlatform.rl_mmio_from_fabric_ifetch_rsp: access fault; final resp to core:");
+	    $display ("    ", fshow (resp));
+	 end
       end
+
       else begin
+	 // No access fault
 	 let data = dprs.data;
 
          SupWaySel maxWay = 0;
@@ -1061,8 +1076,6 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
         toHostAddr <= getDataAlignedAddr(toHost);
         fromHostAddr <= getDataAlignedAddr(fromHost);
         state <= SelectReq;
-       $display ("MMIOPlatform.start: tohostAddr = 0x%0h, fromhostAddr = %0h",
-		 toHost, fromHost);
     endmethod
 
     method ActionValue#(Data) to_host;

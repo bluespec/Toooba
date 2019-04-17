@@ -46,10 +46,12 @@ typedef union tagged {
 
 typedef struct {
     Addr               pc;
+    Bit #(32)          orig_inst;    // original 16b or 32b instruction ([1:0] will distinguish 16b or 32b)
     IType              iType;
     Maybe#(CSR)        csr;
     Bool               claimed_phy_reg; // whether we need to commmit renaming
     Maybe#(Trap)       trap;
+    Addr               tval;    // in case of trap
     PPCVAddrCSRData    ppc_vaddr_csrData;
     Bit#(5)            fflags;
     Bool               will_dirty_fpu_state; // True means 2'b11 will be written to FS
@@ -110,6 +112,7 @@ interface ReorderBufferRowEhr#(numeric type aluExeNum, numeric type fpuMulDivExe
     // get original PC/PPC before execution, EHR port 0 will suffice
     method Addr getOrigPC;
     method Addr getOrigPredPC;
+    method Bit #(32) getOrig_Inst;
     // speculation
     method Bool dependsOn_wrongSpec(SpecTag tag);
     method Action correctSpeculation(SpecBits mask);
@@ -166,10 +169,12 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     Integer sb_correctSpec_port = 2; // write spec_bits
 
     Reg#(Addr)                                                      pc                   <- mkRegU;
+    Reg #(Bit #(32))                                                orig_inst            <- mkRegU;
     Reg#(IType)                                                     iType                <- mkRegU;
     Reg#(Maybe#(CSR))                                               csr                  <- mkRegU;
     Reg#(Bool)                                                      claimed_phy_reg      <- mkRegU;
     Ehr#(3, Maybe#(Trap))                                           trap                 <- mkEhr(?);
+    Ehr#(3, Addr)                                                   tval                 <- mkEhr(?);
     Ehr#(TAdd#(2, aluExeNum), PPCVAddrCSRData)                      ppc_vaddr_csrData    <- mkEhr(?);
     Ehr#(TAdd#(1, fpuMulDivExeNum), Bit#(5))                        fflags               <- mkEhr(?);
     Reg#(Bool)                                                      will_dirty_fpu_state <- mkRegU;
@@ -221,6 +226,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
 
     method Addr getOrigPC = pc;
     method Addr getOrigPredPC = predPcWire;
+    method Bit #(32) getOrig_Inst = orig_inst;
 
     interface setExecuted_doFinishAlu = aluSetExe;
 
@@ -252,10 +258,12 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
 
     method Action write_enq(ToReorderBuffer x);
         pc <= x.pc;
+        orig_inst <= x.orig_inst;
         iType <= x.iType;
         csr <= x.csr;
         claimed_phy_reg <= x.claimed_phy_reg;
         trap[trap_enq_port] <= x.trap;
+        tval[trap_enq_port] <= x.tval;
         ppc_vaddr_csrData[pvc_enq_port] <= x.ppc_vaddr_csrData;
         fflags[fflags_enq_port] <= x.fflags;
         will_dirty_fpu_state <= x.will_dirty_fpu_state;
@@ -283,10 +291,12 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     method ToReorderBuffer read_deq;
         return ToReorderBuffer {
             pc: pc,
+	    orig_inst: orig_inst,
             iType: iType,
             csr: csr,
             claimed_phy_reg: claimed_phy_reg,
             trap: trap[trap_deq_port],
+            tval: tval[trap_deq_port],
             ppc_vaddr_csrData: ppc_vaddr_csrData[pvc_deq_port],
             fflags: fflags[fflags_deq_port],
             will_dirty_fpu_state: will_dirty_fpu_state,
@@ -312,6 +322,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         doAssert(!isValid(trap[trap_deqLSQ_port]), "cannot have trap");
         if(cause matches tagged Valid .e) begin
             trap[trap_deqLSQ_port] <= Valid (Exception (e));
+	    // TODO: shouldn't we record tval here as well?
         end
         // record ld misspeculation
         ldKilled[ldKill_deqLSQ_port] <= ld_killed;
@@ -383,6 +394,10 @@ interface ROB_getOrigPredPC;
     method Addr get(InstTag x);
 endinterface
 
+interface ROB_getOrig_Inst;
+    method Bit #(32) get(InstTag x);
+endinterface
+
 interface SupReorderBuffer#(numeric type aluExeNum, numeric type fpuMulDivExeNum);
     interface Vector#(SupSize, ROB_EnqPort) enqPort;
     method Bool isEmpty; // empty signal for enq port (for FENCE/System inst etc.)
@@ -406,6 +421,7 @@ interface SupReorderBuffer#(numeric type aluExeNum, numeric type fpuMulDivExeNum
     // get original PC/PPC before execution, EHR port 0 will suffice
     interface Vector#(TAdd#(1, aluExeNum), ROB_getOrigPC) getOrigPC;
     interface Vector#(aluExeNum, ROB_getOrigPredPC) getOrigPredPC;
+    interface Vector#(aluExeNum, ROB_getOrig_Inst) getOrig_Inst;
 
     // get enq time for reservation station dispatch
     method InstTime getEnqTime;
@@ -911,6 +927,14 @@ module mkSupReorderBuffer#(
         endinterface);
     end
 
+    // get original instr (16b or 32b). Lsbs [1:0] encode whether 16b or 32b
+    Vector#(aluExeNum, ROB_getOrig_Inst) getOrig_Inst_Ifc;
+    for(Integer i = 0; i < valueof(aluExeNum); i = i+1) begin
+        getOrig_Inst_Ifc[i] = (interface ROB_getOrig_Inst;
+            method Bit #(32) get(InstTag x) = row[x.way][x.ptr].getOrig_Inst;
+        endinterface);
+    end
+
     interface enqPort = enqIfc;
 
     method Bool isEmpty;
@@ -967,6 +991,7 @@ module mkSupReorderBuffer#(
 
     interface getOrigPC = getOrigPCIfc;
     interface getOrigPredPC = getOrigPredPCIfc;
+    interface getOrig_Inst  = getOrig_Inst_Ifc;
 
     method InstTime getEnqTime = enqTime;
 

@@ -60,7 +60,6 @@ module BRAM2(CLKA,
    input [DATA_WIDTH-1:0]         DIB;
    output [DATA_WIDTH-1:0]        DOB;
 
-   (* RAM_STYLE = "BLOCK" *)
    reg [DATA_WIDTH-1:0]           RAM[0:MEMSIZE-1] /* synthesis syn_ramstyle="no_rw_check" */ ;
    reg [DATA_WIDTH-1:0]           DOA_R;
    reg [DATA_WIDTH-1:0]           DOB_R;

@@ -85,7 +85,6 @@ module SizedFIFO(CLK, RST, D_IN, ENQ, FULL_N, D_OUT, DEQ, EMPTY_N, CLR);
 
    // if the depth is too small, don't create an ill-sized array;
    // instead, make a 1-sized array and let the initial block report an error
-   (* RAM_STYLE = "DISTRIBUTED" *)
    reg [p1width - 1 : 0]     arr[0: p2depth2];
 
    reg [p1width - 1 : 0]     D_OUT;

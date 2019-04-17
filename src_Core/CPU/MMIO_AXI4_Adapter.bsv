@@ -155,14 +155,13 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
 	 $display ("    ", fshow (mem_rsp));
       end
 
-      if (mem_rsp.rresp != axi4_resp_okay) begin
-	 // TODO: need to raise a non-maskable interrupt (NMI) here
-	 $display ("%0d: MMIO_AXI4_Adapter.rl_handle_read_rsp: fabric response error; exit", cur_cycle);
+      if ((cfg_verbosity > 0) && (mem_rsp.rresp != axi4_resp_okay)) begin
+	 $display ("%0d: MMIO_AXI4_Adapter.rl_handle_read_rsp: fabric response error", cur_cycle);
 	 $display ("    ", fshow (mem_rsp));
-	 $finish (1);
       end
 
-      let rsp = MMIODataPRs {valid: True, data: mem_rsp.rdata};
+      let rsp = MMIODataPRs {valid: (mem_rsp.rresp == axi4_resp_okay),
+			     data: mem_rsp.rdata};
       f_rsps_to_core.enq (rsp);
 
       if (cfg_verbosity > 0)

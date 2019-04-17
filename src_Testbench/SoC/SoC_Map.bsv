@@ -59,8 +59,8 @@ typedef struct {
    Bit #(64)  boot_rom_addr_base;
    Bit #(64)  boot_rom_addr_size;
 
-   Bit #(64)  mem0_controller_addr_base;
-   Bit #(64)  mem0_controller_addr_size;
+   Bit #(64)  main_mem_addr_base;
+   Bit #(64)  main_mem_addr_size;
 
    Bit #(64)  pc_reset_value;
    } SoC_Map_Struct
@@ -68,15 +68,15 @@ deriving (FShow);
 
 SoC_Map_Struct soc_map_struct =
 SoC_Map_Struct {
-   near_mem_io_addr_base:     'h_0200_0000,
+   near_mem_io_addr_base: 'h_0200_0000,
 
-   boot_rom_addr_base:        'h_0000_1000,
-   boot_rom_addr_size:        'h_0000_1000,
+   boot_rom_addr_base:    'h_0000_1000,
+   boot_rom_addr_size:    'h_0000_1000,
 
-   mem0_controller_addr_base: 'h_8000_0000,
-   mem0_controller_addr_size: 'h_1000_0000,
+   main_mem_addr_base:    'h_8000_0000,
+   main_mem_addr_size:    'h_1000_0000,
 
-   pc_reset_value:            'h_0000_1000
+   pc_reset_value:        'h_0000_1000
    };
 
 // ================================================================
@@ -209,8 +209,7 @@ module mkSoC_Map (SoC_Map_IFC);
    // (Caches need this information to cache these addresses.)
 
    function Bool fn_is_mem_addr (Fabric_Addr addr);
-      return (   fn_is_boot_rom_addr (addr)
-	      || fn_is_mem0_controller_addr (addr)
+      return (   fn_is_mem0_controller_addr (addr)
 	      || fn_is_tcm_addr (addr)
 	      );
    endfunction
@@ -221,7 +220,8 @@ module mkSoC_Map (SoC_Map_IFC);
    // (Caches need this information to avoid cacheing these addresses.)
 
    function Bool fn_is_IO_addr (Fabric_Addr addr);
-      return (   fn_is_near_mem_io_addr (addr)
+      return (   fn_is_boot_rom_addr (addr)
+	      || fn_is_near_mem_io_addr (addr)
 	      || fn_is_plic_addr (addr)
 	      || fn_is_uart0_addr  (addr)
 	      );

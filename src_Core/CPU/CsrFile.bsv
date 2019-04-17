@@ -671,11 +671,13 @@ module mkCsrFile #(Data hartid)(CsrFile);
             tagged Exception .e: begin
                 cause_code = pack(e);
                 trap_val = (case(e)
-                    InstAddrMisaligned, InstAccessFault,
-                    Breakpoint, InstPageFault: return pc;
+                    InstAddrMisaligned, Breakpoint: return pc;
+
+		    InstAccessFault, InstPageFault,
                     LoadAddrMisaligned, LoadAccessFault,
                     StoreAddrMisaligned, StoreAccessFault,
                     LoadPageFault, StorePageFault: return addr;
+
                     default: return 0;
                 endcase);
             end

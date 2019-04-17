@@ -47,7 +47,7 @@ DataAlignedAddr bootRomBaseAddr   = getDataAlignedAddr(soc_map_struct.boot_rom_a
 DataAlignedAddr msipBaseAddr      = getDataAlignedAddr(soc_map_struct.near_mem_io_addr_base + 64'h_0000_0000);
 DataAlignedAddr mtimecmpBaseAddr  = getDataAlignedAddr(soc_map_struct.near_mem_io_addr_base + 64'h_0000_4000);
 DataAlignedAddr mtimeBaseAddr     = getDataAlignedAddr(soc_map_struct.near_mem_io_addr_base + 64'h_0000_bff8);
-DataAlignedAddr mainMemBaseAddr   = getDataAlignedAddr(soc_map_struct.mem0_controller_addr_base);
+DataAlignedAddr mainMemBaseAddr   = getDataAlignedAddr(soc_map_struct.main_mem_addr_base);
 
 // XXX Each msip reg is 32-bit, while mtime and each mtimecmp are 64-bit. We
 // assume Data is 64-bit. We hard code this relation in all MMIO logic.
@@ -60,6 +60,8 @@ DataAlignedAddr mainMemBaseAddr   = getDataAlignedAddr(soc_map_struct.mem0_contr
 // (aligned to Data)
 DataAlignedAddr bootRomBoundAddr   = bootRomBaseAddr +
                                      fromInteger(valueof(TExp#(LgBootRomSzData)));
+DataAlignedAddr mainMemBoundAddr   = (mainMemBaseAddr +
+				      getDataAlignedAddr(soc_map_struct.main_mem_addr_size));
 DataAlignedAddr msipBoundAddr      = msipBaseAddr +
                                      fromInteger(valueof(TDiv#(CoreNum, 2)));
 DataAlignedAddr mtimecmpBoundAddr  = mtimecmpBaseAddr +

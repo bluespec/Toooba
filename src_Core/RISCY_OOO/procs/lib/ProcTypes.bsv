@@ -93,6 +93,7 @@ typedef struct {
     Bool a;
     Bool f;
     Bool d;
+    Bool c;
 } RiscVISASubset deriving (Bits, Eq, FShow);
 
 instance DefaultValue#(RiscVISASubset);
@@ -107,10 +108,12 @@ function Bit#(2) getXLBits = 2'b10; // MXL/SXL/UXL fix to RV64
 function Bit#(26) getExtensionBits(RiscVISASubset isa);
     // include S and I by default
     Bit#(26)   ext =       26'b00000001000000000100000000;
+    if (isa.u) ext = ext | 26'b00000100000000000000000000;
     if (isa.m) ext = ext | 26'b00000000000001000000000000;
     if (isa.a) ext = ext | 26'b00000000000000000000000001;
     if (isa.f) ext = ext | 26'b00000000000000000000100000;
     if (isa.d) ext = ext | 26'b00000000000000000000001000;
+    if (isa.c) ext = ext | 26'b00000000000000000000000100;
     return ext;
 endfunction
 

@@ -251,7 +251,7 @@ module mkL2Tlb(CLK,
        rsToCQ_empty_lat_0$whas,
        rsToCQ_full_lat_0$whas,
        tlb4KB_m_tlbRam_0_rdReqQ_enqP_lat_0$whas,
-       tlbMG_m_updRepIdx_dummy_1_0$whas,
+       tlbMG_m_updRepIdx_lat_1$whas,
        transCacheReqQ_enqP_lat_0$whas;
 
   // register dFlushReq
@@ -1464,7 +1464,7 @@ module mkL2Tlb(CLK,
        MUX_pendWait_0_dummy2_0$write_1__SEL_1,
        MUX_pendWait_1_dummy2_0$write_1__SEL_1,
        MUX_rsToCQ_data_0_dummy2_0$write_1__SEL_1,
-       MUX_rsToCQ_data_0_lat_0$wset_1__SEL_2,
+       MUX_rsToCQ_data_0_dummy2_0$write_1__SEL_2,
        MUX_tlb4KB_m_pendReq_dummy2_1$write_1__SEL_1,
        MUX_tlb4KB_m_pendReq_dummy_1_0$wset_1__VAL_1,
        MUX_tlb4KB_m_repRam_bram$a_put_1__SEL_1,
@@ -1489,7 +1489,7 @@ module mkL2Tlb(CLK,
 	       SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626;
   reg [43 : 0] SEL_ARR_tlb4KB_m_tlbRam_0_bram_b_read__14_BITS_ETC___d1436,
 	       SEL_ARR_tlbMG_m_entryVec_0_077_BITS_52_TO_9_34_ETC___d1351,
-	       masked_ppn__h134509;
+	       masked_ppn__h134587;
   reg [26 : 0] CASE_tlbMG_m_entryVec_0_BITS_1_TO_0_0_vpn15185_ETC__q5,
 	       CASE_tlbMG_m_entryVec_1_BITS_1_TO_0_0_vpn15185_ETC__q4,
 	       CASE_tlbMG_m_entryVec_2_BITS_1_TO_0_0_vpn15185_ETC__q8,
@@ -1502,11 +1502,11 @@ module mkL2Tlb(CLK,
 	       SEL_ARR_pendReq_0_049_BITS_26_TO_0_087_pendReq_ETC___d1649,
 	       SEL_ARR_tlb4KB_m_tlbRam_0_bram_b_read__14_BITS_ETC___d1430,
 	       SEL_ARR_tlbMG_m_entryVec_0_077_BITS_79_TO_53_0_ETC___d1341,
-	       masked_vpn__h134508,
+	       masked_vpn__h134586,
 	       vpn__h115185;
   reg [8 : 0] x__h131454, x__h134221;
-  reg [1 : 0] CASE_idx33342_0_pendReq_0_BITS_28_TO_27_1_pend_ETC__q17,
-	      CASE_tlbReqQ_data_0_0_pendReq_0_BITS_28_TO_27__ETC__q18,
+  reg [1 : 0] CASE_idx33342_0_pendReq_0_BITS_28_TO_27_1_pend_ETC__q18,
+	      CASE_tlbReqQ_data_0_0_pendReq_0_BITS_28_TO_27__ETC__q17,
 	      SEL_ARR_tlb4KB_m_tlbRam_0_bram_b_read__14_BITS_ETC___d1483,
 	      SEL_ARR_tlbMG_m_entryVec_0_077_BITS_1_TO_0_078_ETC___d1426,
 	      walkLevel__h134113;
@@ -1551,9 +1551,9 @@ module mkL2Tlb(CLK,
 		IF_tlb4KB_m_pendReq_lat_1_whas__01_THEN_tlb4KB_ETC___d130,
 		vpn__h103803;
   wire [7 : 0] IF_NOT_tlb4KB_m_repRam_bram_b_read__66_BITS_1__ETC___d286,
-	       IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1809,
+	       IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1830,
 	       IF_tlbMG_m_lruBit_lat_0_whas__18_THEN_tlbMG_m__ETC___d321,
-	       upd__h141871,
+	       upd__h142874,
 	       val__h41243,
 	       val__h41244,
 	       x__h41318;
@@ -1561,16 +1561,16 @@ module mkL2Tlb(CLK,
 	       IF_NOT_tlbMG_m_validVec_0_075_076_OR_NOT_IF_tl_ETC___d1337,
 	       IF_NOT_tlbMG_m_validVec_0_075_076_OR_NOT_IF_tl_ETC___d1339,
 	       IF_tlbMG_m_updRepIdx_lat_1_whas__23_THEN_tlbMG_ETC___d342,
-	       IF_tlbMG_m_validVec_0_075_AND_tlbMG_m_validVec_ETC___d1806,
-	       IF_tlbMG_m_validVec_4_176_AND_tlbMG_m_validVec_ETC___d1803,
-	       _dfoo52,
-	       _dfoo56,
-	       addIdx__h143083,
-	       addIdx__h144349,
+	       IF_tlbMG_m_validVec_0_075_AND_tlbMG_m_validVec_ETC___d1827,
+	       IF_tlbMG_m_validVec_4_176_AND_tlbMG_m_validVec_ETC___d1824,
+	       _dfoo68,
+	       _dfoo72,
+	       addIdx__h144086,
+	       addIdx__h145352,
 	       idx__h116621,
-	       v__h140329,
-	       v__h141586,
-	       v__h142062;
+	       v__h141332,
+	       v__h142589,
+	       v__h143065;
   wire [1 : 0] IF_NOT_tlb4KB_m_repRam_bram_b_read__66_BITS_1__ETC___d1514,
 	       IF_NOT_tlb4KB_m_repRam_bram_b_read__66_BITS_1__ETC___d1515,
 	       IF_NOT_tlb4KB_m_repRam_bram_b_read__66_BITS_1__ETC___d282,
@@ -1585,12 +1585,12 @@ module mkL2Tlb(CLK,
 	       way__h36041;
   wire IF_IF_NOT_tlb4KB_m_tlbRam_0_bram_b_read__14_BI_ETC___d1312,
        IF_IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_ETC___d1316,
-       IF_IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_ETC___d1696,
+       IF_IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_ETC___d1708,
        IF_IF_respForOtherReq_611_BIT_1_612_THEN_NOT_r_ETC___d1669,
        IF_IF_tlbMG_m_entryVec_0_077_BITS_1_TO_0_078_E_ETC___d1114,
        IF_IF_tlbMG_m_entryVec_0_077_BITS_1_TO_0_078_E_ETC___d1191,
-       IF_NOT_SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_ETC___d1694,
-       IF_NOT_pendWait_0_dummy2_0_read__538_539_OR_NO_ETC___d1718,
+       IF_NOT_SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_ETC___d1706,
+       IF_NOT_pendWait_0_dummy2_0_read__538_539_OR_NO_ETC___d1730,
        IF_NOT_tlb4KB_m_tlbRam_0_bram_b_read__14_BIT_8_ETC___d1293,
        IF_NOT_tlb4KB_m_tlbRam_0_bram_b_read__14_BIT_8_ETC___d1294,
        IF_NOT_tlb4KB_m_tlbRam_0_bram_b_read__14_BIT_8_ETC___d1295,
@@ -1614,13 +1614,14 @@ module mkL2Tlb(CLK,
        IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1064,
        IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1332,
        IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1622,
-       IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1736,
-       IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1740,
-       IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1761,
-       IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1788,
-       IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1931,
+       IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1748,
+       IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1752,
+       IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1778,
+       IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1804,
+       IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1809,
        IF_SEL_ARR_pendWalkLevel_0_636_pendWalkLevel_1_ETC___d1672,
-       IF_SEL_ARR_pendWalkLevel_0_636_pendWalkLevel_1_ETC___d1692,
+       IF_SEL_ARR_pendWalkLevel_0_636_pendWalkLevel_1_ETC___d1703,
+       IF_SEL_ARR_pendWalkLevel_0_636_pendWalkLevel_1_ETC___d1754,
        IF_memReqQ_deqReq_dummy2_2_read__97_AND_IF_mem_ETC___d705,
        IF_memReqQ_deqReq_lat_1_whas__68_THEN_memReqQ__ETC___d674,
        IF_memReqQ_enqReq_lat_1_whas__39_THEN_memReqQ__ETC___d648,
@@ -1630,10 +1631,8 @@ module mkL2Tlb(CLK,
        IF_respForOtherReq_611_BIT_1_612_THEN_NOT_resp_ETC___d1644,
        IF_respForOtherReq_611_BIT_1_612_THEN_NOT_resp_ETC___d1645,
        IF_respForOtherReq_611_BIT_1_612_THEN_NOT_resp_ETC___d1665,
-       IF_respForOtherReq_611_BIT_1_612_THEN_NOT_resp_ETC___d1775,
-       IF_respForOtherReq_611_BIT_1_612_THEN_respForO_ETC___d1726,
-       IF_respForOtherReq_611_BIT_1_612_THEN_respForO_ETC___d1948,
-       IF_respForOtherReq_611_BIT_1_612_THEN_respForO_ETC___d1949,
+       IF_respForOtherReq_611_BIT_1_612_THEN_NOT_resp_ETC___d1791,
+       IF_respForOtherReq_611_BIT_1_612_THEN_respForO_ETC___d1738,
        IF_respLdQ_deqReq_dummy2_2_read__94_AND_IF_res_ETC___d802,
        IF_respLdQ_deqReq_lat_1_whas__65_THEN_respLdQ__ETC___d771,
        IF_respLdQ_enqReq_lat_1_whas__36_THEN_respLdQ__ETC___d745,
@@ -1654,11 +1653,12 @@ module mkL2Tlb(CLK,
        IF_tlbMG_m_updRepIdx_lat_1_whas__23_THEN_tlbMG_ETC___d332,
        IF_transCacheReqQ_data_0_536_AND_pendWait_0_du_ETC___d1584,
        IF_transCache_RDY_resp__524_AND_transCache_res_ETC___d1550,
-       NOT_SEL_ARR_pendWalkLevel_0_636_pendWalkLevel__ETC___d1928,
+       NOT_SEL_ARR_pendWalkLevel_0_636_pendWalkLevel__ETC___d1704,
+       NOT_SEL_ARR_pendWalkLevel_0_636_pendWalkLevel__ETC___d1949,
        NOT_flushDoneQ_enqReq_dummy2_2_read__36_51_OR__ETC___d461,
        NOT_memReqQ_clearReq_dummy2_1_read__83_84_OR_I_ETC___d688,
        NOT_memReqQ_enqReq_dummy2_2_read__89_19_OR_IF__ETC___d723,
-       NOT_pendWait_0_dummy2_0_read__538_539_OR_NOT_p_ETC___d1710,
+       NOT_pendWait_0_dummy2_0_read__538_539_OR_NOT_p_ETC___d1722,
        NOT_perfReqQ_clearReq_dummy2_1_read__76_77_OR__ETC___d881,
        NOT_perfReqQ_enqReq_dummy2_2_read__82_97_OR_IF_ETC___d902,
        NOT_respLdQ_clearReq_dummy2_1_read__80_81_OR_I_ETC___d785,
@@ -1677,7 +1677,7 @@ module mkL2Tlb(CLK,
        NOT_tlb4KB_m_tlbRam_0_rdReqQ_empty_dummy2_0_re_ETC___d165,
        NOT_tlb4KB_m_tlbRam_0_rdReqQ_full_dummy2_1_rea_ETC___d944,
        NOT_tlb4KB_m_tlbRam_1_rdReqQ_empty_dummy2_0_re_ETC___d175,
-       NOT_tlb4KB_m_tlbRam_1_rdReqQ_full_dummy2_1_rea_ETC___d1688,
+       NOT_tlb4KB_m_tlbRam_1_rdReqQ_full_dummy2_1_rea_ETC___d1699,
        NOT_tlb4KB_m_tlbRam_1_rdReqQ_full_dummy2_1_rea_ETC___d953,
        NOT_tlb4KB_m_tlbRam_2_rdReqQ_empty_dummy2_0_re_ETC___d185,
        NOT_tlb4KB_m_tlbRam_2_rdReqQ_full_dummy2_1_rea_ETC___d962,
@@ -1694,31 +1694,33 @@ module mkL2Tlb(CLK,
        NOT_tlbMG_m_validVec_0_075_076_OR_NOT_IF_tlbMG_ETC___d1242,
        NOT_tlbMG_m_validVec_0_075_076_OR_NOT_IF_tlbMG_ETC___d1501,
        NOT_tlbMG_m_validVec_0_075_076_OR_NOT_IF_tlbMG_ETC___d1522,
-       NOT_tlbMG_m_validVec_0_075_076_OR_NOT_tlbMG_m__ETC___d1796,
-       NOT_tlbMG_m_validVec_1_102_103_OR_NOT_tlbMG_m__ETC___d1926,
-       NOT_tlbMG_m_validVec_3_151_152_OR_NOT_tlbMG_m__ETC___d1924,
-       NOT_tlbMG_m_validVec_5_202_203_OR_NOT_tlbMG_m__ETC___d1922,
+       NOT_tlbMG_m_validVec_0_075_076_OR_NOT_tlbMG_m__ETC___d1817,
+       NOT_tlbMG_m_validVec_1_102_103_OR_NOT_tlbMG_m__ETC___d1947,
+       NOT_tlbMG_m_validVec_3_151_152_OR_NOT_tlbMG_m__ETC___d1945,
+       NOT_tlbMG_m_validVec_5_202_203_OR_NOT_tlbMG_m__ETC___d1943,
        NOT_tlbReqQ_empty_dummy2_0_read__039_040_OR_NO_ETC___d1048,
        NOT_transCacheReqQ_data_0_536_537_OR_NOT_pendW_ETC___d1545,
        NOT_transCacheReqQ_empty_dummy2_0_read__526_52_ETC___d1535,
-       SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1767,
-       SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1778,
+       SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1757,
+       SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1783,
+       SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1794,
+       SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1952,
+       _dfoo101,
+       _dfoo103,
        _dfoo13,
        _dfoo41,
        _dfoo45,
-       _dfoo57,
-       _dfoo59,
-       _dfoo61,
-       _dfoo63,
        _dfoo65,
+       _dfoo67,
        _dfoo69,
-       _dfoo73,
-       _dfoo75,
-       _dfoo77,
-       _dfoo79,
-       _dfoo81,
-       _dfoo85,
+       _dfoo71,
+       _dfoo89,
        _dfoo9,
+       _dfoo91,
+       _dfoo93,
+       _dfoo95,
+       _dfoo97,
+       _dfoo99,
        _theResult_____2__h82166,
        _theResult_____2__h89736,
        flushDoneQ_enqReq_dummy2_2_read__36_AND_IF_flu_ETC___d448,
@@ -1726,7 +1728,7 @@ module mkL2Tlb(CLK,
        memReqQ_enqReq_dummy2_2_read__89_AND_IF_memReq_ETC___d715,
        next_deqP___1__h82485,
        next_deqP___1__h90055,
-       pendWait_1_rl_18_BIT_0_30_EQ_SEL_ARR_respLdQ_d_ETC___d1715,
+       pendWait_1_rl_18_BIT_0_30_EQ_SEL_ARR_respLdQ_d_ETC___d1727,
        pendWalkAddr_0_555_EQ_0_CONCAT_IF_transCache_r_ETC___d1572,
        pendWalkAddr_1_591_EQ_0_CONCAT_SEL_ARR_respLdQ_ETC___d1667,
        perfReqQ_enqReq_dummy2_2_read__82_AND_IF_perfR_ETC___d894,
@@ -2930,7 +2932,7 @@ module mkL2Tlb(CLK,
   // rule RL_doPageWalk
   assign CAN_FIRE_RL_doPageWalk =
 	     !respLdQ_empty &&
-	     IF_IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_ETC___d1696 &&
+	     IF_IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_ETC___d1708 &&
 	     tlbReqQ_empty_dummy2_0$Q_OUT &&
 	     tlbReqQ_empty_dummy2_1$Q_OUT &&
 	     tlbReqQ_empty_dummy2_2$Q_OUT &&
@@ -3144,22 +3146,16 @@ module mkL2Tlb(CLK,
 	     !IF_NOT_transCacheReqQ_data_0_536_537_OR_NOT_pe_ETC___d1594 ;
   assign MUX_memReqQ_enqReq_dummy2_0$write_1__SEL_2 =
 	     WILL_FIRE_RL_doPageWalk &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1740 &&
-	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1778 ;
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1752 &&
+	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1794 ;
   assign MUX_pendValid_0_lat_0$wset_1__SEL_1 =
 	     WILL_FIRE_RL_doTlbResp && _dfoo13 ;
   assign MUX_pendValid_0_lat_0$wset_1__SEL_2 =
-	     WILL_FIRE_RL_doPageWalk &&
-	     (idx__h133342 == 1'd0 &&
-	      IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1622 ||
-	      _dfoo69) ;
+	     WILL_FIRE_RL_doPageWalk && _dfoo103 ;
   assign MUX_pendValid_1_lat_0$wset_1__SEL_1 =
 	     WILL_FIRE_RL_doTlbResp && _dfoo9 ;
   assign MUX_pendValid_1_lat_0$wset_1__SEL_2 =
-	     WILL_FIRE_RL_doPageWalk &&
-	     (idx__h133342 == 1'd1 &&
-	      IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1622 ||
-	      _dfoo65) ;
+	     WILL_FIRE_RL_doPageWalk && _dfoo99 ;
   assign MUX_pendWait_0_dummy2_0$write_1__SEL_1 =
 	     WILL_FIRE_RL_doTranslationCacheResp &&
 	     transCacheReqQ_data_0 == 1'd0 ;
@@ -3171,12 +3167,12 @@ module mkL2Tlb(CLK,
 	     (IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1064 ||
 	      IF_NOT_tlbMG_m_validVec_0_075_076_OR_NOT_IF_tl_ETC___d1267 ||
 	      IF_NOT_tlb4KB_m_tlbRam_0_bram_b_read__14_BIT_8_ETC___d1295) ;
-  assign MUX_rsToCQ_data_0_lat_0$wset_1__SEL_2 =
+  assign MUX_rsToCQ_data_0_dummy2_0$write_1__SEL_2 =
 	     WILL_FIRE_RL_doPageWalk &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1736 ;
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1748 ;
   assign MUX_tlb4KB_m_pendReq_dummy2_1$write_1__SEL_1 =
 	     WILL_FIRE_RL_doPageWalk &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1788 ;
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1809 ;
   assign MUX_tlb4KB_m_repRam_bram$a_put_1__SEL_1 =
 	     WILL_FIRE_RL_doTlbResp &&
 	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1332 &&
@@ -3204,29 +3200,37 @@ module mkL2Tlb(CLK,
 	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1332 &&
 	     IF_NOT_tlbMG_m_validVec_0_075_076_OR_NOT_IF_tl_ETC___d1267 ;
   assign MUX_tlbMG_m_validVec_0$write_1__SEL_1 =
-	     WILL_FIRE_RL_doPageWalk && v__h140329 == 3'd0 &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1931 ;
+	     WILL_FIRE_RL_doPageWalk && v__h141332 == 3'd0 &&
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1752 &&
+	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1952 ;
   assign MUX_tlbMG_m_validVec_1$write_1__SEL_1 =
-	     WILL_FIRE_RL_doPageWalk && v__h140329 == 3'd1 &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1931 ;
+	     WILL_FIRE_RL_doPageWalk && v__h141332 == 3'd1 &&
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1752 &&
+	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1952 ;
   assign MUX_tlbMG_m_validVec_2$write_1__SEL_1 =
-	     WILL_FIRE_RL_doPageWalk && v__h140329 == 3'd2 &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1931 ;
+	     WILL_FIRE_RL_doPageWalk && v__h141332 == 3'd2 &&
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1752 &&
+	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1952 ;
   assign MUX_tlbMG_m_validVec_3$write_1__SEL_1 =
-	     WILL_FIRE_RL_doPageWalk && v__h140329 == 3'd3 &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1931 ;
+	     WILL_FIRE_RL_doPageWalk && v__h141332 == 3'd3 &&
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1752 &&
+	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1952 ;
   assign MUX_tlbMG_m_validVec_4$write_1__SEL_1 =
-	     WILL_FIRE_RL_doPageWalk && v__h140329 == 3'd4 &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1931 ;
+	     WILL_FIRE_RL_doPageWalk && v__h141332 == 3'd4 &&
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1752 &&
+	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1952 ;
   assign MUX_tlbMG_m_validVec_5$write_1__SEL_1 =
-	     WILL_FIRE_RL_doPageWalk && v__h140329 == 3'd5 &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1931 ;
+	     WILL_FIRE_RL_doPageWalk && v__h141332 == 3'd5 &&
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1752 &&
+	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1952 ;
   assign MUX_tlbMG_m_validVec_6$write_1__SEL_1 =
-	     WILL_FIRE_RL_doPageWalk && v__h140329 == 3'd6 &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1931 ;
+	     WILL_FIRE_RL_doPageWalk && v__h141332 == 3'd6 &&
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1752 &&
+	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1952 ;
   assign MUX_tlbMG_m_validVec_7$write_1__SEL_1 =
-	     WILL_FIRE_RL_doPageWalk && v__h140329 == 3'd7 &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1931 ;
+	     WILL_FIRE_RL_doPageWalk && v__h141332 == 3'd7 &&
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1752 &&
+	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1952 ;
   assign MUX_memReqQ_enqReq_lat_0$wset_1__VAL_1 =
 	     { 1'd1, pteAddr__h131141, transCacheReqQ_data_0 } ;
   assign MUX_memReqQ_enqReq_lat_0$wset_1__VAL_2 =
@@ -3243,9 +3247,9 @@ module mkL2Tlb(CLK,
 	      IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1622) ?
 	       3'd0 :
 	       ((idx__h133342 == 1'd0 &&
-		 IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1761) ?
+		 IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1778) ?
 		  3'd0 :
-		  _dfoo56) ;
+		  _dfoo72) ;
   assign MUX_pendWait_1_lat_0$wset_1__VAL_1 =
 	     (transCacheReqQ_data_0 == 1'd1 &&
 	      IF_NOT_transCacheReqQ_data_0_536_537_OR_NOT_pe_ETC___d1594) ?
@@ -3258,24 +3262,21 @@ module mkL2Tlb(CLK,
 	      IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1622) ?
 	       3'd0 :
 	       ((idx__h133342 == 1'd1 &&
-		 IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1761) ?
+		 IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1778) ?
 		  3'd0 :
-		  _dfoo52) ;
+		  _dfoo68) ;
   assign MUX_rsToCQ_data_0_lat_0$wset_1__VAL_1 =
 	     { !SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NOT_p_ETC___d1057,
-	       CASE_tlbReqQ_data_0_0_pendReq_0_BITS_28_TO_27__ETC__q18,
+	       CASE_tlbReqQ_data_0_0_pendReq_0_BITS_28_TO_27__ETC__q17,
 	       IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1332,
 	       IF_IF_NOT_tlbMG_m_validVec_0_075_076_OR_NOT_IF_ETC___d1486 } ;
   assign MUX_rsToCQ_data_0_lat_0$wset_1__VAL_2 =
 	     { !SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NOT_p_ETC___d1621,
-	       CASE_idx33342_0_pendReq_0_BITS_28_TO_27_1_pend_ETC__q17,
-	       IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1740 &&
-	       SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[0] &&
-	       (SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[3] ||
-		SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[1] ||
-		SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[2]),
-	       masked_vpn__h134508,
-	       masked_ppn__h134509,
+	       CASE_idx33342_0_pendReq_0_BITS_28_TO_27_1_pend_ETC__q18,
+	       IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1752 &&
+	       SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1757,
+	       masked_vpn__h134586,
+	       masked_ppn__h134587,
 	       SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[7:1],
 	       walkLevel__h134113 } ;
   assign MUX_tlb4KB_m_flushIdx$write_1__VAL_1 = tlb4KB_m_flushIdx + 8'd1 ;
@@ -3283,8 +3284,8 @@ module mkL2Tlb(CLK,
 	     WILL_FIRE_RL_doTlbResp || WILL_FIRE_RL_tlb4KB_m_doAddEntry ;
   assign MUX_tlb4KB_m_pendReq_lat_1$wset_1__VAL_1 =
 	     { 2'd3,
-	       masked_vpn__h134508,
-	       masked_ppn__h134509,
+	       masked_vpn__h134586,
+	       masked_ppn__h134587,
 	       SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[7:1],
 	       walkLevel__h134113 } ;
   assign MUX_tlb4KB_m_pendReq_lat_1$wset_1__VAL_2 =
@@ -3322,7 +3323,7 @@ module mkL2Tlb(CLK,
   assign MUX_tlbMG_m_updRepIdx_dummy_1_0$wset_1__VAL_1 =
 	     WILL_FIRE_RL_tlbMG_m_doUpdateRep || WILL_FIRE_RL_doStartFlush ;
   assign MUX_tlbMG_m_updRepIdx_lat_1$wset_1__VAL_1 = { 1'd1, idx__h116621 } ;
-  assign MUX_tlbMG_m_updRepIdx_lat_1$wset_1__VAL_2 = { 1'd1, v__h140329 } ;
+  assign MUX_tlbMG_m_updRepIdx_lat_1$wset_1__VAL_2 = { 1'd1, v__h141332 } ;
 
   // inlined wires
   assign tlb4KB_m_pendReq_lat_1$wget =
@@ -3333,12 +3334,13 @@ module mkL2Tlb(CLK,
 	     MUX_tlbMG_m_updRepIdx_dummy2_1$write_1__SEL_1 ?
 	       MUX_tlbMG_m_updRepIdx_lat_1$wset_1__VAL_1 :
 	       MUX_tlbMG_m_updRepIdx_lat_1$wset_1__VAL_2 ;
-  assign tlbMG_m_updRepIdx_dummy_1_0$whas =
+  assign tlbMG_m_updRepIdx_lat_1$whas =
 	     WILL_FIRE_RL_doTlbResp &&
 	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1332 &&
 	     IF_NOT_tlbMG_m_validVec_0_075_076_OR_NOT_IF_tl_ETC___d1267 ||
 	     WILL_FIRE_RL_doPageWalk &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1931 ;
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1752 &&
+	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1952 ;
   assign rsToCQ_data_0_lat_0$wget =
 	     MUX_rsToCQ_data_0_dummy2_0$write_1__SEL_1 ?
 	       MUX_rsToCQ_data_0_lat_0$wset_1__VAL_1 :
@@ -3349,13 +3351,13 @@ module mkL2Tlb(CLK,
 	      IF_NOT_tlbMG_m_validVec_0_075_076_OR_NOT_IF_tl_ETC___d1267 ||
 	      IF_NOT_tlb4KB_m_tlbRam_0_bram_b_read__14_BIT_8_ETC___d1295) ||
 	     WILL_FIRE_RL_doPageWalk &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1736 ;
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1748 ;
   assign rsToCQ_empty_lat_0$whas =
 	     MUX_rsToCQ_data_0_dummy2_0$write_1__SEL_1 ||
-	     MUX_rsToCQ_data_0_lat_0$wset_1__SEL_2 ;
+	     MUX_rsToCQ_data_0_dummy2_0$write_1__SEL_2 ;
   assign rsToCQ_full_lat_0$whas =
 	     MUX_rsToCQ_data_0_dummy2_0$write_1__SEL_1 ||
-	     MUX_rsToCQ_data_0_lat_0$wset_1__SEL_2 ;
+	     MUX_rsToCQ_data_0_dummy2_0$write_1__SEL_2 ;
   assign pendValid_0_lat_0$whas =
 	     MUX_pendValid_0_lat_0$wset_1__SEL_1 ||
 	     MUX_pendValid_0_lat_0$wset_1__SEL_2 ;
@@ -3373,7 +3375,7 @@ module mkL2Tlb(CLK,
   assign pendWait_0_lat_0$whas =
 	     WILL_FIRE_RL_doTranslationCacheResp &&
 	     transCacheReqQ_data_0 == 1'd0 ||
-	     WILL_FIRE_RL_doPageWalk && _dfoo79 ;
+	     WILL_FIRE_RL_doPageWalk && _dfoo95 ;
   assign pendWait_1_lat_0$wget =
 	     MUX_pendWait_1_dummy2_0$write_1__SEL_1 ?
 	       MUX_pendWait_1_lat_0$wset_1__VAL_1 :
@@ -3381,7 +3383,7 @@ module mkL2Tlb(CLK,
   assign pendWait_1_lat_0$whas =
 	     WILL_FIRE_RL_doTranslationCacheResp &&
 	     transCacheReqQ_data_0 == 1'd1 ||
-	     WILL_FIRE_RL_doPageWalk && _dfoo75 ;
+	     WILL_FIRE_RL_doPageWalk && _dfoo91 ;
   assign memReqQ_enqReq_lat_0$wget =
 	     MUX_memReqQ_enqReq_dummy2_0$write_1__SEL_1 ?
 	       MUX_memReqQ_enqReq_lat_0$wset_1__VAL_1 :
@@ -3392,17 +3394,17 @@ module mkL2Tlb(CLK,
   assign respLdQ_enqReq_lat_0$wget = { 1'd1, toMem_respLd_enq_x } ;
   assign respLdQ_deqReq_lat_0$whas =
 	     WILL_FIRE_RL_doPageWalk &&
-	     (NOT_pendWait_0_dummy2_0_read__538_539_OR_NOT_p_ETC___d1710 ||
+	     (NOT_pendWait_0_dummy2_0_read__538_539_OR_NOT_p_ETC___d1722 ||
 	      IF_respForOtherReq_611_BIT_1_612_THEN_NOT_resp_ETC___d1644) &&
 	     (!pendWait_1_dummy2_0$Q_OUT || !pendWait_1_dummy2_1$Q_OUT ||
 	      pendWait_1_rl[2:1] == 2'd0 ||
 	      pendWait_1_rl[2:1] == 2'd1 ||
-	      !pendWait_1_rl_18_BIT_0_30_EQ_SEL_ARR_respLdQ_d_ETC___d1715 ||
-	      IF_respForOtherReq_611_BIT_1_612_THEN_respForO_ETC___d1726) ;
+	      !pendWait_1_rl_18_BIT_0_30_EQ_SEL_ARR_respLdQ_d_ETC___d1727 ||
+	      IF_respForOtherReq_611_BIT_1_612_THEN_respForO_ETC___d1738) ;
   assign perfReqQ_enqReq_lat_0$wget = { 1'd1, perf_req_r } ;
   assign tlb4KB_m_tlbRam_0_rdReqQ_enqP_lat_0$whas =
 	     WILL_FIRE_RL_doPageWalk &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1788 ||
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1809 ||
 	     WILL_FIRE_RL_doTlbReq ;
   assign transCacheReqQ_enqP_lat_0$whas =
 	     WILL_FIRE_RL_doTlbResp &&
@@ -3647,8 +3649,8 @@ module mkL2Tlb(CLK,
 
   // register respForOtherReq
   assign respForOtherReq$D_IN =
-	     { IF_NOT_pendWait_0_dummy2_0_read__538_539_OR_NO_ETC___d1718,
-	       NOT_pendWait_0_dummy2_0_read__538_539_OR_NOT_p_ETC___d1710 ||
+	     { IF_NOT_pendWait_0_dummy2_0_read__538_539_OR_NO_ETC___d1730,
+	       NOT_pendWait_0_dummy2_0_read__538_539_OR_NOT_p_ETC___d1722 ||
 	       IF_respForOtherReq_611_BIT_1_612_THEN_NOT_resp_ETC___d1644 } ;
   assign respForOtherReq$EN = WILL_FIRE_RL_doPageWalk ;
 
@@ -3853,8 +3855,8 @@ module mkL2Tlb(CLK,
 
   // register tlbMG_m_entryVec_0
   assign tlbMG_m_entryVec_0$D_IN =
-	     { masked_vpn__h134508,
-	       masked_ppn__h134509,
+	     { masked_vpn__h134586,
+	       masked_ppn__h134587,
 	       SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[7:1],
 	       walkLevel__h134113 } ;
   assign tlbMG_m_entryVec_0$EN = MUX_tlbMG_m_validVec_0$write_1__SEL_1 ;
@@ -3905,57 +3907,65 @@ module mkL2Tlb(CLK,
   // register tlbMG_m_validVec_0
   assign tlbMG_m_validVec_0$D_IN = MUX_tlbMG_m_validVec_0$write_1__SEL_1 ;
   assign tlbMG_m_validVec_0$EN =
-	     WILL_FIRE_RL_doPageWalk && v__h140329 == 3'd0 &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1931 ||
+	     WILL_FIRE_RL_doPageWalk && v__h141332 == 3'd0 &&
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1752 &&
+	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1952 ||
 	     WILL_FIRE_RL_doStartFlush ;
 
   // register tlbMG_m_validVec_1
   assign tlbMG_m_validVec_1$D_IN = MUX_tlbMG_m_validVec_1$write_1__SEL_1 ;
   assign tlbMG_m_validVec_1$EN =
-	     WILL_FIRE_RL_doPageWalk && v__h140329 == 3'd1 &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1931 ||
+	     WILL_FIRE_RL_doPageWalk && v__h141332 == 3'd1 &&
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1752 &&
+	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1952 ||
 	     WILL_FIRE_RL_doStartFlush ;
 
   // register tlbMG_m_validVec_2
   assign tlbMG_m_validVec_2$D_IN = MUX_tlbMG_m_validVec_2$write_1__SEL_1 ;
   assign tlbMG_m_validVec_2$EN =
-	     WILL_FIRE_RL_doPageWalk && v__h140329 == 3'd2 &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1931 ||
+	     WILL_FIRE_RL_doPageWalk && v__h141332 == 3'd2 &&
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1752 &&
+	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1952 ||
 	     WILL_FIRE_RL_doStartFlush ;
 
   // register tlbMG_m_validVec_3
   assign tlbMG_m_validVec_3$D_IN = MUX_tlbMG_m_validVec_3$write_1__SEL_1 ;
   assign tlbMG_m_validVec_3$EN =
-	     WILL_FIRE_RL_doPageWalk && v__h140329 == 3'd3 &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1931 ||
+	     WILL_FIRE_RL_doPageWalk && v__h141332 == 3'd3 &&
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1752 &&
+	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1952 ||
 	     WILL_FIRE_RL_doStartFlush ;
 
   // register tlbMG_m_validVec_4
   assign tlbMG_m_validVec_4$D_IN = MUX_tlbMG_m_validVec_4$write_1__SEL_1 ;
   assign tlbMG_m_validVec_4$EN =
-	     WILL_FIRE_RL_doPageWalk && v__h140329 == 3'd4 &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1931 ||
+	     WILL_FIRE_RL_doPageWalk && v__h141332 == 3'd4 &&
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1752 &&
+	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1952 ||
 	     WILL_FIRE_RL_doStartFlush ;
 
   // register tlbMG_m_validVec_5
   assign tlbMG_m_validVec_5$D_IN = MUX_tlbMG_m_validVec_5$write_1__SEL_1 ;
   assign tlbMG_m_validVec_5$EN =
-	     WILL_FIRE_RL_doPageWalk && v__h140329 == 3'd5 &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1931 ||
+	     WILL_FIRE_RL_doPageWalk && v__h141332 == 3'd5 &&
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1752 &&
+	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1952 ||
 	     WILL_FIRE_RL_doStartFlush ;
 
   // register tlbMG_m_validVec_6
   assign tlbMG_m_validVec_6$D_IN = MUX_tlbMG_m_validVec_6$write_1__SEL_1 ;
   assign tlbMG_m_validVec_6$EN =
-	     WILL_FIRE_RL_doPageWalk && v__h140329 == 3'd6 &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1931 ||
+	     WILL_FIRE_RL_doPageWalk && v__h141332 == 3'd6 &&
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1752 &&
+	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1952 ||
 	     WILL_FIRE_RL_doStartFlush ;
 
   // register tlbMG_m_validVec_7
   assign tlbMG_m_validVec_7$D_IN = MUX_tlbMG_m_validVec_7$write_1__SEL_1 ;
   assign tlbMG_m_validVec_7$EN =
-	     WILL_FIRE_RL_doPageWalk && v__h140329 == 3'd7 &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1931 ||
+	     WILL_FIRE_RL_doPageWalk && v__h141332 == 3'd7 &&
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1752 &&
+	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1952 ||
 	     WILL_FIRE_RL_doStartFlush ;
 
   // register tlbReqQ_data_0
@@ -4061,8 +4071,8 @@ module mkL2Tlb(CLK,
 	     WILL_FIRE_RL_doTranslationCacheResp &&
 	     !IF_NOT_transCacheReqQ_data_0_536_537_OR_NOT_pe_ETC___d1594 ||
 	     WILL_FIRE_RL_doPageWalk &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1740 &&
-	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1778 ;
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1752 &&
+	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1794 ;
 
   // submodule memReqQ_enqReq_dummy2_1
   assign memReqQ_enqReq_dummy2_1$D_IN = 1'b0 ;
@@ -4076,7 +4086,7 @@ module mkL2Tlb(CLK,
   assign pendValid_0_dummy2_0$D_IN = 1'd1 ;
   assign pendValid_0_dummy2_0$EN =
 	     WILL_FIRE_RL_doTlbResp && _dfoo13 ||
-	     WILL_FIRE_RL_doPageWalk && _dfoo85 ;
+	     WILL_FIRE_RL_doPageWalk && _dfoo101 ;
 
   // submodule pendValid_0_dummy2_1
   assign pendValid_0_dummy2_1$D_IN = 1'd1 ;
@@ -4086,7 +4096,7 @@ module mkL2Tlb(CLK,
   assign pendValid_1_dummy2_0$D_IN = 1'd1 ;
   assign pendValid_1_dummy2_0$EN =
 	     WILL_FIRE_RL_doTlbResp && _dfoo9 ||
-	     WILL_FIRE_RL_doPageWalk && _dfoo81 ;
+	     WILL_FIRE_RL_doPageWalk && _dfoo97 ;
 
   // submodule pendValid_1_dummy2_1
   assign pendValid_1_dummy2_1$D_IN = 1'd1 ;
@@ -4097,7 +4107,7 @@ module mkL2Tlb(CLK,
   assign pendWait_0_dummy2_0$EN =
 	     WILL_FIRE_RL_doTranslationCacheResp &&
 	     transCacheReqQ_data_0 == 1'd0 ||
-	     WILL_FIRE_RL_doPageWalk && _dfoo77 ;
+	     WILL_FIRE_RL_doPageWalk && _dfoo93 ;
 
   // submodule pendWait_0_dummy2_1
   assign pendWait_0_dummy2_1$D_IN = 1'b0 ;
@@ -4108,7 +4118,7 @@ module mkL2Tlb(CLK,
   assign pendWait_1_dummy2_0$EN =
 	     WILL_FIRE_RL_doTranslationCacheResp &&
 	     transCacheReqQ_data_0 == 1'd1 ||
-	     WILL_FIRE_RL_doPageWalk && _dfoo73 ;
+	     WILL_FIRE_RL_doPageWalk && _dfoo89 ;
 
   // submodule pendWait_1_dummy2_1
   assign pendWait_1_dummy2_1$D_IN = 1'b0 ;
@@ -4303,7 +4313,7 @@ module mkL2Tlb(CLK,
   end
   assign tlb4KB_m_repRam_bram$ADDRB =
 	     MUX_tlb4KB_m_pendReq_dummy2_1$write_1__SEL_1 ?
-	       masked_vpn__h134508[7:0] :
+	       masked_vpn__h134586[7:0] :
 	       vpn__h103803[7:0] ;
   always@(MUX_tlb4KB_m_repRam_bram$a_put_1__SEL_1 or
 	  MUX_tlb4KB_m_repRam_bram$a_put_3__VAL_1 or
@@ -4388,7 +4398,7 @@ module mkL2Tlb(CLK,
 	       tlb4KB_m_flushIdx ;
   assign tlb4KB_m_tlbRam_0_bram$ADDRB =
 	     MUX_tlb4KB_m_pendReq_dummy2_1$write_1__SEL_1 ?
-	       masked_vpn__h134508[7:0] :
+	       masked_vpn__h134586[7:0] :
 	       vpn__h103803[7:0] ;
   assign tlb4KB_m_tlbRam_0_bram$DIA =
 	     MUX_tlb4KB_m_tlbRam_0_bram$a_put_1__SEL_1 ?
@@ -4461,7 +4471,7 @@ module mkL2Tlb(CLK,
 	       tlb4KB_m_flushIdx ;
   assign tlb4KB_m_tlbRam_1_bram$ADDRB =
 	     MUX_tlb4KB_m_pendReq_dummy2_1$write_1__SEL_1 ?
-	       masked_vpn__h134508[7:0] :
+	       masked_vpn__h134586[7:0] :
 	       vpn__h103803[7:0] ;
   assign tlb4KB_m_tlbRam_1_bram$DIA =
 	     MUX_tlb4KB_m_tlbRam_1_bram$a_put_1__SEL_1 ?
@@ -4534,7 +4544,7 @@ module mkL2Tlb(CLK,
 	       tlb4KB_m_flushIdx ;
   assign tlb4KB_m_tlbRam_2_bram$ADDRB =
 	     MUX_tlb4KB_m_pendReq_dummy2_1$write_1__SEL_1 ?
-	       masked_vpn__h134508[7:0] :
+	       masked_vpn__h134586[7:0] :
 	       vpn__h103803[7:0] ;
   assign tlb4KB_m_tlbRam_2_bram$DIA =
 	     MUX_tlb4KB_m_tlbRam_2_bram$a_put_1__SEL_1 ?
@@ -4607,7 +4617,7 @@ module mkL2Tlb(CLK,
 	       tlb4KB_m_flushIdx ;
   assign tlb4KB_m_tlbRam_3_bram$ADDRB =
 	     MUX_tlb4KB_m_pendReq_dummy2_1$write_1__SEL_1 ?
-	       masked_vpn__h134508[7:0] :
+	       masked_vpn__h134586[7:0] :
 	       vpn__h103803[7:0] ;
   assign tlb4KB_m_tlbRam_3_bram$DIA =
 	     MUX_tlb4KB_m_tlbRam_3_bram$a_put_1__SEL_1 ?
@@ -4689,7 +4699,7 @@ module mkL2Tlb(CLK,
 
   // submodule tlbMG_m_updRepIdx_dummy2_1
   assign tlbMG_m_updRepIdx_dummy2_1$D_IN = 1'd1 ;
-  assign tlbMG_m_updRepIdx_dummy2_1$EN = tlbMG_m_updRepIdx_dummy_1_0$whas ;
+  assign tlbMG_m_updRepIdx_dummy2_1$EN = tlbMG_m_updRepIdx_lat_1$whas ;
 
   // submodule tlbReqQ_deqP_dummy2_0
   assign tlbReqQ_deqP_dummy2_0$D_IN = 1'd1 ;
@@ -4745,7 +4755,7 @@ module mkL2Tlb(CLK,
   assign transCache$EN_deqResp = CAN_FIRE_RL_doTranslationCacheResp ;
   assign transCache$EN_addEntry =
 	     WILL_FIRE_RL_doPageWalk &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1740 &&
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1752 &&
 	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[0] &&
 	     !SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[3] &&
 	     !SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[1] &&
@@ -4832,11 +4842,11 @@ module mkL2Tlb(CLK,
 	       NOT_rsToCQ_full_dummy2_0_read__065_066_OR_NOT__ETC___d1074 :
 	       !CAN_FIRE_RL_doStartFlush &&
 	       IF_NOT_tlbMG_m_validVec_0_075_076_OR_IF_tlbMG__ETC___d1314 ;
-  assign IF_IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_ETC___d1696 =
+  assign IF_IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_ETC___d1708 =
 	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1622 ?
 	       NOT_rsToCQ_full_dummy2_0_read__065_066_OR_NOT__ETC___d1074 :
 	       (SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[0] ?
-		  IF_NOT_SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_ETC___d1694 :
+		  IF_NOT_SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_ETC___d1706 :
 		  NOT_rsToCQ_full_dummy2_0_read__065_066_OR_NOT__ETC___d1074) ;
   assign IF_IF_respForOtherReq_611_BIT_1_612_THEN_NOT_r_ETC___d1669 =
 	     (IF_respForOtherReq_611_BIT_1_612_THEN_NOT_resp_ETC___d1645 ||
@@ -4860,20 +4870,20 @@ module mkL2Tlb(CLK,
 	     IF_NOT_tlbMG_m_validVec_0_075_076_OR_IF_tlbMG__ETC___d1139 &&
 	     IF_NOT_tlbMG_m_validVec_0_075_076_OR_IF_tlbMG__ETC___d1163 &&
 	     IF_NOT_tlbMG_m_validVec_0_075_076_OR_IF_tlbMG__ETC___d1188 ;
-  assign IF_NOT_SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_ETC___d1694 =
+  assign IF_NOT_SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_ETC___d1706 =
 	     (!SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[3] &&
 	      !SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[1] &&
 	      !SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[2]) ?
 	       IF_SEL_ARR_pendWalkLevel_0_636_pendWalkLevel_1_ETC___d1672 :
 	       NOT_rsToCQ_full_dummy2_0_read__065_066_OR_NOT__ETC___d1074 &&
-	       IF_SEL_ARR_pendWalkLevel_0_636_pendWalkLevel_1_ETC___d1692 ;
-  assign IF_NOT_pendWait_0_dummy2_0_read__538_539_OR_NO_ETC___d1718 =
-	     (NOT_pendWait_0_dummy2_0_read__538_539_OR_NOT_p_ETC___d1710 ||
+	       NOT_SEL_ARR_pendWalkLevel_0_636_pendWalkLevel__ETC___d1704 ;
+  assign IF_NOT_pendWait_0_dummy2_0_read__538_539_OR_NO_ETC___d1730 =
+	     (NOT_pendWait_0_dummy2_0_read__538_539_OR_NOT_p_ETC___d1722 ||
 	      IF_respForOtherReq_611_BIT_1_612_THEN_NOT_resp_ETC___d1644) ?
 	       pendWait_1_dummy2_0$Q_OUT && pendWait_1_dummy2_1$Q_OUT &&
 	       pendWait_1_rl[2:1] != 2'd0 &&
 	       pendWait_1_rl[2:1] != 2'd1 &&
-	       pendWait_1_rl_18_BIT_0_30_EQ_SEL_ARR_respLdQ_d_ETC___d1715 &&
+	       pendWait_1_rl_18_BIT_0_30_EQ_SEL_ARR_respLdQ_d_ETC___d1727 &&
 	       IF_respForOtherReq_611_BIT_1_612_THEN_NOT_resp_ETC___d1665 :
 	       idx__h133342 ;
   assign IF_NOT_tlb4KB_m_repRam_bram_b_read__66_BITS_1__ETC___d1514 =
@@ -5097,52 +5107,65 @@ module mkL2Tlb(CLK,
 	     SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NOT_p_ETC___d1621 ?
 	       !vm_info_I[46] :
 	       !vm_info_D[46] ;
-  assign IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1736 =
+  assign IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1748 =
 	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1622 ||
 	     walkLevel__h134113 == 2'd0 ||
 	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[3] ||
 	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[1] ||
 	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[2] ||
 	     !SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[0] ;
-  assign IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1740 =
+  assign IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1752 =
 	     SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NOT_p_ETC___d1621 ?
 	       vm_info_I[46] :
 	       vm_info_D[46] ;
-  assign IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1761 =
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1740 &&
+  assign IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1778 =
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1752 &&
 	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[0] &&
 	     !SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[3] &&
 	     !SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[1] &&
 	     !SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[2] &&
 	     walkLevel__h134113 == 2'd0 ;
-  assign IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1788 =
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1740 &&
+  assign IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1804 =
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1752 &&
+	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[0] &&
+	     (SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[3] ||
+	      SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[1] ||
+	      SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[2]) &&
+	     walkLevel__h134113 != 2'd0 &&
+	     ((walkLevel__h134113 == 2'd1) ?
+		SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[18:10] !=
+		9'd0 :
+		walkLevel__h134113 != 2'd2 ||
+		SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[27:10] !=
+		18'd0) ;
+  assign IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1809 =
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1752 &&
 	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[0] &&
 	     (SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[3] ||
 	      SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[1] ||
 	      SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[2]) &&
 	     walkLevel__h134113 == 2'd0 ;
-  assign IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1931 =
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1740 &&
-	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[0] &&
-	     (SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[3] ||
-	      SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[1] ||
-	      SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[2]) &&
-	     NOT_SEL_ARR_pendWalkLevel_0_636_pendWalkLevel__ETC___d1928 ;
   assign IF_SEL_ARR_pendWalkLevel_0_636_pendWalkLevel_1_ETC___d1672 =
 	     (walkLevel__h134113 == 2'd0) ?
 	       NOT_rsToCQ_full_dummy2_0_read__065_066_OR_NOT__ETC___d1074 :
 	       transCache$RDY_addEntry &&
 	       (IF_IF_respForOtherReq_611_BIT_1_612_THEN_NOT_r_ETC___d1669 ||
 		!memReqQ_full) ;
-  assign IF_SEL_ARR_pendWalkLevel_0_636_pendWalkLevel_1_ETC___d1692 =
+  assign IF_SEL_ARR_pendWalkLevel_0_636_pendWalkLevel_1_ETC___d1703 =
 	     (walkLevel__h134113 == 2'd0) ?
 	       tlb4KB_m_state &&
 	       NOT_tlb4KB_m_pendReq_dummy2_1_read__42_08_OR_I_ETC___d925 &&
 	       NOT_tlb4KB_m_tlbRam_0_rdReqQ_full_dummy2_1_rea_ETC___d944 &&
-	       NOT_tlb4KB_m_tlbRam_1_rdReqQ_full_dummy2_1_rea_ETC___d1688 :
+	       NOT_tlb4KB_m_tlbRam_1_rdReqQ_full_dummy2_1_rea_ETC___d1699 :
 	       !CAN_FIRE_RL_doStartFlush &&
 	       NOT_tlbMG_m_updRepIdx_dummy2_1_read__50_269_OR_ETC___d1270 ;
+  assign IF_SEL_ARR_pendWalkLevel_0_636_pendWalkLevel_1_ETC___d1754 =
+	     (walkLevel__h134113 == 2'd1) ?
+	       SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[18:10] ==
+	       9'd0 :
+	       walkLevel__h134113 == 2'd2 &&
+	       SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[27:10] ==
+	       18'd0 ;
   assign IF_memReqQ_deqReq_dummy2_2_read__97_AND_IF_mem_ETC___d705 =
 	     _theResult_____2__h82166 == v__h81624 ;
   assign IF_memReqQ_deqReq_lat_1_whas__68_THEN_memReqQ__ETC___d674 =
@@ -5175,32 +5198,18 @@ module mkL2Tlb(CLK,
 	     respForOtherReq[1] ?
 	       !respForOtherReq[0] :
 	       SEL_ARR_NOT_respLdQ_data_0_614_BIT_0_615_661_N_ETC___d1664 ;
-  assign IF_respForOtherReq_611_BIT_1_612_THEN_NOT_resp_ETC___d1775 =
+  assign IF_respForOtherReq_611_BIT_1_612_THEN_NOT_resp_ETC___d1791 =
 	     (IF_respForOtherReq_611_BIT_1_612_THEN_NOT_resp_ETC___d1645 ||
 	      pendWalkAddr_0 != newPTEAddr__h134116) &&
-	     (IF_respForOtherReq_611_BIT_1_612_THEN_respForO_ETC___d1726 ||
+	     (IF_respForOtherReq_611_BIT_1_612_THEN_respForO_ETC___d1738 ||
 	      !pendWait_1_dummy2_0$Q_OUT ||
 	      !pendWait_1_dummy2_1$Q_OUT ||
 	      pendWait_1_rl[2:1] != 2'd1 ||
 	      !pendWalkAddr_1_591_EQ_0_CONCAT_SEL_ARR_respLdQ_ETC___d1667) ;
-  assign IF_respForOtherReq_611_BIT_1_612_THEN_respForO_ETC___d1726 =
+  assign IF_respForOtherReq_611_BIT_1_612_THEN_respForO_ETC___d1738 =
 	     respForOtherReq[1] ?
 	       respForOtherReq[0] :
 	       !SEL_ARR_NOT_respLdQ_data_0_614_BIT_0_615_661_N_ETC___d1664 ;
-  assign IF_respForOtherReq_611_BIT_1_612_THEN_respForO_ETC___d1948 =
-	     idx__h133342 == 1'd0 &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1740 &&
-	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[0] &&
-	     (SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[3] ||
-	      SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[1] ||
-	      SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[2]) ;
-  assign IF_respForOtherReq_611_BIT_1_612_THEN_respForO_ETC___d1949 =
-	     idx__h133342 == 1'd1 &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1740 &&
-	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[0] &&
-	     (SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[3] ||
-	      SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[1] ||
-	      SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[2]) ;
   assign IF_respLdQ_deqReq_dummy2_2_read__94_AND_IF_res_ETC___d802 =
 	     _theResult_____2__h89736 == v__h89194 ;
   assign IF_respLdQ_deqReq_lat_1_whas__65_THEN_respLdQ__ETC___d771 =
@@ -5294,30 +5303,30 @@ module mkL2Tlb(CLK,
   assign IF_tlbMG_m_entryVec_7_244_BITS_1_TO_0_245_EQ_0_ETC___d1253 =
 	     CASE_tlbMG_m_entryVec_7_BITS_1_TO_0_0_vpn15185_ETC__q16 ==
 	     tlbMG_m_entryVec_7[79:53] ;
-  assign IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1809 =
+  assign IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1830 =
 	     tlbMG_m_lruBit_dummy2_1$Q_OUT ?
 	       ~IF_tlbMG_m_lruBit_lat_0_whas__18_THEN_tlbMG_m__ETC___d321 :
 	       8'd255 ;
   assign IF_tlbMG_m_lruBit_lat_0_whas__18_THEN_tlbMG_m__ETC___d321 =
 	     MUX_tlbMG_m_updRepIdx_dummy_1_0$wset_1__VAL_1 ?
-	       upd__h141871 :
+	       upd__h142874 :
 	       tlbMG_m_lruBit_rl ;
   assign IF_tlbMG_m_updRepIdx_lat_1_whas__23_THEN_tlbMG_ETC___d332 =
-	     tlbMG_m_updRepIdx_dummy_1_0$whas ?
+	     tlbMG_m_updRepIdx_lat_1$whas ?
 	       tlbMG_m_updRepIdx_lat_1$wget[3] :
 	       !MUX_tlbMG_m_updRepIdx_dummy_1_0$wset_1__VAL_1 &&
 	       tlbMG_m_updRepIdx_rl[3] ;
   assign IF_tlbMG_m_updRepIdx_lat_1_whas__23_THEN_tlbMG_ETC___d342 =
-	     tlbMG_m_updRepIdx_dummy_1_0$whas ?
+	     tlbMG_m_updRepIdx_lat_1$whas ?
 	       tlbMG_m_updRepIdx_lat_1$wget[2:0] :
 	       (MUX_tlbMG_m_updRepIdx_dummy_1_0$wset_1__VAL_1 ?
 		  3'b010 :
 		  tlbMG_m_updRepIdx_rl[2:0]) ;
-  assign IF_tlbMG_m_validVec_0_075_AND_tlbMG_m_validVec_ETC___d1806 =
+  assign IF_tlbMG_m_validVec_0_075_AND_tlbMG_m_validVec_ETC___d1827 =
 	     (tlbMG_m_validVec_0 && tlbMG_m_validVec_1) ?
 	       (tlbMG_m_validVec_2 ? 3'd3 : 3'd2) :
 	       (tlbMG_m_validVec_0 ? 3'd1 : 3'd0) ;
-  assign IF_tlbMG_m_validVec_4_176_AND_tlbMG_m_validVec_ETC___d1803 =
+  assign IF_tlbMG_m_validVec_4_176_AND_tlbMG_m_validVec_ETC___d1824 =
 	     (tlbMG_m_validVec_4 && tlbMG_m_validVec_5) ?
 	       (tlbMG_m_validVec_6 ? 3'd7 : 3'd6) :
 	       (tlbMG_m_validVec_4 ? 3'd5 : 3'd4) ;
@@ -5336,14 +5345,23 @@ module mkL2Tlb(CLK,
 	      transCache_resp__546_BITS_45_TO_44_547_ULT_2___d1548) ?
 	       transCache$RDY_resp :
 	       NOT_transCacheReqQ_empty_dummy2_0_read__526_52_ETC___d1535 ;
-  assign NOT_SEL_ARR_pendWalkLevel_0_636_pendWalkLevel__ETC___d1928 =
+  assign NOT_SEL_ARR_pendWalkLevel_0_636_pendWalkLevel__ETC___d1704 =
+	     walkLevel__h134113 != 2'd0 &&
+	     ((walkLevel__h134113 == 2'd1) ?
+		SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[18:10] !=
+		9'd0 :
+		walkLevel__h134113 != 2'd2 ||
+		SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[27:10] !=
+		18'd0) ||
+	     IF_SEL_ARR_pendWalkLevel_0_636_pendWalkLevel_1_ETC___d1703 ;
+  assign NOT_SEL_ARR_pendWalkLevel_0_636_pendWalkLevel__ETC___d1949 =
 	     walkLevel__h134113 != 2'd0 &&
 	     (!tlbMG_m_validVec_0 ||
-	      tlbMG_m_entryVec_0[79:53] != masked_vpn__h134508 ||
+	      tlbMG_m_entryVec_0[79:53] != masked_vpn__h134586 ||
 	      tlbMG_m_entryVec_0[1:0] != walkLevel__h134113 ||
 	      tlbMG_m_entryVec_0[6] !=
 	      SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[5]) &&
-	     NOT_tlbMG_m_validVec_1_102_103_OR_NOT_tlbMG_m__ETC___d1926 ;
+	     NOT_tlbMG_m_validVec_1_102_103_OR_NOT_tlbMG_m__ETC___d1947 ;
   assign NOT_flushDoneQ_enqReq_dummy2_2_read__36_51_OR__ETC___d461 =
 	     (!flushDoneQ_enqReq_dummy2_2$Q_OUT ||
 	      !CAN_FIRE_RL_doWaitFlush && !flushDoneQ_enqReq_rl) &&
@@ -5360,7 +5378,7 @@ module mkL2Tlb(CLK,
 	     (memReqQ_deqReq_dummy2_2$Q_OUT &&
 	      IF_memReqQ_deqReq_lat_1_whas__68_THEN_memReqQ__ETC___d674 ||
 	      memReqQ_empty) ;
-  assign NOT_pendWait_0_dummy2_0_read__538_539_OR_NOT_p_ETC___d1710 =
+  assign NOT_pendWait_0_dummy2_0_read__538_539_OR_NOT_p_ETC___d1722 =
 	     !pendWait_0_dummy2_0$Q_OUT || !pendWait_0_dummy2_1$Q_OUT ||
 	     pendWait_0_rl[2:1] == 2'd0 ||
 	     pendWait_0_rl[2:1] == 2'd1 ||
@@ -5463,13 +5481,13 @@ module mkL2Tlb(CLK,
 	     !tlb4KB_m_tlbRam_1_rdReqQ_empty_dummy2_1$Q_OUT ||
 	     !tlb4KB_m_tlbRam_1_rdReqQ_empty_dummy2_2$Q_OUT ||
 	     !tlb4KB_m_tlbRam_1_rdReqQ_empty_rl ;
-  assign NOT_tlb4KB_m_tlbRam_1_rdReqQ_full_dummy2_1_rea_ETC___d1688 =
+  assign NOT_tlb4KB_m_tlbRam_1_rdReqQ_full_dummy2_1_rea_ETC___d1699 =
 	     NOT_tlb4KB_m_tlbRam_1_rdReqQ_full_dummy2_1_rea_ETC___d953 &&
 	     NOT_tlb4KB_m_tlbRam_2_rdReqQ_full_dummy2_1_rea_ETC___d962 &&
 	     NOT_tlb4KB_m_tlbRam_3_rdReqQ_full_dummy2_1_rea_ETC___d971 &&
 	     NOT_tlb4KB_m_repRam_rdReqQ_full_dummy2_1_read__ETC___d980 &&
 	     (!tlb4KB_m_pendIndex$wget[8] ||
-	      tlb4KB_m_pendIndex$wget[7:0] != masked_vpn__h134508[7:0]) ;
+	      tlb4KB_m_pendIndex$wget[7:0] != masked_vpn__h134586[7:0]) ;
   assign NOT_tlb4KB_m_tlbRam_1_rdReqQ_full_dummy2_1_rea_ETC___d953 =
 	     !tlb4KB_m_tlbRam_1_rdReqQ_full_dummy2_1$Q_OUT ||
 	     !tlb4KB_m_tlbRam_1_rdReqQ_full_dummy2_2$Q_OUT ||
@@ -5568,7 +5586,7 @@ module mkL2Tlb(CLK,
 	     NOT_tlb4KB_m_tlbRam_0_bram_b_read__14_BIT_80_1_ETC___d1288 &&
 	     (!tlb4KB_m_tlbRam_3_bram$DOB[80] ||
 	      !tlb4KB_m_tlbRam_3_bram_b_read__51_BITS_79_TO_5_ETC___d1289) ;
-  assign NOT_tlbMG_m_validVec_0_075_076_OR_NOT_tlbMG_m__ETC___d1796 =
+  assign NOT_tlbMG_m_validVec_0_075_076_OR_NOT_tlbMG_m__ETC___d1817 =
 	     !tlbMG_m_validVec_0 || !tlbMG_m_validVec_1 ||
 	     !tlbMG_m_validVec_2 ||
 	     !tlbMG_m_validVec_3 ||
@@ -5576,43 +5594,43 @@ module mkL2Tlb(CLK,
 	     !tlbMG_m_validVec_5 ||
 	     !tlbMG_m_validVec_6 ||
 	     !tlbMG_m_validVec_7 ;
-  assign NOT_tlbMG_m_validVec_1_102_103_OR_NOT_tlbMG_m__ETC___d1926 =
+  assign NOT_tlbMG_m_validVec_1_102_103_OR_NOT_tlbMG_m__ETC___d1947 =
 	     (!tlbMG_m_validVec_1 ||
-	      tlbMG_m_entryVec_1[79:53] != masked_vpn__h134508 ||
+	      tlbMG_m_entryVec_1[79:53] != masked_vpn__h134586 ||
 	      tlbMG_m_entryVec_1[1:0] != walkLevel__h134113 ||
 	      tlbMG_m_entryVec_1[6] !=
 	      SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[5]) &&
 	     (!tlbMG_m_validVec_2 ||
-	      tlbMG_m_entryVec_2[79:53] != masked_vpn__h134508 ||
+	      tlbMG_m_entryVec_2[79:53] != masked_vpn__h134586 ||
 	      tlbMG_m_entryVec_2[1:0] != walkLevel__h134113 ||
 	      tlbMG_m_entryVec_2[6] !=
 	      SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[5]) &&
-	     NOT_tlbMG_m_validVec_3_151_152_OR_NOT_tlbMG_m__ETC___d1924 ;
-  assign NOT_tlbMG_m_validVec_3_151_152_OR_NOT_tlbMG_m__ETC___d1924 =
+	     NOT_tlbMG_m_validVec_3_151_152_OR_NOT_tlbMG_m__ETC___d1945 ;
+  assign NOT_tlbMG_m_validVec_3_151_152_OR_NOT_tlbMG_m__ETC___d1945 =
 	     (!tlbMG_m_validVec_3 ||
-	      tlbMG_m_entryVec_3[79:53] != masked_vpn__h134508 ||
+	      tlbMG_m_entryVec_3[79:53] != masked_vpn__h134586 ||
 	      tlbMG_m_entryVec_3[1:0] != walkLevel__h134113 ||
 	      tlbMG_m_entryVec_3[6] !=
 	      SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[5]) &&
 	     (!tlbMG_m_validVec_4 ||
-	      tlbMG_m_entryVec_4[79:53] != masked_vpn__h134508 ||
+	      tlbMG_m_entryVec_4[79:53] != masked_vpn__h134586 ||
 	      tlbMG_m_entryVec_4[1:0] != walkLevel__h134113 ||
 	      tlbMG_m_entryVec_4[6] !=
 	      SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[5]) &&
-	     NOT_tlbMG_m_validVec_5_202_203_OR_NOT_tlbMG_m__ETC___d1922 ;
-  assign NOT_tlbMG_m_validVec_5_202_203_OR_NOT_tlbMG_m__ETC___d1922 =
+	     NOT_tlbMG_m_validVec_5_202_203_OR_NOT_tlbMG_m__ETC___d1943 ;
+  assign NOT_tlbMG_m_validVec_5_202_203_OR_NOT_tlbMG_m__ETC___d1943 =
 	     (!tlbMG_m_validVec_5 ||
-	      tlbMG_m_entryVec_5[79:53] != masked_vpn__h134508 ||
+	      tlbMG_m_entryVec_5[79:53] != masked_vpn__h134586 ||
 	      tlbMG_m_entryVec_5[1:0] != walkLevel__h134113 ||
 	      tlbMG_m_entryVec_5[6] !=
 	      SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[5]) &&
 	     (!tlbMG_m_validVec_6 ||
-	      tlbMG_m_entryVec_6[79:53] != masked_vpn__h134508 ||
+	      tlbMG_m_entryVec_6[79:53] != masked_vpn__h134586 ||
 	      tlbMG_m_entryVec_6[1:0] != walkLevel__h134113 ||
 	      tlbMG_m_entryVec_6[6] !=
 	      SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[5]) &&
 	     (!tlbMG_m_validVec_7 ||
-	      tlbMG_m_entryVec_7[79:53] != masked_vpn__h134508 ||
+	      tlbMG_m_entryVec_7[79:53] != masked_vpn__h134586 ||
 	      tlbMG_m_entryVec_7[1:0] != walkLevel__h134113 ||
 	      tlbMG_m_entryVec_7[6] !=
 	      SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[5]) ;
@@ -5629,20 +5647,46 @@ module mkL2Tlb(CLK,
 	     !transCacheReqQ_empty_dummy2_1$Q_OUT ||
 	     !transCacheReqQ_empty_dummy2_2$Q_OUT ||
 	     !transCacheReqQ_empty_rl ;
-  assign SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1767 =
+  assign SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1757 =
+	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[0] &&
+	     (SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[3] ||
+	      SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[1] ||
+	      SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[2]) &&
+	     (walkLevel__h134113 == 2'd0 ||
+	      IF_SEL_ARR_pendWalkLevel_0_636_pendWalkLevel_1_ETC___d1754) ;
+  assign SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1783 =
 	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[0] &&
 	     !SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[3] &&
 	     !SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[1] &&
 	     !SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[2] &&
 	     walkLevel__h134113 != 2'd0 &&
 	     IF_IF_respForOtherReq_611_BIT_1_612_THEN_NOT_r_ETC___d1669 ;
-  assign SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1778 =
+  assign SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1794 =
 	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[0] &&
 	     !SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[3] &&
 	     !SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[1] &&
 	     !SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[2] &&
 	     walkLevel__h134113 != 2'd0 &&
-	     IF_respForOtherReq_611_BIT_1_612_THEN_NOT_resp_ETC___d1775 ;
+	     IF_respForOtherReq_611_BIT_1_612_THEN_NOT_resp_ETC___d1791 ;
+  assign SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1952 =
+	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[0] &&
+	     (SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[3] ||
+	      SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[1] ||
+	      SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[2]) &&
+	     IF_SEL_ARR_pendWalkLevel_0_636_pendWalkLevel_1_ETC___d1754 &&
+	     NOT_SEL_ARR_pendWalkLevel_0_636_pendWalkLevel__ETC___d1949 ;
+  assign _dfoo101 =
+	     idx__h133342 == 1'd0 &&
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1622 ||
+	     idx__h133342 == 1'd0 &&
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1778 ||
+	     _dfoo45 ;
+  assign _dfoo103 =
+	     idx__h133342 == 1'd0 &&
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1622 ||
+	     idx__h133342 == 1'd0 &&
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1778 ||
+	     _dfoo45 ;
   assign _dfoo13 =
 	     tlbReqQ_data_0 == 1'd0 &&
 	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1064 ||
@@ -5652,110 +5696,80 @@ module mkL2Tlb(CLK,
 	      NOT_tlbMG_m_validVec_0_075_076_OR_NOT_IF_tlbMG_ETC___d1501) ;
   assign _dfoo41 =
 	     idx__h133342 == 1'd1 &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1740 &&
-	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1778 ||
-	     IF_respForOtherReq_611_BIT_1_612_THEN_respForO_ETC___d1949 ||
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1804 ||
 	     idx__h133342 == 1'd1 &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1740 &&
-	     !SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[0] ;
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1752 &&
+	     (SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1757 ||
+	      !SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[0]) ;
   assign _dfoo45 =
 	     idx__h133342 == 1'd0 &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1740 &&
-	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1778 ||
-	     IF_respForOtherReq_611_BIT_1_612_THEN_respForO_ETC___d1948 ||
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1804 ||
 	     idx__h133342 == 1'd0 &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1740 &&
-	     !SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[0] ;
-  assign _dfoo52 =
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1752 &&
+	     (SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1757 ||
+	      !SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[0]) ;
+  assign _dfoo65 =
+	     idx__h133342 == 1'd1 &&
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1752 &&
+	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1783 ||
+	     idx__h133342 == 1'd1 &&
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1752 &&
+	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1794 ||
+	     _dfoo41 ;
+  assign _dfoo67 =
+	     idx__h133342 == 1'd1 &&
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1752 &&
+	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1783 ||
+	     idx__h133342 == 1'd1 &&
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1752 &&
+	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1794 ||
+	     _dfoo41 ;
+  assign _dfoo68 =
 	     (idx__h133342 == 1'd1 &&
-	      IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1740 &&
-	      SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1767) ?
+	      IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1752 &&
+	      SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1783) ?
 	       { 2'd2,
 		 IF_respForOtherReq_611_BIT_1_612_THEN_NOT_resp_ETC___d1645 ||
 		 pendWalkAddr_0 != newPTEAddr__h134116 } :
 	       ((idx__h133342 == 1'd1 &&
-		 IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1740 &&
-		 SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1778) ?
+		 IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1752 &&
+		 SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1794) ?
 		  3'd2 :
 		  3'd0) ;
-  assign _dfoo56 =
+  assign _dfoo69 =
+	     idx__h133342 == 1'd0 &&
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1752 &&
+	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1783 ||
+	     idx__h133342 == 1'd0 &&
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1752 &&
+	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1794 ||
+	     _dfoo45 ;
+  assign _dfoo71 =
+	     idx__h133342 == 1'd0 &&
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1752 &&
+	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1783 ||
+	     idx__h133342 == 1'd0 &&
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1752 &&
+	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1794 ||
+	     _dfoo45 ;
+  assign _dfoo72 =
 	     (idx__h133342 == 1'd0 &&
-	      IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1740 &&
-	      SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1767) ?
+	      IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1752 &&
+	      SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1783) ?
 	       { 2'd2,
 		 IF_respForOtherReq_611_BIT_1_612_THEN_NOT_resp_ETC___d1645 ||
 		 pendWalkAddr_0 != newPTEAddr__h134116 } :
 	       ((idx__h133342 == 1'd0 &&
-		 IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1740 &&
-		 SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1778) ?
+		 IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1752 &&
+		 SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1794) ?
 		  3'd2 :
 		  3'd0) ;
-  assign _dfoo57 =
-	     idx__h133342 == 1'd1 &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1761 ||
-	     idx__h133342 == 1'd1 &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1740 &&
-	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1767 ||
-	     _dfoo41 ;
-  assign _dfoo59 =
-	     idx__h133342 == 1'd1 &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1761 ||
-	     idx__h133342 == 1'd1 &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1740 &&
-	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1767 ||
-	     _dfoo41 ;
-  assign _dfoo61 =
-	     idx__h133342 == 1'd0 &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1761 ||
-	     idx__h133342 == 1'd0 &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1740 &&
-	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1767 ||
-	     _dfoo45 ;
-  assign _dfoo63 =
-	     idx__h133342 == 1'd0 &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1761 ||
-	     idx__h133342 == 1'd0 &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1740 &&
-	     SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1767 ||
-	     _dfoo45 ;
-  assign _dfoo65 =
-	     idx__h133342 == 1'd1 &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1761 ||
-	     IF_respForOtherReq_611_BIT_1_612_THEN_respForO_ETC___d1949 ||
-	     idx__h133342 == 1'd1 &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1740 &&
-	     !SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[0] ;
-  assign _dfoo69 =
-	     idx__h133342 == 1'd0 &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1761 ||
-	     IF_respForOtherReq_611_BIT_1_612_THEN_respForO_ETC___d1948 ||
-	     idx__h133342 == 1'd0 &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1740 &&
-	     !SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[0] ;
-  assign _dfoo73 =
+  assign _dfoo89 =
 	     idx__h133342 == 1'd1 &&
 	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1622 ||
-	     _dfoo57 ;
-  assign _dfoo75 =
 	     idx__h133342 == 1'd1 &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1622 ||
-	     _dfoo59 ;
-  assign _dfoo77 =
-	     idx__h133342 == 1'd0 &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1622 ||
-	     _dfoo61 ;
-  assign _dfoo79 =
-	     idx__h133342 == 1'd0 &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1622 ||
-	     _dfoo63 ;
-  assign _dfoo81 =
-	     idx__h133342 == 1'd1 &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1622 ||
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1778 ||
 	     _dfoo65 ;
-  assign _dfoo85 =
-	     idx__h133342 == 1'd0 &&
-	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1622 ||
-	     _dfoo69 ;
   assign _dfoo9 =
 	     tlbReqQ_data_0 == 1'd1 &&
 	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1064 ||
@@ -5763,6 +5777,36 @@ module mkL2Tlb(CLK,
 	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1332 &&
 	     (IF_NOT_tlbMG_m_validVec_0_075_076_OR_NOT_IF_tl_ETC___d1267 ||
 	      NOT_tlbMG_m_validVec_0_075_076_OR_NOT_IF_tlbMG_ETC___d1501) ;
+  assign _dfoo91 =
+	     idx__h133342 == 1'd1 &&
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1622 ||
+	     idx__h133342 == 1'd1 &&
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1778 ||
+	     _dfoo67 ;
+  assign _dfoo93 =
+	     idx__h133342 == 1'd0 &&
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1622 ||
+	     idx__h133342 == 1'd0 &&
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1778 ||
+	     _dfoo69 ;
+  assign _dfoo95 =
+	     idx__h133342 == 1'd0 &&
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1622 ||
+	     idx__h133342 == 1'd0 &&
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1778 ||
+	     _dfoo71 ;
+  assign _dfoo97 =
+	     idx__h133342 == 1'd1 &&
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1622 ||
+	     idx__h133342 == 1'd1 &&
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1778 ||
+	     _dfoo41 ;
+  assign _dfoo99 =
+	     idx__h133342 == 1'd1 &&
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1622 ||
+	     idx__h133342 == 1'd1 &&
+	     IF_SEL_ARR_NOT_pendReq_0_049_BIT_29_050_051_NO_ETC___d1778 ||
+	     _dfoo41 ;
   assign _theResult_____2__h82166 =
 	     (memReqQ_deqReq_dummy2_2$Q_OUT &&
 	      IF_memReqQ_deqReq_lat_1_whas__68_THEN_memReqQ__ETC___d674) ?
@@ -5773,33 +5817,33 @@ module mkL2Tlb(CLK,
 	      IF_respLdQ_deqReq_lat_1_whas__65_THEN_respLdQ__ETC___d771) ?
 	       next_deqP___1__h90055 :
 	       respLdQ_deqP ;
-  assign addIdx__h143083 =
-	     (!IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1809[0] &&
-	      !IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1809[1] &&
-	      !IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1809[2] &&
-	      !IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1809[3]) ?
-	       ((!IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1809[4] &&
-		 !IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1809[5]) ?
-		  (IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1809[6] ?
+  assign addIdx__h144086 =
+	     (!IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1830[0] &&
+	      !IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1830[1] &&
+	      !IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1830[2] &&
+	      !IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1830[3]) ?
+	       ((!IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1830[4] &&
+		 !IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1830[5]) ?
+		  (IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1830[6] ?
 		     3'd6 :
 		     3'd7) :
-		  (IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1809[4] ?
+		  (IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1830[4] ?
 		     3'd4 :
 		     3'd5)) :
-	       ((!IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1809[0] &&
-		 !IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1809[1]) ?
-		  (IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1809[2] ?
+	       ((!IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1830[0] &&
+		 !IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1830[1]) ?
+		  (IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1830[2] ?
 		     3'd2 :
 		     3'd3) :
-		  (IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1809[0] ?
+		  (IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1830[0] ?
 		     3'd0 :
 		     3'd1)) ;
-  assign addIdx__h144349 =
+  assign addIdx__h145352 =
 	     (tlbMG_m_validVec_0 && tlbMG_m_validVec_1 &&
 	      tlbMG_m_validVec_2 &&
 	      tlbMG_m_validVec_3) ?
-	       IF_tlbMG_m_validVec_4_176_AND_tlbMG_m_validVec_ETC___d1803 :
-	       IF_tlbMG_m_validVec_0_075_AND_tlbMG_m_validVec_ETC___d1806 ;
+	       IF_tlbMG_m_validVec_4_176_AND_tlbMG_m_validVec_ETC___d1824 :
+	       IF_tlbMG_m_validVec_0_075_AND_tlbMG_m_validVec_ETC___d1827 ;
   assign baseAddr__h131140 = { 8'd0, x__h131413 } ;
   assign basePpn__h131409 =
 	     transCache_resp__546_BITS_45_TO_44_547_ULT_2___d1548 ?
@@ -5829,7 +5873,7 @@ module mkL2Tlb(CLK,
   assign newWalkLevel__h134114 = walkLevel__h134113 - 2'd1 ;
   assign next_deqP___1__h82485 = memReqQ_deqP + 1'd1 ;
   assign next_deqP___1__h90055 = respLdQ_deqP + 1'd1 ;
-  assign pendWait_1_rl_18_BIT_0_30_EQ_SEL_ARR_respLdQ_d_ETC___d1715 =
+  assign pendWait_1_rl_18_BIT_0_30_EQ_SEL_ARR_respLdQ_d_ETC___d1727 =
 	     pendWait_1_rl[0] == def__h133570 ;
   assign pendWalkAddr_0_555_EQ_0_CONCAT_IF_transCache_r_ETC___d1572 =
 	     pendWalkAddr_0 == pteAddr__h131141 ;
@@ -5888,31 +5932,31 @@ module mkL2Tlb(CLK,
 	      !memReqQ_full) ;
   assign transCache_resp__546_BITS_45_TO_44_547_ULT_2___d1548 =
 	     transCache$resp[45:44] < 2'd2 ;
-  assign upd__h141871 =
+  assign upd__h142874 =
 	     WILL_FIRE_RL_tlbMG_m_doUpdateRep ?
 	       MUX_tlbMG_m_lruBit_lat_0$wset_1__VAL_1 :
 	       8'd0 ;
   assign v__h100600 =
 	     pendValid_0_dummy2_1$Q_OUT &&
 	     IF_pendValid_0_lat_0_whas__70_THEN_pendValid_0_ETC___d573 ;
-  assign v__h140329 =
-	     NOT_tlbMG_m_validVec_0_075_076_OR_NOT_tlbMG_m__ETC___d1796 ?
-	       addIdx__h144349 :
-	       v__h141586 ;
-  assign v__h141586 =
+  assign v__h141332 =
+	     NOT_tlbMG_m_validVec_0_075_076_OR_NOT_tlbMG_m__ETC___d1817 ?
+	       addIdx__h145352 :
+	       v__h142589 ;
+  assign v__h142589 =
 	     CASE_tlbMG_m_randIdx_0_IF_tlbMG_m_lruBit_dummy_ETC__q19 ?
 	       tlbMG_m_randIdx :
-	       v__h142062 ;
-  assign v__h142062 =
-	     (IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1809[0] ||
-	      IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1809[1] ||
-	      IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1809[2] ||
-	      IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1809[3] ||
-	      IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1809[4] ||
-	      IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1809[5] ||
-	      IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1809[6] ||
-	      IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1809[7]) ?
-	       addIdx__h143083 :
+	       v__h143065 ;
+  assign v__h143065 =
+	     (IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1830[0] ||
+	      IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1830[1] ||
+	      IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1830[2] ||
+	      IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1830[3] ||
+	      IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1830[4] ||
+	      IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1830[5] ||
+	      IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1830[6] ||
+	      IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1830[7]) ?
+	       addIdx__h144086 :
 	       3'd0 ;
   assign v__h81624 =
 	     (memReqQ_enqReq_dummy2_2$Q_OUT &&
@@ -6536,17 +6580,17 @@ module mkL2Tlb(CLK,
   begin
     case (walkLevel__h134113)
       2'd0:
-	  masked_ppn__h134509 =
+	  masked_ppn__h134587 =
 	      SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[53:10];
       2'd1:
-	  masked_ppn__h134509 =
+	  masked_ppn__h134587 =
 	      { SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[53:19],
 		9'd0 };
       2'd2:
-	  masked_ppn__h134509 =
+	  masked_ppn__h134587 =
 	      { SEL_ARR_respLdQ_data_0_614_BITS_64_TO_1_623_re_ETC___d1626[53:28],
 		18'd0 };
-      2'd3: masked_ppn__h134509 = 44'd0;
+      2'd3: masked_ppn__h134587 = 44'd0;
     endcase
   end
   always@(idx__h133342 or pendReq_0 or pendReq_1)
@@ -6581,17 +6625,17 @@ module mkL2Tlb(CLK,
   begin
     case (walkLevel__h134113)
       2'd0:
-	  masked_vpn__h134508 =
+	  masked_vpn__h134586 =
 	      SEL_ARR_pendReq_0_049_BITS_26_TO_0_087_pendReq_ETC___d1649;
       2'd1:
-	  masked_vpn__h134508 =
+	  masked_vpn__h134586 =
 	      { SEL_ARR_pendReq_0_049_BITS_26_TO_0_087_pendReq_ETC___d1649[26:9],
 		9'd0 };
       2'd2:
-	  masked_vpn__h134508 =
+	  masked_vpn__h134586 =
 	      { SEL_ARR_pendReq_0_049_BITS_26_TO_0_087_pendReq_ETC___d1649[26:18],
 		18'd0 };
-      2'd3: masked_vpn__h134508 = 27'd0;
+      2'd3: masked_vpn__h134586 = 27'd0;
     endcase
   end
   always@(respLdQ_deqP or respLdQ_data_0 or respLdQ_data_1)
@@ -6715,26 +6759,6 @@ module mkL2Tlb(CLK,
 	      tlb4KB_m_tlbRam_3_bram$DOB[4];
     endcase
   end
-  always@(w__h117246 or
-	  tlb4KB_m_tlbRam_0_bram$DOB or
-	  tlb4KB_m_tlbRam_1_bram$DOB or
-	  tlb4KB_m_tlbRam_2_bram$DOB or tlb4KB_m_tlbRam_3_bram$DOB)
-  begin
-    case (w__h117246)
-      2'd0:
-	  SEL_ARR_tlb4KB_m_tlbRam_0_bram_b_read__14_BIT__ETC___d1450 =
-	      tlb4KB_m_tlbRam_0_bram$DOB[6];
-      2'd1:
-	  SEL_ARR_tlb4KB_m_tlbRam_0_bram_b_read__14_BIT__ETC___d1450 =
-	      tlb4KB_m_tlbRam_1_bram$DOB[6];
-      2'd2:
-	  SEL_ARR_tlb4KB_m_tlbRam_0_bram_b_read__14_BIT__ETC___d1450 =
-	      tlb4KB_m_tlbRam_2_bram$DOB[6];
-      2'd3:
-	  SEL_ARR_tlb4KB_m_tlbRam_0_bram_b_read__14_BIT__ETC___d1450 =
-	      tlb4KB_m_tlbRam_3_bram$DOB[6];
-    endcase
-  end
   always@(idx__h116621 or
 	  tlbMG_m_entryVec_0 or
 	  tlbMG_m_entryVec_1 or
@@ -6768,6 +6792,26 @@ module mkL2Tlb(CLK,
       3'd7:
 	  SEL_ARR_tlbMG_m_entryVec_0_077_BIT_6_372_tlbMG_ETC___d1381 =
 	      tlbMG_m_entryVec_7[6];
+    endcase
+  end
+  always@(w__h117246 or
+	  tlb4KB_m_tlbRam_0_bram$DOB or
+	  tlb4KB_m_tlbRam_1_bram$DOB or
+	  tlb4KB_m_tlbRam_2_bram$DOB or tlb4KB_m_tlbRam_3_bram$DOB)
+  begin
+    case (w__h117246)
+      2'd0:
+	  SEL_ARR_tlb4KB_m_tlbRam_0_bram_b_read__14_BIT__ETC___d1450 =
+	      tlb4KB_m_tlbRam_0_bram$DOB[6];
+      2'd1:
+	  SEL_ARR_tlb4KB_m_tlbRam_0_bram_b_read__14_BIT__ETC___d1450 =
+	      tlb4KB_m_tlbRam_1_bram$DOB[6];
+      2'd2:
+	  SEL_ARR_tlb4KB_m_tlbRam_0_bram_b_read__14_BIT__ETC___d1450 =
+	      tlb4KB_m_tlbRam_2_bram$DOB[6];
+      2'd3:
+	  SEL_ARR_tlb4KB_m_tlbRam_0_bram_b_read__14_BIT__ETC___d1450 =
+	      tlb4KB_m_tlbRam_3_bram$DOB[6];
     endcase
   end
   always@(idx__h116621 or
@@ -6825,6 +6869,26 @@ module mkL2Tlb(CLK,
 	      tlb4KB_m_tlbRam_3_bram$DOB[1:0];
     endcase
   end
+  always@(w__h117246 or
+	  tlb4KB_m_tlbRam_0_bram$DOB or
+	  tlb4KB_m_tlbRam_1_bram$DOB or
+	  tlb4KB_m_tlbRam_2_bram$DOB or tlb4KB_m_tlbRam_3_bram$DOB)
+  begin
+    case (w__h117246)
+      2'd0:
+	  SEL_ARR_tlb4KB_m_tlbRam_0_bram_b_read__14_BITS_ETC___d1436 =
+	      tlb4KB_m_tlbRam_0_bram$DOB[52:9];
+      2'd1:
+	  SEL_ARR_tlb4KB_m_tlbRam_0_bram_b_read__14_BITS_ETC___d1436 =
+	      tlb4KB_m_tlbRam_1_bram$DOB[52:9];
+      2'd2:
+	  SEL_ARR_tlb4KB_m_tlbRam_0_bram_b_read__14_BITS_ETC___d1436 =
+	      tlb4KB_m_tlbRam_2_bram$DOB[52:9];
+      2'd3:
+	  SEL_ARR_tlb4KB_m_tlbRam_0_bram_b_read__14_BITS_ETC___d1436 =
+	      tlb4KB_m_tlbRam_3_bram$DOB[52:9];
+    endcase
+  end
   always@(idx__h116621 or
 	  tlbMG_m_entryVec_0 or
 	  tlbMG_m_entryVec_1 or
@@ -6860,76 +6924,56 @@ module mkL2Tlb(CLK,
 	      tlbMG_m_entryVec_7[52:9];
     endcase
   end
-  always@(w__h117246 or
-	  tlb4KB_m_tlbRam_0_bram$DOB or
-	  tlb4KB_m_tlbRam_1_bram$DOB or
-	  tlb4KB_m_tlbRam_2_bram$DOB or tlb4KB_m_tlbRam_3_bram$DOB)
+  always@(tlbReqQ_data_0 or pendReq_0 or pendReq_1)
   begin
-    case (w__h117246)
-      2'd0:
-	  SEL_ARR_tlb4KB_m_tlbRam_0_bram_b_read__14_BITS_ETC___d1436 =
-	      tlb4KB_m_tlbRam_0_bram$DOB[52:9];
-      2'd1:
-	  SEL_ARR_tlb4KB_m_tlbRam_0_bram_b_read__14_BITS_ETC___d1436 =
-	      tlb4KB_m_tlbRam_1_bram$DOB[52:9];
-      2'd2:
-	  SEL_ARR_tlb4KB_m_tlbRam_0_bram_b_read__14_BITS_ETC___d1436 =
-	      tlb4KB_m_tlbRam_2_bram$DOB[52:9];
-      2'd3:
-	  SEL_ARR_tlb4KB_m_tlbRam_0_bram_b_read__14_BITS_ETC___d1436 =
-	      tlb4KB_m_tlbRam_3_bram$DOB[52:9];
+    case (tlbReqQ_data_0)
+      1'd0:
+	  CASE_tlbReqQ_data_0_0_pendReq_0_BITS_28_TO_27__ETC__q17 =
+	      pendReq_0[28:27];
+      1'd1:
+	  CASE_tlbReqQ_data_0_0_pendReq_0_BITS_28_TO_27__ETC__q17 =
+	      pendReq_1[28:27];
     endcase
   end
   always@(idx__h133342 or pendReq_0 or pendReq_1)
   begin
     case (idx__h133342)
       1'd0:
-	  CASE_idx33342_0_pendReq_0_BITS_28_TO_27_1_pend_ETC__q17 =
+	  CASE_idx33342_0_pendReq_0_BITS_28_TO_27_1_pend_ETC__q18 =
 	      pendReq_0[28:27];
       1'd1:
-	  CASE_idx33342_0_pendReq_0_BITS_28_TO_27_1_pend_ETC__q17 =
-	      pendReq_1[28:27];
-    endcase
-  end
-  always@(tlbReqQ_data_0 or pendReq_0 or pendReq_1)
-  begin
-    case (tlbReqQ_data_0)
-      1'd0:
-	  CASE_tlbReqQ_data_0_0_pendReq_0_BITS_28_TO_27__ETC__q18 =
-	      pendReq_0[28:27];
-      1'd1:
-	  CASE_tlbReqQ_data_0_0_pendReq_0_BITS_28_TO_27__ETC__q18 =
+	  CASE_idx33342_0_pendReq_0_BITS_28_TO_27_1_pend_ETC__q18 =
 	      pendReq_1[28:27];
     endcase
   end
   always@(tlbMG_m_randIdx or
-	  IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1809)
+	  IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1830)
   begin
     case (tlbMG_m_randIdx)
       3'd0:
 	  CASE_tlbMG_m_randIdx_0_IF_tlbMG_m_lruBit_dummy_ETC__q19 =
-	      IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1809[0];
+	      IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1830[0];
       3'd1:
 	  CASE_tlbMG_m_randIdx_0_IF_tlbMG_m_lruBit_dummy_ETC__q19 =
-	      IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1809[1];
+	      IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1830[1];
       3'd2:
 	  CASE_tlbMG_m_randIdx_0_IF_tlbMG_m_lruBit_dummy_ETC__q19 =
-	      IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1809[2];
+	      IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1830[2];
       3'd3:
 	  CASE_tlbMG_m_randIdx_0_IF_tlbMG_m_lruBit_dummy_ETC__q19 =
-	      IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1809[3];
+	      IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1830[3];
       3'd4:
 	  CASE_tlbMG_m_randIdx_0_IF_tlbMG_m_lruBit_dummy_ETC__q19 =
-	      IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1809[4];
+	      IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1830[4];
       3'd5:
 	  CASE_tlbMG_m_randIdx_0_IF_tlbMG_m_lruBit_dummy_ETC__q19 =
-	      IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1809[5];
+	      IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1830[5];
       3'd6:
 	  CASE_tlbMG_m_randIdx_0_IF_tlbMG_m_lruBit_dummy_ETC__q19 =
-	      IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1809[6];
+	      IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1830[6];
       3'd7:
 	  CASE_tlbMG_m_randIdx_0_IF_tlbMG_m_lruBit_dummy_ETC__q19 =
-	      IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1809[7];
+	      IF_tlbMG_m_lruBit_dummy2_1_read__56_THEN_INV_I_ETC___d1830[7];
     endcase
   end
 

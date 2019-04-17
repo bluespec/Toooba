@@ -1,3 +1,18 @@
+This repository contains code with two licenses.
+
+1. See: src_Core/RISCY_OOO/LICENSE_RISCY-OOO
+
+    The code in src_Core/RISCY_OOO is mostly a copy of MIT's
+    'riscy-ooo' processor, free and open-source under
+    LICENSE_RISC-OOO.
+
+    That code has been slightly modified by Bluespec, Inc. (see README for details).
+
+2. Bluespec's modifications in src_Core/RISCY_OOO and the rest of this
+    repository are licensed under the license shown below.
+
+>================================================================
+
                                  Apache License
                            Version 2.0, January 2004
                         http://www.apache.org/licenses/

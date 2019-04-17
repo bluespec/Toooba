@@ -55,8 +55,8 @@ typedef struct {
    Bit #(64)  boot_rom_addr_base;
    Bit #(64)  boot_rom_addr_size;
 
-   Bit #(64)  mem0_controller_addr_base;
-   Bit #(64)  mem0_controller_addr_size;
+   Bit #(64)  main_mem_addr_base;
+   Bit #(64)  main_mem_addr_size;
 
    Bit #(64)  pc_reset_value;
    } SoC_Map_Struct
@@ -64,15 +64,15 @@ deriving (FShow);
 
 SoC_Map_Struct soc_map_struct =
 SoC_Map_Struct {
-   near_mem_io_addr_base:     'h_1000_0000,
+   near_mem_io_addr_base:  'h_1000_0000,
 
-   boot_rom_addr_base:        'h_7000_0000,
-   boot_rom_addr_size:        'h_0000_1000,
+   boot_rom_addr_base:     'h_7000_0000,
+   boot_rom_addr_size:     'h_0000_1000,
 
-   mem0_controller_addr_base: 'h_C000_0000,
-   mem0_controller_addr_size: 'h_4000_0000,
+   main_mem_addr_base:     'h_C000_0000,
+   main_mem_addr_size:     'h_4000_0000,
 
-   pc_reset_value:            'h_7000_0000    // = boot_rom_addr_base
+   pc_reset_value:         'h_7000_0000    // = boot_rom_addr_base
    };
 
 // ================================================================
