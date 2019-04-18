@@ -4730,24 +4730,6 @@ module mkProc(CLK,
   assign tlbQ$CLR = 1'b0 ;
 
   // remaining internal signals
-  module_amoExec instance_amoExec_0(.amoExec_amo_inst({ mmioPlatform_reqFunc[3:0],
-							mmioPlatform_reqBE_BIT_4___h27539 &&
-							mmioPlatform_reqBE_BIT_0___h27579,
-							2'd0 }),
-				    .amoExec_current_data(x__h34833),
-				    .amoExec_in_data(mmioPlatform_reqData__h46238),
-				    .amoExec_upper_32_bits(mmioPlatform_reqBE_BIT_4___h27539 &&
-							   !mmioPlatform_reqBE_BIT_0___h27579),
-				    .amoExec(x__h29563));
-  module_amoExec instance_amoExec_1(.amoExec_amo_inst({ mmioPlatform_reqFunc[3:0],
-							mmioPlatform_reqBE_BIT_4___h27539 &&
-							mmioPlatform_reqBE_BIT_0___h27579,
-							2'd0 }),
-				    .amoExec_current_data(mmioPlatform_mtime__h34685),
-				    .amoExec_in_data(mmioPlatform_reqData__h46238),
-				    .amoExec_upper_32_bits(mmioPlatform_reqBE_BIT_4___h27539 &&
-							   !mmioPlatform_reqBE_BIT_0___h27579),
-				    .amoExec(x__h32473));
   module_amoExec instance_amoExec_2(.amoExec_amo_inst({ mmioPlatform_reqFunc[3:0],
 							mmioPlatform_reqBE_BIT_4___h27539 &&
 							mmioPlatform_reqBE_BIT_0___h27579,
@@ -4757,6 +4739,15 @@ module mkProc(CLK,
 				    .amoExec_upper_32_bits(mmioPlatform_reqBE_BIT_4___h27539 &&
 							   !mmioPlatform_reqBE_BIT_0___h27579),
 				    .amoExec(x__h38418));
+  module_amoExec instance_amoExec_0(.amoExec_amo_inst({ mmioPlatform_reqFunc[3:0],
+							mmioPlatform_reqBE_BIT_4___h27539 &&
+							mmioPlatform_reqBE_BIT_0___h27579,
+							2'd0 }),
+				    .amoExec_current_data(x__h34833),
+				    .amoExec_in_data(mmioPlatform_reqData__h46238),
+				    .amoExec_upper_32_bits(mmioPlatform_reqBE_BIT_4___h27539 &&
+							   !mmioPlatform_reqBE_BIT_0___h27579),
+				    .amoExec(x__h29563));
   module_amoExec instance_amoExec_3(.amoExec_amo_inst({ mmioPlatform_reqFunc[3:0],
 							mmioPlatform_reqBE_BIT_4___h27539 &&
 							mmioPlatform_reqBE_BIT_0___h27579,
@@ -4766,6 +4757,15 @@ module mkProc(CLK,
 				    .amoExec_upper_32_bits(mmioPlatform_reqBE_BIT_4___h27539 &&
 							   !mmioPlatform_reqBE_BIT_0___h27579),
 				    .amoExec(x__h40511));
+  module_amoExec instance_amoExec_1(.amoExec_amo_inst({ mmioPlatform_reqFunc[3:0],
+							mmioPlatform_reqBE_BIT_4___h27539 &&
+							mmioPlatform_reqBE_BIT_0___h27579,
+							2'd0 }),
+				    .amoExec_current_data(mmioPlatform_mtime__h34685),
+				    .amoExec_in_data(mmioPlatform_reqData__h46238),
+				    .amoExec_upper_32_bits(mmioPlatform_reqBE_BIT_4___h27539 &&
+							   !mmioPlatform_reqBE_BIT_0___h27579),
+				    .amoExec(x__h32473));
   assign DONTCARE_CONCAT_IF_mmioPlatform_reqFunc_01_BIT_ETC___d645 =
 	     { 1'h0,
 	       (mmioPlatform_reqFunc[5:4] == 2'd2) ?

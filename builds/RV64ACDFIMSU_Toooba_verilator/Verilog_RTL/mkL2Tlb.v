@@ -251,9 +251,8 @@ module mkL2Tlb(CLK,
        rsToCQ_empty_lat_0$whas,
        rsToCQ_full_lat_0$whas,
        tlb4KB_m_tlbRam_0_rdReqQ_enqP_lat_0$whas,
-       tlbMG_m_lruBit_lat_0$whas,
        tlbMG_m_updRepIdx_lat_1$whas,
-       transCacheReqQ_enqP_lat_0$whas;
+       transCacheReqQ_empty_dummy_1_0$whas;
 
   // register dFlushReq
   reg dFlushReq;
@@ -3367,7 +3366,7 @@ module mkL2Tlb(CLK,
   assign MUX_tlbMG_m_lruBit_lat_0$wset_1__VAL_1 =
 	     (val__h41244 == 8'd255) ? x__h41318 : val__h41244 ;
   assign MUX_tlbMG_m_updRepIdx_dummy_1_0$wset_1__VAL_1 =
-	     WILL_FIRE_RL_doStartFlush || WILL_FIRE_RL_tlbMG_m_doUpdateRep ;
+	     WILL_FIRE_RL_tlbMG_m_doUpdateRep || WILL_FIRE_RL_doStartFlush ;
   assign MUX_tlbMG_m_updRepIdx_lat_1$wset_1__VAL_1 = { 1'd1, idx__h118414 } ;
   assign MUX_tlbMG_m_updRepIdx_lat_1$wset_1__VAL_2 = { 1'd1, v__h143929 } ;
 
@@ -3376,8 +3375,6 @@ module mkL2Tlb(CLK,
 	     MUX_tlb4KB_m_pendReq_dummy2_1$write_1__SEL_1 ?
 	       MUX_tlb4KB_m_pendReq_lat_1$wset_1__VAL_1 :
 	       MUX_tlb4KB_m_pendReq_lat_1$wset_1__VAL_2 ;
-  assign tlbMG_m_lruBit_lat_0$whas =
-	     WILL_FIRE_RL_tlbMG_m_doUpdateRep || WILL_FIRE_RL_doStartFlush ;
   assign tlbMG_m_updRepIdx_lat_1$wget =
 	     MUX_tlbMG_m_updRepIdx_dummy2_1$write_1__SEL_1 ?
 	       MUX_tlbMG_m_updRepIdx_lat_1$wset_1__VAL_1 :
@@ -3389,6 +3386,10 @@ module mkL2Tlb(CLK,
 	     WILL_FIRE_RL_doPageWalk &&
 	     IF_SEL_ARR_NOT_pendReq_0_081_BIT_29_082_083_NO_ETC___d1834 &&
 	     SEL_ARR_respLdQ_data_0_692_BITS_64_TO_1_701_re_ETC___d2086 ;
+  assign transCacheReqQ_empty_dummy_1_0$whas =
+	     WILL_FIRE_RL_doTlbResp &&
+	     IF_SEL_ARR_NOT_pendReq_0_081_BIT_29_082_083_NO_ETC___d1380 &&
+	     NOT_tlbMG_m_validVec_0_107_108_OR_NOT_IF_tlbMG_ETC___d1582 ;
   assign rsToCQ_data_0_lat_0$wget =
 	     MUX_rsToCQ_data_0_dummy2_0$write_1__SEL_1 ?
 	       MUX_rsToCQ_data_0_lat_0$wset_1__VAL_1 :
@@ -3452,10 +3453,6 @@ module mkL2Tlb(CLK,
 	     WILL_FIRE_RL_doPageWalk &&
 	     IF_SEL_ARR_NOT_pendReq_0_081_BIT_29_082_083_NO_ETC___d1891 ||
 	     WILL_FIRE_RL_doTlbReq ;
-  assign transCacheReqQ_enqP_lat_0$whas =
-	     WILL_FIRE_RL_doTlbResp &&
-	     IF_SEL_ARR_NOT_pendReq_0_081_BIT_29_082_083_NO_ETC___d1380 &&
-	     NOT_tlbMG_m_validVec_0_107_108_OR_NOT_IF_tlbMG_ETC___d1582 ;
   assign tlb4KB_m_pendIndex$wget =
 	     { tlb4KB_m_pendReq_dummy2_0$Q_OUT &&
 	       tlb4KB_m_pendReq_dummy2_1$Q_OUT &&
@@ -3895,39 +3892,39 @@ module mkL2Tlb(CLK,
   assign tlb4KB_m_tlbRam_3_rdReqQ_full_rl$EN = 1'd1 ;
 
   // register tlbMG_m_entryVec_0
-  assign tlbMG_m_entryVec_0$D_IN =
+  assign tlbMG_m_entryVec_0$D_IN = tlbMG_m_entryVec_1$D_IN ;
+  assign tlbMG_m_entryVec_0$EN = MUX_tlbMG_m_validVec_0$write_1__SEL_1 ;
+
+  // register tlbMG_m_entryVec_1
+  assign tlbMG_m_entryVec_1$D_IN =
 	     { masked_vpn__h136986,
 	       masked_ppn__h136987,
 	       SEL_ARR_respLdQ_data_0_692_BITS_64_TO_1_701_re_ETC___d1704[7:1],
 	       walkLevel__h136517 } ;
-  assign tlbMG_m_entryVec_0$EN = MUX_tlbMG_m_validVec_0$write_1__SEL_1 ;
-
-  // register tlbMG_m_entryVec_1
-  assign tlbMG_m_entryVec_1$D_IN = tlbMG_m_entryVec_0$D_IN ;
   assign tlbMG_m_entryVec_1$EN = MUX_tlbMG_m_validVec_1$write_1__SEL_1 ;
 
   // register tlbMG_m_entryVec_2
-  assign tlbMG_m_entryVec_2$D_IN = tlbMG_m_entryVec_0$D_IN ;
+  assign tlbMG_m_entryVec_2$D_IN = tlbMG_m_entryVec_1$D_IN ;
   assign tlbMG_m_entryVec_2$EN = MUX_tlbMG_m_validVec_2$write_1__SEL_1 ;
 
   // register tlbMG_m_entryVec_3
-  assign tlbMG_m_entryVec_3$D_IN = tlbMG_m_entryVec_0$D_IN ;
+  assign tlbMG_m_entryVec_3$D_IN = tlbMG_m_entryVec_1$D_IN ;
   assign tlbMG_m_entryVec_3$EN = MUX_tlbMG_m_validVec_3$write_1__SEL_1 ;
 
   // register tlbMG_m_entryVec_4
-  assign tlbMG_m_entryVec_4$D_IN = tlbMG_m_entryVec_0$D_IN ;
+  assign tlbMG_m_entryVec_4$D_IN = tlbMG_m_entryVec_1$D_IN ;
   assign tlbMG_m_entryVec_4$EN = MUX_tlbMG_m_validVec_4$write_1__SEL_1 ;
 
   // register tlbMG_m_entryVec_5
-  assign tlbMG_m_entryVec_5$D_IN = tlbMG_m_entryVec_0$D_IN ;
+  assign tlbMG_m_entryVec_5$D_IN = tlbMG_m_entryVec_1$D_IN ;
   assign tlbMG_m_entryVec_5$EN = MUX_tlbMG_m_validVec_5$write_1__SEL_1 ;
 
   // register tlbMG_m_entryVec_6
-  assign tlbMG_m_entryVec_6$D_IN = tlbMG_m_entryVec_0$D_IN ;
+  assign tlbMG_m_entryVec_6$D_IN = tlbMG_m_entryVec_1$D_IN ;
   assign tlbMG_m_entryVec_6$EN = MUX_tlbMG_m_validVec_6$write_1__SEL_1 ;
 
   // register tlbMG_m_entryVec_7
-  assign tlbMG_m_entryVec_7$D_IN = tlbMG_m_entryVec_0$D_IN ;
+  assign tlbMG_m_entryVec_7$D_IN = tlbMG_m_entryVec_1$D_IN ;
   assign tlbMG_m_entryVec_7$EN = MUX_tlbMG_m_validVec_7$write_1__SEL_1 ;
 
   // register tlbMG_m_lruBit_rl
@@ -4027,17 +4024,17 @@ module mkL2Tlb(CLK,
 
   // register transCacheReqQ_data_0
   assign transCacheReqQ_data_0$D_IN = tlbReqQ_data_0 ;
-  assign transCacheReqQ_data_0$EN = transCacheReqQ_enqP_lat_0$whas ;
+  assign transCacheReqQ_data_0$EN = transCacheReqQ_empty_dummy_1_0$whas ;
 
   // register transCacheReqQ_empty_rl
   assign transCacheReqQ_empty_rl$D_IN =
-	     !transCacheReqQ_enqP_lat_0$whas &&
+	     !transCacheReqQ_empty_dummy_1_0$whas &&
 	     (CAN_FIRE_RL_doTranslationCacheResp || transCacheReqQ_empty_rl) ;
   assign transCacheReqQ_empty_rl$EN = 1'd1 ;
 
   // register transCacheReqQ_full_rl
   assign transCacheReqQ_full_rl$D_IN =
-	     transCacheReqQ_enqP_lat_0$whas ||
+	     transCacheReqQ_empty_dummy_1_0$whas ||
 	     !CAN_FIRE_RL_doTranslationCacheResp && transCacheReqQ_full_rl ;
   assign transCacheReqQ_full_rl$EN = 1'd1 ;
 
@@ -4820,7 +4817,8 @@ module mkL2Tlb(CLK,
 
   // submodule transCacheReqQ_empty_dummy2_1
   assign transCacheReqQ_empty_dummy2_1$D_IN = 1'd1 ;
-  assign transCacheReqQ_empty_dummy2_1$EN = transCacheReqQ_enqP_lat_0$whas ;
+  assign transCacheReqQ_empty_dummy2_1$EN =
+	     transCacheReqQ_empty_dummy_1_0$whas ;
 
   // submodule transCacheReqQ_empty_dummy2_2
   assign transCacheReqQ_empty_dummy2_2$D_IN = 1'b0 ;
@@ -4828,7 +4826,8 @@ module mkL2Tlb(CLK,
 
   // submodule transCacheReqQ_enqP_dummy2_0
   assign transCacheReqQ_enqP_dummy2_0$D_IN = 1'd1 ;
-  assign transCacheReqQ_enqP_dummy2_0$EN = transCacheReqQ_enqP_lat_0$whas ;
+  assign transCacheReqQ_enqP_dummy2_0$EN =
+	     transCacheReqQ_empty_dummy_1_0$whas ;
 
   // submodule transCacheReqQ_enqP_dummy2_1
   assign transCacheReqQ_enqP_dummy2_1$D_IN = 1'b0 ;
@@ -4841,7 +4840,8 @@ module mkL2Tlb(CLK,
 
   // submodule transCacheReqQ_full_dummy2_1
   assign transCacheReqQ_full_dummy2_1$D_IN = 1'd1 ;
-  assign transCacheReqQ_full_dummy2_1$EN = transCacheReqQ_enqP_lat_0$whas ;
+  assign transCacheReqQ_full_dummy2_1$EN =
+	     transCacheReqQ_empty_dummy_1_0$whas ;
 
   // submodule transCacheReqQ_full_dummy2_2
   assign transCacheReqQ_full_dummy2_2$D_IN = 1'b0 ;
@@ -5370,7 +5370,9 @@ module mkL2Tlb(CLK,
 	       ~IF_tlbMG_m_lruBit_lat_0_whas__18_THEN_tlbMG_m__ETC___d321 :
 	       8'd255 ;
   assign IF_tlbMG_m_lruBit_lat_0_whas__18_THEN_tlbMG_m__ETC___d321 =
-	     tlbMG_m_lruBit_lat_0$whas ? upd__h145471 : tlbMG_m_lruBit_rl ;
+	     MUX_tlbMG_m_updRepIdx_dummy_1_0$wset_1__VAL_1 ?
+	       upd__h145471 :
+	       tlbMG_m_lruBit_rl ;
   assign IF_tlbMG_m_updRepIdx_lat_1_whas__23_THEN_tlbMG_ETC___d332 =
 	     tlbMG_m_updRepIdx_lat_1$whas ?
 	       tlbMG_m_updRepIdx_lat_1$wget[3] :
@@ -6819,17 +6821,6 @@ module mkL2Tlb(CLK,
 	      pendValid_1_rl;
     endcase
   end
-  always@(idx__h135545 or pendReq_0 or pendReq_1)
-  begin
-    case (idx__h135545)
-      1'd0:
-	  SEL_ARR_NOT_pendReq_0_081_BIT_29_082_083_NOT_p_ETC___d1699 =
-	      !pendReq_0[29];
-      1'd1:
-	  SEL_ARR_NOT_pendReq_0_081_BIT_29_082_083_NOT_p_ETC___d1699 =
-	      !pendReq_1[29];
-    endcase
-  end
   always@(NOT_transCacheReqQ_data_0_596_597_OR_NOT_pendW_ETC___d1603 or
 	  pendWalkAddr_0_613_EQ_0_CONCAT_IF_transCache_r_ETC___d1630 or
 	  pendValid_0_dummy2_0$Q_OUT or
@@ -6848,6 +6839,17 @@ module mkL2Tlb(CLK,
 	  SEL_ARR_NOT_pendValid_0_dummy2_0_read__28_671__ETC___d1678 =
 	      !pendValid_1_dummy2_0$Q_OUT || !pendValid_1_dummy2_1$Q_OUT ||
 	      !pendValid_1_rl;
+    endcase
+  end
+  always@(idx__h135545 or pendReq_0 or pendReq_1)
+  begin
+    case (idx__h135545)
+      1'd0:
+	  SEL_ARR_NOT_pendReq_0_081_BIT_29_082_083_NOT_p_ETC___d1699 =
+	      !pendReq_0[29];
+      1'd1:
+	  SEL_ARR_NOT_pendReq_0_081_BIT_29_082_083_NOT_p_ETC___d1699 =
+	      !pendReq_1[29];
     endcase
   end
   always@(respLdQ_deqP or respLdQ_data_0 or respLdQ_data_1)
@@ -7151,26 +7153,6 @@ module mkL2Tlb(CLK,
 	      tlb4KB_m_tlbRam_3_bram$DOB[4];
     endcase
   end
-  always@(w__h119039 or
-	  tlb4KB_m_tlbRam_0_bram$DOB or
-	  tlb4KB_m_tlbRam_1_bram$DOB or
-	  tlb4KB_m_tlbRam_2_bram$DOB or tlb4KB_m_tlbRam_3_bram$DOB)
-  begin
-    case (w__h119039)
-      2'd0:
-	  SEL_ARR_tlb4KB_m_tlbRam_0_bram_b_read__14_BIT__ETC___d1498 =
-	      tlb4KB_m_tlbRam_0_bram$DOB[6];
-      2'd1:
-	  SEL_ARR_tlb4KB_m_tlbRam_0_bram_b_read__14_BIT__ETC___d1498 =
-	      tlb4KB_m_tlbRam_1_bram$DOB[6];
-      2'd2:
-	  SEL_ARR_tlb4KB_m_tlbRam_0_bram_b_read__14_BIT__ETC___d1498 =
-	      tlb4KB_m_tlbRam_2_bram$DOB[6];
-      2'd3:
-	  SEL_ARR_tlb4KB_m_tlbRam_0_bram_b_read__14_BIT__ETC___d1498 =
-	      tlb4KB_m_tlbRam_3_bram$DOB[6];
-    endcase
-  end
   always@(idx__h118414 or
 	  tlbMG_m_entryVec_0 or
 	  tlbMG_m_entryVec_1 or
@@ -7204,6 +7186,26 @@ module mkL2Tlb(CLK,
       3'd7:
 	  SEL_ARR_tlbMG_m_entryVec_0_109_BIT_6_420_tlbMG_ETC___d1429 =
 	      tlbMG_m_entryVec_7[6];
+    endcase
+  end
+  always@(w__h119039 or
+	  tlb4KB_m_tlbRam_0_bram$DOB or
+	  tlb4KB_m_tlbRam_1_bram$DOB or
+	  tlb4KB_m_tlbRam_2_bram$DOB or tlb4KB_m_tlbRam_3_bram$DOB)
+  begin
+    case (w__h119039)
+      2'd0:
+	  SEL_ARR_tlb4KB_m_tlbRam_0_bram_b_read__14_BIT__ETC___d1498 =
+	      tlb4KB_m_tlbRam_0_bram$DOB[6];
+      2'd1:
+	  SEL_ARR_tlb4KB_m_tlbRam_0_bram_b_read__14_BIT__ETC___d1498 =
+	      tlb4KB_m_tlbRam_1_bram$DOB[6];
+      2'd2:
+	  SEL_ARR_tlb4KB_m_tlbRam_0_bram_b_read__14_BIT__ETC___d1498 =
+	      tlb4KB_m_tlbRam_2_bram$DOB[6];
+      2'd3:
+	  SEL_ARR_tlb4KB_m_tlbRam_0_bram_b_read__14_BIT__ETC___d1498 =
+	      tlb4KB_m_tlbRam_3_bram$DOB[6];
     endcase
   end
   always@(w__h119039 or

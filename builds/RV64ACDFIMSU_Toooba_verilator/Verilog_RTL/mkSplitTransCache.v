@@ -945,8 +945,8 @@ module mkSplitTransCache(CLK,
 	       MUX_caches_0_updRepIdx_lat_1$wset_1__VAL_2,
 	       MUX_caches_1_updRepIdx_lat_1$wset_1__VAL_1,
 	       MUX_caches_1_updRepIdx_lat_1$wset_1__VAL_2;
-  wire MUX_caches_0_updRepIdx_dummy2_1$write_1__SEL_1,
-       MUX_caches_0_updRepIdx_dummy_1_0$wset_1__VAL_1,
+  wire MUX_caches_0_updRepIdx_dummy_1_0$wset_1__VAL_2,
+       MUX_caches_0_updRepIdx_lat_1$wset_1__SEL_1,
        MUX_caches_0_validVec_0$write_1__SEL_1,
        MUX_caches_0_validVec_1$write_1__SEL_1,
        MUX_caches_0_validVec_10$write_1__SEL_1,
@@ -971,8 +971,8 @@ module mkSplitTransCache(CLK,
        MUX_caches_0_validVec_7$write_1__SEL_1,
        MUX_caches_0_validVec_8$write_1__SEL_1,
        MUX_caches_0_validVec_9$write_1__SEL_1,
-       MUX_caches_1_updRepIdx_dummy2_1$write_1__SEL_1,
-       MUX_caches_1_updRepIdx_dummy_1_0$wset_1__VAL_1,
+       MUX_caches_1_updRepIdx_dummy_1_0$wset_1__VAL_2,
+       MUX_caches_1_updRepIdx_lat_1$wset_1__SEL_1,
        MUX_caches_1_validVec_0$write_1__SEL_1,
        MUX_caches_1_validVec_1$write_1__SEL_1,
        MUX_caches_1_validVec_10$write_1__SEL_1,
@@ -1625,9 +1625,7 @@ module mkSplitTransCache(CLK,
   assign WILL_FIRE_RL_respQ_full_canon = 1'd1 ;
 
   // inputs to muxes for submodule ports
-  assign MUX_caches_0_updRepIdx_dummy2_1$write_1__SEL_1 =
-	     EN_req &&
-	     IF_NOT_caches_0_validVec_0_14_15_OR_NOT_req_vp_ETC___d347 ;
+  assign MUX_caches_0_updRepIdx_lat_1$wset_1__SEL_1 = EN_addEntry && _dfoo7 ;
   assign MUX_caches_0_validVec_0$write_1__SEL_1 =
 	     EN_addEntry && v__h56470 == 5'd0 &&
 	     IF_NOT_caches_0_validVec_0_14_15_OR_NOT_addEnt_ETC___d1067 &&
@@ -1724,9 +1722,7 @@ module mkSplitTransCache(CLK,
 	     EN_addEntry && v__h56470 == 5'd9 &&
 	     IF_NOT_caches_0_validVec_0_14_15_OR_NOT_addEnt_ETC___d1067 &&
 	     x__h46068 == 2'd0 ;
-  assign MUX_caches_1_updRepIdx_dummy2_1$write_1__SEL_1 =
-	     EN_req &&
-	     IF_NOT_caches_1_validVec_0_72_73_OR_NOT_req_vp_ETC___d605 ;
+  assign MUX_caches_1_updRepIdx_lat_1$wset_1__SEL_1 = EN_addEntry && _dfoo1 ;
   assign MUX_caches_1_validVec_0$write_1__SEL_1 =
 	     EN_addEntry && v__h75650 == 5'd0 &&
 	     IF_NOT_caches_1_validVec_0_72_73_OR_NOT_addEnt_ETC___d1504 &&
@@ -1825,44 +1821,44 @@ module mkSplitTransCache(CLK,
 	     x__h46068 == 2'd1 ;
   assign MUX_caches_0_lruBit_lat_0$wset_1__VAL_1 =
 	     (val__h8225 == 24'd16777215) ? x__h8299 : val__h8225 ;
-  assign MUX_caches_0_updRepIdx_dummy_1_0$wset_1__VAL_1 =
+  assign MUX_caches_0_updRepIdx_dummy_1_0$wset_1__VAL_2 =
 	     WILL_FIRE_RL_caches_0_doUpdateRep || EN_flush ;
-  assign MUX_caches_0_updRepIdx_lat_1$wset_1__VAL_1 = { 1'd1, i__h28125 } ;
-  assign MUX_caches_0_updRepIdx_lat_1$wset_1__VAL_2 =
+  assign MUX_caches_0_updRepIdx_lat_1$wset_1__VAL_1 =
 	     (IF_NOT_caches_0_validVec_0_14_15_OR_NOT_addEnt_ETC___d914 &&
 	      x__h46068 == 2'd0) ?
 	       { 1'd1,
 		 IF_NOT_caches_0_validVec_0_14_15_OR_NOT_addEnt_ETC___d940 } :
 	       { 1'd1, v__h56470 } ;
+  assign MUX_caches_0_updRepIdx_lat_1$wset_1__VAL_2 = { 1'd1, i__h28125 } ;
   assign MUX_caches_1_lruBit_lat_0$wset_1__VAL_1 =
 	     (val__h16766 == 24'd16777215) ? x__h16840 : val__h16766 ;
-  assign MUX_caches_1_updRepIdx_dummy_1_0$wset_1__VAL_1 =
+  assign MUX_caches_1_updRepIdx_dummy_1_0$wset_1__VAL_2 =
 	     WILL_FIRE_RL_caches_1_doUpdateRep || EN_flush ;
-  assign MUX_caches_1_updRepIdx_lat_1$wset_1__VAL_1 = { 1'd1, i__h37542 } ;
-  assign MUX_caches_1_updRepIdx_lat_1$wset_1__VAL_2 =
+  assign MUX_caches_1_updRepIdx_lat_1$wset_1__VAL_1 =
 	     (IF_NOT_caches_1_validVec_0_72_73_OR_NOT_addEnt_ETC___d1352 &&
 	      x__h46068 == 2'd1) ?
 	       { 1'd1,
 		 IF_NOT_caches_1_validVec_0_72_73_OR_NOT_addEnt_ETC___d1377 } :
 	       { 1'd1, v__h75650 } ;
+  assign MUX_caches_1_updRepIdx_lat_1$wset_1__VAL_2 = { 1'd1, i__h37542 } ;
 
   // inlined wires
   assign caches_0_updRepIdx_lat_1$wget =
-	     MUX_caches_0_updRepIdx_dummy2_1$write_1__SEL_1 ?
+	     MUX_caches_0_updRepIdx_lat_1$wset_1__SEL_1 ?
 	       MUX_caches_0_updRepIdx_lat_1$wset_1__VAL_1 :
 	       MUX_caches_0_updRepIdx_lat_1$wset_1__VAL_2 ;
   assign caches_0_updRepIdx_lat_1$whas =
+	     EN_addEntry && _dfoo7 ||
 	     EN_req &&
-	     IF_NOT_caches_0_validVec_0_14_15_OR_NOT_req_vp_ETC___d347 ||
-	     EN_addEntry && _dfoo7 ;
+	     IF_NOT_caches_0_validVec_0_14_15_OR_NOT_req_vp_ETC___d347 ;
   assign caches_1_updRepIdx_lat_1$wget =
-	     MUX_caches_1_updRepIdx_dummy2_1$write_1__SEL_1 ?
+	     MUX_caches_1_updRepIdx_lat_1$wset_1__SEL_1 ?
 	       MUX_caches_1_updRepIdx_lat_1$wset_1__VAL_1 :
 	       MUX_caches_1_updRepIdx_lat_1$wset_1__VAL_2 ;
   assign caches_1_updRepIdx_lat_1$whas =
+	     EN_addEntry && _dfoo1 ||
 	     EN_req &&
-	     IF_NOT_caches_1_validVec_0_72_73_OR_NOT_req_vp_ETC___d605 ||
-	     EN_addEntry && _dfoo1 ;
+	     IF_NOT_caches_1_validVec_0_72_73_OR_NOT_req_vp_ETC___d605 ;
 
   // register caches_0_lruBit_rl
   assign caches_0_lruBit_rl$D_IN =
@@ -2683,7 +2679,7 @@ module mkSplitTransCache(CLK,
   // submodule caches_0_lruBit_dummy2_0
   assign caches_0_lruBit_dummy2_0$D_IN = 1'd1 ;
   assign caches_0_lruBit_dummy2_0$EN =
-	     MUX_caches_0_updRepIdx_dummy_1_0$wset_1__VAL_1 ;
+	     MUX_caches_0_updRepIdx_dummy_1_0$wset_1__VAL_2 ;
 
   // submodule caches_0_lruBit_dummy2_1
   assign caches_0_lruBit_dummy2_1$D_IN = 1'b0 ;
@@ -2692,19 +2688,19 @@ module mkSplitTransCache(CLK,
   // submodule caches_0_updRepIdx_dummy2_0
   assign caches_0_updRepIdx_dummy2_0$D_IN = 1'd1 ;
   assign caches_0_updRepIdx_dummy2_0$EN =
-	     MUX_caches_0_updRepIdx_dummy_1_0$wset_1__VAL_1 ;
+	     MUX_caches_0_updRepIdx_dummy_1_0$wset_1__VAL_2 ;
 
   // submodule caches_0_updRepIdx_dummy2_1
   assign caches_0_updRepIdx_dummy2_1$D_IN = 1'd1 ;
   assign caches_0_updRepIdx_dummy2_1$EN =
+	     EN_addEntry && _dfoo7 ||
 	     EN_req &&
-	     IF_NOT_caches_0_validVec_0_14_15_OR_NOT_req_vp_ETC___d347 ||
-	     EN_addEntry && _dfoo7 ;
+	     IF_NOT_caches_0_validVec_0_14_15_OR_NOT_req_vp_ETC___d347 ;
 
   // submodule caches_1_lruBit_dummy2_0
   assign caches_1_lruBit_dummy2_0$D_IN = 1'd1 ;
   assign caches_1_lruBit_dummy2_0$EN =
-	     MUX_caches_1_updRepIdx_dummy_1_0$wset_1__VAL_1 ;
+	     MUX_caches_1_updRepIdx_dummy_1_0$wset_1__VAL_2 ;
 
   // submodule caches_1_lruBit_dummy2_1
   assign caches_1_lruBit_dummy2_1$D_IN = 1'b0 ;
@@ -2713,14 +2709,14 @@ module mkSplitTransCache(CLK,
   // submodule caches_1_updRepIdx_dummy2_0
   assign caches_1_updRepIdx_dummy2_0$D_IN = 1'd1 ;
   assign caches_1_updRepIdx_dummy2_0$EN =
-	     MUX_caches_1_updRepIdx_dummy_1_0$wset_1__VAL_1 ;
+	     MUX_caches_1_updRepIdx_dummy_1_0$wset_1__VAL_2 ;
 
   // submodule caches_1_updRepIdx_dummy2_1
   assign caches_1_updRepIdx_dummy2_1$D_IN = 1'd1 ;
   assign caches_1_updRepIdx_dummy2_1$EN =
+	     EN_addEntry && _dfoo1 ||
 	     EN_req &&
-	     IF_NOT_caches_1_validVec_0_72_73_OR_NOT_req_vp_ETC___d605 ||
-	     EN_addEntry && _dfoo1 ;
+	     IF_NOT_caches_1_validVec_0_72_73_OR_NOT_req_vp_ETC___d605 ;
 
   // submodule respQ_deqP_dummy2_0
   assign respQ_deqP_dummy2_0$D_IN = 1'd1 ;
@@ -3964,18 +3960,18 @@ module mkSplitTransCache(CLK,
 	       ~IF_caches_0_lruBit_lat_0_whas_THEN_caches_0_lr_ETC___d6 :
 	       24'd16777215 ;
   assign IF_caches_0_lruBit_lat_0_whas_THEN_caches_0_lr_ETC___d6 =
-	     MUX_caches_0_updRepIdx_dummy_1_0$wset_1__VAL_1 ?
+	     MUX_caches_0_updRepIdx_dummy_1_0$wset_1__VAL_2 ?
 	       upd__h60756 :
 	       caches_0_lruBit_rl ;
   assign IF_caches_0_updRepIdx_lat_1_whas_THEN_caches_0_ETC___d17 =
 	     caches_0_updRepIdx_lat_1$whas ?
 	       caches_0_updRepIdx_lat_1$wget[5] :
-	       !MUX_caches_0_updRepIdx_dummy_1_0$wset_1__VAL_1 &&
+	       !MUX_caches_0_updRepIdx_dummy_1_0$wset_1__VAL_2 &&
 	       caches_0_updRepIdx_rl[5] ;
   assign IF_caches_0_updRepIdx_lat_1_whas_THEN_caches_0_ETC___d27 =
 	     caches_0_updRepIdx_lat_1$whas ?
 	       caches_0_updRepIdx_lat_1$wget[4:0] :
-	       (MUX_caches_0_updRepIdx_dummy_1_0$wset_1__VAL_1 ?
+	       (MUX_caches_0_updRepIdx_dummy_1_0$wset_1__VAL_2 ?
 		  5'b01010 :
 		  caches_0_updRepIdx_rl[4:0]) ;
   assign IF_caches_0_validVec_0_14_AND_caches_0_validVe_ETC___d1112 =
@@ -4025,18 +4021,18 @@ module mkSplitTransCache(CLK,
 	       ~IF_caches_1_lruBit_lat_0_whas__0_THEN_caches_1_ETC___d53 :
 	       24'd16777215 ;
   assign IF_caches_1_lruBit_lat_0_whas__0_THEN_caches_1_ETC___d53 =
-	     MUX_caches_1_updRepIdx_dummy_1_0$wset_1__VAL_1 ?
+	     MUX_caches_1_updRepIdx_dummy_1_0$wset_1__VAL_2 ?
 	       upd__h79933 :
 	       caches_1_lruBit_rl ;
   assign IF_caches_1_updRepIdx_lat_1_whas__5_THEN_cache_ETC___d64 =
 	     caches_1_updRepIdx_lat_1$whas ?
 	       caches_1_updRepIdx_lat_1$wget[5] :
-	       !MUX_caches_1_updRepIdx_dummy_1_0$wset_1__VAL_1 &&
+	       !MUX_caches_1_updRepIdx_dummy_1_0$wset_1__VAL_2 &&
 	       caches_1_updRepIdx_rl[5] ;
   assign IF_caches_1_updRepIdx_lat_1_whas__5_THEN_cache_ETC___d74 =
 	     caches_1_updRepIdx_lat_1$whas ?
 	       caches_1_updRepIdx_lat_1$wget[4:0] :
-	       (MUX_caches_1_updRepIdx_dummy_1_0$wset_1__VAL_1 ?
+	       (MUX_caches_1_updRepIdx_dummy_1_0$wset_1__VAL_2 ?
 		  5'b01010 :
 		  caches_1_updRepIdx_rl[4:0]) ;
   assign IF_caches_1_validVec_0_72_AND_caches_1_validVe_ETC___d1549 =
@@ -4083,7 +4079,7 @@ module mkSplitTransCache(CLK,
 	       IF_caches_1_validVec_8_36_AND_caches_1_validVe_ETC___d1542 ;
   assign NOT_caches_0_updRepIdx_dummy2_1_read__3_48_OR__ETC___d749 =
 	     !caches_0_updRepIdx_dummy2_1$Q_OUT ||
-	     MUX_caches_0_updRepIdx_dummy_1_0$wset_1__VAL_1 ||
+	     MUX_caches_0_updRepIdx_dummy_1_0$wset_1__VAL_2 ||
 	     !caches_0_updRepIdx_rl[5] ;
   assign NOT_caches_0_validVec_0_14_15_OR_NOT_addEntry__ETC___d783 =
 	     (!caches_0_validVec_0 ||
@@ -4243,7 +4239,7 @@ module mkSplitTransCache(CLK,
 	     !caches_0_validVec_15 ;
   assign NOT_caches_1_updRepIdx_dummy2_1_read__0_51_OR__ETC___d752 =
 	     !caches_1_updRepIdx_dummy2_1$Q_OUT ||
-	     MUX_caches_1_updRepIdx_dummy_1_0$wset_1__VAL_1 ||
+	     MUX_caches_1_updRepIdx_dummy_1_0$wset_1__VAL_2 ||
 	     !caches_1_updRepIdx_rl[5] ;
   assign NOT_caches_1_validVec_0_72_73_OR_NOT_addEntry__ETC___d1221 =
 	     (!caches_1_validVec_0 ||
