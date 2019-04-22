@@ -9560,6 +9560,7 @@ module mkCore(CLK,
 	     !WILL_FIRE_RL_coreFix_aluExe_0_doFinishAlu_F &&
 	     !WILL_FIRE_RL_coreFix_aluExe_1_doFinishAlu_F &&
 	     !WILL_FIRE_RL_coreFix_aluExe_1_doFinishAlu_T &&
+	     !WILL_FIRE_RL_coreFix_fpuMulDivExe_0_doExeFpuMulDiv &&
 	     !WILL_FIRE_RL_coreFix_fpuMulDivExe_0_doFinishIntDiv &&
 	     !WILL_FIRE_RL_coreFix_fpuMulDivExe_0_doFinishIntMul &&
 	     !WILL_FIRE_RL_coreFix_fpuMulDivExe_0_doFinishFpSqrt &&
@@ -9609,6 +9610,7 @@ module mkCore(CLK,
 	     !WILL_FIRE_RL_coreFix_aluExe_0_doFinishAlu_F &&
 	     !WILL_FIRE_RL_coreFix_aluExe_1_doFinishAlu_F &&
 	     !WILL_FIRE_RL_coreFix_aluExe_1_doFinishAlu_T &&
+	     !WILL_FIRE_RL_coreFix_fpuMulDivExe_0_doExeFpuMulDiv &&
 	     !WILL_FIRE_RL_coreFix_fpuMulDivExe_0_doFinishIntDiv &&
 	     !WILL_FIRE_RL_coreFix_fpuMulDivExe_0_doFinishIntMul &&
 	     !WILL_FIRE_RL_coreFix_fpuMulDivExe_0_doFinishFpSqrt &&
@@ -9706,6 +9708,7 @@ module mkCore(CLK,
 	     coreFix_trainBPQ_1$FULL_N ;
   assign WILL_FIRE_RL_coreFix_aluExe_1_doFinishAlu_T =
 	     CAN_FIRE_RL_coreFix_aluExe_1_doFinishAlu_T &&
+	     !WILL_FIRE_RL_coreFix_fpuMulDivExe_0_doExeFpuMulDiv &&
 	     !WILL_FIRE_RL_coreFix_fpuMulDivExe_0_doFinishIntDiv &&
 	     !WILL_FIRE_RL_coreFix_fpuMulDivExe_0_doFinishIntMul &&
 	     !WILL_FIRE_RL_coreFix_fpuMulDivExe_0_doFinishFpSqrt &&
@@ -9737,6 +9740,7 @@ module mkCore(CLK,
 	     CAN_FIRE_RL_coreFix_aluExe_0_doFinishAlu_T &&
 	     !WILL_FIRE_RL_coreFix_aluExe_1_doFinishAlu_F &&
 	     !WILL_FIRE_RL_coreFix_aluExe_1_doFinishAlu_T &&
+	     !WILL_FIRE_RL_coreFix_fpuMulDivExe_0_doExeFpuMulDiv &&
 	     !WILL_FIRE_RL_coreFix_fpuMulDivExe_0_doFinishIntDiv &&
 	     !WILL_FIRE_RL_coreFix_fpuMulDivExe_0_doFinishIntMul &&
 	     !WILL_FIRE_RL_coreFix_fpuMulDivExe_0_doFinishFpSqrt &&
@@ -10532,11 +10536,7 @@ module mkCore(CLK,
 	     coreFix_fpuMulDivExe_0_regToExeQ$RDY_first &&
 	     IF_coreFix_fpuMulDivExe_0_regToExeQ_first__482_ETC___d8541 ;
   assign WILL_FIRE_RL_coreFix_fpuMulDivExe_0_doExeFpuMulDiv =
-	     CAN_FIRE_RL_coreFix_fpuMulDivExe_0_doExeFpuMulDiv &&
-	     !WILL_FIRE_RL_commitStage_doCommitKilledLd &&
-	     !WILL_FIRE_RL_commitStage_doCommitTrap_flush &&
-	     !WILL_FIRE_RL_coreFix_aluExe_0_doFinishAlu_T &&
-	     !WILL_FIRE_RL_coreFix_aluExe_1_doFinishAlu_T ;
+	     CAN_FIRE_RL_coreFix_fpuMulDivExe_0_doExeFpuMulDiv ;
 
   // rule RL_coreFix_fpuMulDivExe_0_doRegReadFpuMulDiv
   assign CAN_FIRE_RL_coreFix_fpuMulDivExe_0_doRegReadFpuMulDiv =
@@ -14640,7 +14640,7 @@ module mkCore(CLK,
   assign coreFix_fpuMulDivExe_0_regToExeQ$EN_enq =
 	     WILL_FIRE_RL_coreFix_fpuMulDivExe_0_doRegReadFpuMulDiv ;
   assign coreFix_fpuMulDivExe_0_regToExeQ$EN_deq =
-	     WILL_FIRE_RL_coreFix_fpuMulDivExe_0_doExeFpuMulDiv ;
+	     CAN_FIRE_RL_coreFix_fpuMulDivExe_0_doExeFpuMulDiv ;
   assign coreFix_fpuMulDivExe_0_regToExeQ$EN_specUpdate_incorrectSpeculation =
 	     WILL_FIRE_RL_coreFix_aluExe_1_doFinishAlu_T ||
 	     WILL_FIRE_RL_coreFix_aluExe_0_doFinishAlu_T ||

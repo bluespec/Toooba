@@ -21,7 +21,7 @@ usage_line = (
     "  If <opt parallelism> is given, it must be an integer\n"
     "      Specifies the number of parallel processes used\n"
     "        (creates temporary separate working directories worker_0, worker_1, ...)\n"
-    "      By default uses 1/2 the CPUs listed in /proc/cpuinfo.\n"
+    "      By default uses the number of CPUs listed in /proc/cpuinfo - 4.\n"
     "      In any case, limits it to 8.\n"
     "\n"
     "  Example:\n"
@@ -128,7 +128,7 @@ def main (argv = None):
     if len (argv [j:]) != 0 and isdecimal (argv [j]):
         n_workers = int (argv [j])
     else:
-        n_workers = multiprocessing.cpu_count () // 2
+        n_workers = multiprocessing.cpu_count () - 4
     n_workers = min (n_workers_max, n_workers)
     sys.stdout.write ("Using {0} worker processes\n".format (n_workers))
 

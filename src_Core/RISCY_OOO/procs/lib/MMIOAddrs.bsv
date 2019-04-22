@@ -43,7 +43,6 @@ DataAlignedAddr mtimeBaseAddr     = getDataAlignedAddr(64'h0200bff8);
 DataAlignedAddr mainMemBaseAddr   = getDataAlignedAddr(64'h80000000);
 */
 
-DataAlignedAddr bootRomBaseAddr   = getDataAlignedAddr(soc_map_struct.boot_rom_addr_base);
 DataAlignedAddr msipBaseAddr      = getDataAlignedAddr(soc_map_struct.near_mem_io_addr_base + 64'h_0000_0000);
 DataAlignedAddr mtimecmpBaseAddr  = getDataAlignedAddr(soc_map_struct.near_mem_io_addr_base + 64'h_0000_4000);
 DataAlignedAddr mtimeBaseAddr     = getDataAlignedAddr(soc_map_struct.near_mem_io_addr_base + 64'h_0000_bff8);
@@ -58,8 +57,6 @@ DataAlignedAddr mainMemBaseAddr   = getDataAlignedAddr(soc_map_struct.main_mem_a
 
 // upper bound addr (bound itself is invalid addr) for each MMIO reg/device
 // (aligned to Data)
-DataAlignedAddr bootRomBoundAddr   = bootRomBaseAddr +
-                                     fromInteger(valueof(TExp#(LgBootRomSzData)));
 DataAlignedAddr mainMemBoundAddr   = (mainMemBaseAddr +
 				      getDataAlignedAddr(soc_map_struct.main_mem_addr_size));
 DataAlignedAddr msipBoundAddr      = msipBaseAddr +

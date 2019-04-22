@@ -54,10 +54,6 @@ import Fabric_Defs :: *;    // Only for type Fabric_Addr
 
 typedef struct {
    Bit #(64)  near_mem_io_addr_base;
-   Bit #(64)  near_mem_io_addr_size;
-
-   Bit #(64)  boot_rom_addr_base;
-   Bit #(64)  boot_rom_addr_size;
 
    Bit #(64)  main_mem_addr_base;
    Bit #(64)  main_mem_addr_size;
@@ -69,9 +65,6 @@ deriving (FShow);
 SoC_Map_Struct soc_map_struct =
 SoC_Map_Struct {
    near_mem_io_addr_base: 'h_0200_0000,
-
-   boot_rom_addr_base:    'h_0000_1000,
-   boot_rom_addr_size:    'h_0000_1000,
 
    main_mem_addr_base:    'h_8000_0000,
    main_mem_addr_size:    'h_1000_0000,

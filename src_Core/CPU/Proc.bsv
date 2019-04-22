@@ -94,10 +94,6 @@ import TV_Info  :: *;
 (* synthesize *)
 module mkProc (Proc_IFC);
 
-   // Check that RISCY-OOO and Bluespec defs of boot rom size are the same
-   staticAssert ( (soc_map_struct.boot_rom_addr_size == fromInteger (valueOf (TExp #(LgBootRomBytes)))),
-		 "Boot ROM size def mismatch: ProcConfig.bsv:LgBootRomBytes vs. SoC_Map.bsv:soc_map_struct.boot_rom_addr_size");
-
    // ----------------
     // cores
     Vector#(CoreNum, Core) core = ?;
