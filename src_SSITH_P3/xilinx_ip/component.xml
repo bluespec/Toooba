@@ -2929,6 +2929,10 @@
         <spirit:name>hdl/ResetEither.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
+      <spirit:file>
+        <spirit:name>hdl/FIFOL1.v</spirit:name>
+        <spirit:fileType>verilogSource</spirit:fileType>
+      </spirit:file>
     </spirit:fileSet>
     <spirit:fileSet>
       <spirit:name>xilinx_anylanguagesynthesis_xilinx_com_ip_mult_gen_12_0__ref_view_fileset</spirit:name>
@@ -3483,6 +3487,10 @@
       </spirit:file>
       <spirit:file>
         <spirit:name>hdl/ResetEither.v</spirit:name>
+        <spirit:fileType>verilogSource</spirit:fileType>
+      </spirit:file>
+      <spirit:file>
+        <spirit:name>hdl/FIFOL1.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
     </spirit:fileSet>
