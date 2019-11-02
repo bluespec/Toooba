@@ -39,9 +39,10 @@ interface NextAddrPred;
 endinterface
 
 // Local BTB Typedefs
+typedef 1 PcLsbsIgnore;
 typedef 256 BtbEntries; // 4KB BTB
 typedef Bit#(TLog#(BtbEntries)) BtbIndex;
-typedef Bit#(TSub#(TSub#(AddrSz, TLog#(BtbEntries)), 2)) BtbTag;
+typedef Bit#(TSub#(TSub#(AddrSz, TLog#(BtbEntries)), PcLsbsIgnore)) BtbTag;
 
 typedef struct {
     Addr pc;
@@ -65,7 +66,7 @@ module mkBtb(NextAddrPred);
     Bool flushDone = True;
 `endif
 
-    function BtbIndex getIndex(Addr pc) = truncate(pc >> 2);
+    function BtbIndex getIndex(Addr pc) = truncate(pc >> valueof(PcLsbsIgnore));
     function BtbTag getTag(Addr pc) = truncateLSB(pc);
 
     // no flush, accept update
