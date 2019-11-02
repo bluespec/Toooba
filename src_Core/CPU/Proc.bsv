@@ -38,6 +38,7 @@ import ConfigReg    :: *;
 // ----------------
 // BSV additional libs
 
+import Cur_Cycle      :: *;
 import GetPut_Aux     :: *;
 
 // ================================================================
@@ -272,7 +273,7 @@ module mkProc (Proc_IFC);
    // Print out values written 'tohost'
    rule rl_tohost;
       let x <- mmioPlatform.to_host;
-      $display ("mmioPlatform.rl_tohost: 0x%0x (= %0d)", x, x);
+      $display ("%0d: mmioPlatform.rl_tohost: 0x%0x (= %0d)", cur_cycle, x, x);
       if (x != 0) begin
 	 // Standard RISC-V ISA tests finish by writing a value tohost with x[0]==1.
 	 // Further when x[63:1]==0, all tests within the program pass,
