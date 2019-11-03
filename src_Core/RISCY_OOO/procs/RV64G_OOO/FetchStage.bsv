@@ -325,7 +325,7 @@ module mkFetchStage(FetchStage);
     Reg#(Epoch) f_main_epoch <- mkReg(0); // fetch estimate of main epoch
 
    // Regs/wires to hold the first half of an instruction that straddles a cache line boundary
-   Ehr #(2, Bool)      ehr_pending_straddle <- mkEhr (False);
+   Ehr #(3, Bool)      ehr_pending_straddle <- mkEhr (False);
    Ehr #(2, Addr)      ehr_half_inst_pc     <- mkEhr (?);    // The PC of the straddling instruction
    Ehr #(2, Bit #(16)) ehr_half_inst_lsbs   <- mkEhr (?);    // The 16 lsbs of the straddling instruction
 
@@ -853,6 +853,7 @@ module mkFetchStage(FetchStage);
         if (verbose) $display("Redirect: newpc %h, old f_main_epoch %d, new f_main_epoch %d",new_pc,f_main_epoch,f_main_epoch+1);
         pc_reg[pc_redirect_port] <= new_pc;
         f_main_epoch <= (f_main_epoch == fromInteger(valueOf(NumEpochs)-1)) ? 0 : f_main_epoch + 1;
+        ehr_pending_straddle[2] <= False;
         // redirect comes, stop stalling for redirect
         waitForRedirect <= False;
         setWaitRedirect_redirect_conflict.wset(?); // conflict with setWaitForRedirect
