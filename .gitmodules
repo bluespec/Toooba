@@ -1,0 +1,3 @@
+[submodule "src_Verifier/BSV-RVFI-DII"]
+	path = src_Verifier/BSV-RVFI-DII
+	url = https://github.com/CTSRD-CHERI/BSV-RVFI-DII.git
