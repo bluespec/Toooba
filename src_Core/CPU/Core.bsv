@@ -82,6 +82,10 @@ import RenameStage::*;
 import CommitStage::*;
 import Bypass::*;
 
+`ifdef RVFI_DII
+import Toooba_RVFI_DII_Bridge::*;
+`endif
+
 import CsrFile :: *;
 
 interface CoreReq;
@@ -132,12 +136,16 @@ interface Core;
     // debug rename
     interface CoreRenameDebug renameDebug;
 
-   // Bluespec: external interrupt requests targeting Machine and Supervisor modes
+    // Bluespec: external interrupt requests targeting Machine and Supervisor modes
     method Action setMEIP (Bit #(1) v);
     method Action setSEIP (Bit #(1) v);
 
-   // Bluespec: external interrupt to enter debug mode
+    // Bluespec: external interrupt to enter debug mode
     method Action setDEIP (Bit #(1) v);
+    
+`ifdef RVFI_DII
+    interface Toooba_RVFI_DII_Server rvfi_dii_server;
+`endif
 endinterface
 
 // fixpoint to instantiate modules
@@ -164,6 +172,15 @@ module mkCore#(CoreId coreId)(Core);
     FetchStage fetchStage <- mkFetchStage;
     ITlb iTlb = fetchStage.iTlbIfc;
     ICoCache iMem = fetchStage.iMemIfc;
+    
+    // ================================================================
+    // If using Direct Instruction Injection then make a
+    // bridge that can insert instructions as if it were
+    // an instruction cache.
+`ifdef RVFI_DII
+    Toooba_RVFI_DII_Bridge_IFC rvfi_bridge <- mkTooobaRVFIDIIBridge;
+    mkConnection(rvfi_bridge.dii, fetchStage.dii);
+`endif
 
     // back end
     RFileSynth rf <- mkRFileSynth;
@@ -511,6 +528,10 @@ module mkCore#(CoreId coreId)(Core);
         endmethod
     endinterface);
     CommitStage commitStage <- mkCommitStage(commitInput);
+
+`ifdef RVFI
+    mkConnection(commitStage.rvfi, rvfi_bridge.rvfi);
+`endif
 
     // send rob enq time to reservation stations
     (* fire_when_enabled, no_implicit_conditions *)
@@ -968,6 +989,10 @@ module mkCore#(CoreId coreId)(Core);
         interface checkStarted = nullGet;
 `endif
     endinterface
+    
+`ifdef RVFI_DII
+   interface Toooba_RVFI_DII_Server rvfi_dii_server = rvfi_bridge.rvfi_dii_server;
+`endif
 
     // rename debug
     interface CoreRenameDebug renameDebug;

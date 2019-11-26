@@ -24,6 +24,10 @@ import DM_CPU_Req_Rsp :: *;
 import TV_Info  :: *;
 `endif
 
+`ifdef RVFI_DII
+import Types :: *;
+`endif
+
 // ================================================================
 // CPU interface
 
@@ -79,6 +83,10 @@ interface Proc_IFC;
 
 `ifdef INCLUDE_TANDEM_VERIF
    interface Get #(Trace_Data)  trace_data_out;
+`endif
+
+`ifdef RVFI_DII
+   interface Toooba_RVFI_DII_Server rvfi_dii_server;
 `endif
 
    // ----------------

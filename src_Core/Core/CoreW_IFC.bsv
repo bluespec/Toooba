@@ -40,6 +40,10 @@ import TV_Info  :: *;
 import Debug_Module  :: *;
 `endif
 
+`ifdef RVFI_DII
+import Types :: *;
+`endif
+
 // ================================================================
 // The CoreW interface
 
@@ -84,6 +88,10 @@ interface CoreW_IFC #(numeric type t_n_interrupt_sources);
 
 `ifdef INCLUDE_TANDEM_VERIF
    interface Get #(Info_CPU_to_Verifier)  tv_verifier_info_get;
+`endif
+
+`ifdef RVFI_DII
+    interface Toooba_RVFI_DII_Server rvfi_dii_server;
 `endif
 
    // ----------------------------------------------------------------

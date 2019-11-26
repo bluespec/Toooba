@@ -66,3 +66,20 @@ import "DPI-C"
 function  byte unsigned  c_debug_client_response_send (int unsigned  data);
 
 // ================================================================
+
+import "DPI-C"
+function  int serv_socket_get8(longint unsigned ptr);
+
+import "DPI-C"
+function  int unsigned serv_socket_put8(longint unsigned ptr, byte unsigned data);
+
+import "DPI-C"
+function  longint unsigned serv_socket_create_nameless(int unsigned dflt_port);
+
+import "DPI-C"
+function  longint unsigned serv_socket_create(chandle name, int unsigned dflt_port);
+
+import "DPI-C"
+function  void serv_socket_init(longint unsigned ptr);
+
+// ================================================================

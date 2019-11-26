@@ -1,5 +1,16 @@
 // Copyright (c) 2013-2019 Bluespec, Inc. All Rights Reserved.
 
+//-
+// RVFI_DII modifications:
+//     Copyright (c) 2018 Peter Rugg
+//     All rights reserved.
+//
+//     This software was developed by SRI International and the University of
+//     Cambridge Computer Laboratory (Department of Computer Science and
+//     Technology) under DARPA contract HR0011-18-C-0016 ("ECATS"), as part of the
+//     DARPA SSITH research programme.
+//-
+
 package Top_HW_Side;
 
 // ================================================================
@@ -50,14 +61,22 @@ import C_Imports      :: *;
 import External_Control :: *;
 `endif
 
+`ifdef RVFI_DII
+import RVFI_DII :: *;
+import Types    :: *;
+`endif
+
 // ================================================================
 // Top-level module.
 // Instantiates the SoC.
 // Instantiates a memory model.
 
+`ifndef RVFI_DII
 (* synthesize *)
-module mkTop_HW_Side (Empty) ;
-
+module mkTop_HW_Side (Empty);
+`else
+module mkPre_Top_HW_Side (Toooba_RVFI_DII_Server);
+`endif
    SoC_Top_IFC    soc_top   <- mkSoC_Top;
    Mem_Model_IFC  mem_model <- mkMem_Model;
 
@@ -67,6 +86,7 @@ module mkTop_HW_Side (Empty) ;
    // ================================================================
    // BEHAVIOR
 
+`ifndef RVFI_DII
    Reg #(Bool) rg_banner_printed <- mkReg (False);
 
    // Display a banner
@@ -132,6 +152,7 @@ module mkTop_HW_Side (Empty) ;
 `endif
 
    endrule
+`endif
 
    // ================================================================
    // Tandem verifier: drain and output vectors of bytes
@@ -261,9 +282,51 @@ module mkTop_HW_Side (Empty) ;
    // INTERFACE
 
    //  None (this is top-level)
+   
+   //  Except RVFI_DII interface if enabled
+`ifdef RVFI_DII
+   return soc_top.rvfi_dii_server;
+`endif
 
 endmodule
 
+// ================================================================
+
+`ifdef RVFI_DII
+// ================================================================
+// mkPiccolo_RVFI_DII instantiates the toplevel with the RVFI_DII
+// interfaces enabled, allowing testing with directly
+// ================================================================
+
+(* synthesize *)
+module mkTop_HW_Side(Empty)
+    provisos (Add#(a__, TDiv#(DataSz,8), 8), Add#(b__, DataSz, 64), Add#(c__, TDiv#(DataSz,8), 8), Add#(d__, DataSz, 64));
+
+    Reg #(Bool) rg_banner_printed <- mkReg (False);
+
+    // Display a banner
+    rule rl_step0 (! rg_banner_printed);
+       $display ("================================================================");
+       $display ("Bluespec RISC-V standalone system simulation v1.2");
+       $display ("Copyright (c) 2017-2018 Bluespec, Inc. All Rights Reserved.");
+       $display ("================================================================");
+
+       rg_banner_printed <= True;
+    endrule
+
+    RVFI_DII_Bridge #(DataSz, DataSz, SEQ_LEN) bridge <- mkRVFI_DII_Bridge("", 5001);
+    let    dut <- mkPre_Top_HW_Side(reset_by bridge.new_rst);
+    mkConnection(bridge.client.report, dut.trace_report);
+
+    (* descending_urgency = "bridge.handleReset, rl_provide_instr" *)
+    rule rl_provide_instr;
+        Dii_Id req <- dut.seqReq.get;
+        Bit#(32) inst <- bridge.client.getInst(req);
+        dut.inst.put(tuple2(inst, req));
+    endrule
+endmodule
+
+`endif
 // ================================================================
 
 endpackage: Top_HW_Side

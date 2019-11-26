@@ -61,7 +61,8 @@ simulator:
 		$(VERILATOR_FLAGS) \
 		--cc  $(TOPMODULE)_edited.v \
 		--exe  sim_main.cpp \
-		$(REPO)/src_Testbench/Top/C_Imported_Functions.c
+		$(REPO)/src_Testbench/Top/C_Imported_Functions.c \
+		$(REPO)/src_Verifier/BSV-RVFI-DII/SocketPacketUtils/socket_packet_utils.c
 	@echo "INFO: Linking verilated files"
 	cp  -p  $(VERILATOR_RESOURCES)/sim_main.cpp  obj_dir/sim_main.cpp
 	cd obj_dir; \

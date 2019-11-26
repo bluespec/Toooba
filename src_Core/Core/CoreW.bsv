@@ -488,6 +488,10 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
    endinterface
 `endif
 
+`ifdef RVFI_DII
+   interface Toooba_RVFI_DII_Server rvfi_dii_server = proc.rvfi_dii_server;
+`endif
+
    // ----------------------------------------------------------------
    // Optional DM interfaces
 

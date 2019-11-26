@@ -1,5 +1,15 @@
 // Copyright (c) 2016-2019 Bluespec, Inc. All Rights Reserved.
 
+//-
+// RVFI_DII modifications:
+//     Copyright (c) 2018 Peter Rugg
+//
+//     This software was developed by SRI International and the University of
+//     Cambridge Computer Laboratory (Department of Computer Science and
+//     Technology) under DARPA contract HR0011-18-C-0016 ("ECATS"), as part of the
+//     DARPA SSITH research programme.
+//-
+
 package SoC_Top;
 
 // ================================================================
@@ -61,6 +71,11 @@ import Accel_AES      :: *;
 import TV_Info :: *;
 `endif
 
+`ifdef RVFI_DII
+import RVFI_DII :: *;
+import Types :: *;
+`endif
+
 `ifdef INCLUDE_GDB_CONTROL
 import External_Control :: *;    // Control requests/responses from HSFE
 import Debug_Module     :: *;
@@ -87,6 +102,8 @@ interface SoC_Top_IFC;
 `ifdef INCLUDE_TANDEM_VERIF
    // To tandem verifier
    interface Get #(Info_CPU_to_Verifier) tv_verifier_info_get;
+`elsif RVFI_DII
+   interface Toooba_RVFI_DII_Server rvfi_dii_server;
 `endif
 
    // External real memory
@@ -325,8 +342,8 @@ module mkSoC_Top (SoC_Top_IFC);
    // ================================================================
    // INTERFACE
 
-   method Action  set_verbosity (Bit #(4)  verbosity, Bit #(64)  logdelay);
-      corew.set_verbosity (verbosity, logdelay);
+   method Action  set_verbosity (Bit #(4)  new_verbosity, Bit #(64)  logdelay);
+      corew.set_verbosity (new_verbosity, logdelay);
    endmethod
 
    // To external controller (E.g., GDB)
@@ -337,6 +354,8 @@ module mkSoC_Top (SoC_Top_IFC);
 `ifdef INCLUDE_TANDEM_VERIF
    // To tandem verifier
    interface tv_verifier_info_get = corew.tv_verifier_info_get;
+`elsif RVFI_DII
+   interface rvfi_dii_server = corew.rvfi_dii_server;
 `endif
 
    // External real memory

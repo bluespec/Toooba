@@ -99,7 +99,7 @@ typedef struct {
 instance DefaultValue#(RiscVISASubset);
     function RiscVISASubset defaultValue = RiscVISASubset {
         s: True, u: True,
-        m: `m , a: `a , f: `f , d: `d
+        m: `m , a: `a , f: `f , d: `d, c: `c
     };
 endinstance
 

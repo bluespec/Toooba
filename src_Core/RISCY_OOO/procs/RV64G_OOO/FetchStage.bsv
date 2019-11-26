@@ -31,6 +31,7 @@ import Connectable::*;
 import Decode::*;
 import Ehr::*;
 import Fifo::*;
+import FIFOF::*;
 import GetPut::*;
 import MemoryTypes::*;
 import Types::*;
@@ -48,6 +49,10 @@ import ITlb::*;
 import CCTypes::*;
 import L1CoCache::*;
 import MMIOInst::*;
+`ifdef RVFI_DII
+import RVFI_DII::*;
+import Types::*;
+`endif
 
 // ================================================================
 // For fv_decode_C function and related types and definitions
@@ -86,6 +91,9 @@ interface FetchStage;
 
     // debug
     method FetchDebugState getFetchState;
+`ifdef RVFI_DII
+    interface Client#(Dii_Id, InstsAndIDs) dii;
+`endif
 
     // performance
     interface Perf#(DecStagePerfType) perf;
@@ -296,7 +304,7 @@ module mkFetchStage(FetchStage);
     // Fetch1 < Fetch3 to avoid bypassing path on PC and epochs
 
     Bool verbose = False;
-    Integer verbosity = 0;
+    Integer verbosity = 1;
 
     // Basic State Elements
     Reg#(Bool) started <- mkReg(False);
@@ -324,10 +332,10 @@ module mkFetchStage(FetchStage);
     Reg#(Bool) decode_epoch <- mkReg(False);
     Reg#(Epoch) f_main_epoch <- mkReg(0); // fetch estimate of main epoch
 
-   // Regs to hold the first half of an instruction that straddles a cache line boundary
-   Reg #(Bool)      rg_pending_straddle <- mkReg (False);
-   Reg #(Addr)      rg_half_inst_pc     <- mkRegU;    // The PC of the straddling instruction
-   Reg #(Bit #(16)) rg_half_inst_lsbs   <- mkRegU;    // The 16 lsbs of the straddling instruction
+    // Regs to hold the first half of an instruction that straddles a cache line boundary
+    Reg #(Bool)      rg_pending_straddle <- mkReg (False);
+    Reg #(Addr)      rg_half_inst_pc     <- mkRegU;    // The PC of the straddling instruction
+    Reg #(Bit #(16)) rg_half_inst_lsbs   <- mkRegU;    // The 16 lsbs of the straddling instruction
 
     // Pipeline Stage FIFOs
     Fifo#(2, Tuple2#(Bit#(TLog#(SupSize)),Fetch1ToFetch2)) f12f2 <- mkCFFifo;
@@ -382,6 +390,25 @@ module mkFetchStage(FetchStage);
             pType: t,
             data: d
         });
+    endrule
+`endif
+
+`ifdef RVFI_DII
+    Fifo#(2, Dii_Id) dii_instIds <- mkCFFifo;
+    Fifo#(2, InstsAndIDs) dii_insts <- mkCFFifo;
+    FIFOF#(Dii_Id) flush_id <- mkUGFIFOF1; // Next sequence number to request when trapping
+    Reg#(Dii_Id) dii_id_next <- mkReg(0);
+    
+    rule feed_dii;
+        if (flush_id.notEmpty) begin
+            dii_instIds.enq(flush_id.first);
+            if (verbosity > 0) $display("Requested from %d DII", flush_id.first);
+            flush_id.deq;
+        end else begin
+            dii_instIds.enq(dii_id_next);
+            if (verbosity > 0) $display("Requested from %d DII", dii_id_next);
+            dii_id_next <= dii_id_next + 1;
+        end
     endrule
 `endif
 
@@ -509,11 +536,11 @@ module mkFetchStage(FetchStage);
             main_epoch: in.main_epoch };
         f22f3.enq(tuple2(nbSup,out));
 
-       if (verbosity > 0) begin
-	  $display ("----------------");
-	  $display ("Fetch2: TLB response pyhs_pc 0x%0h  cause ", phys_pc, fshow (cause));
-	  $display ("Fetch2: f2_tof3.enq: nbSup %0d out ", nbSup, fshow (out));
-       end
+        if (verbosity > 0) begin
+            $display ("----------------");
+            $display ("Fetch2: TLB response pyhs_pc 0x%0h  cause ", phys_pc, fshow (cause));
+            $display ("Fetch2: f2_tof3.enq: nbSup %0d out ", nbSup, fshow (out));
+        end
     endrule
  
 // Break out of i$
@@ -521,7 +548,7 @@ module mkFetchStage(FetchStage);
         let {nbSup, fetch3In} = f22f3.first;
         f22f3.deq();
         if (verbosity > 0)
-	   $display("Fetch3: fetch3In: ", fshow (fetch3In));
+        $display("Fetch3: fetch3In: ", fshow (fetch3In));
 
         // Get ICache/MMIO response if no exception
         // In case of exception, we still need to process at least inst_data[0]
@@ -538,6 +565,13 @@ module mkFetchStage(FetchStage);
                 inst_d <- mem_server.response.get;
             end
         end
+        
+`ifdef RVFI_DII
+        InstsAndIDs ii <- toGet(dii_insts).get();
+        inst_d = ii.insts;
+        if (verbosity > 0)
+        $display("Got from DII: ", fshow (inst_d));
+`endif
 
        if (fetch3In.decode_epoch != decode_epoch) begin
 	  // Just drop it.
@@ -945,5 +979,12 @@ module mkFetchStage(FetchStage);
         method Bool respValid = perfReqQ.notEmpty;
 `endif
     endinterface
+    
+`ifdef RVFI_DII
+    interface Client dii;
+        interface Get request = toGet(dii_instIds);
+        interface Put response = toPut(dii_insts);
+    endinterface
+`endif
 endmodule
  

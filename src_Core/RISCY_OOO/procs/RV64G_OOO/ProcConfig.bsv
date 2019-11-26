@@ -36,6 +36,7 @@
 `define a True
 `define f True
 `define d True
+`define c True
 
 //`define NUM_CORES 1 // defined in make file
 

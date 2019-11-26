@@ -21,8 +21,15 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+`include "ProcConfig.bsv"
+
 import Vector::*;
 import Assert::*;
+import ClientServer::*;
+import GetPut::*;
+`ifdef RVFI_DII
+import RVFI_DII_Types::*;
+`endif
 
 typedef 64 AddrSz;
 typedef Bit#(AddrSz) Addr;
@@ -70,4 +77,21 @@ typedef struct {
 function Action doAssert(Bool b, String s) = action if(!b) $fdisplay(stderr, "\n%m: ASSERT FAIL!!"); dynamicAssert(b, s); endaction;
 `else
 function Action doAssert(Bool b, String s) = dynamicAssert(b, s);
+`endif
+
+`ifdef RVFI_DII
+typedef 8 SEQ_LEN;
+typedef UInt#(SEQ_LEN) Dii_Id;
+typedef Vector#(`sizeSup, RVFI_DII_Execution #(DataSz,DataSz)) Rvfi_Traces;
+
+typedef struct {
+  Vector#(`sizeSup, Maybe#(Instruction)) insts;
+  Vector#(`sizeSup, Dii_Id) ids;
+} InstsAndIDs deriving(Bits, Eq, FShow);
+
+interface Toooba_RVFI_DII_Server;
+    interface Get#(Dii_Id) seqReq;
+    interface Put#(Tuple2#(Bit#(32), Dii_Id)) inst;
+    interface Get#(RVFI_DII_Execution#(DataSz, DataSz)) trace_report;
+endinterface
 `endif

@@ -355,6 +355,10 @@ module mkProc (Proc_IFC);
    interface Get  trace_data_out = toGet (f_trace_data);
 `endif
 
+`ifdef RVFI_DII
+   interface Toooba_RVFI_DII_Server rvfi_dii_server = core[0].rvfi_dii_server;
+`endif
+
    // ----------------
    // Optional interface to Debug Module
 

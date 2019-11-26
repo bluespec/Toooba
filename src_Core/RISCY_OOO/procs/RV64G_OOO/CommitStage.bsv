@@ -39,6 +39,10 @@ import StoreBuffer::*;
 import VerificationPacket::*;
 import RenameDebugIF::*;
 
+`ifdef RVFI
+import RVFI_DII  :: *;
+`endif
+
 typedef struct {
     // info about the inst blocking at ROB head
     Addr pc;
@@ -112,6 +116,10 @@ interface CommitStage;
     // rename debug
     method Action startRenameDebug;
     interface Get#(RenameErrInfo) renameErr;
+`ifdef RVFI
+    // RVFI trace report. Not an input?
+    method Get#(Rvfi_Traces) rvfi;
+`endif
 endinterface
 
 // we apply actions the end of commit rule
@@ -122,8 +130,33 @@ typedef struct {
     Trap trap;
 } CommitTrap deriving(Bits, Eq, FShow);
 
+`ifdef RVFI
+function RVFI_DII_Execution#(DataSz,DataSz) genRVFI(ToReorderBuffer rot);
+  return RVFI_DII_Execution {
+    rvfi_order: 0, // Instruction number? InstID maybe?
+    rvfi_trap: isValid(rot.trap),
+    rvfi_halt: False,
+    rvfi_intr: ?,
+    rvfi_insn: rot.orig_inst,
+    rvfi_rs1_addr: rot.orig_inst[19:15],
+    rvfi_rs2_addr: rot.orig_inst[24:20],
+    rvfi_rs1_data: ?,
+    rvfi_rs2_data: ?,
+    rvfi_pc_rdata: rot.pc,
+    rvfi_pc_wdata: rot.pc + 4,
+    rvfi_mem_wdata: 0,
+    rvfi_rd_addr: rot.orig_inst[11:7],
+    rvfi_rd_wdata: ?,
+    rvfi_mem_addr: 0,
+    rvfi_mem_rmask: 0,
+    rvfi_mem_wmask: 0,
+    rvfi_mem_rdata: 0
+  };
+endfunction
+`endif
+
 module mkCommitStage#(CommitInput inIfc)(CommitStage);
-    Bool verbose = False;
+    Bool verbose = True;
 
     // Bluespec: for lightweight verbosity trace
     Integer verbosity = 1;
@@ -178,6 +211,11 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
     Count#(Data) flushSecurityCnt <- mkCount(0);
     Count#(Data) flushBPCnt <- mkCount(0);
     Count#(Data) flushCacheCnt <- mkCount(0);
+`endif
+
+`ifdef RVFI
+    // RVFI trace report. Not an input?
+    FIFO#(Rvfi_Traces) rvfiQ <- mkFIFO;
 `endif
 
     // deadlock check
@@ -375,6 +413,11 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 	   $display ("CommitStage.doCommitTrap_flush: deq_data:   ", fshow (x));
 	   $display ("CommitStage.doCommitTrap_flush: commitTrap: ", fshow (commitTrap_val));
 	end
+`ifdef RVFI
+        Rvfi_Traces rvfis = replicate(RVFI_DII_Execution{rvfi_order: -1});
+        rvfis[0] = genRVFI(x);
+        rvfiQ.enq(rvfis);
+`endif
 
         // flush everything. Only increment epoch and stall fetch when we haven
         // not done it yet (we may have already done them at rename stage)
@@ -475,6 +518,11 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 		    "   iType:", fshow (x.iType), "    [doCommitSystemInst]");
 	   rg_instret <= rg_instret + 1;
 	end
+`ifdef RVFI
+        Rvfi_Traces rvfis = replicate(RVFI_DII_Execution{rvfi_order: -1});
+        rvfis[0] = genRVFI(x);
+        rvfiQ.enq(rvfis);
+`endif
 
         // we claim a phy reg for every inst, so commit its renaming
         regRenamingTable.commit[0].commit;
@@ -616,6 +664,10 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         SupCnt amoCnt = 0;
 `endif
 
+`ifdef RVFI
+        Rvfi_Traces rvfis = replicate(RVFI_DII_Execution{rvfi_order: -1});
+`endif
+
         Bit #(64) instret = 0;
 
         // compute what actions to take
@@ -631,6 +683,9 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                 end
                 else begin
                     if (verbose) $display("[doCommitNormalInst - %d] ", i, fshow(inst_tag), " ; ", fshow(x));
+`ifdef RVFI
+                    rvfis[i] = genRVFI(x);
+`endif
 
 		    if (verbosity > 0) begin
 		       $display("instret:%0d  PC:0x%0h  instr:0x%08h", rg_instret + instret, x.pc, x.orig_inst,
@@ -734,6 +789,9 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
             end
         end
 `endif
+`ifdef RVFI
+        rvfiQ.enq(rvfis);
+`endif
     endrule
 
 
@@ -765,6 +823,10 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
             default: 0;
         endcase);
     endmethod
+
+`ifdef RVFI
+    method rvfi = toGet(rvfiQ);
+`endif
 
 `ifdef CHECK_DEADLOCK
     interface commitInstStuck = toGet(commitInstStuckQ);
