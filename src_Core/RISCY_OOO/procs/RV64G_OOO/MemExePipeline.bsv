@@ -461,6 +461,20 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         let x = dTlbResp.inst;
         let {paddr, cause} = dTlbResp.resp;
 
+`ifdef RVFI_DII
+        // TestRIG expects us throw an access fault for any memory access outside of a 64-KiB memory at 0x8000000.
+        if (!isValid(cause) && (paddr < 'h80000000 || paddr >= 'h80010000)) begin
+            case(x.mem_func)
+                Ld, Lr: begin
+                    cause = Valid (LoadAccessFault);
+                end
+                default: begin
+                    cause = Valid (StoreAccessFault);
+                end
+            endcase
+        end
+`endif
+
         if(verbose) $display("[doFinishMem] ", fshow(dTlbResp));
         if(isValid(cause) && verbose) $display("  [doFinishMem - dTlb response] PAGEFAULT!");
 

@@ -84,6 +84,9 @@ typedef struct {
     ControlFlow controlFlow;
     // speculation
     Maybe#(SpecTag) spec_tag;
+`ifdef RVFI
+    ExtraTraceBundle   traceBundle;
+`endif
 } AluExeToFinish deriving(Bits, Eq, FShow);
 
 // XXX currently ALU/Br should not have any exception, so we don't have cause feild above
@@ -137,7 +140,14 @@ interface AluExeInput;
     method Addr rob_getPC(InstTag t);
     method Addr rob_getPredPC(InstTag t);
     method Bit #(32) rob_getOrig_Inst (InstTag t);
-    method Action rob_setExecuted(InstTag t, Maybe#(Data) csrData, ControlFlow cf);
+    method Action rob_setExecuted(
+        InstTag t,
+        Maybe#(Data) csrData,
+        ControlFlow cf
+`ifdef RVFI
+        , ExtraTraceBundle tb
+`endif
+    );
     // Fetch stage
     method Action fetch_train_predictors(FetchTrainBP train);
 
@@ -292,7 +302,13 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
                 tag: x.tag,
                 dpTrain: x.dpTrain,
                 data: exec_result.data,
-                csrData: isValid(x.dInst.csr) ? Valid (exec_result.csrData) : Invalid,
+                csrData: isValid(x.dInst.csr) ? Valid (exec_result.csrData) : tagged Invalid,
+`ifdef RVFI
+                traceBundle: ExtraTraceBundle{
+                    regWriteData: exec_result.data,
+                    memByteEn: replicate(False)
+                },
+`endif
                 controlFlow: exec_result.controlFlow,
                 spec_tag: x.spec_tag
             },
@@ -317,6 +333,9 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
             x.tag,
             x.csrData,
             x.controlFlow
+`ifdef RVFI
+            , x.traceBundle
+`endif
         );
 
         // handle spec tags for branch predictions

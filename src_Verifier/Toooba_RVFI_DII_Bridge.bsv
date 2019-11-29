@@ -61,10 +61,11 @@ module mkTooobaRVFIDIIBridge(Toooba_RVFI_DII_Bridge_IFC);
     // DII state
     FIFOF#(Tuple2#(Bit#(32), Dii_Id)) dii_in <- mkUGFIFOF;
     Reg#(InstsAndIDs) buff <- mkConfigRegU;
-    FIFOF#(InstsAndIDs) instrs <- mkSizedFIFOF(128);
+    FIFOF#(InstsAndIDs) instrs <- mkSizedFIFOF(2048);
+    PulseWire putFromBridge <- mkPulseWire;
     // RVFI state
-    FIFO#(Rvfi_Traces) report_vectors <- mkSizedFIFO(128);
-    FIFO#(RVFI_DII_Execution#(DataSz,DataSz)) reports <- mkSizedFIFO(256);
+    FIFO#(Rvfi_Traces) report_vectors <- mkSizedFIFO(2048);
+    FIFO#(RVFI_DII_Execution#(DataSz,DataSz)) reports <- mkFIFO;
     // Request ID
     FIFO#(Dii_Id) seq_req <- mkFIFO;
 
@@ -93,7 +94,7 @@ module mkTooobaRVFIDIIBridge(Toooba_RVFI_DII_Bridge_IFC);
         InstsAndIDs cb = buff;
         Bit#(32) ins = nop;
         Dii_Id id = ?;
-        if (dii_in.notEmpty) {ins, id} = dii_in.first;
+        if (dii_in.notEmpty) {ins, id} <- toGet(dii_in).get;
         cb.insts[buffLvl] = tagged Valid ins;
         cb.ids[buffLvl] = id;
         if (buffLvl == -1) begin
@@ -106,14 +107,19 @@ module mkTooobaRVFIDIIBridge(Toooba_RVFI_DII_Bridge_IFC);
 
     interface Toooba_RVFI_DII_Server rvfi_dii_server;
         interface Get seqReq = toGet(seq_req);
-        interface Put inst = toPut(dii_in);
+        interface Put inst;
+            method Action put(Tuple2#(Bit#(32), Dii_Id) in) if (dii_in.notFull);
+                dii_in.enq(in);
+                putFromBridge.send();
+            endmethod
+        endinterface
         interface Get trace_report = toGet(reports);
     endinterface
 
     interface Server dii;
         interface Put request = toPut(seq_req);
         interface Get response;
-            method ActionValue#(InstsAndIDs) get;
+            method ActionValue#(InstsAndIDs) get if (!putFromBridge);
                 InstsAndIDs insts = instrs.first();
                 instrs.deq();
                 if (verbose)

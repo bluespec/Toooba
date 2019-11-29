@@ -175,8 +175,7 @@ module mkCore#(CoreId coreId)(Core);
     
     // ================================================================
     // If using Direct Instruction Injection then make a
-    // bridge that can insert instructions as if it were
-    // an instruction cache.
+    // bridge that can insert instructions.
 `ifdef RVFI_DII
     Toooba_RVFI_DII_Bridge_IFC rvfi_bridge <- mkTooobaRVFIDIIBridge;
     mkConnection(rvfi_bridge.dii, fetchStage.dii);

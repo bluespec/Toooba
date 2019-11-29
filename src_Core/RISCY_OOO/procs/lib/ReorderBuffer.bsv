@@ -44,6 +44,13 @@ typedef union tagged {
     Data CSRData; // for Csr inst, store csr_data
 } PPCVAddrCSRData deriving(Bits, Eq, FShow);
 
+`ifdef RVFI
+typedef struct {
+    Data regWriteData;
+    ByteEn memByteEn;
+} ExtraTraceBundle deriving(Bits, Eq, FShow);
+`endif
+
 typedef struct {
     Addr               pc;
     Bit #(32)          orig_inst;    // original 16b or 32b instruction ([1:0] will distinguish 16b or 32b)
@@ -75,6 +82,9 @@ typedef struct {
 
     // speculation
     SpecBits           spec_bits;
+`ifdef RVFI
+    ExtraTraceBundle   traceBundle;
+`endif
 } ToReorderBuffer deriving(Bits, Eq, FShow);
 
 typedef enum {
@@ -83,7 +93,13 @@ typedef enum {
 } RobInstState deriving (Bits, Eq, FShow);
 
 interface Row_setExecuted_doFinishAlu;
-    method Action set(Maybe#(Data) csrData, ControlFlow cf);
+    method Action set(
+        Maybe#(Data) csrData,
+        ControlFlow cf
+`ifdef RVFI
+        , ExtraTraceBundle tb
+`endif
+    );
 endinterface
 
 interface Row_setExecuted_doFinishFpuMulDiv;
@@ -186,6 +202,9 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     Ehr#(2, Bool)                                                   nonMMIOStDone        <- mkEhr(?);
     Reg#(Bool)                                                      epochIncremented     <- mkRegU;
     Ehr#(3, SpecBits)                                               spec_bits            <- mkEhr(?);
+`ifdef RVFI
+    Ehr#(TAdd#(2, aluExeNum), (ExtraTraceBundle))                   traceBundle          <- mkEhr(?);
+`endif
 
     // wires to get stale (EHR port 0) values of PPC
     Wire#(Addr) predPcWire <- mkBypassWire;
@@ -197,7 +216,13 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     Vector#(aluExeNum, Row_setExecuted_doFinishAlu) aluSetExe;
     for(Integer i = 0; i < valueof(aluExeNum); i = i+1) begin
         aluSetExe[i] = (interface Row_setExecuted_doFinishAlu;
-            method Action set(Maybe#(Data) csrData, ControlFlow cf);
+            method Action set(
+                Maybe#(Data) csrData,
+                ControlFlow cf
+`ifdef RVFI
+                , ExtraTraceBundle tb
+`endif
+            );
                 // inst is done
                 rob_inst_state[state_finishAlu_port(i)] <= Executed; 
                 // update PPC or csrData (vaddr is always useless for ALU results)
@@ -207,6 +232,9 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
                 else begin
                     ppc_vaddr_csrData[pvc_finishAlu_port(i)] <= PPC (cf.nextPc);
                 end
+`ifdef RVFI
+                traceBundle[pvc_finishAlu_port(i)] <= tb;
+`endif
                 doAssert(isValid(csr) == isValid(csrData), "csr valid should match");
             endmethod
         endinterface);
@@ -281,6 +309,9 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         ldKilled[ldKill_enq_port] <= Invalid;
         lsqAtCommitNotified[lsqNotified_enq_port] <= False;
         nonMMIOStDone[nonMMIOSt_enq_port] <= False;
+`ifdef RVFI
+        traceBundle[pvc_enq_port] <= x.traceBundle;
+`endif
         // check
         doAssert(!isValid(x.ldKilled), "ld killed must be false");
         doAssert(x.memAccessAtCommit == False, "mem access at commit must be false");
@@ -307,6 +338,9 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
             lsqAtCommitNotified: lsqAtCommitNotified[lsqNotified_deq_port],
             nonMMIOStDone: nonMMIOStDone[nonMMIOSt_deq_port],
             epochIncremented: epochIncremented,
+`ifdef RVFI
+            traceBundle: traceBundle[pvc_deq_port],
+`endif
             spec_bits: spec_bits[sb_deq_port]
         };
     endmethod
@@ -379,7 +413,13 @@ endinterface
 // not raise false conflicts between the superscalar enq/deq actions
 
 interface ROB_setExecuted_doFinishAlu;
-    method Action set(InstTag x, Maybe#(Data) csrData, ControlFlow cf);
+    method Action set(InstTag x,
+                      Maybe#(Data) csrData,
+                      ControlFlow cf
+`ifdef RVFI
+                      , ExtraTraceBundle tb
+`endif
+                      );
 endinterface
 
 interface ROB_setExecuted_doFinishFpuMulDiv;
@@ -891,11 +931,22 @@ module mkSupReorderBuffer#(
     for(Integer i = 0; i < valueof(aluExeNum); i = i+1) begin
         aluSetExeIfc[i] = (interface ROB_setExecuted_doFinishAlu;
             method Action set(
-                InstTag x, Maybe#(Data) csrData, ControlFlow cf
+                InstTag x,
+                Maybe#(Data) csrData,
+                ControlFlow cf
+`ifdef RVFI
+                , ExtraTraceBundle tb
+`endif
             ) if(
                 all(id, readVReg(setExeAlu_SB_enq)) // ordering: < enq
             );
-                row[x.way][x.ptr].setExecuted_doFinishAlu[i].set(csrData, cf);
+                row[x.way][x.ptr].setExecuted_doFinishAlu[i].set(
+                    csrData,
+                    cf
+`ifdef RVFI
+                    , tb
+`endif
+                );
             endmethod
         endinterface);
     end

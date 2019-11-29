@@ -132,6 +132,20 @@ typedef struct {
 
 `ifdef RVFI
 function RVFI_DII_Execution#(DataSz,DataSz) genRVFI(ToReorderBuffer rot);
+  Addr addr = 0;
+  Addr next_pc = rot.pc + 4;
+  Data data = rot.traceBundle.regWriteData;
+  case (rot.ppc_vaddr_csrData) matches
+      tagged VAddr .vaddr: addr = vaddr;
+      tagged PPC .ppc: next_pc = ppc;
+      tagged CSRData .csrdata: data = csrdata;
+  endcase
+  ByteEn rmask = replicate(False);
+  ByteEn wmask = replicate(False);
+  case (rot.lsqTag) matches
+      tagged Ld .l: rmask = rot.traceBundle.memByteEn;
+      tagged St .s: wmask = rot.traceBundle.memByteEn;
+  endcase
   return RVFI_DII_Execution {
     rvfi_order: 0, // Instruction number? InstID maybe?
     rvfi_trap: isValid(rot.trap),
@@ -143,14 +157,14 @@ function RVFI_DII_Execution#(DataSz,DataSz) genRVFI(ToReorderBuffer rot);
     rvfi_rs1_data: ?,
     rvfi_rs2_data: ?,
     rvfi_pc_rdata: rot.pc,
-    rvfi_pc_wdata: rot.pc + 4,
+    rvfi_pc_wdata: next_pc,
     rvfi_mem_wdata: 0,
     rvfi_rd_addr: rot.orig_inst[11:7],
-    rvfi_rd_wdata: ?,
-    rvfi_mem_addr: 0,
-    rvfi_mem_rmask: 0,
-    rvfi_mem_wmask: 0,
-    rvfi_mem_rdata: 0
+    rvfi_rd_wdata: ((rot.orig_inst[11:7]==0) ? 0:data),
+    rvfi_mem_addr: addr,
+    rvfi_mem_rmask: pack(rmask),
+    rvfi_mem_wmask: pack(wmask),
+    rvfi_mem_rdata: data
   };
 endfunction
 `endif
