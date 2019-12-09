@@ -50,7 +50,7 @@ import CCTypes::*;
 import L1CoCache::*;
 import MMIOInst::*;
 `ifdef RVFI_DII
-import RVFI_DII::*;
+import RVFI_DII_Types::*;
 import Types::*;
 `endif
 
@@ -92,7 +92,8 @@ interface FetchStage;
     // debug
     method FetchDebugState getFetchState;
 `ifdef RVFI_DII
-    interface Client#(Dii_Id, InstsAndIDs) dii;
+    interface Client#(Dii_Ids, InstsAndIDs) dii;
+    method Action lastTraceId(Dii_Id in);
 `endif
 
     // performance
@@ -303,7 +304,7 @@ module mkFetchStage(FetchStage);
     // rule ordering: Fetch1 (BTB+TLB) < Fetch3 (decode & dir pred) < redirect method
     // Fetch1 < Fetch3 to avoid bypassing path on PC and epochs
 
-    Bool verbose = False;
+    Bool verbose = True;
     Integer verbosity = 1;
 
     // Basic State Elements
@@ -329,13 +330,13 @@ module mkFetchStage(FetchStage);
     Integer pc_redirect_port = 2;
 
     // Epochs
-    Reg#(Bool) decode_epoch <- mkReg(False);
+    Ehr#(2, Bool) decode_epoch <- mkEhr(False);
     Reg#(Epoch) f_main_epoch <- mkReg(0); // fetch estimate of main epoch
 
-    // Regs to hold the first half of an instruction that straddles a cache line boundary
-    Reg #(Bool)      rg_pending_straddle <- mkReg (False);
-    Reg #(Addr)      rg_half_inst_pc     <- mkRegU;    // The PC of the straddling instruction
-    Reg #(Bit #(16)) rg_half_inst_lsbs   <- mkRegU;    // The 16 lsbs of the straddling instruction
+   // Regs/wires to hold the first half of an instruction that straddles a cache line boundary
+   Ehr #(3, Bool)      ehr_pending_straddle <- mkEhr (False);
+   Ehr #(2, Addr)      ehr_half_inst_pc     <- mkEhr (?);    // The PC of the straddling instruction
+   Ehr #(2, Bit #(16)) ehr_half_inst_lsbs   <- mkEhr (?);    // The 16 lsbs of the straddling instruction
 
     // Pipeline Stage FIFOs
     Fifo#(2, Tuple2#(Bit#(TLog#(SupSize)),Fetch1ToFetch2)) f12f2 <- mkCFFifo;
@@ -394,21 +395,31 @@ module mkFetchStage(FetchStage);
 `endif
 
 `ifdef RVFI_DII
-    Fifo#(2, Dii_Id) dii_instIds <- mkCFFifo;
+    Fifo#(2, Dii_Ids) dii_instIds <- mkCFFifo;
     Fifo#(2, InstsAndIDs) dii_insts <- mkCFFifo;
     FIFOF#(Dii_Id) flush_id <- mkUGFIFOF1; // Next sequence number to request when trapping
     Reg#(Dii_Id) dii_id_next <- mkReg(0);
+    Reg#(Dii_Id) last_trace_id <- mkRegU;
     
-    rule feed_dii;
+    rule feed_dii(!waitForFlush);
+        Dii_Id next_id = dii_id_next;
         if (flush_id.notEmpty) begin
-            dii_instIds.enq(flush_id.first);
-            if (verbosity > 0) $display("Requested from %d DII", flush_id.first);
+            next_id = flush_id.first;
+            if (verbosity > 0) $display("DII flushed!");
             flush_id.deq;
-        end else begin
-            dii_instIds.enq(dii_id_next);
-            if (verbosity > 0) $display("Requested from %d DII", dii_id_next);
-            dii_id_next <= dii_id_next + 1;
         end
+        Dii_Ids reqs = replicate(tagged Invalid);
+        for (Integer i = 0; i < `sizeSup; i = i + 1)
+          reqs[i] = tagged Valid (next_id + fromInteger(i));
+        if (verbosity > 0) $display("Requested from DII", fshow(reqs));
+        dii_instIds.enq(reqs);
+        dii_id_next <= next_id + `sizeSup;
+    endrule
+    
+    Reg#(Bit#(4)) ticker <- mkReg(0);
+    rule tick;
+        ticker <= ticker + 4;
+        if (ticker == 0) $display("%t : tick", $time);
     endrule
 `endif
 
@@ -483,7 +494,7 @@ module mkFetchStage(FetchStage);
         let out = Fetch1ToFetch2 {
             pc: pc,
             pred_next_pc: pred_next_pc,
-            decode_epoch: decode_epoch,
+            decode_epoch: decode_epoch[0],
             main_epoch: f_main_epoch};
         f12f2.enq(tuple2(fromInteger(posLastSup),out));
         if (verbose) $display("Fetch1: ", fshow(out));
@@ -499,6 +510,7 @@ module mkFetchStage(FetchStage);
 
         // Access main mem or boot rom if no TLB exception
         Bool access_mmio = False;
+`ifndef RVFI_DII
         if (!isValid(cause)) begin
             case(mmio.getFetchTarget(phys_pc))
                 MainMem: begin
@@ -524,6 +536,7 @@ module mkFetchStage(FetchStage);
            Addr align32b_mask = 'h3;
            tval = (in.pc & (~ align32b_mask));
 	end
+`endif
 
         let out = Fetch2ToFetch3 {
             pc: in.pc,
@@ -542,14 +555,22 @@ module mkFetchStage(FetchStage);
             $display ("Fetch2: f2_tof3.enq: nbSup %0d out ", nbSup, fshow (out));
         end
     endrule
- 
+
 // Break out of i$
     rule doFetch3;
         let {nbSup, fetch3In} = f22f3.first;
         f22f3.deq();
         if (verbosity > 0)
         $display("Fetch3: fetch3In: ", fshow (fetch3In));
-
+        
+`ifdef RVFI_DII
+        Vector#(SupSize,Maybe#(Instruction)) inst_d = replicate(tagged Valid dii_nop);
+        if (fetch3In.main_epoch == f_main_epoch) begin
+            InstsAndIDs ii <- toGet(dii_insts).get();
+            inst_d = ii.insts;
+            if (verbosity > 0) $display("Got from DII: ", fshow (inst_d));
+        end
+`else
         // Get ICache/MMIO response if no exception
         // In case of exception, we still need to process at least inst_data[0]
         // (it will be turned to an exception later), so inst_data[0] must be
@@ -557,27 +578,21 @@ module mkFetchStage(FetchStage);
         Vector#(SupSize,Maybe#(Instruction)) inst_d = replicate(tagged Valid (0));
         if(!isValid(fetch3In.cause)) begin
             if(fetch3In.access_mmio) begin
-                if(verbose) $display("get answer from MMIO %d", fetch3In.pc);
+                if(verbose) $display("get answer from MMIO %x", fetch3In.pc);
                 inst_d <- mmio.bootRomResp;
             end
             else begin
-                if(verbose) $display("get answer from memory %d", fetch3In.pc);
+                if(verbose) $display("get answer from memory %x", fetch3In.pc);
                 inst_d <- mem_server.response.get;
             end
         end
-        
-`ifdef RVFI_DII
-        InstsAndIDs ii <- toGet(dii_insts).get();
-        inst_d = ii.insts;
-        if (verbosity > 0)
-        $display("Got from DII: ", fshow (inst_d));
 `endif
 
-       if (fetch3In.decode_epoch != decode_epoch) begin
+       if (fetch3In.decode_epoch != decode_epoch[1]) begin
 	  // Just drop it.
           if (verbosity > 0) begin
 	     $display ("----------------");
-	     $display ("Fetch3: Drop: decode epoch: %d", decode_epoch);
+	     $display ("Fetch3: Drop: decode epoch: %d", decode_epoch[1]);
 	     $display ("Fetch3: f22f3.first: ", fshow (f22f3.first));
 	     $display ("Fetch3: inst_d:      ", fshow (inst_d));
 	  end
@@ -588,8 +603,8 @@ module mkFetchStage(FetchStage);
 	  Addr start_PC = fetch3In.pc;
 
 	  // Handle cache-line boundary straddling instruction, if one is pending
-	  if (rg_pending_straddle) begin
-	     if (fetch3In.pc != rg_half_inst_pc + 4) begin
+	  if (ehr_pending_straddle[1]) begin
+	     if (fetch3In.pc != ehr_half_inst_pc[1] + 4) begin
 		$display ("----------------");
 		$display ("Fetch3: straddle: pc mismatch");
 		$display ("Fetch3: f22f3.first: ", fshow (f22f3.first));
@@ -598,17 +613,17 @@ module mkFetchStage(FetchStage);
 	     end
 	     else begin
 		// Prepend onto the sequence: { first-half of the instruction , 0 }
-		v_x16 = shiftInAt0 (shiftInAt0 (v_x16, rg_half_inst_lsbs), 0);
+		v_x16 = shiftInAt0 (shiftInAt0 (v_x16, ehr_half_inst_lsbs[1]), 0);
 		let bound = valueOf (SupSizeX2) - 1;
 		if (n_x16s < (fromInteger (bound) - 1))
 		   n_x16s = n_x16s + 2;
 		else if (n_x16s < fromInteger (bound))
 		   n_x16s = n_x16s + 1;
-		start_PC = rg_half_inst_pc;
-		rg_pending_straddle <= False;
+		start_PC = ehr_half_inst_pc[1];
+		ehr_pending_straddle[1] <= False;
 		if (verbosity > 0) begin
 		   $display ("----------------");
-		   $display ("Fetch3: straddle: prepend x16 %0h", rg_half_inst_lsbs);
+		   $display ("Fetch3: straddle: prepend x16 %0h", ehr_half_inst_lsbs[1]);
 		   $display ("Fetch3: f22f3.first: ", fshow (f22f3.first));
 		   $display ("Fetch3: inst_d:   ",  fshow (inst_d));
 		   $display ("Fetch3: v_x16:    ",  fshow (v_x16));
@@ -640,7 +655,7 @@ module mkFetchStage(FetchStage);
       // The main_epoch check is required to make sure this stage doesn't
       // redirect the PC if a later stage already redirected the PC.
       if (fetch3In.main_epoch == f_main_epoch) begin
-         Bool decode_epoch_local = decode_epoch; // next value for decode epoch
+         Bool decode_epoch_local = decode_epoch[0]; // next value for decode epoch
          Maybe#(Addr) redirectPc = Invalid; // next pc redirect by branch predictor
          Maybe#(TrainNAP) trainNAP = Invalid; // training data sent to next addr pred
 `ifdef PERF_COUNT
@@ -653,9 +668,9 @@ module mkFetchStage(FetchStage);
 	    if ((inst_data[i].inst_kind == Inst_32b_Lsbs) && (fromInteger(i) <= nbSup)) begin
 	       if (fetch3In.decode_epoch == decode_epoch_local) begin
 		  // Save the half-instruction and redirect doFetch1 to get the next cache line
-		  rg_pending_straddle <= True;
-		  rg_half_inst_pc     <= inst_data[i].pc;
-		  rg_half_inst_lsbs   <= inst_data[i].orig_inst [15:0];
+		  ehr_pending_straddle[0] <= True;
+		  ehr_half_inst_pc[0]     <= inst_data[i].pc;
+		  ehr_half_inst_lsbs[0]   <= inst_data[i].orig_inst [15:0];
 		  decode_epoch_local = ! decode_epoch_local;
 		  let next_PC = inst_data[i].pc + 4;
 		  redirectPc  = tagged Valid (next_PC);
@@ -763,7 +778,7 @@ module mkFetchStage(FetchStage);
 			      ras.ras[i].popPush(False, Valid (push_addr));
 			   end
                         end
-			end
+                    end
 
                      if(verbose) begin
 			$display("Branch prediction: ", fshow(dInst.iType), " ; ", fshow(in.pc), " ; ",
@@ -816,7 +831,7 @@ module mkFetchStage(FetchStage);
          if(redirectPc matches tagged Valid .nextPc) begin
 	    pc_reg[pc_decode_port] <= nextPc;
          end
-         decode_epoch <= decode_epoch_local;
+         decode_epoch[0] <= decode_epoch_local;
          // send training data for next addr pred
          if (trainNAP matches tagged Valid .x) begin
 	    napTrainByDecQ.enq(x);
@@ -887,6 +902,7 @@ module mkFetchStage(FetchStage);
         if (verbose) $display("Redirect: newpc %h, old f_main_epoch %d, new f_main_epoch %d",new_pc,f_main_epoch,f_main_epoch+1);
         pc_reg[pc_redirect_port] <= new_pc;
         f_main_epoch <= (f_main_epoch == fromInteger(valueOf(NumEpochs)-1)) ? 0 : f_main_epoch + 1;
+        ehr_pending_straddle[2] <= False;
         // redirect comes, stop stalling for redirect
         waitForRedirect <= False;
         setWaitRedirect_redirect_conflict.wset(?); // conflict with setWaitForRedirect
@@ -896,7 +912,19 @@ module mkFetchStage(FetchStage);
     endmethod
     method Action done_flushing() if (waitForFlush);
         // signal that the pipeline can resume fetching
-        waitForFlush <= False;
+`ifdef RVFI_DII
+        if (dii_insts.notEmpty) begin
+            dii_insts.deq;
+            if (verbose) $display("%t : Flushing; dequing dii_insts",$time());
+        end else begin
+            flush_id.enq(last_trace_id + 1);
+`endif
+            waitForFlush <= False;
+            if (verbose) $display("%t : Done Flushing",$time());
+`ifdef RVFI_DII
+        end
+`endif
+        
         // XXX The guard prevents the readyToFetch rule in Core.bsv from firing every cycle
         // The guard also makes this method sequence before (restricted) redirect method
         // So the effect of setting waitForFlush in redirect method will not be overwritten
@@ -985,6 +1013,9 @@ module mkFetchStage(FetchStage);
         interface Get request = toGet(dii_instIds);
         interface Put response = toPut(dii_insts);
     endinterface
+    method Action lastTraceId(Dii_Id in);
+        last_trace_id <= in;
+    endmethod
 `endif
 endmodule
  
