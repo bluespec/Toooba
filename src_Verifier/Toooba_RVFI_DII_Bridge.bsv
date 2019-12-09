@@ -43,8 +43,10 @@ import ConfigReg    :: *;
 // ================================================================
 // Project imports
 
+`include "ProcConfig.bsv"
+
 import Types::*;
-import ProcTypes::*;
+import ProcTypes::*; 
 
 //import Verifier  :: *;
 import RVFI_DII  :: *;
@@ -53,74 +55,51 @@ import RVFI_DII  :: *;
 
 interface Toooba_RVFI_DII_Bridge_IFC;
     interface Toooba_RVFI_DII_Server rvfi_dii_server;
-    interface Server#(Dii_Id, InstsAndIDs) dii;
+    interface Server#(Dii_Ids, InstsAndIDs) dii;
     interface Put#(Rvfi_Traces) rvfi;
+    method Dii_Id lastId;
 endinterface
 
 module mkTooobaRVFIDIIBridge(Toooba_RVFI_DII_Bridge_IFC);
     // DII state
-    FIFOF#(Tuple2#(Bit#(32), Dii_Id)) dii_in <- mkUGFIFOF;
-    Reg#(InstsAndIDs) buff <- mkConfigRegU;
     FIFOF#(InstsAndIDs) instrs <- mkSizedFIFOF(2048);
-    PulseWire putFromBridge <- mkPulseWire;
     // RVFI state
     FIFO#(Rvfi_Traces) report_vectors <- mkSizedFIFO(2048);
-    FIFO#(RVFI_DII_Execution#(DataSz,DataSz)) reports <- mkFIFO;
     // Request ID
-    FIFO#(Dii_Id) seq_req <- mkFIFO;
-
-    Bit#(32) nop = 'h01FFF033;
+    FIFO#(Dii_Ids) seq_req <- mkFIFO;
+    Reg#(Dii_Id) last_id <- mkReg(0);
     
     Bool verbose = True;
     
     function Bool validReport(RVFI_DII_Execution#(DataSz,DataSz) trace);
-        return (trace.rvfi_order != -1 && trace.rvfi_insn != nop);
+        return (trace.rvfi_insn != dii_nop);
     endfunction
     
-    Reg#(SupWaySel) report_select <- mkReg(0);
-    rule split_report_vectors;
-        RVFI_DII_Execution#(DataSz,DataSz) report = report_vectors.first[report_select];
-        if (verbose)
-                    $display("%t RVFI response: ", $time,
-                        fshow(report_vectors.first[report_select])
-                    );
-        if (validReport(report)) reports.enq(report);
-        if (report_select == -1) report_vectors.deq();
-        report_select <= report_select + 1;
-    endrule
+    // These two functions convert beteween "Invalid" instructions and "nops".
+    // This is because the pipeline currently isn't able to handle Invalid injections,
+    // so we replace them with special nops in the bridge that we can filter out in the rvfi trace stream.
+    function Maybe#(Bit#(32)) maybeToNop(Maybe#(Bit#(32)) in);
+        return tagged Valid fromMaybe(dii_nop, in);
+    endfunction
     
-    Reg#(SupWaySel) buffLvl <- mkConfigReg(0);
-    rule bufferInsts(buffLvl != 0 || dii_in.notEmpty);
-        InstsAndIDs cb = buff;
-        Bit#(32) ins = nop;
-        Dii_Id id = ?;
-        if (dii_in.notEmpty) {ins, id} <- toGet(dii_in).get;
-        cb.insts[buffLvl] = tagged Valid ins;
-        cb.ids[buffLvl] = id;
-        if (buffLvl == -1) begin
-            instrs.enq(cb);
-            cb.insts = replicate(tagged Invalid);
-        end
-        buff <= cb;
-        buffLvl <= buffLvl + 1;
-    endrule
+    function Maybe#(RVFI_DII_Execution #(DataSz,DataSz)) nopToMaybe(Maybe#(RVFI_DII_Execution #(DataSz,DataSz)) in);
+        Maybe#(RVFI_DII_Execution #(DataSz,DataSz)) ret = in;
+        if (ret matches tagged Valid .val &&& !validReport(val)) ret = tagged Invalid;
+        return (ret);
+    endfunction
 
     interface Toooba_RVFI_DII_Server rvfi_dii_server;
         interface Get seqReq = toGet(seq_req);
-        interface Put inst;
-            method Action put(Tuple2#(Bit#(32), Dii_Id) in) if (dii_in.notFull);
-                dii_in.enq(in);
-                putFromBridge.send();
-            endmethod
-        endinterface
-        interface Get trace_report = toGet(reports);
+        interface Put inst = toPut(instrs);
+        interface Get trace_report = toGet(report_vectors);
     endinterface
 
     interface Server dii;
         interface Put request = toPut(seq_req);
         interface Get response;
-            method ActionValue#(InstsAndIDs) get if (!putFromBridge);
+            method ActionValue#(InstsAndIDs) get;
                 InstsAndIDs insts = instrs.first();
+                insts.insts = map(maybeToNop, insts.insts);
                 instrs.deq();
                 if (verbose)
                     $display("%t DII injection: ", $time,
@@ -131,7 +110,21 @@ module mkTooobaRVFIDIIBridge(Toooba_RVFI_DII_Bridge_IFC);
         endinterface
     endinterface
 
-    interface Put rvfi = toPut(report_vectors);
+    interface Put rvfi;
+        method Action put(Rvfi_Traces in);
+            Rvfi_Traces out = map(nopToMaybe,in);
+            report_vectors.enq(out);
+            Dii_Id next_id = last_id;
+            for (Integer i = 0; i < `sizeSup; i = i + 1) begin
+                if (out[i] matches tagged Valid .rpt) begin
+                  Dii_Id this_id = unpack(truncate(rpt.rvfi_order));
+                  if (this_id > next_id) next_id = this_id;
+                end
+            end
+            last_id <= next_id;
+        endmethod
+    endinterface
+    method Dii_Id lastId = last_id;
 endmodule
 
 endpackage

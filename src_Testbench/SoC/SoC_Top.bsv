@@ -72,7 +72,7 @@ import TV_Info :: *;
 `endif
 
 `ifdef RVFI_DII
-import RVFI_DII :: *;
+import RVFI_DII_Types :: *;
 import Types :: *;
 `endif
 

@@ -179,6 +179,9 @@ module mkCore#(CoreId coreId)(Core);
 `ifdef RVFI_DII
     Toooba_RVFI_DII_Bridge_IFC rvfi_bridge <- mkTooobaRVFIDIIBridge;
     mkConnection(rvfi_bridge.dii, fetchStage.dii);
+    rule rl_passLastId;
+        fetchStage.lastTraceId(rvfi_bridge.lastId);
+    endrule
 `endif
 
     // back end

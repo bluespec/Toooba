@@ -40,7 +40,7 @@ import VerificationPacket::*;
 import RenameDebugIF::*;
 
 `ifdef RVFI
-import RVFI_DII  :: *;
+import RVFI_DII_Types::*;
 `endif
 
 typedef struct {
@@ -131,41 +131,47 @@ typedef struct {
 } CommitTrap deriving(Bits, Eq, FShow);
 
 `ifdef RVFI
-function RVFI_DII_Execution#(DataSz,DataSz) genRVFI(ToReorderBuffer rot);
-  Addr addr = 0;
-  Addr next_pc = rot.pc + 4;
-  Data data = rot.traceBundle.regWriteData;
-  case (rot.ppc_vaddr_csrData) matches
-      tagged VAddr .vaddr: addr = vaddr;
-      tagged PPC .ppc: next_pc = ppc;
-      tagged CSRData .csrdata: data = csrdata;
-  endcase
-  ByteEn rmask = replicate(False);
-  ByteEn wmask = replicate(False);
-  case (rot.lsqTag) matches
-      tagged Ld .l: rmask = rot.traceBundle.memByteEn;
-      tagged St .s: wmask = rot.traceBundle.memByteEn;
-  endcase
-  return RVFI_DII_Execution {
-    rvfi_order: 0, // Instruction number? InstID maybe?
-    rvfi_trap: isValid(rot.trap),
-    rvfi_halt: False,
-    rvfi_intr: ?,
-    rvfi_insn: rot.orig_inst,
-    rvfi_rs1_addr: rot.orig_inst[19:15],
-    rvfi_rs2_addr: rot.orig_inst[24:20],
-    rvfi_rs1_data: ?,
-    rvfi_rs2_data: ?,
-    rvfi_pc_rdata: rot.pc,
-    rvfi_pc_wdata: next_pc,
-    rvfi_mem_wdata: 0,
-    rvfi_rd_addr: rot.orig_inst[11:7],
-    rvfi_rd_wdata: ((rot.orig_inst[11:7]==0) ? 0:data),
-    rvfi_mem_addr: addr,
-    rvfi_mem_rmask: pack(rmask),
-    rvfi_mem_wmask: pack(wmask),
-    rvfi_mem_rdata: data
-  };
+function Maybe#(RVFI_DII_Execution#(DataSz,DataSz)) genRVFI(ToReorderBuffer rot, Dii_Id traceCnt);
+    Addr addr = 0;
+    Addr next_pc = 0;
+    Data data = 0;
+    ByteEn rmask = replicate(False);
+    ByteEn wmask = replicate(False);
+    if (!isValid(rot.trap)) begin
+        next_pc = rot.pc + 4;
+        data = rot.traceBundle.regWriteData;
+        case (rot.ppc_vaddr_csrData) matches
+            tagged VAddr .vaddr: begin
+              addr = vaddr;
+              case (rot.lsqTag) matches
+                  tagged Ld .l: rmask = rot.traceBundle.memByteEn;
+                  tagged St .s: wmask = rot.traceBundle.memByteEn;
+              endcase
+            end
+            tagged PPC .ppc: next_pc = ppc;
+            tagged CSRData .csrdata: data = csrdata;
+        endcase
+    end
+    return tagged Valid RVFI_DII_Execution {
+        rvfi_order: zeroExtend(pack(traceCnt)),
+        rvfi_trap: isValid(rot.trap),
+        rvfi_halt: False,
+        rvfi_intr: ?,
+        rvfi_insn: rot.orig_inst,
+        rvfi_rs1_addr: rot.orig_inst[19:15],
+        rvfi_rs2_addr: rot.orig_inst[24:20],
+        rvfi_rs1_data: ?,
+        rvfi_rs2_data: ?,
+        rvfi_pc_rdata: rot.pc,
+        rvfi_pc_wdata: next_pc,
+        rvfi_mem_wdata: 0,
+        rvfi_rd_addr: rot.orig_inst[11:7],
+        rvfi_rd_wdata: ((rot.orig_inst[11:7]==0) ? 0:data),
+        rvfi_mem_addr: addr,
+        rvfi_mem_rmask: pack(rmask),
+        rvfi_mem_wmask: pack(wmask),
+        rvfi_mem_rdata: data
+    };
 endfunction
 `endif
 
@@ -230,6 +236,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 `ifdef RVFI
     // RVFI trace report. Not an input?
     FIFO#(Rvfi_Traces) rvfiQ <- mkFIFO;
+    Reg#(Dii_Id) traceCnt <- mkReg(0);
 `endif
 
     // deadlock check
@@ -428,9 +435,10 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 	   $display ("CommitStage.doCommitTrap_flush: commitTrap: ", fshow (commitTrap_val));
 	end
 `ifdef RVFI
-        Rvfi_Traces rvfis = replicate(RVFI_DII_Execution{rvfi_order: -1});
-        rvfis[0] = genRVFI(x);
+        Rvfi_Traces rvfis = replicate(tagged Invalid);
+        rvfis[0] = genRVFI(x, traceCnt);
         rvfiQ.enq(rvfis);
+        traceCnt <= traceCnt + 1;
 `endif
 
         // flush everything. Only increment epoch and stall fetch when we haven
@@ -469,6 +477,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         if(trap.trap matches tagged Interrupt .inter) begin
             inIfc.commitCsrInstOrInterrupt;
         end
+        if (verbose) $display ("CommitStage.doCommitTrap_handle: ", fshow (commitTrap));
 
         // trap handling & redirect
         let new_pc <- csrf.trap(trap.trap, trap.pc, trap.addr);
@@ -533,9 +542,10 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 	   rg_instret <= rg_instret + 1;
 	end
 `ifdef RVFI
-        Rvfi_Traces rvfis = replicate(RVFI_DII_Execution{rvfi_order: -1});
-        rvfis[0] = genRVFI(x);
+        Rvfi_Traces rvfis = replicate(tagged Invalid);
+        rvfis[0] = genRVFI(x, traceCnt);
         rvfiQ.enq(rvfis);
+        traceCnt <= traceCnt + 1;
 `endif
 
         // we claim a phy reg for every inst, so commit its renaming
@@ -679,7 +689,8 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 `endif
 
 `ifdef RVFI
-        Rvfi_Traces rvfis = replicate(RVFI_DII_Execution{rvfi_order: -1});
+        Rvfi_Traces rvfis = replicate(tagged Invalid);
+        SupCnt whichTrace = 0;
 `endif
 
         Bit #(64) instret = 0;
@@ -698,7 +709,8 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                 else begin
                     if (verbose) $display("[doCommitNormalInst - %d] ", i, fshow(inst_tag), " ; ", fshow(x));
 `ifdef RVFI
-                    rvfis[i] = genRVFI(x);
+                    rvfis[i] = genRVFI(x, traceCnt + zeroExtend(whichTrace));
+                    whichTrace = whichTrace + 1;
 `endif
 
 		    if (verbosity > 0) begin
@@ -805,6 +817,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 `endif
 `ifdef RVFI
         rvfiQ.enq(rvfis);
+        traceCnt <= traceCnt + zeroExtend(whichTrace);
 `endif
     endrule
 

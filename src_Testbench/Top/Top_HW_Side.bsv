@@ -31,6 +31,8 @@ package Top_HW_Side;
 // ================================================================
 // BSV lib imports
 
+`include "ProcConfig.bsv"
+
 import GetPut       :: *;
 import ClientServer :: *;
 import Connectable  :: *;
@@ -300,6 +302,7 @@ endmodule
 
 (* synthesize *)
 module mkTop_HW_Side(Empty)
+
     provisos (Add#(a__, TDiv#(DataSz,8), 8), Add#(b__, DataSz, 64), Add#(c__, TDiv#(DataSz,8), 8), Add#(d__, DataSz, 64));
 
     Reg #(Bool) rg_banner_printed <- mkReg (False);
@@ -314,15 +317,14 @@ module mkTop_HW_Side(Empty)
        rg_banner_printed <= True;
     endrule
 
-    RVFI_DII_Bridge #(DataSz, DataSz, SEQ_LEN) bridge <- mkRVFI_DII_Bridge("", 5001);
+    RVFI_DII_Bridge #(DataSz, DataSz, `sizeSup) bridge <- mkRVFI_DII_Bridge("", 5001);
     let    dut <- mkPre_Top_HW_Side(reset_by bridge.new_rst);
     mkConnection(bridge.client.report, dut.trace_report);
 
-    (* descending_urgency = "bridge.handleReset, rl_provide_instr" *)
     rule rl_provide_instr;
-        Dii_Id req <- dut.seqReq.get;
-        Bit#(32) inst <- bridge.client.getInst(req);
-        dut.inst.put(tuple2(inst, req));
+        Dii_Ids reqs <- dut.seqReq.get;
+        Dii_Insts insts <- bridge.client.getInst(reqs);
+        dut.inst.put(InstsAndIDs{insts: insts, ids: reqs});
     endrule
 endmodule
 
