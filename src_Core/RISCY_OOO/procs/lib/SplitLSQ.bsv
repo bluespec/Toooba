@@ -288,6 +288,7 @@ typedef struct {
 } LSQHitInfo deriving(Bits, Eq, FShow);
 
 typedef struct {
+    LdQTag             tag;
     InstTag            instTag;
     LdQMemFunc         memFunc;
     ByteEn             byteEn;
@@ -2009,6 +2010,7 @@ module mkSplitLSQ(SplitLSQ);
     method LdQDeqEntry firstLd if(deqLdGuard);
         LdQTag deqP = ld_deqP_deqLd;
         return LdQDeqEntry {
+            tag: deqP,
             instTag: ld_instTag[deqP],
             memFunc: ld_memFunc[deqP],
             byteEn: ld_byteEn[deqP],

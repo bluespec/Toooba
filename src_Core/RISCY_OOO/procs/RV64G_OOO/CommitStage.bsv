@@ -135,18 +135,23 @@ function Maybe#(RVFI_DII_Execution#(DataSz,DataSz)) genRVFI(ToReorderBuffer rot,
     Addr addr = 0;
     Addr next_pc = 0;
     Data data = 0;
+    Data wdata = 0;
     ByteEn rmask = replicate(False);
     ByteEn wmask = replicate(False);
     if (!isValid(rot.trap)) begin
         next_pc = rot.pc + 4;
-        data = rot.traceBundle.regWriteData;
+        data = rot.traceBundle.regWriteData; // Default for register-to-register operations.
         case (rot.ppc_vaddr_csrData) matches
             tagged VAddr .vaddr: begin
-              addr = vaddr;
-              case (rot.lsqTag) matches
-                  tagged Ld .l: rmask = rot.traceBundle.memByteEn;
-                  tagged St .s: wmask = rot.traceBundle.memByteEn;
-              endcase
+                addr = vaddr;
+                case (rot.lsqTag) matches
+                    tagged Ld .l: rmask = rot.traceBundle.memByteEn;
+                    tagged St .s: begin
+                        wmask = rot.traceBundle.memByteEn;
+                        data = 0;
+                        wdata = rot.traceBundle.regWriteData;
+                    end
+                endcase
             end
             tagged PPC .ppc: next_pc = ppc;
             tagged CSRData .csrdata: data = csrdata;
@@ -164,7 +169,7 @@ function Maybe#(RVFI_DII_Execution#(DataSz,DataSz)) genRVFI(ToReorderBuffer rot,
         rvfi_rs2_data: ?,
         rvfi_pc_rdata: rot.pc,
         rvfi_pc_wdata: next_pc,
-        rvfi_mem_wdata: 0,
+        rvfi_mem_wdata: wdata,
         rvfi_rd_addr: rot.orig_inst[11:7],
         rvfi_rd_wdata: ((rot.orig_inst[11:7]==0) ? 0:data),
         rvfi_mem_addr: addr,

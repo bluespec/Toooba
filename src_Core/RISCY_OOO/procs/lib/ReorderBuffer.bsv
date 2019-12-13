@@ -111,7 +111,11 @@ interface ReorderBufferRowEhr#(numeric type aluExeNum, numeric type fpuMulDivExe
     method ToReorderBuffer read_deq;
     method Action setLSQAtCommitNotified;
     // deqLSQ rules set ROB state: set execeptions, load mispeculation, and becomes Executed
-    method Action setExecuted_deqLSQ(Maybe#(Exception) cause, Maybe#(LdKilledBy) ld_killed);
+    method Action setExecuted_deqLSQ(Maybe#(Exception) cause, Maybe#(LdKilledBy) ld_killed
+`ifdef RVFI
+    , ExtraTraceBundle tb
+`endif
+    );
     // doFinish rules set ROB state for ALU and FPU/MUL/DIV (always become Executed)
     interface Vector#(aluExeNum, Row_setExecuted_doFinishAlu) setExecuted_doFinishAlu;
     interface Vector#(fpuMulDivExeNum, Row_setExecuted_doFinishFpuMulDiv) setExecuted_doFinishFpuMulDiv;
@@ -120,7 +124,11 @@ interface ReorderBufferRowEhr#(numeric type aluExeNum, numeric type fpuMulDivExe
     // faulting inst cannot have this set, since there is no access to
     // perform), and non-MMIO St can become Executed (NOTE faulting
     // instructions are not Executed, they are set at deqLSQ time)
-    method Action setExecuted_doFinishMem(Addr vaddr, Bool access_at_commit, Bool non_mmio_st_done);
+    method Action setExecuted_doFinishMem(Addr vaddr, Bool access_at_commit, Bool non_mmio_st_done
+`ifdef RVFI
+        , ExtraTraceBundle tb
+`endif
+    );
 `ifdef INORDER_CORE
     // in-order core sets LSQ tag after getting out of issue queue
     method Action setLSQTag(LdStQTag t, Bool isFence);
@@ -204,6 +212,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     Ehr#(3, SpecBits)                                               spec_bits            <- mkEhr(?);
 `ifdef RVFI
     Ehr#(TAdd#(2, aluExeNum), (ExtraTraceBundle))                   traceBundle          <- mkEhr(?);
+    Reg#(ExtraTraceBundle)                                          traceBundleMem       <- mkRegU;
 `endif
 
     // wires to get stale (EHR port 0) values of PPC
@@ -233,6 +242,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
                     ppc_vaddr_csrData[pvc_finishAlu_port(i)] <= PPC (cf.nextPc);
                 end
 `ifdef RVFI
+                $display("%t : traceBundle = ", $time(), fshow(tb), " in Row_setExecuted_doFinishAlu for %x", pc);
                 traceBundle[pvc_finishAlu_port(i)] <= tb;
 `endif
                 doAssert(isValid(csr) == isValid(csrData), "csr valid should match");
@@ -260,7 +270,11 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
 
     interface setExecuted_doFinishFpuMulDiv = fpuMulDivExe;
 
-    method Action setExecuted_doFinishMem(Addr vaddr, Bool access_at_commit, Bool non_mmio_st_done);
+    method Action setExecuted_doFinishMem(Addr vaddr, Bool access_at_commit, Bool non_mmio_st_done
+`ifdef RVFI
+        , ExtraTraceBundle tb
+`endif
+    );
         doAssert(!(access_at_commit && non_mmio_st_done),
                  "cannot both be true");
         // update ROB state
@@ -270,6 +284,10 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         end
         // update VAddr
         ppc_vaddr_csrData[pvc_finishMem_port] <= VAddr (vaddr);
+`ifdef RVFI
+        $display("%t : traceBundle = ", $time(), fshow(tb), " in setExecuted_doFinishMem for %x", pc);
+        traceBundle[pvc_finishMem_port] <= tb;
+`endif
         // update access at commit
         memAccessAtCommit[accessCom_finishMem_port] <= access_at_commit;
         // udpate non mmio st
@@ -310,6 +328,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         lsqAtCommitNotified[lsqNotified_enq_port] <= False;
         nonMMIOStDone[nonMMIOSt_enq_port] <= False;
 `ifdef RVFI
+        $display("%t : traceBundle = ", $time(), fshow(x.traceBundle), " in write_enq for %x", pc);
         traceBundle[pvc_enq_port] <= x.traceBundle;
 `endif
         // check
@@ -339,7 +358,15 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
             nonMMIOStDone: nonMMIOStDone[nonMMIOSt_deq_port],
             epochIncremented: epochIncremented,
 `ifdef RVFI
-            traceBundle: traceBundle[pvc_deq_port],
+            traceBundle: case (ppc_vaddr_csrData[pvc_deq_port]) matches
+                            tagged VAddr .v: begin
+                                case (lsqTag) matches
+                                    tagged Ld .l: return traceBundleMem;
+                                    default: return traceBundle[pvc_deq_port];
+                                endcase
+                            end
+                            default: return traceBundle[pvc_deq_port];
+                        endcase,
 `endif
             spec_bits: spec_bits[sb_deq_port]
         };
@@ -349,9 +376,19 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         lsqAtCommitNotified[lsqNotified_setNotified_port] <= True;
     endmethod
 
-    method Action setExecuted_deqLSQ(Maybe#(Exception) cause, Maybe#(LdKilledBy) ld_killed);
+    method Action setExecuted_deqLSQ(
+        Maybe#(Exception) cause,
+        Maybe#(LdKilledBy) ld_killed
+`ifdef RVFI
+        , ExtraTraceBundle tb
+`endif
+        );
         // inst becomes Executed
         rob_inst_state[state_deqLSQ_port] <= Executed;
+`ifdef RVFI
+        traceBundleMem <= tb;
+        $display("%t: Wrote tb for deqLSQ ", $time(), fshow(tb));
+`endif
         // record trap
         doAssert(!isValid(trap[trap_deqLSQ_port]), "cannot have trap");
         if(cause matches tagged Valid .e) begin
@@ -447,12 +484,20 @@ interface SupReorderBuffer#(numeric type aluExeNum, numeric type fpuMulDivExeNum
     // record that we have notified LSQ about inst reaching commit 
     method Action setLSQAtCommitNotified(InstTag x);
     // deqLSQ rules set ROB state
-    method Action setExecuted_deqLSQ(InstTag x, Maybe#(Exception) cause, Maybe#(LdKilledBy) ld_killed);
+    method Action setExecuted_deqLSQ(InstTag x, Maybe#(Exception) cause, Maybe#(LdKilledBy) ld_killed
+`ifdef RVFI
+    , ExtraTraceBundle tb
+`endif
+    );
     // doFinish rules set ROB state in ALU and FPU/MUL/DIV
     interface Vector#(aluExeNum, ROB_setExecuted_doFinishAlu) setExecuted_doFinishAlu;
     interface Vector#(fpuMulDivExeNum, ROB_setExecuted_doFinishFpuMulDiv) setExecuted_doFinishFpuMulDiv;
     // doFinishMem, after addr translation
-    method Action setExecuted_doFinishMem(InstTag x, Addr vaddr, Bool access_at_commit, Bool non_mmio_st_done);
+    method Action setExecuted_doFinishMem(InstTag x, Addr vaddr, Bool access_at_commit, Bool non_mmio_st_done
+`ifdef RVFI
+        , ExtraTraceBundle tb
+`endif
+    );
 `ifdef INORDER_CORE
     // in-order core sets LSQ tag after getting out of issue queue
     method Action setLSQTag(InstTag x, LdStQTag t, Bool isFence);
@@ -1016,10 +1061,18 @@ module mkSupReorderBuffer#(
         row[x.way][x.ptr].setLSQAtCommitNotified;
     endmethod
 
-    method Action setExecuted_deqLSQ(InstTag x, Maybe#(Exception) cause, Maybe#(LdKilledBy) ld_killed) if(
+    method Action setExecuted_deqLSQ(InstTag x, Maybe#(Exception) cause, Maybe#(LdKilledBy) ld_killed
+`ifdef RVFI
+    , ExtraTraceBundle tb
+`endif
+    ) if(
         all(id, readVReg(setExeLSQ_SB_enq)) // ordering: < enq
     );
-        row[x.way][x.ptr].setExecuted_deqLSQ(cause, ld_killed);
+        row[x.way][x.ptr].setExecuted_deqLSQ(cause, ld_killed
+`ifdef RVFI
+            , tb
+`endif
+        );
     endmethod
 
     interface setExecuted_doFinishAlu = aluSetExeIfc;
@@ -1028,10 +1081,17 @@ module mkSupReorderBuffer#(
 
     method Action setExecuted_doFinishMem(
         InstTag x, Addr vaddr, Bool access_at_commit, Bool non_mmio_st_done
+`ifdef RVFI
+        , tb
+`endif
     ) if(
         all(id, readVReg(setExeMem_SB_enq)) // ordering: < enq
     );
-        row[x.way][x.ptr].setExecuted_doFinishMem(vaddr, access_at_commit, non_mmio_st_done);
+        row[x.way][x.ptr].setExecuted_doFinishMem(vaddr, access_at_commit, non_mmio_st_done
+`ifdef RVFI
+            , tb
+`endif
+        );
     endmethod
 
 `ifdef INORDER_CORE

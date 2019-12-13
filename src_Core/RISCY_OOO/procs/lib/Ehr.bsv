@@ -49,12 +49,7 @@ endfunction
 
 module mkEhr#(t init)(Ehr#(n, t)) provisos(Bits#(t, tSz));
   Vector#(n, RWire#(t)) lat <- replicateM(mkUnsafeRWire);
-
-  Vector#(n, Vector#(n, RWire#(Bool))) dummy <- replicateM(replicateM(mkUnsafeRWire));
-  Vector#(n, Reg#(Bool)) dummy2 <- replicateM(mkRevertingVirtualReg(True)); // this must be true
-
   Reg#(t) rl <- mkReg(init);
-
   Ehr#(n, t) r = newVector;
 
   (* fire_when_enabled, no_implicit_conditions *)
@@ -70,22 +65,16 @@ module mkEhr#(t init)(Ehr#(n, t)) provisos(Bits#(t, tSz));
     r[i] = (interface Reg;
               method Action _write(t x);
                 lat[i].wset(x);
-                dummy2[i] <= True;
-                for(Integer j = 0; j < i; j = j + 1)
-                  dummy[i][j].wset(isValid(lat[j].wget));
               endmethod
 
               method t _read;
                 t upd = rl;
-                Bool yes = True;
-                for(Integer j = i; j < valueOf(n); j = j + 1)
-                  yes = yes && dummy2[j];
                 for(Integer j = 0; j < i; j = j + 1)
                 begin
                   if(lat[j].wget matches tagged Valid .x)
                     upd = x;
                 end
-                return yes? upd : unpack(0);
+                return upd;
                 // use a non-? val here! otherwise new BSV compiler will stop optimize at ? val
                 // this affects judging if two rules are exclusive
               endmethod

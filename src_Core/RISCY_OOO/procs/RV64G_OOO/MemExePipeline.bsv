@@ -28,6 +28,7 @@ import GetPut::*;
 import ClientServer::*;
 import Cntrs::*;
 import Fifo::*;
+import Ehr::*;
 import Types::*;
 import ProcTypes::*;
 import MemoryTypes::*;
@@ -144,8 +145,16 @@ interface MemExeInput;
     method Data csrf_rd(CSR csr);
     // ROB
     method Addr rob_getPC(InstTag t);
-    method Action rob_setExecuted_doFinishMem(InstTag t, Addr vaddr, Bool access_at_commit, Bool non_mmio_st_done);
-    method Action rob_setExecuted_deqLSQ(InstTag t, Maybe#(Exception) cause, Maybe#(LdKilledBy) ld_killed);
+    method Action rob_setExecuted_doFinishMem(InstTag t, Addr vaddr, Bool access_at_commit, Bool non_mmio_st_done
+`ifdef RVFI
+        , ExtraTraceBundle tb
+`endif
+    );
+    method Action rob_setExecuted_deqLSQ(InstTag t, Maybe#(Exception) cause, Maybe#(LdKilledBy) ld_killed
+`ifdef RVFI
+        , ExtraTraceBundle tb
+`endif
+    );
     // MMIO
     method Bool isMMIOAddr(Addr a);
     method Action mmioReq(MMIOCRq r);
@@ -179,7 +188,7 @@ interface MemExePipeline;
 endinterface
 
 module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
-    Bool verbose = False;
+    Bool verbose = True;
 
     // we change cache request in case of single core, becaues our MSI protocol
     // is not good with single core
@@ -270,7 +279,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
                 inIfc.setRegReadyAggr_mem(dst.indx);
             end
             if(verbose) begin
-                $display("[Ld resp] ", fshow(id), "; ", fshow(d), "; ", fshow(info));
+                $display("%t : [Ld resp] ", $time, fshow(id), "; ", fshow(d), "; ", fshow(info));
             end
 `ifdef PERF_COUNT
             // perf: load mem latency
@@ -416,6 +425,10 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         });
     endrule
 
+`ifdef RVFI_DII
+    Vector#(TExp#(SizeOf#(LdStQTag)), Reg#(Data)) memData <- replicateM(mkReg(?));
+`endif
+
     rule doExeMem;
         regToExeQ.deq;
         let regToExe = regToExeQ.first;
@@ -425,6 +438,11 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         // get virtual addr & St/Sc/Amo data
         Addr vaddr = x.rVal1 + signExtend(x.imm);
         Data data = x.rVal2;
+        
+`ifdef RVFI_DII
+        memData[pack(x.ldstq_tag)] <= data;
+        $display("%t : memData[%x] <= %x", $time(), pack(x.ldstq_tag), data);
+`endif
 
         // get shifted data and BE
         // we can use virtual addr to shift, since page size > dword size
@@ -512,8 +530,21 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         endcase);
         Bool access_at_commit = !isValid(cause) && (isMMIO || isLrScAmo);
         Bool non_mmio_st_done = !isValid(cause) && !isMMIO && x.mem_func == St;
-        inIfc.rob_setExecuted_doFinishMem(x.tag, x.vaddr,
-                                          access_at_commit, non_mmio_st_done);
+        inIfc.rob_setExecuted_doFinishMem(
+            x.tag,
+            x.vaddr,
+            access_at_commit,
+            non_mmio_st_done
+`ifdef RVFI
+            , ExtraTraceBundle{
+                regWriteData: memData[pack(x.ldstq_tag)],
+                memByteEn: unpack(pack(x.shiftedBE) >> x.vaddr[2:0])
+            }
+`endif
+        );
+`ifdef RVFI
+        $display("%t : memData[%x]: %x", $time(), pack(x.ldstq_tag), memData[pack(x.ldstq_tag)]);
+`endif
 
         // update LSQ
         LSQUpdateAddrResult updRes <- lsq.updateAddr(
@@ -640,7 +671,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
     function Action doRespLd(LdQTag tag, Data data, String rule_name);
     action
         LSQRespLdResult res <- lsq.respLd(tag, data);
-        if(verbose) $display(rule_name, " ", fshow(tag), "; ", fshow(data), "; ", fshow(res));
+        if(verbose) $display("%t : ", $time, rule_name, " ", fshow(tag), "; ", fshow(data), "; ", fshow(res));
         if(res.dst matches tagged Valid .dst) begin
             inIfc.writeRegFile(dst.indx, res.data);
 `ifdef PERF_COUNT
@@ -651,13 +682,18 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
                 exeLdToUseCnt.incr(1);
             end
 `endif
+`ifdef RVFI
+            LdStQTag idx = tagged Ld tag;
+            memData[pack(idx)] <= res.data;
+            $display("%t : memData[%x] <= %x", $time(), pack(idx), res.data);
+`endif
         end
         if(res.wrongPath) begin
             doAssert(res.dst == Invalid, "wrong path resp cannot write reg");
         end
     endaction
     endfunction
-
+    
     rule doRespLdMem;
         memRespLdQ.deq;
         let {t, d} = memRespLdQ.first;
@@ -673,12 +709,22 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
 
     // deqStQ
     LdQDeqEntry lsqDeqLd = lsq.firstLd;
+`ifdef RVFI
+    LdStQTag lsqDeqIdx = tagged Ld lsqDeqLd.tag;
+`endif
 
     // deq fault/killed ld
     rule doDeqLdQ_fault(isValid(lsqDeqLd.fault));
         if(verbose) $display("[doDeqLdQ_fault] ", fshow(lsqDeqLd));
         lsq.deqLd;
-        inIfc.rob_setExecuted_deqLSQ(lsqDeqLd.instTag, lsqDeqLd.fault, Invalid);
+        inIfc.rob_setExecuted_deqLSQ(lsqDeqLd.instTag, lsqDeqLd.fault, Invalid
+`ifdef RVFI
+            , ExtraTraceBundle{
+                regWriteData: memData[pack(lsqDeqIdx)],
+                memByteEn: replicate(False)
+            }
+`endif
+        );
         // check
         doAssert(!isValid(lsqDeqLd.killed), "cannot be killed");
     endrule
@@ -693,7 +739,14 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         // normal load should not have .rl, so no need to check SB empty
         doAssert(!lsqDeqLd.rel, "normal Ld cannot have .rl");
         // set ROB as Executed (may be killed)
-        inIfc.rob_setExecuted_deqLSQ(lsqDeqLd.instTag, Invalid, lsqDeqLd.killed);
+        inIfc.rob_setExecuted_deqLSQ(lsqDeqLd.instTag, Invalid, lsqDeqLd.killed
+`ifdef RVFI
+            , ExtraTraceBundle{
+                regWriteData: memData[pack(lsqDeqIdx)],
+                memByteEn: replicate(False)
+            }
+`endif
+        );
     endrule
 
     // issue non-MMIO Lr wihtout fault when
@@ -781,7 +834,17 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             inIfc.writeRegFile(dst.indx, resp);
             inIfc.setRegReadyAggr_mem(dst.indx);
         end
-        inIfc.rob_setExecuted_deqLSQ(lsqDeqLd.instTag, Invalid, Invalid);
+        inIfc.rob_setExecuted_deqLSQ(
+            lsqDeqLd.instTag,
+            Invalid,
+            Invalid
+`ifdef RVFI
+            , ExtraTraceBundle{
+                regWriteData: resp,
+                memByteEn: replicate(False)
+            }
+`endif
+        );
         if(verbose) $display("[doDeqLdQ_Lr_deq] ", fshow(lsqDeqLd), "; ", fshow(d), "; ", fshow(resp));
         // check
         doAssert(lsqDeqLd.memFunc == Lr && !lsqDeqLd.isMMIO, "must be non-MMIO Lr");
@@ -856,7 +919,14 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             inIfc.writeRegFile(dst.indx, resp);
             inIfc.setRegReadyAggr_mem(dst.indx);
         end
-        inIfc.rob_setExecuted_deqLSQ(lsqDeqLd.instTag, Invalid, Invalid);
+        inIfc.rob_setExecuted_deqLSQ(lsqDeqLd.instTag, Invalid, Invalid
+`ifdef RVFI
+            , ExtraTraceBundle{
+                regWriteData: resp,
+                memByteEn: replicate(False)
+            }
+`endif
+        );
         if(verbose) $display("[doDeqLdQ_MMIO_deq] ", fshow(lsqDeqLd), "; ", fshow(d), "; ", fshow(resp));
         // check
         doAssert(lsqDeqLd.memFunc == Ld && lsqDeqLd.isMMIO, "must be MMIO Ld");
@@ -881,7 +951,14 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         lsq.deqLd;
         waitLrScAmoMMIOResp <= Invalid;
         // set ROB to raise access fault
-        inIfc.rob_setExecuted_deqLSQ(lsqDeqLd.instTag, Valid (LoadAccessFault), Invalid);
+        inIfc.rob_setExecuted_deqLSQ(lsqDeqLd.instTag, Valid (LoadAccessFault), Invalid
+`ifdef RVFI
+            , ExtraTraceBundle{
+                regWriteData: memData[pack(lsqDeqIdx)],
+                memByteEn: replicate(False)
+            }
+`endif
+        );
         if(verbose) $display("[doDeqLdQ_MMIO_fault] ", fshow(lsqDeqLd));
         // check
         doAssert(lsqDeqLd.memFunc == Ld && lsqDeqLd.isMMIO, "must be MMIO Ld");
@@ -894,7 +971,14 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
     rule doDeqStQ_fault(isValid(lsqDeqSt.fault));
         if(verbose) $display("[doDeqStQ_fault] ", fshow(lsqDeqSt));
         lsq.deqSt;
-        inIfc.rob_setExecuted_deqLSQ(lsqDeqSt.instTag, lsqDeqSt.fault, Invalid);
+        inIfc.rob_setExecuted_deqLSQ(lsqDeqSt.instTag, lsqDeqSt.fault, Invalid
+`ifdef RVFI
+            , ExtraTraceBundle{
+                regWriteData: lsqDeqSt.stData,
+                memByteEn: replicate(False)
+            }
+`endif
+        );
     endrule
 
 `ifdef TSO_MM
@@ -983,7 +1067,14 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
 `endif
         lsq.deqSt;
         // set ROB executed
-        inIfc.rob_setExecuted_deqLSQ(lsqDeqSt.instTag, Invalid, Invalid);
+        inIfc.rob_setExecuted_deqLSQ(lsqDeqSt.instTag, Invalid, Invalid
+`ifdef RVFI
+            , ExtraTraceBundle{
+                regWriteData: lsqDeqSt.stData,
+                memByteEn: replicate(False)
+            }
+`endif
+        );
         if(verbose) $display("[doDeqStQ_Fence] ", fshow(lsqDeqSt));
 `ifdef PERF_COUNT
         if(inIfc.doStats) begin
@@ -1076,7 +1167,14 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             inIfc.writeRegFile(dst.indx, resp);
             inIfc.setRegReadyAggr_mem(dst.indx);
         end
-        inIfc.rob_setExecuted_deqLSQ(lsqDeqSt.instTag, Invalid, Invalid);
+        inIfc.rob_setExecuted_deqLSQ(lsqDeqSt.instTag, Invalid, Invalid
+`ifdef RVFI
+            , ExtraTraceBundle{
+                regWriteData: resp,
+                memByteEn: replicate(False)
+            }
+`endif
+        );
         if(verbose) $display("[doDeqStQ_ScAmo_deq] ", fshow(lsqDeqSt), "; ", fshow(resp));
         // check
         doAssert((lsqDeqSt.memFunc == Sc || lsqDeqSt.memFunc == Amo) &&
@@ -1172,7 +1270,14 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             inIfc.writeRegFile(dst.indx, resp);
             inIfc.setRegReadyAggr_mem(dst.indx);
         end
-        inIfc.rob_setExecuted_deqLSQ(lsqDeqSt.instTag, Invalid, Invalid);
+        inIfc.rob_setExecuted_deqLSQ(lsqDeqSt.instTag, Invalid, Invalid
+`ifdef RVFI
+            , ExtraTraceBundle{
+                regWriteData: resp,
+                memByteEn: replicate(False)
+            }
+`endif
+        );
         if(verbose) $display("[doDeqStQ_MMIO_deq] ", fshow(lsqDeqSt), "; ", fshow(resp));
         // check
         doAssert(lsqDeqSt.memFunc == St || lsqDeqSt.memFunc == Amo, "must be St/Amo");
@@ -1197,7 +1302,14 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         lsq.deqSt;
         waitLrScAmoMMIOResp <= Invalid;
         // set ROB to raise access fault
-        inIfc.rob_setExecuted_deqLSQ(lsqDeqSt.instTag, Valid (StoreAccessFault), Invalid);
+        inIfc.rob_setExecuted_deqLSQ(lsqDeqSt.instTag, Valid (StoreAccessFault), Invalid
+`ifdef RVFI
+            , ExtraTraceBundle{
+                regWriteData: lsqDeqSt.stData,
+                memByteEn: replicate(False)
+            }
+`endif
+        );
         if(verbose) $display("[doDeqStQ_MMIO_fault] ", fshow(lsqDeqSt));
         // check
         doAssert(lsqDeqSt.memFunc == St || lsqDeqSt.memFunc == Amo, "must be St/Amo");
