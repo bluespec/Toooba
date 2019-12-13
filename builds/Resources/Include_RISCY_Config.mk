@@ -10,7 +10,7 @@ PROC := RV64G_OOO
 # core size
 CORE_SIZE ?= SMALL
 # cache size
-CACHE_SIZE ?= LARGE
+CACHE_SIZE ?= SMALL
 # always include perf counter
 PERF_COUNT := true
 # dram type in simulation: VC707 or AWSF1
