@@ -88,7 +88,11 @@ interface CommitInput;
     method Action setReconcileD; // recocile D$
     // redirect
     method Action killAll;
-    method Action redirectPc(Addr trap_pc);
+    method Action redirectPc(Addr trap_pc
+`ifdef RVFI_DII
+        , Dii_Id diid
+`endif
+    );
     method Action setFetchWaitRedirect;
     method Action incrementEpoch;
     // record if we commit a CSR inst or interrupt
@@ -128,6 +132,9 @@ typedef struct {
     Addr pc;
     Addr addr;
     Trap trap;
+`ifdef RVFI_DII
+    Dii_Id diid;
+`endif
 } CommitTrap deriving(Bits, Eq, FShow);
 
 `ifdef RVFI
@@ -140,7 +147,10 @@ function Maybe#(RVFI_DII_Execution#(DataSz,DataSz)) genRVFI(ToReorderBuffer rot,
     ByteEn wmask = replicate(False);
     if (!isValid(rot.trap)) begin
         next_pc = rot.pc + 4;
-        data = rot.traceBundle.regWriteData; // Default for register-to-register operations.
+        data =  case (rot.iType)
+                    St, Br: return 0;
+                    default: return rot.traceBundle.regWriteData; // Default for register-to-register operations.
+                endcase;
         case (rot.ppc_vaddr_csrData) matches
             tagged VAddr .vaddr: begin
                 addr = vaddr;
@@ -148,7 +158,6 @@ function Maybe#(RVFI_DII_Execution#(DataSz,DataSz)) genRVFI(ToReorderBuffer rot,
                     tagged Ld .l: rmask = rot.traceBundle.memByteEn;
                     tagged St .s: begin
                         wmask = rot.traceBundle.memByteEn;
-                        data = 0;
                         wdata = rot.traceBundle.regWriteData;
                     end
                 endcase
@@ -428,6 +437,9 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
             trap: trap,
             pc: x.pc,
             addr: vaddr
+`ifdef RVFI_DII
+            , diid: x.diid
+`endif
 	});
         commitTrap <= commitTrap_val;
 
@@ -486,7 +498,11 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
         // trap handling & redirect
         let new_pc <- csrf.trap(trap.trap, trap.pc, trap.addr);
-        inIfc.redirectPc(new_pc);
+        inIfc.redirectPc(new_pc
+`ifdef RVFI_DII
+            , trap.diid + 1
+`endif
+        );
 
         // system consistency
         // TODO spike flushes TLB here, but perhaps it is because spike's TLB
@@ -508,7 +524,11 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
         // kill everything, redirect, and increment epoch
         inIfc.killAll;
-        inIfc.redirectPc(x.pc);
+        inIfc.redirectPc(x.pc
+`ifdef RVFI_DII
+            , x.diid
+`endif
+        );
         inIfc.incrementEpoch;
 
         // the killed Ld should have claimed phy reg, we should not commit it;
@@ -587,7 +607,11 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         else if(x.iType == Mret) begin
             next_pc <- csrf.mret;
         end
-        inIfc.redirectPc(next_pc);
+        inIfc.redirectPc(next_pc
+`ifdef RVFI_DII
+            , x.diid + 1
+`endif
+        );
 
         // rename stage only sends out system inst when ROB is empty, so no
         // need to flush ROB again

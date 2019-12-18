@@ -72,12 +72,20 @@ interface FetchStage;
     interface MMIOInstToCore mmioIfc;
 
     // starting and stopping
-    method Action start(Addr pc);
+    method Action start(Addr pc
+`ifdef RVFI_DII
+        , Dii_Id id
+`endif
+    );
     method Action stop();
 
     // redirection methods
     method Action setWaitRedirect;
-    method Action redirect(Addr pc);
+    method Action redirect(Addr pc
+`ifdef RVFI_DII
+        , Dii_Id id
+`endif
+    );
     method Action done_flushing();
     method Action train_predictors(
         Addr pc, Addr next_pc, IType iType, Bool taken,
@@ -149,6 +157,9 @@ typedef struct {
   ArchRegs regs;
   Maybe#(Exception) cause;
   Addr              tval;    // in case of exception
+`ifdef RVFI_DII
+  Dii_Id diid;
+`endif
 } FromFetchStage deriving (Bits, Eq, FShow);
 
 // train next addr pred (BTB)
@@ -244,6 +255,9 @@ function ActionValue #(Vector #(SupSize, Inst_Item))
 								   orig_inst: 0,
 								   inst: 0});
       SupCntX2 j  = ((pc_start [1:0] == 2'b00) ? 0 : 1);    // Start parse at parcel 0/1 depending on pc lsbs
+`ifdef RVFI_DII
+      j  = 0;
+`endif
       Addr     pc = pc_start;
       for (Integer i = 0; i < valueOf (SupSize); i = i + 1) begin
 	 Inst_Kind inst_kind = Inst_None;
@@ -395,30 +409,31 @@ module mkFetchStage(FetchStage);
 `endif
 
 `ifdef RVFI_DII
+    Ehr#(3, Dii_Id) dii_id_next <- mkEhr(0);
     Fifo#(2, Dii_Ids) dii_instIds <- mkCFFifo;
     Fifo#(2, InstsAndIDs) dii_insts <- mkCFFifo;
-    FIFOF#(Dii_Id) flush_id <- mkUGFIFOF1; // Next sequence number to request when trapping
-    Reg#(Dii_Id) dii_id_next <- mkReg(0);
+    Fifo#(2, Dii_Ids) dii_fetched_ids <- mkCFFifo;
+    
     Reg#(Dii_Id) last_trace_id <- mkRegU;
     
-    rule feed_dii(!waitForFlush);
-        Dii_Id next_id = dii_id_next;
-        if (flush_id.notEmpty) begin
-            next_id = flush_id.first;
-            if (verbosity > 0) $display("DII flushed!");
-            flush_id.deq;
-        end
-        Dii_Ids reqs = replicate(tagged Invalid);
-        for (Integer i = 0; i < `sizeSup; i = i + 1)
-          reqs[i] = tagged Valid (next_id + fromInteger(i));
-        if (verbosity > 0) $display("Requested from DII", fshow(reqs));
-        dii_instIds.enq(reqs);
-        dii_id_next <= next_id + `sizeSup;
-    endrule
+    //rule feed_dii(!waitForFlush);
+        //Dii_Id next_id = dii_id_next;
+        //if (flush_id.notEmpty) begin
+        //    next_id = flush_id.first;
+        //    if (verbosity > 0) $display("DII flushed!");
+        //    flush_id.deq;
+        //end
+        //Dii_Ids reqs = replicate(tagged Invalid);
+        //for (Integer i = 0; i < `sizeSup; i = i + 1)
+        //  reqs[i] = tagged Valid (next_id + fromInteger(i));
+        //if (verbosity > 0) $display("Requested from DII", fshow(reqs));
+        //dii_instIds.enq(reqs);
+        //dii_id_next <= next_id + `sizeSup;
+    //endrule
     
     Reg#(Bit#(4)) ticker <- mkReg(0);
     rule tick;
-        ticker <= ticker + 4;
+        ticker <= ticker + 1;
         if (ticker == 0) $display("%t : tick", $time);
     endrule
 `endif
@@ -485,6 +500,16 @@ module mkFetchStage(FetchStage);
 
         match { .posLastSup, .pred_next_pc } <- fav_pred_next_pc (pc);
         pc_reg[pc_fetch1_port] <= pred_next_pc;
+        
+`ifdef RVFI_DII
+        Dii_Id next_id = dii_id_next[pc_fetch1_port];
+        Dii_Ids reqs = replicate(tagged Invalid);
+        for (Integer i = 0; i <= posLastSup; i = i + 1)
+          reqs[i] = tagged Valid (next_id + fromInteger(i));
+        if (verbosity > 0) $display("Requested from DII", fshow(reqs));
+        dii_instIds.enq(reqs);
+        dii_id_next[pc_fetch1_port] <= next_id + fromInteger(posLastSup) + 1;
+`endif
 
         // Send TLB request.
         // Mask to 32-bit alignment, even if 'C' is supported (where we may discard first 2 bytes)
@@ -495,7 +520,8 @@ module mkFetchStage(FetchStage);
             pc: pc,
             pred_next_pc: pred_next_pc,
             decode_epoch: decode_epoch[0],
-            main_epoch: f_main_epoch};
+            main_epoch: f_main_epoch
+            };
         f12f2.enq(tuple2(fromInteger(posLastSup),out));
         if (verbose) $display("Fetch1: ", fshow(out));
     endrule
@@ -565,11 +591,9 @@ module mkFetchStage(FetchStage);
         
 `ifdef RVFI_DII
         Vector#(SupSize,Maybe#(Instruction)) inst_d = replicate(tagged Valid dii_nop);
-        if (fetch3In.main_epoch == f_main_epoch) begin
-            InstsAndIDs ii <- toGet(dii_insts).get();
-            inst_d = ii.insts;
-            if (verbosity > 0) $display("Got from DII: ", fshow (inst_d));
-        end
+        InstsAndIDs ii <- toGet(dii_insts).get();
+        inst_d = ii.insts;
+        if (verbosity > 0) $display("Got from DII: ", fshow (ii));
 `else
         // Get ICache/MMIO response if no exception
         // In case of exception, we still need to process at least inst_data[0]
@@ -636,6 +660,9 @@ module mkFetchStage(FetchStage);
 
           instdata.enq (v_items);
           f32d.enq(f22f3.first);
+`ifdef RVFI_DII
+          dii_fetched_ids.enq(ii.ids);
+`endif
 
           if (verbosity > 0) begin
 	     $display ("----------------");
@@ -652,6 +679,11 @@ module mkFetchStage(FetchStage);
       f32d.deq();
       let inst_data = instdata.first();
       instdata.deq();
+`ifdef RVFI_DII
+      let ids = dii_fetched_ids.first();
+      dii_fetched_ids.deq();
+      Dii_Id nextId = dii_id_next[pc_decode_port];
+`endif
       // The main_epoch check is required to make sure this stage doesn't
       // redirect the PC if a later stage already redirected the PC.
       if (fetch3In.main_epoch == f_main_epoch) begin
@@ -793,6 +825,9 @@ module mkFetchStage(FetchStage);
 			in.ppc = decode_pred_next_pc;
 			// train next addr pred when mispredict
 			trainNAP = Valid (TrainNAP {pc: in.pc, nextPc: decode_pred_next_pc});
+`ifdef RVFI_DII
+                        nextId = fromMaybe(nextId,ids[i]) + 1;
+`endif
 `ifdef PERF_COUNT
 			// performance stats: record decode redirect
 			doAssert(redirectInst == Invalid, "at most 1 decode redirect per cycle");
@@ -809,6 +844,9 @@ module mkFetchStage(FetchStage);
 					   orig_inst: inst_data[i].orig_inst,
 					   regs: decode_result.regs,
 					   cause: cause,
+`ifdef RVFI_DII
+                                           diid: fromMaybe(?,ids[i]),
+`endif
 					   tval:  tval};
 		  out_fifo.enqS[i].enq(out);
                   if (verbosity > 0)
@@ -830,6 +868,9 @@ module mkFetchStage(FetchStage);
          // update PC and epoch
          if(redirectPc matches tagged Valid .nextPc) begin
 	    pc_reg[pc_decode_port] <= nextPc;
+`ifdef RVFI_DII
+            dii_id_next[pc_decode_port] <= nextId;
+`endif
          end
          decode_epoch[0] <= decode_epoch_local;
          // send training data for next addr pred
@@ -884,8 +925,16 @@ module mkFetchStage(FetchStage);
     interface iMemIfc = iMem;
     interface mmioIfc = mmio.toCore;
 
-    method Action start(Addr start_pc);
+    method Action start(
+        Addr start_pc
+`ifdef RVFI_DII
+        , Dii_Id id
+`endif
+    );
         pc_reg[0] <= start_pc;
+`ifdef RVFI_DII
+        dii_id_next[0] <= id;
+`endif
         started <= True;
         waitForRedirect <= False;
         waitForFlush <= False;
@@ -898,9 +947,18 @@ module mkFetchStage(FetchStage);
         waitForRedirect <= True;
         setWaitRedirect_redirect_conflict.wset(?); // conflict with redirect
     endmethod
-    method Action redirect(Addr new_pc);
+    method Action redirect(
+        Addr new_pc
+`ifdef RVFI_DII
+        , Dii_Id id
+`endif
+    );
         if (verbose) $display("Redirect: newpc %h, old f_main_epoch %d, new f_main_epoch %d",new_pc,f_main_epoch,f_main_epoch+1);
         pc_reg[pc_redirect_port] <= new_pc;
+`ifdef RVFI_DII
+        dii_id_next[pc_redirect_port] <= id;
+        if (verbose) $display("%t Redirect: dii_id_next %d", $time(), id);
+`endif
         f_main_epoch <= (f_main_epoch == fromInteger(valueOf(NumEpochs)-1)) ? 0 : f_main_epoch + 1;
         ehr_pending_straddle[2] <= False;
         // redirect comes, stop stalling for redirect
@@ -912,19 +970,9 @@ module mkFetchStage(FetchStage);
     endmethod
     method Action done_flushing() if (waitForFlush);
         // signal that the pipeline can resume fetching
-`ifdef RVFI_DII
-        if (dii_insts.notEmpty) begin
-            dii_insts.deq;
-            if (verbose) $display("%t : Flushing; dequing dii_insts",$time());
-        end else begin
-            flush_id.enq(last_trace_id + 1);
-`endif
-            waitForFlush <= False;
-            if (verbose) $display("%t : Done Flushing",$time());
-`ifdef RVFI_DII
-        end
-`endif
-        
+        waitForFlush <= False;
+        if (verbose) $display("%t : Done Flushing",$time());
+
         // XXX The guard prevents the readyToFetch rule in Core.bsv from firing every cycle
         // The guard also makes this method sequence before (restricted) redirect method
         // So the effect of setting waitForFlush in redirect method will not be overwritten

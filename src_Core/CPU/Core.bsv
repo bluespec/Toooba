@@ -316,7 +316,11 @@ module mkCore#(CoreId coreId)(Core);
                                  "; ", fshow(spec_tag), "; ", fshow(inst_tag));
                     end
                     epochManager.incrementEpoch;
-                    fetchStage.redirect(new_pc);
+                    fetchStage.redirect(new_pc
+`ifdef RVFI_DII
+                    , inst_tag.diid + 1
+`endif
+                    );
                     globalSpecUpdate.incorrectSpec(False, spec_tag, inst_tag);
                 endmethod
                 method correctSpec = globalSpecUpdate.correctSpec[finishAluCorrectSpecPort(i)].put;
@@ -931,7 +935,11 @@ module mkCore#(CoreId coreId)(Core);
             Bit#(64) startpc,
             Addr toHostAddr, Addr fromHostAddr
         );
-            fetchStage.start(startpc);
+            fetchStage.start(startpc
+`ifdef RVFI_DII
+                , 0
+`endif
+            );
             started <= True;
             mmio.setHtifAddrs(toHostAddr, fromHostAddr);
             // start rename debug

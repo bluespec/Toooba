@@ -313,6 +313,9 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                 nonMMIOStDone: False,
                                 epochIncremented: True, // we have incremented epoch
                                 spec_bits: specTagManager.currentSpecBits
+`ifdef RVFI_DII
+                                , diid: x.diid
+`endif
                                };
         rob.enqPort[0].enq(y);
         // record if we issue an interrupt
@@ -418,6 +421,9 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
 
         // get ROB tag
         let inst_tag = rob.enqPort[0].getEnqInstTag;
+`ifdef RVFI_DII
+        inst_tag.diid = x.diid;
+`endif
 
         // CSR inst will be sent to ALU exe pipeline
         Bool to_exec = False;
@@ -474,6 +480,9 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                 nonMMIOStDone: False,
                                 epochIncremented: True, // system inst has incremented epoch
                                 spec_bits: spec_bits
+`ifdef RVFI_DII
+                                , diid: x.diid
+`endif
                                };
         rob.enqPort[0].enq(y);
 
@@ -561,6 +570,9 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
 
         // get ROB tag
         let inst_tag = rob.enqPort[0].getEnqInstTag;
+`ifdef RVFI_DII
+        inst_tag.diid = x.diid;
+`endif
 
         // LSQ tag
         LdStQTag lsq_tag = ?;
@@ -632,6 +644,9 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                 nonMMIOStDone: False,
                                 epochIncremented: False,
                                 spec_bits: spec_bits
+`ifdef RVFI_DII
+                                , diid: x.diid
+`endif
                                };
         rob.enqPort[0].enq(y);
 
@@ -805,6 +820,9 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
 
                     // get ROB tag
                     let inst_tag = rob.enqPort[i].getEnqInstTag;
+`ifdef RVFI_DII
+                    inst_tag.diid = x.diid;
+`endif
 
                     // LSQ tag
                     LdStQTag lsq_tag = ?;
@@ -970,6 +988,9 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                                 nonMMIOStDone: False,
                                                 epochIncremented: False,
                                                 spec_bits: spec_bits
+`ifdef RVFI_DII
+                                                , diid: x.diid
+`endif
                                                };
                         rob.enqPort[i].enq(y);
 

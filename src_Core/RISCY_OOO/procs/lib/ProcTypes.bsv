@@ -27,6 +27,9 @@ import Types::*;
 import FShow::*;
 import DefaultValue::*;
 import MemoryTypes::*;
+`ifdef RVFI_DII
+import RVFI_DII_Types::*;
+`endif
 
 typedef `NUM_CORES CoreNum;
 typedef Bit#(TLog#(CoreNum)) CoreId;
@@ -56,6 +59,9 @@ typedef struct {
     SupWaySel way; // which way in superscalar
     SingleScalarPtr ptr; // pointer within a way
     InstTime t; // inst time in ROB (for dispatch in reservation station)
+`ifdef RVFI_DII
+    Dii_Id diid;
+`endif
 } InstTag deriving(Bits, Eq, FShow);
 
 typedef `SB_SIZE SBSize;

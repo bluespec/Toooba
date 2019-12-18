@@ -30,6 +30,9 @@ import Vector::*;
 import Assert::*;
 import Ehr::*;
 import RevertingVirtualReg::*;
+`ifdef RVFI_DII
+import RVFI_DII_Types::*;
+`endif
 
 // right after execution, full_result has more up-to-date data (e.g. ppc of mispredicted branch)
 // some parts of full_result are for verification
@@ -82,6 +85,9 @@ typedef struct {
 
     // speculation
     SpecBits           spec_bits;
+`ifdef RVFI_DII
+    Dii_Id             diid;
+`endif
 `ifdef RVFI
     ExtraTraceBundle   traceBundle;
 `endif
@@ -210,6 +216,9 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     Ehr#(2, Bool)                                                   nonMMIOStDone        <- mkEhr(?);
     Reg#(Bool)                                                      epochIncremented     <- mkRegU;
     Ehr#(3, SpecBits)                                               spec_bits            <- mkEhr(?);
+`ifdef RVFI_DII
+    Reg#(Dii_Id)                                                    diid                 <- mkRegU;
+`endif
 `ifdef RVFI
     Ehr#(TAdd#(2, aluExeNum), (ExtraTraceBundle))                   traceBundle          <- mkEhr(?);
     Reg#(ExtraTraceBundle)                                          traceBundleMem       <- mkRegU;
@@ -327,6 +336,9 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         ldKilled[ldKill_enq_port] <= Invalid;
         lsqAtCommitNotified[lsqNotified_enq_port] <= False;
         nonMMIOStDone[nonMMIOSt_enq_port] <= False;
+`ifdef RVFI_DII
+        diid <= x.diid;
+`endif
 `ifdef RVFI
         $display("%t : traceBundle = ", $time(), fshow(x.traceBundle), " in write_enq for %x", pc);
         traceBundle[pvc_enq_port] <= x.traceBundle;
@@ -357,6 +369,9 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
             lsqAtCommitNotified: lsqAtCommitNotified[lsqNotified_deq_port],
             nonMMIOStDone: nonMMIOStDone[nonMMIOSt_deq_port],
             epochIncremented: epochIncremented,
+`ifdef RVFI_DII
+            diid: diid,
+`endif
 `ifdef RVFI
             traceBundle: case (ppc_vaddr_csrData[pvc_deq_port]) matches
                             tagged VAddr .v: begin
