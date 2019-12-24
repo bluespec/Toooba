@@ -16,7 +16,7 @@ PERF_COUNT := true
 # dram type in simulation: VC707 or AWSF1
 SIM_DRAM_TYPE := AWSF1
 # use Xilinx FPU IP cores
-USE_XILINX_FPU ?= true
+USE_XILINX_FPU ?= false
 
 # default 1 core
 CORE_NUM ?= 1
@@ -73,7 +73,6 @@ BSC_COMPILATION_FLAGS += \
 	-D CORE_$(CORE_SIZE) \
 	-D NUM_CORES=$(CORE_NUM) \
 	-D CACHE_$(CACHE_SIZE) \
-	-D USE_XILINX_FPU \
         -D XILINX_FP_FMA_LATENCY=$(XILINX_FP_FMA_LATENCY) \
         -D XILINX_INT_MUL_LATENCY=$(XILINX_INT_MUL_LATENCY) \
 	-D USE_BSV_BRAM_SYNC_FIFO \
