@@ -309,7 +309,7 @@ module mkCore#(CoreId coreId)(Core);
                 let train <- toGet(trainBPQ[i]).get;
                 fetchStage.train_predictors(
                     train.pc, train.nextPc, train.iType, train.taken,
-                    train.dpTrain, train.mispred
+                    train.dpTrain, train.mispred, train.isCompressed
                 );
             endrule
         end

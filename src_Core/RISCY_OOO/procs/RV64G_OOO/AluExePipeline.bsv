@@ -78,6 +78,7 @@ typedef struct {
     Maybe#(PhyDst) dst;
     InstTag tag;
     DirPredTrainInfo dpTrain;
+    Bool isCompressed;
     // result
     Data data; // alu compute result
     Maybe#(Data) csrData; // data to write CSR file
@@ -123,6 +124,7 @@ typedef struct {
     Bool taken;
     DirPredTrainInfo dpTrain;
     Bool mispred;
+    Bool isCompressed;
 } FetchTrainBP deriving(Bits, Eq, FShow);
 
 interface AluExeInput;
@@ -291,6 +293,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
                 dst: x.dst,
                 tag: x.tag,
                 dpTrain: x.dpTrain,
+                isCompressed: x.orig_inst[1:0] != 2'b11,
                 data: exec_result.data,
                 csrData: isValid(x.dInst.csr) ? Valid (exec_result.csrData) : Invalid,
                 controlFlow: exec_result.controlFlow,
@@ -333,7 +336,8 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
                 iType: x.iType,
                 taken: x.controlFlow.taken,
                 dpTrain: x.dpTrain,
-                mispred: True
+                mispred: True,
+                isCompressed: x.isCompressed
             });
 `ifdef PERF_COUNT
             // performance counter
@@ -361,7 +365,8 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
                     iType: x.iType,
                     taken: x.controlFlow.taken,
                     dpTrain: x.dpTrain,
-                    mispred: False
+                    mispred: False,
+                    isCompressed: x.isCompressed
                 });
             end
         end
