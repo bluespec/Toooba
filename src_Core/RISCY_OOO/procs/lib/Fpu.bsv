@@ -186,8 +186,8 @@ function Tuple2#(Bit#(64), FpuException) fmin_s(Bit#(64) in1, Bit#(64) in2);
     // as the fmin and fmax are quiet comparison
     if (isSNaN(in1_f) || isSNaN(in2_f)) begin
         e.invalid_op = True;
-        return tuple2(fv_nanbox (zeroExtend(pack(nan_f))), e);
-    end else if (isNaN(in1_f) && isNaN(in2_f)) begin
+    end
+    if (isNaN(in1_f) && isNaN(in2_f)) begin
         return tuple2(fv_nanbox (zeroExtend(pack(nan_f))), e);
     end else if (isNaN(in2_f)) begin
         return tuple2(in1_f_packed, e);
@@ -216,8 +216,8 @@ function Tuple2#(Bit#(64), FpuException) fmin_d(Bit#(64) in1, Bit#(64) in2);
     // as the fmin and fmax are quiet comparison
     if (isSNaN(in1_f) || isSNaN(in2_f)) begin
         e.invalid_op = True;
-        return tuple2(pack(nan_f), e);
-    end else if (isNaN(in1_f) && isNaN(in2_f)) begin
+    end
+    if (isNaN(in1_f) && isNaN(in2_f)) begin
         return tuple2(zeroExtend(pack(nan_f)), e);
     end else if (isNaN(in2_f)) begin
         return tuple2(in1, e);
@@ -254,8 +254,8 @@ function Tuple2#(Bit#(64), FpuException) fmax_s(Bit#(64) in1, Bit#(64) in2);
     // as the fmin and fmax are quiet comparison
     if (isSNaN(in1_f) || isSNaN(in2_f)) begin
         e.invalid_op = True;
-        return tuple2(fv_nanbox (zeroExtend(pack(nan_f))), e);
-    end else if (isNaN(in1_f) && isNaN(in2_f)) begin
+    end
+    if (isNaN(in1_f) && isNaN(in2_f)) begin
         return tuple2(fv_nanbox (zeroExtend(pack(nan_f))), e);
     end else if (isNaN(in2_f)) begin
         return tuple2(in1_f_packed, e);
@@ -284,8 +284,8 @@ function Tuple2#(Bit#(64), FpuException) fmax_d(Bit#(64) in1, Bit#(64) in2);
     // as the fmin and fmax are quiet comparison
     if (isSNaN(in1_f) || isSNaN(in2_f)) begin
         e.invalid_op = True;
-        return tuple2(pack(nan_f), e);
-    end else if (isNaN(in1_f) && isNaN(in2_f)) begin
+    end
+    if (isNaN(in1_f) && isNaN(in2_f)) begin
         return tuple2(zeroExtend(pack(nan_f)), e);
     end else if (isNaN(in2_f)) begin
         return tuple2(in1, e);
