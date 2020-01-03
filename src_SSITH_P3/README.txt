@@ -29,9 +29,15 @@ into this socket:
     - Variations/alternatives by various SSITH project teams
 
 >================================================================
-Whenever there are changes to the Piccolo core, rerun:
+Whenever there are changes to the Toooba core, rerun:
 
-  $ make compile
+  $ make compile SIM=true for a simulation version
       (which generates RTL and then $ cp Verilog_RTL/* xilinx_ip/hdl/)
+
+  $ make compile for a synthesizable (on Xilinx) version
+      (which generates RTL and then $ cp Verilog_RTL/* xilinx_ip/hdl/)
+
+The simulation version uses simulation models for the integer divider,
+while the synthesis version uses Xilinx IP.
 
 >================================================================

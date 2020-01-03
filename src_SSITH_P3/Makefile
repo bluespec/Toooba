@@ -38,7 +38,11 @@ BSC_COMPILATION_FLAGS += \
 
 #================================================================
 # Parameter settings for MIT RISCY
-# We omit 'BSC_COMPILATION_FLAGS += D BSIM' so it'll use Xilinx IP for floating point arith
+# We include 'BSC_COMPILATION_FLAGS += D BSIM' to use simulation
+# models for the integer divier. Omit this for synthesis.
+ifeq ($(SIM), true)
+        BSC_COMPILATION_FLAGS += -D BSIM
+endif
 
 include $(REPO)/builds/Resources/Include_RISCY_Config.mk
 
