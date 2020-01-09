@@ -84,6 +84,8 @@ import Bypass::*;
 
 import CsrFile :: *;
 
+import Cur_Cycle :: *;
+
 interface CoreReq;
     method Action start(
         Addr startpc,
@@ -138,6 +140,19 @@ interface Core;
 
    // Bluespec: external interrupt to enter debug mode
     method Action setDEIP (Bit #(1) v);
+
+`ifdef INCLUDE_GDB_CONTROL
+    method Action halt_to_debug_mode_req;
+
+    (* always_ready *)
+    method Bool is_debug_halted;
+
+    method Action resume_from_debug_mode;
+
+    method Data csr_read (Bit #(12)  csr_addr);
+    method Action csr_write (Bit #(12)  csr_addr, Data  data);
+
+`endif
 endinterface
 
 // fixpoint to instantiate modules
@@ -158,7 +173,11 @@ module mkCore#(CoreId coreId)(Core);
         outOfReset <= True;
     endrule
 
-    Reg#(Bool) started <- mkReg(False);
+    Reg#(Bool) started <- mkReg(False);    // only used for deadlock check
+
+`ifdef INCLUDE_GDB_CONTROL
+    Reg#(Bool) rg_debug_halted <- mkReg (False);
+`endif
 
     // front end
     FetchStage fetchStage <- mkFetchStage;
@@ -511,6 +530,21 @@ module mkCore#(CoreId coreId)(Core);
         endmethod
     endinterface);
     CommitStage commitStage <- mkCommitStage(commitInput);
+
+   (* mutually_exclusive = "coreFix.aluExe_0.doRegReadAlu,         commitStage.rl_enter_debug_mode_flush" *)
+   (* mutually_exclusive = "coreFix.aluExe_1.doRegReadAlu,         commitStage.rl_enter_debug_mode_flush" *)
+   (* mutually_exclusive = "coreFix.aluExe_0.doDispatchAlu,        commitStage.rl_enter_debug_mode_flush" *)
+   (* mutually_exclusive = "coreFix.aluExe_1.doDispatchAlu,        commitStage.rl_enter_debug_mode_flush" *)
+   (* mutually_exclusive = "coreFix.fpuMulDivExe_0.doFinishIntMul, commitStage.rl_enter_debug_mode_flush" *)
+   (* mutually_exclusive = "coreFix.fpuMulDivExe_0.doFinishIntDiv, commitStage.rl_enter_debug_mode_flush" *)
+   (* mutually_exclusive = "coreFix.fpuMulDivExe_0.doFinishFpFma,  commitStage.rl_enter_debug_mode_flush" *)
+   (* mutually_exclusive = "coreFix.fpuMulDivExe_0.doFinishFpDiv,  commitStage.rl_enter_debug_mode_flush" *)
+   (* mutually_exclusive = "coreFix.fpuMulDivExe_0.doFinishFpSqrt, commitStage.rl_enter_debug_mode_flush" *)
+   (* mutually_exclusive = "coreFix.fpuMulDivExe_0.doFinishFpSqrt, commitStage.rl_enter_debug_mode_flush" *)
+
+   rule rl_bogus_dummy (False);
+      // Just to allow the scheduling attributes above
+   endrule
 
     // send rob enq time to reservation stations
     (* fire_when_enabled, no_implicit_conditions *)
@@ -903,6 +937,19 @@ module mkCore#(CoreId coreId)(Core);
     endrule
 `endif
 
+`ifdef INCLUDE_GDB_CONTROL
+   // ================================================================
+   // Stopping into debug mode
+
+   rule rl_debug_halt_actions ((! rg_debug_halted) && commitStage.is_debug_halted);
+      $display ("%0d: %m.rl_debug_halt_actions", cur_cycle);
+      rg_debug_halted <= True;
+   endrule
+
+`endif
+
+   // ================================================================
+
     interface CoreReq coreReq;
         method Action start(
             Bit#(64) startpc,
@@ -910,6 +957,9 @@ module mkCore#(CoreId coreId)(Core);
         );
             fetchStage.start(startpc);
             started <= True;
+`ifdef INCLUDE_GDB_CONTROL
+	   rg_debug_halted <= False;
+`endif
             mmio.setHtifAddrs(toHostAddr, fromHostAddr);
             // start rename debug
             commitStage.startRenameDebug;
@@ -980,5 +1030,38 @@ module mkCore#(CoreId coreId)(Core);
 
    // Bluespec: external interrupt to enter debug mode
     method Action setDEIP (v) = csrf.setDEIP (v);
-endmodule
 
+`ifdef INCLUDE_GDB_CONTROL
+    method Action halt_to_debug_mode_req () if (! rg_debug_halted);
+       $display ("%0d: %m.halt_to_debug_mode_req", cur_cycle);
+       started <= False;
+       fetchStage.stop;
+       commitStage.halt_to_debug_mode_req;
+    endmethod
+
+    method Bool is_debug_halted;
+       return rg_debug_halted;
+    endmethod
+
+    method Action resume_from_debug_mode if (rg_debug_halted);
+       let startpc = csrf.dpc_read;
+       fetchStage.resume_from_debug_mode (startpc);
+       commitStage.resume_from_debug_mode;
+       started <= True;
+       rg_debug_halted <= False;
+
+       $display ("%0d: %m.resume_from_debug_mode, dpc = 0x%0h", cur_cycle, startpc);
+    endmethod
+
+       // TODO_DEBUG: was part of method cond: commitStage.is_debug_halted &&
+    method Data csr_read (Bit #(12)  csr_addr) if (rg_debug_halted);
+       return csrf.rd (unpack (csr_addr));
+    endmethod
+
+       // TODO_DEBUG: was part of method cond: commitStage.is_debug_halted &&
+    method Action csr_write (Bit #(12)  csr_addr, Data  data) if (rg_debug_halted);
+       csrf.csrInstWr (unpack (csr_addr), data);
+    endmethod
+`endif
+
+endmodule

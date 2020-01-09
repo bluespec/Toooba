@@ -269,6 +269,14 @@ typedef enum {
     // sanctum user CSR
     CSRtrng       = 12'hcc0, // random number for secure boot
 `endif
+
+`ifdef INCLUDE_GDB_CONTROL
+   CSRdcsr        = 12'h7B0,    // Debug control and status
+   CSRdpc         = 12'h7B1,    // Debug PC
+   CSRdscratch0   = 12'h7B2,    // Debug scratch0
+   CSRdscratch1   = 12'h7B3,    // Debug scratch1
+`endif
+
     // CSR that catches all the unimplemented CSRs. To avoid exception on this,
     // make it a user non-standard read/write CSR.
     CSRnone       = 12'h8ff

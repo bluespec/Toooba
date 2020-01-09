@@ -39,6 +39,8 @@ import StoreBuffer::*;
 import VerificationPacket::*;
 import RenameDebugIF::*;
 
+import Cur_Cycle :: *;
+
 typedef struct {
     // info about the inst blocking at ROB head
     Addr pc;
@@ -112,6 +114,18 @@ interface CommitStage;
     // rename debug
     method Action startRenameDebug;
     interface Get#(RenameErrInfo) renameErr;
+
+`ifdef INCLUDE_GDB_CONTROL
+   // Request halt into debug mode
+   method Action halt_to_debug_mode_req;
+
+   (* always_ready *)
+   // Becomes true when pipeline is halted
+   method Bool is_debug_halted;
+
+   method Action resume_from_debug_mode;
+`endif
+
 endinterface
 
 // we apply actions the end of commit rule
@@ -122,12 +136,34 @@ typedef struct {
     Trap trap;
 } CommitTrap deriving(Bits, Eq, FShow);
 
+// Bluespec: for debugger run-control
+typedef enum {
+   Run_State_RUNNING              // Normal state
+`ifdef INCLUDE_GDB_CONTROL
+   , Run_State_DEBUGGER_HALT         // When ready to halt for debugger after stop/step
+   , Run_State_DEBUGGER_HALT_FLUSH   // When flushing state during debugger halt
+   , Run_State_DEBUGGER_HALTED       // When halted for debugger
+`endif
+   } Run_State
+deriving (Eq, FShow, Bits);
+
 module mkCommitStage#(CommitInput inIfc)(CommitStage);
     Bool verbose = False;
 
     // Bluespec: for lightweight verbosity trace
     Integer verbosity = 1;
     Reg #(Bit #(64)) rg_instret <- mkReg (0);
+
+   // Bluespec: for debugger run-control
+   Reg #(Run_State) rg_run_state   <- mkReg (Run_State_RUNNING);
+
+`ifdef INCLUDE_GDB_CONTROL
+   // rg_stop_req is set True when debugger requests a stop (e.g., GDB ^C)
+   Reg #(Bool)      rg_stop_req   <- mkReg (False);
+   // When going into debug mode, these hold the cause for the break and the resume-PC
+   Reg #(Bit #(3))  rg_debug_cause <- mkRegU;
+   Reg #(Addr)      rg_debug_pc    <- mkRegU;
+`endif
 
     // func units
     ReorderBufferSynth rob = inIfc.robIfc;
@@ -338,15 +374,57 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
     endaction
     endfunction
 
+`ifdef INCLUDE_GDB_CONTROL
+   // ================================================================
+   // Bluespec: debugger run-control
+   // Every time an instruction commits, we check this boolean
+   // to decide whether we continue running of stop.
+
+   // We halt after committing an instruction if:
+   //     the debugger requested a stop
+   //  or dcsr.step is True
+
+   Maybe #(Bit #(3)) m_debug_stop_step_cause = (  rg_stop_req
+						? tagged Valid 3            // Debug Module haltreq
+						: (csrf.dcsr_stop_for_step
+						   ? tagged Valid 4         // dcsr.step
+						   : tagged Invalid));
+
+   // ================================================================
+
+   /*
+   // Bluespec: debugger run-control
+   // Rule cond should be identical to doCommitTrap_flush's cond
+   // except for fn_ebreak_to_debug_mode()
+    rule doCommitTrap_ebreak_to_debug_mode(
+        (rg_run_state == Run_State_RUNNING) &&&    // Bluespec: debugger run-control
+        !isValid(commitTrap) &&&
+        rob.deqPort[0].deq_data.trap matches tagged Valid .trap &&&
+        fn_ebreak_to_debug_mode (trap)             // Bluespec: debugger run-control
+    );
+       let x = rob.deqPort[0].deq_data;
+       rg_run_state   <= Run_State_DEBUGGER_HALT;
+       rg_debug_pc    <= x.pc;
+       rg_debug_cause <= 1;    // cause: EBREAK
+    endrule
+   */
+`endif
+
+   // ================================================================
+
     // TODO Currently we don't check spec bits == 0 when we commit an
     // instruction. This is because killings of wrong path instructions are
     // done in a single cycle. However, when we make killings distributed or
     // pipelined, then we need to check spec bits at commit port.
 
     rule doCommitTrap_flush(
+`ifdef INCLUDE_GDB_CONTROL
+        (rg_run_state == Run_State_RUNNING) &&&    // Bluespec: debugger run-control
+`endif
         !isValid(commitTrap) &&&
         rob.deqPort[0].deq_data.trap matches tagged Valid .trap
     );
+        $display ("%0d: %m.CommitStage.rule_doCommitTrap_flush", cur_cycle);
         rob.deqPort[0].deq;
         let x = rob.deqPort[0].deq_data;
         if(verbose) $display("[doCommitTrap] ", fshow(x));
@@ -404,7 +482,15 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         doAssert(x.spec_bits == 0, "cannot have spec bits");
     endrule
 
-    rule doCommitTrap_handle(commitTrap matches tagged Valid .trap);
+    // This rule's condition is enabled only by the previous rule, doCommitTrap_flush
+    rule doCommitTrap_handle(
+`ifdef INCLUDE_GDB_CONTROL
+       (rg_run_state == Run_State_RUNNING) &&&    // Bluespec: debugger run-control
+`endif
+       commitTrap matches tagged Valid .trap);
+
+        $display ("%0d: %m.CommitStage.rule_doCommitTrap_handle", cur_cycle);
+
         // reset commitTrap
         commitTrap <= Invalid;
 
@@ -413,9 +499,31 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
             inIfc.commitCsrInstOrInterrupt;
         end
 
-        // trap handling & redirect
-        let new_pc <- csrf.trap(trap.trap, trap.pc, trap.addr);
-        inIfc.redirectPc(new_pc);
+`ifdef INCLUDE_GDB_CONTROL
+       if ((trap.trap == tagged Exception Breakpoint) && csrf.dcsr_stop_for_break) begin
+	  // Don't handle the trap
+	  rg_run_state <= Run_State_DEBUGGER_HALTED;
+	  // Record debug CSRs for later Debugger query and later resumption
+	  csrf.dcsr_cause_write (1);          // EBREAK dcsr.cause
+	  csrf.dpc_write        (trap.pc);    // Where we'll resume on 'continue'
+       end
+       else begin
+          // Handle the trap and redirect
+          let new_pc <- csrf.trap(trap.trap, trap.pc, trap.addr);
+	  inIfc.redirectPc (new_pc);
+
+          if (m_debug_stop_step_cause matches tagged Valid .cause) begin
+	     rg_run_state <= Run_State_DEBUGGER_HALTED;
+	     // Record debug CSRs for later Debugger query and later resumption
+	     csrf.dcsr_cause_write (cause);
+	     csrf.dpc_write        (new_pc);    // Where we'll resume on 'continue'
+	  end
+       end
+`else
+       // trap handling & redirect
+       let new_pc <- csrf.trap(trap.trap, trap.pc, trap.addr);
+       inIfc.redirectPc(new_pc);
+`endif
 
         // system consistency
         // TODO spike flushes TLB here, but perhaps it is because spike's TLB
@@ -427,6 +535,9 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
     // commit misspeculated load
     rule doCommitKilledLd(
+`ifdef INCLUDE_GDB_CONTROL
+        (rg_run_state == Run_State_RUNNING) &&&    // Bluespec: debugger run-control
+`endif
         !isValid(commitTrap) &&&
         !isValid(rob.deqPort[0].deq_data.trap) &&&
         rob.deqPort[0].deq_data.ldKilled matches tagged Valid .killBy
@@ -437,7 +548,19 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
         // kill everything, redirect, and increment epoch
         inIfc.killAll;
-        inIfc.redirectPc(x.pc);
+
+`ifdef INCLUDE_GDB_CONTROL
+       // Bluespec: debug run-control
+       doAssert (x.iType != Ebreak, "CommitStage.rule_doCommitKilledLd iType should not be Ebreak");
+       if (m_debug_stop_step_cause matches tagged Valid .cause) begin
+	  rg_run_state   <= Run_State_DEBUGGER_HALT_FLUSH;
+	  rg_debug_pc    <= x.pc;
+	  rg_debug_cause <= cause;
+       end
+       else
+`endif
+          inIfc.redirectPc(x.pc);    // original (no debugger)
+
         inIfc.incrementEpoch;
 
         // the killed Ld should have claimed phy reg, we should not commit it;
@@ -461,6 +584,9 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
     // commit system inst
     rule doCommitSystemInst(
+`ifdef INCLUDE_GDB_CONTROL
+        (rg_run_state == Run_State_RUNNING) &&    // Bluespec: debugger run-control
+`endif
         !isValid(commitTrap) &&
         !isValid(rob.deqPort[0].deq_data.trap) &&
         !isValid(rob.deqPort[0].deq_data.ldKilled) &&
@@ -510,7 +636,18 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         else if(x.iType == Mret) begin
             next_pc <- csrf.mret;
         end
-        inIfc.redirectPc(next_pc);
+
+`ifdef INCLUDE_GDB_CONTROL
+       // Bluespec: debug run-control
+       doAssert (x.iType != Ebreak, "CommitStage.rule_doCommitSystemInst iType should not be Ebreak");
+       if (m_debug_stop_step_cause matches tagged Valid .cause) begin
+	  rg_run_state   <= Run_State_DEBUGGER_HALT_FLUSH;
+	  rg_debug_pc    <= next_pc;
+	  rg_debug_cause <= cause;
+       end
+       else
+`endif
+          inIfc.redirectPc(next_pc);    // original (no debugger)
 
         // rename stage only sends out system inst when ROB is empty, so no
         // need to flush ROB again
@@ -567,6 +704,9 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
     // Lr/Sc/Amo/MMIO cannot proceed to executed until we notify LSQ that it
     // has reached the commit stage
     rule notifyLSQCommit(
+`ifdef INCLUDE_GDB_CONTROL
+        (rg_run_state == Run_State_RUNNING) &&    // Bluespec: debugger run-control
+`endif
         !isValid(commitTrap) &&
         !isValid(rob.deqPort[0].deq_data.trap) &&
         !isValid(rob.deqPort[0].deq_data.ldKilled) &&
@@ -585,6 +725,9 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
     // commit normal: fire when at least one commit can be done
     rule doCommitNormalInst(
+`ifdef INCLUDE_GDB_CONTROL
+        (rg_run_state == Run_State_RUNNING) &&    // Bluespec: debugger run-control
+`endif
         !isValid(commitTrap) &&
         !isValid(rob.deqPort[0].deq_data.trap) &&
         !isValid(rob.deqPort[0].deq_data.ldKilled) &&
@@ -595,6 +738,10 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         // 1. see a trap or system inst or killed Ld
         // 2. inst is not ready to commit
         Bool stop = False;
+
+        // Bluespec: debugger run-control
+        // 3. one instr is committed and debugger halt is requested (due to stop or step)
+        Bool stop_for_debugger = False;
 
         // We merge writes on FPU csr and apply writes at the end of the rule
         Bit#(5) fflags = 0;
@@ -620,7 +767,8 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
         // compute what actions to take
         for(Integer i = 0; i < valueof(SupSize); i = i+1) begin
-            if(!stop && rob.deqPort[i].canDeq) begin
+
+            if(!stop && (! stop_for_debugger) && rob.deqPort[i].canDeq) begin
                 let x = rob.deqPort[i].deq_data;
                 let inst_tag = rob.deqPort[i].getDeqInstTag;
 
@@ -673,6 +821,35 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                         comUserInstCnt = comUserInstCnt + 1; // user space inst
                     end
 
+`ifdef INCLUDE_GDB_CONTROL
+		   if (m_debug_stop_step_cause matches tagged Valid .cause
+		       &&& (comInstCnt != 0))
+		      begin
+			 $display ("%0d: %m.CommitStage.rule_doCommitNormalInst: Stopping for debugger", cur_cycle);
+			 stop_for_debugger = True;
+
+			 // Compute next PC in case of debugger stop.
+			 // Note: AluExePipeline.rule_doFinishAlu does inIfc.rob_setExecuted (... x.controlFlow)
+			 //     which updates the rob entry's ppc_vaddr_csrData field with actual
+			 //     branch/jump targets, which we retrieve here.
+			 Addr next_pc = ?;
+			 if (x.ppc_vaddr_csrData matches tagged PPC .addr
+			    &&& ((x.iType == J) || (x.iType == Jr) || (x.iType == Br)))
+			    // JAL, JALR, BRANCH
+			    next_pc = addr;
+			 else if (x.orig_inst [1:0] == 2'b11)
+			    // RV32I RV64I
+			    next_pc = x.pc + 4;
+			 else
+			    // RVC
+			    next_pc = x.pc + 2;
+
+			 rg_run_state   <= Run_State_DEBUGGER_HALT_FLUSH;
+			 rg_debug_pc    <= next_pc;
+			 rg_debug_cause <= cause;
+		      end
+`endif
+
 `ifdef PERF_COUNT
                     // performance counter
                     case(x.iType)
@@ -688,7 +865,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 `endif
                 end
             end
-        end
+        end    // for-loop for superscalar width
         rg_instret <= rg_instret + instret;
 
         // write FPU csr
@@ -736,6 +913,47 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 `endif
     endrule
 
+`ifdef INCLUDE_GDB_CONTROL
+   // ================================================================
+   // Rules to move into debug mode
+
+   // This rule is like rule doCommitTrap_flush, i.e., a debugger-halt is like an interrupt
+   rule rl_enter_debug_mode_flush (rg_run_state == Run_State_DEBUGGER_HALT_FLUSH);
+      $write ("%0d: %m.commitStage.rl_enter_debug_mode:", cur_cycle);
+      if      (rg_debug_cause == 1) $display (" EBREAK");
+      else if (rg_debug_cause == 3) $display (" Debugger halt request");
+      else if (rg_debug_cause == 4) $display (" Halt after step");
+      else                          $display (" Unknown cause %0d", rg_debug_cause);
+
+      // flush everything. Only increment epoch and stall fetch when we haven
+      // not done it yet (we may have already done them at rename stage)
+      inIfc.killAll;
+      inIfc.incrementEpoch;
+      inIfc.setFetchWaitRedirect;
+
+      rg_run_state <= Run_State_DEBUGGER_HALT;
+   endrule
+
+   // This rule is like rule doCommitTrap_handle, except we don't redirect
+   rule rl_enter_debug_mode_halt (rg_run_state == Run_State_DEBUGGER_HALT);
+      // system consistency
+      // TODO spike flushes TLB here, but perhaps it is because spike's TLB
+      // does not include prv info, and it has to flush when prv changes.
+      // XXX As approximation, Trap may cause context switch, so flush for
+      // security
+      makeSystemConsistent(False, True, False);
+
+      // Record debug CSRs for later Debugger query and later resumption
+      csrf.dcsr_cause_write (rg_debug_cause);    // reason for entering debug mode
+      csrf.dpc_write        (rg_debug_pc);       // Where we'll resume on 'continue'
+
+      // Go to HALTED state where no rule fires.
+      // To re-start, mkCore must call restart method.
+      rg_run_state <= Run_State_DEBUGGER_HALTED;
+   endrule
+
+   // ================================================================
+`endif
 
     method Data getPerf(ComStagePerfType t);
         return (case(t)
@@ -785,4 +1003,24 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
     endmethod
     interface renameErr = nullGet;
 `endif
+
+`ifdef INCLUDE_GDB_CONTROL
+   // Request halt into debug mode
+   method Action halt_to_debug_mode_req () if (rg_run_state == Run_State_RUNNING);
+      $display ("%0d: %m.commitStage.halt_to_debug_mode_req", cur_cycle);
+      rg_stop_req <= True;
+   endmethod
+
+   // Becomes true when pipeline is halted
+   method Bool is_debug_halted;
+      return (rg_run_state == Run_State_DEBUGGER_HALTED);
+   endmethod
+
+   method Action resume_from_debug_mode () if (rg_run_state == Run_State_DEBUGGER_HALTED);
+      $display ("%0d: %m.commitStage.resume_from_debug_mode", cur_cycle);
+      rg_stop_req  <= False;
+      rg_run_state <= Run_State_RUNNING;
+   endmethod
+`endif
+
 endmodule

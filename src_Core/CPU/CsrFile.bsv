@@ -37,6 +37,8 @@ import GetPut::*;
 import BuildVector::*;
 //import TRNG::*;
 
+import SoC_Map :: *;
+
 interface CsrFile;
     // Read
     method Data rd(CSR csr);
@@ -90,6 +92,24 @@ interface CsrFile;
 
     // terminate
     method ActionValue#(void) terminate;
+
+`ifdef INCLUDE_GDB_CONTROL
+   // Read dpc
+   method Addr dpc_read ();
+
+   // Update dpc
+   method Action dpc_write (Addr pc);
+
+   // Check whether to enter Debug Mode based on dcsr.{ebreakm, ebreaks, ebreaku}
+   method Bool dcsr_stop_for_break;
+
+   // Check whether to enter Debug Mode based on dcsr.step
+   method Bool dcsr_stop_for_step;
+
+   // Update 'cause' in DCSR
+   (* always_ready *)
+   method Action dcsr_cause_write (Bit #(3)  dcsr_cause);
+`endif
 endinterface
 
 // Fancy Reg functions
@@ -501,6 +521,30 @@ module mkCsrFile #(Data hartid)(CsrFile);
     StatsCsr stats_module <- mkStatsCsr;
     Reg#(Data) stats_csr = stats_module.reg_ifc;
 
+`ifdef INCLUDE_GDB_CONTROL
+   // DCSR is 32b even in RV64
+   Bit #(32) dcsr_reset_value =  {4'h4,    // [31:28]  xdebugver
+				  12'h0,   // [27:16]  reserved
+				  1'h0,    // [15]     ebreakm
+				  1'h0,    // [14]     reserved
+				  1'h0,    // [13]     ebreaks
+				  1'h0,    // [12]     ebreaku
+				  1'h0,    // [11]     stepie
+				  1'h0,    // [10]     stopcount
+				  1'h0,    // [9]      stoptime
+				  3'h0,    // [8:7]    cause    // WARNING: 0 is non-standard
+				  1'h0,    // [5]      reserved
+				  1'h1,    // [4]      mprven
+				  1'h0,    // [3]      nmip    // non-maskable interrupt pending
+				  1'h0,    // [2]      step
+				  2'h3};   // [1:0]    prv (machine mode)
+
+   Reg #(Data) rg_dcsr      <- mkReg (zeroExtend (dcsr_reset_value));
+   Reg #(Data) rg_dpc       <- mkReg (truncate (soc_map_struct.pc_reset_value));
+   Reg #(Data) rg_dscratch0 <- mkRegU;
+   Reg #(Data) rg_dscratch1 <- mkRegU;
+`endif
+
 `ifdef SECURITY
     // sanctum machine CSRs
 
@@ -607,6 +651,14 @@ module mkCsrFile #(Data hartid)(CsrFile);
             CSRmspec:      mspec_csr;
             CSRtrng:       trng_csr;
 `endif
+
+`ifdef INCLUDE_GDB_CONTROL
+	   CSRdcsr:       rg_dcsr;    // TODO: take NMI into account (cf. Piccolo/Flute)
+	   CSRdpc:        rg_dpc;
+	   CSRdscratch0:  rg_dscratch0;
+	   CSRdscratch1:  rg_dscratch1;
+`endif
+
             default:       readOnlyReg(64'b0);
         endcase);
     endfunction
@@ -856,4 +908,40 @@ module mkCsrFile #(Data hartid)(CsrFile);
     method doPerfStats = stats_module.doPerfStats;
     method sendDoStats = stats_module.sendDoStats;
     method recvDoStats = stats_module.recvDoStats;
+
+   // ----------------
+   // Bluespec:
+   // Methods when Debug Module is present
+
+`ifdef INCLUDE_GDB_CONTROL
+   // Read dpc
+   method Addr dpc_read ();
+      return rg_dpc;
+   endmethod
+
+   // Update dpc
+   method Action dpc_write (Addr pc);
+      rg_dpc <= pc;
+   endmethod
+
+   // Check whether to enter Debug Mode based on dcsr.{ebreakm, ebreaks, ebreaku}
+   method Bool dcsr_stop_for_break;
+      return case (prv_reg)
+		prvM: (rg_dcsr [15] == 1'b1);
+		prvS: (rg_dcsr [13] == 1'b1);
+		prvU: (rg_dcsr [12] == 1'b1);
+	     endcase;
+   endmethod
+
+   // Check whether to enter Debug Mode based on dcsr.step
+   method Bool dcsr_stop_for_step;
+      return (rg_dcsr [2] == 1'b1);
+   endmethod
+
+   // Update 'cause' in DCSR
+   method Action dcsr_cause_write (Bit #(3) dcsr_cause);
+      rg_dcsr <= { 32'b0, rg_dcsr [31:9], dcsr_cause, rg_dcsr [5:2], prv_reg };
+   endmethod
+`endif
+
 endmodule

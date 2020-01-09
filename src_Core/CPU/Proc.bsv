@@ -92,6 +92,31 @@ import TV_Info  :: *;
 
 // ================================================================
 
+// Major States of CPU
+
+typedef enum {CPU_RESET1,
+	      CPU_RESET2,
+
+`ifdef INCLUDE_GDB_CONTROL
+	      CPU_GDB_PAUSING,      // On GDB breakpoint, while waiting for fence completion
+`endif
+	      CPU_DEBUG_MODE,       // Stopped (normally for debugger)
+	      CPU_RUNNING           // Normal operation
+   } CPU_State
+deriving (Eq, Bits, FShow);
+
+function Bool fn_is_running (CPU_State  cpu_state);
+   return (   (cpu_state != CPU_RESET1)
+	   && (cpu_state != CPU_RESET2)
+`ifdef INCLUDE_GDB_CONTROL
+	   && (cpu_state != CPU_GDB_PAUSING)
+	   && (cpu_state != CPU_DEBUG_MODE)
+`endif
+	   );
+endfunction
+
+// ================================================================
+
 (* synthesize *)
 module mkProc (Proc_IFC);
 
@@ -107,6 +132,11 @@ module mkProc (Proc_IFC);
 
    // Verbosity: 0=quiet; 1=instruction trace; 2=more detail
    Reg #(Bit #(4))  cfg_verbosity <- mkConfigReg (0);
+
+   // ----------------
+   // Major CPU states
+
+   Reg #(CPU_State)  rg_state    <- mkReg (CPU_RESET1);
 
    // ----------------
    // Reset requests and responses    (TODO: to be implemented)
@@ -258,6 +288,8 @@ module mkProc (Proc_IFC);
       mmio_axi4_adapter.reset;
 
       f_reset_rsps.enq (?);
+
+      rg_state <= CPU_RUNNING;
    endrule
 
    // ----------------
@@ -290,6 +322,122 @@ module mkProc (Proc_IFC);
    // ================================================================
    // ================================================================
    // ================================================================
+   // DEBUGGER ACCESS
+
+`ifdef INCLUDE_GDB_CONTROL
+
+   // ----------------
+   // Debug Module Run (resume) control
+
+   // Run command when in debug mode
+   rule rl_debug_run ((f_run_halt_reqs.first == True)
+		      && (! f_gpr_reqs.notEmpty)
+		      && (! f_fpr_reqs.notEmpty)
+		      && (! f_csr_reqs.notEmpty)
+		      && (rg_state == CPU_DEBUG_MODE));
+      // if (cfg_verbosity > 1)
+	 $display ("%0d: %m.rl_debug_run", cur_cycle);
+
+      f_run_halt_reqs.deq;
+      core[0].resume_from_debug_mode;
+      rg_state <= CPU_RUNNING;
+
+      // Notify debugger that we've started running
+      f_run_halt_rsps.enq (True);
+   endrule
+
+   // Run command when already running
+   rule rl_debug_run_redundant ((f_run_halt_reqs.first == True)
+				&& (! f_gpr_reqs.notEmpty)
+				&& (! f_fpr_reqs.notEmpty)
+				&& (! f_csr_reqs.notEmpty)
+				&& fn_is_running (rg_state));
+      // if (cfg_verbosity > 1)
+	 $display ("%0d: %m.rl_debug_run_redundant", cur_cycle);
+
+      f_run_halt_reqs.deq;
+
+      // Notify debugger that we're running
+      f_run_halt_rsps.enq (True);
+   endrule
+
+   // ----------------
+   // Debug Module Halt control
+
+   rule rl_debug_halt ((f_run_halt_reqs.first == False) && fn_is_running (rg_state));
+      // if (cfg_verbosity > 1) 
+	 $display ("%0d: %m.rl_debug_halt", cur_cycle);
+
+      f_run_halt_reqs.deq;
+
+      // Debugger 'halt' request (e.g., GDB '^C' command)
+      core[0].halt_to_debug_mode_req;
+
+      rg_state <= CPU_GDB_PAUSING;
+   endrule
+
+   rule rl_debug_halted ((rg_state == CPU_GDB_PAUSING) && core [0].is_debug_halted);
+      // Notify debugger that we've halted
+      f_run_halt_rsps.enq (False);
+      // Stop executing rules until ready to restart from debugger
+      rg_state <= CPU_DEBUG_MODE;
+
+      // if (cfg_verbosity > 1)
+	 $display ("%0d: %m.rl_debug_halted", cur_cycle);
+   endrule
+
+   rule rl_debug_halt_redundant ((f_run_halt_reqs.first == False) && (! fn_is_running (rg_state)));
+      // if (cfg_verbosity > 1)
+	 $display ("%0d: %m.rl_debug_halt_redundant", cur_cycle);
+
+      f_run_halt_reqs.deq;
+
+      // Notify debugger that we've 'halted'
+      f_run_halt_rsps.enq (False);
+
+      $display ("%0d: %m.rl_debug_halt_redundant: CPU already halted; state = ", cur_cycle, fshow (rg_state));
+   endrule
+
+   // ----------------
+   // Debug Module CSR read/write
+
+   rule rl_debug_read_csr ((rg_state == CPU_DEBUG_MODE) && (! f_csr_reqs.first.write));
+      let req <- pop (f_csr_reqs);
+      Bit #(12) csr_addr = req.address;
+      let data = core [0].csr_read (csr_addr);
+      let rsp = DM_CPU_Rsp {ok: True, data: data};
+      f_csr_rsps.enq (rsp);
+      // if (cur_verbosity > 1)
+	 $display ("%m.rl_debug_read_csr: csr %0d => 0x%0h",
+		   csr_addr, data);
+   endrule
+
+   rule rl_debug_write_csr ((rg_state == CPU_DEBUG_MODE) && f_csr_reqs.first.write);
+      let req <- pop (f_csr_reqs);
+      Bit #(12) csr_addr = req.address;
+      let data = req.data;
+      core [0].csr_write (csr_addr, data);
+      let rsp = DM_CPU_Rsp {ok: True, data: ?};
+      f_csr_rsps.enq (rsp);
+
+      // if (cur_verbosity > 1)
+	 $display ("%m.rl_debug_write_csr: csr 0x%0h <= 0x%0h", csr_addr, data);
+   endrule
+
+   rule rl_debug_csr_access_busy (rg_state != CPU_DEBUG_MODE);
+      let req <- pop (f_csr_reqs);
+      let rsp = DM_CPU_Rsp {ok: False, data: ?};
+      f_csr_rsps.enq (rsp);
+
+      // if (cur_verbosity > 1)
+	 $display ("%m.rl_debug_csr_access_busy");
+   endrule
+
+`endif
+
+   // ================================================================
+   // ================================================================
+   // ================================================================
    // INTERFACE
 
    // Reset
@@ -305,7 +453,7 @@ module mkProc (Proc_IFC);
 
       mmioPlatform.start (tohostAddr, fromhostAddr);
 
-      $display ("Proc.start: startpc = 0x%0h, tohostAddr = 0x%0h, fromhostAddr = %0h",
+      $display ("%m.start: startpc = 0x%0h, tohostAddr = 0x%0h, fromhostAddr = %0h",
 		startpc, tohostAddr, fromhostAddr);
    endmethod
 
