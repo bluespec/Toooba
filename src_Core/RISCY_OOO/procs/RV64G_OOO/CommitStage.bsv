@@ -391,26 +391,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 						   : tagged Invalid));
 
    // ================================================================
-
-   /*
-   // Bluespec: debugger run-control
-   // Rule cond should be identical to doCommitTrap_flush's cond
-   // except for fn_ebreak_to_debug_mode()
-    rule doCommitTrap_ebreak_to_debug_mode(
-        (rg_run_state == Run_State_RUNNING) &&&    // Bluespec: debugger run-control
-        !isValid(commitTrap) &&&
-        rob.deqPort[0].deq_data.trap matches tagged Valid .trap &&&
-        fn_ebreak_to_debug_mode (trap)             // Bluespec: debugger run-control
-    );
-       let x = rob.deqPort[0].deq_data;
-       rg_run_state   <= Run_State_DEBUGGER_HALT;
-       rg_debug_pc    <= x.pc;
-       rg_debug_cause <= 1;    // cause: EBREAK
-    endrule
-   */
 `endif
-
-   // ================================================================
 
     // TODO Currently we don't check spec bits == 0 when we commit an
     // instruction. This is because killings of wrong path instructions are
