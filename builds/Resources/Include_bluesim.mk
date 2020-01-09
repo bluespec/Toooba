@@ -15,7 +15,7 @@ build_dir:
 .PHONY: compile
 compile: build_dir
 	@echo "INFO: Re-compiling Core (CPU, Caches)"
-	bsc -u -elab -sim  $(TMP_DIRS)  $(BSC_COMPILATION_FLAGS)  $(BSC_PATH)  $(TOPFILE)
+	bsc -u -elab -sim  $(TMP_DIRS)  $(BSC_COMPILATION_FLAGS)  -p $(BSC_PATH)  $(TOPFILE)
 	@echo "INFO: Re-compiled  Core (CPU, Caches)"
 
 # ================================================================
@@ -31,7 +31,7 @@ BSC_C_FLAGS += \
 .PHONY: simulator
 simulator:
 	@echo "INFO: linking bsc-compiled objects into Bluesim executable"
-	bsc -sim -parallel-sim-link 8 +RTS -K32M -RTS \
+	bsc -sim -parallel-sim-link 8 +RTS -K128M -RTS \
 		$(TMP_DIRS) \
 		-e $(TOPMODULE) -o ./$(SIM_EXE_FILE) \
 		$(BSC_C_FLAGS) \
