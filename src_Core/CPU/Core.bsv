@@ -155,8 +155,14 @@ interface Core;
 
     method Action debug_resume;
 
-    method Data csr_read (Bit #(12)  csr_addr);
+    method Data   csr_read  (Bit #(12)  csr_addr);
     method Action csr_write (Bit #(12)  csr_addr, Data  data);
+    method Data   gpr_read  (Bit #(5)   gpr_addr);
+    method Action gpr_write (Bit #(5)   gpr_addr, Data  data);
+`ifdef ISA_F
+    method Data   fpr_read  (Bit #(5)   fpr_addr);
+    method Action fpr_write (Bit #(5)   fpr_addr, Data  data);
+`endif
 `endif
 endinterface
 
@@ -171,7 +177,6 @@ endinterface
 
 typedef enum {
 `ifdef INCLUDE_GDB_CONTROL
-   CORE_HALTING,
    CORE_HALTED,
 `endif
    CORE_RUNNING
@@ -720,42 +725,27 @@ module mkCore#(CoreId coreId)(Core);
 `endif
     );
         fetchStage.done_flushing();
-    endrule
 
 `ifdef INCLUDE_GDB_CONTROL
-    rule rl_debug_halting((rg_core_run_state == CORE_HALTING) &&
-			  !flush_reservation && !flush_tlbs && !update_vm_info
-			  && iTlb.flush_done && dTlb.flush_done
-			  && !flush_caches && !flush_brpred
-			  && iMem.flush_done && dMem.flush_done
-			  && fetchStage.flush_predictors_done
-`ifdef SELF_INV_CACHE
-			  && !reconcile_i && iMem.reconcile_done
-`ifdef SYSTEM_SELF_INV_L1D
-			  && !reconcile_d
+        if (commitStage.is_debug_halted) begin
+	   started           <= False;
+	   rg_core_run_state <= CORE_HALTED;
+	   $display ("%0d: %m.rule readyToFetch: debug halt", cur_cycle);
+	end
 `endif
-`endif
-			  && commitStage.is_debug_halted
-    );
-
-       fetchStage.done_flushing();
-       rg_core_run_state <= CORE_HALTED;
-
-       $display ("%0d: %m.rl_debug_halting", cur_cycle);
     endrule
-`endif
 
    /*
-`ifdef INCLUDE_GDB_CONTROL
-   // TODO: DELETE AFTER DEBUGGING
-   rule rl_flushing_conditions (rg_core_run_state == CORE_HALTING);
-      $display ("%0d: %m.rl_done_flushing_for_debug_halt", cur_cycle);
+   rule rl_readyToFetch_conds_debug
+      $display ("%0d: %m.rl_readyToFetch_conds_debug:", cur_cycle);
       $display ("    !flush_reservation = %0d, !flush_tlbs = %0d, !update_vm_info = %0d",
 		!flush_reservation, !flush_tlbs, !update_vm_info);
       $display ("    iTlb.flush_done = %0d, dTlb.flush_done = %0d", iTlb.flush_done, dTlb.flush_done);
+`ifdef SECURITY_OR_INCLUDE_GDB_CONTROL
       $display ("    !flush_caches = %0d !flush_brpred = %0d", !flush_caches, !flush_brpred);
       $display ("    iMem.flush_done = %0d dMem.flush_done = %0d", iMem.flush_done, dMem.flush_done);
       $display ("    fetchStage.flush_predictors_done = %0d", fetchStage.flush_predictors_done);
+`endif
 `ifdef SELF_INV_CACHE
       $display ("    !reconcile_i = %0d, iMem.reconcide_done = %0d", !reconcile_i, iMem.reconcile_done);
 `ifdef SYSTEM_SELF_INV_L1D
@@ -763,7 +753,6 @@ module mkCore#(CoreId coreId)(Core);
 `endif
 `endif
    endrule
-`endif
    */
 
 `ifdef PERF_COUNT
@@ -1107,9 +1096,7 @@ module mkCore#(CoreId coreId)(Core);
 `ifdef INCLUDE_GDB_CONTROL
     method Action debug_halt () if (started && (rg_core_run_state == CORE_RUNNING));
        $display ("%0d: %m.debug_halt", cur_cycle);
-       started <= False;
        renameStage.debug_halt;    // start the halt protocol
-       rg_core_run_state <= CORE_HALTING;       
     endmethod
 
     method Bool is_debug_halted;
@@ -1117,13 +1104,13 @@ module mkCore#(CoreId coreId)(Core);
     endmethod
 
     method Action debug_resume () if (rg_core_run_state == CORE_HALTED);
-       renameStage.debug_resume;
-       commitStage.debug_resume;
-
        let startpc = csrf.dpc_read;
        fetchStage.redirect (startpc);
 
-       started <= True;
+       renameStage.debug_resume;
+       commitStage.debug_resume;
+
+       started           <= True;
        rg_core_run_state <= CORE_RUNNING;
        $display ("%0d: %m.debug_resume, dpc = 0x%0h", cur_cycle, startpc);
     endmethod
@@ -1135,6 +1122,53 @@ module mkCore#(CoreId coreId)(Core);
     method Action csr_write (Bit #(12)  csr_addr, Data  data) if (rg_core_run_state == CORE_HALTED);
        csrf.csrInstWr (unpack (csr_addr), data);
     endmethod
+
+    method Data gpr_read (Bit #(5)  gpr_addr) if (rg_core_run_state == CORE_HALTED);
+       let arch_regs = ArchRegs {src1: tagged Valid (tagged Gpr gpr_addr),
+				 src2: ?,
+				 src3: ?,
+				 dst: ?};
+       let rename_result = regRenamingTable.rename[0].getRename (arch_regs);
+       let phy_rindx     = fromMaybe (?, rename_result.phy_regs.src1);
+       let data          = rf.read [debuggerPort].rd1 (phy_rindx);
+       return data;
+    endmethod
+
+    method Action gpr_write (Bit #(5)  gpr_addr, Data  data) if (rg_core_run_state == CORE_HALTED);
+       let arch_regs = ArchRegs {src1: tagged Valid (tagged Gpr gpr_addr),
+				 src2: ?,
+				 src3: ?,
+				 dst: ?};
+       let rename_result = regRenamingTable.rename[0].getRename (arch_regs);
+       let phy_rindx     = fromMaybe (?, rename_result.phy_regs.src1);
+       rf.write [debuggerPort].wr (phy_rindx, data);
+       $display ("%m.gpr_write (%0d, %0x), phy_rindx %0d", gpr_addr, data, phy_rindx);
+    endmethod
+
+`ifdef ISA_F
+    method Data   fpr_read (Bit #(5)  fpr_addr) if (rg_core_run_state == CORE_HALTED);
+       let arch_regs = ArchRegs {src1: tagged Valid (tagged Fpu fpr_addr),
+				 src2: ?,
+				 src3: ?,
+				 dst: ?};
+       let rename_result = regRenamingTable.rename[0].getRename (arch_regs);
+       let phy_rindx     = fromMaybe (?, rename_result.phy_regs.src1);
+       let data          = 0;    // TODO: rf.read [debuggerPort].rd1 (phy_rindx);
+       return data;
+    endmethod
+
+    method Action fpr_write (Bit #(5)  fpr_addr, Data  data) if (rg_core_run_state == CORE_HALTED);
+       let arch_regs = ArchRegs {src1: tagged Valid (tagged Fpu fpr_addr),
+				 src2: ?,
+				 src3: ?,
+				 dst: ?};
+       let rename_result = regRenamingTable.rename[0].getRename (arch_regs);
+       let phy_rindx     = fromMaybe (?, rename_result.phy_regs.src1);
+       // TODO: rf.write [debuggerPort].wr (phy_rindx, data);
+       $display ("%m.fpr_write (%0d, %0x), phy_rindx %0d", fpr_addr, data, phy_rindx);
+    endmethod
+`endif
+
 `endif
 
 endmodule

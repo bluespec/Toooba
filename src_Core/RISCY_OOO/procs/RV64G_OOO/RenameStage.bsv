@@ -171,7 +171,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
       action
 	 if (csrf.dcsr_step_bit == 1'b1) begin
 	    rg_m_halt_req <= tagged Valid DebugStep;
-	    $display ("%0d: %m.fa_step_check: rg_m_halt_req <= tagged Valid DebugStep", cur_cycle);
+	    $display ("%0d: %m.renameStage.fa_step_check: rg_m_halt_req <= tagged Valid DebugStep", cur_cycle);
 	 end
       endaction
    endfunction
@@ -260,8 +260,8 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
 
 `ifdef INCLUDE_GDB_CONTROL
         if (rg_m_halt_req matches tagged Valid .cause) begin
-	    // Stop due to debugger halt or step
-	    trap = tagged Valid (tagged Interrupt cause);
+	   // Stop due to debugger halt or step
+	   trap = tagged Valid (tagged Interrupt cause);
         end else
 `endif
 
@@ -308,9 +308,9 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         fa_step_check;
 
        if (firstTrap == tagged Valid (tagged Interrupt DebugHalt))
-	  $display ("%0d: %m.doRenaming_Trap: DebugHalt", cur_cycle);
+	  $display ("%0d: %m.renameStage.doRenaming_Trap: DebugHalt", cur_cycle);
        else if (firstTrap == tagged Valid (tagged Interrupt DebugStep))
-	  $display ("%0d: %m.doRenaming_Trap: DebugStep", cur_cycle);
+	  $display ("%0d: %m.renameStage.doRenaming_Trap: DebugStep", cur_cycle);
 `endif
         let x = fetchStage.pipelines[0].first;
         let pc = x.pc;
@@ -1092,12 +1092,12 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
 `ifdef INCLUDE_GDB_CONTROL
    method Action debug_halt () if (rg_m_halt_req == tagged Invalid);
       rg_m_halt_req <= tagged Valid DebugHalt;
-      $display ("%0d: %m.renameStage.debug_halt", cur_cycle);
+      $display ("%0d: %m.renameStage.renameStage.debug_halt", cur_cycle);
    endmethod
 
    method Action debug_resume () if (rg_m_halt_req != tagged Invalid);
       rg_m_halt_req <= tagged Invalid;
-      $display ("%0d: %m.renameStage.debug_resume", cur_cycle);
+      $display ("%0d: %m.renameStage.renameStage.debug_resume", cur_cycle);
    endmethod
 `endif
 

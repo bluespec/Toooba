@@ -349,12 +349,13 @@ module mkProc (Proc_IFC);
       f_run_halt_reqs.deq;
 
       // Debugger 'halt' request (e.g., GDB '^C' command)
+      // This is just like an interrupt.
       core[0].debug_halt;
-
-      rg_state <= CPU_ENTERING_DEBUG_MODE;
    endrule
 
-   rule rl_debug_halted ((rg_state == CPU_ENTERING_DEBUG_MODE) && core [0].is_debug_halted);
+   // Monitors when we've reached halted state while running (halt,
+   // step or EBREAK) and notifies DM
+   rule rl_debug_halted (fn_is_running (rg_state) && core [0].is_debug_halted);
       // Notify debugger that we've halted
       f_run_halt_rsps.enq (False);
       // Stop executing rules until ready to restart from debugger
@@ -373,7 +374,8 @@ module mkProc (Proc_IFC);
       // Notify debugger that we've 'halted'
       f_run_halt_rsps.enq (False);
 
-      $display ("%0d: %m.rl_debug_halt_redundant: CPU already halted; state = ", cur_cycle, fshow (rg_state));
+      $display ("%0d: %m.rl_debug_halt_redundant: CPU already halted; state = ",
+		cur_cycle, fshow (rg_state));
    endrule
 
    // ----------------
@@ -410,6 +412,84 @@ module mkProc (Proc_IFC);
       // if (cur_verbosity > 1)
 	 $display ("%m.rl_debug_csr_access_busy");
    endrule
+
+   // ----------------
+   // Debug Module GPR read/write
+
+   rule rl_debug_read_gpr ((rg_state == CPU_DEBUG_MODE) && (! f_gpr_reqs.first.write));
+      let req <- pop (f_gpr_reqs);
+      Bit #(5) regname = req.address;
+
+      let data = core [0].gpr_read (regname);
+
+      let rsp = DM_CPU_Rsp {ok: True, data: data};
+      f_gpr_rsps.enq (rsp);
+      if (cur_verbosity > 1)
+	 $display ("%0d: %m.rl_debug_read_gpr: reg %0d => 0x%0h",
+		   mcycle, regname, data);
+   endrule
+
+   rule rl_debug_write_gpr ((rg_state == CPU_DEBUG_MODE) && f_gpr_reqs.first.write);
+      let req <- pop (f_gpr_reqs);
+      Bit #(5) regname = req.address;
+      let data = req.data;
+      core [0].gpr_write (regname, data);
+
+      let rsp = DM_CPU_Rsp {ok: True, data: ?};
+      f_gpr_rsps.enq (rsp);
+
+      if (cur_verbosity > 1)
+	 $display ("%0d: %m.rl_debug_write_gpr: reg %0d <= 0x%0h",
+		   mcycle, regname, data);
+   endrule
+
+   rule rl_debug_gpr_access_busy (rg_state != CPU_DEBUG_MODE);
+      let req <- pop (f_gpr_reqs);
+      let rsp = DM_CPU_Rsp {ok: False, data: ?};
+      f_gpr_rsps.enq (rsp);
+
+      if (cur_verbosity > 1) $display ("%0d: %m.rl_debug_gpr_access_busy", mcycle);
+   endrule
+
+   // ----------------
+   // Debug Module FPR read/write
+
+`ifdef ISA_F
+   rule rl_debug_read_fpr ((rg_state == CPU_DEBUG_MODE) && (! f_fpr_reqs.first.write));
+      let req <- pop (f_fpr_reqs);
+      Bit #(5) regname = req.address;
+      let data = core [0].fpr_read (regname);
+      let rsp = DM_CPU_Rsp {ok: True, data: data};
+      f_fpr_rsps.enq (rsp);
+      if (cur_verbosity > 1)
+	 $display ("%0d: %m.rl_debug_read_fpr: reg %0d => 0x%0h",
+		   mcycle, regname, data);
+   endrule
+
+   rule rl_debug_write_fpr ((rg_state == CPU_DEBUG_MODE) && f_fpr_reqs.first.write);
+      let req <- pop (f_fpr_reqs);
+      Bit #(5) regname = req.address;
+      let data = req.data;
+      core [0].fpr_write (regname, data);
+
+      let rsp = DM_CPU_Rsp {ok: True, data: ?};
+      f_fpr_rsps.enq (rsp);
+
+      if (cur_verbosity > 1)
+	 $display ("%0d: %m.rl_debug_write_fpr: reg %0d <= 0x%0h",
+		   mcycle, regname, data);
+   endrule
+
+   rule rl_debug_fpr_access_busy (rg_state != CPU_DEBUG_MODE);
+      let req <- pop (f_fpr_reqs);
+      let rsp = DM_CPU_Rsp {ok: False, data: ?};
+      f_fpr_rsps.enq (rsp);
+
+      if (cur_verbosity > 1)
+	 $display ("%0d: %m.rl_debug_fpr_access_busy", mcycle);
+   endrule
+`endif
+
 `endif
 
    // ================================================================
