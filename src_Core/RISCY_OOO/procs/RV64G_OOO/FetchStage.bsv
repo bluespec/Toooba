@@ -50,7 +50,7 @@ import CCTypes::*;
 import L1CoCache::*;
 import MMIOInst::*;
 
-import Cur_Cycle      :: *;
+import Cur_Cycle :: *;
 
 // ================================================================
 // For fv_decode_C function and related types and definitions
@@ -76,6 +76,9 @@ interface FetchStage;
     // redirection methods
     method Action setWaitRedirect;
     method Action redirect(Addr pc);
+`ifdef INCLUDE_GDB_CONTROL
+   method Action setWaitFlush;
+`endif
     method Action done_flushing();
     method Action train_predictors(
         Addr pc, Addr next_pc, IType iType, Bool taken,
@@ -92,10 +95,6 @@ interface FetchStage;
 
     // performance
     interface Perf#(DecStagePerfType) perf;
-
-`ifdef INCLUDE_GDB_CONTROL
-    method Action resume_from_debug_mode (Addr new_pc);
-`endif
 endinterface
 
 typedef struct {
@@ -990,7 +989,6 @@ module mkFetchStage(FetchStage);
     interface mmioIfc = mmio.toCore;
 
     method Action start(Addr start_pc);
-       $display ("%0d: %m.start (start_pc = 0x%0h)", cur_cycle, start_pc);
         pc_reg[0] <= start_pc;
         started <= True;
         waitForRedirect <= False;
@@ -998,7 +996,6 @@ module mkFetchStage(FetchStage);
     endmethod
     method Action stop();
         started <= False;
-       $display ("%0d: %m.stop", cur_cycle);
     endmethod
 
     method Action setWaitRedirect;
@@ -1017,6 +1014,14 @@ module mkFetchStage(FetchStage);
         // we conservatively set wait for flush TODO make this an input parameter
         waitForFlush <= True;
     endmethod
+
+`ifdef INCLUDE_GDB_CONTROL
+   method Action setWaitFlush;
+      waitForFlush <= True;
+      $display ("%0d.%m.FetchStage.setWaitFlush", cur_cycle);
+   endmethod
+`endif
+
     method Action done_flushing() if (waitForFlush);
         // signal that the pipeline can resume fetching
         waitForFlush <= False;
@@ -1103,24 +1108,5 @@ module mkFetchStage(FetchStage);
         method Bool respValid = perfReqQ.notEmpty;
 `endif
     endinterface
-
-`ifdef INCLUDE_GDB_CONTROL
-    method Action resume_from_debug_mode (Addr new_pc);
-        if (verbose)
-	   $display("resume_from_debug_mode: newpc %h, old f_main_epoch %d, new f_main_epoch %d",
-		    new_pc, f_main_epoch, f_main_epoch + 1);
-        pc_reg[pc_redirect_port] <= new_pc;
-        f_main_epoch <= (f_main_epoch == fromInteger(valueOf(NumEpochs)-1)) ? 0 : f_main_epoch + 1;
-        ehr_pending_straddle[1] <= tagged Invalid;
-        // redirect comes, stop stalling for redirect
-        waitForRedirect <= False;
-        setWaitRedirect_redirect_conflict.wset(?); // conflict with setWaitForRedirect
-
-        // this redirect may be caused by a trap/system inst in commit stage
-        // we conservatively set wait for flush TODO make this an input parameter
-        // TODO: do we need this? waitForFlush <= True;
-    endmethod
-`endif
-
 endmodule
  

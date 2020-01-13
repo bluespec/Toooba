@@ -101,10 +101,10 @@ interface CsrFile;
    method Action dpc_write (Addr pc);
 
    // Check whether to enter Debug Mode based on dcsr.{ebreakm, ebreaks, ebreaku}
-   method Bool dcsr_stop_for_break;
+   method Bit #(1) dcsr_break_bit;
 
-   // Check whether to enter Debug Mode based on dcsr.step
-   method Bool dcsr_stop_for_step;
+   // Read dcsr[2], the step bit
+   method Bit #(1) dcsr_step_bit;
 
    // Update 'cause' in DCSR
    (* always_ready *)
@@ -539,10 +539,11 @@ module mkCsrFile #(Data hartid)(CsrFile);
 				  1'h0,    // [2]      step
 				  2'h3};   // [1:0]    prv (machine mode)
 
-   Reg #(Data) rg_dcsr      <- mkReg (zeroExtend (dcsr_reset_value));
-   Reg #(Data) rg_dpc       <- mkReg (truncate (soc_map_struct.pc_reset_value));
-   Reg #(Data) rg_dscratch0 <- mkRegU;
-   Reg #(Data) rg_dscratch1 <- mkRegU;
+   // RV64: dcsr's upper 32b zeroExtended/ignored
+   Reg #(Data) rg_dcsr      <- mkConfigReg (zeroExtend (dcsr_reset_value));
+   Reg #(Data) rg_dpc       <- mkConfigReg (truncate (soc_map_struct.pc_reset_value));
+   Reg #(Data) rg_dscratch0 <- mkConfigRegU;
+   Reg #(Data) rg_dscratch1 <- mkConfigRegU;
 `endif
 
 `ifdef SECURITY
@@ -925,17 +926,17 @@ module mkCsrFile #(Data hartid)(CsrFile);
    endmethod
 
    // Check whether to enter Debug Mode based on dcsr.{ebreakm, ebreaks, ebreaku}
-   method Bool dcsr_stop_for_break;
+   method Bit #(1) dcsr_break_bit;
       return case (prv_reg)
-		prvM: (rg_dcsr [15] == 1'b1);
-		prvS: (rg_dcsr [13] == 1'b1);
-		prvU: (rg_dcsr [12] == 1'b1);
+		prvM: rg_dcsr [15];
+		prvS: rg_dcsr [13];
+		prvU: rg_dcsr [12];
 	     endcase;
    endmethod
 
    // Check whether to enter Debug Mode based on dcsr.step
-   method Bool dcsr_stop_for_step;
-      return (rg_dcsr [2] == 1'b1);
+   method Bit #(1) dcsr_step_bit;
+      return rg_dcsr [2];
    endmethod
 
    // Update 'cause' in DCSR

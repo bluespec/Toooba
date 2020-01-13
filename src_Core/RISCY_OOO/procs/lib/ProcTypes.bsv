@@ -99,7 +99,7 @@ typedef struct {
 instance DefaultValue#(RiscVISASubset);
     function RiscVISASubset defaultValue = RiscVISASubset {
         s: True, u: True,
-        m: `m , a: `a , f: `f , d: `d
+        m: `m , a: `a , f: `f , d: `d, c: `c
     };
 endinstance
 
@@ -454,13 +454,20 @@ typedef enum {
     MachineTimer       = 4'd7,
     UserExternal       = 4'd8,
     SupervisorExternel = 4'd9,
-    MachineExternal    = 4'd11,
+    MachineExternal    = 4'd11
 
-    DebugExternal      = 4'd14    // Bluespec: for debug mode   
+`ifdef INCLUDE_GDB_CONTROL
+  , DebugHalt          = 4'd14,        // Debugger halt command (^C in GDB)
+    DebugStep          = 4'd15         // dcsr.step is set and 1 instr has been processed
+`endif
+
 } Interrupt deriving(Bits, Eq, FShow);
 
-// typedef 12 InterruptNum;
-typedef 15 InterruptNum;    // Bluespec: extended to 15 bits for debug interrupt
+`ifdef INCLUDE_GDB_CONTROL
+typedef 16 InterruptNum;    // With debugger
+`else
+typedef 12 InterruptNum;    // Without debugger
+`endif
 
 // Traps are either an exception or an interrupt
 typedef union tagged {
