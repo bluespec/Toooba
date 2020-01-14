@@ -157,11 +157,11 @@ interface Core;
 
     method Data   csr_read  (Bit #(12)  csr_addr);
     method Action csr_write (Bit #(12)  csr_addr, Data  data);
-    method Data   gpr_read  (Bit #(5)   gpr_addr);
-    method Action gpr_write (Bit #(5)   gpr_addr, Data  data);
+    method Data gpr_read (Bit #(5)  gpr_addr);
+    method Action gpr_write (Bit #(5)  gpr_addr, Data  data);
 `ifdef ISA_F
-    method Data   fpr_read  (Bit #(5)   fpr_addr);
-    method Action fpr_write (Bit #(5)   fpr_addr, Data  data);
+    method Data fpr_read (Bit #(5)  fpr_addr);
+    method Action fpr_write (Bit #(5)  fpr_addr, Data  data);
 `endif
 `endif
 endinterface
@@ -1128,9 +1128,9 @@ module mkCore#(CoreId coreId)(Core);
 				 src2: ?,
 				 src3: ?,
 				 dst: ?};
-       let rename_result = regRenamingTable.rename[0].getRename (arch_regs);
-       let phy_rindx     = fromMaybe (?, rename_result.phy_regs.src1);
-       let data          = rf.read [debuggerPort].rd1 (phy_rindx);
+       let rename_result = ?; // regRenamingTable.rename[0].getRename (arch_regs);
+       let phy_rindx     = ?; // fromMaybe (?, rename_result.phy_regs.src1);
+       let data          = ?; // rf.read [debuggerPort].rd1 (phy_rindx);
        return data;
     endmethod
 
@@ -1139,21 +1139,21 @@ module mkCore#(CoreId coreId)(Core);
 				 src2: ?,
 				 src3: ?,
 				 dst: ?};
-       let rename_result = regRenamingTable.rename[0].getRename (arch_regs);
-       let phy_rindx     = fromMaybe (?, rename_result.phy_regs.src1);
-       rf.write [debuggerPort].wr (phy_rindx, data);
-       $display ("%m.gpr_write (%0d, %0x), phy_rindx %0d", gpr_addr, data, phy_rindx);
+       let rename_result = ?; // regRenamingTable.rename[0].getRename (arch_regs);
+       let phy_rindx     = ?; // fromMaybe (?, rename_result.phy_regs.src1);
+       // rf.write [debuggerPort].wr (phy_rindx, data);
+       // $display ("%m.gpr_write (%0d, %0x), phy_rindx %0d", gpr_addr, data, phy_rindx);
     endmethod
 
 `ifdef ISA_F
-    method Data   fpr_read (Bit #(5)  fpr_addr) if (rg_core_run_state == CORE_HALTED);
+    method Data fpr_read (Bit #(5)  fpr_addr) if (rg_core_run_state == CORE_HALTED);
        let arch_regs = ArchRegs {src1: tagged Valid (tagged Fpu fpr_addr),
 				 src2: ?,
 				 src3: ?,
 				 dst: ?};
-       let rename_result = regRenamingTable.rename[0].getRename (arch_regs);
-       let phy_rindx     = fromMaybe (?, rename_result.phy_regs.src1);
-       let data          = 0;    // TODO: rf.read [debuggerPort].rd1 (phy_rindx);
+       let rename_result = ?; // regRenamingTable.rename[0].getRename (arch_regs);
+       let phy_rindx     = ?; // fromMaybe (?, rename_result.phy_regs.src1);
+       let data          = ?; // rf.read [debuggerPort].rd1 (phy_rindx);
        return data;
     endmethod
 
@@ -1162,10 +1162,10 @@ module mkCore#(CoreId coreId)(Core);
 				 src2: ?,
 				 src3: ?,
 				 dst: ?};
-       let rename_result = regRenamingTable.rename[0].getRename (arch_regs);
-       let phy_rindx     = fromMaybe (?, rename_result.phy_regs.src1);
-       // TODO: rf.write [debuggerPort].wr (phy_rindx, data);
-       $display ("%m.fpr_write (%0d, %0x), phy_rindx %0d", fpr_addr, data, phy_rindx);
+       let rename_result = ?; // regRenamingTable.rename[0].getRename (arch_regs);
+       let phy_rindx     = ?; // fromMaybe (?, rename_result.phy_regs.src1);
+       // rf.write [debuggerPort].wr (phy_rindx, data);
+       // $display ("%m.fpr_write (%0d, %0x), phy_rindx %0d", fpr_addr, data, phy_rindx);
     endmethod
 `endif
 

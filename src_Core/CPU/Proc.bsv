@@ -388,8 +388,7 @@ module mkProc (Proc_IFC);
       let rsp = DM_CPU_Rsp {ok: True, data: data};
       f_csr_rsps.enq (rsp);
       // if (cur_verbosity > 1)
-	 $display ("%m.rl_debug_read_csr: csr %0d => 0x%0h",
-		   csr_addr, data);
+	 $display ("%0d: %m.rl_debug_read_csr: csr %0d => 0x%0h", cur_cycle, csr_addr, data);
    endrule
 
    rule rl_debug_csr_write ((rg_state == CPU_DEBUG_MODE) && f_csr_reqs.first.write);
@@ -401,7 +400,7 @@ module mkProc (Proc_IFC);
       f_csr_rsps.enq (rsp);
 
       // if (cur_verbosity > 1)
-	 $display ("%m.rl_debug_write_csr: csr 0x%0h <= 0x%0h", csr_addr, data);
+	 $display ("%0d: %m.rl_debug_write_csr: csr 0x%0h <= 0x%0h", cur_cycle, csr_addr, data);
    endrule
 
    rule rl_debug_csr_access_busy (rg_state != CPU_DEBUG_MODE);
@@ -410,37 +409,36 @@ module mkProc (Proc_IFC);
       f_csr_rsps.enq (rsp);
 
       // if (cur_verbosity > 1)
-	 $display ("%m.rl_debug_csr_access_busy");
+	 $display ("%0d: %m.rl_debug_csr_access_busy", cur_cycle);
    endrule
 
    // ----------------
    // Debug Module GPR read/write
 
-   rule rl_debug_read_gpr ((rg_state == CPU_DEBUG_MODE) && (! f_gpr_reqs.first.write));
+   rule rl_debug_gpr_read ((rg_state == CPU_DEBUG_MODE) && (! f_gpr_reqs.first.write));
       let req <- pop (f_gpr_reqs);
-      Bit #(5) regname = req.address;
+      Bit #(5) regnum = req.address;
 
-      let data = core [0].gpr_read (regname);
+      let data_out = core [0].gpr_read (regnum);
 
-      let rsp = DM_CPU_Rsp {ok: True, data: data};
+      let rsp = DM_CPU_Rsp {ok: True, data: data_out};
       f_gpr_rsps.enq (rsp);
-      if (cur_verbosity > 1)
-	 $display ("%0d: %m.rl_debug_read_gpr: reg %0d => 0x%0h",
-		   mcycle, regname, data);
+      // if (cur_verbosity > 1)
+	 $display ("%0d: %m.rl_debug_read_gpr: reg %0d => 0x%0h", cur_cycle, regnum, data_out);
    endrule
 
-   rule rl_debug_write_gpr ((rg_state == CPU_DEBUG_MODE) && f_gpr_reqs.first.write);
+   rule rl_debug_gpr_write ((rg_state == CPU_DEBUG_MODE) && f_gpr_reqs.first.write);
       let req <- pop (f_gpr_reqs);
-      Bit #(5) regname = req.address;
-      let data = req.data;
-      core [0].gpr_write (regname, data);
+      Bit #(5) regnum = req.address;
+      let data_in = req.data;
+
+      core [0].gpr_write (regnum, data_in);
 
       let rsp = DM_CPU_Rsp {ok: True, data: ?};
       f_gpr_rsps.enq (rsp);
 
-      if (cur_verbosity > 1)
-	 $display ("%0d: %m.rl_debug_write_gpr: reg %0d <= 0x%0h",
-		   mcycle, regname, data);
+      // if (cur_verbosity > 1)
+	 $display ("%0d: %m.rl_debug_write_gpr: reg %0d <= 0x%0h", cur_cycle, regnum, data_in);
    endrule
 
    rule rl_debug_gpr_access_busy (rg_state != CPU_DEBUG_MODE);
@@ -448,36 +446,38 @@ module mkProc (Proc_IFC);
       let rsp = DM_CPU_Rsp {ok: False, data: ?};
       f_gpr_rsps.enq (rsp);
 
-      if (cur_verbosity > 1) $display ("%0d: %m.rl_debug_gpr_access_busy", mcycle);
+      // if (cur_verbosity > 1)
+         $display ("%0d: %m.rl_debug_gpr_access_busy", cur_cycle);
    endrule
 
    // ----------------
    // Debug Module FPR read/write
 
 `ifdef ISA_F
-   rule rl_debug_read_fpr ((rg_state == CPU_DEBUG_MODE) && (! f_fpr_reqs.first.write));
+   rule rl_debug_fpr_read ((rg_state == CPU_DEBUG_MODE) && (! f_fpr_reqs.first.write));
       let req <- pop (f_fpr_reqs);
-      Bit #(5) regname = req.address;
-      let data = core [0].fpr_read (regname);
-      let rsp = DM_CPU_Rsp {ok: True, data: data};
+      Bit #(5) regnum = req.address;
+
+      let data_out = core [0].fpr_read (regnum);
+
+      let rsp = DM_CPU_Rsp {ok: True, data: data_out};
       f_fpr_rsps.enq (rsp);
-      if (cur_verbosity > 1)
-	 $display ("%0d: %m.rl_debug_read_fpr: reg %0d => 0x%0h",
-		   mcycle, regname, data);
+      // if (cur_verbosity > 1)
+	 $display ("%0d: %m.rl_debug_read_fpr: reg %0d => 0x%0h", cur_cycle, regnum, data_out);
    endrule
 
-   rule rl_debug_write_fpr ((rg_state == CPU_DEBUG_MODE) && f_fpr_reqs.first.write);
+   rule rl_debug_fpr_write ((rg_state == CPU_DEBUG_MODE) && f_fpr_reqs.first.write);
       let req <- pop (f_fpr_reqs);
-      Bit #(5) regname = req.address;
-      let data = req.data;
-      core [0].fpr_write (regname, data);
+      Bit #(5) regnum = req.address;
+      let data_in = req.data;
+
+      core [0].fpr_write (regnum, data_in);
 
       let rsp = DM_CPU_Rsp {ok: True, data: ?};
       f_fpr_rsps.enq (rsp);
 
-      if (cur_verbosity > 1)
-	 $display ("%0d: %m.rl_debug_write_fpr: reg %0d <= 0x%0h",
-		   mcycle, regname, data);
+      // if (cur_verbosity > 1)
+	 $display ("%0d: %m.rl_debug_write_fpr: reg %0d <= 0x%0h", cur_cycle, regnum, data_in);
    endrule
 
    rule rl_debug_fpr_access_busy (rg_state != CPU_DEBUG_MODE);
@@ -485,8 +485,8 @@ module mkProc (Proc_IFC);
       let rsp = DM_CPU_Rsp {ok: False, data: ?};
       f_fpr_rsps.enq (rsp);
 
-      if (cur_verbosity > 1)
-	 $display ("%0d: %m.rl_debug_fpr_access_busy", mcycle);
+      // if (cur_verbosity > 1)
+	 $display ("%0d: %m.rl_debug_fpr_access_busy", cur_cycle);
    endrule
 `endif
 
