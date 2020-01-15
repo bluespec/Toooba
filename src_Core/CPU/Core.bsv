@@ -84,7 +84,18 @@ import Bypass::*;
 
 import CsrFile :: *;
 
-import Cur_Cycle :: *;
+// ================================================================
+// Toooba
+
+import Cur_Cycle  :: *;
+import FIFOF      :: *;
+import GetPut_Aux :: *;
+
+`ifdef INCLUDE_GDB_CONTROL
+import DM_CPU_Req_Rsp  :: *;
+`endif
+
+// ================================================================
 
 `ifdef SECURITY
 `define SECURITY_OR_INCLUDE_GDB_CONTROL
@@ -155,14 +166,14 @@ interface Core;
 
     method Action debug_resume;
 
-    method Data   csr_read  (Bit #(12)  csr_addr);
-    method Action csr_write (Bit #(12)  csr_addr, Data  data);
-    method Data gpr_read (Bit #(5)  gpr_addr);
-    method Action gpr_write (Bit #(5)  gpr_addr, Data  data);
+   interface Server #(DM_CPU_Req #(5, 64), DM_CPU_Rsp #(64)) hart0_gpr_mem_server;
 `ifdef ISA_F
-    method Data fpr_read (Bit #(5)  fpr_addr);
-    method Action fpr_write (Bit #(5)  fpr_addr, Data  data);
+   // FPR access
+   interface Server #(DM_CPU_Req #(5, 64), DM_CPU_Rsp #(64)) hart0_fpr_mem_server;
 `endif
+
+   // CSR access
+   interface Server #(DM_CPU_Req #(12, 64), DM_CPU_Rsp #(64)) hart0_csr_mem_server;
 `endif
 endinterface
 
@@ -195,7 +206,8 @@ module mkCore#(CoreId coreId)(Core);
     Reg#(Bool) started <- mkReg(False);
 
 `ifdef INCLUDE_GDB_CONTROL
-    Reg #(Core_Run_State) rg_core_run_state <- mkReg (CORE_RUNNING);
+    // Using a ConfigReg since scheduling of reads/writes not critical (TODO: verify this)
+    Reg #(Core_Run_State) rg_core_run_state <- mkConfigReg (CORE_RUNNING);
 `endif
 
     // front end
@@ -517,6 +529,9 @@ module mkCore#(CoreId coreId)(Core);
 `endif
         endmethod
         method doStats = coreFix.doStatsIfc._read;
+`ifdef INCLUDE_GDB_CONTROL
+        method Bool core_is_running = (rg_core_run_state == CORE_RUNNING);
+`endif
     endinterface);
     RenameStage renameStage <- mkRenameStage(renameInput);
 
@@ -1012,6 +1027,173 @@ module mkCore#(CoreId coreId)(Core);
     endrule
 `endif
 
+`ifdef INCLUDE_GDB_CONTROL
+   // ================================================================
+   // DEBUG MODULE INTERFACE
+
+   // ----------------
+   // Debug Module GPR read/write
+
+   FIFOF #(DM_CPU_Req #(5, 64)) f_gpr_reqs <- mkFIFOF1;
+   FIFOF #(DM_CPU_Rsp #(64))    f_gpr_rsps <- mkFIFOF1;
+
+   rule rl_debug_gpr_read (   (rg_core_run_state == CORE_HALTED)
+			   && f_gpr_reqs.notEmpty
+			   && (! f_gpr_reqs.first.write));
+      let req <- pop (f_gpr_reqs);
+      Bit #(5) regnum = req.address;
+
+      let arch_regs = ArchRegs {src1: tagged Valid (tagged Gpr regnum),
+				src2: tagged Invalid,
+				src3: tagged Invalid,
+				dst:  tagged Invalid};
+      let rename_result = regRenamingTable.rename[0].getRename (arch_regs);
+      let phy_rindx     = fromMaybe (?, rename_result.phy_regs.src1);
+      let data_out      = rf.read [debuggerPort].rd1 (phy_rindx);
+
+      let rsp = DM_CPU_Rsp {ok: True, data: data_out};
+      f_gpr_rsps.enq (rsp);
+      // if (cur_verbosity > 1)
+	 $display ("%0d: %m.rl_debug_read_gpr: reg %0d => 0x%0h", cur_cycle, regnum, data_out);
+   endrule
+
+   rule rl_debug_gpr_write (   (rg_core_run_state == CORE_HALTED)
+			    && f_gpr_reqs.notEmpty
+			    && f_gpr_reqs.first.write);
+      let req <- pop (f_gpr_reqs);
+      Bit #(5) regnum = req.address;
+      let data_in = req.data;
+
+      let arch_regs = ArchRegs {src1: tagged Valid (tagged Gpr regnum),
+				src2: tagged Invalid,
+				src3: tagged Invalid,
+				dst:  tagged Invalid};
+      let rename_result = regRenamingTable.rename[0].getRename (arch_regs);
+      let phy_rindx     = fromMaybe (?, rename_result.phy_regs.src1);
+      rf.write [debuggerPort].wr (phy_rindx, data_in);
+      $display ("%m.gpr_write (%0d, %0x), phy_rindx %0d", regnum, data_in, phy_rindx);
+
+      let rsp = DM_CPU_Rsp {ok: True, data: ?};
+      f_gpr_rsps.enq (rsp);
+
+      // if (cur_verbosity > 1)
+	 $display ("%0d: %m.rl_debug_write_gpr: reg %0d <= 0x%0h", cur_cycle, regnum, data_in);
+   endrule
+
+   rule rl_debug_gpr_access_busy (rg_core_run_state != CORE_HALTED);
+      let req <- pop (f_gpr_reqs);
+      let rsp = DM_CPU_Rsp {ok: False, data: ?};
+      f_gpr_rsps.enq (rsp);
+
+      // if (cur_verbosity > 1)
+         $display ("%0d: %m.rl_debug_gpr_access_busy", cur_cycle);
+   endrule
+
+`ifdef ISA_F
+   // ----------------
+   // Debug Module FPR read/write
+
+   FIFOF #(DM_CPU_Req #(5,  64)) f_fpr_reqs <- mkFIFOF1;
+   FIFOF #(DM_CPU_Rsp #(64))     f_fpr_rsps <- mkFIFOF1;
+
+   rule rl_debug_fpr_read (   (rg_core_run_state == CORE_HALTED)
+			   && (! f_gpr_reqs.notEmpty)    // prioritize gpr reqs
+			   && (! f_fpr_reqs.first.write));
+      let req <- pop (f_fpr_reqs);
+      Bit #(5) regnum = req.address;
+
+      let arch_regs = ArchRegs {src1: tagged Valid (tagged Fpu regnum),
+				src2: tagged Invalid,
+				src3: tagged Invalid,
+				dst:  tagged Invalid};
+      let rename_result = regRenamingTable.rename[0].getRename (arch_regs);
+      let phy_rindx     = fromMaybe (?, rename_result.phy_regs.src1);
+      let data_out      = rf.read [debuggerPort].rd1 (phy_rindx);
+
+      let rsp = DM_CPU_Rsp {ok: True, data: data_out};
+      f_fpr_rsps.enq (rsp);
+      // if (cur_verbosity > 1)
+	 $display ("%0d: %m.rl_debug_read_fpr: reg %0d => 0x%0h", cur_cycle, regnum, data_out);
+   endrule
+
+   rule rl_debug_fpr_write (   (rg_core_run_state == CORE_HALTED)
+			    && (! f_gpr_reqs.notEmpty)    // prioritize gpr reqs
+			    && f_fpr_reqs.first.write);
+      let req <- pop (f_fpr_reqs);
+      Bit #(5) regnum = req.address;
+      let data_in = req.data;
+
+      let arch_regs = ArchRegs {src1: tagged Valid (tagged Fpu regnum),
+				src2: tagged Invalid,
+				src3: tagged Invalid,
+				dst:  tagged Invalid};
+      let rename_result = regRenamingTable.rename[0].getRename (arch_regs);
+      let phy_rindx     = fromMaybe (?, rename_result.phy_regs.src1);
+      rf.write [debuggerPort].wr (phy_rindx, data_in);
+      $display ("%m.gpr_write (%0d, %0x), phy_rindx %0d", regnum, data_in, phy_rindx);
+
+      let rsp = DM_CPU_Rsp {ok: True, data: ?};
+      f_fpr_rsps.enq (rsp);
+
+      // if (cur_verbosity > 1)
+	 $display ("%0d: %m.rl_debug_write_fpr: reg %0d <= 0x%0h", cur_cycle, regnum, data_in);
+   endrule
+
+   rule rl_debug_fpr_access_busy (rg_core_run_state != CORE_HALTED);
+      let req <- pop (f_fpr_reqs);
+      let rsp = DM_CPU_Rsp {ok: False, data: ?};
+      f_fpr_rsps.enq (rsp);
+
+      // if (cur_verbosity > 1)
+	 $display ("%0d: %m.rl_debug_fpr_access_busy", cur_cycle);
+   endrule
+`endif
+
+   // ----------------
+   // Debug Module CSR read/write
+
+   // Debugger CSR read/write request/response
+   FIFOF #(DM_CPU_Req #(12, 64)) f_csr_reqs <- mkFIFOF1;
+   FIFOF #(DM_CPU_Rsp #(64))     f_csr_rsps <- mkFIFOF1;
+
+   rule rl_debug_csr_read (   (rg_core_run_state == CORE_HALTED)
+			   && (! f_csr_reqs.first.write));
+      let req <- pop (f_csr_reqs);
+      Bit #(12) csr_addr = req.address;
+      let data_out = csrf.rd (unpack (csr_addr));
+
+      let rsp = DM_CPU_Rsp {ok: True, data: data_out};
+      f_csr_rsps.enq (rsp);
+      // if (cur_verbosity > 1)
+	 $display ("%0d: %m.rl_debug_read_csr: csr %0d => 0x%0h", cur_cycle, csr_addr, data_out);
+   endrule
+
+   rule rl_debug_csr_write (   (rg_core_run_state == CORE_HALTED)
+			    && f_csr_reqs.first.write);
+      let req <- pop (f_csr_reqs);
+      Bit #(12) csr_addr = req.address;
+      let data_in = req.data;
+      csrf.csrInstWr (unpack (csr_addr), data_in);
+
+      let rsp = DM_CPU_Rsp {ok: True, data: ?};
+      f_csr_rsps.enq (rsp);
+
+      // if (cur_verbosity > 1)
+	 $display ("%0d: %m.rl_debug_write_csr: csr 0x%0h <= 0x%0h", cur_cycle, csr_addr, data_in);
+   endrule
+
+   rule rl_debug_csr_access_busy (rg_core_run_state != CORE_HALTED);
+      let req <- pop (f_csr_reqs);
+      let rsp = DM_CPU_Rsp {ok: False, data: ?};
+      f_csr_rsps.enq (rsp);
+
+      // if (cur_verbosity > 1)
+	 $display ("%0d: %m.rl_debug_csr_access_busy", cur_cycle);
+   endrule
+
+   // ================================================================
+`endif
+
     interface CoreReq coreReq;
         method Action start(
             Bit#(64) startpc,
@@ -1115,60 +1297,14 @@ module mkCore#(CoreId coreId)(Core);
        $display ("%0d: %m.debug_resume, dpc = 0x%0h", cur_cycle, startpc);
     endmethod
 
-    method Data csr_read (Bit #(12)  csr_addr) if (rg_core_run_state == CORE_HALTED);
-       return csrf.rd (unpack (csr_addr));
-    endmethod
-
-    method Action csr_write (Bit #(12)  csr_addr, Data  data) if (rg_core_run_state == CORE_HALTED);
-       csrf.csrInstWr (unpack (csr_addr), data);
-    endmethod
-
-    method Data gpr_read (Bit #(5)  gpr_addr) if (rg_core_run_state == CORE_HALTED);
-       let arch_regs = ArchRegs {src1: tagged Valid (tagged Gpr gpr_addr),
-				 src2: tagged Invalid,
-				 src3: tagged Invalid,
-				 dst:  tagged Invalid};
-       let rename_result = ?; // regRenamingTable.rename[0].getRename (arch_regs);
-       let phy_rindx     = ?; // fromMaybe (?, rename_result.phy_regs.src1);
-       let data          = ?; // rf.read [debuggerPort].rd1 (phy_rindx);
-       return data;
-    endmethod
-
-    method Action gpr_write (Bit #(5)  gpr_addr, Data  data) if (rg_core_run_state == CORE_HALTED);
-       let arch_regs = ArchRegs {src1: tagged Valid (tagged Gpr gpr_addr),
-				 src2: tagged Invalid,
-				 src3: tagged Invalid,
-				 dst:  tagged Invalid};
-       let rename_result = ?; // regRenamingTable.rename[0].getRename (arch_regs);
-       let phy_rindx     = ?; // fromMaybe (?, rename_result.phy_regs.src1);
-       // rf.write [debuggerPort].wr (phy_rindx, data);
-       // $display ("%m.gpr_write (%0d, %0x), phy_rindx %0d", gpr_addr, data, phy_rindx);
-    endmethod
+   interface Server  hart0_gpr_mem_server = toGPServer (f_gpr_reqs, f_gpr_rsps);
 
 `ifdef ISA_F
-    method Data fpr_read (Bit #(5)  fpr_addr) if (rg_core_run_state == CORE_HALTED);
-       let arch_regs = ArchRegs {src1: tagged Valid (tagged Fpu fpr_addr),
-				 src2: tagged Invalid,
-				 src3: tagged Invalid,
-				 dst:  tagged Invalid};
-       let rename_result = ?; // regRenamingTable.rename[0].getRename (arch_regs);
-       let phy_rindx     = ?; // fromMaybe (?, rename_result.phy_regs.src1);
-       let data          = ?; // rf.read [debuggerPort].rd1 (phy_rindx);
-       return data;
-    endmethod
-
-    method Action fpr_write (Bit #(5)  fpr_addr, Data  data) if (rg_core_run_state == CORE_HALTED);
-       let arch_regs = ArchRegs {src1: tagged Valid (tagged Fpu fpr_addr),
-				 src2: tagged Invalid,
-				 src3: tagged Invalid,
-				 dst:  tagged Invalid};
-       let rename_result = ?; // regRenamingTable.rename[0].getRename (arch_regs);
-       let phy_rindx     = ?; // fromMaybe (?, rename_result.phy_regs.src1);
-       // rf.write [debuggerPort].wr (phy_rindx, data);
-       // $display ("%m.fpr_write (%0d, %0x), phy_rindx %0d", fpr_addr, data, phy_rindx);
-    endmethod
+   interface Server  hart0_fpr_mem_server = toGPServer (f_fpr_reqs, f_fpr_rsps);
 `endif
 
+   // CSR access
+   interface Server  hart0_csr_mem_server = toGPServer (f_csr_reqs, f_csr_rsps);
 `endif
 
 endmodule

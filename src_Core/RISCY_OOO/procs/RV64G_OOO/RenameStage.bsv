@@ -77,6 +77,9 @@ interface RenameInput;
     method Bool checkDeadlock;
     // performance
     method Bool doStats;
+`ifdef INCLUDE_GDB_CONTROL
+    method Bool core_is_running;
+`endif
 endinterface
 
 interface RenameStage;
@@ -302,6 +305,9 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         && epochManager.checkEpoch[0].check(fetchStage.pipelines[0].first.main_epoch) // correct path
         && isValid(firstTrap) // take trap
         && rob.isEmpty // stall for ROB empty
+`ifdef INCLUDE_GDB_CONTROL
+        && inIfc.core_is_running
+`endif
     );
         fetchStage.pipelines[0].deq;
 `ifdef INCLUDE_GDB_CONTROL
@@ -416,6 +422,9 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         && !isValid(firstTrap) // not trap
         && firstReplay // system inst needs replay
         && rob.isEmpty // stall for ROB empty
+`ifdef INCLUDE_GDB_CONTROL
+        && inIfc.core_is_running
+`endif
     );
         fetchStage.pipelines[0].deq;
 `ifdef INCLUDE_GDB_CONTROL
@@ -562,6 +571,9 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         // turn off speculation for mem inst only, and first inst is mem
         && (specNonMem && firstMem)
         && rob.isEmpty // stall for ROB empty to process mem inst
+`ifdef INCLUDE_GDB_CONTROL
+        && inIfc.core_is_running
+`endif
     );
         fetchStage.pipelines[0].deq;
 `ifdef INCLUDE_GDB_CONTROL
@@ -722,6 +734,9 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         && (!specNone || rob.isEmpty)
         // don't process mem inst if we don't allow speculation for mem inst only
         && !(specNonMem && firstMem)
+`endif
+`ifdef INCLUDE_GDB_CONTROL
+        && inIfc.core_is_running
 `endif
     );
         // we stop superscalar rename when an instruction cannot be processed:

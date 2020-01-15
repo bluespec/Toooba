@@ -139,20 +139,6 @@ module mkProc (Proc_IFC);
    FIFOF #(Bool)  f_run_halt_reqs <- mkFIFOF;
    FIFOF #(Bool)  f_run_halt_rsps <- mkFIFOF;
 
-   // Debugger GPR read/write request/response
-   FIFOF #(DM_CPU_Req #(5,  XLEN)) f_gpr_reqs <- mkFIFOF1;
-   FIFOF #(DM_CPU_Rsp #(XLEN))     f_gpr_rsps <- mkFIFOF1;
-
-`ifdef ISA_F
-   // Debugger FPR read/write request/response
-   FIFOF #(DM_CPU_Req #(5,  FLEN)) f_fpr_reqs <- mkFIFOF1;
-   FIFOF #(DM_CPU_Rsp #(FLEN))     f_fpr_rsps <- mkFIFOF1;
-`endif
-
-   // Debugger CSR read/write request/response
-   FIFOF #(DM_CPU_Req #(12, XLEN)) f_csr_reqs <- mkFIFOF1;
-   FIFOF #(DM_CPU_Rsp #(XLEN))     f_csr_rsps <- mkFIFOF1;
-
 `endif
 
    // ----------------
@@ -195,14 +181,7 @@ module mkProc (Proc_IFC);
         tlbToMem[i] = core[i].tlbToMem;
     end
 
-   /*
-   // Stub out memLoader (TODO: can be Debug Module's access)
-   let memLoaderStub = interface MemLoaderMemClient;
-			  interface memReq = nullFifoDeq;
-			  interface respSt = nullFifoEnq;
-		       endinterface;
-   */
-
+   // Note: mkLLCDmaConnect is Toooba version, different from riscy-ooo version
    let llc__mem_server <- mkLLCDmaConnect(llc.dma, tlbToMem);
 
    // ================================================================
@@ -311,9 +290,7 @@ module mkProc (Proc_IFC);
 
    // Run command when in debug mode
    rule rl_debug_run ((f_run_halt_reqs.first == True)
-		      && (! f_gpr_reqs.notEmpty)
-		      && (! f_fpr_reqs.notEmpty)
-		      && (! f_csr_reqs.notEmpty)
+		      // && (! f_csr_reqs.notEmpty)
 		      && (rg_state == CPU_DEBUG_MODE));
       // if (cfg_verbosity > 1)
 	 $display ("%0d: %m.rl_debug_run", cur_cycle);
@@ -328,9 +305,7 @@ module mkProc (Proc_IFC);
 
    // Run command when already running
    rule rl_debug_run_redundant ((f_run_halt_reqs.first == True)
-				&& (! f_gpr_reqs.notEmpty)
-				&& (! f_fpr_reqs.notEmpty)
-				&& (! f_csr_reqs.notEmpty)
+				// && (! f_csr_reqs.notEmpty)
 				&& fn_is_running (rg_state));
       // if (cfg_verbosity > 1)
 	 $display ("%0d: %m.rl_debug_run_redundant", cur_cycle);
@@ -379,118 +354,6 @@ module mkProc (Proc_IFC);
       $display ("%0d: %m.rl_debug_halt_redundant: CPU already halted; state = ",
 		cur_cycle, fshow (rg_state));
    endrule
-
-   // ----------------
-   // Debug Module CSR read/write
-
-   rule rl_debug_csr_read ((rg_state == CPU_DEBUG_MODE) && (! f_csr_reqs.first.write));
-      let req <- pop (f_csr_reqs);
-      Bit #(12) csr_addr = req.address;
-      let data = core [0].csr_read (csr_addr);
-      let rsp = DM_CPU_Rsp {ok: True, data: data};
-      f_csr_rsps.enq (rsp);
-      // if (cur_verbosity > 1)
-	 $display ("%0d: %m.rl_debug_read_csr: csr %0d => 0x%0h", cur_cycle, csr_addr, data);
-   endrule
-
-   rule rl_debug_csr_write ((rg_state == CPU_DEBUG_MODE) && f_csr_reqs.first.write);
-      let req <- pop (f_csr_reqs);
-      Bit #(12) csr_addr = req.address;
-      let data = req.data;
-      core [0].csr_write (csr_addr, data);
-      let rsp = DM_CPU_Rsp {ok: True, data: ?};
-      f_csr_rsps.enq (rsp);
-
-      // if (cur_verbosity > 1)
-	 $display ("%0d: %m.rl_debug_write_csr: csr 0x%0h <= 0x%0h", cur_cycle, csr_addr, data);
-   endrule
-
-   rule rl_debug_csr_access_busy (rg_state != CPU_DEBUG_MODE);
-      let req <- pop (f_csr_reqs);
-      let rsp = DM_CPU_Rsp {ok: False, data: ?};
-      f_csr_rsps.enq (rsp);
-
-      // if (cur_verbosity > 1)
-	 $display ("%0d: %m.rl_debug_csr_access_busy", cur_cycle);
-   endrule
-
-   // ----------------
-   // Debug Module GPR read/write
-
-   rule rl_debug_gpr_read ((rg_state == CPU_DEBUG_MODE) && (! f_gpr_reqs.first.write));
-      let req <- pop (f_gpr_reqs);
-      Bit #(5) regnum = req.address;
-
-      let data_out = core [0].gpr_read (regnum);
-
-      let rsp = DM_CPU_Rsp {ok: True, data: data_out};
-      f_gpr_rsps.enq (rsp);
-      // if (cur_verbosity > 1)
-	 $display ("%0d: %m.rl_debug_read_gpr: reg %0d => 0x%0h", cur_cycle, regnum, data_out);
-   endrule
-
-   rule rl_debug_gpr_write ((rg_state == CPU_DEBUG_MODE) && f_gpr_reqs.first.write);
-      let req <- pop (f_gpr_reqs);
-      Bit #(5) regnum = req.address;
-      let data_in = req.data;
-
-      core [0].gpr_write (regnum, data_in);
-
-      let rsp = DM_CPU_Rsp {ok: True, data: ?};
-      f_gpr_rsps.enq (rsp);
-
-      // if (cur_verbosity > 1)
-	 $display ("%0d: %m.rl_debug_write_gpr: reg %0d <= 0x%0h", cur_cycle, regnum, data_in);
-   endrule
-
-   rule rl_debug_gpr_access_busy (rg_state != CPU_DEBUG_MODE);
-      let req <- pop (f_gpr_reqs);
-      let rsp = DM_CPU_Rsp {ok: False, data: ?};
-      f_gpr_rsps.enq (rsp);
-
-      // if (cur_verbosity > 1)
-         $display ("%0d: %m.rl_debug_gpr_access_busy", cur_cycle);
-   endrule
-
-   // ----------------
-   // Debug Module FPR read/write
-
-`ifdef ISA_F
-   rule rl_debug_fpr_read ((rg_state == CPU_DEBUG_MODE) && (! f_fpr_reqs.first.write));
-      let req <- pop (f_fpr_reqs);
-      Bit #(5) regnum = req.address;
-
-      let data_out = core [0].fpr_read (regnum);
-
-      let rsp = DM_CPU_Rsp {ok: True, data: data_out};
-      f_fpr_rsps.enq (rsp);
-      // if (cur_verbosity > 1)
-	 $display ("%0d: %m.rl_debug_read_fpr: reg %0d => 0x%0h", cur_cycle, regnum, data_out);
-   endrule
-
-   rule rl_debug_fpr_write ((rg_state == CPU_DEBUG_MODE) && f_fpr_reqs.first.write);
-      let req <- pop (f_fpr_reqs);
-      Bit #(5) regnum = req.address;
-      let data_in = req.data;
-
-      core [0].fpr_write (regnum, data_in);
-
-      let rsp = DM_CPU_Rsp {ok: True, data: ?};
-      f_fpr_rsps.enq (rsp);
-
-      // if (cur_verbosity > 1)
-	 $display ("%0d: %m.rl_debug_write_fpr: reg %0d <= 0x%0h", cur_cycle, regnum, data_in);
-   endrule
-
-   rule rl_debug_fpr_access_busy (rg_state != CPU_DEBUG_MODE);
-      let req <- pop (f_fpr_reqs);
-      let rsp = DM_CPU_Rsp {ok: False, data: ?};
-      f_fpr_rsps.enq (rsp);
-
-      // if (cur_verbosity > 1)
-	 $display ("%0d: %m.rl_debug_fpr_access_busy", cur_cycle);
-   endrule
-`endif
 
 `endif
 
@@ -577,15 +440,15 @@ module mkProc (Proc_IFC);
    endinterface
 
    // GPR access
-   interface Server  hart0_gpr_mem_server = toGPServer (f_gpr_reqs, f_gpr_rsps);
+   interface Server  hart0_gpr_mem_server = core[0].hart0_gpr_mem_server;
 
 `ifdef ISA_F
    // FPR access
-   interface Server  hart0_fpr_mem_server = toGPServer (f_fpr_reqs, f_fpr_rsps);
+   interface Server  hart0_fpr_mem_server = core[0].hart0_fpr_mem_server;
 `endif
 
    // CSR access
-   interface Server  hart0_csr_mem_server = toGPServer (f_csr_reqs, f_csr_rsps);
+   interface Server  hart0_csr_mem_server = core[0].hart0_csr_mem_server;
 
    interface  debug_module_mem_server = llc__mem_server;
 `endif
