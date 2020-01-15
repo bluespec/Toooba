@@ -99,6 +99,8 @@ interface Proc_IFC;
 
    // CSR access
    interface Server #(DM_CPU_Req #(12, XLEN), DM_CPU_Rsp #(XLEN)) hart0_csr_mem_server;
+
+   interface AXI4_Slave_IFC #(Wd_Id, Wd_Addr, Wd_Data, Wd_User)  debug_module_mem_server;
 `endif
 
 endinterface

@@ -1125,9 +1125,9 @@ module mkCore#(CoreId coreId)(Core);
 
     method Data gpr_read (Bit #(5)  gpr_addr) if (rg_core_run_state == CORE_HALTED);
        let arch_regs = ArchRegs {src1: tagged Valid (tagged Gpr gpr_addr),
-				 src2: ?,
-				 src3: ?,
-				 dst: ?};
+				 src2: tagged Invalid,
+				 src3: tagged Invalid,
+				 dst:  tagged Invalid};
        let rename_result = ?; // regRenamingTable.rename[0].getRename (arch_regs);
        let phy_rindx     = ?; // fromMaybe (?, rename_result.phy_regs.src1);
        let data          = ?; // rf.read [debuggerPort].rd1 (phy_rindx);
@@ -1136,9 +1136,9 @@ module mkCore#(CoreId coreId)(Core);
 
     method Action gpr_write (Bit #(5)  gpr_addr, Data  data) if (rg_core_run_state == CORE_HALTED);
        let arch_regs = ArchRegs {src1: tagged Valid (tagged Gpr gpr_addr),
-				 src2: ?,
-				 src3: ?,
-				 dst: ?};
+				 src2: tagged Invalid,
+				 src3: tagged Invalid,
+				 dst:  tagged Invalid};
        let rename_result = ?; // regRenamingTable.rename[0].getRename (arch_regs);
        let phy_rindx     = ?; // fromMaybe (?, rename_result.phy_regs.src1);
        // rf.write [debuggerPort].wr (phy_rindx, data);
@@ -1148,9 +1148,9 @@ module mkCore#(CoreId coreId)(Core);
 `ifdef ISA_F
     method Data fpr_read (Bit #(5)  fpr_addr) if (rg_core_run_state == CORE_HALTED);
        let arch_regs = ArchRegs {src1: tagged Valid (tagged Fpu fpr_addr),
-				 src2: ?,
-				 src3: ?,
-				 dst: ?};
+				 src2: tagged Invalid,
+				 src3: tagged Invalid,
+				 dst:  tagged Invalid};
        let rename_result = ?; // regRenamingTable.rename[0].getRename (arch_regs);
        let phy_rindx     = ?; // fromMaybe (?, rename_result.phy_regs.src1);
        let data          = ?; // rf.read [debuggerPort].rd1 (phy_rindx);
@@ -1159,9 +1159,9 @@ module mkCore#(CoreId coreId)(Core);
 
     method Action fpr_write (Bit #(5)  fpr_addr, Data  data) if (rg_core_run_state == CORE_HALTED);
        let arch_regs = ArchRegs {src1: tagged Valid (tagged Fpu fpr_addr),
-				 src2: ?,
-				 src3: ?,
-				 dst: ?};
+				 src2: tagged Invalid,
+				 src3: tagged Invalid,
+				 dst:  tagged Invalid};
        let rename_result = ?; // regRenamingTable.rename[0].getRename (arch_regs);
        let phy_rindx     = ?; // fromMaybe (?, rename_result.phy_regs.src1);
        // rf.write [debuggerPort].wr (phy_rindx, data);

@@ -195,16 +195,18 @@ module mkProc (Proc_IFC);
         tlbToMem[i] = core[i].tlbToMem;
     end
 
+   /*
    // Stub out memLoader (TODO: can be Debug Module's access)
    let memLoaderStub = interface MemLoaderMemClient;
 			  interface memReq = nullFifoDeq;
 			  interface respSt = nullFifoEnq;
 		       endinterface;
+   */
 
-    mkLLCDmaConnect(llc.dma, memLoaderStub, tlbToMem);
+   let llc__mem_server <- mkLLCDmaConnect(llc.dma, tlbToMem);
 
    // ================================================================
-   // interface LLC to AXI4
+   // interface Back-side of LLC to AXI4
 
    LLC_AXI4_Adapter_IFC  llc_axi4_adapter <- mkLLC_AXi4_Adapter (llc.to_mem);
 
@@ -584,6 +586,8 @@ module mkProc (Proc_IFC);
 
    // CSR access
    interface Server  hart0_csr_mem_server = toGPServer (f_csr_reqs, f_csr_rsps);
+
+   interface  debug_module_mem_server = llc__mem_server;
 `endif
 
 endmodule: mkProc

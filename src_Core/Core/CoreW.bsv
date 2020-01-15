@@ -411,8 +411,9 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
    mkConnection (fabric_2x3.v_to_slaves [plic_slave_num],        plic.axi4_slave);
 
    // TODO: This slave can be connected to mkLLCDmaConnect for Debug Module System Bus Access
-   AXI4_Slave_IFC #(Wd_Id, Wd_Addr, Wd_Data, Wd_User) dummy_slave = dummy_AXI4_Slave_ifc;
-   mkConnection (fabric_2x3.v_to_slaves [near_mem_io_slave_num], dummy_slave);
+   // AXI4_Slave_IFC #(Wd_Id, Wd_Addr, Wd_Data, Wd_User) dummy_slave = dummy_AXI4_Slave_ifc;
+   // mkConnection (fabric_2x3.v_to_slaves [near_mem_io_slave_num], dummy_slave);
+   mkConnection (fabric_2x3.v_to_slaves [near_mem_io_slave_num], proc.debug_module_mem_server);
 
    // ================================================================
    // Connect external interrupt lines from PLIC to CPU
@@ -557,8 +558,8 @@ module mkFabric_2x3 (Fabric_2x3_IFC);
    // Any addr is legal, and there is only one slave to service it.
 
    function Tuple2 #(Bool, Slave_Num_2x3) fn_addr_to_slave_num_2x3  (Fabric_Addr addr);
-      if (   (soc_map.m_near_mem_io_addr_base <= addr)
-	  && (addr < soc_map.m_near_mem_io_addr_lim))
+      if (   (soc_map.m_mem0_controller_addr_base <= addr)
+	  && (addr < soc_map.m_mem0_controller_addr_lim))
 	 return tuple2 (True, near_mem_io_slave_num);
 
       else if (   (soc_map.m_plic_addr_base <= addr)
