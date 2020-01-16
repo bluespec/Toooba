@@ -159,20 +159,11 @@ interface Core;
     method Action setDEIP (Bit #(1) v);
 
 `ifdef INCLUDE_GDB_CONTROL
-    method Action debug_halt;
-
-    (* always_ready *)
-    method Bool is_debug_halted;
-
-    method Action debug_resume;
-
-   interface Server #(DM_CPU_Req #(5, 64), DM_CPU_Rsp #(64)) hart0_gpr_mem_server;
+   interface Server #(Bool, Bool)                             hart0_run_halt_server;
+   interface Server #(DM_CPU_Req #(5, 64),  DM_CPU_Rsp #(64)) hart0_gpr_mem_server;
 `ifdef ISA_F
-   // FPR access
-   interface Server #(DM_CPU_Req #(5, 64), DM_CPU_Rsp #(64)) hart0_fpr_mem_server;
+   interface Server #(DM_CPU_Req #(5, 64),  DM_CPU_Rsp #(64)) hart0_fpr_mem_server;
 `endif
-
-   // CSR access
    interface Server #(DM_CPU_Req #(12, 64), DM_CPU_Rsp #(64)) hart0_csr_mem_server;
 `endif
 endinterface
@@ -188,6 +179,7 @@ endinterface
 
 typedef enum {
 `ifdef INCLUDE_GDB_CONTROL
+   CORE_HALTING,
    CORE_HALTED,
 `endif
    CORE_RUNNING
@@ -744,8 +736,8 @@ module mkCore#(CoreId coreId)(Core);
 `ifdef INCLUDE_GDB_CONTROL
         if (commitStage.is_debug_halted) begin
 	   started           <= False;
-	   rg_core_run_state <= CORE_HALTED;
-	   $display ("%0d: %m.rule readyToFetch: debug halt", cur_cycle);
+	   rg_core_run_state <= CORE_HALTING;
+	   $display ("%0d: %m.rule readyToFetch: halting for debug mode", cur_cycle);
 	end
 `endif
     endrule
@@ -1031,7 +1023,9 @@ module mkCore#(CoreId coreId)(Core);
    // ================================================================
    // DEBUG MODULE INTERFACE
 
-   // ----------------
+   Bool show_DM_interactions = True;    // for debugging the interactions
+
+   // ----------------------------------------------------------------
    // Debug Module GPR read/write
 
    FIFOF #(DM_CPU_Req #(5, 64)) f_gpr_reqs <- mkFIFOF1;
@@ -1053,7 +1047,8 @@ module mkCore#(CoreId coreId)(Core);
 
       let rsp = DM_CPU_Rsp {ok: True, data: data_out};
       f_gpr_rsps.enq (rsp);
-      // if (cur_verbosity > 1)
+
+      if (show_DM_interactions)
 	 $display ("%0d: %m.rl_debug_read_gpr: reg %0d => 0x%0h", cur_cycle, regnum, data_out);
    endrule
 
@@ -1071,26 +1066,26 @@ module mkCore#(CoreId coreId)(Core);
       let rename_result = regRenamingTable.rename[0].getRename (arch_regs);
       let phy_rindx     = fromMaybe (?, rename_result.phy_regs.src1);
       rf.write [debuggerPort].wr (phy_rindx, data_in);
-      $display ("%m.gpr_write (%0d, %0x), phy_rindx %0d", regnum, data_in, phy_rindx);
 
       let rsp = DM_CPU_Rsp {ok: True, data: ?};
       f_gpr_rsps.enq (rsp);
 
-      // if (cur_verbosity > 1)
-	 $display ("%0d: %m.rl_debug_write_gpr: reg %0d <= 0x%0h", cur_cycle, regnum, data_in);
+      if (show_DM_interactions)
+	 $display ("%0d: %m.rl_debug_gpr_write: reg %0d <= 0x%0h (phy_rindx = %0d)",
+		   cur_cycle, regnum, data_in, phy_rindx);
    endrule
 
-   rule rl_debug_gpr_access_busy (rg_core_run_state != CORE_HALTED);
+   rule rl_debug_gpr_access_busy (rg_core_run_state == CORE_RUNNING);
       let req <- pop (f_gpr_reqs);
       let rsp = DM_CPU_Rsp {ok: False, data: ?};
       f_gpr_rsps.enq (rsp);
 
-      // if (cur_verbosity > 1)
+      if (show_DM_interactions)
          $display ("%0d: %m.rl_debug_gpr_access_busy", cur_cycle);
    endrule
 
 `ifdef ISA_F
-   // ----------------
+   // ----------------------------------------------------------------
    // Debug Module FPR read/write
 
    FIFOF #(DM_CPU_Req #(5,  64)) f_fpr_reqs <- mkFIFOF1;
@@ -1112,7 +1107,8 @@ module mkCore#(CoreId coreId)(Core);
 
       let rsp = DM_CPU_Rsp {ok: True, data: data_out};
       f_fpr_rsps.enq (rsp);
-      // if (cur_verbosity > 1)
+
+      if (show_DM_interactions)
 	 $display ("%0d: %m.rl_debug_read_fpr: reg %0d => 0x%0h", cur_cycle, regnum, data_out);
    endrule
 
@@ -1130,26 +1126,28 @@ module mkCore#(CoreId coreId)(Core);
       let rename_result = regRenamingTable.rename[0].getRename (arch_regs);
       let phy_rindx     = fromMaybe (?, rename_result.phy_regs.src1);
       rf.write [debuggerPort].wr (phy_rindx, data_in);
-      $display ("%m.gpr_write (%0d, %0x), phy_rindx %0d", regnum, data_in, phy_rindx);
 
       let rsp = DM_CPU_Rsp {ok: True, data: ?};
       f_fpr_rsps.enq (rsp);
 
-      // if (cur_verbosity > 1)
-	 $display ("%0d: %m.rl_debug_write_fpr: reg %0d <= 0x%0h", cur_cycle, regnum, data_in);
+      if (show_DM_interactions)
+	 $display ("%0d: %m.rl_debug_write_fpr: reg %0d <= 0x%0h (phy_rindx %0d)",
+		   cur_cycle, regnum, data_in, phy_rindx);
    endrule
 
-   rule rl_debug_fpr_access_busy (rg_core_run_state != CORE_HALTED);
+   rule rl_debug_fpr_access_busy (   (rg_core_run_state == CORE_RUNNING)
+				  && f_fpr_reqs.notEmpty);
+
       let req <- pop (f_fpr_reqs);
       let rsp = DM_CPU_Rsp {ok: False, data: ?};
       f_fpr_rsps.enq (rsp);
 
-      // if (cur_verbosity > 1)
+      if (show_DM_interactions)
 	 $display ("%0d: %m.rl_debug_fpr_access_busy", cur_cycle);
    endrule
 `endif
 
-   // ----------------
+   // ----------------------------------------------------------------
    // Debug Module CSR read/write
 
    // Debugger CSR read/write request/response
@@ -1164,7 +1162,8 @@ module mkCore#(CoreId coreId)(Core);
 
       let rsp = DM_CPU_Rsp {ok: True, data: data_out};
       f_csr_rsps.enq (rsp);
-      // if (cur_verbosity > 1)
+
+      if (show_DM_interactions)
 	 $display ("%0d: %m.rl_debug_read_csr: csr %0d => 0x%0h", cur_cycle, csr_addr, data_out);
    endrule
 
@@ -1178,17 +1177,105 @@ module mkCore#(CoreId coreId)(Core);
       let rsp = DM_CPU_Rsp {ok: True, data: ?};
       f_csr_rsps.enq (rsp);
 
-      // if (cur_verbosity > 1)
+      if (show_DM_interactions)
 	 $display ("%0d: %m.rl_debug_write_csr: csr 0x%0h <= 0x%0h", cur_cycle, csr_addr, data_in);
    endrule
 
-   rule rl_debug_csr_access_busy (rg_core_run_state != CORE_HALTED);
+   rule rl_debug_csr_access_busy (rg_core_run_state == CORE_RUNNING);
       let req <- pop (f_csr_reqs);
       let rsp = DM_CPU_Rsp {ok: False, data: ?};
       f_csr_rsps.enq (rsp);
 
-      // if (cur_verbosity > 1)
+      if (show_DM_interactions)
 	 $display ("%0d: %m.rl_debug_csr_access_busy", cur_cycle);
+   endrule
+
+   // ----------------------------------------------------------------
+   // Debug Module run-halt control
+
+   FIFOF #(Bool)  f_run_halt_reqs  <- mkFIFOF;
+   FIFOF #(Bool)  f_run_halt_rsps  <- mkFIFOF;
+   Reg #(Bool)    rg_sent_halt_rsp <- mkReg (False);
+
+   // ----------------
+   // Debug Module Halt control
+
+   rule rl_debug_halt_req (   (rg_core_run_state == CORE_RUNNING)
+			   && (f_run_halt_reqs.first == False));
+      f_run_halt_reqs.deq;
+
+      // Debugger 'halt' request (e.g., GDB '^C' command)
+      // This is initiated just like an interrupt.
+      renameStage.debug_halt_req;
+      rg_sent_halt_rsp <= False;
+
+      if (show_DM_interactions)
+	 $display ("%0d: %m.rl_debug_halt_req", cur_cycle);
+   endrule
+
+   rule rl_debug_halt_req_already_halted (   (rg_core_run_state != CORE_RUNNING)
+					  && (f_run_halt_reqs.first == False));
+      f_run_halt_reqs.deq;
+
+      // Notify debugger that we've 'halted'
+      f_run_halt_rsps.enq (False);
+
+      if (show_DM_interactions)
+	 $display ("%0d: %m.rl_debug_halt_req_already_halted", cur_cycle);
+   endrule
+
+   // Monitors when we've reached halted state while running
+   // (due to halt, step or EBREAK) and notifies DM
+   rule rl_debug_halted (rg_core_run_state == CORE_HALTING);
+      // Notify debugger that we've halted
+      f_run_halt_rsps.enq (False);
+      rg_core_run_state <= CORE_HALTED;
+
+      if (show_DM_interactions)
+	 $display ("%0d: %m.rl_debug_halted", cur_cycle);
+   endrule
+
+   // ----------------
+   // Debug Module Resume (run) control
+
+   // Resume command when in debug mode
+   rule rl_debug_resume (   (rg_core_run_state == CORE_HALTED)
+			 && (f_run_halt_reqs.first == True)
+
+			 // prioritise gpr/fpr/csr read/write requests before resuming
+			 && (! f_gpr_reqs.notEmpty)
+`ifdef ISA_F
+			 && (! f_fpr_reqs.notEmpty)
+`endif
+			 && (! f_csr_reqs.notEmpty));
+
+      f_run_halt_reqs.deq;
+
+      let startpc = csrf.dpc_read;
+      fetchStage.redirect (startpc);
+      renameStage.debug_resume;
+      commitStage.debug_resume;
+
+      started           <= True;
+      rg_core_run_state <= CORE_RUNNING;
+
+      // Notify debugger that we've started running
+      f_run_halt_rsps.enq (True);
+
+      if (show_DM_interactions)
+         $display ("%0d: %m.debug_resume, dpc = 0x%0h", cur_cycle, startpc);
+   endrule
+
+   // Run command when already running
+   rule rl_debug_run_redundant (   (rg_core_run_state == CORE_RUNNING)
+				&& (f_run_halt_reqs.first == True));
+      f_run_halt_reqs.deq;
+
+      // Notify debugger that we're running
+      f_run_halt_rsps.enq (True);
+
+      if (show_DM_interactions)
+	 $display ("%0d: %m.rl_debug_run_redundant", cur_cycle);
    endrule
 
    // ================================================================
@@ -1276,35 +1363,12 @@ module mkCore#(CoreId coreId)(Core);
     method Action setDEIP (v) = csrf.setDEIP (v);
 
 `ifdef INCLUDE_GDB_CONTROL
-    method Action debug_halt () if (started && (rg_core_run_state == CORE_RUNNING));
-       $display ("%0d: %m.debug_halt", cur_cycle);
-       renameStage.debug_halt;    // start the halt protocol
-    endmethod
-
-    method Bool is_debug_halted;
-       return (rg_core_run_state == CORE_HALTED);
-    endmethod
-
-    method Action debug_resume () if (rg_core_run_state == CORE_HALTED);
-       let startpc = csrf.dpc_read;
-       fetchStage.redirect (startpc);
-
-       renameStage.debug_resume;
-       commitStage.debug_resume;
-
-       started           <= True;
-       rg_core_run_state <= CORE_RUNNING;
-       $display ("%0d: %m.debug_resume, dpc = 0x%0h", cur_cycle, startpc);
-    endmethod
-
-   interface Server  hart0_gpr_mem_server = toGPServer (f_gpr_reqs, f_gpr_rsps);
-
+   interface Server  hart0_run_halt_server = toGPServer (f_run_halt_reqs, f_run_halt_rsps);
+   interface Server  hart0_gpr_mem_server  = toGPServer (f_gpr_reqs, f_gpr_rsps);
 `ifdef ISA_F
-   interface Server  hart0_fpr_mem_server = toGPServer (f_fpr_reqs, f_fpr_rsps);
+   interface Server  hart0_fpr_mem_server  = toGPServer (f_fpr_reqs, f_fpr_rsps);
 `endif
-
-   // CSR access
-   interface Server  hart0_csr_mem_server = toGPServer (f_csr_reqs, f_csr_rsps);
+   interface Server  hart0_csr_mem_server  = toGPServer (f_csr_reqs, f_csr_rsps);
 `endif
 
 endmodule

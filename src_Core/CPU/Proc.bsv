@@ -86,23 +86,6 @@ import DM_CPU_Req_Rsp  :: *;
 `endif
 
 // ================================================================
-// CPU run-states
-// TODO: Reset from GDB etc.
-
-typedef enum {CPU_RUNNING                 // Normal operation
-`ifdef INCLUDE_GDB_CONTROL
-	      ,
-              CPU_ENTERING_DEBUG_MODE,    // On GDB breakpoint, while waiting for fence completion
-	      CPU_DEBUG_MODE              // Halted for debugger
-`endif
-   } CPU_State
-deriving (Eq, Bits, FShow);
-
-function Bool fn_is_running (CPU_State  cpu_state);
-   return (cpu_state == CPU_RUNNING);
-endfunction
-
-// ================================================================
 
 (* synthesize *)
 module mkProc (Proc_IFC);
@@ -121,25 +104,10 @@ module mkProc (Proc_IFC);
    Reg #(Bit #(4))  cfg_verbosity <- mkConfigReg (0);
 
    // ----------------
-   // CPU run/debug states
-
-   Reg #(CPU_State)  rg_state <- mkReg (CPU_RUNNING);
-
-   // ----------------
    // Reset requests and responses    (TODO: to be implemented)
 
    FIFOF #(Bit #(0))  f_reset_reqs <- mkFIFOF;
    FIFOF #(Bit #(0))  f_reset_rsps <- mkFIFOF;
-
-`ifdef INCLUDE_GDB_CONTROL
-   // ----------------
-   // Communication to/from External debug module    (TODO: to be implemented)
-
-   // Debugger run-control
-   FIFOF #(Bool)  f_run_halt_reqs <- mkFIFOF;
-   FIFOF #(Bool)  f_run_halt_rsps <- mkFIFOF;
-
-`endif
 
    // ----------------
    // Tandem Verification    (TODO: to be implemented)
@@ -182,7 +150,7 @@ module mkProc (Proc_IFC);
     end
 
    // Note: mkLLCDmaConnect is Toooba version, different from riscy-ooo version
-   let llc__mem_server <- mkLLCDmaConnect(llc.dma, tlbToMem);
+   let llc_mem_server <- mkLLCDmaConnect(llc.dma, tlbToMem);
 
    // ================================================================
    // interface Back-side of LLC to AXI4
@@ -281,85 +249,6 @@ module mkProc (Proc_IFC);
    // ================================================================
    // ================================================================
    // ================================================================
-   // DEBUGGER ACCESS
-
-`ifdef INCLUDE_GDB_CONTROL
-
-   // ----------------
-   // Debug Module Run (resume) control
-
-   // Run command when in debug mode
-   rule rl_debug_run ((f_run_halt_reqs.first == True)
-		      // && (! f_csr_reqs.notEmpty)
-		      && (rg_state == CPU_DEBUG_MODE));
-      // if (cfg_verbosity > 1)
-	 $display ("%0d: %m.rl_debug_run", cur_cycle);
-
-      f_run_halt_reqs.deq;
-      core[0].debug_resume;
-      rg_state <= CPU_RUNNING;
-
-      // Notify debugger that we've started running
-      f_run_halt_rsps.enq (True);
-   endrule
-
-   // Run command when already running
-   rule rl_debug_run_redundant ((f_run_halt_reqs.first == True)
-				// && (! f_csr_reqs.notEmpty)
-				&& fn_is_running (rg_state));
-      // if (cfg_verbosity > 1)
-	 $display ("%0d: %m.rl_debug_run_redundant", cur_cycle);
-
-      f_run_halt_reqs.deq;
-
-      // Notify debugger that we're running
-      f_run_halt_rsps.enq (True);
-   endrule
-
-   // ----------------
-   // Debug Module Halt control
-
-   rule rl_debug_halt ((f_run_halt_reqs.first == False) && fn_is_running (rg_state));
-      // if (cfg_verbosity > 1)
-	 $display ("%0d: %m.rl_debug_halt", cur_cycle);
-
-      f_run_halt_reqs.deq;
-
-      // Debugger 'halt' request (e.g., GDB '^C' command)
-      // This is just like an interrupt.
-      core[0].debug_halt;
-   endrule
-
-   // Monitors when we've reached halted state while running (halt,
-   // step or EBREAK) and notifies DM
-   rule rl_debug_halted (fn_is_running (rg_state) && core [0].is_debug_halted);
-      // Notify debugger that we've halted
-      f_run_halt_rsps.enq (False);
-      // Stop executing rules until ready to restart from debugger
-      rg_state <= CPU_DEBUG_MODE;
-
-      // if (cfg_verbosity > 1)
-	 $display ("%0d: %m.rl_debug_halted", cur_cycle);
-   endrule
-
-   rule rl_debug_halt_redundant ((f_run_halt_reqs.first == False) && (! fn_is_running (rg_state)));
-      // if (cfg_verbosity > 1)
-	 $display ("%0d: %m.rl_debug_halt_redundant", cur_cycle);
-
-      f_run_halt_reqs.deq;
-
-      // Notify debugger that we've 'halted'
-      f_run_halt_rsps.enq (False);
-
-      $display ("%0d: %m.rl_debug_halt_redundant: CPU already halted; state = ",
-		cur_cycle, fshow (rg_state));
-   endrule
-
-`endif
-
-   // ================================================================
-   // ================================================================
-   // ================================================================
    // INTERFACE
 
    // Reset
@@ -430,27 +319,23 @@ module mkProc (Proc_IFC);
    // Optional interface to Debug Module
 
 `ifdef INCLUDE_GDB_CONTROL
-   // run-control, other
-   interface Server  hart0_server_run_halt = toGPServer (f_run_halt_reqs, f_run_halt_rsps);
+   // run/halt, gpr, mem and csr control goes to core
+   interface Server  hart0_run_halt_server = core [0].hart0_run_halt_server;
+   interface Server  hart0_gpr_mem_server  = core[0].hart0_gpr_mem_server;
+`ifdef ISA_F
+   interface Server  hart0_fpr_mem_server  = core[0].hart0_fpr_mem_server;
+`endif
+   interface Server  hart0_csr_mem_server  = core[0].hart0_csr_mem_server;
 
+   // mem access goes to LLC (stays coherent with CPU pipeline).
+   interface  debug_module_mem_server = llc_mem_server;
+
+   // We don't implement 'other' functionality
    interface Put  hart0_put_other_req;
       method Action  put (Bit #(4) req);
 	 cfg_verbosity <= req;
       endmethod
    endinterface
-
-   // GPR access
-   interface Server  hart0_gpr_mem_server = core[0].hart0_gpr_mem_server;
-
-`ifdef ISA_F
-   // FPR access
-   interface Server  hart0_fpr_mem_server = core[0].hart0_fpr_mem_server;
-`endif
-
-   // CSR access
-   interface Server  hart0_csr_mem_server = core[0].hart0_csr_mem_server;
-
-   interface  debug_module_mem_server = llc__mem_server;
 `endif
 
 endmodule: mkProc

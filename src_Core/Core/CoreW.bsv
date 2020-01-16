@@ -206,7 +206,7 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
 `ifdef INCLUDE_GDB_CONTROL
 `ifndef EXTERNAL_DEBUG_MODULE
    // DM to CPU connections for run-control and other misc requests
-   mkConnection (debug_module.hart0_client_run_halt, proc.hart0_server_run_halt);
+   mkConnection (debug_module.hart0_client_run_halt, proc.hart0_run_halt_server);
    mkConnection (debug_module.hart0_get_other_req,   proc.hart0_put_other_req);
 `endif
 `endif
@@ -230,8 +230,8 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
 		  rg_fromhost_addr);
    endrule
 
-   rule rl_hart0_server_run_halt;
-      let tmp <- proc.hart0_server_run_halt.response.get;
+   rule rl_hart0_run_halt_server;
+      let tmp <- proc.hart0_run_halt_server.response.get;
    endrule
 
    Reg#(Bool) hart0_halt <- mkReg(False);
@@ -409,10 +409,6 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
    // Slaves on the local 2x3 fabric
    // default slave is taken out directly to the Core interface
    mkConnection (fabric_2x3.v_to_slaves [plic_slave_num],        plic.axi4_slave);
-
-   // TODO: This slave can be connected to mkLLCDmaConnect for Debug Module System Bus Access
-   // AXI4_Slave_IFC #(Wd_Id, Wd_Addr, Wd_Data, Wd_User) dummy_slave = dummy_AXI4_Slave_ifc;
-   // mkConnection (fabric_2x3.v_to_slaves [near_mem_io_slave_num], dummy_slave);
    mkConnection (fabric_2x3.v_to_slaves [near_mem_io_slave_num], proc.debug_module_mem_server);
 
    // ================================================================

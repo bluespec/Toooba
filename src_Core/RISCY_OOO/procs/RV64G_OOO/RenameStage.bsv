@@ -90,7 +90,7 @@ interface RenameStage;
     interface Get#(RenameStuck) renameCorrectPathStuck;
 
 `ifdef INCLUDE_GDB_CONTROL
-   method Action debug_halt;
+   method Action debug_halt_req;
    method Action debug_resume;
 `endif
 endinterface
@@ -1105,9 +1105,9 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
     endmethod
 
 `ifdef INCLUDE_GDB_CONTROL
-   method Action debug_halt () if (rg_m_halt_req == tagged Invalid);
+   method Action debug_halt_req () if (rg_m_halt_req == tagged Invalid);
       rg_m_halt_req <= tagged Valid DebugHalt;
-      $display ("%0d: %m.renameStage.renameStage.debug_halt", cur_cycle);
+      $display ("%0d: %m.renameStage.renameStage.debug_halt_req", cur_cycle);
    endmethod
 
    method Action debug_resume () if (rg_m_halt_req != tagged Invalid);
