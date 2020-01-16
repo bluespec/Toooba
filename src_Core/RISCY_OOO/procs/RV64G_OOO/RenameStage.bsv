@@ -48,6 +48,8 @@ import ReservationStationMem::*;
 import ReservationStationFpuMulDiv::*;
 import SplitLSQ::*;
 
+import Cur_Cycle :: *;
+
 typedef struct {
     FetchDebugState fetch;
     EpochDebugState epoch;
@@ -75,6 +77,9 @@ interface RenameInput;
     method Bool checkDeadlock;
     // performance
     method Bool doStats;
+`ifdef INCLUDE_GDB_CONTROL
+    method Bool core_is_running;
+`endif
 endinterface
 
 interface RenameStage;
@@ -83,6 +88,11 @@ interface RenameStage;
     // deadlock check
     interface Get#(RenameStuck) renameInstStuck;
     interface Get#(RenameStuck) renameCorrectPathStuck;
+
+`ifdef INCLUDE_GDB_CONTROL
+   method Action debug_halt_req;
+   method Action debug_resume;
+`endif
 endinterface
 
 module mkRenameStage#(RenameInput inIfc)(RenameStage);
@@ -151,6 +161,23 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         renameInstTimer <= (renameCorrectPath || renameWrongPath || renameInstStuckSent) ? 0 : getNextTimer(renameInstTimer);
         renameCorrectPathTimer <= (renameCorrectPath || renameCorrectPathStuckSent) ? 0 : getNextTimer(renameCorrectPathTimer);
     endrule
+`endif
+
+`ifdef INCLUDE_GDB_CONTROL
+   // Is set to Valid DebugHalt on debugger halt request
+   // Is set to Valid DebugStep on dcsr[stepbit]==1 and one instruction has been processed.
+   //     Note (step): 1st instruction is guaranteed architectural, cannot possibly be speculative.
+   //     Note (step): 1st instruction may trap; we halt pointing at the trap vector
+   Reg #(Maybe #(Interrupt)) rg_m_halt_req <- mkReg (tagged Invalid);
+
+   function Action fa_step_check;
+      action
+	 if (csrf.dcsr_step_bit == 1'b1) begin
+	    rg_m_halt_req <= tagged Valid DebugStep;
+	    $display ("%0d: %m.renameStage.fa_step_check: rg_m_halt_req <= tagged Valid DebugStep", cur_cycle);
+	 end
+      endaction
+   endfunction
 `endif
 
     // kill wrong path inst
@@ -234,6 +261,13 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
 			 && (mstatus_tw == 1'b1)
 			 && (csrf.decodeInfo.prv < prvM));
 
+`ifdef INCLUDE_GDB_CONTROL
+        if (rg_m_halt_req matches tagged Valid .cause) begin
+	   // Stop due to debugger halt or step
+	   trap = tagged Valid (tagged Interrupt cause);
+        end else
+`endif
+
         if (isValid(x.cause)) begin
             // previously found exception
             trap = tagged Valid (tagged Exception fromMaybe(?, x.cause));
@@ -271,8 +305,19 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         && epochManager.checkEpoch[0].check(fetchStage.pipelines[0].first.main_epoch) // correct path
         && isValid(firstTrap) // take trap
         && rob.isEmpty // stall for ROB empty
+`ifdef INCLUDE_GDB_CONTROL
+        && inIfc.core_is_running
+`endif
     );
         fetchStage.pipelines[0].deq;
+`ifdef INCLUDE_GDB_CONTROL
+        fa_step_check;
+
+       if (firstTrap == tagged Valid (tagged Interrupt DebugHalt))
+	  $display ("%0d: %m.renameStage.doRenaming_Trap: DebugHalt", cur_cycle);
+       else if (firstTrap == tagged Valid (tagged Interrupt DebugStep))
+	  $display ("%0d: %m.renameStage.doRenaming_Trap: DebugStep", cur_cycle);
+`endif
         let x = fetchStage.pipelines[0].first;
         let pc = x.pc;
         let orig_inst = x.orig_inst;
@@ -377,8 +422,14 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         && !isValid(firstTrap) // not trap
         && firstReplay // system inst needs replay
         && rob.isEmpty // stall for ROB empty
+`ifdef INCLUDE_GDB_CONTROL
+        && inIfc.core_is_running
+`endif
     );
         fetchStage.pipelines[0].deq;
+`ifdef INCLUDE_GDB_CONTROL
+        fa_step_check;
+`endif
         let x = fetchStage.pipelines[0].first;
         let pc = x.pc;
         let orig_inst = x.orig_inst;
@@ -520,8 +571,14 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         // turn off speculation for mem inst only, and first inst is mem
         && (specNonMem && firstMem)
         && rob.isEmpty // stall for ROB empty to process mem inst
+`ifdef INCLUDE_GDB_CONTROL
+        && inIfc.core_is_running
+`endif
     );
         fetchStage.pipelines[0].deq;
+`ifdef INCLUDE_GDB_CONTROL
+        fa_step_check;
+`endif
         let x = fetchStage.pipelines[0].first;
         let pc = x.pc;
         let orig_inst = x.orig_inst;
@@ -678,6 +735,9 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         // don't process mem inst if we don't allow speculation for mem inst only
         && !(specNonMem && firstMem)
 `endif
+`ifdef INCLUDE_GDB_CONTROL
+        && inIfc.core_is_running
+`endif
     );
         // we stop superscalar rename when an instruction cannot be processed:
         // (a) It has trap
@@ -685,6 +745,11 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         // (c) It is system inst (we handle system inst in a separate rule)
         // (d) It does not have enough resource
         Bool stop = False;
+`ifdef INCLUDE_GDB_CONTROL
+        // (e) One rename has been done and dcsr.step is set
+        Bool debug_step = False;
+`endif
+
         // We automatically stop after an inst cannot be deq from fetch stage
         // because canDeq signal for sup-fifo is consecutive
 
@@ -732,6 +797,13 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                 let cause = x.cause;
 
                 Addr fallthrough_pc = ((orig_inst[1:0] == 2'b11) ? pc + 4 : pc + 2);
+
+`ifdef INCLUDE_GDB_CONTROL
+	        if ((i != 0) && (csrf.dcsr_step_bit == 1'b1)) begin
+		   stop       = True;
+		   debug_step = True;
+		end
+`endif
 
                 // check for wrong path, if wrong path, don't process it, leave to the other rule in next cycle
                 if(!epochManager.checkEpoch[i].check(main_epoch)) begin
@@ -986,6 +1058,11 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
             end
         end
 
+`ifdef INCLUDE_GDB_CONTROL
+        if (debug_step)
+	   rg_m_halt_req <= tagged Valid DebugStep;
+`endif
+
         // only fire this rule if we make some progress
         // otherwise this rule may block other rules forever
         when(doCorrectPath, noAction);
@@ -1026,4 +1103,17 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
             default: 0;
         endcase);
     endmethod
+
+`ifdef INCLUDE_GDB_CONTROL
+   method Action debug_halt_req () if (rg_m_halt_req == tagged Invalid);
+      rg_m_halt_req <= tagged Valid DebugHalt;
+      $display ("%0d: %m.renameStage.renameStage.debug_halt_req", cur_cycle);
+   endmethod
+
+   method Action debug_resume () if (rg_m_halt_req != tagged Invalid);
+      rg_m_halt_req <= tagged Invalid;
+      $display ("%0d: %m.renameStage.renameStage.debug_resume", cur_cycle);
+   endmethod
+`endif
+
 endmodule

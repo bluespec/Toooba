@@ -77,17 +77,12 @@ import SoC_Map      :: *;
 import AXI4_Types   :: *;
 import Fabric_Defs  :: *;
 
-
-`ifdef INCLUDE_GDB_CONTROL
-import DM_CPU_Req_Rsp  :: *;
-`endif
-
 `ifdef INCLUDE_TANDEM_VERIF
 import TV_Info  :: *;
 `endif
 
-`ifdef EXTERNAL_DEBUG_MODULE
-`undef INCLUDE_GDB_CONTROL
+`ifdef INCLUDE_GDB_CONTROL
+import DM_CPU_Req_Rsp  :: *;
 `endif
 
 // ================================================================
@@ -113,37 +108,6 @@ module mkProc (Proc_IFC);
 
    FIFOF #(Bit #(0))  f_reset_reqs <- mkFIFOF;
    FIFOF #(Bit #(0))  f_reset_rsps <- mkFIFOF;
-
-   // ----------------
-   // Communication to/from External debug module    (TODO: to be implemented)
-
-`ifdef INCLUDE_GDB_CONTROL
-
-   // Debugger run-control
-   FIFOF #(Bool)  f_run_halt_reqs <- mkFIFOF;
-   FIFOF #(Bool)  f_run_halt_rsps <- mkFIFOF;
-
-   // Stop-request from debugger (e.g., GDB ^C or Dsharp 'stop')
-   Reg #(Bool) rg_stop_req <- mkReg (False);
-
-   // Count instrs after step-request from debugger (via dcsr.step)
-   Reg #(Bit #(1))  rg_step_count <- mkReg (0);
-
-   // Debugger GPR read/write request/response
-   FIFOF #(DM_CPU_Req #(5,  XLEN)) f_gpr_reqs <- mkFIFOF1;
-   FIFOF #(DM_CPU_Rsp #(XLEN))     f_gpr_rsps <- mkFIFOF1;
-
-`ifdef ISA_F
-   // Debugger FPR read/write request/response
-   FIFOF #(DM_CPU_Req #(5,  FLEN)) f_fpr_reqs <- mkFIFOF1;
-   FIFOF #(DM_CPU_Rsp #(FLEN))     f_fpr_rsps <- mkFIFOF1;
-`endif
-
-   // Debugger CSR read/write request/response
-   FIFOF #(DM_CPU_Req #(12, XLEN)) f_csr_reqs <- mkFIFOF1;
-   FIFOF #(DM_CPU_Rsp #(XLEN))     f_csr_rsps <- mkFIFOF1;
-
-`endif
 
    // ----------------
    // Tandem Verification    (TODO: to be implemented)
@@ -185,16 +149,11 @@ module mkProc (Proc_IFC);
         tlbToMem[i] = core[i].tlbToMem;
     end
 
-   // Stub out memLoader (TODO: can be Debug Module's access)
-   let memLoaderStub = interface MemLoaderMemClient;
-			  interface memReq = nullFifoDeq;
-			  interface respSt = nullFifoEnq;
-		       endinterface;
-
-    mkLLCDmaConnect(llc.dma, memLoaderStub, tlbToMem);
+   // Note: mkLLCDmaConnect is Toooba version, different from riscy-ooo version
+   let llc_mem_server <- mkLLCDmaConnect(llc.dma, tlbToMem);
 
    // ================================================================
-   // interface LLC to AXI4
+   // interface Back-side of LLC to AXI4
 
    LLC_AXI4_Adapter_IFC  llc_axi4_adapter <- mkLLC_AXi4_Adapter (llc.to_mem);
 
@@ -360,25 +319,23 @@ module mkProc (Proc_IFC);
    // Optional interface to Debug Module
 
 `ifdef INCLUDE_GDB_CONTROL
-   // run-control, other
-   interface Server  hart0_server_run_halt = toGPServer (f_run_halt_reqs, f_run_halt_rsps);
+   // run/halt, gpr, mem and csr control goes to core
+   interface Server  hart0_run_halt_server = core [0].hart0_run_halt_server;
+   interface Server  hart0_gpr_mem_server  = core[0].hart0_gpr_mem_server;
+`ifdef ISA_F
+   interface Server  hart0_fpr_mem_server  = core[0].hart0_fpr_mem_server;
+`endif
+   interface Server  hart0_csr_mem_server  = core[0].hart0_csr_mem_server;
 
+   // mem access goes to LLC (stays coherent with CPU pipeline).
+   interface  debug_module_mem_server = llc_mem_server;
+
+   // We don't implement 'other' functionality
    interface Put  hart0_put_other_req;
       method Action  put (Bit #(4) req);
 	 cfg_verbosity <= req;
       endmethod
    endinterface
-
-   // GPR access
-   interface Server  hart0_gpr_mem_server = toGPServer (f_gpr_reqs, f_gpr_rsps);
-
-`ifdef ISA_F
-   // FPR access
-   interface Server  hart0_fpr_mem_server = toGPServer (f_fpr_reqs, f_fpr_rsps);
-`endif
-
-   // CSR access
-   interface Server  hart0_csr_mem_server = toGPServer (f_csr_reqs, f_csr_rsps);
 `endif
 
 endmodule: mkProc

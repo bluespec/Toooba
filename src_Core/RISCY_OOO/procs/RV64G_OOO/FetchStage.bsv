@@ -50,6 +50,8 @@ import CCTypes::*;
 import L1CoCache::*;
 import MMIOInst::*;
 
+import Cur_Cycle :: *;
+
 // ================================================================
 // For fv_decode_C function and related types and definitions
 
@@ -74,6 +76,9 @@ interface FetchStage;
     // redirection methods
     method Action setWaitRedirect;
     method Action redirect(Addr pc);
+`ifdef INCLUDE_GDB_CONTROL
+   method Action setWaitFlush;
+`endif
     method Action done_flushing();
     method Action train_predictors(
         Addr pc, Addr next_pc, IType iType, Bool taken,
@@ -1009,6 +1014,14 @@ module mkFetchStage(FetchStage);
         // we conservatively set wait for flush TODO make this an input parameter
         waitForFlush <= True;
     endmethod
+
+`ifdef INCLUDE_GDB_CONTROL
+   method Action setWaitFlush;
+      waitForFlush <= True;
+      $display ("%0d.%m.FetchStage.setWaitFlush", cur_cycle);
+   endmethod
+`endif
+
     method Action done_flushing() if (waitForFlush);
         // signal that the pipeline can resume fetching
         waitForFlush <= False;

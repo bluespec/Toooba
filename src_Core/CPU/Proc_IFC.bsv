@@ -85,20 +85,16 @@ interface Proc_IFC;
    // Optional interface to Debug Module
 
 `ifdef INCLUDE_GDB_CONTROL
-   // run-control, other
-   interface Server #(Bool, Bool)  hart0_server_run_halt;
-   interface Put #(Bit #(4))       hart0_put_other_req;
-
-   // GPR access
+   interface Server #(Bool, Bool)                                 hart0_run_halt_server;
    interface Server #(DM_CPU_Req #(5,  XLEN), DM_CPU_Rsp #(XLEN)) hart0_gpr_mem_server;
-
 `ifdef ISA_F
-   // FPR access
    interface Server #(DM_CPU_Req #(5,  FLEN), DM_CPU_Rsp #(FLEN)) hart0_fpr_mem_server;
 `endif
-
-   // CSR access
    interface Server #(DM_CPU_Req #(12, XLEN), DM_CPU_Rsp #(XLEN)) hart0_csr_mem_server;
+   interface AXI4_Slave_IFC #(Wd_Id, Wd_Addr, Wd_Data, Wd_User)   debug_module_mem_server;
+
+   // Non-standard
+   interface Put #(Bit #(4))                                      hart0_put_other_req;
 `endif
 
 endinterface

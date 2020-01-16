@@ -99,7 +99,7 @@ typedef struct {
 instance DefaultValue#(RiscVISASubset);
     function RiscVISASubset defaultValue = RiscVISASubset {
         s: True, u: True,
-        m: `m , a: `a , f: `f , d: `d
+        m: `m , a: `a , f: `f , d: `d, c: `c
     };
 endinstance
 
@@ -269,6 +269,14 @@ typedef enum {
     // sanctum user CSR
     CSRtrng       = 12'hcc0, // random number for secure boot
 `endif
+
+`ifdef INCLUDE_GDB_CONTROL
+   CSRdcsr        = 12'h7B0,    // Debug control and status
+   CSRdpc         = 12'h7B1,    // Debug PC
+   CSRdscratch0   = 12'h7B2,    // Debug scratch0
+   CSRdscratch1   = 12'h7B3,    // Debug scratch1
+`endif
+
     // CSR that catches all the unimplemented CSRs. To avoid exception on this,
     // make it a user non-standard read/write CSR.
     CSRnone       = 12'h8ff
@@ -446,13 +454,20 @@ typedef enum {
     MachineTimer       = 4'd7,
     UserExternal       = 4'd8,
     SupervisorExternel = 4'd9,
-    MachineExternal    = 4'd11,
+    MachineExternal    = 4'd11
 
-    DebugExternal      = 4'd14    // Bluespec: for debug mode   
+`ifdef INCLUDE_GDB_CONTROL
+  , DebugHalt          = 4'd14,        // Debugger halt command (^C in GDB)
+    DebugStep          = 4'd15         // dcsr.step is set and 1 instr has been processed
+`endif
+
 } Interrupt deriving(Bits, Eq, FShow);
 
-// typedef 12 InterruptNum;
-typedef 15 InterruptNum;    // Bluespec: extended to 15 bits for debug interrupt
+`ifdef INCLUDE_GDB_CONTROL
+typedef 16 InterruptNum;    // With debugger
+`else
+typedef 12 InterruptNum;    // Without debugger
+`endif
 
 // Traps are either an exception or an interrupt
 typedef union tagged {

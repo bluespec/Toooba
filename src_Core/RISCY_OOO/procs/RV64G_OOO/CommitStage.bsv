@@ -39,6 +39,8 @@ import StoreBuffer::*;
 import VerificationPacket::*;
 import RenameDebugIF::*;
 
+import Cur_Cycle :: *;
+
 typedef struct {
     // info about the inst blocking at ROB head
     Addr pc;
@@ -86,6 +88,7 @@ interface CommitInput;
     method Action killAll;
     method Action redirectPc(Addr trap_pc);
     method Action setFetchWaitRedirect;
+    method Action setFetchWaitFlush;
     method Action incrementEpoch;
     // record if we commit a CSR inst or interrupt
     method Action commitCsrInstOrInterrupt;
@@ -112,6 +115,12 @@ interface CommitStage;
     // rename debug
     method Action startRenameDebug;
     interface Get#(RenameErrInfo) renameErr;
+
+`ifdef INCLUDE_GDB_CONTROL
+   method Bool is_debug_halted;
+   method Action debug_resume;
+`endif
+
 endinterface
 
 // we apply actions the end of commit rule
@@ -122,12 +131,27 @@ typedef struct {
     Trap trap;
 } CommitTrap deriving(Bits, Eq, FShow);
 
+`ifdef INCLUDE_GDB_CONTROL
+
+typedef enum {
+   RUN_STATE_RUNNING,                // Normal state
+   RUN_STATE_DEBUGGER_HALTED         // When halted for debugger
+   } Run_State
+deriving (Eq, FShow, Bits);
+
+`endif
+
 module mkCommitStage#(CommitInput inIfc)(CommitStage);
     Bool verbose = False;
 
     // Bluespec: for lightweight verbosity trace
     Integer verbosity = 1;
     Reg #(Bit #(64)) rg_instret <- mkReg (0);
+
+
+`ifdef INCLUDE_GDB_CONTROL
+   Reg #(Run_State) rg_run_state   <- mkReg (RUN_STATE_RUNNING);
+`endif
 
     // func units
     ReorderBufferSynth rob = inIfc.robIfc;
@@ -338,12 +362,56 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
     endaction
     endfunction
 
+`ifdef INCLUDE_GDB_CONTROL
+   // Maintain system consistency when halting into debug mode
+   // This code is patterned after 'makeSystemConsistent' above
+   function Action makeSystemConsistent_for_debug_mode;
+      action
+	 inIfc.setFlushTlbs;
+
+         // notify TLB to keep update of CSR changes
+         inIfc.setUpdateVMInfo;
+         // always wait store buffer and SQ to be empty
+         when(inIfc.stbEmpty && inIfc.stqEmpty, noAction);
+         // We wait TLB to finish all requests and become sync with memory.
+         // Notice that currently TLB is read only, so TLB is always in sync
+         // with memory (i.e., there is no write to commit to memory). Since all
+         // insts have been killed, nothing can be issued to D TLB at this time.
+         // Since fetch stage is set to wait for redirect, fetch1 stage is
+         // stalled, and nothing can be issued to I TLB at this time.
+         // Therefore, we just need to make sure that I and D TLBs are not
+         // handling any miss req. Besides, when I and D TLBs do not have any
+         // miss req, L2 TLB must be idling.
+         when(inIfc.tlbNoPendingReq, noAction);
+         // yield load reservation in cache
+         inIfc.setFlushReservation;
+
+	 inIfc.setFlushBrPred;
+	 inIfc.setFlushCaches;
+
+`ifdef SELF_INV_CACHE
+         // reconcile I$
+         if(reconcileI) begin
+            inIfc.setReconcileI;
+         end
+`ifdef SYSTEM_SELF_INV_L1D
+         // FIXME is this reconcile of D$ necessary?
+         inIfc.setReconcileD;
+`endif
+`endif
+      endaction
+   endfunction
+`endif
+
     // TODO Currently we don't check spec bits == 0 when we commit an
     // instruction. This is because killings of wrong path instructions are
     // done in a single cycle. However, when we make killings distributed or
     // pipelined, then we need to check spec bits at commit port.
 
     rule doCommitTrap_flush(
+`ifdef INCLUDE_GDB_CONTROL
+        (rg_run_state == RUN_STATE_RUNNING) &&&
+`endif
         !isValid(commitTrap) &&&
         rob.deqPort[0].deq_data.trap matches tagged Valid .trap
     );
@@ -404,7 +472,12 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         doAssert(x.spec_bits == 0, "cannot have spec bits");
     endrule
 
-    rule doCommitTrap_handle(commitTrap matches tagged Valid .trap);
+    rule doCommitTrap_handle(
+`ifdef INCLUDE_GDB_CONTROL
+       (rg_run_state == RUN_STATE_RUNNING) &&&
+`endif
+       commitTrap matches tagged Valid .trap);
+
         // reset commitTrap
         commitTrap <= Invalid;
 
@@ -413,20 +486,59 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
             inIfc.commitCsrInstOrInterrupt;
         end
 
-        // trap handling & redirect
-        let new_pc <- csrf.trap(trap.trap, trap.pc, trap.addr);
-        inIfc.redirectPc(new_pc);
+       Bool debugger_halt = False;
 
-        // system consistency
-        // TODO spike flushes TLB here, but perhaps it is because spike's TLB
-        // does not include prv info, and it has to flush when prv changes.
-        // XXX As approximation, Trap may cause context switch, so flush for
-        // security
-        makeSystemConsistent(False, True, False);
+`ifdef INCLUDE_GDB_CONTROL
+       if ((trap.trap == tagged Interrupt DebugHalt)
+	   || (trap.trap == tagged Interrupt DebugStep)
+	   || ((trap.trap == tagged Exception Breakpoint) && (csrf.dcsr_break_bit == 1'b1)))
+          begin
+	     debugger_halt = True;
+
+	     // Flush everything (tlbs, caches, reservation, branch predictor);
+	     // reconcilei and I; update VM info.
+	     makeSystemConsistent_for_debug_mode;
+
+	     // Save values in debugger CSRs
+	     Bit #(3) dcsr_cause = (  (trap.trap == tagged Interrupt DebugHalt)
+				    ? 3
+				    : (  (trap.trap == tagged Interrupt DebugStep)
+				       ? 4
+				       : 1));
+	     csrf.dcsr_cause_write (dcsr_cause);
+	     csrf.dpc_write (trap.pc);
+
+	     // Tell fetch stage to wait for redirect
+	     // Note: rule doCommitTrap_flush may have done this already; redundant call is ok.
+	     inIfc.setFetchWaitRedirect;
+	     inIfc.setFetchWaitFlush;
+
+	     // Go to quiescent state until debugger resumes execution
+	     rg_run_state <= RUN_STATE_DEBUGGER_HALTED;
+
+	     $display ("%0d: %m.commitStage.doCommitTrap_handle; debugger halt:", cur_cycle);
+	  end
+`endif
+
+       if (! debugger_halt) begin
+          // trap handling & redirect
+          let new_pc <- csrf.trap(trap.trap, trap.pc, trap.addr);
+          inIfc.redirectPc(new_pc);
+
+          // system consistency
+          // TODO spike flushes TLB here, but perhaps it is because spike's TLB
+          // does not include prv info, and it has to flush when prv changes.
+          // XXX As approximation, Trap may cause context switch, so flush for
+          // security
+          makeSystemConsistent(False, True, False);
+       end
     endrule
 
     // commit misspeculated load
     rule doCommitKilledLd(
+`ifdef INCLUDE_GDB_CONTROL
+       (rg_run_state == RUN_STATE_RUNNING) &&&
+`endif
         !isValid(commitTrap) &&&
         !isValid(rob.deqPort[0].deq_data.trap) &&&
         rob.deqPort[0].deq_data.ldKilled matches tagged Valid .killBy
@@ -461,6 +573,9 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
     // commit system inst
     rule doCommitSystemInst(
+`ifdef INCLUDE_GDB_CONTROL
+       (rg_run_state == RUN_STATE_RUNNING) &&
+`endif
         !isValid(commitTrap) &&
         !isValid(rob.deqPort[0].deq_data.trap) &&
         !isValid(rob.deqPort[0].deq_data.ldKilled) &&
@@ -585,6 +700,9 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
     // commit normal: fire when at least one commit can be done
     rule doCommitNormalInst(
+`ifdef INCLUDE_GDB_CONTROL
+       (rg_run_state == RUN_STATE_RUNNING) &&
+`endif
         !isValid(commitTrap) &&
         !isValid(rob.deqPort[0].deq_data.trap) &&
         !isValid(rob.deqPort[0].deq_data.ldKilled) &&
@@ -736,7 +854,6 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 `endif
     endrule
 
-
     method Data getPerf(ComStagePerfType t);
         return (case(t)
 `ifdef PERF_COUNT
@@ -785,4 +902,16 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
     endmethod
     interface renameErr = nullGet;
 `endif
+
+`ifdef INCLUDE_GDB_CONTROL
+   method Bool is_debug_halted;
+      return (rg_run_state == RUN_STATE_DEBUGGER_HALTED);
+   endmethod
+
+   method Action debug_resume () if (rg_run_state == RUN_STATE_DEBUGGER_HALTED);
+      rg_run_state <= RUN_STATE_RUNNING;
+      $display ("%0d: %m.commitStage.debug_resume", cur_cycle);
+   endmethod
+`endif
+
 endmodule

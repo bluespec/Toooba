@@ -84,6 +84,25 @@ import Bypass::*;
 
 import CsrFile :: *;
 
+// ================================================================
+// Toooba
+
+import Cur_Cycle  :: *;
+import FIFOF      :: *;
+import GetPut_Aux :: *;
+
+`ifdef INCLUDE_GDB_CONTROL
+import DM_CPU_Req_Rsp  :: *;
+`endif
+
+// ================================================================
+
+`ifdef SECURITY
+`define SECURITY_OR_INCLUDE_GDB_CONTROL
+`elsif INCLUDE_GDB_CONTROL
+`define SECURITY_OR_INCLUDE_GDB_CONTROL
+`endif
+
 interface CoreReq;
     method Action start(
         Addr startpc,
@@ -138,6 +157,15 @@ interface Core;
 
    // Bluespec: external interrupt to enter debug mode
     method Action setDEIP (Bit #(1) v);
+
+`ifdef INCLUDE_GDB_CONTROL
+   interface Server #(Bool, Bool)                             hart0_run_halt_server;
+   interface Server #(DM_CPU_Req #(5, 64),  DM_CPU_Rsp #(64)) hart0_gpr_mem_server;
+`ifdef ISA_F
+   interface Server #(DM_CPU_Req #(5, 64),  DM_CPU_Rsp #(64)) hart0_fpr_mem_server;
+`endif
+   interface Server #(DM_CPU_Req #(12, 64), DM_CPU_Rsp #(64)) hart0_csr_mem_server;
+`endif
 endinterface
 
 // fixpoint to instantiate modules
@@ -149,6 +177,15 @@ interface CoreFixPoint;
     interface Reg#(Bool) doStatsIfc;
 endinterface
 
+typedef enum {
+`ifdef INCLUDE_GDB_CONTROL
+   CORE_HALTING,
+   CORE_HALTED,
+`endif
+   CORE_RUNNING
+   } Core_Run_State
+deriving (Bits, Eq, FShow);
+
 (* synthesize *)
 module mkCore#(CoreId coreId)(Core);
     let verbose = False;
@@ -159,6 +196,11 @@ module mkCore#(CoreId coreId)(Core);
     endrule
 
     Reg#(Bool) started <- mkReg(False);
+
+`ifdef INCLUDE_GDB_CONTROL
+    // Using a ConfigReg since scheduling of reads/writes not critical (TODO: verify this)
+    Reg #(Core_Run_State) rg_core_run_state <- mkConfigReg (CORE_RUNNING);
+`endif
 
     // front end
     FetchStage fetchStage <- mkFetchStage;
@@ -384,13 +426,15 @@ module mkCore#(CoreId coreId)(Core);
     Reg#(Bool)  flush_tlbs <- mkReg(False);
     Reg#(Bool)  update_vm_info <- mkReg(False);
     Reg#(Bool)  flush_reservation <- mkReg(False);
-`ifdef SECURITY
+
+`ifdef SECURITY_OR_INCLUDE_GDB_CONTROL
     Reg#(Bool)  flush_caches <- mkReg(False);
     Reg#(Bool)  flush_brpred <- mkReg(False);
 `else
     Reg#(Bool)  flush_caches <- mkReadOnlyReg(False);
     Reg#(Bool)  flush_brpred <- mkReadOnlyReg(False);
 `endif
+
 `ifdef SELF_INV_CACHE
     Reg#(Bool)  reconcile_i <- mkReg(False);
 `else
@@ -477,6 +521,9 @@ module mkCore#(CoreId coreId)(Core);
 `endif
         endmethod
         method doStats = coreFix.doStatsIfc._read;
+`ifdef INCLUDE_GDB_CONTROL
+        method Bool core_is_running = (rg_core_run_state == CORE_RUNNING);
+`endif
     endinterface);
     RenameStage renameStage <- mkRenameStage(renameInput);
 
@@ -489,16 +536,48 @@ module mkCore#(CoreId coreId)(Core);
         method stqEmpty = lsq.stqEmpty;
         method lsqSetAtCommit = lsq.setAtCommit;
         method tlbNoPendingReq = iTlb.noPendingReq && dTlb.noPendingReq;
-        method setFlushTlbs = flush_tlbs._write(True);
-        method setUpdateVMInfo = update_vm_info._write(True);
-        method setFlushReservation = flush_reservation._write(True);
-        method setFlushBrPred = flush_brpred._write(True);
-        method setFlushCaches = flush_caches._write(True);
+
+        method setFlushTlbs;
+	   action
+	      flush_tlbs <= True;
+              // $display ("%0d: %m.commitInput.setFlushTlbs", cur_cycle);
+	   endaction
+        endmethod
+
+        method setUpdateVMInfo;
+	   action
+	      update_vm_info <= True;
+              // $display ("%0d: %m.commitInput.setUpdateVMInfo", cur_cycle);
+	   endaction
+        endmethod
+
+        method setFlushReservation;
+	   action
+	      flush_reservation <= True;
+              // $display ("%0d: %m.commitInput.setFlushReservation", cur_cycle);
+	   endaction
+        endmethod
+
+        method setFlushBrPred;
+	   action
+	      flush_brpred <= True;
+              // $display ("%0d: %m.commitInput.setFlushBrPred", cur_cycle);
+	   endaction
+        endmethod
+
+        method setFlushCaches;
+	   action
+	      flush_caches <= True;
+              // $display ("%0d: %m.commitInput.setFlushCaches", cur_cycle);
+	   endaction
+        endmethod
+
         method setReconcileI = reconcile_i._write(True);
         method setReconcileD = reconcile_d._write(True);
         method killAll = coreFix.killAll;
         method redirectPc = fetchStage.redirect;
         method setFetchWaitRedirect = fetchStage.setWaitRedirect;
+        method setFetchWaitFlush    = fetchStage.setWaitFlush;
         method incrementEpoch = epochManager.incrementEpoch;
         method commitCsrInstOrInterrupt = csrInstOrInterruptInflight_commit._write(False);
         method doStats = coreFix.doStatsIfc._read;
@@ -541,11 +620,13 @@ module mkCore#(CoreId coreId)(Core);
         if (flush_reservation) begin
             flush_reservation <= False;
             dMem.resetLinkAddr;
+	   // $display ("%0d: %m.rule prepareCachesAndTlbs: flushing reservation", cur_cycle);
         end
         if (flush_tlbs) begin
             flush_tlbs <= False;
             iTlb.flush;
             dTlb.flush;
+	   // $display ("%0d: %m.rule prepareCachesAndTlbs: flushing iTlb and dTlb", cur_cycle);
         end
         if (update_vm_info) begin
             update_vm_info <= False;
@@ -554,10 +635,11 @@ module mkCore#(CoreId coreId)(Core);
             iTlb.updateVMInfo(vmI);
             dTlb.updateVMInfo(vmD);
             l2Tlb.updateVMInfo(vmI, vmD);
+	   // $display ("%0d: %m.rule prepareCachesAndTlbs: updating VMInfo", cur_cycle);
         end
     endrule
 
-`ifdef SECURITY
+`ifdef SECURITY_OR_INCLUDE_GDB_CONTROL
     // Use wires to capture flush regs and empty signals. This is ok because
     // there cannot be any activity to make empty -> not-empty or need-flush ->
     // no-need-flush when we are trying to flush.
@@ -566,6 +648,7 @@ module mkCore#(CoreId coreId)(Core);
 
     rule setDoFlushCaches(flush_caches && fetchStage.emptyForFlush && lsq.noWrongPathLoads);
         doFlushCaches.send;
+       $display ("%0d: %m.rl_setDoFlushCaches", cur_cycle);
     endrule
 
     rule setDoFlushBrPred(flush_brpred && fetchStage.emptyForFlush);
@@ -578,6 +661,7 @@ module mkCore#(CoreId coreId)(Core);
         flush_caches <= False;
         iMem.flush;
         dMem.flush;
+        $display ("%0d: %m.rule flushCaches (imem and dmem)", cur_cycle);
     endrule
 
     // security flush branch predictors: wait for wrong path inst fetches to
@@ -585,6 +669,7 @@ module mkCore#(CoreId coreId)(Core);
     rule flushBrPred(doFlushBrPred);
         flush_brpred <= False;
         fetchStage.flush_predictors;
+        $display ("%0d: %m.rule flushBrPred", cur_cycle);
     endrule
 `endif
 
@@ -629,9 +714,12 @@ module mkCore#(CoreId coreId)(Core);
 `endif // SELF_INV_CACHE
 
     rule readyToFetch(
+`ifdef INCLUDE_GDB_CONTROL
+        (rg_core_run_state == CORE_RUNNING) &&
+`endif
         !flush_reservation && !flush_tlbs && !update_vm_info
         && iTlb.flush_done && dTlb.flush_done
-`ifdef SECURITY
+`ifdef SECURITY_OR_INCLUDE_GDB_CONTROL
         && !flush_caches && !flush_brpred
         && iMem.flush_done && dMem.flush_done
         && fetchStage.flush_predictors_done
@@ -644,7 +732,35 @@ module mkCore#(CoreId coreId)(Core);
 `endif
     );
         fetchStage.done_flushing();
+
+`ifdef INCLUDE_GDB_CONTROL
+        if (commitStage.is_debug_halted) begin
+	   started           <= False;
+	   rg_core_run_state <= CORE_HALTING;
+	   $display ("%0d: %m.rule readyToFetch: halting for debug mode", cur_cycle);
+	end
+`endif
     endrule
+
+   /*
+   rule rl_readyToFetch_conds_debug
+      $display ("%0d: %m.rl_readyToFetch_conds_debug:", cur_cycle);
+      $display ("    !flush_reservation = %0d, !flush_tlbs = %0d, !update_vm_info = %0d",
+		!flush_reservation, !flush_tlbs, !update_vm_info);
+      $display ("    iTlb.flush_done = %0d, dTlb.flush_done = %0d", iTlb.flush_done, dTlb.flush_done);
+`ifdef SECURITY_OR_INCLUDE_GDB_CONTROL
+      $display ("    !flush_caches = %0d !flush_brpred = %0d", !flush_caches, !flush_brpred);
+      $display ("    iMem.flush_done = %0d dMem.flush_done = %0d", iMem.flush_done, dMem.flush_done);
+      $display ("    fetchStage.flush_predictors_done = %0d", fetchStage.flush_predictors_done);
+`endif
+`ifdef SELF_INV_CACHE
+      $display ("    !reconcile_i = %0d, iMem.reconcide_done = %0d", !reconcile_i, iMem.reconcile_done);
+`ifdef SYSTEM_SELF_INV_L1D
+      $display ("    reconcile_d = %0d", reconcile_d);
+`endif
+`endif
+   endrule
+   */
 
 `ifdef PERF_COUNT
     // incr cycle count
@@ -903,6 +1019,268 @@ module mkCore#(CoreId coreId)(Core);
     endrule
 `endif
 
+`ifdef INCLUDE_GDB_CONTROL
+   // ================================================================
+   // DEBUG MODULE INTERFACE
+
+   Bool show_DM_interactions = True;    // for debugging the interactions
+
+   // ----------------------------------------------------------------
+   // Debug Module GPR read/write
+
+   FIFOF #(DM_CPU_Req #(5, 64)) f_gpr_reqs <- mkFIFOF1;
+   FIFOF #(DM_CPU_Rsp #(64))    f_gpr_rsps <- mkFIFOF1;
+
+   rule rl_debug_gpr_read (   (rg_core_run_state == CORE_HALTED)
+			   && f_gpr_reqs.notEmpty
+			   && (! f_gpr_reqs.first.write));
+      let req <- pop (f_gpr_reqs);
+      Bit #(5) regnum = req.address;
+
+      let arch_regs = ArchRegs {src1: tagged Valid (tagged Gpr regnum),
+				src2: tagged Invalid,
+				src3: tagged Invalid,
+				dst:  tagged Invalid};
+      let rename_result = regRenamingTable.rename[0].getRename (arch_regs);
+      let phy_rindx     = fromMaybe (?, rename_result.phy_regs.src1);
+      let data_out      = rf.read [debuggerPort].rd1 (phy_rindx);
+
+      let rsp = DM_CPU_Rsp {ok: True, data: data_out};
+      f_gpr_rsps.enq (rsp);
+
+      if (show_DM_interactions)
+	 $display ("%0d: %m.rl_debug_read_gpr: reg %0d => 0x%0h", cur_cycle, regnum, data_out);
+   endrule
+
+   rule rl_debug_gpr_write (   (rg_core_run_state == CORE_HALTED)
+			    && f_gpr_reqs.notEmpty
+			    && f_gpr_reqs.first.write);
+      let req <- pop (f_gpr_reqs);
+      Bit #(5) regnum = req.address;
+      let data_in = req.data;
+
+      let arch_regs = ArchRegs {src1: tagged Valid (tagged Gpr regnum),
+				src2: tagged Invalid,
+				src3: tagged Invalid,
+				dst:  tagged Invalid};
+      let rename_result = regRenamingTable.rename[0].getRename (arch_regs);
+      let phy_rindx     = fromMaybe (?, rename_result.phy_regs.src1);
+      rf.write [debuggerPort].wr (phy_rindx, data_in);
+
+      let rsp = DM_CPU_Rsp {ok: True, data: ?};
+      f_gpr_rsps.enq (rsp);
+
+      if (show_DM_interactions)
+	 $display ("%0d: %m.rl_debug_gpr_write: reg %0d <= 0x%0h (phy_rindx = %0d)",
+		   cur_cycle, regnum, data_in, phy_rindx);
+   endrule
+
+   rule rl_debug_gpr_access_busy (rg_core_run_state == CORE_RUNNING);
+      let req <- pop (f_gpr_reqs);
+      let rsp = DM_CPU_Rsp {ok: False, data: ?};
+      f_gpr_rsps.enq (rsp);
+
+      if (show_DM_interactions)
+         $display ("%0d: %m.rl_debug_gpr_access_busy", cur_cycle);
+   endrule
+
+`ifdef ISA_F
+   // ----------------------------------------------------------------
+   // Debug Module FPR read/write
+
+   FIFOF #(DM_CPU_Req #(5,  64)) f_fpr_reqs <- mkFIFOF1;
+   FIFOF #(DM_CPU_Rsp #(64))     f_fpr_rsps <- mkFIFOF1;
+
+   rule rl_debug_fpr_read (   (rg_core_run_state == CORE_HALTED)
+			   && (! f_gpr_reqs.notEmpty)    // prioritize gpr reqs
+			   && (! f_fpr_reqs.first.write));
+      let req <- pop (f_fpr_reqs);
+      Bit #(5) regnum = req.address;
+
+      let arch_regs = ArchRegs {src1: tagged Valid (tagged Fpu regnum),
+				src2: tagged Invalid,
+				src3: tagged Invalid,
+				dst:  tagged Invalid};
+      let rename_result = regRenamingTable.rename[0].getRename (arch_regs);
+      let phy_rindx     = fromMaybe (?, rename_result.phy_regs.src1);
+      let data_out      = rf.read [debuggerPort].rd1 (phy_rindx);
+
+      let rsp = DM_CPU_Rsp {ok: True, data: data_out};
+      f_fpr_rsps.enq (rsp);
+
+      if (show_DM_interactions)
+	 $display ("%0d: %m.rl_debug_read_fpr: reg %0d => 0x%0h", cur_cycle, regnum, data_out);
+   endrule
+
+   rule rl_debug_fpr_write (   (rg_core_run_state == CORE_HALTED)
+			    && (! f_gpr_reqs.notEmpty)    // prioritize gpr reqs
+			    && f_fpr_reqs.first.write);
+      let req <- pop (f_fpr_reqs);
+      Bit #(5) regnum = req.address;
+      let data_in = req.data;
+
+      let arch_regs = ArchRegs {src1: tagged Valid (tagged Fpu regnum),
+				src2: tagged Invalid,
+				src3: tagged Invalid,
+				dst:  tagged Invalid};
+      let rename_result = regRenamingTable.rename[0].getRename (arch_regs);
+      let phy_rindx     = fromMaybe (?, rename_result.phy_regs.src1);
+      rf.write [debuggerPort].wr (phy_rindx, data_in);
+
+      let rsp = DM_CPU_Rsp {ok: True, data: ?};
+      f_fpr_rsps.enq (rsp);
+
+      if (show_DM_interactions)
+	 $display ("%0d: %m.rl_debug_write_fpr: reg %0d <= 0x%0h (phy_rindx %0d)",
+		   cur_cycle, regnum, data_in, phy_rindx);
+   endrule
+
+   rule rl_debug_fpr_access_busy (   (rg_core_run_state == CORE_RUNNING)
+				  && f_fpr_reqs.notEmpty);
+
+      let req <- pop (f_fpr_reqs);
+      let rsp = DM_CPU_Rsp {ok: False, data: ?};
+      f_fpr_rsps.enq (rsp);
+
+      if (show_DM_interactions)
+	 $display ("%0d: %m.rl_debug_fpr_access_busy", cur_cycle);
+   endrule
+`endif
+
+   // ----------------------------------------------------------------
+   // Debug Module CSR read/write
+
+   // Debugger CSR read/write request/response
+   FIFOF #(DM_CPU_Req #(12, 64)) f_csr_reqs <- mkFIFOF1;
+   FIFOF #(DM_CPU_Rsp #(64))     f_csr_rsps <- mkFIFOF1;
+
+   rule rl_debug_csr_read (   (rg_core_run_state == CORE_HALTED)
+			   && (! f_csr_reqs.first.write));
+      let req <- pop (f_csr_reqs);
+      Bit #(12) csr_addr = req.address;
+      let data_out = csrf.rd (unpack (csr_addr));
+
+      let rsp = DM_CPU_Rsp {ok: True, data: data_out};
+      f_csr_rsps.enq (rsp);
+
+      if (show_DM_interactions)
+	 $display ("%0d: %m.rl_debug_read_csr: csr %0d => 0x%0h", cur_cycle, csr_addr, data_out);
+   endrule
+
+   rule rl_debug_csr_write (   (rg_core_run_state == CORE_HALTED)
+			    && f_csr_reqs.first.write);
+      let req <- pop (f_csr_reqs);
+      Bit #(12) csr_addr = req.address;
+      let data_in = req.data;
+      csrf.csrInstWr (unpack (csr_addr), data_in);
+
+      let rsp = DM_CPU_Rsp {ok: True, data: ?};
+      f_csr_rsps.enq (rsp);
+
+      if (show_DM_interactions)
+	 $display ("%0d: %m.rl_debug_write_csr: csr 0x%0h <= 0x%0h", cur_cycle, csr_addr, data_in);
+   endrule
+
+   rule rl_debug_csr_access_busy (rg_core_run_state == CORE_RUNNING);
+      let req <- pop (f_csr_reqs);
+      let rsp = DM_CPU_Rsp {ok: False, data: ?};
+      f_csr_rsps.enq (rsp);
+
+      if (show_DM_interactions)
+	 $display ("%0d: %m.rl_debug_csr_access_busy", cur_cycle);
+   endrule
+
+   // ----------------------------------------------------------------
+   // Debug Module run-halt control
+
+   FIFOF #(Bool)  f_run_halt_reqs  <- mkFIFOF;
+   FIFOF #(Bool)  f_run_halt_rsps  <- mkFIFOF;
+   Reg #(Bool)    rg_sent_halt_rsp <- mkReg (False);
+
+   // ----------------
+   // Debug Module Halt control
+
+   rule rl_debug_halt_req (   (rg_core_run_state == CORE_RUNNING)
+			   && (f_run_halt_reqs.first == False));
+      f_run_halt_reqs.deq;
+
+      // Debugger 'halt' request (e.g., GDB '^C' command)
+      // This is initiated just like an interrupt.
+      renameStage.debug_halt_req;
+      rg_sent_halt_rsp <= False;
+
+      if (show_DM_interactions)
+	 $display ("%0d: %m.rl_debug_halt_req", cur_cycle);
+   endrule
+
+   rule rl_debug_halt_req_already_halted (   (rg_core_run_state != CORE_RUNNING)
+					  && (f_run_halt_reqs.first == False));
+      f_run_halt_reqs.deq;
+
+      // Notify debugger that we've 'halted'
+      f_run_halt_rsps.enq (False);
+
+      if (show_DM_interactions)
+	 $display ("%0d: %m.rl_debug_halt_req_already_halted", cur_cycle);
+   endrule
+
+   // Monitors when we've reached halted state while running
+   // (due to halt, step or EBREAK) and notifies DM
+   rule rl_debug_halted (rg_core_run_state == CORE_HALTING);
+      // Notify debugger that we've halted
+      f_run_halt_rsps.enq (False);
+      rg_core_run_state <= CORE_HALTED;
+
+      if (show_DM_interactions)
+	 $display ("%0d: %m.rl_debug_halted", cur_cycle);
+   endrule
+
+   // ----------------
+   // Debug Module Resume (run) control
+
+   // Resume command when in debug mode
+   rule rl_debug_resume (   (rg_core_run_state == CORE_HALTED)
+			 && (f_run_halt_reqs.first == True)
+
+			 // prioritise gpr/fpr/csr read/write requests before resuming
+			 && (! f_gpr_reqs.notEmpty)
+`ifdef ISA_F
+			 && (! f_fpr_reqs.notEmpty)
+`endif
+			 && (! f_csr_reqs.notEmpty));
+
+      f_run_halt_reqs.deq;
+
+      let startpc = csrf.dpc_read;
+      fetchStage.redirect (startpc);
+      renameStage.debug_resume;
+      commitStage.debug_resume;
+
+      started           <= True;
+      rg_core_run_state <= CORE_RUNNING;
+
+      // Notify debugger that we've started running
+      f_run_halt_rsps.enq (True);
+
+      if (show_DM_interactions)
+         $display ("%0d: %m.debug_resume, dpc = 0x%0h", cur_cycle, startpc);
+   endrule
+
+   // Run command when already running
+   rule rl_debug_run_redundant (   (rg_core_run_state == CORE_RUNNING)
+				&& (f_run_halt_reqs.first == True));
+      f_run_halt_reqs.deq;
+
+      // Notify debugger that we're running
+      f_run_halt_rsps.enq (True);
+
+      if (show_DM_interactions)
+	 $display ("%0d: %m.rl_debug_run_redundant", cur_cycle);
+   endrule
+
+   // ================================================================
+`endif
+
     interface CoreReq coreReq;
         method Action start(
             Bit#(64) startpc,
@@ -910,6 +1288,9 @@ module mkCore#(CoreId coreId)(Core);
         );
             fetchStage.start(startpc);
             started <= True;
+`ifdef INCLUDE_GDB_CONTROL
+	   rg_core_run_state <= CORE_RUNNING;
+`endif
             mmio.setHtifAddrs(toHostAddr, fromHostAddr);
             // start rename debug
             commitStage.startRenameDebug;
@@ -980,5 +1361,14 @@ module mkCore#(CoreId coreId)(Core);
 
    // Bluespec: external interrupt to enter debug mode
     method Action setDEIP (v) = csrf.setDEIP (v);
-endmodule
 
+`ifdef INCLUDE_GDB_CONTROL
+   interface Server  hart0_run_halt_server = toGPServer (f_run_halt_reqs, f_run_halt_rsps);
+   interface Server  hart0_gpr_mem_server  = toGPServer (f_gpr_reqs, f_gpr_rsps);
+`ifdef ISA_F
+   interface Server  hart0_fpr_mem_server  = toGPServer (f_fpr_reqs, f_fpr_rsps);
+`endif
+   interface Server  hart0_csr_mem_server  = toGPServer (f_csr_reqs, f_csr_rsps);
+`endif
+
+endmodule
