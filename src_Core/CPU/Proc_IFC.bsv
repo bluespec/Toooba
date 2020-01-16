@@ -82,6 +82,11 @@ interface Proc_IFC;
 `endif
 
    // ----------------
+   // Coherent port into LLC (used by Debug Module, DMA engines, ... to read/write memory)
+
+   interface AXI4_Slave_IFC #(Wd_Id, Wd_Addr, Wd_Data, Wd_User)   debug_module_mem_server;
+
+   // ----------------
    // Optional interface to Debug Module
 
 `ifdef INCLUDE_GDB_CONTROL
@@ -91,7 +96,6 @@ interface Proc_IFC;
    interface Server #(DM_CPU_Req #(5,  FLEN), DM_CPU_Rsp #(FLEN)) hart0_fpr_mem_server;
 `endif
    interface Server #(DM_CPU_Req #(12, XLEN), DM_CPU_Rsp #(XLEN)) hart0_csr_mem_server;
-   interface AXI4_Slave_IFC #(Wd_Id, Wd_Addr, Wd_Data, Wd_User)   debug_module_mem_server;
 
    // Non-standard
    interface Put #(Bit #(4))                                      hart0_put_other_req;

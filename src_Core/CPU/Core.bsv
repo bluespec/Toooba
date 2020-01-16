@@ -577,7 +577,9 @@ module mkCore#(CoreId coreId)(Core);
         method killAll = coreFix.killAll;
         method redirectPc = fetchStage.redirect;
         method setFetchWaitRedirect = fetchStage.setWaitRedirect;
+`ifdef INCLUDE_GDB_CONTROL
         method setFetchWaitFlush    = fetchStage.setWaitFlush;
+`endif
         method incrementEpoch = epochManager.incrementEpoch;
         method commitCsrInstOrInterrupt = csrInstOrInterruptInflight_commit._write(False);
         method doStats = coreFix.doStatsIfc._read;

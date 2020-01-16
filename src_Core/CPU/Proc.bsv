@@ -316,6 +316,11 @@ module mkProc (Proc_IFC);
 `endif
 
    // ----------------
+   // Coherent port into LLC (used by Debug Module, DMA engines, ... to read/write memory)
+
+   interface  debug_module_mem_server = llc_mem_server;
+
+   // ----------------
    // Optional interface to Debug Module
 
 `ifdef INCLUDE_GDB_CONTROL
@@ -326,9 +331,6 @@ module mkProc (Proc_IFC);
    interface Server  hart0_fpr_mem_server  = core[0].hart0_fpr_mem_server;
 `endif
    interface Server  hart0_csr_mem_server  = core[0].hart0_csr_mem_server;
-
-   // mem access goes to LLC (stays coherent with CPU pipeline).
-   interface  debug_module_mem_server = llc_mem_server;
 
    // We don't implement 'other' functionality
    interface Put  hart0_put_other_req;

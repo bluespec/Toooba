@@ -88,7 +88,9 @@ interface CommitInput;
     method Action killAll;
     method Action redirectPc(Addr trap_pc);
     method Action setFetchWaitRedirect;
+`ifdef INCLUDE_GDB_CONTROL
     method Action setFetchWaitFlush;
+`endif
     method Action incrementEpoch;
     // record if we commit a CSR inst or interrupt
     method Action commitCsrInstOrInterrupt;
