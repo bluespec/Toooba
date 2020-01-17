@@ -12808,71 +12808,6 @@ module mkReservationStationFpuMulDiv(CLK,
   begin
     case (idx__h159797)
       4'd0:
-	  SEL_ARR_m_data_0_093_BIT_2_637_m_data_1_096_BI_ETC___d1654 =
-	      m_data_0[2];
-      4'd1:
-	  SEL_ARR_m_data_0_093_BIT_2_637_m_data_1_096_BI_ETC___d1654 =
-	      m_data_1[2];
-      4'd2:
-	  SEL_ARR_m_data_0_093_BIT_2_637_m_data_1_096_BI_ETC___d1654 =
-	      m_data_2[2];
-      4'd3:
-	  SEL_ARR_m_data_0_093_BIT_2_637_m_data_1_096_BI_ETC___d1654 =
-	      m_data_3[2];
-      4'd4:
-	  SEL_ARR_m_data_0_093_BIT_2_637_m_data_1_096_BI_ETC___d1654 =
-	      m_data_4[2];
-      4'd5:
-	  SEL_ARR_m_data_0_093_BIT_2_637_m_data_1_096_BI_ETC___d1654 =
-	      m_data_5[2];
-      4'd6:
-	  SEL_ARR_m_data_0_093_BIT_2_637_m_data_1_096_BI_ETC___d1654 =
-	      m_data_6[2];
-      4'd7:
-	  SEL_ARR_m_data_0_093_BIT_2_637_m_data_1_096_BI_ETC___d1654 =
-	      m_data_7[2];
-      4'd8:
-	  SEL_ARR_m_data_0_093_BIT_2_637_m_data_1_096_BI_ETC___d1654 =
-	      m_data_8[2];
-      4'd9:
-	  SEL_ARR_m_data_0_093_BIT_2_637_m_data_1_096_BI_ETC___d1654 =
-	      m_data_9[2];
-      4'd10:
-	  SEL_ARR_m_data_0_093_BIT_2_637_m_data_1_096_BI_ETC___d1654 =
-	      m_data_10[2];
-      4'd11:
-	  SEL_ARR_m_data_0_093_BIT_2_637_m_data_1_096_BI_ETC___d1654 =
-	      m_data_11[2];
-      4'd12:
-	  SEL_ARR_m_data_0_093_BIT_2_637_m_data_1_096_BI_ETC___d1654 =
-	      m_data_12[2];
-      4'd13:
-	  SEL_ARR_m_data_0_093_BIT_2_637_m_data_1_096_BI_ETC___d1654 =
-	      m_data_13[2];
-      4'd14:
-	  SEL_ARR_m_data_0_093_BIT_2_637_m_data_1_096_BI_ETC___d1654 =
-	      m_data_14[2];
-      4'd15:
-	  SEL_ARR_m_data_0_093_BIT_2_637_m_data_1_096_BI_ETC___d1654 =
-	      m_data_15[2];
-    endcase
-  end
-  always@(idx__h159797 or
-	  m_data_0 or
-	  m_data_1 or
-	  m_data_2 or
-	  m_data_3 or
-	  m_data_4 or
-	  m_data_5 or
-	  m_data_6 or
-	  m_data_7 or
-	  m_data_8 or
-	  m_data_9 or
-	  m_data_10 or
-	  m_data_11 or m_data_12 or m_data_13 or m_data_14 or m_data_15)
-  begin
-    case (idx__h159797)
-      4'd0:
 	  SEL_ARR_m_data_0_093_BIT_0_673_m_data_1_096_BI_ETC___d1690 =
 	      m_data_0[0];
       4'd1:
@@ -12920,6 +12855,71 @@ module mkReservationStationFpuMulDiv(CLK,
       4'd15:
 	  SEL_ARR_m_data_0_093_BIT_0_673_m_data_1_096_BI_ETC___d1690 =
 	      m_data_15[0];
+    endcase
+  end
+  always@(idx__h159797 or
+	  m_data_0 or
+	  m_data_1 or
+	  m_data_2 or
+	  m_data_3 or
+	  m_data_4 or
+	  m_data_5 or
+	  m_data_6 or
+	  m_data_7 or
+	  m_data_8 or
+	  m_data_9 or
+	  m_data_10 or
+	  m_data_11 or m_data_12 or m_data_13 or m_data_14 or m_data_15)
+  begin
+    case (idx__h159797)
+      4'd0:
+	  SEL_ARR_m_data_0_093_BIT_2_637_m_data_1_096_BI_ETC___d1654 =
+	      m_data_0[2];
+      4'd1:
+	  SEL_ARR_m_data_0_093_BIT_2_637_m_data_1_096_BI_ETC___d1654 =
+	      m_data_1[2];
+      4'd2:
+	  SEL_ARR_m_data_0_093_BIT_2_637_m_data_1_096_BI_ETC___d1654 =
+	      m_data_2[2];
+      4'd3:
+	  SEL_ARR_m_data_0_093_BIT_2_637_m_data_1_096_BI_ETC___d1654 =
+	      m_data_3[2];
+      4'd4:
+	  SEL_ARR_m_data_0_093_BIT_2_637_m_data_1_096_BI_ETC___d1654 =
+	      m_data_4[2];
+      4'd5:
+	  SEL_ARR_m_data_0_093_BIT_2_637_m_data_1_096_BI_ETC___d1654 =
+	      m_data_5[2];
+      4'd6:
+	  SEL_ARR_m_data_0_093_BIT_2_637_m_data_1_096_BI_ETC___d1654 =
+	      m_data_6[2];
+      4'd7:
+	  SEL_ARR_m_data_0_093_BIT_2_637_m_data_1_096_BI_ETC___d1654 =
+	      m_data_7[2];
+      4'd8:
+	  SEL_ARR_m_data_0_093_BIT_2_637_m_data_1_096_BI_ETC___d1654 =
+	      m_data_8[2];
+      4'd9:
+	  SEL_ARR_m_data_0_093_BIT_2_637_m_data_1_096_BI_ETC___d1654 =
+	      m_data_9[2];
+      4'd10:
+	  SEL_ARR_m_data_0_093_BIT_2_637_m_data_1_096_BI_ETC___d1654 =
+	      m_data_10[2];
+      4'd11:
+	  SEL_ARR_m_data_0_093_BIT_2_637_m_data_1_096_BI_ETC___d1654 =
+	      m_data_11[2];
+      4'd12:
+	  SEL_ARR_m_data_0_093_BIT_2_637_m_data_1_096_BI_ETC___d1654 =
+	      m_data_12[2];
+      4'd13:
+	  SEL_ARR_m_data_0_093_BIT_2_637_m_data_1_096_BI_ETC___d1654 =
+	      m_data_13[2];
+      4'd14:
+	  SEL_ARR_m_data_0_093_BIT_2_637_m_data_1_096_BI_ETC___d1654 =
+	      m_data_14[2];
+      4'd15:
+	  SEL_ARR_m_data_0_093_BIT_2_637_m_data_1_096_BI_ETC___d1654 =
+	      m_data_15[2];
     endcase
   end
   always@(idx__h159797 or

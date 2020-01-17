@@ -3146,16 +3146,16 @@ module mkProc(CLK,
 
   // rule RL_srcPropose
   assign CAN_FIRE_RL_srcPropose =
-	     core_0$RDY_dCacheToParent_rqToP_deq &&
 	     core_0$RDY_dCacheToParent_rqToP_first &&
+	     core_0$RDY_dCacheToParent_rqToP_deq &&
 	     (!propDstIdx_0_dummy2_0$Q_OUT || !propDstIdx_0_dummy2_1$Q_OUT ||
 	      !propDstIdx_0_rl) ;
   assign WILL_FIRE_RL_srcPropose = CAN_FIRE_RL_srcPropose ;
 
   // rule RL_srcPropose_1
   assign CAN_FIRE_RL_srcPropose_1 =
-	     core_0$RDY_iCacheToParent_rqToP_deq &&
 	     core_0$RDY_iCacheToParent_rqToP_first &&
+	     core_0$RDY_iCacheToParent_rqToP_deq &&
 	     (!propDstIdx_1_dummy2_0$Q_OUT || !propDstIdx_1_dummy2_1$Q_OUT ||
 	      !propDstIdx_1_rl) ;
   assign WILL_FIRE_RL_srcPropose_1 = CAN_FIRE_RL_srcPropose_1 ;
@@ -3172,8 +3172,8 @@ module mkProc(CLK,
 
   // rule RL_srcPropose_2
   assign CAN_FIRE_RL_srcPropose_2 =
-	     core_0$RDY_dCacheToParent_rsToP_deq &&
 	     core_0$RDY_dCacheToParent_rsToP_first &&
+	     core_0$RDY_dCacheToParent_rsToP_deq &&
 	     (!propDstIdx_1_0_dummy2_0$Q_OUT ||
 	      !propDstIdx_1_0_dummy2_1$Q_OUT ||
 	      !propDstIdx_1_0_rl) ;
@@ -3181,8 +3181,8 @@ module mkProc(CLK,
 
   // rule RL_srcPropose_3
   assign CAN_FIRE_RL_srcPropose_3 =
-	     core_0$RDY_iCacheToParent_rsToP_deq &&
 	     core_0$RDY_iCacheToParent_rsToP_first &&
+	     core_0$RDY_iCacheToParent_rsToP_deq &&
 	     (!propDstIdx_1_1_dummy2_0$Q_OUT ||
 	      !propDstIdx_1_1_dummy2_1$Q_OUT ||
 	      !propDstIdx_1_1_rl) ;
@@ -3200,7 +3200,7 @@ module mkProc(CLK,
 
   // rule RL_sendPRq
   assign CAN_FIRE_RL_sendPRq =
-	     llc$RDY_to_child_toC_deq && llc$RDY_to_child_toC_first &&
+	     llc$RDY_to_child_toC_first && llc$RDY_to_child_toC_deq &&
 	     core_0$RDY_dCacheToParent_fromP_enq &&
 	     !llc$to_child_toC_first[583] &&
 	     !llc$to_child_toC_first[0] ;
@@ -3208,7 +3208,7 @@ module mkProc(CLK,
 
   // rule RL_sendPRs
   assign CAN_FIRE_RL_sendPRs =
-	     llc$RDY_to_child_toC_deq && llc$RDY_to_child_toC_first &&
+	     llc$RDY_to_child_toC_first && llc$RDY_to_child_toC_deq &&
 	     core_0$RDY_dCacheToParent_fromP_enq &&
 	     llc$to_child_toC_first[583] &&
 	     !llc$to_child_toC_first[516] ;
@@ -3216,7 +3216,7 @@ module mkProc(CLK,
 
   // rule RL_sendPRq_1
   assign CAN_FIRE_RL_sendPRq_1 =
-	     llc$RDY_to_child_toC_deq && llc$RDY_to_child_toC_first &&
+	     llc$RDY_to_child_toC_first && llc$RDY_to_child_toC_deq &&
 	     core_0$RDY_iCacheToParent_fromP_enq &&
 	     !llc$to_child_toC_first[583] &&
 	     llc$to_child_toC_first[0] ;
@@ -3224,7 +3224,7 @@ module mkProc(CLK,
 
   // rule RL_sendPRs_1
   assign CAN_FIRE_RL_sendPRs_1 =
-	     llc$RDY_to_child_toC_deq && llc$RDY_to_child_toC_first &&
+	     llc$RDY_to_child_toC_first && llc$RDY_to_child_toC_deq &&
 	     core_0$RDY_iCacheToParent_fromP_enq &&
 	     llc$to_child_toC_first[583] &&
 	     llc$to_child_toC_first[516] ;
@@ -3394,8 +3394,8 @@ module mkProc(CLK,
 
   // rule RL_mmioPlatform_waitMTimeCmpDone
   assign CAN_FIRE_RL_mmioPlatform_waitMTimeCmpDone =
-	     core_0$RDY_mmioToPlatform_pRs_enq &&
 	     core_0$RDY_mmioToPlatform_cRs_deq &&
+	     core_0$RDY_mmioToPlatform_pRs_enq &&
 	     mmioPlatform_curReq[66:64] == 3'd3 &&
 	     mmioPlatform_state == 2'd3 ;
   assign WILL_FIRE_RL_mmioPlatform_waitMTimeCmpDone =
@@ -3560,8 +3560,8 @@ module mkProc(CLK,
 
   // rule RL_llc_mem_server_srcPropose
   assign CAN_FIRE_RL_llc_mem_server_srcPropose =
-	     core_0$RDY_tlbToMem_memReq_deq &&
 	     core_0$RDY_tlbToMem_memReq_first &&
+	     core_0$RDY_tlbToMem_memReq_deq &&
 	     (!llc_mem_server_propDstIdx_0_dummy2_0$Q_OUT ||
 	      !llc_mem_server_propDstIdx_0_dummy2_1$Q_OUT ||
 	      !llc_mem_server_propDstIdx_0_rl) ;
@@ -3607,7 +3607,7 @@ module mkProc(CLK,
 
   // rule RL_llc_mem_server_sendLdRespToMemLoader
   assign CAN_FIRE_RL_llc_mem_server_sendLdRespToMemLoader =
-	     llc$RDY_dma_respLd_deq && llc$RDY_dma_respLd_first &&
+	     llc$RDY_dma_respLd_first && llc$RDY_dma_respLd_deq &&
 	     llc_mem_server_f_word_in_line$EMPTY_N &&
 	     llc_mem_server_axi4_slave_xactor_f_rd_data$FULL_N &&
 	     !llc$dma_respLd_first[4] ;
@@ -3616,7 +3616,7 @@ module mkProc(CLK,
 
   // rule RL_llc_mem_server_sendLdRespToTlb
   assign CAN_FIRE_RL_llc_mem_server_sendLdRespToTlb =
-	     llc$RDY_dma_respLd_deq && llc$RDY_dma_respLd_first &&
+	     llc$RDY_dma_respLd_first && llc$RDY_dma_respLd_deq &&
 	     core_0$RDY_tlbToMem_respLd_enq &&
 	     llc$dma_respLd_first[4] ;
   assign WILL_FIRE_RL_llc_mem_server_sendLdRespToTlb =
@@ -3624,7 +3624,7 @@ module mkProc(CLK,
 
   // rule RL_llc_mem_server_sendStRespToMemLoader
   assign CAN_FIRE_RL_llc_mem_server_sendStRespToMemLoader =
-	     llc$RDY_dma_respSt_deq && llc$RDY_dma_respSt_first &&
+	     llc$RDY_dma_respSt_first && llc$RDY_dma_respSt_deq &&
 	     llc_mem_server_axi4_slave_xactor_f_wr_resp$FULL_N &&
 	     !llc$dma_respSt_first[4] ;
   assign WILL_FIRE_RL_llc_mem_server_sendStRespToMemLoader =
@@ -3632,7 +3632,7 @@ module mkProc(CLK,
 
   // rule RL_llc_mem_server_sendStRespToTlb
   assign CAN_FIRE_RL_llc_mem_server_sendStRespToTlb =
-	     llc$RDY_dma_respSt_deq && llc$RDY_dma_respSt_first &&
+	     llc$RDY_dma_respSt_first && llc$RDY_dma_respSt_deq &&
 	     llc$dma_respSt_first[4] ;
   assign WILL_FIRE_RL_llc_mem_server_sendStRespToTlb =
 	     CAN_FIRE_RL_llc_mem_server_sendStRespToTlb ;
@@ -3694,8 +3694,8 @@ module mkProc(CLK,
 	     CAN_FIRE_RL_llc_axi4_adapter_rl_discard_write_rsp ;
 
   // rule RL_rl_reset
-  assign CAN_FIRE_RL_rl_reset = f_reset_reqs$EMPTY_N && f_reset_rsps$FULL_N ;
-  assign WILL_FIRE_RL_rl_reset = CAN_FIRE_RL_rl_reset ;
+  assign CAN_FIRE_RL_rl_reset = WILL_FIRE_RL_rl_reset ;
+  assign WILL_FIRE_RL_rl_reset = f_reset_reqs$EMPTY_N && f_reset_rsps$FULL_N ;
 
   // inputs to muxes for submodule ports
   assign MUX_core_0$mmioToPlatform_pRq_enq_1__SEL_1 =
@@ -4181,7 +4181,7 @@ module mkProc(CLK,
 	       mmio_axi4_adapter_ctr_wr_rsps_pending_crg$port1__write_1 :
 	       b__h2274 ;
   assign mmio_axi4_adapter_ctr_wr_rsps_pending_crg$port3__read =
-	     CAN_FIRE_RL_rl_reset ?
+	     WILL_FIRE_RL_rl_reset ?
 	       4'd0 :
 	       mmio_axi4_adapter_ctr_wr_rsps_pending_crg$port2__read ;
   assign llc_axi4_adapter_master_xactor_crg_wr_addr_full$EN_port1__write =
@@ -4238,7 +4238,7 @@ module mkProc(CLK,
 	       llc_axi4_adapter_ctr_wr_rsps_pending_crg$port1__write_1 :
 	       b__h125205 ;
   assign llc_axi4_adapter_ctr_wr_rsps_pending_crg$port3__read =
-	     CAN_FIRE_RL_rl_reset ?
+	     WILL_FIRE_RL_rl_reset ?
 	       4'd0 :
 	       llc_axi4_adapter_ctr_wr_rsps_pending_crg$port2__read ;
 
@@ -5011,11 +5011,11 @@ module mkProc(CLK,
 
   // submodule f_reset_reqs
   assign f_reset_reqs$ENQ = EN_hart0_server_reset_request_put ;
-  assign f_reset_reqs$DEQ = CAN_FIRE_RL_rl_reset ;
+  assign f_reset_reqs$DEQ = f_reset_reqs$EMPTY_N && f_reset_rsps$FULL_N ;
   assign f_reset_reqs$CLR = 1'b0 ;
 
   // submodule f_reset_rsps
-  assign f_reset_rsps$ENQ = CAN_FIRE_RL_rl_reset ;
+  assign f_reset_rsps$ENQ = f_reset_reqs$EMPTY_N && f_reset_rsps$FULL_N ;
   assign f_reset_rsps$DEQ = EN_hart0_server_reset_response_get ;
   assign f_reset_rsps$CLR = 1'b0 ;
 
@@ -5415,15 +5415,6 @@ module mkProc(CLK,
 				    .amoExec_upper_32_bits(mmioPlatform_reqBE_BIT_4___h27519 &&
 							   !mmioPlatform_reqBE_BIT_0___h27559),
 				    .amoExec(x__h29543));
-  module_amoExec instance_amoExec_1(.amoExec_amo_inst({ mmioPlatform_reqFunc[3:0],
-							mmioPlatform_reqBE_BIT_4___h27519 &&
-							mmioPlatform_reqBE_BIT_0___h27559,
-							2'd0 }),
-				    .amoExec_current_data(mmioPlatform_mtime__h34665),
-				    .amoExec_in_data(mmioPlatform_reqData__h46219),
-				    .amoExec_upper_32_bits(mmioPlatform_reqBE_BIT_4___h27519 &&
-							   !mmioPlatform_reqBE_BIT_0___h27559),
-				    .amoExec(x__h32453));
   module_amoExec instance_amoExec_2(.amoExec_amo_inst({ mmioPlatform_reqFunc[3:0],
 							mmioPlatform_reqBE_BIT_4___h27519 &&
 							mmioPlatform_reqBE_BIT_0___h27559,
@@ -5433,6 +5424,15 @@ module mkProc(CLK,
 				    .amoExec_upper_32_bits(mmioPlatform_reqBE_BIT_4___h27519 &&
 							   !mmioPlatform_reqBE_BIT_0___h27559),
 				    .amoExec(x__h38399));
+  module_amoExec instance_amoExec_1(.amoExec_amo_inst({ mmioPlatform_reqFunc[3:0],
+							mmioPlatform_reqBE_BIT_4___h27519 &&
+							mmioPlatform_reqBE_BIT_0___h27559,
+							2'd0 }),
+				    .amoExec_current_data(mmioPlatform_mtime__h34665),
+				    .amoExec_in_data(mmioPlatform_reqData__h46219),
+				    .amoExec_upper_32_bits(mmioPlatform_reqBE_BIT_4___h27519 &&
+							   !mmioPlatform_reqBE_BIT_0___h27559),
+				    .amoExec(x__h32453));
   module_amoExec instance_amoExec_3(.amoExec_amo_inst({ mmioPlatform_reqFunc[3:0],
 							mmioPlatform_reqBE_BIT_4___h27519 &&
 							mmioPlatform_reqBE_BIT_0___h27559,
@@ -5691,12 +5691,12 @@ module mkProc(CLK,
 	       mmioPlatform_toHostQ_enqReq_rl[64] ;
   assign IF_mmioPlatform_waitLowerMSIPCRs_53_THEN_core__ETC___d461 =
 	     mmioPlatform_waitLowerMSIPCRs ?
-	       core_0$RDY_mmioToPlatform_cRs_deq &&
-	       core_0$RDY_mmioToPlatform_cRs_first :
+	       core_0$RDY_mmioToPlatform_cRs_first &&
+	       core_0$RDY_mmioToPlatform_cRs_deq :
 	       (!mmioPlatform_waitUpperMSIPCRs ||
-		core_0$RDY_mmioToPlatform_cRs_deq) &&
+		core_0$RDY_mmioToPlatform_cRs_first) &&
 	       (!mmioPlatform_waitUpperMSIPCRs ||
-		core_0$RDY_mmioToPlatform_cRs_first) ;
+		core_0$RDY_mmioToPlatform_cRs_deq) ;
   assign IF_mmio_axi4_adapter_f_rsps_to_core_first__25__ETC___d939 =
 	     mmio_axi4_adapter_f_rsps_to_core$D_OUT[64] ?
 	       mmioPlatform_fetchingWay <
@@ -5864,8 +5864,8 @@ module mkProc(CLK,
 	     !mmioPlatform_mtip_0 &&
 	     mmioPlatform_mtimecmp_0_21_ULE_mmioPlatform_mt_ETC___d322 ||
 	     !core_0$mmioToPlatform_cRq_notEmpty ||
-	     core_0$RDY_mmioToPlatform_cRq_deq &&
-	     core_0$RDY_mmioToPlatform_cRq_first ;
+	     core_0$RDY_mmioToPlatform_cRq_first &&
+	     core_0$RDY_mmioToPlatform_cRq_deq ;
   assign NOT_mmioPlatform_reqFunc_01_BITS_5_TO_4_02_EQ__ETC___d451 =
 	     mmioPlatform_reqFunc[5:4] != 2'd0 && !mmioPlatform_reqBE[4] &&
 	     (mmioPlatform_reqBE[0] || mmioPlatform_reqFunc[5:4] == 2'd1 ||
@@ -6447,27 +6447,6 @@ module mkProc(CLK,
     endcase
   end
   always@(mmioPlatform_curReq or
-	  result__h46555 or
-	  result__h46582 or result__h46609 or result__h46636)
-  begin
-    case (mmioPlatform_curReq[2:0])
-      3'h0:
-	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_46_EQ_0x_ETC___d838 =
-	      result__h46555;
-      3'h2:
-	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_46_EQ_0x_ETC___d838 =
-	      result__h46582;
-      3'h4:
-	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_46_EQ_0x_ETC___d838 =
-	      result__h46609;
-      3'h6:
-	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_46_EQ_0x_ETC___d838 =
-	      result__h46636;
-      default: IF_mmioPlatform_curReq_96_BITS_2_TO_0_46_EQ_0x_ETC___d838 =
-		   64'd0;
-    endcase
-  end
-  always@(mmioPlatform_curReq or
 	  result__h46322 or
 	  result__h46349 or
 	  result__h46376 or
@@ -6500,6 +6479,27 @@ module mkProc(CLK,
       3'h7:
 	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_46_EQ_0x_ETC___d826 =
 	      result__h46511;
+    endcase
+  end
+  always@(mmioPlatform_curReq or
+	  result__h46555 or
+	  result__h46582 or result__h46609 or result__h46636)
+  begin
+    case (mmioPlatform_curReq[2:0])
+      3'h0:
+	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_46_EQ_0x_ETC___d838 =
+	      result__h46555;
+      3'h2:
+	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_46_EQ_0x_ETC___d838 =
+	      result__h46582;
+      3'h4:
+	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_46_EQ_0x_ETC___d838 =
+	      result__h46609;
+      3'h6:
+	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_46_EQ_0x_ETC___d838 =
+	      result__h46636;
+      default: IF_mmioPlatform_curReq_96_BITS_2_TO_0_46_EQ_0x_ETC___d838 =
+		   64'd0;
     endcase
   end
   always@(mmioPlatform_curReq or result__h46676 or result__h46703)

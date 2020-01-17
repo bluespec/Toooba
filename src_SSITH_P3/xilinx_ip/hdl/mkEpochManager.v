@@ -186,19 +186,10 @@ module mkEpochManager(CLK,
        WILL_FIRE_updatePrevEpoch_1_update;
 
   // remaining internal signals
-  wire [3 : 0] IF_updatePrevEn_0_lat_0_whas_THEN_updatePrevEn_ETC___d19,
-	       _theResult____h5017,
-	       next_epoch__h81;
+  wire [3 : 0] next_epoch__h81;
   wire IF_NOT_updatePrevEn_1_dummy2_1_read__5_6_OR_IF_ETC___d50,
-       IF_updatePrevEn_0_dummy2_1_read__8_AND_IF_upda_ETC___d73,
-       IF_updatePrevEn_0_lat_0_whas_THEN_updatePrevEn_ETC___d9,
-       NOT_IF_updatePrevEn_0_dummy2_1_read__8_AND_IF__ETC___d75,
-       NOT_prev_checked_epoch_0_ULE_updatePrevEpoch_0_ETC___d63,
        NOT_updatePrevEn_0_dummy2_1_read__8_1_OR_IF_up_ETC___d52,
-       NOT_updatePrevEn_1_dummy2_1_read__5_6_OR_IF_up_ETC___d47,
-       NOT_updatePrevEpoch_0_update_e_ULE_curr_epoch_8_4___d65,
-       NOT_updatePrevEpoch_1_update_e_ULE_curr_epoch_8_6___d77,
-       prev_checked_epoch_0_ULE_curr_epoch_8___d61;
+       NOT_updatePrevEn_1_dummy2_1_read__5_6_OR_IF_up_ETC___d47;
 
   // value method checkEpoch_0_check
   assign checkEpoch_0_check = checkEpoch_0_check_e == curr_epoch ;
@@ -282,7 +273,9 @@ module mkEpochManager(CLK,
   // register prev_checked_epoch
   assign prev_checked_epoch$D_IN =
 	     NOT_updatePrevEn_1_dummy2_1_read__5_6_OR_IF_up_ETC___d47 ?
-	       IF_updatePrevEn_0_lat_0_whas_THEN_updatePrevEn_ETC___d19 :
+	       (EN_updatePrevEpoch_0_update ?
+		  updatePrevEn_0_lat_0$wget[3:0] :
+		  updatePrevEn_0_rl[3:0]) :
 	       (EN_updatePrevEpoch_1_update ?
 		  updatePrevEn_1_lat_0$wget[3:0] :
 		  updatePrevEn_1_rl[3:0]) ;
@@ -317,24 +310,12 @@ module mkEpochManager(CLK,
   assign IF_NOT_updatePrevEn_1_dummy2_1_read__5_6_OR_IF_ETC___d50 =
 	     NOT_updatePrevEn_1_dummy2_1_read__5_6_OR_IF_up_ETC___d47 ?
 	       updatePrevEn_0_dummy2_1$Q_OUT &&
-	       IF_updatePrevEn_0_lat_0_whas_THEN_updatePrevEn_ETC___d9 :
+	       (EN_updatePrevEpoch_0_update ?
+		  updatePrevEn_0_lat_0$wget[4] :
+		  updatePrevEn_0_rl[4]) :
 	       (EN_updatePrevEpoch_1_update ?
 		  updatePrevEn_1_lat_0$wget[4] :
 		  updatePrevEn_1_rl[4]) ;
-  assign IF_updatePrevEn_0_dummy2_1_read__8_AND_IF_upda_ETC___d73 =
-	     _theResult____h5017 <= curr_epoch ;
-  assign IF_updatePrevEn_0_lat_0_whas_THEN_updatePrevEn_ETC___d19 =
-	     EN_updatePrevEpoch_0_update ?
-	       updatePrevEn_0_lat_0$wget[3:0] :
-	       updatePrevEn_0_rl[3:0] ;
-  assign IF_updatePrevEn_0_lat_0_whas_THEN_updatePrevEn_ETC___d9 =
-	     EN_updatePrevEpoch_0_update ?
-	       updatePrevEn_0_lat_0$wget[4] :
-	       updatePrevEn_0_rl[4] ;
-  assign NOT_IF_updatePrevEn_0_dummy2_1_read__8_AND_IF__ETC___d75 =
-	     _theResult____h5017 > updatePrevEpoch_1_update_e ;
-  assign NOT_prev_checked_epoch_0_ULE_updatePrevEpoch_0_ETC___d63 =
-	     prev_checked_epoch > updatePrevEpoch_0_update_e ;
   assign NOT_updatePrevEn_0_dummy2_1_read__8_1_OR_IF_up_ETC___d52 =
 	     !updatePrevEn_0_dummy2_1$Q_OUT ||
 	     (EN_updatePrevEpoch_0_update ?
@@ -345,18 +326,7 @@ module mkEpochManager(CLK,
 	     (EN_updatePrevEpoch_1_update ?
 		!updatePrevEn_1_lat_0$wget[4] :
 		!updatePrevEn_1_rl[4]) ;
-  assign NOT_updatePrevEpoch_0_update_e_ULE_curr_epoch_8_4___d65 =
-	     updatePrevEpoch_0_update_e > curr_epoch ;
-  assign NOT_updatePrevEpoch_1_update_e_ULE_curr_epoch_8_6___d77 =
-	     updatePrevEpoch_1_update_e > curr_epoch ;
-  assign _theResult____h5017 =
-	     (updatePrevEn_0_dummy2_1$Q_OUT &&
-	      IF_updatePrevEn_0_lat_0_whas_THEN_updatePrevEn_ETC___d9) ?
-	       IF_updatePrevEn_0_lat_0_whas_THEN_updatePrevEn_ETC___d19 :
-	       prev_checked_epoch ;
   assign next_epoch__h81 = (curr_epoch == 4'd11) ? 4'd0 : curr_epoch + 4'd1 ;
-  assign prev_checked_epoch_0_ULE_curr_epoch_8___d61 =
-	     prev_checked_epoch <= curr_epoch ;
 
   // handling of inlined registers
 
@@ -401,30 +371,6 @@ module mkEpochManager(CLK,
   always@(negedge CLK)
   begin
     #0;
-    if (RST_N != `BSV_RESET_VALUE)
-      if (EN_updatePrevEpoch_0_update &&
-	  prev_checked_epoch_0_ULE_curr_epoch_8___d61 &&
-	  (NOT_prev_checked_epoch_0_ULE_updatePrevEpoch_0_ETC___d63 ||
-	   NOT_updatePrevEpoch_0_update_e_ULE_curr_epoch_8_4___d65))
-	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (EN_updatePrevEpoch_0_update &&
-	  !prev_checked_epoch_0_ULE_curr_epoch_8___d61 &&
-	  NOT_prev_checked_epoch_0_ULE_updatePrevEpoch_0_ETC___d63 &&
-	  NOT_updatePrevEpoch_0_update_e_ULE_curr_epoch_8_4___d65)
-	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (EN_updatePrevEpoch_1_update &&
-	  IF_updatePrevEn_0_dummy2_1_read__8_AND_IF_upda_ETC___d73 &&
-	  (NOT_IF_updatePrevEn_0_dummy2_1_read__8_AND_IF__ETC___d75 ||
-	   NOT_updatePrevEpoch_1_update_e_ULE_curr_epoch_8_6___d77))
-	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (EN_updatePrevEpoch_1_update &&
-	  !IF_updatePrevEn_0_dummy2_1_read__8_AND_IF_upda_ETC___d73 &&
-	  NOT_IF_updatePrevEn_0_dummy2_1_read__8_AND_IF__ETC___d75 &&
-	  NOT_updatePrevEpoch_1_update_e_ULE_curr_epoch_8_6___d77)
-	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
     if (RST_N != `BSV_RESET_VALUE)
       if (IF_NOT_updatePrevEn_1_dummy2_1_read__5_6_OR_IF_ETC___d50 &&
 	  NOT_updatePrevEn_1_dummy2_1_read__5_6_OR_IF_up_ETC___d47 &&

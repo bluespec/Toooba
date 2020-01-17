@@ -554,8 +554,8 @@ module mkFabric_2x3 (Fabric_2x3_IFC);
    // Any addr is legal, and there is only one slave to service it.
 
    function Tuple2 #(Bool, Slave_Num_2x3) fn_addr_to_slave_num_2x3  (Fabric_Addr addr);
-      if (   (soc_map.m_mem0_controller_addr_base <= addr)
-	  && (addr < soc_map.m_mem0_controller_addr_lim))
+      if (   (soc_map.m_near_mem_io_addr_base <= addr)
+	  && (addr < soc_map.m_near_mem_io_addr_lim))
 	 return tuple2 (True, near_mem_io_slave_num);
 
       else if (   (soc_map.m_plic_addr_base <= addr)
