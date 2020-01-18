@@ -1821,8 +1821,8 @@ module mkReservationStationFpuMulDiv(CLK,
        MUX_m_valid_11_dummy2_0$write_1__SEL_2,
        MUX_m_valid_12_dummy2_0$write_1__SEL_1,
        MUX_m_valid_12_dummy2_0$write_1__SEL_2,
-       MUX_m_valid_13_dummy2_0$write_1__SEL_1,
        MUX_m_valid_13_dummy2_0$write_1__SEL_2,
+       MUX_m_valid_13_lat_0$wset_1__SEL_1,
        MUX_m_valid_14_dummy2_0$write_1__SEL_1,
        MUX_m_valid_14_dummy2_0$write_1__SEL_2,
        MUX_m_valid_15_dummy2_0$write_1__SEL_1,
@@ -3917,12 +3917,12 @@ module mkReservationStationFpuMulDiv(CLK,
 	     EN_specUpdate_incorrectSpeculation &&
 	     (specUpdate_incorrectSpeculation_kill_all ||
 	      bs__h248287[specUpdate_incorrectSpeculation_kill_tag]) ;
-  assign MUX_m_valid_13_dummy2_0$write_1__SEL_1 =
-	     EN_doDispatch && idx__h159797 == 4'd13 ;
   assign MUX_m_valid_13_dummy2_0$write_1__SEL_2 =
 	     EN_specUpdate_incorrectSpeculation &&
 	     (specUpdate_incorrectSpeculation_kill_all ||
 	      bs__h248475[specUpdate_incorrectSpeculation_kill_tag]) ;
+  assign MUX_m_valid_13_lat_0$wset_1__SEL_1 =
+	     EN_doDispatch && idx__h159797 == 4'd13 ;
   assign MUX_m_valid_14_dummy2_0$write_1__SEL_1 =
 	     EN_doDispatch && idx__h159797 == 4'd14 ;
   assign MUX_m_valid_14_dummy2_0$write_1__SEL_2 =
@@ -4045,7 +4045,7 @@ module mkReservationStationFpuMulDiv(CLK,
   assign m_valid_12_lat_1$whas = EN_enq && m_enqP_wire$wget[3:0] == 4'd12 ;
   assign m_valid_13_lat_1$whas = EN_enq && m_enqP_wire$wget[3:0] == 4'd13 ;
   assign m_valid_13_dummy_1_0$wget =
-	     MUX_m_valid_13_dummy2_0$write_1__SEL_1 ||
+	     MUX_m_valid_13_lat_0$wset_1__SEL_1 ||
 	     MUX_m_valid_13_dummy2_0$write_1__SEL_2 ;
   assign m_valid_14_lat_0$whas =
 	     MUX_m_valid_14_dummy2_0$write_1__SEL_1 ||

@@ -1,5 +1,6 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
+// Portions Copyright (c) 2019-2020 Bluespec, Inc.
 // 
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
@@ -189,6 +190,8 @@ deriving (Bits, Eq, FShow);
 (* synthesize *)
 module mkCore#(CoreId coreId)(Core);
     let verbose = False;
+    Integer verbosity = 0;    // Bluespec
+
     Reg#(Bool) outOfReset <- mkReg(False);
     rule rl_outOfReset if (!outOfReset);
         $fwrite(stderr, "mkProc came out of reset\n");
@@ -266,18 +269,6 @@ module mkCore#(CoreId coreId)(Core);
 
         // whether perf data is collected
         Reg#(Bool) doStatsReg <- mkConfigReg(False); 
-
-        // redirect func
-        //function Action redirectFunc(Addr trap_pc, Maybe#(SpecTag) spec_tag, InstTag inst_tag );
-        //action
-        //    if (verbose) $fdisplay(stdout, "[redirect_action] new pc = 0x%8x, spec_tag = ", trap_pc, fshow(spec_tag));
-        //    epochManager.redirect;
-        //    fetchStage.redirect(trap_pc);
-        //    if (spec_tag matches tagged Valid .valid_spec_tag) begin
-        //        globalSpecUpdate.incorrectSpec(valid_spec_tag, inst_tag);
-        //    end
-        //endaction
-        //endfunction
 
         // write aggressive elements + wakupe reservation stations
         function Action writeAggr(Integer wrAggrPort, PhyRIndx dst);
@@ -650,7 +641,7 @@ module mkCore#(CoreId coreId)(Core);
 
     rule setDoFlushCaches(flush_caches && fetchStage.emptyForFlush && lsq.noWrongPathLoads);
         doFlushCaches.send;
-       $display ("%0d: %m.rl_setDoFlushCaches", cur_cycle);
+        // $display ("%0d: %m.rl_setDoFlushCaches", cur_cycle);
     endrule
 
     rule setDoFlushBrPred(flush_brpred && fetchStage.emptyForFlush);
@@ -663,7 +654,7 @@ module mkCore#(CoreId coreId)(Core);
         flush_caches <= False;
         iMem.flush;
         dMem.flush;
-        $display ("%0d: %m.rule flushCaches (imem and dmem)", cur_cycle);
+        // $display ("%0d: %m.rule flushCaches (imem and dmem)", cur_cycle);
     endrule
 
     // security flush branch predictors: wait for wrong path inst fetches to
@@ -671,7 +662,7 @@ module mkCore#(CoreId coreId)(Core);
     rule flushBrPred(doFlushBrPred);
         flush_brpred <= False;
         fetchStage.flush_predictors;
-        $display ("%0d: %m.rule flushBrPred", cur_cycle);
+        // $display ("%0d: %m.rule flushBrPred", cur_cycle);
     endrule
 `endif
 
@@ -739,30 +730,11 @@ module mkCore#(CoreId coreId)(Core);
         if (commitStage.is_debug_halted) begin
 	   started           <= False;
 	   rg_core_run_state <= CORE_HALTING;
-	   $display ("%0d: %m.rule readyToFetch: halting for debug mode", cur_cycle);
+	   if (verbosity >= 1)
+	      $display ("%0d: %m.rule readyToFetch: halting for debug mode", cur_cycle);
 	end
 `endif
     endrule
-
-   /*
-   rule rl_readyToFetch_conds_debug
-      $display ("%0d: %m.rl_readyToFetch_conds_debug:", cur_cycle);
-      $display ("    !flush_reservation = %0d, !flush_tlbs = %0d, !update_vm_info = %0d",
-		!flush_reservation, !flush_tlbs, !update_vm_info);
-      $display ("    iTlb.flush_done = %0d, dTlb.flush_done = %0d", iTlb.flush_done, dTlb.flush_done);
-`ifdef SECURITY_OR_INCLUDE_GDB_CONTROL
-      $display ("    !flush_caches = %0d !flush_brpred = %0d", !flush_caches, !flush_brpred);
-      $display ("    iMem.flush_done = %0d dMem.flush_done = %0d", iMem.flush_done, dMem.flush_done);
-      $display ("    fetchStage.flush_predictors_done = %0d", fetchStage.flush_predictors_done);
-`endif
-`ifdef SELF_INV_CACHE
-      $display ("    !reconcile_i = %0d, iMem.reconcide_done = %0d", !reconcile_i, iMem.reconcile_done);
-`ifdef SYSTEM_SELF_INV_L1D
-      $display ("    reconcile_d = %0d", reconcile_d);
-`endif
-`endif
-   endrule
-   */
 
 `ifdef PERF_COUNT
     // incr cycle count
@@ -1025,7 +997,7 @@ module mkCore#(CoreId coreId)(Core);
    // ================================================================
    // DEBUG MODULE INTERFACE
 
-   Bool show_DM_interactions = True;    // for debugging the interactions
+   Bool show_DM_interactions = False;    // for debugging the interactions
 
    // ----------------------------------------------------------------
    // Debug Module GPR read/write
@@ -1166,7 +1138,7 @@ module mkCore#(CoreId coreId)(Core);
       f_csr_rsps.enq (rsp);
 
       if (show_DM_interactions)
-	 $display ("%0d: %m.rl_debug_read_csr: csr %0d => 0x%0h", cur_cycle, csr_addr, data_out);
+	 $display ("%0d: %m.rl_debug_read_csr: csr [%0h] => 0x%0h", cur_cycle, csr_addr, data_out);
    endrule
 
    rule rl_debug_csr_write (   (rg_core_run_state == CORE_HALTED)
@@ -1180,7 +1152,7 @@ module mkCore#(CoreId coreId)(Core);
       f_csr_rsps.enq (rsp);
 
       if (show_DM_interactions)
-	 $display ("%0d: %m.rl_debug_write_csr: csr 0x%0h <= 0x%0h", cur_cycle, csr_addr, data_in);
+	 $display ("%0d: %m.rl_debug_write_csr: csr [%0h] <= 0x%0h", cur_cycle, csr_addr, data_in);
    endrule
 
    rule rl_debug_csr_access_busy (rg_core_run_state == CORE_RUNNING);
@@ -1197,7 +1169,6 @@ module mkCore#(CoreId coreId)(Core);
 
    FIFOF #(Bool)  f_run_halt_reqs  <- mkFIFOF;
    FIFOF #(Bool)  f_run_halt_rsps  <- mkFIFOF;
-   Reg #(Bool)    rg_sent_halt_rsp <- mkReg (False);
 
    // ----------------
    // Debug Module Halt control
@@ -1209,7 +1180,6 @@ module mkCore#(CoreId coreId)(Core);
       // Debugger 'halt' request (e.g., GDB '^C' command)
       // This is initiated just like an interrupt.
       renameStage.debug_halt_req;
-      rg_sent_halt_rsp <= False;
 
       if (show_DM_interactions)
 	 $display ("%0d: %m.rl_debug_halt_req", cur_cycle);
@@ -1219,8 +1189,7 @@ module mkCore#(CoreId coreId)(Core);
 					  && (f_run_halt_reqs.first == False));
       f_run_halt_reqs.deq;
 
-      // Notify debugger that we've 'halted'
-      f_run_halt_rsps.enq (False);
+      // Ignore this.
 
       if (show_DM_interactions)
 	 $display ("%0d: %m.rl_debug_halt_req_already_halted", cur_cycle);
@@ -1265,7 +1234,7 @@ module mkCore#(CoreId coreId)(Core);
       f_run_halt_rsps.enq (True);
 
       if (show_DM_interactions)
-         $display ("%0d: %m.debug_resume, dpc = 0x%0h", cur_cycle, startpc);
+         $display ("%0d: %m.rl_debug_resume, dpc = 0x%0h", cur_cycle, startpc);
    endrule
 
    // Run command when already running

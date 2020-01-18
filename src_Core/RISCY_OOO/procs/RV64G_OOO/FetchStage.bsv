@@ -1,5 +1,6 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
+// Portions Copyright (c) 2019-2020 Bluespec, Inc.
 // 
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
@@ -572,7 +573,7 @@ module mkFetchStage(FetchStage);
             main_epoch: in.main_epoch };
         f22f3.enq(tuple2(nbSupX2,out));
 
-       if (verbosity > 0) begin
+       if (verbosity >= 2) begin
 	  $display ("----------------");
 	  $display ("Fetch2: TLB response pyhs_pc 0x%0h  cause ", phys_pc, fshow (cause));
 	  $display ("Fetch2: f2_tof3.enq: nbSupX2 %0d out ", nbSupX2, fshow (out));
@@ -582,7 +583,7 @@ module mkFetchStage(FetchStage);
 // Break out of i$
     rule doFetch3;
         let {nbSupX2In, fetch3In} = f22f3.first;
-        if (verbosity > 0) begin
+        if (verbosity >= 2) begin
             if (f22f3.notEmpty)
                 $display("Fetch3: nbSupX2In: %0d fetch3In: ", nbSupX2In, fshow (fetch3In));
             else
@@ -599,7 +600,7 @@ module mkFetchStage(FetchStage);
                 // associated with the same epoch.
                 pending_n_items = 0;
                 pending_straddle = tagged Invalid;
-                if (verbosity > 0) begin
+                if (verbosity >= 2) begin
                     $display ("----------------");
                     $display ("Fetch3: Drop pending: main_epoch: %d decode epoch: %d", f_main_epoch, decode_epoch[1]);
                     $display ("Fetch3: rg_pending_n_items:  ", fshow (rg_pending_n_items));
@@ -656,7 +657,7 @@ module mkFetchStage(FetchStage);
             if (fetch3In.main_epoch != f_main_epoch || fetch3In.decode_epoch != decode_epoch[1]) begin
                 pending_straddle = tagged Invalid;
             end
-            if (verbosity > 0) begin
+            if (verbosity >= 2) begin
                 $display ("----------------");
                 $display ("Fetch3: Drop: main_epoch: %d decode epoch: %d fetch3 epoch %d", f_main_epoch, decode_epoch[1], fetch3_epoch);
                 $display ("Fetch3: f22f3.first: ", fshow (f22f3.first));
@@ -749,7 +750,7 @@ module mkFetchStage(FetchStage);
             if (n_items > 0) begin
                 instdata.enq(take(v_items));
                 f32d.enq(tuple2(nbSupOut, out));
-                if (verbosity > 0) begin
+                if (verbosity >= 2) begin
                     $display ("----------------");
                     $display ("Fetch3: epoch inst: %d, epoch main : %d", out.main_epoch, f_main_epoch);
                     $display ("Fetch3: inst_d:   ", fshow (inst_d));
@@ -915,8 +916,13 @@ module mkFetchStage(FetchStage);
 					   cause: cause,
 					   tval:  tval};
 		  out_fifo.enqS[i].enq(out);
-                  if (verbosity > 0)
-		     $display("Decode: ", fshow(out));
+                  if (verbosity >= 1) begin
+		     $write ("%0d: %m.rule doDecode: out_fifo.enqS[%0d].enq", cur_cycle, i);
+		     $display (" pc %0h  inst %08h", out.pc, out.orig_inst);
+		  end
+                  if (verbosity >= 2) begin
+		     $display ("    ", fshow(out));
+		  end
 	       end // if (in.decode_epoch == decode_epoch_local)
                else begin
 		  if (verbose) $display("Drop decoded within a superscalar");
@@ -1018,7 +1024,7 @@ module mkFetchStage(FetchStage);
 `ifdef INCLUDE_GDB_CONTROL
    method Action setWaitFlush;
       waitForFlush <= True;
-      $display ("%0d.%m.FetchStage.setWaitFlush", cur_cycle);
+      // $display ("%0d.%m.setWaitFlush", cur_cycle);
    endmethod
 `endif
 

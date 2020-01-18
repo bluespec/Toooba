@@ -1346,10 +1346,10 @@ module mkDTlbSynth(CLK,
   wire [31 : 0] MUX_m_tlb_m_lruBit_lat_0$wset_1__VAL_1;
   wire [5 : 0] MUX_m_tlb_m_updRepIdx_lat_1$wset_1__VAL_1,
 	       MUX_m_tlb_m_updRepIdx_lat_1$wset_1__VAL_2;
-  wire [3 : 0] MUX_m_pendWait_0$write_1__VAL_1,
-	       MUX_m_pendWait_1$write_1__VAL_1,
-	       MUX_m_pendWait_2$write_1__VAL_1,
-	       MUX_m_pendWait_3$write_1__VAL_1;
+  wire [3 : 0] MUX_m_pendWait_0$write_1__VAL_2,
+	       MUX_m_pendWait_1$write_1__VAL_2,
+	       MUX_m_pendWait_2$write_1__VAL_2,
+	       MUX_m_pendWait_3$write_1__VAL_2;
   wire [2 : 0] MUX_m_freeQ_enqReq_lat_0$wset_1__VAL_1,
 	       MUX_m_freeQ_enqReq_lat_0$wset_1__VAL_2,
 	       MUX_m_freeQ_enqReq_lat_0$wset_1__VAL_3;
@@ -1422,7 +1422,7 @@ module mkDTlbSynth(CLK,
 	       SEL_ARR_m_ldTransRsFromPQ_data_0_00_BITS_54_TO_ETC___d791,
 	       ppn__h121971;
   reg [26 : 0] CASE_level9044_0_SEL_ARR_m_ldTransRsFromPQ_dat_ETC__q2,
-	       CASE_m_tlb_m_entryVec_0_BITS_1_TO_0_0_procReq__ETC__q4,
+	       CASE_m_tlb_m_entryVec_0_BITS_1_TO_0_0_procReq__ETC__q3,
 	       CASE_m_tlb_m_entryVec_10_BITS_1_TO_0_0_procReq_ETC__q13,
 	       CASE_m_tlb_m_entryVec_11_BITS_1_TO_0_0_procReq_ETC__q14,
 	       CASE_m_tlb_m_entryVec_12_BITS_1_TO_0_0_procReq_ETC__q15,
@@ -1433,7 +1433,7 @@ module mkDTlbSynth(CLK,
 	       CASE_m_tlb_m_entryVec_17_BITS_1_TO_0_0_procReq_ETC__q20,
 	       CASE_m_tlb_m_entryVec_18_BITS_1_TO_0_0_procReq_ETC__q21,
 	       CASE_m_tlb_m_entryVec_19_BITS_1_TO_0_0_procReq_ETC__q22,
-	       CASE_m_tlb_m_entryVec_1_BITS_1_TO_0_0_procReq__ETC__q3,
+	       CASE_m_tlb_m_entryVec_1_BITS_1_TO_0_0_procReq__ETC__q4,
 	       CASE_m_tlb_m_entryVec_20_BITS_1_TO_0_0_procReq_ETC__q23,
 	       CASE_m_tlb_m_entryVec_21_BITS_1_TO_0_0_procReq_ETC__q24,
 	       CASE_m_tlb_m_entryVec_22_BITS_1_TO_0_0_procReq_ETC__q25,
@@ -2771,10 +2771,14 @@ module mkDTlbSynth(CLK,
 	     WILL_FIRE_RL_m_doPoisonedProcResp && idx__h105839 == 2'd3 ;
   assign MUX_m_pendValid_3_dummy2_0$write_1__SEL_2 =
 	     EN_deqProcResp && idx__h124884 == 2'd3 ;
-  assign MUX_m_pendWait_0$write_1__SEL_1 = EN_procReq && _dfoo63 ;
-  assign MUX_m_pendWait_1$write_1__SEL_1 = EN_procReq && _dfoo61 ;
-  assign MUX_m_pendWait_2$write_1__SEL_1 = EN_procReq && _dfoo59 ;
-  assign MUX_m_pendWait_3$write_1__SEL_1 = EN_procReq && _dfoo57 ;
+  assign MUX_m_pendWait_0$write_1__SEL_1 =
+	     WILL_FIRE_RL_m_doPRs && idx__h68669 == 2'd0 ;
+  assign MUX_m_pendWait_1$write_1__SEL_1 =
+	     WILL_FIRE_RL_m_doPRs && idx__h68669 == 2'd1 ;
+  assign MUX_m_pendWait_2$write_1__SEL_1 =
+	     WILL_FIRE_RL_m_doPRs && idx__h68669 == 2'd2 ;
+  assign MUX_m_pendWait_3$write_1__SEL_1 =
+	     WILL_FIRE_RL_m_doPRs && idx__h68669 == 2'd3 ;
   assign MUX_m_tlb_m_updRepIdx_dummy2_1$write_1__SEL_1 =
 	     WILL_FIRE_RL_m_doPRs &&
 	     !SEL_ARR_m_pendPoisoned_0_12_m_pendPoisoned_1_1_ETC___d717 &&
@@ -2921,25 +2925,25 @@ module mkDTlbSynth(CLK,
 	       (SEL_ARR_m_freeQ_data_0_079_m_freeQ_data_1_080__ETC___d2949 ?
 		  DONTCARE_CONCAT_1_CONCAT_IF_NOT_procReq_req_BI_ETC___d2951 :
 		  { procReq_req[76:13], 5'd10 }) ;
-  assign MUX_m_pendWait_0$write_1__VAL_1 =
+  assign MUX_m_pendWait_0$write_1__VAL_2 =
 	     SEL_ARR_m_freeQ_data_0_079_m_freeQ_data_1_080__ETC___d2898 ?
 	       4'd2 :
 	       (SEL_ARR_m_freeQ_data_0_079_m_freeQ_data_1_080__ETC___d2946 ?
 		  4'd2 :
 		  _dfoo32) ;
-  assign MUX_m_pendWait_1$write_1__VAL_1 =
+  assign MUX_m_pendWait_1$write_1__VAL_2 =
 	     SEL_ARR_m_freeQ_data_0_079_m_freeQ_data_1_080__ETC___d2899 ?
 	       4'd2 :
 	       (SEL_ARR_m_freeQ_data_0_079_m_freeQ_data_1_080__ETC___d2947 ?
 		  4'd2 :
 		  _dfoo30) ;
-  assign MUX_m_pendWait_2$write_1__VAL_1 =
+  assign MUX_m_pendWait_2$write_1__VAL_2 =
 	     SEL_ARR_m_freeQ_data_0_079_m_freeQ_data_1_080__ETC___d2900 ?
 	       4'd2 :
 	       (SEL_ARR_m_freeQ_data_0_079_m_freeQ_data_1_080__ETC___d2948 ?
 		  4'd2 :
 		  _dfoo28) ;
-  assign MUX_m_pendWait_3$write_1__VAL_1 =
+  assign MUX_m_pendWait_3$write_1__VAL_2 =
 	     SEL_ARR_m_freeQ_data_0_079_m_freeQ_data_1_080__ETC___d2901 ?
 	       4'd2 :
 	       (SEL_ARR_m_freeQ_data_0_079_m_freeQ_data_1_080__ETC___d2949 ?
@@ -3345,38 +3349,38 @@ module mkDTlbSynth(CLK,
   // register m_pendWait_0
   assign m_pendWait_0$D_IN =
 	     MUX_m_pendWait_0$write_1__SEL_1 ?
-	       MUX_m_pendWait_0$write_1__VAL_1 :
-	       4'd2 ;
+	       4'd2 :
+	       MUX_m_pendWait_0$write_1__VAL_2 ;
   assign m_pendWait_0$EN =
-	     EN_procReq && _dfoo63 ||
-	     WILL_FIRE_RL_m_doPRs && idx__h68669 == 2'd0 ;
+	     WILL_FIRE_RL_m_doPRs && idx__h68669 == 2'd0 ||
+	     EN_procReq && _dfoo63 ;
 
   // register m_pendWait_1
   assign m_pendWait_1$D_IN =
 	     MUX_m_pendWait_1$write_1__SEL_1 ?
-	       MUX_m_pendWait_1$write_1__VAL_1 :
-	       4'd2 ;
+	       4'd2 :
+	       MUX_m_pendWait_1$write_1__VAL_2 ;
   assign m_pendWait_1$EN =
-	     EN_procReq && _dfoo61 ||
-	     WILL_FIRE_RL_m_doPRs && idx__h68669 == 2'd1 ;
+	     WILL_FIRE_RL_m_doPRs && idx__h68669 == 2'd1 ||
+	     EN_procReq && _dfoo61 ;
 
   // register m_pendWait_2
   assign m_pendWait_2$D_IN =
 	     MUX_m_pendWait_2$write_1__SEL_1 ?
-	       MUX_m_pendWait_2$write_1__VAL_1 :
-	       4'd2 ;
+	       4'd2 :
+	       MUX_m_pendWait_2$write_1__VAL_2 ;
   assign m_pendWait_2$EN =
-	     EN_procReq && _dfoo59 ||
-	     WILL_FIRE_RL_m_doPRs && idx__h68669 == 2'd2 ;
+	     WILL_FIRE_RL_m_doPRs && idx__h68669 == 2'd2 ||
+	     EN_procReq && _dfoo59 ;
 
   // register m_pendWait_3
   assign m_pendWait_3$D_IN =
 	     MUX_m_pendWait_3$write_1__SEL_1 ?
-	       MUX_m_pendWait_3$write_1__VAL_1 :
-	       4'd2 ;
+	       4'd2 :
+	       MUX_m_pendWait_3$write_1__VAL_2 ;
   assign m_pendWait_3$EN =
-	     EN_procReq && _dfoo57 ||
-	     WILL_FIRE_RL_m_doPRs && idx__h68669 == 2'd3 ;
+	     WILL_FIRE_RL_m_doPRs && idx__h68669 == 2'd3 ||
+	     EN_procReq && _dfoo57 ;
 
   // register m_perfReqQ_clearReq_rl
   assign m_perfReqQ_clearReq_rl$D_IN = 1'd0 ;
@@ -5162,7 +5166,7 @@ module mkDTlbSynth(CLK,
 	     CASE_m_tlb_m_entryVec_19_BITS_1_TO_0_0_procReq_ETC__q22 ==
 	     m_tlb_m_entryVec_19[79:53] ;
   assign IF_m_tlb_m_entryVec_1_62_BITS_1_TO_0_66_EQ_0_1_ETC___d2119 =
-	     CASE_m_tlb_m_entryVec_1_BITS_1_TO_0_0_procReq__ETC__q3 ==
+	     CASE_m_tlb_m_entryVec_1_BITS_1_TO_0_0_procReq__ETC__q4 ==
 	     m_tlb_m_entryVec_1[79:53] ;
   assign IF_m_tlb_m_entryVec_20_166_BITS_1_TO_0_170_EQ__ETC___d2309 =
 	     CASE_m_tlb_m_entryVec_20_BITS_1_TO_0_0_procReq_ETC__q23 ==
@@ -5756,7 +5760,7 @@ module mkDTlbSynth(CLK,
 	     !m_tlb_m_updRepIdx_rl[5] ;
   assign NOT_m_tlb_m_validVec_0_34_35_OR_NOT_IF_m_tlb_m_ETC___d2112 =
 	     !m_tlb_m_validVec_0 ||
-	     CASE_m_tlb_m_entryVec_0_BITS_1_TO_0_0_procReq__ETC__q4 !=
+	     CASE_m_tlb_m_entryVec_0_BITS_1_TO_0_0_procReq__ETC__q3 !=
 	     m_tlb_m_entryVec_0[79:53] ;
   assign NOT_m_tlb_m_validVec_0_34_35_OR_NOT_IF_m_tlb_m_ETC___d2132 =
 	     NOT_m_tlb_m_validVec_0_34_35_OR_NOT_IF_m_tlb_m_ETC___d2112 &&
@@ -6727,6 +6731,18 @@ module mkDTlbSynth(CLK,
   begin
     case (m_ldTransRsFromPQ_deqP)
       1'd0:
+	  SEL_ARR_m_ldTransRsFromPQ_data_0_00_BIT_6_62_m_ETC___d765 =
+	      m_ldTransRsFromPQ_data_0[6];
+      1'd1:
+	  SEL_ARR_m_ldTransRsFromPQ_data_0_00_BIT_6_62_m_ETC___d765 =
+	      m_ldTransRsFromPQ_data_1[6];
+    endcase
+  end
+  always@(m_ldTransRsFromPQ_deqP or
+	  m_ldTransRsFromPQ_data_0 or m_ldTransRsFromPQ_data_1)
+  begin
+    case (m_ldTransRsFromPQ_deqP)
+      1'd0:
 	  SEL_ARR_m_ldTransRsFromPQ_data_0_00_BITS_1_TO__ETC___d705 =
 	      m_ldTransRsFromPQ_data_0[1:0];
       1'd1:
@@ -6809,18 +6825,6 @@ module mkDTlbSynth(CLK,
   begin
     case (m_ldTransRsFromPQ_deqP)
       1'd0:
-	  SEL_ARR_m_ldTransRsFromPQ_data_0_00_BIT_6_62_m_ETC___d765 =
-	      m_ldTransRsFromPQ_data_0[6];
-      1'd1:
-	  SEL_ARR_m_ldTransRsFromPQ_data_0_00_BIT_6_62_m_ETC___d765 =
-	      m_ldTransRsFromPQ_data_1[6];
-    endcase
-  end
-  always@(m_ldTransRsFromPQ_deqP or
-	  m_ldTransRsFromPQ_data_0 or m_ldTransRsFromPQ_data_1)
-  begin
-    case (m_ldTransRsFromPQ_deqP)
-      1'd0:
 	  SEL_ARR_m_ldTransRsFromPQ_data_0_00_BITS_54_TO_ETC___d791 =
 	      m_ldTransRsFromPQ_data_0[54:11];
       1'd1:
@@ -6889,18 +6893,6 @@ module mkDTlbSynth(CLK,
   begin
     case (m_ldTransRsFromPQ_deqP)
       1'd0:
-	  SEL_ARR_NOT_m_ldTransRsFromPQ_data_0_00_BIT_10_ETC___d743 =
-	      !m_ldTransRsFromPQ_data_0[10];
-      1'd1:
-	  SEL_ARR_NOT_m_ldTransRsFromPQ_data_0_00_BIT_10_ETC___d743 =
-	      !m_ldTransRsFromPQ_data_1[10];
-    endcase
-  end
-  always@(m_ldTransRsFromPQ_deqP or
-	  m_ldTransRsFromPQ_data_0 or m_ldTransRsFromPQ_data_1)
-  begin
-    case (m_ldTransRsFromPQ_deqP)
-      1'd0:
 	  SEL_ARR_NOT_m_ldTransRsFromPQ_data_0_00_BIT_9__ETC___d750 =
 	      !m_ldTransRsFromPQ_data_0[9];
       1'd1:
@@ -6918,6 +6910,18 @@ module mkDTlbSynth(CLK,
       1'd1:
 	  SEL_ARR_m_ldTransRsFromPQ_data_0_00_BITS_81_TO_ETC___d842 =
 	      m_ldTransRsFromPQ_data_1[81:55];
+    endcase
+  end
+  always@(m_ldTransRsFromPQ_deqP or
+	  m_ldTransRsFromPQ_data_0 or m_ldTransRsFromPQ_data_1)
+  begin
+    case (m_ldTransRsFromPQ_deqP)
+      1'd0:
+	  SEL_ARR_NOT_m_ldTransRsFromPQ_data_0_00_BIT_10_ETC___d743 =
+	      !m_ldTransRsFromPQ_data_0[10];
+      1'd1:
+	  SEL_ARR_NOT_m_ldTransRsFromPQ_data_0_00_BIT_10_ETC___d743 =
+	      !m_ldTransRsFromPQ_data_1[10];
     endcase
   end
   always@(m_ldTransRsFromPQ_deqP or
@@ -7059,34 +7063,34 @@ module mkDTlbSynth(CLK,
 	      m_pendWait_3[3:2] == 2'd0;
     endcase
   end
-  always@(m_tlb_m_entryVec_1 or procReq_req)
-  begin
-    case (m_tlb_m_entryVec_1[1:0])
-      2'd0:
-	  CASE_m_tlb_m_entryVec_1_BITS_1_TO_0_0_procReq__ETC__q3 =
-	      procReq_req[51:25];
-      2'd1:
-	  CASE_m_tlb_m_entryVec_1_BITS_1_TO_0_0_procReq__ETC__q3 =
-	      { procReq_req[51:34], 9'd0 };
-      2'd2:
-	  CASE_m_tlb_m_entryVec_1_BITS_1_TO_0_0_procReq__ETC__q3 =
-	      { procReq_req[51:43], 18'd0 };
-      2'd3: CASE_m_tlb_m_entryVec_1_BITS_1_TO_0_0_procReq__ETC__q3 = 27'd0;
-    endcase
-  end
   always@(m_tlb_m_entryVec_0 or procReq_req)
   begin
     case (m_tlb_m_entryVec_0[1:0])
       2'd0:
-	  CASE_m_tlb_m_entryVec_0_BITS_1_TO_0_0_procReq__ETC__q4 =
+	  CASE_m_tlb_m_entryVec_0_BITS_1_TO_0_0_procReq__ETC__q3 =
 	      procReq_req[51:25];
       2'd1:
-	  CASE_m_tlb_m_entryVec_0_BITS_1_TO_0_0_procReq__ETC__q4 =
+	  CASE_m_tlb_m_entryVec_0_BITS_1_TO_0_0_procReq__ETC__q3 =
 	      { procReq_req[51:34], 9'd0 };
       2'd2:
-	  CASE_m_tlb_m_entryVec_0_BITS_1_TO_0_0_procReq__ETC__q4 =
+	  CASE_m_tlb_m_entryVec_0_BITS_1_TO_0_0_procReq__ETC__q3 =
 	      { procReq_req[51:43], 18'd0 };
-      2'd3: CASE_m_tlb_m_entryVec_0_BITS_1_TO_0_0_procReq__ETC__q4 = 27'd0;
+      2'd3: CASE_m_tlb_m_entryVec_0_BITS_1_TO_0_0_procReq__ETC__q3 = 27'd0;
+    endcase
+  end
+  always@(m_tlb_m_entryVec_1 or procReq_req)
+  begin
+    case (m_tlb_m_entryVec_1[1:0])
+      2'd0:
+	  CASE_m_tlb_m_entryVec_1_BITS_1_TO_0_0_procReq__ETC__q4 =
+	      procReq_req[51:25];
+      2'd1:
+	  CASE_m_tlb_m_entryVec_1_BITS_1_TO_0_0_procReq__ETC__q4 =
+	      { procReq_req[51:34], 9'd0 };
+      2'd2:
+	  CASE_m_tlb_m_entryVec_1_BITS_1_TO_0_0_procReq__ETC__q4 =
+	      { procReq_req[51:43], 18'd0 };
+      2'd3: CASE_m_tlb_m_entryVec_1_BITS_1_TO_0_0_procReq__ETC__q4 = 27'd0;
     endcase
   end
   always@(m_tlb_m_entryVec_2 or procReq_req)
@@ -8799,31 +8803,6 @@ module mkDTlbSynth(CLK,
   begin
     case (idx__h124884)
       2'd0:
-	  SEL_ARR_IF_m_pendResp_0_021_BITS_3_TO_0_050_EQ_ETC___d3211 =
-	      IF_m_pendResp_0_021_BITS_3_TO_0_050_EQ_0_051_O_ETC___d3076 ==
-	      4'd8;
-      2'd1:
-	  SEL_ARR_IF_m_pendResp_0_021_BITS_3_TO_0_050_EQ_ETC___d3211 =
-	      IF_m_pendResp_1_023_BITS_3_TO_0_078_EQ_0_079_O_ETC___d3104 ==
-	      4'd8;
-      2'd2:
-	  SEL_ARR_IF_m_pendResp_0_021_BITS_3_TO_0_050_EQ_ETC___d3211 =
-	      IF_m_pendResp_2_025_BITS_3_TO_0_106_EQ_0_107_O_ETC___d3132 ==
-	      4'd8;
-      2'd3:
-	  SEL_ARR_IF_m_pendResp_0_021_BITS_3_TO_0_050_EQ_ETC___d3211 =
-	      IF_m_pendResp_3_027_BITS_3_TO_0_134_EQ_0_135_O_ETC___d3160 ==
-	      4'd8;
-    endcase
-  end
-  always@(idx__h124884 or
-	  IF_m_pendResp_0_021_BITS_3_TO_0_050_EQ_0_051_O_ETC___d3076 or
-	  IF_m_pendResp_1_023_BITS_3_TO_0_078_EQ_0_079_O_ETC___d3104 or
-	  IF_m_pendResp_2_025_BITS_3_TO_0_106_EQ_0_107_O_ETC___d3132 or
-	  IF_m_pendResp_3_027_BITS_3_TO_0_134_EQ_0_135_O_ETC___d3160)
-  begin
-    case (idx__h124884)
-      2'd0:
 	  SEL_ARR_IF_m_pendResp_0_021_BITS_3_TO_0_050_EQ_ETC___d3205 =
 	      IF_m_pendResp_0_021_BITS_3_TO_0_050_EQ_0_051_O_ETC___d3076 ==
 	      4'd7;
@@ -8849,21 +8828,21 @@ module mkDTlbSynth(CLK,
   begin
     case (idx__h124884)
       2'd0:
-	  SEL_ARR_IF_m_pendResp_0_021_BITS_3_TO_0_050_EQ_ETC___d3199 =
+	  SEL_ARR_IF_m_pendResp_0_021_BITS_3_TO_0_050_EQ_ETC___d3211 =
 	      IF_m_pendResp_0_021_BITS_3_TO_0_050_EQ_0_051_O_ETC___d3076 ==
-	      4'd6;
+	      4'd8;
       2'd1:
-	  SEL_ARR_IF_m_pendResp_0_021_BITS_3_TO_0_050_EQ_ETC___d3199 =
+	  SEL_ARR_IF_m_pendResp_0_021_BITS_3_TO_0_050_EQ_ETC___d3211 =
 	      IF_m_pendResp_1_023_BITS_3_TO_0_078_EQ_0_079_O_ETC___d3104 ==
-	      4'd6;
+	      4'd8;
       2'd2:
-	  SEL_ARR_IF_m_pendResp_0_021_BITS_3_TO_0_050_EQ_ETC___d3199 =
+	  SEL_ARR_IF_m_pendResp_0_021_BITS_3_TO_0_050_EQ_ETC___d3211 =
 	      IF_m_pendResp_2_025_BITS_3_TO_0_106_EQ_0_107_O_ETC___d3132 ==
-	      4'd6;
+	      4'd8;
       2'd3:
-	  SEL_ARR_IF_m_pendResp_0_021_BITS_3_TO_0_050_EQ_ETC___d3199 =
+	  SEL_ARR_IF_m_pendResp_0_021_BITS_3_TO_0_050_EQ_ETC___d3211 =
 	      IF_m_pendResp_3_027_BITS_3_TO_0_134_EQ_0_135_O_ETC___d3160 ==
-	      4'd6;
+	      4'd8;
     endcase
   end
   always@(idx__h124884 or
@@ -8874,21 +8853,21 @@ module mkDTlbSynth(CLK,
   begin
     case (idx__h124884)
       2'd0:
-	  SEL_ARR_IF_m_pendResp_0_021_BITS_3_TO_0_050_EQ_ETC___d3169 =
+	  SEL_ARR_IF_m_pendResp_0_021_BITS_3_TO_0_050_EQ_ETC___d3199 =
 	      IF_m_pendResp_0_021_BITS_3_TO_0_050_EQ_0_051_O_ETC___d3076 ==
-	      4'd1;
+	      4'd6;
       2'd1:
-	  SEL_ARR_IF_m_pendResp_0_021_BITS_3_TO_0_050_EQ_ETC___d3169 =
+	  SEL_ARR_IF_m_pendResp_0_021_BITS_3_TO_0_050_EQ_ETC___d3199 =
 	      IF_m_pendResp_1_023_BITS_3_TO_0_078_EQ_0_079_O_ETC___d3104 ==
-	      4'd1;
+	      4'd6;
       2'd2:
-	  SEL_ARR_IF_m_pendResp_0_021_BITS_3_TO_0_050_EQ_ETC___d3169 =
+	  SEL_ARR_IF_m_pendResp_0_021_BITS_3_TO_0_050_EQ_ETC___d3199 =
 	      IF_m_pendResp_2_025_BITS_3_TO_0_106_EQ_0_107_O_ETC___d3132 ==
-	      4'd1;
+	      4'd6;
       2'd3:
-	  SEL_ARR_IF_m_pendResp_0_021_BITS_3_TO_0_050_EQ_ETC___d3169 =
+	  SEL_ARR_IF_m_pendResp_0_021_BITS_3_TO_0_050_EQ_ETC___d3199 =
 	      IF_m_pendResp_3_027_BITS_3_TO_0_134_EQ_0_135_O_ETC___d3160 ==
-	      4'd1;
+	      4'd6;
     endcase
   end
   always@(idx__h124884 or
@@ -8989,6 +8968,31 @@ module mkDTlbSynth(CLK,
 	  SEL_ARR_IF_m_pendResp_0_021_BITS_3_TO_0_050_EQ_ETC___d3175 =
 	      IF_m_pendResp_3_027_BITS_3_TO_0_134_EQ_0_135_O_ETC___d3160 ==
 	      4'd2;
+    endcase
+  end
+  always@(idx__h124884 or
+	  IF_m_pendResp_0_021_BITS_3_TO_0_050_EQ_0_051_O_ETC___d3076 or
+	  IF_m_pendResp_1_023_BITS_3_TO_0_078_EQ_0_079_O_ETC___d3104 or
+	  IF_m_pendResp_2_025_BITS_3_TO_0_106_EQ_0_107_O_ETC___d3132 or
+	  IF_m_pendResp_3_027_BITS_3_TO_0_134_EQ_0_135_O_ETC___d3160)
+  begin
+    case (idx__h124884)
+      2'd0:
+	  SEL_ARR_IF_m_pendResp_0_021_BITS_3_TO_0_050_EQ_ETC___d3169 =
+	      IF_m_pendResp_0_021_BITS_3_TO_0_050_EQ_0_051_O_ETC___d3076 ==
+	      4'd1;
+      2'd1:
+	  SEL_ARR_IF_m_pendResp_0_021_BITS_3_TO_0_050_EQ_ETC___d3169 =
+	      IF_m_pendResp_1_023_BITS_3_TO_0_078_EQ_0_079_O_ETC___d3104 ==
+	      4'd1;
+      2'd2:
+	  SEL_ARR_IF_m_pendResp_0_021_BITS_3_TO_0_050_EQ_ETC___d3169 =
+	      IF_m_pendResp_2_025_BITS_3_TO_0_106_EQ_0_107_O_ETC___d3132 ==
+	      4'd1;
+      2'd3:
+	  SEL_ARR_IF_m_pendResp_0_021_BITS_3_TO_0_050_EQ_ETC___d3169 =
+	      IF_m_pendResp_3_027_BITS_3_TO_0_134_EQ_0_135_O_ETC___d3160 ==
+	      4'd1;
     endcase
   end
   always@(idx__h124884 or
@@ -9081,24 +9085,6 @@ module mkDTlbSynth(CLK,
   begin
     case (idx__h124884)
       2'd0:
-	  SEL_ARR_m_pendInst_0_23_BIT_71_302_m_pendInst__ETC___d3307 =
-	      m_pendInst_0[71];
-      2'd1:
-	  SEL_ARR_m_pendInst_0_23_BIT_71_302_m_pendInst__ETC___d3307 =
-	      m_pendInst_1[71];
-      2'd2:
-	  SEL_ARR_m_pendInst_0_23_BIT_71_302_m_pendInst__ETC___d3307 =
-	      m_pendInst_2[71];
-      2'd3:
-	  SEL_ARR_m_pendInst_0_23_BIT_71_302_m_pendInst__ETC___d3307 =
-	      m_pendInst_3[71];
-    endcase
-  end
-  always@(idx__h124884 or
-	  m_pendInst_0 or m_pendInst_1 or m_pendInst_2 or m_pendInst_3)
-  begin
-    case (idx__h124884)
-      2'd0:
 	  SEL_ARR_m_pendInst_0_23_BIT_70_309_m_pendInst__ETC___d3314 =
 	      m_pendInst_0[70];
       2'd1:
@@ -9110,6 +9096,24 @@ module mkDTlbSynth(CLK,
       2'd3:
 	  SEL_ARR_m_pendInst_0_23_BIT_70_309_m_pendInst__ETC___d3314 =
 	      m_pendInst_3[70];
+    endcase
+  end
+  always@(idx__h124884 or
+	  m_pendInst_0 or m_pendInst_1 or m_pendInst_2 or m_pendInst_3)
+  begin
+    case (idx__h124884)
+      2'd0:
+	  SEL_ARR_m_pendInst_0_23_BIT_71_302_m_pendInst__ETC___d3307 =
+	      m_pendInst_0[71];
+      2'd1:
+	  SEL_ARR_m_pendInst_0_23_BIT_71_302_m_pendInst__ETC___d3307 =
+	      m_pendInst_1[71];
+      2'd2:
+	  SEL_ARR_m_pendInst_0_23_BIT_71_302_m_pendInst__ETC___d3307 =
+	      m_pendInst_2[71];
+      2'd3:
+	  SEL_ARR_m_pendInst_0_23_BIT_71_302_m_pendInst__ETC___d3307 =
+	      m_pendInst_3[71];
     endcase
   end
   always@(idx__h124884 or
@@ -9225,24 +9229,6 @@ module mkDTlbSynth(CLK,
   begin
     case (idx__h124884)
       2'd0:
-	  SEL_ARR_m_pendInst_0_23_BIT_90_252_m_pendInst__ETC___d3257 =
-	      m_pendInst_0[90];
-      2'd1:
-	  SEL_ARR_m_pendInst_0_23_BIT_90_252_m_pendInst__ETC___d3257 =
-	      m_pendInst_1[90];
-      2'd2:
-	  SEL_ARR_m_pendInst_0_23_BIT_90_252_m_pendInst__ETC___d3257 =
-	      m_pendInst_2[90];
-      2'd3:
-	  SEL_ARR_m_pendInst_0_23_BIT_90_252_m_pendInst__ETC___d3257 =
-	      m_pendInst_3[90];
-    endcase
-  end
-  always@(idx__h124884 or
-	  m_pendInst_0 or m_pendInst_1 or m_pendInst_2 or m_pendInst_3)
-  begin
-    case (idx__h124884)
-      2'd0:
 	  SEL_ARR_m_pendInst_0_23_BITS_89_TO_85_258_m_pe_ETC___d3263 =
 	      m_pendInst_0[89:85];
       2'd1:
@@ -9254,6 +9240,24 @@ module mkDTlbSynth(CLK,
       2'd3:
 	  SEL_ARR_m_pendInst_0_23_BITS_89_TO_85_258_m_pe_ETC___d3263 =
 	      m_pendInst_3[89:85];
+    endcase
+  end
+  always@(idx__h124884 or
+	  m_pendInst_0 or m_pendInst_1 or m_pendInst_2 or m_pendInst_3)
+  begin
+    case (idx__h124884)
+      2'd0:
+	  SEL_ARR_m_pendInst_0_23_BIT_90_252_m_pendInst__ETC___d3257 =
+	      m_pendInst_0[90];
+      2'd1:
+	  SEL_ARR_m_pendInst_0_23_BIT_90_252_m_pendInst__ETC___d3257 =
+	      m_pendInst_1[90];
+      2'd2:
+	  SEL_ARR_m_pendInst_0_23_BIT_90_252_m_pendInst__ETC___d3257 =
+	      m_pendInst_2[90];
+      2'd3:
+	  SEL_ARR_m_pendInst_0_23_BIT_90_252_m_pendInst__ETC___d3257 =
+	      m_pendInst_3[90];
     endcase
   end
   always@(idx__h124884 or
@@ -9297,24 +9301,6 @@ module mkDTlbSynth(CLK,
   begin
     case (idx__h124884)
       2'd0:
-	  SEL_ARR_m_pendInst_0_23_BITS_77_TO_73_282_m_pe_ETC___d3287 =
-	      m_pendInst_0[77:73];
-      2'd1:
-	  SEL_ARR_m_pendInst_0_23_BITS_77_TO_73_282_m_pe_ETC___d3287 =
-	      m_pendInst_1[77:73];
-      2'd2:
-	  SEL_ARR_m_pendInst_0_23_BITS_77_TO_73_282_m_pe_ETC___d3287 =
-	      m_pendInst_2[77:73];
-      2'd3:
-	  SEL_ARR_m_pendInst_0_23_BITS_77_TO_73_282_m_pe_ETC___d3287 =
-	      m_pendInst_3[77:73];
-    endcase
-  end
-  always@(idx__h124884 or
-	  m_pendInst_0 or m_pendInst_1 or m_pendInst_2 or m_pendInst_3)
-  begin
-    case (idx__h124884)
-      2'd0:
 	  SEL_ARR_m_pendInst_0_23_BIT_0_349_m_pendInst_1_ETC___d3354 =
 	      m_pendInst_0[0];
       2'd1:
@@ -9326,6 +9312,24 @@ module mkDTlbSynth(CLK,
       2'd3:
 	  SEL_ARR_m_pendInst_0_23_BIT_0_349_m_pendInst_1_ETC___d3354 =
 	      m_pendInst_3[0];
+    endcase
+  end
+  always@(idx__h124884 or
+	  m_pendInst_0 or m_pendInst_1 or m_pendInst_2 or m_pendInst_3)
+  begin
+    case (idx__h124884)
+      2'd0:
+	  SEL_ARR_m_pendInst_0_23_BITS_77_TO_73_282_m_pe_ETC___d3287 =
+	      m_pendInst_0[77:73];
+      2'd1:
+	  SEL_ARR_m_pendInst_0_23_BITS_77_TO_73_282_m_pe_ETC___d3287 =
+	      m_pendInst_1[77:73];
+      2'd2:
+	  SEL_ARR_m_pendInst_0_23_BITS_77_TO_73_282_m_pe_ETC___d3287 =
+	      m_pendInst_2[77:73];
+      2'd3:
+	  SEL_ARR_m_pendInst_0_23_BITS_77_TO_73_282_m_pe_ETC___d3287 =
+	      m_pendInst_3[77:73];
     endcase
   end
   always@(idx__h124884 or

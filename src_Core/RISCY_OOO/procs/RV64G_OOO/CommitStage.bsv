@@ -1,5 +1,6 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
+// Portions Copyright (c) 2019-2020 Bluespec, Inc.
 // 
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
@@ -146,8 +147,7 @@ deriving (Eq, FShow, Bits);
 module mkCommitStage#(CommitInput inIfc)(CommitStage);
     Bool verbose = False;
 
-    // Bluespec: for lightweight verbosity trace
-    Integer verbosity = 1;
+    Integer verbosity = 1;   // Bluespec: for lightweight verbosity trace
     Reg #(Bit #(64)) rg_instret <- mkReg (0);
 
 
@@ -437,7 +437,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 	});
         commitTrap <= commitTrap_val;
 
-        if (verbosity > 0) begin
+        if (verbosity >= 1) begin
 	   $display ("instret:%0d  PC:0x%0h  instr:0x%08h", rg_instret, x.pc, x.orig_inst,
 		     "  iType:", fshow (x.iType), "    [doCommitTrap]");
 	end
@@ -487,6 +487,11 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         if(trap.trap matches tagged Interrupt .inter) begin
             inIfc.commitCsrInstOrInterrupt;
         end
+`ifdef INCLUDE_GDB_CONTROL
+	else if (trap.trap == tagged Exception Breakpoint) begin
+            inIfc.commitCsrInstOrInterrupt;
+	end
+`endif
 
        Bool debugger_halt = False;
 
@@ -518,7 +523,8 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 	     // Go to quiescent state until debugger resumes execution
 	     rg_run_state <= RUN_STATE_DEBUGGER_HALTED;
 
-	     $display ("%0d: %m.commitStage.doCommitTrap_handle; debugger halt:", cur_cycle);
+	     if (verbosity >= 2)
+		$display ("%0d: %m.commitStage.doCommitTrap_handle; debugger halt:", cur_cycle);
 	  end
 `endif
 
@@ -587,7 +593,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         rob.deqPort[0].deq;
         let x = rob.deqPort[0].deq_data;
         if(verbose) $display("[doCommitSystemInst] ", fshow(x));
-        if (verbosity > 0) begin
+        if (verbosity >= 1) begin
 	   $display("instret:%0d  PC:0x%0h  instr:0x%08h", rg_instret, x.pc, x.orig_inst,
 		    "   iType:", fshow (x.iType), "    [doCommitSystemInst]");
 	   rg_instret <= rg_instret + 1;
@@ -752,7 +758,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                 else begin
                     if (verbose) $display("[doCommitNormalInst - %d] ", i, fshow(inst_tag), " ; ", fshow(x));
 
-		    if (verbosity > 0) begin
+		    if (verbosity >= 1) begin
 		       $display("instret:%0d  PC:0x%0h  instr:0x%08h", rg_instret + instret, x.pc, x.orig_inst,
 				"   iType:", fshow (x.iType), "    [doCommitNormalInst [%0d]]", i);
 		       instret = instret + 1;
@@ -912,7 +918,8 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
    method Action debug_resume () if (rg_run_state == RUN_STATE_DEBUGGER_HALTED);
       rg_run_state <= RUN_STATE_RUNNING;
-      $display ("%0d: %m.commitStage.debug_resume", cur_cycle);
+      if (verbosity >= 2)
+	 $display ("%0d: %m.commitStage.debug_resume", cur_cycle);
    endmethod
 `endif
 

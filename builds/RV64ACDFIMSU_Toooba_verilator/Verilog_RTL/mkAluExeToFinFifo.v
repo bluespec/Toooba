@@ -98,7 +98,6 @@ module mkAluExeToFinFifo(CLK,
        RDY_specUpdate_incorrectSpeculation;
 
   // inlined wires
-  wire [11 : 0] m_m_specBits_0_lat_1$wget;
   wire m_m_valid_0_lat_1$whas;
 
   // register m_m_row_0
@@ -163,9 +162,7 @@ module mkAluExeToFinFifo(CLK,
 		IF_m_m_specBits_0_lat_0_whas__0_THEN_m_m_specB_ETC___d13,
 		sb__h6835,
 		upd__h2327;
-  wire IF_m_m_valid_0_lat_0_whas_THEN_m_m_valid_0_lat_ETC___d6,
-       _dand1m_m_valid_0_dummy2_1$EN_write,
-       _dand1m_m_valid_0_lat_1$EN_wset;
+  wire IF_m_m_valid_0_lat_0_whas_THEN_m_m_valid_0_lat_ETC___d6;
 
   // action method enq
   assign RDY_enq = !m_m_valid_0_dummy2_1$Q_OUT || EN_deq || !m_m_valid_0_rl ;
@@ -249,9 +246,8 @@ module mkAluExeToFinFifo(CLK,
 	      IF_m_m_specBits_0_dummy2_0_read__7_AND_m_m_spe_ETC___d60[specUpdate_incorrectSpeculation_kill_tag]) ;
 
   // inlined wires
-  assign m_m_valid_0_lat_1$whas = _dand1m_m_valid_0_lat_1$EN_wset || EN_enq ;
-  assign m_m_specBits_0_lat_1$wget =
-	     sb__h6835 & specUpdate_correctSpeculation_mask ;
+  assign m_m_valid_0_lat_1$whas =
+	     MUX_m_m_valid_0_dummy2_1$write_1__SEL_1 || EN_enq ;
 
   // register m_m_row_0
   assign m_m_row_0$D_IN = enq_x[326:12] ;
@@ -294,7 +290,7 @@ module mkAluExeToFinFifo(CLK,
   // submodule m_m_valid_0_dummy2_1
   assign m_m_valid_0_dummy2_1$D_IN = 1'd1 ;
   assign m_m_valid_0_dummy2_1$EN =
-	     _dand1m_m_valid_0_dummy2_1$EN_write || EN_enq ;
+	     MUX_m_m_valid_0_dummy2_1$write_1__SEL_1 || EN_enq ;
 
   // remaining internal signals
   assign IF_m_m_specBits_0_dummy2_0_read__7_AND_m_m_spe_ETC___d60 =
@@ -306,19 +302,11 @@ module mkAluExeToFinFifo(CLK,
 	     EN_enq ? enq_x[11:0] : m_m_specBits_0_rl ;
   assign IF_m_m_valid_0_lat_0_whas_THEN_m_m_valid_0_lat_ETC___d6 =
 	     !EN_deq && m_m_valid_0_rl ;
-  assign _dand1m_m_valid_0_dummy2_1$EN_write =
-	     EN_specUpdate_incorrectSpeculation &&
-	     (specUpdate_incorrectSpeculation_kill_all ||
-	      IF_m_m_specBits_0_dummy2_0_read__7_AND_m_m_spe_ETC___d60[specUpdate_incorrectSpeculation_kill_tag]) ;
-  assign _dand1m_m_valid_0_lat_1$EN_wset =
-	     EN_specUpdate_incorrectSpeculation &&
-	     (specUpdate_incorrectSpeculation_kill_all ||
-	      IF_m_m_specBits_0_dummy2_0_read__7_AND_m_m_spe_ETC___d60[specUpdate_incorrectSpeculation_kill_tag]) ;
   assign sb__h6835 =
 	     m_m_specBits_0_dummy2_1$Q_OUT ?
 	       IF_m_m_specBits_0_lat_0_whas__0_THEN_m_m_specB_ETC___d13 :
 	       12'd0 ;
-  assign upd__h2327 = m_m_specBits_0_lat_1$wget ;
+  assign upd__h2327 = sb__h6835 & specUpdate_correctSpeculation_mask ;
 
   // handling of inlined registers
 

@@ -8,10 +8,8 @@
 // connected to the AXI4_Master of the Debug Module.
 // This axi4_slave accepts and responds to both read and write transactions.
 
-// Modifications Copyright (c) 2020 Bluespec, Inc.
-
-// Original copyright:
 // Copyright (c) 2017 Massachusetts Institute of Technology
+// Portions Copyright (c) 2019-2020 Bluespec, Inc.
 // 
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation

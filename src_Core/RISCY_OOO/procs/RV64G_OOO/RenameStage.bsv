@@ -1,5 +1,6 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
+// Portions Copyright (c) 2019-2020 Bluespec, Inc.
 // 
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
@@ -97,6 +98,7 @@ endinterface
 
 module mkRenameStage#(RenameInput inIfc)(RenameStage);
     Bool verbose = False;
+    Integer verbosity = 0;
 
     // func units
     FetchStage fetchStage = inIfc.fetchIfc;
@@ -174,7 +176,8 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
       action
 	 if (csrf.dcsr_step_bit == 1'b1) begin
 	    rg_m_halt_req <= tagged Valid DebugStep;
-	    $display ("%0d: %m.renameStage.fa_step_check: rg_m_halt_req <= tagged Valid DebugStep", cur_cycle);
+	    if (verbosity >= 2)
+	       $display ("%0d: %m.renameStage.fa_step_check: rg_m_halt_req <= tagged Valid DebugStep", cur_cycle);
 	 end
       endaction
    endfunction
@@ -313,10 +316,14 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
 `ifdef INCLUDE_GDB_CONTROL
         fa_step_check;
 
-       if (firstTrap == tagged Valid (tagged Interrupt DebugHalt))
-	  $display ("%0d: %m.renameStage.doRenaming_Trap: DebugHalt", cur_cycle);
-       else if (firstTrap == tagged Valid (tagged Interrupt DebugStep))
-	  $display ("%0d: %m.renameStage.doRenaming_Trap: DebugStep", cur_cycle);
+       if (verbosity >= 1) begin
+	  if (firstTrap == tagged Valid (tagged Interrupt DebugHalt))
+	     $display ("%0d: %m.renameStage.doRenaming_Trap: DebugHalt", cur_cycle);
+	  else if (firstTrap == tagged Valid (tagged Interrupt DebugStep))
+	     $display ("%0d: %m.renameStage.doRenaming_Trap: DebugStep", cur_cycle);
+	  else if (firstTrap == tagged Valid (tagged Exception Breakpoint))
+	     $display ("%0d: %m.renameStage.doRenaming_Trap: Breakpoint", cur_cycle);
+       end
 `endif
         let x = fetchStage.pipelines[0].first;
         let pc = x.pc;
@@ -364,6 +371,12 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         if(firstTrap matches tagged Valid (tagged Interrupt .i)) begin
             inIfc.issueCsrInstOrInterrupt;
         end
+`ifdef INCLUDE_GDB_CONTROL
+        else if (firstTrap == tagged Valid (tagged Exception Breakpoint)) begin
+            inIfc.issueCsrInstOrInterrupt;
+	end
+`endif
+
 `ifdef CHECK_DEADLOCK
         renameCorrectPath.send;
 `endif
@@ -1107,12 +1120,14 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
 `ifdef INCLUDE_GDB_CONTROL
    method Action debug_halt_req () if (rg_m_halt_req == tagged Invalid);
       rg_m_halt_req <= tagged Valid DebugHalt;
-      $display ("%0d: %m.renameStage.renameStage.debug_halt_req", cur_cycle);
+      if (verbosity >= 1)
+	 $display ("%0d: %m.renameStage.renameStage.debug_halt_req", cur_cycle);
    endmethod
 
-   method Action debug_resume () if (rg_m_halt_req != tagged Invalid);
+   method Action debug_resume;
       rg_m_halt_req <= tagged Invalid;
-      $display ("%0d: %m.renameStage.renameStage.debug_resume", cur_cycle);
+      if (verbosity >= 1)
+	 $display ("%0d: %m.renameStage.renameStage.debug_resume", cur_cycle);
    endmethod
 `endif
 
