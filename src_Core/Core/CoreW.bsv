@@ -66,6 +66,18 @@ import TV_Taps  :: *;
 import DM_CPU_Req_Rsp ::*;
 
 // ================================================================
+// EXTERNAL_DEBUG_MODULE is used in situations where we DO NOTt have a
+// Debug Module controlling the CPU.  In that case, the CPU is
+// 'halted' by asserting the reset signal, during which the external
+// debugger can read/write memory etc.
+
+// EXTERNAL_DEBUG_MODULE and INCLUDE_GDB_CONTROL should never both be defined.
+
+`ifdef EXTERNAL_DEBUG_MODULE
+`undef INCLUDE_GDB_CONTROL
+`endif
+
+// ================================================================
 // The Core module
 
 (* synthesize *)
