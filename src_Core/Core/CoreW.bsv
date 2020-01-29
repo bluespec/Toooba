@@ -1,8 +1,21 @@
-// Copyright (c) 2018-2019 Bluespec, Inc. All Rights Reserved.
+// Copyright (c) 2018-2020 Bluespec, Inc. All Rights Reserved.
 
 package CoreW;
 
 // ================================================================
+// This package is called 'CoreW' for 'Core Wrapper'
+// and corresponds to 'Core' in Piccolo and Flute.
+//
+// Here in Toooba, we use the name 'CoreW' to avoid a name-clash with
+// an inner module called 'Core' in MIT's RISCY-OOO.
+//
+// The specific correspondence with Piccolo/Flute structure is:
+//    Piccolo/Flute    Toooba
+//      mkCore         mkCoreW
+//                     mkProc
+//      mkCPU          mkCore
+
+
 // This package defines:
 //     Core_IFC
 //     mkCore #(Core_IFC)
@@ -19,12 +32,12 @@ package CoreW;
 // ================================================================
 // BSV library imports
 
-import Vector        :: *;
-import FIFOF         :: *;
-import GetPut        :: *;
-import ClientServer  :: *;
-import Connectable   :: *;
-import Clocks        :: *;
+import Vector       :: *;
+import FIFOF        :: *;
+import GetPut       :: *;
+import ClientServer :: *;
+import Connectable  :: *;
+import Clocks       :: *;
 
 // ----------------
 // BSV additional libs
@@ -34,6 +47,13 @@ import GetPut_Aux :: *;
 
 // ================================================================
 // Project imports
+
+// ----------------
+// From RISCY-ooo
+import ProcTypes    :: *;
+
+// ----------------
+// From Toooba
 
 // Main fabric
 import AXI4_Types   :: *;
@@ -52,8 +72,10 @@ import Proc_IFC     :: *;
 import Proc         :: *;
 
 `ifdef INCLUDE_TANDEM_VERIF
-import TV_Info    :: *;
-import TV_Encode  :: *;
+import TV_Info                   :: *;
+import Trace_Data2               :: *;
+import TV_Encode                 :: *;
+import Trace_Data2_to_Trace_Data :: *;
 `endif
 
 // TV_Taps needed when both GDB_CONTROL and TANDEM_VERIF are present
@@ -66,7 +88,7 @@ import TV_Taps  :: *;
 import DM_CPU_Req_Rsp ::*;
 
 // ================================================================
-// EXTERNAL_DEBUG_MODULE is used in situations where we DO NOTt have a
+// EXTERNAL_DEBUG_MODULE is used in situations where we DO NOT have a
 // Debug Module controlling the CPU.  In that case, the CPU is
 // 'halted' by asserting the reset signal, during which the external
 // debugger can read/write memory etc.
@@ -96,12 +118,8 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
    // System address map
    SoC_Map_IFC  soc_map  <- mkSoC_Map;
 
-   // McStriiv processor
-`ifdef EXTERNAL_DEBUG_MODULE
-   Proc_IFC proc <- mkProc(reset_by cpu_reset_either);
-`else
+   // RISCY-OOO processor
    Proc_IFC proc <- mkProc;
-`endif
 
    // A 2x3 fabric for connecting {CPU, Debug_Module} to {Fabric, PLIC}
    Fabric_2x3_IFC  fabric_2x3 <- mkFabric_2x3;
@@ -113,15 +131,19 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
    FIFOF #(Bit #(0)) f_reset_reqs <- mkFIFOF;
    FIFOF #(Bit #(0)) f_reset_rsps <- mkFIFOF;
 
-`ifdef INCLUDE_TANDEM_VERIF
-   // The TV encoder transforms Trace_Data structures produced by the CPU and DM
-   // into encoded byte vectors for transmission to the Tandem Verifier
-   TV_Encode_IFC tv_encode <- mkTV_Encode;
-`endif
-
 `ifdef INCLUDE_GDB_CONTROL
    // Debug Module
    Debug_Module_IFC  debug_module <- mkDebug_Module;
+`endif
+
+`ifdef INCLUDE_TANDEM_VERIF
+   // The following are a superscalar-wide set of transformers from RISCY-OOO output Trace_Data2
+   // to Trace_Data which is input to the TV encoder
+   Vector #(SupSize, Trace_Data2_to_Trace_Data_IFC) v_td2_to_td <- replicateM (mkTrace_Data2_to_Trace_Data);
+
+   // The TV encoder transforms Trace_Data structures from the CPU and DM
+   // into encoded byte vectors for transmission to the Tandem Verifier
+   TV_Encode_IFC tv_encode <- mkTV_Encode;
 `endif
 
    // HTIF locations (for debugging only)
@@ -148,25 +170,21 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
    rule rl_cpu_hart0_reset_from_soc_start;
       let req <- pop (f_reset_reqs);
 
-`ifdef EXTERNAL_DEBUG_MODULE
-      cpu_reset.assertReset;
-`else
       proc.hart0_server_reset.request.put (?);     // CPU
-`endif
       plic.server_reset.request.put (?);           // PLIC
       fabric_2x3.reset;                            // Local 2x3 Fabric
+`ifdef INCLUDE_TANDEM_VERIF
+      tv_encode.reset;
+`endif
 
 `ifdef INCLUDE_GDB_CONTROL
-`ifndef EXTERNAL_DEBUG_MODULE
       // Remember the requestor, so we can respond to it
       f_reset_requestor.enq (reset_requestor_soc);
-`endif
 `endif
       $display ("%0d: Core.rl_cpu_hart0_reset_from_soc_start", cur_cycle);
    endrule
 
 `ifdef INCLUDE_GDB_CONTROL
-`ifndef EXTERNAL_DEBUG_MODULE
    // Reset-hart0 from Debug Module
    rule rl_cpu_hart0_reset_from_dm_start;
       let req <- debug_module.hart0_get_reset_req.get;
@@ -174,20 +192,18 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
       proc.hart0_server_reset.request.put (?);     // CPU
       plic.server_reset.request.put (?);           // PLIC
       fabric_2x3.reset;                            // Local 2x3 fabric
+`ifdef INCLUDE_TANDEM_VERIF
+      tv_encode.reset;
+`endif
 
       // Remember the requestor, so we can respond to it
       f_reset_requestor.enq (reset_requestor_dm);
       $display ("%0d: Core.rl_cpu_hart0_reset_from_dm_start", cur_cycle);
    endrule
 `endif
-`endif
 
-`ifdef EXTERNAL_DEBUG_MODULE
-   rule rl_cpu_hart0_reset_complete(!cpu_reset.isAsserted);
-`else
    rule rl_cpu_hart0_reset_complete;
       let rsp1 <- proc.hart0_server_reset.response.get;     // CPU
-`endif
       let rsp3 <- plic.server_reset.response.get;           // PLIC
 
       plic.set_addr_map (zeroExtend (soc_map.m_plic_addr_base),
@@ -195,145 +211,65 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
 
       Bit #(1) requestor = reset_requestor_soc;
 `ifdef INCLUDE_GDB_CONTROL
-`ifndef EXTERNAL_DEBUG_MODULE
       requestor <- pop (f_reset_requestor);
-`endif
 `endif
       if (requestor == reset_requestor_soc)
 	 f_reset_rsps.enq (?);
 
-`ifndef EXTERNAL_DEBUG_MODULE
       // Start running the cores
       proc.start (soc_map_struct.pc_reset_value,
 		  rg_tohost_addr,
 		  rg_fromhost_addr);
-`endif
 
       $display ("%0d: Core.rl_cpu_hart0_reset_complete; started running proc", cur_cycle);
    endrule
 
-   // ================================================================
-   // Direct DM-to-CPU connections
-
 `ifdef INCLUDE_GDB_CONTROL
-`ifndef EXTERNAL_DEBUG_MODULE
-   // DM to CPU connections for run-control and other misc requests
+   // ================================================================
+   // Direct DM-to-CPU connections for run-control and other misc requests
+
    mkConnection (debug_module.hart0_client_run_halt, proc.hart0_run_halt_server);
    mkConnection (debug_module.hart0_get_other_req,   proc.hart0_put_other_req);
 `endif
-`endif
 
-   // external debug module connections
-`ifdef INCLUDE_GDB_CONTROL
-`ifdef EXTERNAL_DEBUG_MODULE
-
-   Reg#(Bool) once <- mkReg(False, reset_by cpu_reset_either);
-
-   rule rl_once(!once && !cpu_reset.isAsserted && !cpu_halt.isAsserted);
-      proc.hart0_server_reset.request.put(?);
-      once <= True;
-   endrule
-
-   rule rl_hart0_server_reset;
-      let tmp <- proc.hart0_server_reset.response.get;
-
-      proc.start (soc_map_struct.pc_reset_value,
-		  rg_tohost_addr,
-		  rg_fromhost_addr);
-   endrule
-
-   rule rl_hart0_run_halt_server;
-      let tmp <- proc.hart0_run_halt_server.response.get;
-   endrule
-
-   Reg#(Bool) hart0_halt <- mkReg(False);
-
-   rule rl_halt_reset(hart0_halt);
-      cpu_halt.assertReset;
-   endrule
-
-   rule rl_halt;
-      let halt <- debug_module.hart0_client_run_halt.request.get;
-      hart0_halt <= !halt;
-      debug_module.hart0_client_run_halt.response.put(halt);
-   endrule
-
-   rule rl_gpr;
-      let req <- debug_module.hart0_gpr_mem_client.request.get;
-      debug_module.hart0_gpr_mem_client.response.put(DM_CPU_Rsp { ok: True, data: 0 });
-   endrule
-
-`ifdef ISA_F
-   rule rl_fpr;
-      let req <- debug_module.hart0_fpr_mem_client.request.get;
-      debug_module.hart0_fpr_mem_client.response.put(DM_CPU_Rsp { ok: True, data: 0 });
-   endrule
-`endif
-
-   rule rl_csr;
-      let req <- debug_module.hart0_csr_mem_client.request.get;
-      debug_module.hart0_csr_mem_client.response.put(DM_CPU_Rsp { ok: True, data: 0 });
-   endrule
-
-   rule rl_cpu_hart0_reset_from_dm_start;
-      let req <- debug_module.hart0_get_reset_req.get;
-      cpu_reset.assertReset;
-      f_reset_requestor.enq (reset_requestor_dm);
-   endrule
-
-   rule rl_cpu_hart0_reset_from_dm_complete (f_reset_requestor.first == reset_requestor_dm && !cpu_reset.isAsserted);
-      f_reset_requestor.deq;
-   endrule
-
-`endif
-`endif
-
+`ifdef INCLUDE_TANDEM_VERIF
    // ================================================================
-   // Other CPU/DM/TV connections
-   // (depends on whether DM, TV or both are present)
+   // Direct CPU-to-TV connections for TV trace data
+
+   for (Integer j = 0; j < valueOf (SupSize); j = j + 1) begin
+      // CPU Trace_Data2 output streams to Trace_Data2_to_Trace_Data converters
+      mkConnection (proc.v_to_TV [j], v_td2_to_td [j].in);
+      // Trace_Data2_to_Trace_Data converters to TV encoder
+      mkConnection (v_td2_to_td [j].out, tv_encode.v_cpu_in [j]);
+   end
+`endif
 
 `ifdef INCLUDE_GDB_CONTROL
 `ifdef INCLUDE_TANDEM_VERIF
-   // BEGIN SECTION: GDB and TV
-   // ----------------------------------------------------------------
-   // DM and TV both present. We instantiate 'taps' into connections
-   // where the DM writes CPU GPRs, CPU FPRs, CPU CSRs, and main memory,
-   // in order to produce corresponding writes for the Tandem Verifier.
-   // Then, we merge the Trace_Data from these three taps with the
-   // Trace_Data produced by the PROC.
-
-   FIFOF #(Trace_Data) f_trace_data_merged <- mkFIFOF;
-
-   // Connect merged trace data to trace encoder
-   mkConnection (toGet (f_trace_data_merged), tv_encode.trace_data_in);
-
-   // Merge-in CPU's trace data.
-   // This is equivalent to:  mkConnection (proc.trace_data_out, toPut (f_trace_data_merged))
-   // but using a rule allows us to name it in scheduling attributes.
-   rule merge_cpu_trace_data;
-      let tmp <- proc.trace_data_out.get;
-      f_trace_data_merged.enq (tmp);
-   endrule
+   // ================================================================
+   // BEGIN SECTION: DM and TV both present
+   // We instantiate 'taps' into connections where DM writes CPU GPRs,
+   // FPRs, CSRs, and main memory.  The tap outputs go the TV encoder,
+   // to keep the tandem verifier in sync with DM updates to the CPU.
 
    // Create a tap for DM's memory-writes to the bus, and merge-in the trace data.
    DM_Mem_Tap_IFC dm_mem_tap <- mkDM_Mem_Tap;
    mkConnection (debug_module.master, dm_mem_tap.slave);
    let dm_master_local = dm_mem_tap.master;
 
-   rule merge_dm_mem_trace_data;
+   rule rl_merge_dm_mem_trace_data;
       let tmp <- dm_mem_tap.trace_data_out.get;
-      f_trace_data_merged.enq (tmp);
+      tv_encode.dm_in.put (tmp);
    endrule
 
-`ifndef EXTERNAL_DEBUG_MODULE
    // Create a tap for DM's GPR writes to the CPU, and merge-in the trace data.
    DM_GPR_Tap_IFC  dm_gpr_tap_ifc <- mkDM_GPR_Tap;
    mkConnection (debug_module.hart0_gpr_mem_client, dm_gpr_tap_ifc.server);
    mkConnection (dm_gpr_tap_ifc.client, proc.hart0_gpr_mem_server);
 
-   rule merge_dm_gpr_trace_data;
+   rule rl_merge_dm_gpr_trace_data;
       let tmp <- dm_gpr_tap_ifc.trace_data_out.get;
-      f_trace_data_merged.enq (tmp);
+      tv_encode.dm_in.put (tmp);
    endrule
 
 `ifdef ISA_F_OR_D
@@ -342,9 +278,9 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
    mkConnection (debug_module.hart0_fpr_mem_client, dm_fpr_tap_ifc.server);
    mkConnection (dm_fpr_tap_ifc.client, proc.hart0_fpr_mem_server);
 
-   rule merge_dm_fpr_trace_data;
+   rule rl_merge_dm_fpr_trace_data;
       let tmp <- dm_fpr_tap_ifc.trace_data_out.get;
-      f_trace_data_merged.enq (tmp);
+      tv_encode.dm_in.put (tmp);
    endrule
 `endif
    // for ifdef ISA_F_OR_D
@@ -354,25 +290,25 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
    mkConnection(debug_module.hart0_csr_mem_client, dm_csr_tap.server);
    mkConnection(dm_csr_tap.client, proc.hart0_csr_mem_server);
 
-`ifdef ISA_F_OR_D
-   (* descending_urgency = "merge_dm_fpr_trace_data, merge_dm_gpr_trace_data" *)
-`endif
-   (* descending_urgency = "merge_dm_gpr_trace_data, merge_dm_csr_trace_data" *)
-   (* descending_urgency = "merge_dm_csr_trace_data, merge_dm_mem_trace_data" *)
-   (* descending_urgency = "merge_dm_mem_trace_data, merge_cpu_trace_data"    *)
-   rule merge_dm_csr_trace_data;
+   rule rl_merge_dm_csr_trace_data;
       let tmp <- dm_csr_tap.trace_data_out.get;
-      f_trace_data_merged.enq(tmp);
+      tv_encode.dm_in.put(tmp);
    endrule
+
+`ifdef ISA_F_OR_D
+   (* descending_urgency = "rl_merge_dm_fpr_trace_data, rl_merge_dm_gpr_trace_data" *)
 `endif
+   (* descending_urgency = "rl_merge_dm_gpr_trace_data, rl_merge_dm_csr_trace_data" *)
+   (* descending_urgency = "rl_merge_dm_csr_trace_data, rl_merge_dm_mem_trace_data" *)
+   rule rl_bogus_for_sched_attributes;
+   endrule
 
-   // END SECTION: GDB and TV
-`else
-   // for ifdef INCLUDE_TANDEM_VERIF
-   // ----------------------------------------------------------------
-   // BEGIN SECTION: GDB and no TV
+   // END SECTION: DM and TV
+   // ================================================================
+`else    // of ifdef INCLUDE_TANDEM_VERIF
+   // ================================================================
+   // BEGIN SECTION: DM, no TV
 
-`ifndef EXTERNAL_DEBUG_MODULE
    // Connect DM's GPR interface directly to CPU
    mkConnection (debug_module.hart0_gpr_mem_client, proc.hart0_gpr_mem_server);
 
@@ -383,33 +319,24 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
 
    // Connect DM's CSR interface directly to CPU
    mkConnection (debug_module.hart0_csr_mem_client, proc.hart0_csr_mem_server);
-`endif
 
    // DM's bus master is directly the bus master
    let dm_master_local = debug_module.master;
 
-   // END SECTION: GDB and no TV
-`endif
-   // for ifdef INCLUDE_TANDEM_VERIF
+   // END SECTION: DM, no TV
+   // ================================================================
+`endif    // for ifdef INCLUDE_TANDEM_VERIF
+   // ================================================================
+`else    // for ifdef INCLUDE_GDB_CONTROL
+   // ================================================================
+   // BEGIN SECTION: no DM
 
-`else
-   // for ifdef INCLUDE_GDB_CONTROL
-   // BEGIN SECTION: no GDB
-
-   // No DM, so 'DM bus master' is dummy
+   // No DM, so 'DM bus master' is AXI4 dummy
    AXI4_Master_IFC #(Wd_Id, Wd_Addr, Wd_Data, Wd_User)
    dm_master_local = dummy_AXI4_Master_ifc;
 
-`ifdef INCLUDE_TANDEM_VERIF
-   // ----------------------------------------------------------------
-   // BEGIN SECTION: no GDB, TV
+`endif    // for ifdef INCLUDE_GDB_CONTROL
 
-   // Connect CPU's TV out directly to TV encoder
-   mkConnection (proc.trace_data_out, tv_encode.trace_data_in);
-   // END SECTION: no GDB, TV
-`endif
-`endif
-   // for ifdef INCLUDE_GDB_CONTROL
 
    // ================================================================
    // Connect the local 2x3 fabric
@@ -419,9 +346,10 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
    mkConnection (dm_master_local, fabric_2x3.v_from_masters [debug_module_sba_master_num]);
 
    // Slaves on the local 2x3 fabric
-   // default slave is taken out directly to the Core interface
-   mkConnection (fabric_2x3.v_to_slaves [plic_slave_num],        plic.axi4_slave);
-   mkConnection (fabric_2x3.v_to_slaves [near_mem_io_slave_num], proc.debug_module_mem_server);
+   // Two of the slaves are connected here.
+   // The third slave (default slave) is taken out directly to the Core interface
+   mkConnection (fabric_2x3.v_to_slaves [plic_slave_num], plic.axi4_slave);
+   mkConnection (fabric_2x3.v_to_slaves [llc_slave_num],  proc.debug_module_mem_server);
 
    // ================================================================
    // Connect external interrupt lines from PLIC to CPU
@@ -485,22 +413,10 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
       proc.debug_external_interrupt_req (set_not_clear);
    endmethod
 
-   // ----------------------------------------------------------------
-   // Optional TV interface
-
-`ifdef INCLUDE_TANDEM_VERIF
-   interface Get tv_verifier_info_get;
-      method ActionValue #(Info_CPU_to_Verifier) get();
-         match { .n, .v } <- tv_encode.tv_vb_out.get;
-         return (Info_CPU_to_Verifier { num_bytes: n, vec_bytes: v });
-      endmethod
-   endinterface
-`endif
-
+`ifdef INCLUDE_GDB_CONTROL
    // ----------------------------------------------------------------
    // Optional DM interfaces
 
-`ifdef INCLUDE_GDB_CONTROL
    // ----------------
    // DMI (Debug Module Interface) facing remote debugger
 
@@ -511,6 +427,18 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
 
    // Non-Debug-Module Reset (reset all except DM)
    interface Get  dm_ndm_reset_req_get = debug_module.get_ndm_reset_req;
+`endif
+
+`ifdef INCLUDE_TANDEM_VERIF
+   // ----------------------------------------------------------------
+   // Optional TV interface
+
+   interface Get tv_verifier_info_get;
+      method ActionValue #(Info_CPU_to_Verifier) get();
+         match { .n, .v } <- tv_encode.out.get;
+         return (Info_CPU_to_Verifier { num_bytes: n, vec_bytes: v });
+      endmethod
+   endinterface
 `endif
 
 endmodule: mkCoreW
@@ -536,12 +464,9 @@ typedef 3  Num_Slaves_2x3;
 
 typedef Bit #(TLog #(Num_Slaves_2x3))  Slave_Num_2x3;
 
-Slave_Num_2x3  default_slave_num     = 0;
-Slave_Num_2x3  plic_slave_num        = 1;
-
-// TODO: repurpose this for Debug Module System Bus Access to connect to mkLLCDramConnect
-Slave_Num_2x3  near_mem_io_slave_num = 2;
-
+Slave_Num_2x3  default_slave_num = 0;    // for I/O, uncached memory, etc.
+Slave_Num_2x3  plic_slave_num    = 1;    // PLIC mem-mapped registers
+Slave_Num_2x3  llc_slave_num     = 2;    // Normal cached memory (connects to coherent Last-Level Cache)
 
 // ----------------
 // Specialization of parameterized AXI4 fabric for 2x3 Core fabric
@@ -568,7 +493,7 @@ module mkFabric_2x3 (Fabric_2x3_IFC);
    function Tuple2 #(Bool, Slave_Num_2x3) fn_addr_to_slave_num_2x3  (Fabric_Addr addr);
       if (   (soc_map.m_mem0_controller_addr_base <= addr)
 	  && (addr < soc_map.m_mem0_controller_addr_lim))
-	 return tuple2 (True, near_mem_io_slave_num);
+	 return tuple2 (True, llc_slave_num);
 
       else if (   (soc_map.m_plic_addr_base <= addr)
 	       && (addr < soc_map.m_plic_addr_lim))

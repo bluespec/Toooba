@@ -23,8 +23,6 @@ package Proc;
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// Portions Copyright (c) 2019 Bluespec, Inc.
-
 // ================================================================
 // BSV lib imports
 
@@ -78,12 +76,13 @@ import SoC_Map      :: *;
 import AXI4_Types   :: *;
 import Fabric_Defs  :: *;
 
-`ifdef INCLUDE_TANDEM_VERIF
-import TV_Info  :: *;
-`endif
-
 `ifdef INCLUDE_GDB_CONTROL
 import DM_CPU_Req_Rsp  :: *;
+`endif
+
+`ifdef INCLUDE_TANDEM_VERIF
+import ProcTypes   :: *;
+import Trace_Data2 :: *;
 `endif
 
 // ================================================================
@@ -109,13 +108,6 @@ module mkProc (Proc_IFC);
 
    FIFOF #(Bit #(0))  f_reset_reqs <- mkFIFOF;
    FIFOF #(Bit #(0))  f_reset_rsps <- mkFIFOF;
-
-   // ----------------
-   // Tandem Verification    (TODO: to be implemented)
-
-`ifdef INCLUDE_TANDEM_VERIF
-   FIFOF #(Trace_Data) f_trace_data  <- mkFIFOF;
-`endif
 
    // ----------------
    // MMIO
@@ -310,13 +302,6 @@ module mkProc (Proc_IFC);
    endmethod
 
    // ----------------
-   // Optional interface to Tandem Verifier
-
-`ifdef INCLUDE_TANDEM_VERIF
-   interface Get  trace_data_out = toGet (f_trace_data);
-`endif
-
-   // ----------------
    // Coherent port into LLC (used by Debug Module, DMA engines, ... to read/write memory)
 
    interface  debug_module_mem_server = llc_mem_server;
@@ -339,6 +324,10 @@ module mkProc (Proc_IFC);
 	 cfg_verbosity <= req;
       endmethod
    endinterface
+`endif
+
+`ifdef INCLUDE_TANDEM_VERIF
+   interface v_to_TV = core [0].v_to_TV;
 `endif
 
 endmodule: mkProc

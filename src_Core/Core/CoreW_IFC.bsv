@@ -32,12 +32,14 @@ import Fabric_Defs  :: *;
 // External interrupt request interface
 import PLIC  :: *;
 
-`ifdef INCLUDE_TANDEM_VERIF
-import TV_Info  :: *;
-`endif
-
 `ifdef INCLUDE_GDB_CONTROL
 import Debug_Module  :: *;
+`endif
+
+`ifdef INCLUDE_TANDEM_VERIF
+import ProcTypes   :: *;
+import Trace_Data2 :: *;
+import TV_Info     :: *;
 `endif
 
 // ================================================================
@@ -77,19 +79,10 @@ interface CoreW_IFC #(numeric type t_n_interrupt_sources);
    (* always_ready, always_enabled *)
    method Action  debug_external_interrupt_req (Bool set_not_clear);
 
-   // ----------------------------------------------------------------
-   // Optional Tandem Verifier interface output tuples (n,vb),
-   // where 'vb' is a vector of bytes
-   // with relevant bytes in locations [0]..[n-1]
-
-`ifdef INCLUDE_TANDEM_VERIF
-   interface Get #(Info_CPU_to_Verifier)  tv_verifier_info_get;
-`endif
-
+`ifdef INCLUDE_GDB_CONTROL
    // ----------------------------------------------------------------
    // Optional Debug Module interfaces
 
-`ifdef INCLUDE_GDB_CONTROL
    // ----------------
    // DMI (Debug Module Interface) facing remote debugger
 
@@ -101,6 +94,16 @@ interface CoreW_IFC #(numeric type t_n_interrupt_sources);
 
    interface Get #(Bit #(0)) dm_ndm_reset_req_get;
 `endif
+
+`ifdef INCLUDE_TANDEM_VERIF
+   // ----------------------------------------------------------------
+   // Optional Tandem Verifier interface output tuples (n,vb),
+   // where 'vb' is a vector of bytes
+   // with relevant bytes in locations [0]..[n-1]
+
+   interface Get #(Info_CPU_to_Verifier)  tv_verifier_info_get;
+`endif
+
 endinterface
 
 // ================================================================

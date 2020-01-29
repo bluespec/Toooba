@@ -42,6 +42,10 @@ import RenameDebugIF::*;
 
 import Cur_Cycle :: *;
 
+`ifdef INCLUDE_TANDEM_VERIF
+import Trace_Data2 :: *;
+`endif
+
 typedef struct {
     // info about the inst blocking at ROB head
     Addr pc;
@@ -99,6 +103,10 @@ interface CommitInput;
     method Bool doStats;
     // deadlock check
     method Bool checkDeadlock;
+
+`ifdef INCLUDE_TANDEM_VERIF
+    interface Vector #(SupSize, Put #(Trace_Data2)) v_to_TV;
+`endif
 endinterface
 
 typedef struct {
@@ -148,11 +156,33 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
     Bool verbose = False;
 
     Integer verbosity = 1;   // Bluespec: for lightweight verbosity trace
-    Reg #(Bit #(64)) rg_instret <- mkReg (0);
+
+    // Used to inform tandem-verifier about program order.
+    // TODO: we could use fewer bits and allow and recognize wraparound.
+    Reg #(Bit #(64)) rg_serialnum <- mkReg (0);
 
 
 `ifdef INCLUDE_GDB_CONTROL
    Reg #(Run_State) rg_run_state   <- mkReg (RUN_STATE_RUNNING);
+`endif
+
+`ifdef INCLUDE_TANDEM_VERIF
+   function Action fa_to_TV (Bit #(64) serialnum, ToReorderBuffer  deq_data, Integer way);
+      action
+	 let x = Trace_Data2 {serialnum:            serialnum,
+			      pc:                   deq_data.pc,
+			      orig_inst:            deq_data.orig_inst,
+			      iType:                deq_data.iType,
+			      csr:                  deq_data.csr,
+			      trap:                 deq_data.trap,
+			      tval:                 deq_data.tval,
+			      ppc_vaddr_csrData:    deq_data.ppc_vaddr_csrData,
+			      fflags:               deq_data.fflags,
+			      will_dirty_fpu_state: deq_data.will_dirty_fpu_state};
+	 inIfc.v_to_TV [way].put (x);
+      endaction
+   endfunction
+
 `endif
 
     // func units
@@ -437,8 +467,12 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 	});
         commitTrap <= commitTrap_val;
 
+`ifdef INCLUDE_TANDEM_VERIF
+        fa_to_TV (rg_serialnum, x, 0);
+`endif
+
         if (verbosity >= 1) begin
-	   $display ("instret:%0d  PC:0x%0h  instr:0x%08h", rg_instret, x.pc, x.orig_inst,
+	   $display ("instret:%0d  PC:0x%0h  instr:0x%08h", rg_serialnum, x.pc, x.orig_inst,
 		     "  iType:", fshow (x.iType), "    [doCommitTrap]");
 	end
         if (verbose) begin
@@ -592,11 +626,16 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
     );
         rob.deqPort[0].deq;
         let x = rob.deqPort[0].deq_data;
+
+`ifdef INCLUDE_TANDEM_VERIF
+        fa_to_TV (rg_serialnum, x, 0);
+`endif
+
         if(verbose) $display("[doCommitSystemInst] ", fshow(x));
         if (verbosity >= 1) begin
-	   $display("instret:%0d  PC:0x%0h  instr:0x%08h", rg_instret, x.pc, x.orig_inst,
+	   $display("instret:%0d  PC:0x%0h  instr:0x%08h", rg_serialnum, x.pc, x.orig_inst,
 		    "   iType:", fshow (x.iType), "    [doCommitSystemInst]");
-	   rg_instret <= rg_instret + 1;
+	   rg_serialnum <= rg_serialnum + 1;
 	end
 
         // we claim a phy reg for every inst, so commit its renaming
@@ -756,10 +795,14 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                     stop = True;
                 end
                 else begin
+`ifdef INCLUDE_TANDEM_VERIF
+		    fa_to_TV (rg_serialnum + instret, x, i);
+`endif
+
                     if (verbose) $display("[doCommitNormalInst - %d] ", i, fshow(inst_tag), " ; ", fshow(x));
 
 		    if (verbosity >= 1) begin
-		       $display("instret:%0d  PC:0x%0h  instr:0x%08h", rg_instret + instret, x.pc, x.orig_inst,
+		       $display("instret:%0d  PC:0x%0h  instr:0x%08h", rg_serialnum + instret, x.pc, x.orig_inst,
 				"   iType:", fshow (x.iType), "    [doCommitNormalInst [%0d]]", i);
 		       instret = instret + 1;
 		    end
@@ -815,7 +858,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                 end
             end
         end
-        rg_instret <= rg_instret + instret;
+        rg_serialnum <= rg_serialnum + instret;
 
         // write FPU csr
         if(csrf.fpuInstNeedWr(fflags, will_dirty_fpu_state)) begin

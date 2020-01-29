@@ -22,8 +22,6 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// Portions Copyright (c) Bluespec, Inc.
-
 `include "ProcConfig.bsv"
 
 import Vector::*;
@@ -94,6 +92,10 @@ import GetPut_Aux :: *;
 
 `ifdef INCLUDE_GDB_CONTROL
 import DM_CPU_Req_Rsp  :: *;
+`endif
+
+`ifdef INCLUDE_TANDEM_VERIF
+import Trace_Data2 :: *;
 `endif
 
 // ================================================================
@@ -167,6 +169,16 @@ interface Core;
 `endif
    interface Server #(DM_CPU_Req #(12, 64), DM_CPU_Rsp #(64)) hart0_csr_mem_server;
 `endif
+
+`ifdef INCLUDE_TANDEM_VERIF
+   // Note: this is a SupSize vector of streams of Trace_Data2 structs,
+   // each of which has a serialnum field.  Each of the SupSize
+   // streams has serialnums in increasing order.  Each serialnum
+   // appears exactly once in exactly one of the streams. Thus, the
+   // channels can easily be merged into a single program-order stream.
+   interface Vector #(SupSize, Get #(Trace_Data2)) v_to_TV;
+`endif
+
 endinterface
 
 // fixpoint to instantiate modules
@@ -203,6 +215,10 @@ module mkCore#(CoreId coreId)(Core);
 `ifdef INCLUDE_GDB_CONTROL
     // Using a ConfigReg since scheduling of reads/writes not critical (TODO: verify this)
     Reg #(Core_Run_State) rg_core_run_state <- mkConfigReg (CORE_RUNNING);
+`endif
+
+`ifdef INCLUDE_TANDEM_VERIF
+   Vector #(SupSize, FIFOF #(Trace_Data2)) v_f_to_TV <- replicateM (mkFIFOF);
 `endif
 
     // front end
@@ -581,6 +597,11 @@ module mkCore#(CoreId coreId)(Core);
             return False;
 `endif
         endmethod
+
+`ifdef INCLUDE_TANDEM_VERIF
+       interface v_to_TV = map (toPut, v_f_to_TV);
+`endif
+
     endinterface);
     CommitStage commitStage <- mkCommitStage(commitInput);
 
@@ -1340,6 +1361,10 @@ module mkCore#(CoreId coreId)(Core);
    interface Server  hart0_fpr_mem_server  = toGPServer (f_fpr_reqs, f_fpr_rsps);
 `endif
    interface Server  hart0_csr_mem_server  = toGPServer (f_csr_reqs, f_csr_rsps);
+`endif
+
+`ifdef INCLUDE_TANDEM_VERIF
+   interface v_to_TV = map (toGet, v_f_to_TV);
 `endif
 
 endmodule
