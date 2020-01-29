@@ -131,6 +131,10 @@ interface SoC_Map_IFC;
    (* always_ready *)   method  Fabric_Addr  m_ddr4_0_cached_addr_size;
    (* always_ready *)   method  Fabric_Addr  m_ddr4_0_cached_addr_lim;
 
+   (* always_ready *)   method  Fabric_Addr  m_mem0_controller_addr_base;
+   (* always_ready *)   method  Fabric_Addr  m_mem0_controller_addr_size;
+   (* always_ready *)   method  Fabric_Addr  m_mem0_controller_addr_lim;
+
    (* always_ready *)
    method  Bool  m_is_mem_addr (Fabric_Addr addr);
 
@@ -379,6 +383,10 @@ module mkSoC_Map (SoC_Map_IFC);
    method  Fabric_Addr  m_ddr4_0_cached_addr_base = ddr4_0_cached_addr_base;
    method  Fabric_Addr  m_ddr4_0_cached_addr_size = ddr4_0_cached_addr_size;
    method  Fabric_Addr  m_ddr4_0_cached_addr_lim  = ddr4_0_cached_addr_lim;
+
+   method  Fabric_Addr  m_mem0_controller_addr_base = ddr4_0_cached_addr_base;
+   method  Fabric_Addr  m_mem0_controller_addr_size = ddr4_0_cached_addr_size;
+   method  Fabric_Addr  m_mem0_controller_addr_lim  = ddr4_0_cached_addr_lim;
 
    method  Bool  m_is_mem_addr (Fabric_Addr addr) = fn_is_mem_addr (addr);
 

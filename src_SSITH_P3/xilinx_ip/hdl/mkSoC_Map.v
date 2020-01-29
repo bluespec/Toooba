@@ -36,6 +36,9 @@
 // m_ddr4_0_cached_addr_base      O    64 const
 // m_ddr4_0_cached_addr_size      O    64 const
 // m_ddr4_0_cached_addr_lim       O    64 const
+// m_mem0_controller_addr_base    O    64 const
+// m_mem0_controller_addr_size    O    64 const
+// m_mem0_controller_addr_lim     O    64 const
 // m_is_mem_addr                  O     1
 // m_is_IO_addr                   O     1
 // m_is_near_mem_IO_addr          O     1
@@ -130,6 +133,12 @@ module mkSoC_Map(CLK,
 		 m_ddr4_0_cached_addr_size,
 
 		 m_ddr4_0_cached_addr_lim,
+
+		 m_mem0_controller_addr_base,
+
+		 m_mem0_controller_addr_size,
+
+		 m_mem0_controller_addr_lim,
 
 		 m_is_mem_addr_addr,
 		 m_is_mem_addr,
@@ -238,6 +247,15 @@ module mkSoC_Map(CLK,
   // value method m_ddr4_0_cached_addr_lim
   output [63 : 0] m_ddr4_0_cached_addr_lim;
 
+  // value method m_mem0_controller_addr_base
+  output [63 : 0] m_mem0_controller_addr_base;
+
+  // value method m_mem0_controller_addr_size
+  output [63 : 0] m_mem0_controller_addr_size;
+
+  // value method m_mem0_controller_addr_lim
+  output [63 : 0] m_mem0_controller_addr_lim;
+
   // value method m_is_mem_addr
   input  [63 : 0] m_is_mem_addr_addr;
   output m_is_mem_addr;
@@ -281,6 +299,9 @@ module mkSoC_Map(CLK,
 		m_gpio_0_addr_base,
 		m_gpio_0_addr_lim,
 		m_gpio_0_addr_size,
+		m_mem0_controller_addr_base,
+		m_mem0_controller_addr_lim,
+		m_mem0_controller_addr_size,
 		m_mtvec_reset_value,
 		m_near_mem_io_addr_base,
 		m_near_mem_io_addr_lim,
@@ -387,6 +408,15 @@ module mkSoC_Map(CLK,
 
   // value method m_ddr4_0_cached_addr_lim
   assign m_ddr4_0_cached_addr_lim = 64'h0000000100000000 ;
+
+  // value method m_mem0_controller_addr_base
+  assign m_mem0_controller_addr_base = 64'h00000000C0000000 ;
+
+  // value method m_mem0_controller_addr_size
+  assign m_mem0_controller_addr_size = 64'h0000000040000000 ;
+
+  // value method m_mem0_controller_addr_lim
+  assign m_mem0_controller_addr_lim = 64'h0000000100000000 ;
 
   // value method m_is_mem_addr
   assign m_is_mem_addr =

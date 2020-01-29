@@ -481,20 +481,20 @@ module mkRobRowSynth(CLK,
 	      CASE_write_enq_x_BITS_165_TO_162_0_write_enq_x_ETC__q5,
 	      CASE_write_enq_x_BITS_165_TO_162_0_write_enq_x_ETC__q6;
   reg [1 : 0] CASE_write_enq_x_BITS_97_TO_96_0_write_enq_x_B_ETC__q7;
-  wire [186 : 0] m_iType_54_CONCAT_m_csr_55_BIT_12_56_CONCAT_IF_ETC___d636;
-  wire [168 : 0] m_claimed_phy_reg_32_CONCAT_m_trap_dummy2_0_re_ETC___d635;
-  wire [65 : 0] IF_NOT_m_ppc_vaddr_csrData_dummy2_0_read__93_9_ETC___d580;
-  wire [63 : 0] IF_m_ppc_vaddr_csrData_dummy2_0_read__93_AND_m_ETC___d308,
-		IF_m_ppc_vaddr_csrData_lat_1_whas__75_THEN_m_p_ETC___d207,
-		IF_m_ppc_vaddr_csrData_lat_3_whas__67_THEN_m_p_ETC___d209,
-		x__h26533;
-  wire [11 : 0] IF_m_spec_bits_lat_1_whas__85_THEN_m_spec_bits_ETC___d291,
-		bs__h32492,
-		sb__h32527,
-		upd__h17952;
-  wire [4 : 0] IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d154,
-	       x_read_deq_fflags__h25726;
-  wire [3 : 0] IF_IF_m_trap_lat_2_whas_THEN_NOT_m_trap_lat_2__ETC___d153,
+  wire [186 : 0] m_iType_68_CONCAT_m_csr_69_BIT_12_70_CONCAT_IF_ETC___d659;
+  wire [168 : 0] m_claimed_phy_reg_54_CONCAT_m_trap_dummy2_0_re_ETC___d658;
+  wire [65 : 0] IF_NOT_m_ppc_vaddr_csrData_dummy2_0_read__01_0_ETC___d603;
+  wire [63 : 0] IF_m_ppc_vaddr_csrData_dummy2_0_read__01_AND_m_ETC___d316,
+		IF_m_ppc_vaddr_csrData_lat_1_whas__83_THEN_m_p_ETC___d215,
+		IF_m_ppc_vaddr_csrData_lat_3_whas__75_THEN_m_p_ETC___d217,
+		x__h26342;
+  wire [11 : 0] IF_m_spec_bits_lat_1_whas__93_THEN_m_spec_bits_ETC___d299,
+		bs__h31901,
+		sb__h31936,
+		upd__h17978;
+  wire [4 : 0] IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d162,
+	       x_read_deq_fflags__h25495;
+  wire [3 : 0] IF_IF_m_trap_lat_2_whas_THEN_NOT_m_trap_lat_2__ETC___d161,
 	       IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d131,
 	       IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d132,
 	       IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d134,
@@ -503,18 +503,19 @@ module mkRobRowSynth(CLK,
 	       IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d139,
 	       IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d141,
 	       IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d143,
-	       IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d146,
-	       IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d148,
-	       IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d150,
-	       IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d152;
-  wire [1 : 0] IF_m_ldKilled_lat_1_whas__37_THEN_m_ldKilled_l_ETC___d256;
-  wire IF_m_ldKilled_lat_1_whas__37_THEN_m_ldKilled_l_ETC___d246,
-       IF_m_memAccessAtCommit_lat_1_whas__61_THEN_m_m_ETC___d267,
-       IF_m_ppc_vaddr_csrData_lat_1_whas__75_THEN_m_p_ETC___d187,
-       IF_m_ppc_vaddr_csrData_lat_1_whas__75_THEN_m_p_ETC___d196,
-       IF_m_ppc_vaddr_csrData_lat_3_whas__67_THEN_m_p_ETC___d189,
-       IF_m_ppc_vaddr_csrData_lat_3_whas__67_THEN_m_p_ETC___d198,
-       IF_m_rob_inst_state_lat_3_whas__22_THEN_m_rob__ETC___d234,
+	       IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d151,
+	       IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d153,
+	       IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d155,
+	       IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d157,
+	       IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d159;
+  wire [1 : 0] IF_m_ldKilled_lat_1_whas__45_THEN_m_ldKilled_l_ETC___d264;
+  wire IF_m_ldKilled_lat_1_whas__45_THEN_m_ldKilled_l_ETC___d254,
+       IF_m_memAccessAtCommit_lat_1_whas__69_THEN_m_m_ETC___d275,
+       IF_m_ppc_vaddr_csrData_lat_1_whas__83_THEN_m_p_ETC___d195,
+       IF_m_ppc_vaddr_csrData_lat_1_whas__83_THEN_m_p_ETC___d204,
+       IF_m_ppc_vaddr_csrData_lat_3_whas__75_THEN_m_p_ETC___d197,
+       IF_m_ppc_vaddr_csrData_lat_3_whas__75_THEN_m_p_ETC___d206,
+       IF_m_rob_inst_state_lat_3_whas__30_THEN_m_rob__ETC___d242,
        IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d102,
        IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d109,
        IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d116,
@@ -524,9 +525,8 @@ module mkRobRowSynth(CLK,
        IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d74,
        IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d81,
        IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d95,
-       NOT_m_ppc_vaddr_csrData_dummy2_0_read__93_94_O_ETC___d303,
-       m_rob_inst_state_dummy2_0_read__86_AND_m_rob_i_ETC___d597,
-       m_trap_dummy2_0_read__33_AND_m_trap_dummy2_1_r_ETC___d538;
+       NOT_m_ppc_vaddr_csrData_dummy2_0_read__01_02_O_ETC___d311,
+       m_rob_inst_state_dummy2_0_read__09_AND_m_rob_i_ETC___d620;
 
   // action method write_enq
   assign RDY_write_enq = 1'd1 ;
@@ -537,7 +537,7 @@ module mkRobRowSynth(CLK,
   assign read_deq =
 	     { m_pc,
 	       m_orig_inst,
-	       m_iType_54_CONCAT_m_csr_55_BIT_12_56_CONCAT_IF_ETC___d636 } ;
+	       m_iType_68_CONCAT_m_csr_69_BIT_12_70_CONCAT_IF_ETC___d659 } ;
   assign RDY_read_deq = 1'd1 ;
 
   // action method setLSQAtCommitNotified
@@ -579,9 +579,9 @@ module mkRobRowSynth(CLK,
 
   // value method getOrigPredPC
   assign getOrigPredPC =
-	     (NOT_m_ppc_vaddr_csrData_dummy2_0_read__93_94_O_ETC___d303 ||
+	     (NOT_m_ppc_vaddr_csrData_dummy2_0_read__01_02_O_ETC___d311 ||
 	      m_ppc_vaddr_csrData_rl[65:64] == 2'd0) ?
-	       IF_m_ppc_vaddr_csrData_dummy2_0_read__93_AND_m_ETC___d308 :
+	       IF_m_ppc_vaddr_csrData_dummy2_0_read__01_AND_m_ETC___d316 :
 	       64'd0 ;
   assign RDY_getOrigPredPC = 1'd1 ;
 
@@ -590,7 +590,7 @@ module mkRobRowSynth(CLK,
   assign RDY_getOrig_Inst = 1'd1 ;
 
   // value method dependsOn_wrongSpec
-  assign dependsOn_wrongSpec = bs__h32492[dependsOn_wrongSpec_tag] ;
+  assign dependsOn_wrongSpec = bs__h31901[dependsOn_wrongSpec_tag] ;
   assign RDY_dependsOn_wrongSpec = 1'd1 ;
 
   // action method correctSpeculation
@@ -888,8 +888,8 @@ module mkRobRowSynth(CLK,
 
   // register m_ldKilled_rl
   assign m_ldKilled_rl$D_IN =
-	     { IF_m_ldKilled_lat_1_whas__37_THEN_m_ldKilled_l_ETC___d246,
-	       IF_m_ldKilled_lat_1_whas__37_THEN_m_ldKilled_l_ETC___d256 } ;
+	     { IF_m_ldKilled_lat_1_whas__45_THEN_m_ldKilled_l_ETC___d254,
+	       IF_m_ldKilled_lat_1_whas__45_THEN_m_ldKilled_l_ETC___d264 } ;
   assign m_ldKilled_rl$EN = 1'd1 ;
 
   // register m_lsqAtCommitNotified_rl
@@ -904,7 +904,7 @@ module mkRobRowSynth(CLK,
 
   // register m_memAccessAtCommit_rl
   assign m_memAccessAtCommit_rl$D_IN =
-	     IF_m_memAccessAtCommit_lat_1_whas__61_THEN_m_m_ETC___d267 ;
+	     IF_m_memAccessAtCommit_lat_1_whas__69_THEN_m_m_ETC___d275 ;
   assign m_memAccessAtCommit_rl$EN = 1'd1 ;
 
   // register m_nonMMIOStDone_rl
@@ -925,12 +925,12 @@ module mkRobRowSynth(CLK,
 
   // register m_ppc_vaddr_csrData_rl
   assign m_ppc_vaddr_csrData_rl$D_IN =
-	     { IF_m_ppc_vaddr_csrData_lat_3_whas__67_THEN_m_p_ETC___d189 ?
+	     { IF_m_ppc_vaddr_csrData_lat_3_whas__75_THEN_m_p_ETC___d197 ?
 		 2'd0 :
-		 (IF_m_ppc_vaddr_csrData_lat_3_whas__67_THEN_m_p_ETC___d198 ?
+		 (IF_m_ppc_vaddr_csrData_lat_3_whas__75_THEN_m_p_ETC___d206 ?
 		    2'd1 :
 		    2'd2),
-	       IF_m_ppc_vaddr_csrData_lat_3_whas__67_THEN_m_p_ETC___d209 } ;
+	       IF_m_ppc_vaddr_csrData_lat_3_whas__75_THEN_m_p_ETC___d217 } ;
   assign m_ppc_vaddr_csrData_rl$EN = 1'd1 ;
 
   // register m_rob_inst_state_rl
@@ -938,14 +938,14 @@ module mkRobRowSynth(CLK,
 	     EN_write_enq ?
 	       write_enq_x[25] :
 	       m_rob_inst_state_lat_4$whas ||
-	       IF_m_rob_inst_state_lat_3_whas__22_THEN_m_rob__ETC___d234 ;
+	       IF_m_rob_inst_state_lat_3_whas__30_THEN_m_rob__ETC___d242 ;
   assign m_rob_inst_state_rl$EN = 1'd1 ;
 
   // register m_spec_bits_rl
   assign m_spec_bits_rl$D_IN =
 	     EN_correctSpeculation ?
-	       upd__h17952 :
-	       IF_m_spec_bits_lat_1_whas__85_THEN_m_spec_bits_ETC___d291 ;
+	       upd__h17978 :
+	       IF_m_spec_bits_lat_1_whas__93_THEN_m_spec_bits_ETC___d299 ;
   assign m_spec_bits_rl$EN = 1'd1 ;
 
   // register m_trap_rl
@@ -953,7 +953,7 @@ module mkRobRowSynth(CLK,
 	     { EN_write_enq ?
 		 m_trap_lat_2$wget[5] :
 		 (m_trap_lat_0$whas ? m_trap_lat_0$wget[5] : m_trap_rl[5]),
-	       IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d154 } ;
+	       IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d162 } ;
   assign m_trap_rl$EN = 1'd1 ;
 
   // register m_tval_rl
@@ -1086,12 +1086,14 @@ module mkRobRowSynth(CLK,
   assign m_tval_dummy2_2$EN = EN_write_enq ;
 
   // remaining internal signals
-  assign IF_IF_m_trap_lat_2_whas_THEN_NOT_m_trap_lat_2__ETC___d153 =
+  assign IF_IF_m_trap_lat_2_whas_THEN_NOT_m_trap_lat_2__ETC___d161 =
 	     (EN_write_enq ?
 		!m_trap_lat_2$wget[4] :
 		(m_trap_lat_0$whas ? !m_trap_lat_0$wget[4] : !m_trap_rl[4])) ?
 	       IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d143 :
-	       IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d152 ;
+	       (IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d46 ?
+		  4'd0 :
+		  IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d159) ;
   assign IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d131 =
 	     (EN_write_enq ?
 		m_trap_lat_2$wget[3:0] == 4'd13 :
@@ -1150,108 +1152,114 @@ module mkRobRowSynth(CLK,
 	       (IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d53 ?
 		  4'd1 :
 		  IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d141) ;
-  assign IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d146 =
-	     IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d102 ?
-	       4'd8 :
-	       (IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d109 ?
-		  4'd9 :
-		  (IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d116 ?
-		     4'd11 :
-		     4'd14)) ;
-  assign IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d148 =
-	     IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d81 ?
-	       4'd5 :
-	       (IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d95 ?
-		  4'd7 :
-		  IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d146) ;
-  assign IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d150 =
-	     IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d67 ?
-	       4'd3 :
-	       (IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d74 ?
-		  4'd4 :
-		  IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d148) ;
-  assign IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d152 =
-	     IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d46 ?
-	       4'd0 :
-	       (IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d53 ?
-		  4'd1 :
-		  IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d150) ;
-  assign IF_NOT_m_ppc_vaddr_csrData_dummy2_0_read__93_9_ETC___d580 =
-	     (NOT_m_ppc_vaddr_csrData_dummy2_0_read__93_94_O_ETC___d303 ||
+  assign IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d151 =
+	     (EN_write_enq ?
+		m_trap_lat_2$wget[3:0] == 4'd14 :
+		(m_trap_lat_0$whas ?
+		   m_trap_lat_0$wget[3:0] == 4'd14 :
+		   m_trap_rl[3:0] == 4'd14)) ?
+	       4'd14 :
+	       4'd15 ;
+  assign IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d153 =
+	     IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d109 ?
+	       4'd9 :
+	       (IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d116 ?
+		  4'd11 :
+		  IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d151) ;
+  assign IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d155 =
+	     IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d95 ?
+	       4'd7 :
+	       (IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d102 ?
+		  4'd8 :
+		  IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d153) ;
+  assign IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d157 =
+	     IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d74 ?
+	       4'd4 :
+	       (IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d81 ?
+		  4'd5 :
+		  IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d155) ;
+  assign IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d159 =
+	     IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d53 ?
+	       4'd1 :
+	       (IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d67 ?
+		  4'd3 :
+		  IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d157) ;
+  assign IF_NOT_m_ppc_vaddr_csrData_dummy2_0_read__01_0_ETC___d603 =
+	     (NOT_m_ppc_vaddr_csrData_dummy2_0_read__01_02_O_ETC___d311 ||
 	      m_ppc_vaddr_csrData_rl[65:64] == 2'd0) ?
 	       { 2'd0,
-		 IF_m_ppc_vaddr_csrData_dummy2_0_read__93_AND_m_ETC___d308 } :
+		 IF_m_ppc_vaddr_csrData_dummy2_0_read__01_AND_m_ETC___d316 } :
 	       { (m_ppc_vaddr_csrData_rl[65:64] == 2'd1) ?
 		   m_ppc_vaddr_csrData_rl[65:64] :
 		   2'd2,
 		 m_ppc_vaddr_csrData_rl[63:0] } ;
-  assign IF_m_ldKilled_lat_1_whas__37_THEN_m_ldKilled_l_ETC___d246 =
+  assign IF_m_ldKilled_lat_1_whas__45_THEN_m_ldKilled_l_ETC___d254 =
 	     !EN_write_enq &&
 	     (EN_setExecuted_deqLSQ ?
 		setExecuted_deqLSQ_ld_killed[2] :
 		m_ldKilled_rl[2]) ;
-  assign IF_m_ldKilled_lat_1_whas__37_THEN_m_ldKilled_l_ETC___d256 =
+  assign IF_m_ldKilled_lat_1_whas__45_THEN_m_ldKilled_l_ETC___d264 =
 	     EN_write_enq ?
 	       2'b10 :
 	       (EN_setExecuted_deqLSQ ?
 		  setExecuted_deqLSQ_ld_killed[1:0] :
 		  m_ldKilled_rl[1:0]) ;
-  assign IF_m_memAccessAtCommit_lat_1_whas__61_THEN_m_m_ETC___d267 =
+  assign IF_m_memAccessAtCommit_lat_1_whas__69_THEN_m_m_ETC___d275 =
 	     EN_write_enq ?
 	       write_enq_x[186:182] == 5'd14 :
 	       (EN_setExecuted_doFinishMem ?
 		  setExecuted_doFinishMem_access_at_commit :
 		  m_memAccessAtCommit_rl) ;
-  assign IF_m_ppc_vaddr_csrData_dummy2_0_read__93_AND_m_ETC___d308 =
+  assign IF_m_ppc_vaddr_csrData_dummy2_0_read__01_AND_m_ETC___d316 =
 	     (m_ppc_vaddr_csrData_dummy2_0$Q_OUT &&
 	      m_ppc_vaddr_csrData_dummy2_1$Q_OUT &&
 	      m_ppc_vaddr_csrData_dummy2_2$Q_OUT &&
 	      m_ppc_vaddr_csrData_dummy2_3$Q_OUT) ?
 	       m_ppc_vaddr_csrData_rl[63:0] :
 	       64'd0 ;
-  assign IF_m_ppc_vaddr_csrData_lat_1_whas__75_THEN_m_p_ETC___d187 =
+  assign IF_m_ppc_vaddr_csrData_lat_1_whas__83_THEN_m_p_ETC___d195 =
 	     EN_setExecuted_doFinishAlu_1_set ?
 	       m_ppc_vaddr_csrData_lat_1$wget[65:64] == 2'd0 :
 	       (EN_setExecuted_doFinishAlu_0_set ?
 		  m_ppc_vaddr_csrData_lat_0$wget[65:64] == 2'd0 :
 		  m_ppc_vaddr_csrData_rl[65:64] == 2'd0) ;
-  assign IF_m_ppc_vaddr_csrData_lat_1_whas__75_THEN_m_p_ETC___d196 =
+  assign IF_m_ppc_vaddr_csrData_lat_1_whas__83_THEN_m_p_ETC___d204 =
 	     EN_setExecuted_doFinishAlu_1_set ?
 	       m_ppc_vaddr_csrData_lat_1$wget[65:64] == 2'd1 :
 	       (EN_setExecuted_doFinishAlu_0_set ?
 		  m_ppc_vaddr_csrData_lat_0$wget[65:64] == 2'd1 :
 		  m_ppc_vaddr_csrData_rl[65:64] == 2'd1) ;
-  assign IF_m_ppc_vaddr_csrData_lat_1_whas__75_THEN_m_p_ETC___d207 =
+  assign IF_m_ppc_vaddr_csrData_lat_1_whas__83_THEN_m_p_ETC___d215 =
 	     EN_setExecuted_doFinishAlu_1_set ?
 	       m_ppc_vaddr_csrData_lat_1$wget[63:0] :
 	       (EN_setExecuted_doFinishAlu_0_set ?
 		  m_ppc_vaddr_csrData_lat_0$wget[63:0] :
 		  m_ppc_vaddr_csrData_rl[63:0]) ;
-  assign IF_m_ppc_vaddr_csrData_lat_3_whas__67_THEN_m_p_ETC___d189 =
+  assign IF_m_ppc_vaddr_csrData_lat_3_whas__75_THEN_m_p_ETC___d197 =
 	     EN_write_enq ?
 	       m_ppc_vaddr_csrData_lat_3$wget[65:64] == 2'd0 :
 	       (EN_setExecuted_doFinishMem ?
 		  m_ppc_vaddr_csrData_lat_2$wget[65:64] == 2'd0 :
-		  IF_m_ppc_vaddr_csrData_lat_1_whas__75_THEN_m_p_ETC___d187) ;
-  assign IF_m_ppc_vaddr_csrData_lat_3_whas__67_THEN_m_p_ETC___d198 =
+		  IF_m_ppc_vaddr_csrData_lat_1_whas__83_THEN_m_p_ETC___d195) ;
+  assign IF_m_ppc_vaddr_csrData_lat_3_whas__75_THEN_m_p_ETC___d206 =
 	     EN_write_enq ?
 	       m_ppc_vaddr_csrData_lat_3$wget[65:64] == 2'd1 :
 	       (EN_setExecuted_doFinishMem ?
 		  m_ppc_vaddr_csrData_lat_2$wget[65:64] == 2'd1 :
-		  IF_m_ppc_vaddr_csrData_lat_1_whas__75_THEN_m_p_ETC___d196) ;
-  assign IF_m_ppc_vaddr_csrData_lat_3_whas__67_THEN_m_p_ETC___d209 =
+		  IF_m_ppc_vaddr_csrData_lat_1_whas__83_THEN_m_p_ETC___d204) ;
+  assign IF_m_ppc_vaddr_csrData_lat_3_whas__75_THEN_m_p_ETC___d217 =
 	     EN_write_enq ?
 	       m_ppc_vaddr_csrData_lat_3$wget[63:0] :
 	       (EN_setExecuted_doFinishMem ?
 		  m_ppc_vaddr_csrData_lat_2$wget[63:0] :
-		  IF_m_ppc_vaddr_csrData_lat_1_whas__75_THEN_m_p_ETC___d207) ;
-  assign IF_m_rob_inst_state_lat_3_whas__22_THEN_m_rob__ETC___d234 =
+		  IF_m_ppc_vaddr_csrData_lat_1_whas__83_THEN_m_p_ETC___d215) ;
+  assign IF_m_rob_inst_state_lat_3_whas__30_THEN_m_rob__ETC___d242 =
 	     EN_setExecuted_deqLSQ ||
 	     EN_setExecuted_doFinishFpuMulDiv_0_set ||
 	     EN_setExecuted_doFinishAlu_1_set ||
 	     EN_setExecuted_doFinishAlu_0_set ||
 	     m_rob_inst_state_rl ;
-  assign IF_m_spec_bits_lat_1_whas__85_THEN_m_spec_bits_ETC___d291 =
+  assign IF_m_spec_bits_lat_1_whas__93_THEN_m_spec_bits_ETC___d299 =
 	     EN_write_enq ? write_enq_x[11:0] : m_spec_bits_rl ;
   assign IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d102 =
 	     EN_write_enq ?
@@ -1271,11 +1279,11 @@ module mkRobRowSynth(CLK,
 	       (m_trap_lat_0$whas ?
 		  m_trap_lat_0$wget[3:0] == 4'd11 :
 		  m_trap_rl[3:0] == 4'd11) ;
-  assign IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d154 =
+  assign IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d162 =
 	     { EN_write_enq ?
 		 m_trap_lat_2$wget[4] :
 		 (m_trap_lat_0$whas ? m_trap_lat_0$wget[4] : m_trap_rl[4]),
-	       IF_IF_m_trap_lat_2_whas_THEN_NOT_m_trap_lat_2__ETC___d153 } ;
+	       IF_IF_m_trap_lat_2_whas_THEN_NOT_m_trap_lat_2__ETC___d161 } ;
   assign IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d46 =
 	     EN_write_enq ?
 	       m_trap_lat_2$wget[3:0] == 4'd0 :
@@ -1312,28 +1320,30 @@ module mkRobRowSynth(CLK,
 	       (m_trap_lat_0$whas ?
 		  m_trap_lat_0$wget[3:0] == 4'd7 :
 		  m_trap_rl[3:0] == 4'd7) ;
-  assign NOT_m_ppc_vaddr_csrData_dummy2_0_read__93_94_O_ETC___d303 =
+  assign NOT_m_ppc_vaddr_csrData_dummy2_0_read__01_02_O_ETC___d311 =
 	     !m_ppc_vaddr_csrData_dummy2_0$Q_OUT ||
 	     !m_ppc_vaddr_csrData_dummy2_1$Q_OUT ||
 	     !m_ppc_vaddr_csrData_dummy2_2$Q_OUT ||
 	     !m_ppc_vaddr_csrData_dummy2_3$Q_OUT ;
-  assign bs__h32492 =
+  assign bs__h31901 =
 	     (m_spec_bits_dummy2_0$Q_OUT && m_spec_bits_dummy2_1$Q_OUT &&
 	      m_spec_bits_dummy2_2$Q_OUT) ?
 	       m_spec_bits_rl :
 	       12'd0 ;
-  assign m_claimed_phy_reg_32_CONCAT_m_trap_dummy2_0_re_ETC___d635 =
+  assign m_claimed_phy_reg_54_CONCAT_m_trap_dummy2_0_re_ETC___d658 =
 	     { m_claimed_phy_reg,
-	       m_trap_dummy2_0_read__33_AND_m_trap_dummy2_1_r_ETC___d538,
+	       m_trap_dummy2_0$Q_OUT && m_trap_dummy2_1$Q_OUT &&
+	       m_trap_dummy2_2$Q_OUT &&
+	       m_trap_rl[5],
 	       m_trap_rl[4],
 	       m_trap_rl[4] ?
 		 CASE_m_trap_rl_BITS_3_TO_0_0_m_trap_rl_BITS_3__ETC__q1 :
 		 CASE_m_trap_rl_BITS_3_TO_0_0_m_trap_rl_BITS_3__ETC__q2,
-	       x__h26533,
-	       IF_NOT_m_ppc_vaddr_csrData_dummy2_0_read__93_9_ETC___d580,
-	       x_read_deq_fflags__h25726,
+	       x__h26342,
+	       IF_NOT_m_ppc_vaddr_csrData_dummy2_0_read__01_0_ETC___d603,
+	       x_read_deq_fflags__h25495,
 	       m_will_dirty_fpu_state,
-	       m_rob_inst_state_dummy2_0_read__86_AND_m_rob_i_ETC___d597,
+	       m_rob_inst_state_dummy2_0_read__09_AND_m_rob_i_ETC___d620,
 	       m_lsqTag,
 	       m_ldKilled_dummy2_0$Q_OUT && m_ldKilled_dummy2_1$Q_OUT &&
 	       m_ldKilled_rl[2],
@@ -1349,13 +1359,13 @@ module mkRobRowSynth(CLK,
 	       m_nonMMIOStDone_dummy2_1$Q_OUT &&
 	       m_nonMMIOStDone_rl,
 	       m_epochIncremented,
-	       bs__h32492 } ;
-  assign m_iType_54_CONCAT_m_csr_55_BIT_12_56_CONCAT_IF_ETC___d636 =
+	       bs__h31901 } ;
+  assign m_iType_68_CONCAT_m_csr_69_BIT_12_70_CONCAT_IF_ETC___d659 =
 	     { m_iType,
 	       m_csr[12],
 	       CASE_m_csr_BITS_11_TO_0_1_m_csr_BITS_11_TO_0_2_ETC__q3,
-	       m_claimed_phy_reg_32_CONCAT_m_trap_dummy2_0_re_ETC___d635 } ;
-  assign m_rob_inst_state_dummy2_0_read__86_AND_m_rob_i_ETC___d597 =
+	       m_claimed_phy_reg_54_CONCAT_m_trap_dummy2_0_re_ETC___d658 } ;
+  assign m_rob_inst_state_dummy2_0_read__09_AND_m_rob_i_ETC___d620 =
 	     m_rob_inst_state_dummy2_0$Q_OUT &&
 	     m_rob_inst_state_dummy2_1$Q_OUT &&
 	     m_rob_inst_state_dummy2_2$Q_OUT &&
@@ -1363,31 +1373,27 @@ module mkRobRowSynth(CLK,
 	     m_rob_inst_state_dummy2_4$Q_OUT &&
 	     m_rob_inst_state_dummy2_5$Q_OUT &&
 	     m_rob_inst_state_rl ;
-  assign m_trap_dummy2_0_read__33_AND_m_trap_dummy2_1_r_ETC___d538 =
-	     m_trap_dummy2_0$Q_OUT && m_trap_dummy2_1$Q_OUT &&
-	     m_trap_dummy2_2$Q_OUT &&
-	     m_trap_rl[5] ;
-  assign sb__h32527 =
+  assign sb__h31936 =
 	     m_spec_bits_dummy2_2$Q_OUT ?
-	       IF_m_spec_bits_lat_1_whas__85_THEN_m_spec_bits_ETC___d291 :
+	       IF_m_spec_bits_lat_1_whas__93_THEN_m_spec_bits_ETC___d299 :
 	       12'd0 ;
-  assign upd__h17952 = sb__h32527 & correctSpeculation_mask ;
-  assign x__h26533 =
+  assign upd__h17978 = sb__h31936 & correctSpeculation_mask ;
+  assign x__h26342 =
 	     (m_tval_dummy2_0$Q_OUT && m_tval_dummy2_1$Q_OUT &&
 	      m_tval_dummy2_2$Q_OUT) ?
 	       m_tval_rl :
 	       64'd0 ;
-  assign x_read_deq_fflags__h25726 =
+  assign x_read_deq_fflags__h25495 =
 	     (m_fflags_dummy2_0$Q_OUT && m_fflags_dummy2_1$Q_OUT) ?
 	       m_fflags_rl :
 	       5'd0 ;
   always@(m_trap_rl)
   begin
     case (m_trap_rl[3:0])
-      4'd0, 4'd1, 4'd3, 4'd4, 4'd5, 4'd7, 4'd8, 4'd9, 4'd11:
+      4'd0, 4'd1, 4'd3, 4'd4, 4'd5, 4'd7, 4'd8, 4'd9, 4'd11, 4'd14:
 	  CASE_m_trap_rl_BITS_3_TO_0_0_m_trap_rl_BITS_3__ETC__q1 =
 	      m_trap_rl[3:0];
-      default: CASE_m_trap_rl_BITS_3_TO_0_0_m_trap_rl_BITS_3__ETC__q1 = 4'd14;
+      default: CASE_m_trap_rl_BITS_3_TO_0_0_m_trap_rl_BITS_3__ETC__q1 = 4'd15;
     endcase
   end
   always@(m_trap_rl)
@@ -1439,6 +1445,10 @@ module mkRobRowSynth(CLK,
       12'd834,
       12'd835,
       12'd836,
+      12'd1968,
+      12'd1969,
+      12'd1970,
+      12'd1971,
       12'd2048,
       12'd2049,
       12'd2816,
@@ -1480,10 +1490,10 @@ module mkRobRowSynth(CLK,
   always@(write_enq_x)
   begin
     case (write_enq_x[165:162])
-      4'd0, 4'd1, 4'd3, 4'd4, 4'd5, 4'd7, 4'd8, 4'd9, 4'd11:
+      4'd0, 4'd1, 4'd3, 4'd4, 4'd5, 4'd7, 4'd8, 4'd9, 4'd11, 4'd14:
 	  CASE_write_enq_x_BITS_165_TO_162_0_write_enq_x_ETC__q5 =
 	      write_enq_x[165:162];
-      default: CASE_write_enq_x_BITS_165_TO_162_0_write_enq_x_ETC__q5 = 4'd14;
+      default: CASE_write_enq_x_BITS_165_TO_162_0_write_enq_x_ETC__q5 = 4'd15;
     endcase
   end
   always@(write_enq_x)
@@ -1544,6 +1554,10 @@ module mkRobRowSynth(CLK,
       12'd834,
       12'd835,
       12'd836,
+      12'd1968,
+      12'd1969,
+      12'd1970,
+      12'd1971,
       12'd2048,
       12'd2049,
       12'd2816,
@@ -1643,49 +1657,6 @@ module mkRobRowSynth(CLK,
     m_will_dirty_fpu_state = 1'h0;
   end
   `endif // BSV_NO_INITIAL_BLOCKS
-  // synopsys translate_on
-
-  // handling of system tasks
-
-  // synopsys translate_off
-  always@(negedge CLK)
-  begin
-    #0;
-    if (RST_N != `BSV_RESET_VALUE)
-      if (EN_setExecuted_doFinishAlu_0_set &&
-	  m_csr[12] != setExecuted_doFinishAlu_0_set_csrData[64])
-	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (EN_setExecuted_doFinishAlu_1_set &&
-	  m_csr[12] != setExecuted_doFinishAlu_1_set_csrData[64])
-	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (EN_setExecuted_deqLSQ &&
-	  m_trap_dummy2_0_read__33_AND_m_trap_dummy2_1_r_ETC___d538)
-	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (EN_setExecuted_doFinishMem &&
-	  setExecuted_doFinishMem_access_at_commit &&
-	  setExecuted_doFinishMem_non_mmio_st_done)
-	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (EN_setExecuted_doFinishMem &&
-	  setExecuted_doFinishMem_non_mmio_st_done &&
-	  m_iType != 5'd5)
-	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (EN_write_enq && write_enq_x[18])
-	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (EN_write_enq && write_enq_x[15])
-	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (EN_write_enq && write_enq_x[14])
-	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (EN_write_enq && write_enq_x[13])
-	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
-  end
   // synopsys translate_on
 endmodule  // mkRobRowSynth
 
