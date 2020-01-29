@@ -31,13 +31,31 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-import FShow::*;
-import GetPut::*;
-import Vector::*;
-import BuildVector::*;
-import FIFO::*;
-import FIFOF::*;
-import Assert::*;
+// ================================================================
+// BSV library imports
+
+import FIFOF       :: *;
+import Connectable :: *;
+
+import FShow       :: *;
+import GetPut      :: *;
+import Vector      :: *;
+import BuildVector :: *;
+import FIFO        :: *;
+import Assert      :: *;
+
+// ----------------
+// BSV additional libs
+
+import Cur_Cycle  :: *;
+import Semi_FIFOF :: *;
+import EdgeFIFOFs :: *;
+
+// ================================================================
+// Project imports
+
+// ----------------
+// From RISCY-OOO
 
 import Types::*;
 import ProcTypes::*;
@@ -48,9 +66,14 @@ import MemLoader::*;
 import CrossBar::*;
 import MemLoader::*;
 
+// ----------------
+// From Toooba
+
 import AXI4_Types   :: *;
 import Fabric_Defs  :: *;
 import Semi_FIFOF   :: *;
+
+// ================================================================
 
 typedef struct {
     CoreId core;
@@ -63,26 +86,35 @@ typedef union tagged {
     TlbDmaReqId Tlb;
 } LLCDmaReqId deriving(Bits, Eq, FShow);
 
-// For writing, position a 4-byte value and 4-bit byte-enable into a 64-byte line and 64-bit line-byte-enable
-function Tuple3 #(Addr, Line, LineByteEn) fn_line_and_byteen_from_word (Addr addr, Bit #(64) data);
-   Vector #(16, Bit #(32)) line_words        = replicate (0);
-   Vector #(16, Bit #(4))  line_word_byteens = replicate (0);
-   Bit #(4) word_index = addr [5:2];
-   line_words [word_index] = ((addr [2] == 0) ? data [31:0] : data [63:32]);
-   line_word_byteens [word_index] = 4'b1111;
-   Addr line_addr = { addr [63:6], 6'b0 };
+// ================================================================
+// Functions to insert/extract axi4 data into/from a cache line
+
+// For writing, position the AXI4 8-byte data and 8-bit byte-enable
+// into a 64-byte line and 64-bit line-byte-enable
+function Tuple3 #(Addr,
+		  Line,
+		  LineByteEn) fn_line_and_line_byteen_from_axi4 (Addr       axi4_addr,
+								 Bit #(8)   axi4_byteen,
+								 Bit #(64)  axi4_data);
+   Vector #(8, Bit #(64)) line_dwords       = replicate (0);
+   Vector #(8, Bit #(8))  line_dword_byteen = replicate (0);
+   Bit #(3) dword_index = axi4_addr [5:3];
+   line_dwords       [dword_index] = axi4_data;
+   line_dword_byteen [dword_index] = axi4_byteen;
+   Addr line_addr = { axi4_addr [63:6], 6'b0 };
    return tuple3 (line_addr,
-		  unpack (pack (line_words)),
-		  unpack (pack (line_word_byteens)));
+		  unpack (pack (line_dwords)),
+		  unpack (pack (line_dword_byteen)));
 endfunction
 
-// For reading, extract a 4-byte value from a 64-byte line
-function Bit #(64) fn_word_from_line (Line line, Bit #(4) word_in_line);
-   Vector #(16, Bit #(32)) line_words = unpack (pack (line));
-   Bit #(32) w  = line_words [word_in_line];
-   Bit #(64) dw = ((word_in_line [0] == 0) ? { 32'b0, w } : { w, 32'b0 });
+// For reading, extract 8-byte AXI4 data from a 64-byte line
+function Bit #(64) fn_axi4_data_from_line (Line line, Bit #(3) dword_in_line);
+   Vector #(8, Bit #(64)) line_words = unpack (pack (line));
+   Bit #(64) dw = line_words [dword_in_line];
    return dw;
 endfunction
+
+// ================================================================
 
 module mkLLCDmaConnect #(
     DmaServer#(LLCDmaReqId) llc,
@@ -95,8 +127,8 @@ module mkLLCDmaConnect #(
 
    Integer verbosity = 0;
 
-   // When debugger reads a word, request a line from LLC, and remember word-in-line here
-   FIFOF #(Bit #(4)) f_word_in_line <- mkFIFOF;
+   // When debugger reads a word, request a line from LLC, and remember dword-in-line here
+   FIFOF #(Bit #(3)) f_dword_in_line <- mkFIFOF;
 
    // Slave transactor for requests from Debug Module
    AXI4_Slave_Xactor_IFC #(Wd_Id, Wd_Addr, Wd_Data, Wd_User) axi4_slave_xactor <- mkAXI4_Slave_Xactor;
@@ -130,38 +162,76 @@ module mkLLCDmaConnect #(
     rule sendMemLoaderReqToLLC_wr;    // write requests
        let wr_addr <- pop_o (axi4_slave_xactor.o_wr_addr);
        let wr_data <- pop_o (axi4_slave_xactor.o_wr_data);
-       match { .line_addr, .line_data, .line_byteen } = fn_line_and_byteen_from_word (wr_addr.awaddr, wr_data.wdata);
-       dmaRqT req =  DmaRq {addr:   line_addr,
-			    byteEn: line_byteen,
-			    data:   line_data,
-			    id:     tagged MemLoader (?)    // TODO: change uniformly to  wr_addr.awid
-			    };
-       llc.memReq.enq(req);
 
-       if (verbosity != 0) begin
-          $display("[LLCDmaConnect sendMemLoaderReqToLLC_wr]");
+       if (wr_addr.awlen != 0) begin
+	  $display ("%0d: %m.sendMemLoaderReqToLLC_wr: ERROR: awlen is not 0 (burst length is not 1)", cur_cycle);
 	  $display ("    ", fshow (wr_addr));
 	  $display ("    ", fshow (wr_data));
-	  $display ("    ", fshow (req));
+       end
+       else if (   (wr_addr.awsize != axsize_1)
+		&& (wr_addr.awsize != axsize_2)
+		&& (wr_addr.awsize != axsize_4)
+		&& (wr_addr.awsize != axsize_8)) begin
+	  $display ("%0d: %m.sendMemLoaderReqToLLC_wr: ERROR: awsize is not code for 1,2,4,8", cur_cycle);
+	  $display ("    ", fshow (wr_addr));
+	  $display ("    ", fshow (wr_data));
+       end
+       else if (! wr_data.wlast) begin
+	  $display ("%0d: %m.sendMemLoaderReqToLLC_wr: ERROR: wlast is 1", cur_cycle);
+	  $display ("    ", fshow (wr_addr));
+	  $display ("    ", fshow (wr_data));
+       end
+       else begin
+	  match {.line_addr,
+		 .line_data,
+		 .line_byteen } = fn_line_and_line_byteen_from_axi4 (wr_addr.awaddr,
+								     wr_data.wstrb,
+								     wr_data.wdata);
+	  dmaRqT req =  DmaRq {addr:   line_addr,
+			       byteEn: line_byteen,
+			       data:   line_data,
+			       id:     tagged MemLoader (?)    // TODO: change uniformly to  wr_addr.awid
+			       };
+	  llc.memReq.enq(req);
+          if (verbosity != 0) begin
+	     $display ("%0d: %m.sendMemLoaderReqToLLC_wr", cur_cycle);
+	     $display ("    ", fshow (wr_addr));
+	     $display ("    ", fshow (wr_data));
+	     $display ("    ", fshow (req));
+	  end
        end
     endrule
 
     rule sendMemLoaderReqToLLC_rd;    // read requests
        let rd_addr <- pop_o (axi4_slave_xactor.o_rd_addr);
-       Addr line_addr = { rd_addr.araddr [63:6], 6'b0 };
-       dmaRqT req =  DmaRq {addr:   line_addr,
-			    byteEn: replicate (False),
-			    data:   ?,
-			    id:     MemLoader (?)    // TODO: change uniformly to  rd_addr.awid
-			    };
-       llc.memReq.enq(req);
-       Bit #(4) word_in_line = rd_addr.araddr [5:2];
-       f_word_in_line.enq (word_in_line);
 
-       if (verbosity != 0) begin
-          $display("[LLCDmaConnect sendMemLoaderReqToLLC_rd]");
+       if (rd_addr.arlen != 0) begin
+	  $display ("%0d: %m.sendMemLoaderReqToLLC_rd: ERROR: arlen is not 0 (burst length is not 1)", cur_cycle);
 	  $display ("    ", fshow (rd_addr));
-	  $display ("    ", fshow (req));
+       end
+       else if (   (rd_addr.arsize != axsize_1)
+		&& (rd_addr.arsize != axsize_2)
+		&& (rd_addr.arsize != axsize_4)
+		&& (rd_addr.arsize != axsize_8)) begin
+	  $display ("%0d: %m.sendMemLoaderReqToLLC_rd: ERROR: arsize is not code for 1,2,4,8", cur_cycle);
+	  $display ("    ", fshow (rd_addr));
+       end
+       else begin
+	  Addr line_addr = { rd_addr.araddr [63:6], 6'b0 };
+	  dmaRqT req =  DmaRq {addr:   line_addr,
+			       byteEn: replicate (False),
+			       data:   ?,
+			       id:     MemLoader (?)    // TODO: change uniformly to  rd_addr.arid
+			       };
+	  llc.memReq.enq(req);
+	  Bit #(3) dword_in_line = rd_addr.araddr [5:3];
+	  f_dword_in_line.enq (dword_in_line);
+
+	  if (verbosity != 0) begin
+             $display("[LLCDmaConnect sendMemLoaderReqToLLC_rd]");
+	     $display ("    ", fshow (rd_addr));
+	     $display ("    ", fshow (req));
+	  end
        end
     endrule
 
@@ -180,11 +250,11 @@ module mkLLCDmaConnect #(
     rule sendLdRespToMemLoader(llc.respLd.first.id matches tagged MemLoader .id);
        let resp = llc.respLd.first;
        llc.respLd.deq;
-       let word_in_line = f_word_in_line.first;
-       f_word_in_line.deq;
+       let dword_in_line = f_dword_in_line.first;
+       f_dword_in_line.deq;
        AXI4_Rd_Data #(Wd_Id, Wd_Data, Wd_User)
        rd_data = AXI4_Rd_Data {rid: 0,    // TODO: change uniformly to Fabric_Id
-			       rdata: fn_word_from_line (resp.data, word_in_line),
+			       rdata: fn_axi4_data_from_line (resp.data, dword_in_line),
 			       rresp: axi4_resp_okay,
 			       rlast: True,
 			       ruser: ?};
