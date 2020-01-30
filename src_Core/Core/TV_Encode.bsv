@@ -62,7 +62,7 @@ endinterface
 (* synthesize *)
 module mkTV_Encode (TV_Encode_IFC);
 
-   Integer verbosity = 1;    // For debugging
+   Integer verbosity = 0;    // For debugging
 
    Reg #(Bool) rg_reset_done <- mkReg (False);
 

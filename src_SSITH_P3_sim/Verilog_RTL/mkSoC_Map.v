@@ -317,7 +317,11 @@ module mkSoC_Map(CLK,
   wire m_is_IO_addr, m_is_mem_addr, m_is_near_mem_IO_addr;
 
   // remaining internal signals
-  wire m_is_IO_addr_addr_ULT_0x70000000___d35;
+  wire NOT_m_is_IO_addr_addr_ULT_0xC000000_AND_m_is_I_ETC___d37,
+       NOT_m_is_IO_addr_addr_ULT_0xC000000_AND_m_is_I_ETC___d82,
+       m_is_IO_addr_addr_ULT_0x30000000___d80,
+       m_is_IO_addr_addr_ULT_0x70000000___d35,
+       m_is_IO_addr_addr_ULT_1073741824___d13;
 
   // value method m_plic_addr_base
   assign m_plic_addr_base = 64'h000000000C000000 ;
@@ -341,10 +345,10 @@ module mkSoC_Map(CLK,
   assign m_flash_mem_addr_base = 64'h0000000040000000 ;
 
   // value method m_flash_mem_addr_size
-  assign m_flash_mem_addr_size = 64'h0000000000010000 ;
+  assign m_flash_mem_addr_size = 64'h0000000008000000 ;
 
   // value method m_flash_mem_addr_lim
-  assign m_flash_mem_addr_lim = 64'd1073807360 ;
+  assign m_flash_mem_addr_lim = 64'd1207959552 ;
 
   // value method m_ethernet_0_addr_base
   assign m_ethernet_0_addr_base = 64'h0000000062100000 ;
@@ -425,24 +429,9 @@ module mkSoC_Map(CLK,
 
   // value method m_is_IO_addr
   assign m_is_IO_addr =
-	     m_is_IO_addr_addr >= 64'h000000000C000000 &&
-	     m_is_IO_addr_addr < 64'd205520896 ||
-	     m_is_IO_addr_addr >= 64'h0000000010000000 &&
-	     m_is_IO_addr_addr < 64'd268500992 ||
-	     m_is_IO_addr_addr >= 64'h0000000040000000 &&
-	     m_is_IO_addr_addr < 64'd1073807360 ||
-	     m_is_IO_addr_addr >= 64'h0000000062100000 &&
-	     m_is_IO_addr_addr < 64'd1645477888 ||
-	     m_is_IO_addr_addr >= 64'h0000000062200000 &&
-	     m_is_IO_addr_addr < 64'd1646329856 ||
-	     m_is_IO_addr_addr >= 64'h0000000062300000 &&
-	     m_is_IO_addr_addr < 64'd1647316992 ||
-	     m_is_IO_addr_addr >= 64'h000000006FFF0000 &&
-	     m_is_IO_addr_addr_ULT_0x70000000___d35 ||
-	     !m_is_IO_addr_addr_ULT_0x70000000___d35 &&
-	     m_is_IO_addr_addr < 64'd1879052288 ||
-	     m_is_IO_addr_addr >= 64'h0000000080000000 &&
-	     m_is_IO_addr_addr < 64'h00000000C0000000 ;
+	     NOT_m_is_IO_addr_addr_ULT_0xC000000_AND_m_is_I_ETC___d82 ||
+	     !m_is_IO_addr_addr_ULT_0x30000000___d80 &&
+	     m_is_IO_addr_addr_ULT_1073741824___d13 ;
 
   // value method m_is_near_mem_IO_addr
   assign m_is_near_mem_IO_addr =
@@ -459,7 +448,46 @@ module mkSoC_Map(CLK,
   assign m_nmivec_reset_value = 64'hAAAAAAAAAAAAAAAA ;
 
   // remaining internal signals
+  assign NOT_m_is_IO_addr_addr_ULT_0xC000000_AND_m_is_I_ETC___d37 =
+	     m_is_IO_addr_addr >= 64'h000000000C000000 &&
+	     m_is_IO_addr_addr < 64'd205520896 ||
+	     m_is_IO_addr_addr >= 64'h0000000010000000 &&
+	     m_is_IO_addr_addr < 64'd268500992 ||
+	     !m_is_IO_addr_addr_ULT_1073741824___d13 &&
+	     m_is_IO_addr_addr < 64'd1207959552 ||
+	     m_is_IO_addr_addr >= 64'h0000000062100000 &&
+	     m_is_IO_addr_addr < 64'd1645477888 ||
+	     m_is_IO_addr_addr >= 64'h0000000062200000 &&
+	     m_is_IO_addr_addr < 64'd1646329856 ||
+	     m_is_IO_addr_addr >= 64'h0000000062300000 &&
+	     m_is_IO_addr_addr < 64'd1647316992 ||
+	     m_is_IO_addr_addr >= 64'h000000006FFF0000 &&
+	     m_is_IO_addr_addr_ULT_0x70000000___d35 ;
+  assign NOT_m_is_IO_addr_addr_ULT_0xC000000_AND_m_is_I_ETC___d82 =
+	     NOT_m_is_IO_addr_addr_ULT_0xC000000_AND_m_is_I_ETC___d37 ||
+	     !m_is_IO_addr_addr_ULT_0x70000000___d35 &&
+	     m_is_IO_addr_addr < 64'd1879052288 ||
+	     m_is_IO_addr_addr >= 64'h0000000080000000 &&
+	     m_is_IO_addr_addr < 64'h00000000C0000000 ||
+	     m_is_IO_addr_addr >= 64'h0000000062400000 &&
+	     m_is_IO_addr_addr < 64'd1648365568 ||
+	     m_is_IO_addr_addr >= 64'h0000000062310000 &&
+	     m_is_IO_addr_addr < 64'd1647382528 ||
+	     m_is_IO_addr_addr >= 64'h0000000062320000 &&
+	     m_is_IO_addr_addr < 64'd1647448064 ||
+	     m_is_IO_addr_addr >= 64'h0000000062360000 &&
+	     m_is_IO_addr_addr < 64'd1647710208 ||
+	     m_is_IO_addr_addr >= 64'h0000000062330000 &&
+	     m_is_IO_addr_addr < 64'd1647513600 ||
+	     m_is_IO_addr_addr >= 64'h0000000062370000 &&
+	     m_is_IO_addr_addr < 64'd1647775744 ||
+	     m_is_IO_addr_addr >= 64'h0000000020000000 &&
+	     m_is_IO_addr_addr_ULT_0x30000000___d80 ;
+  assign m_is_IO_addr_addr_ULT_0x30000000___d80 =
+	     m_is_IO_addr_addr < 64'h0000000030000000 ;
   assign m_is_IO_addr_addr_ULT_0x70000000___d35 =
 	     m_is_IO_addr_addr < 64'h0000000070000000 ;
+  assign m_is_IO_addr_addr_ULT_1073741824___d13 =
+	     m_is_IO_addr_addr < 64'd1073741824 ;
 endmodule  // mkSoC_Map
 
