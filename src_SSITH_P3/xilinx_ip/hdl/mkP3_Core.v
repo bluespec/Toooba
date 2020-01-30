@@ -1239,11 +1239,11 @@ module mkP3_Core(CLK,
 		.EN_set_htif_addrs(corew$EN_set_htif_addrs),
 		.EN_cpu_reset_server_request_put(corew$EN_cpu_reset_server_request_put),
 		.EN_cpu_reset_server_response_get(corew$EN_cpu_reset_server_response_get),
-		.EN_tv_verifier_info_get_get(corew$EN_tv_verifier_info_get_get),
 		.EN_dm_dmi_read_addr(corew$EN_dm_dmi_read_addr),
 		.EN_dm_dmi_read_data(corew$EN_dm_dmi_read_data),
 		.EN_dm_dmi_write(corew$EN_dm_dmi_write),
 		.EN_dm_ndm_reset_req_get_get(corew$EN_dm_ndm_reset_req_get_get),
+		.EN_tv_verifier_info_get_get(corew$EN_tv_verifier_info_get_get),
 		.RDY_set_verbosity(),
 		.RDY_set_htif_addrs(),
 		.RDY_cpu_reset_server_request_put(corew$RDY_cpu_reset_server_request_put),
@@ -1306,13 +1306,13 @@ module mkP3_Core(CLK,
 		.cpu_dmem_master_arqos(corew$cpu_dmem_master_arqos),
 		.cpu_dmem_master_arregion(corew$cpu_dmem_master_arregion),
 		.cpu_dmem_master_rready(corew$cpu_dmem_master_rready),
-		.tv_verifier_info_get_get(corew$tv_verifier_info_get_get),
-		.RDY_tv_verifier_info_get_get(corew$RDY_tv_verifier_info_get_get),
 		.RDY_dm_dmi_read_addr(corew$RDY_dm_dmi_read_addr),
 		.dm_dmi_read_data(corew$dm_dmi_read_data),
 		.RDY_dm_dmi_read_data(corew$RDY_dm_dmi_read_data),
 		.RDY_dm_dmi_write(corew$RDY_dm_dmi_write),
-		.RDY_dm_ndm_reset_req_get_get(corew$RDY_dm_ndm_reset_req_get_get));
+		.RDY_dm_ndm_reset_req_get_get(corew$RDY_dm_ndm_reset_req_get_get),
+		.tv_verifier_info_get_get(corew$tv_verifier_info_get_get),
+		.RDY_tv_verifier_info_get_get(corew$RDY_tv_verifier_info_get_get));
 
   // submodule jtagtap
   mkJtagTap jtagtap(.CLK(CLK),
@@ -1640,7 +1640,6 @@ module mkP3_Core(CLK,
   assign corew$EN_cpu_reset_server_request_put = CAN_FIRE_RL_rl_once ;
   assign corew$EN_cpu_reset_server_response_get =
 	     corew$RDY_cpu_reset_server_response_get ;
-  assign corew$EN_tv_verifier_info_get_get = CAN_FIRE_RL_mkConnectionGetPut ;
   assign corew$EN_dm_dmi_read_addr =
 	     WILL_FIRE_RL_rl_dmi_req_cpu &&
 	     bus_dmi_req_fifof$D_OUT[1:0] == 2'd1 ;
@@ -1649,6 +1648,7 @@ module mkP3_Core(CLK,
 	     WILL_FIRE_RL_rl_dmi_req_cpu &&
 	     bus_dmi_req_fifof$D_OUT[1:0] == 2'd2 ;
   assign corew$EN_dm_ndm_reset_req_get_get = CAN_FIRE_RL_rl_ndmreset ;
+  assign corew$EN_tv_verifier_info_get_get = CAN_FIRE_RL_mkConnectionGetPut ;
 
   // submodule jtagtap
   assign jtagtap$dmi_req_ready = bus_dmi_req_fifof$FULL_N ;

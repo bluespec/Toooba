@@ -46,7 +46,7 @@
 // master_arqos                   O     4 reg
 // master_arregion                O     4 reg
 // master_rready                  O     1 reg
-// trace_data_out_get             O   362 reg
+// trace_data_out_get             O   427 reg
 // RDY_trace_data_out_get         O     1 reg
 // CLK                            I     1 clock
 // RST_N                          I     1 reset
@@ -440,11 +440,11 @@ module mkDM_Mem_Tap(CLK,
 
   // actionvalue method trace_data_out_get
   input  EN_trace_data_out_get;
-  output [361 : 0] trace_data_out_get;
+  output [426 : 0] trace_data_out_get;
   output RDY_trace_data_out_get;
 
   // signals for module outputs
-  wire [361 : 0] trace_data_out_get;
+  wire [426 : 0] trace_data_out_get;
   wire [63 : 0] master_araddr, master_awaddr, master_wdata, slave_rdata;
   wire [7 : 0] master_arlen, master_awlen, master_wstrb;
   wire [3 : 0] master_arcache,
@@ -477,7 +477,7 @@ module mkDM_Mem_Tap(CLK,
        slave_wready;
 
   // ports of submodule f_trace_data
-  wire [361 : 0] f_trace_data$D_IN, f_trace_data$D_OUT;
+  wire [426 : 0] f_trace_data$D_IN, f_trace_data$D_OUT;
   wire f_trace_data$CLR,
        f_trace_data$DEQ,
        f_trace_data$EMPTY_N,
@@ -597,8 +597,7 @@ module mkDM_Mem_Tap(CLK,
        WILL_FIRE_trace_data_out_get;
 
   // remaining internal signals
-  wire [63 : 0] stval___1__h1527, x__h1522, y_avValue_fst__h1438;
-  wire slave_xactor_f_wr_data_i_notEmpty_AND_master_x_ETC___d8;
+  wire [63 : 0] stval___1__h1532, x__h1527, y_avValue_fst__h1438;
 
   // action method slave_m_awvalid
   assign CAN_FIRE_slave_m_awvalid = 1'd1 ;
@@ -767,7 +766,7 @@ module mkDM_Mem_Tap(CLK,
   assign WILL_FIRE_trace_data_out_get = EN_trace_data_out_get ;
 
   // submodule f_trace_data
-  FIFO2 #(.width(32'd362), .guarded(32'd1)) f_trace_data(.RST(RST_N),
+  FIFO2 #(.width(32'd427), .guarded(32'd1)) f_trace_data(.RST(RST_N),
 							 .CLK(CLK),
 							 .D_IN(f_trace_data$D_IN),
 							 .ENQ(f_trace_data$ENQ),
@@ -894,7 +893,10 @@ module mkDM_Mem_Tap(CLK,
   // rule RL_write_reqs
   assign CAN_FIRE_RL_write_reqs =
 	     slave_xactor_f_wr_addr$EMPTY_N &&
-	     slave_xactor_f_wr_data_i_notEmpty_AND_master_x_ETC___d8 ;
+	     slave_xactor_f_wr_data$EMPTY_N &&
+	     master_xactor_f_wr_addr$FULL_N &&
+	     master_xactor_f_wr_data$FULL_N &&
+	     f_trace_data$FULL_N ;
   assign WILL_FIRE_RL_write_reqs = CAN_FIRE_RL_write_reqs ;
 
   // rule RL_rl_connect
@@ -917,13 +919,11 @@ module mkDM_Mem_Tap(CLK,
 
   // submodule f_trace_data
   assign f_trace_data$D_IN =
-	     { 170'h12AAAAAAAAAAAAAAA955555554A0000000000000002,
-	       x__h1522,
+	     { 171'h12AAAAAAAAAAAAAAA955555554A0000000000000002,
+	       x__h1527,
 	       slave_xactor_f_wr_addr$D_OUT[92:29],
-	       64'hAAAAAAAAAAAAAAAA } ;
-  assign f_trace_data$ENQ =
-	     slave_xactor_f_wr_addr$EMPTY_N &&
-	     slave_xactor_f_wr_data_i_notEmpty_AND_master_x_ETC___d8 ;
+	       128'hAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA } ;
+  assign f_trace_data$ENQ = CAN_FIRE_RL_write_reqs ;
   assign f_trace_data$DEQ = EN_trace_data_out_get ;
   assign f_trace_data$CLR = 1'b0 ;
 
@@ -1020,15 +1020,10 @@ module mkDM_Mem_Tap(CLK,
   assign slave_xactor_f_wr_resp$CLR = 1'b0 ;
 
   // remaining internal signals
-  assign slave_xactor_f_wr_data_i_notEmpty_AND_master_x_ETC___d8 =
-	     slave_xactor_f_wr_data$EMPTY_N &&
-	     master_xactor_f_wr_addr$FULL_N &&
-	     master_xactor_f_wr_data$FULL_N &&
-	     f_trace_data$FULL_N ;
-  assign stval___1__h1527 = { 32'd0, slave_xactor_f_wr_data$D_OUT[40:9] } ;
-  assign x__h1522 =
+  assign stval___1__h1532 = { 32'd0, slave_xactor_f_wr_data$D_OUT[40:9] } ;
+  assign x__h1527 =
 	     (slave_xactor_f_wr_data$D_OUT[8:1] == 8'h0F) ?
-	       stval___1__h1527 :
+	       stval___1__h1532 :
 	       y_avValue_fst__h1438 ;
   assign y_avValue_fst__h1438 =
 	     { 32'd0, slave_xactor_f_wr_data$D_OUT[72:41] } ;

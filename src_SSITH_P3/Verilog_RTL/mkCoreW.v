@@ -68,13 +68,13 @@
 // cpu_dmem_master_arqos          O     4 reg
 // cpu_dmem_master_arregion       O     4 reg
 // cpu_dmem_master_rready         O     1 reg
-// tv_verifier_info_get_get       O   608 reg
-// RDY_tv_verifier_info_get_get   O     1 reg
 // RDY_dm_dmi_read_addr           O     1
 // dm_dmi_read_data               O    32
 // RDY_dm_dmi_read_data           O     1
 // RDY_dm_dmi_write               O     1
 // RDY_dm_ndm_reset_req_get_get   O     1 reg
+// tv_verifier_info_get_get       O   608 reg
+// RDY_tv_verifier_info_get_get   O     1 reg
 // CLK                            I     1 clock
 // RST_N                          I     1 reset
 // set_verbosity_verbosity        I     4
@@ -130,8 +130,8 @@
 // EN_dm_dmi_read_addr            I     1
 // EN_dm_dmi_write                I     1
 // EN_dm_ndm_reset_req_get_get    I     1
-// EN_tv_verifier_info_get_get    I     1
 // EN_dm_dmi_read_data            I     1
+// EN_tv_verifier_info_get_get    I     1
 //
 // Combinational paths from inputs to outputs:
 //   (cpu_imem_master_awready, cpu_imem_master_wready) -> cpu_imem_master_bready
@@ -356,10 +356,6 @@ module mkCoreW(CLK,
 
 	       debug_external_interrupt_req_set_not_clear,
 
-	       EN_tv_verifier_info_get_get,
-	       tv_verifier_info_get_get,
-	       RDY_tv_verifier_info_get_get,
-
 	       dm_dmi_read_addr_dm_addr,
 	       EN_dm_dmi_read_addr,
 	       RDY_dm_dmi_read_addr,
@@ -374,7 +370,11 @@ module mkCoreW(CLK,
 	       RDY_dm_dmi_write,
 
 	       EN_dm_ndm_reset_req_get_get,
-	       RDY_dm_ndm_reset_req_get_get);
+	       RDY_dm_ndm_reset_req_get_get,
+
+	       EN_tv_verifier_info_get_get,
+	       tv_verifier_info_get_get,
+	       RDY_tv_verifier_info_get_get);
   input  CLK;
   input  RST_N;
 
@@ -677,11 +677,6 @@ module mkCoreW(CLK,
   // action method debug_external_interrupt_req
   input  debug_external_interrupt_req_set_not_clear;
 
-  // actionvalue method tv_verifier_info_get_get
-  input  EN_tv_verifier_info_get_get;
-  output [607 : 0] tv_verifier_info_get_get;
-  output RDY_tv_verifier_info_get_get;
-
   // action method dm_dmi_read_addr
   input  [6 : 0] dm_dmi_read_addr_dm_addr;
   input  EN_dm_dmi_read_addr;
@@ -701,6 +696,11 @@ module mkCoreW(CLK,
   // action method dm_ndm_reset_req_get_get
   input  EN_dm_ndm_reset_req_get_get;
   output RDY_dm_ndm_reset_req_get_get;
+
+  // actionvalue method tv_verifier_info_get_get
+  input  EN_tv_verifier_info_get_get;
+  output [607 : 0] tv_verifier_info_get_get;
+  output RDY_tv_verifier_info_get_get;
 
   // signals for module outputs
   wire [607 : 0] tv_verifier_info_get_get;
@@ -863,7 +863,7 @@ module mkCoreW(CLK,
        debug_module$master_wvalid;
 
   // ports of submodule dm_csr_tap
-  wire [361 : 0] dm_csr_tap$trace_data_out_get;
+  wire [426 : 0] dm_csr_tap$trace_data_out_get;
   wire [76 : 0] dm_csr_tap$client_request_get, dm_csr_tap$server_request_put;
   wire [64 : 0] dm_csr_tap$client_response_put,
 		dm_csr_tap$server_response_get;
@@ -879,7 +879,7 @@ module mkCoreW(CLK,
        dm_csr_tap$RDY_trace_data_out_get;
 
   // ports of submodule dm_gpr_tap_ifc
-  wire [361 : 0] dm_gpr_tap_ifc$trace_data_out_get;
+  wire [426 : 0] dm_gpr_tap_ifc$trace_data_out_get;
   wire [69 : 0] dm_gpr_tap_ifc$client_request_get,
 		dm_gpr_tap_ifc$server_request_put;
   wire [64 : 0] dm_gpr_tap_ifc$client_response_put,
@@ -896,7 +896,7 @@ module mkCoreW(CLK,
        dm_gpr_tap_ifc$RDY_trace_data_out_get;
 
   // ports of submodule dm_mem_tap
-  wire [361 : 0] dm_mem_tap$trace_data_out_get;
+  wire [426 : 0] dm_mem_tap$trace_data_out_get;
   wire [63 : 0] dm_mem_tap$master_araddr,
 		dm_mem_tap$master_awaddr,
 		dm_mem_tap$master_rdata,
@@ -1002,15 +1002,6 @@ module mkCoreW(CLK,
        f_reset_rsps$EMPTY_N,
        f_reset_rsps$ENQ,
        f_reset_rsps$FULL_N;
-
-  // ports of submodule f_trace_data_merged
-  reg [361 : 0] f_trace_data_merged$D_IN;
-  wire [361 : 0] f_trace_data_merged$D_OUT;
-  wire f_trace_data_merged$CLR,
-       f_trace_data_merged$DEQ,
-       f_trace_data_merged$EMPTY_N,
-       f_trace_data_merged$ENQ,
-       f_trace_data_merged$FULL_N;
 
   // ports of submodule fabric_2x3
   wire [63 : 0] fabric_2x3$v_from_masters_0_araddr,
@@ -1289,7 +1280,7 @@ module mkCoreW(CLK,
        plic$v_targets_1_m_eip;
 
   // ports of submodule proc
-  wire [361 : 0] proc$trace_data_out_get;
+  wire [319 : 0] proc$v_to_TV_0_get, proc$v_to_TV_1_get;
   wire [76 : 0] proc$hart0_csr_mem_server_request_put;
   wire [69 : 0] proc$hart0_fpr_mem_server_request_put,
 		proc$hart0_gpr_mem_server_request_put;
@@ -1391,7 +1382,8 @@ module mkCoreW(CLK,
        proc$EN_hart0_server_reset_response_get,
        proc$EN_set_verbosity,
        proc$EN_start,
-       proc$EN_trace_data_out_get,
+       proc$EN_v_to_TV_0_get,
+       proc$EN_v_to_TV_1_get,
        proc$RDY_hart0_csr_mem_server_request_put,
        proc$RDY_hart0_csr_mem_server_response_get,
        proc$RDY_hart0_gpr_mem_server_request_put,
@@ -1401,7 +1393,8 @@ module mkCoreW(CLK,
        proc$RDY_hart0_server_reset_request_put,
        proc$RDY_hart0_server_reset_response_get,
        proc$RDY_start,
-       proc$RDY_trace_data_out_get,
+       proc$RDY_v_to_TV_0_get,
+       proc$RDY_v_to_TV_1_get,
        proc$debug_external_interrupt_req_set_not_clear,
        proc$debug_module_mem_server_arlock,
        proc$debug_module_mem_server_arready,
@@ -1459,13 +1452,51 @@ module mkCoreW(CLK,
 		soc_map$m_plic_addr_lim;
 
   // ports of submodule tv_encode
-  wire [607 : 0] tv_encode$tv_vb_out_get;
-  wire [361 : 0] tv_encode$trace_data_in_put;
-  wire tv_encode$EN_reset,
-       tv_encode$EN_trace_data_in_put,
-       tv_encode$EN_tv_vb_out_get,
-       tv_encode$RDY_trace_data_in_put,
-       tv_encode$RDY_tv_vb_out_get;
+  reg [426 : 0] tv_encode$dm_in_put;
+  wire [607 : 0] tv_encode$out_get;
+  wire [490 : 0] tv_encode$v_cpu_in_0_put, tv_encode$v_cpu_in_1_put;
+  wire tv_encode$EN_dm_in_put,
+       tv_encode$EN_out_get,
+       tv_encode$EN_reset,
+       tv_encode$EN_v_cpu_in_0_put,
+       tv_encode$EN_v_cpu_in_1_put,
+       tv_encode$RDY_dm_in_put,
+       tv_encode$RDY_out_get,
+       tv_encode$RDY_reset,
+       tv_encode$RDY_v_cpu_in_0_put,
+       tv_encode$RDY_v_cpu_in_1_put;
+
+  // ports of submodule v_td2_to_td_0_f_in
+  wire [319 : 0] v_td2_to_td_0_f_in$D_IN, v_td2_to_td_0_f_in$D_OUT;
+  wire v_td2_to_td_0_f_in$CLR,
+       v_td2_to_td_0_f_in$DEQ,
+       v_td2_to_td_0_f_in$EMPTY_N,
+       v_td2_to_td_0_f_in$ENQ,
+       v_td2_to_td_0_f_in$FULL_N;
+
+  // ports of submodule v_td2_to_td_0_f_out
+  wire [490 : 0] v_td2_to_td_0_f_out$D_IN, v_td2_to_td_0_f_out$D_OUT;
+  wire v_td2_to_td_0_f_out$CLR,
+       v_td2_to_td_0_f_out$DEQ,
+       v_td2_to_td_0_f_out$EMPTY_N,
+       v_td2_to_td_0_f_out$ENQ,
+       v_td2_to_td_0_f_out$FULL_N;
+
+  // ports of submodule v_td2_to_td_1_f_in
+  wire [319 : 0] v_td2_to_td_1_f_in$D_IN, v_td2_to_td_1_f_in$D_OUT;
+  wire v_td2_to_td_1_f_in$CLR,
+       v_td2_to_td_1_f_in$DEQ,
+       v_td2_to_td_1_f_in$EMPTY_N,
+       v_td2_to_td_1_f_in$ENQ,
+       v_td2_to_td_1_f_in$FULL_N;
+
+  // ports of submodule v_td2_to_td_1_f_out
+  wire [490 : 0] v_td2_to_td_1_f_out$D_IN, v_td2_to_td_1_f_out$D_OUT;
+  wire v_td2_to_td_1_f_out$CLR,
+       v_td2_to_td_1_f_out$DEQ,
+       v_td2_to_td_1_f_out$EMPTY_N,
+       v_td2_to_td_1_f_out$ENQ,
+       v_td2_to_td_1_f_out$FULL_N;
 
   // rule scheduling signals
   wire CAN_FIRE_RL_ClientServerRequest,
@@ -1478,15 +1509,17 @@ module mkCoreW(CLK,
        CAN_FIRE_RL_ClientServerResponse_2,
        CAN_FIRE_RL_ClientServerResponse_3,
        CAN_FIRE_RL_ClientServerResponse_4,
-       CAN_FIRE_RL_merge_cpu_trace_data,
-       CAN_FIRE_RL_merge_dm_csr_trace_data,
-       CAN_FIRE_RL_merge_dm_gpr_trace_data,
-       CAN_FIRE_RL_merge_dm_mem_trace_data,
        CAN_FIRE_RL_mkConnectionGetPut,
        CAN_FIRE_RL_mkConnectionGetPut_1,
+       CAN_FIRE_RL_mkConnectionGetPut_2,
+       CAN_FIRE_RL_mkConnectionGetPut_3,
+       CAN_FIRE_RL_mkConnectionGetPut_4,
        CAN_FIRE_RL_rl_cpu_hart0_reset_complete,
        CAN_FIRE_RL_rl_cpu_hart0_reset_from_dm_start,
        CAN_FIRE_RL_rl_cpu_hart0_reset_from_soc_start,
+       CAN_FIRE_RL_rl_merge_dm_csr_trace_data,
+       CAN_FIRE_RL_rl_merge_dm_gpr_trace_data,
+       CAN_FIRE_RL_rl_merge_dm_mem_trace_data,
        CAN_FIRE_RL_rl_rd_addr_channel,
        CAN_FIRE_RL_rl_rd_addr_channel_1,
        CAN_FIRE_RL_rl_rd_addr_channel_2,
@@ -1514,6 +1547,8 @@ module mkCoreW(CLK,
        CAN_FIRE_RL_rl_wr_response_channel_2,
        CAN_FIRE_RL_rl_wr_response_channel_3,
        CAN_FIRE_RL_rl_wr_response_channel_4,
+       CAN_FIRE_RL_v_td2_to_td_0_rl_xform,
+       CAN_FIRE_RL_v_td2_to_td_1_rl_xform,
        CAN_FIRE_core_external_interrupt_sources_0_m_interrupt_req,
        CAN_FIRE_core_external_interrupt_sources_10_m_interrupt_req,
        CAN_FIRE_core_external_interrupt_sources_11_m_interrupt_req,
@@ -1560,15 +1595,17 @@ module mkCoreW(CLK,
        WILL_FIRE_RL_ClientServerResponse_2,
        WILL_FIRE_RL_ClientServerResponse_3,
        WILL_FIRE_RL_ClientServerResponse_4,
-       WILL_FIRE_RL_merge_cpu_trace_data,
-       WILL_FIRE_RL_merge_dm_csr_trace_data,
-       WILL_FIRE_RL_merge_dm_gpr_trace_data,
-       WILL_FIRE_RL_merge_dm_mem_trace_data,
        WILL_FIRE_RL_mkConnectionGetPut,
        WILL_FIRE_RL_mkConnectionGetPut_1,
+       WILL_FIRE_RL_mkConnectionGetPut_2,
+       WILL_FIRE_RL_mkConnectionGetPut_3,
+       WILL_FIRE_RL_mkConnectionGetPut_4,
        WILL_FIRE_RL_rl_cpu_hart0_reset_complete,
        WILL_FIRE_RL_rl_cpu_hart0_reset_from_dm_start,
        WILL_FIRE_RL_rl_cpu_hart0_reset_from_soc_start,
+       WILL_FIRE_RL_rl_merge_dm_csr_trace_data,
+       WILL_FIRE_RL_rl_merge_dm_gpr_trace_data,
+       WILL_FIRE_RL_rl_merge_dm_mem_trace_data,
        WILL_FIRE_RL_rl_rd_addr_channel,
        WILL_FIRE_RL_rl_rd_addr_channel_1,
        WILL_FIRE_RL_rl_rd_addr_channel_2,
@@ -1596,6 +1633,8 @@ module mkCoreW(CLK,
        WILL_FIRE_RL_rl_wr_response_channel_2,
        WILL_FIRE_RL_rl_wr_response_channel_3,
        WILL_FIRE_RL_rl_wr_response_channel_4,
+       WILL_FIRE_RL_v_td2_to_td_0_rl_xform,
+       WILL_FIRE_RL_v_td2_to_td_1_rl_xform,
        WILL_FIRE_core_external_interrupt_sources_0_m_interrupt_req,
        WILL_FIRE_core_external_interrupt_sources_10_m_interrupt_req,
        WILL_FIRE_core_external_interrupt_sources_11_m_interrupt_req,
@@ -1635,16 +1674,29 @@ module mkCoreW(CLK,
 
   // declarations used by system tasks
   // synopsys translate_off
-  reg [31 : 0] v__h5154;
-  reg [31 : 0] v__h5328;
-  reg [31 : 0] v__h5598;
-  reg [31 : 0] v__h5148;
-  reg [31 : 0] v__h5322;
-  reg [31 : 0] v__h5592;
+  reg [31 : 0] v__h7205;
+  reg [31 : 0] v__h7403;
+  reg [31 : 0] v__h7674;
+  reg [31 : 0] v__h7199;
+  reg [31 : 0] v__h7397;
+  reg [31 : 0] v__h7668;
   // synopsys translate_on
 
   // remaining internal signals
-  wire proc_RDY_hart0_server_reset_request_put_AND_fa_ETC___d8;
+  reg [63 : 0] x__h5725, x__h6650;
+  reg [11 : 0] CASE_procv_to_TV_0_get_BITS_153_TO_142_1_proc_ETC__q1,
+	       CASE_procv_to_TV_1_get_BITS_153_TO_142_1_proc_ETC__q5;
+  reg [4 : 0] CASE_v_td2_to_td_0_f_inD_OUT_BITS_159_TO_155__ETC__q9,
+	      CASE_v_td2_to_td_1_f_inD_OUT_BITS_159_TO_155__ETC__q10,
+	      x1_avValue_rd__h5432,
+	      x1_avValue_rd__h6363;
+  reg [3 : 0] CASE_procv_to_TV_0_get_BITS_139_TO_136_0_proc_ETC__q2,
+	      CASE_procv_to_TV_0_get_BITS_139_TO_136_0_proc_ETC__q3,
+	      CASE_procv_to_TV_1_get_BITS_139_TO_136_0_proc_ETC__q6,
+	      CASE_procv_to_TV_1_get_BITS_139_TO_136_0_proc_ETC__q7;
+  reg [1 : 0] CASE_procv_to_TV_0_get_BITS_71_TO_70_0_procv_ETC__q4,
+	      CASE_procv_to_TV_1_get_BITS_71_TO_70_0_procv_ETC__q8;
+  wire tv_encode_RDY_reset__07_AND_proc_RDY_hart0_ser_ETC___d113;
 
   // action method set_verbosity
   assign RDY_set_verbosity = 1'd1 ;
@@ -1950,12 +2002,6 @@ module mkCoreW(CLK,
   assign CAN_FIRE_debug_external_interrupt_req = 1'd1 ;
   assign WILL_FIRE_debug_external_interrupt_req = 1'd1 ;
 
-  // actionvalue method tv_verifier_info_get_get
-  assign tv_verifier_info_get_get = tv_encode$tv_vb_out_get ;
-  assign RDY_tv_verifier_info_get_get = tv_encode$RDY_tv_vb_out_get ;
-  assign CAN_FIRE_tv_verifier_info_get_get = tv_encode$RDY_tv_vb_out_get ;
-  assign WILL_FIRE_tv_verifier_info_get_get = EN_tv_verifier_info_get_get ;
-
   // action method dm_dmi_read_addr
   assign RDY_dm_dmi_read_addr = debug_module$RDY_dmi_read_addr ;
   assign CAN_FIRE_dm_dmi_read_addr = debug_module$RDY_dmi_read_addr ;
@@ -1978,6 +2024,12 @@ module mkCoreW(CLK,
   assign CAN_FIRE_dm_ndm_reset_req_get_get =
 	     debug_module$RDY_get_ndm_reset_req_get ;
   assign WILL_FIRE_dm_ndm_reset_req_get_get = EN_dm_ndm_reset_req_get_get ;
+
+  // actionvalue method tv_verifier_info_get_get
+  assign tv_verifier_info_get_get = tv_encode$out_get ;
+  assign RDY_tv_verifier_info_get_get = tv_encode$RDY_out_get ;
+  assign CAN_FIRE_tv_verifier_info_get_get = tv_encode$RDY_out_get ;
+  assign WILL_FIRE_tv_verifier_info_get_get = EN_tv_verifier_info_get_get ;
 
   // submodule debug_module
   mkDebug_Module debug_module(.CLK(CLK),
@@ -2217,17 +2269,6 @@ module mkCoreW(CLK,
 					 .CLR(f_reset_rsps$CLR),
 					 .FULL_N(f_reset_rsps$FULL_N),
 					 .EMPTY_N(f_reset_rsps$EMPTY_N));
-
-  // submodule f_trace_data_merged
-  FIFO2 #(.width(32'd362), .guarded(32'd1)) f_trace_data_merged(.RST(RST_N),
-								.CLK(CLK),
-								.D_IN(f_trace_data_merged$D_IN),
-								.ENQ(f_trace_data_merged$ENQ),
-								.DEQ(f_trace_data_merged$DEQ),
-								.CLR(f_trace_data_merged$CLR),
-								.D_OUT(f_trace_data_merged$D_OUT),
-								.FULL_N(f_trace_data_merged$FULL_N),
-								.EMPTY_N(f_trace_data_merged$EMPTY_N));
 
   // submodule fabric_2x3
   mkFabric_2x3 fabric_2x3(.CLK(CLK),
@@ -2584,7 +2625,6 @@ module mkCoreW(CLK,
 	      .EN_hart0_server_reset_response_get(proc$EN_hart0_server_reset_response_get),
 	      .EN_start(proc$EN_start),
 	      .EN_set_verbosity(proc$EN_set_verbosity),
-	      .EN_trace_data_out_get(proc$EN_trace_data_out_get),
 	      .EN_hart0_run_halt_server_request_put(proc$EN_hart0_run_halt_server_request_put),
 	      .EN_hart0_run_halt_server_response_get(proc$EN_hart0_run_halt_server_response_get),
 	      .EN_hart0_gpr_mem_server_request_put(proc$EN_hart0_gpr_mem_server_request_put),
@@ -2594,6 +2634,8 @@ module mkCoreW(CLK,
 	      .EN_hart0_csr_mem_server_request_put(proc$EN_hart0_csr_mem_server_request_put),
 	      .EN_hart0_csr_mem_server_response_get(proc$EN_hart0_csr_mem_server_response_get),
 	      .EN_hart0_put_other_req_put(proc$EN_hart0_put_other_req_put),
+	      .EN_v_to_TV_0_get(proc$EN_v_to_TV_0_get),
+	      .EN_v_to_TV_1_get(proc$EN_v_to_TV_1_get),
 	      .RDY_hart0_server_reset_request_put(proc$RDY_hart0_server_reset_request_put),
 	      .RDY_hart0_server_reset_response_get(proc$RDY_hart0_server_reset_response_get),
 	      .RDY_start(proc$RDY_start),
@@ -2656,8 +2698,6 @@ module mkCoreW(CLK,
 	      .master1_arregion(proc$master1_arregion),
 	      .master1_rready(proc$master1_rready),
 	      .RDY_set_verbosity(),
-	      .trace_data_out_get(proc$trace_data_out_get),
-	      .RDY_trace_data_out_get(proc$RDY_trace_data_out_get),
 	      .debug_module_mem_server_awready(proc$debug_module_mem_server_awready),
 	      .debug_module_mem_server_wready(proc$debug_module_mem_server_wready),
 	      .debug_module_mem_server_bvalid(proc$debug_module_mem_server_bvalid),
@@ -2681,7 +2721,11 @@ module mkCoreW(CLK,
 	      .RDY_hart0_csr_mem_server_request_put(proc$RDY_hart0_csr_mem_server_request_put),
 	      .hart0_csr_mem_server_response_get(proc$hart0_csr_mem_server_response_get),
 	      .RDY_hart0_csr_mem_server_response_get(proc$RDY_hart0_csr_mem_server_response_get),
-	      .RDY_hart0_put_other_req_put());
+	      .RDY_hart0_put_other_req_put(),
+	      .v_to_TV_0_get(proc$v_to_TV_0_get),
+	      .RDY_v_to_TV_0_get(proc$RDY_v_to_TV_0_get),
+	      .v_to_TV_1_get(proc$v_to_TV_1_get),
+	      .RDY_v_to_TV_1_get(proc$RDY_v_to_TV_1_get));
 
   // submodule soc_map
   mkSoC_Map soc_map(.CLK(CLK),
@@ -2732,25 +2776,75 @@ module mkCoreW(CLK,
   // submodule tv_encode
   mkTV_Encode tv_encode(.CLK(CLK),
 			.RST_N(RST_N),
-			.trace_data_in_put(tv_encode$trace_data_in_put),
+			.dm_in_put(tv_encode$dm_in_put),
+			.v_cpu_in_0_put(tv_encode$v_cpu_in_0_put),
+			.v_cpu_in_1_put(tv_encode$v_cpu_in_1_put),
 			.EN_reset(tv_encode$EN_reset),
-			.EN_trace_data_in_put(tv_encode$EN_trace_data_in_put),
-			.EN_tv_vb_out_get(tv_encode$EN_tv_vb_out_get),
-			.RDY_reset(),
-			.RDY_trace_data_in_put(tv_encode$RDY_trace_data_in_put),
-			.tv_vb_out_get(tv_encode$tv_vb_out_get),
-			.RDY_tv_vb_out_get(tv_encode$RDY_tv_vb_out_get));
+			.EN_v_cpu_in_0_put(tv_encode$EN_v_cpu_in_0_put),
+			.EN_v_cpu_in_1_put(tv_encode$EN_v_cpu_in_1_put),
+			.EN_dm_in_put(tv_encode$EN_dm_in_put),
+			.EN_out_get(tv_encode$EN_out_get),
+			.RDY_reset(tv_encode$RDY_reset),
+			.RDY_v_cpu_in_0_put(tv_encode$RDY_v_cpu_in_0_put),
+			.RDY_v_cpu_in_1_put(tv_encode$RDY_v_cpu_in_1_put),
+			.RDY_dm_in_put(tv_encode$RDY_dm_in_put),
+			.out_get(tv_encode$out_get),
+			.RDY_out_get(tv_encode$RDY_out_get));
+
+  // submodule v_td2_to_td_0_f_in
+  FIFO2 #(.width(32'd320), .guarded(32'd1)) v_td2_to_td_0_f_in(.RST(RST_N),
+							       .CLK(CLK),
+							       .D_IN(v_td2_to_td_0_f_in$D_IN),
+							       .ENQ(v_td2_to_td_0_f_in$ENQ),
+							       .DEQ(v_td2_to_td_0_f_in$DEQ),
+							       .CLR(v_td2_to_td_0_f_in$CLR),
+							       .D_OUT(v_td2_to_td_0_f_in$D_OUT),
+							       .FULL_N(v_td2_to_td_0_f_in$FULL_N),
+							       .EMPTY_N(v_td2_to_td_0_f_in$EMPTY_N));
+
+  // submodule v_td2_to_td_0_f_out
+  FIFO2 #(.width(32'd491), .guarded(32'd1)) v_td2_to_td_0_f_out(.RST(RST_N),
+								.CLK(CLK),
+								.D_IN(v_td2_to_td_0_f_out$D_IN),
+								.ENQ(v_td2_to_td_0_f_out$ENQ),
+								.DEQ(v_td2_to_td_0_f_out$DEQ),
+								.CLR(v_td2_to_td_0_f_out$CLR),
+								.D_OUT(v_td2_to_td_0_f_out$D_OUT),
+								.FULL_N(v_td2_to_td_0_f_out$FULL_N),
+								.EMPTY_N(v_td2_to_td_0_f_out$EMPTY_N));
+
+  // submodule v_td2_to_td_1_f_in
+  FIFO2 #(.width(32'd320), .guarded(32'd1)) v_td2_to_td_1_f_in(.RST(RST_N),
+							       .CLK(CLK),
+							       .D_IN(v_td2_to_td_1_f_in$D_IN),
+							       .ENQ(v_td2_to_td_1_f_in$ENQ),
+							       .DEQ(v_td2_to_td_1_f_in$DEQ),
+							       .CLR(v_td2_to_td_1_f_in$CLR),
+							       .D_OUT(v_td2_to_td_1_f_in$D_OUT),
+							       .FULL_N(v_td2_to_td_1_f_in$FULL_N),
+							       .EMPTY_N(v_td2_to_td_1_f_in$EMPTY_N));
+
+  // submodule v_td2_to_td_1_f_out
+  FIFO2 #(.width(32'd491), .guarded(32'd1)) v_td2_to_td_1_f_out(.RST(RST_N),
+								.CLK(CLK),
+								.D_IN(v_td2_to_td_1_f_out$D_IN),
+								.ENQ(v_td2_to_td_1_f_out$ENQ),
+								.DEQ(v_td2_to_td_1_f_out$DEQ),
+								.CLR(v_td2_to_td_1_f_out$CLR),
+								.D_OUT(v_td2_to_td_1_f_out$D_OUT),
+								.FULL_N(v_td2_to_td_1_f_out$FULL_N),
+								.EMPTY_N(v_td2_to_td_1_f_out$EMPTY_N));
 
   // rule RL_ClientServerRequest
   assign CAN_FIRE_RL_ClientServerRequest =
-	     proc$RDY_hart0_run_halt_server_request_put &&
-	     debug_module$RDY_hart0_client_run_halt_request_get ;
+	     debug_module$RDY_hart0_client_run_halt_request_get &&
+	     proc$RDY_hart0_run_halt_server_request_put ;
   assign WILL_FIRE_RL_ClientServerRequest = CAN_FIRE_RL_ClientServerRequest ;
 
   // rule RL_ClientServerResponse
   assign CAN_FIRE_RL_ClientServerResponse =
-	     proc$RDY_hart0_run_halt_server_response_get &&
-	     debug_module$RDY_hart0_client_run_halt_response_put ;
+	     debug_module$RDY_hart0_client_run_halt_response_put &&
+	     proc$RDY_hart0_run_halt_server_response_get ;
   assign WILL_FIRE_RL_ClientServerResponse =
 	     CAN_FIRE_RL_ClientServerResponse ;
 
@@ -2762,9 +2856,27 @@ module mkCoreW(CLK,
 
   // rule RL_mkConnectionGetPut_1
   assign CAN_FIRE_RL_mkConnectionGetPut_1 =
-	     tv_encode$RDY_trace_data_in_put && f_trace_data_merged$EMPTY_N ;
+	     proc$RDY_v_to_TV_0_get && v_td2_to_td_0_f_in$FULL_N ;
   assign WILL_FIRE_RL_mkConnectionGetPut_1 =
 	     CAN_FIRE_RL_mkConnectionGetPut_1 ;
+
+  // rule RL_mkConnectionGetPut_2
+  assign CAN_FIRE_RL_mkConnectionGetPut_2 =
+	     tv_encode$RDY_v_cpu_in_0_put && v_td2_to_td_0_f_out$EMPTY_N ;
+  assign WILL_FIRE_RL_mkConnectionGetPut_2 =
+	     CAN_FIRE_RL_mkConnectionGetPut_2 ;
+
+  // rule RL_mkConnectionGetPut_3
+  assign CAN_FIRE_RL_mkConnectionGetPut_3 =
+	     proc$RDY_v_to_TV_1_get && v_td2_to_td_1_f_in$FULL_N ;
+  assign WILL_FIRE_RL_mkConnectionGetPut_3 =
+	     CAN_FIRE_RL_mkConnectionGetPut_3 ;
+
+  // rule RL_mkConnectionGetPut_4
+  assign CAN_FIRE_RL_mkConnectionGetPut_4 =
+	     tv_encode$RDY_v_cpu_in_1_put && v_td2_to_td_1_f_out$EMPTY_N ;
+  assign WILL_FIRE_RL_mkConnectionGetPut_4 =
+	     CAN_FIRE_RL_mkConnectionGetPut_4 ;
 
   // rule RL_rl_wr_addr_channel
   assign CAN_FIRE_RL_rl_wr_addr_channel = 1'd1 ;
@@ -2784,76 +2896,67 @@ module mkCoreW(CLK,
 
   // rule RL_ClientServerRequest_1
   assign CAN_FIRE_RL_ClientServerRequest_1 =
-	     debug_module$RDY_hart0_gpr_mem_client_request_get &&
-	     dm_gpr_tap_ifc$RDY_server_request_put ;
+	     dm_gpr_tap_ifc$RDY_server_request_put &&
+	     debug_module$RDY_hart0_gpr_mem_client_request_get ;
   assign WILL_FIRE_RL_ClientServerRequest_1 =
 	     CAN_FIRE_RL_ClientServerRequest_1 ;
 
   // rule RL_ClientServerResponse_1
   assign CAN_FIRE_RL_ClientServerResponse_1 =
-	     debug_module$RDY_hart0_gpr_mem_client_response_put &&
-	     dm_gpr_tap_ifc$RDY_server_response_get ;
+	     dm_gpr_tap_ifc$RDY_server_response_get &&
+	     debug_module$RDY_hart0_gpr_mem_client_response_put ;
   assign WILL_FIRE_RL_ClientServerResponse_1 =
 	     CAN_FIRE_RL_ClientServerResponse_1 ;
 
   // rule RL_ClientServerResponse_2
   assign CAN_FIRE_RL_ClientServerResponse_2 =
-	     proc$RDY_hart0_gpr_mem_server_response_get &&
-	     dm_gpr_tap_ifc$RDY_client_response_put ;
+	     dm_gpr_tap_ifc$RDY_client_response_put &&
+	     proc$RDY_hart0_gpr_mem_server_response_get ;
   assign WILL_FIRE_RL_ClientServerResponse_2 =
 	     CAN_FIRE_RL_ClientServerResponse_2 ;
 
-  // rule RL_merge_dm_gpr_trace_data
-  assign CAN_FIRE_RL_merge_dm_gpr_trace_data =
-	     dm_gpr_tap_ifc$RDY_trace_data_out_get &&
-	     f_trace_data_merged$FULL_N ;
-  assign WILL_FIRE_RL_merge_dm_gpr_trace_data =
-	     CAN_FIRE_RL_merge_dm_gpr_trace_data ;
+  // rule RL_rl_merge_dm_gpr_trace_data
+  assign CAN_FIRE_RL_rl_merge_dm_gpr_trace_data =
+	     tv_encode$RDY_dm_in_put &&
+	     dm_gpr_tap_ifc$RDY_trace_data_out_get ;
+  assign WILL_FIRE_RL_rl_merge_dm_gpr_trace_data =
+	     CAN_FIRE_RL_rl_merge_dm_gpr_trace_data ;
 
   // rule RL_ClientServerRequest_3
   assign CAN_FIRE_RL_ClientServerRequest_3 =
-	     debug_module$RDY_hart0_csr_mem_client_request_get &&
-	     dm_csr_tap$RDY_server_request_put ;
+	     dm_csr_tap$RDY_server_request_put &&
+	     debug_module$RDY_hart0_csr_mem_client_request_get ;
   assign WILL_FIRE_RL_ClientServerRequest_3 =
 	     CAN_FIRE_RL_ClientServerRequest_3 ;
 
   // rule RL_ClientServerResponse_3
   assign CAN_FIRE_RL_ClientServerResponse_3 =
-	     debug_module$RDY_hart0_csr_mem_client_response_put &&
-	     dm_csr_tap$RDY_server_response_get ;
+	     dm_csr_tap$RDY_server_response_get &&
+	     debug_module$RDY_hart0_csr_mem_client_response_put ;
   assign WILL_FIRE_RL_ClientServerResponse_3 =
 	     CAN_FIRE_RL_ClientServerResponse_3 ;
 
   // rule RL_ClientServerResponse_4
   assign CAN_FIRE_RL_ClientServerResponse_4 =
-	     proc$RDY_hart0_csr_mem_server_response_get &&
-	     dm_csr_tap$RDY_client_response_put ;
+	     dm_csr_tap$RDY_client_response_put &&
+	     proc$RDY_hart0_csr_mem_server_response_get ;
   assign WILL_FIRE_RL_ClientServerResponse_4 =
 	     CAN_FIRE_RL_ClientServerResponse_4 ;
 
-  // rule RL_merge_cpu_trace_data
-  assign CAN_FIRE_RL_merge_cpu_trace_data =
-	     proc$RDY_trace_data_out_get && f_trace_data_merged$FULL_N ;
-  assign WILL_FIRE_RL_merge_cpu_trace_data =
-	     CAN_FIRE_RL_merge_cpu_trace_data &&
-	     !WILL_FIRE_RL_merge_dm_mem_trace_data &&
-	     !WILL_FIRE_RL_merge_dm_csr_trace_data &&
-	     !WILL_FIRE_RL_merge_dm_gpr_trace_data ;
+  // rule RL_rl_merge_dm_mem_trace_data
+  assign CAN_FIRE_RL_rl_merge_dm_mem_trace_data =
+	     tv_encode$RDY_dm_in_put && dm_mem_tap$RDY_trace_data_out_get ;
+  assign WILL_FIRE_RL_rl_merge_dm_mem_trace_data =
+	     CAN_FIRE_RL_rl_merge_dm_mem_trace_data &&
+	     !WILL_FIRE_RL_rl_merge_dm_csr_trace_data &&
+	     !WILL_FIRE_RL_rl_merge_dm_gpr_trace_data ;
 
-  // rule RL_merge_dm_mem_trace_data
-  assign CAN_FIRE_RL_merge_dm_mem_trace_data =
-	     dm_mem_tap$RDY_trace_data_out_get && f_trace_data_merged$FULL_N ;
-  assign WILL_FIRE_RL_merge_dm_mem_trace_data =
-	     CAN_FIRE_RL_merge_dm_mem_trace_data &&
-	     !WILL_FIRE_RL_merge_dm_csr_trace_data &&
-	     !WILL_FIRE_RL_merge_dm_gpr_trace_data ;
-
-  // rule RL_merge_dm_csr_trace_data
-  assign CAN_FIRE_RL_merge_dm_csr_trace_data =
-	     dm_csr_tap$RDY_trace_data_out_get && f_trace_data_merged$FULL_N ;
-  assign WILL_FIRE_RL_merge_dm_csr_trace_data =
-	     CAN_FIRE_RL_merge_dm_csr_trace_data &&
-	     !WILL_FIRE_RL_merge_dm_gpr_trace_data ;
+  // rule RL_rl_merge_dm_csr_trace_data
+  assign CAN_FIRE_RL_rl_merge_dm_csr_trace_data =
+	     tv_encode$RDY_dm_in_put && dm_csr_tap$RDY_trace_data_out_get ;
+  assign WILL_FIRE_RL_rl_merge_dm_csr_trace_data =
+	     CAN_FIRE_RL_rl_merge_dm_csr_trace_data &&
+	     !WILL_FIRE_RL_rl_merge_dm_gpr_trace_data ;
 
   // rule RL_rl_wr_addr_channel_1
   assign CAN_FIRE_RL_rl_wr_addr_channel_1 = 1'd1 ;
@@ -2941,17 +3044,17 @@ module mkCoreW(CLK,
 
   // rule RL_rl_cpu_hart0_reset_from_soc_start
   assign CAN_FIRE_RL_rl_cpu_hart0_reset_from_soc_start =
-	     plic$RDY_server_reset_request_put &&
-	     proc_RDY_hart0_server_reset_request_put_AND_fa_ETC___d8 ;
+	     plic$RDY_server_reset_request_put && fabric_2x3$RDY_reset &&
+	     tv_encode_RDY_reset__07_AND_proc_RDY_hart0_ser_ETC___d113 ;
   assign WILL_FIRE_RL_rl_cpu_hart0_reset_from_soc_start =
 	     CAN_FIRE_RL_rl_cpu_hart0_reset_from_soc_start ;
 
   // rule RL_rl_cpu_hart0_reset_from_dm_start
   assign CAN_FIRE_RL_rl_cpu_hart0_reset_from_dm_start =
-	     plic$RDY_server_reset_request_put &&
-	     proc$RDY_hart0_server_reset_request_put &&
+	     plic$RDY_server_reset_request_put && fabric_2x3$RDY_reset &&
+	     tv_encode$RDY_reset &&
 	     debug_module$RDY_hart0_get_reset_req_get &&
-	     fabric_2x3$RDY_reset &&
+	     proc$RDY_hart0_server_reset_request_put &&
 	     f_reset_requestor$FULL_N ;
   assign WILL_FIRE_RL_rl_cpu_hart0_reset_from_dm_start =
 	     CAN_FIRE_RL_rl_cpu_hart0_reset_from_dm_start &&
@@ -2972,21 +3075,33 @@ module mkCoreW(CLK,
 
   // rule RL_ClientServerRequest_2
   assign CAN_FIRE_RL_ClientServerRequest_2 =
-	     proc$RDY_hart0_gpr_mem_server_request_put &&
-	     dm_gpr_tap_ifc$RDY_client_request_get ;
+	     dm_gpr_tap_ifc$RDY_client_request_get &&
+	     proc$RDY_hart0_gpr_mem_server_request_put ;
   assign WILL_FIRE_RL_ClientServerRequest_2 =
 	     CAN_FIRE_RL_ClientServerRequest_2 ;
 
   // rule RL_ClientServerRequest_4
   assign CAN_FIRE_RL_ClientServerRequest_4 =
-	     proc$RDY_hart0_csr_mem_server_request_put &&
-	     dm_csr_tap$RDY_client_request_get ;
+	     dm_csr_tap$RDY_client_request_get &&
+	     proc$RDY_hart0_csr_mem_server_request_put ;
   assign WILL_FIRE_RL_ClientServerRequest_4 =
 	     CAN_FIRE_RL_ClientServerRequest_4 ;
 
   // rule RL_rl_relay_non_maskable_interrupt
   assign CAN_FIRE_RL_rl_relay_non_maskable_interrupt = 1'd1 ;
   assign WILL_FIRE_RL_rl_relay_non_maskable_interrupt = 1'd1 ;
+
+  // rule RL_v_td2_to_td_0_rl_xform
+  assign CAN_FIRE_RL_v_td2_to_td_0_rl_xform =
+	     v_td2_to_td_0_f_in$EMPTY_N && v_td2_to_td_0_f_out$FULL_N ;
+  assign WILL_FIRE_RL_v_td2_to_td_0_rl_xform =
+	     CAN_FIRE_RL_v_td2_to_td_0_rl_xform ;
+
+  // rule RL_v_td2_to_td_1_rl_xform
+  assign CAN_FIRE_RL_v_td2_to_td_1_rl_xform =
+	     v_td2_to_td_1_f_in$EMPTY_N && v_td2_to_td_1_f_out$FULL_N ;
+  assign WILL_FIRE_RL_v_td2_to_td_1_rl_xform =
+	     CAN_FIRE_RL_v_td2_to_td_1_rl_xform ;
 
   // register rg_fromhost_addr
   assign rg_fromhost_addr$D_IN = set_htif_addrs_fromhost_addr ;
@@ -3055,7 +3170,7 @@ module mkCoreW(CLK,
   assign dm_csr_tap$EN_server_response_get =
 	     CAN_FIRE_RL_ClientServerResponse_3 ;
   assign dm_csr_tap$EN_trace_data_out_get =
-	     WILL_FIRE_RL_merge_dm_csr_trace_data ;
+	     WILL_FIRE_RL_rl_merge_dm_csr_trace_data ;
 
   // submodule dm_gpr_tap_ifc
   assign dm_gpr_tap_ifc$client_response_put =
@@ -3071,7 +3186,7 @@ module mkCoreW(CLK,
   assign dm_gpr_tap_ifc$EN_server_response_get =
 	     CAN_FIRE_RL_ClientServerResponse_1 ;
   assign dm_gpr_tap_ifc$EN_trace_data_out_get =
-	     CAN_FIRE_RL_merge_dm_gpr_trace_data ;
+	     CAN_FIRE_RL_rl_merge_dm_gpr_trace_data ;
 
   // submodule dm_mem_tap
   assign dm_mem_tap$master_arready = fabric_2x3$v_from_masters_1_arready ;
@@ -3115,13 +3230,13 @@ module mkCoreW(CLK,
   assign dm_mem_tap$slave_wstrb = debug_module$master_wstrb ;
   assign dm_mem_tap$slave_wvalid = debug_module$master_wvalid ;
   assign dm_mem_tap$EN_trace_data_out_get =
-	     WILL_FIRE_RL_merge_dm_mem_trace_data ;
+	     WILL_FIRE_RL_rl_merge_dm_mem_trace_data ;
 
   // submodule f_reset_reqs
   assign f_reset_reqs$ENQ = EN_cpu_reset_server_request_put ;
   assign f_reset_reqs$DEQ =
-	     plic$RDY_server_reset_request_put &&
-	     proc_RDY_hart0_server_reset_request_put_AND_fa_ETC___d8 ;
+	     plic$RDY_server_reset_request_put && fabric_2x3$RDY_reset &&
+	     tv_encode_RDY_reset__07_AND_proc_RDY_hart0_ser_ETC___d113 ;
   assign f_reset_reqs$CLR = 1'b0 ;
 
   // submodule f_reset_requestor
@@ -3139,37 +3254,6 @@ module mkCoreW(CLK,
 	     f_reset_requestor$D_OUT ;
   assign f_reset_rsps$DEQ = EN_cpu_reset_server_response_get ;
   assign f_reset_rsps$CLR = 1'b0 ;
-
-  // submodule f_trace_data_merged
-  always@(WILL_FIRE_RL_merge_cpu_trace_data or
-	  proc$trace_data_out_get or
-	  WILL_FIRE_RL_merge_dm_mem_trace_data or
-	  dm_mem_tap$trace_data_out_get or
-	  WILL_FIRE_RL_merge_dm_gpr_trace_data or
-	  dm_gpr_tap_ifc$trace_data_out_get or
-	  WILL_FIRE_RL_merge_dm_csr_trace_data or
-	  dm_csr_tap$trace_data_out_get)
-  begin
-    case (1'b1) // synopsys parallel_case
-      WILL_FIRE_RL_merge_cpu_trace_data:
-	  f_trace_data_merged$D_IN = proc$trace_data_out_get;
-      WILL_FIRE_RL_merge_dm_mem_trace_data:
-	  f_trace_data_merged$D_IN = dm_mem_tap$trace_data_out_get;
-      WILL_FIRE_RL_merge_dm_gpr_trace_data:
-	  f_trace_data_merged$D_IN = dm_gpr_tap_ifc$trace_data_out_get;
-      WILL_FIRE_RL_merge_dm_csr_trace_data:
-	  f_trace_data_merged$D_IN = dm_csr_tap$trace_data_out_get;
-      default: f_trace_data_merged$D_IN =
-		   362'h2AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA /* unspecified value */ ;
-    endcase
-  end
-  assign f_trace_data_merged$ENQ =
-	     WILL_FIRE_RL_merge_cpu_trace_data ||
-	     WILL_FIRE_RL_merge_dm_mem_trace_data ||
-	     WILL_FIRE_RL_merge_dm_gpr_trace_data ||
-	     WILL_FIRE_RL_merge_dm_csr_trace_data ;
-  assign f_trace_data_merged$DEQ = CAN_FIRE_RL_mkConnectionGetPut_1 ;
-  assign f_trace_data_merged$CLR = 1'b0 ;
 
   // submodule fabric_2x3
   assign fabric_2x3$set_verbosity_verbosity = 4'h0 ;
@@ -3445,7 +3529,6 @@ module mkCoreW(CLK,
 	     CAN_FIRE_RL_rl_cpu_hart0_reset_complete ;
   assign proc$EN_start = CAN_FIRE_RL_rl_cpu_hart0_reset_complete ;
   assign proc$EN_set_verbosity = EN_set_verbosity ;
-  assign proc$EN_trace_data_out_get = WILL_FIRE_RL_merge_cpu_trace_data ;
   assign proc$EN_hart0_run_halt_server_request_put =
 	     CAN_FIRE_RL_ClientServerRequest ;
   assign proc$EN_hart0_run_halt_server_response_get =
@@ -3462,6 +3545,8 @@ module mkCoreW(CLK,
 	     CAN_FIRE_RL_ClientServerResponse_4 ;
   assign proc$EN_hart0_put_other_req_put =
 	     debug_module$RDY_hart0_get_other_req_get ;
+  assign proc$EN_v_to_TV_0_get = CAN_FIRE_RL_mkConnectionGetPut_1 ;
+  assign proc$EN_v_to_TV_1_get = CAN_FIRE_RL_mkConnectionGetPut_3 ;
 
   // submodule soc_map
   assign soc_map$m_is_IO_addr_addr = 64'h0 ;
@@ -3469,17 +3554,338 @@ module mkCoreW(CLK,
   assign soc_map$m_is_near_mem_IO_addr_addr = 64'h0 ;
 
   // submodule tv_encode
-  assign tv_encode$trace_data_in_put = f_trace_data_merged$D_OUT ;
-  assign tv_encode$EN_reset = 1'b0 ;
-  assign tv_encode$EN_trace_data_in_put = CAN_FIRE_RL_mkConnectionGetPut_1 ;
-  assign tv_encode$EN_tv_vb_out_get = EN_tv_verifier_info_get_get ;
+  always@(WILL_FIRE_RL_rl_merge_dm_mem_trace_data or
+	  dm_mem_tap$trace_data_out_get or
+	  WILL_FIRE_RL_rl_merge_dm_gpr_trace_data or
+	  dm_gpr_tap_ifc$trace_data_out_get or
+	  WILL_FIRE_RL_rl_merge_dm_csr_trace_data or
+	  dm_csr_tap$trace_data_out_get)
+  begin
+    case (1'b1) // synopsys parallel_case
+      WILL_FIRE_RL_rl_merge_dm_mem_trace_data:
+	  tv_encode$dm_in_put = dm_mem_tap$trace_data_out_get;
+      WILL_FIRE_RL_rl_merge_dm_gpr_trace_data:
+	  tv_encode$dm_in_put = dm_gpr_tap_ifc$trace_data_out_get;
+      WILL_FIRE_RL_rl_merge_dm_csr_trace_data:
+	  tv_encode$dm_in_put = dm_csr_tap$trace_data_out_get;
+      default: tv_encode$dm_in_put =
+		   427'h2AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA /* unspecified value */ ;
+    endcase
+  end
+  assign tv_encode$v_cpu_in_0_put = v_td2_to_td_0_f_out$D_OUT ;
+  assign tv_encode$v_cpu_in_1_put = v_td2_to_td_1_f_out$D_OUT ;
+  assign tv_encode$EN_reset =
+	     WILL_FIRE_RL_rl_cpu_hart0_reset_from_dm_start ||
+	     WILL_FIRE_RL_rl_cpu_hart0_reset_from_soc_start ;
+  assign tv_encode$EN_v_cpu_in_0_put = CAN_FIRE_RL_mkConnectionGetPut_2 ;
+  assign tv_encode$EN_v_cpu_in_1_put = CAN_FIRE_RL_mkConnectionGetPut_4 ;
+  assign tv_encode$EN_dm_in_put =
+	     WILL_FIRE_RL_rl_merge_dm_mem_trace_data ||
+	     WILL_FIRE_RL_rl_merge_dm_gpr_trace_data ||
+	     WILL_FIRE_RL_rl_merge_dm_csr_trace_data ;
+  assign tv_encode$EN_out_get = EN_tv_verifier_info_get_get ;
+
+  // submodule v_td2_to_td_0_f_in
+  assign v_td2_to_td_0_f_in$D_IN =
+	     { proc$v_to_TV_0_get[319:154],
+	       proc$v_to_TV_0_get[154] ?
+		 CASE_procv_to_TV_0_get_BITS_153_TO_142_1_proc_ETC__q1 :
+		 12'hAAA,
+	       proc$v_to_TV_0_get[141],
+	       proc$v_to_TV_0_get[141] ?
+		 { proc$v_to_TV_0_get[140],
+		   proc$v_to_TV_0_get[140] ?
+		     CASE_procv_to_TV_0_get_BITS_139_TO_136_0_proc_ETC__q2 :
+		     CASE_procv_to_TV_0_get_BITS_139_TO_136_0_proc_ETC__q3 } :
+		 5'h0A,
+	       proc$v_to_TV_0_get[135:72],
+	       CASE_procv_to_TV_0_get_BITS_71_TO_70_0_procv_ETC__q4,
+	       proc$v_to_TV_0_get[69:0] } ;
+  assign v_td2_to_td_0_f_in$ENQ = CAN_FIRE_RL_mkConnectionGetPut_1 ;
+  assign v_td2_to_td_0_f_in$DEQ = CAN_FIRE_RL_v_td2_to_td_0_rl_xform ;
+  assign v_td2_to_td_0_f_in$CLR = 1'b0 ;
+
+  // submodule v_td2_to_td_0_f_out
+  assign v_td2_to_td_0_f_out$D_IN =
+	     { v_td2_to_td_0_f_in$D_OUT[319:256],
+	       CASE_v_td2_to_td_0_f_inD_OUT_BITS_159_TO_155__ETC__q9,
+	       v_td2_to_td_0_f_in$D_OUT[255:192],
+	       v_td2_to_td_0_f_in$D_OUT[161:160] == 2'b11,
+	       v_td2_to_td_0_f_in$D_OUT[191:160],
+	       x1_avValue_rd__h5432,
+	       x__h5725,
+	       256'h000000000000000000000000000000000000000000000000AAAAAAAAAAAAAAAA } ;
+  assign v_td2_to_td_0_f_out$ENQ = CAN_FIRE_RL_v_td2_to_td_0_rl_xform ;
+  assign v_td2_to_td_0_f_out$DEQ = CAN_FIRE_RL_mkConnectionGetPut_2 ;
+  assign v_td2_to_td_0_f_out$CLR = 1'b0 ;
+
+  // submodule v_td2_to_td_1_f_in
+  assign v_td2_to_td_1_f_in$D_IN =
+	     { proc$v_to_TV_1_get[319:154],
+	       proc$v_to_TV_1_get[154] ?
+		 CASE_procv_to_TV_1_get_BITS_153_TO_142_1_proc_ETC__q5 :
+		 12'hAAA,
+	       proc$v_to_TV_1_get[141],
+	       proc$v_to_TV_1_get[141] ?
+		 { proc$v_to_TV_1_get[140],
+		   proc$v_to_TV_1_get[140] ?
+		     CASE_procv_to_TV_1_get_BITS_139_TO_136_0_proc_ETC__q6 :
+		     CASE_procv_to_TV_1_get_BITS_139_TO_136_0_proc_ETC__q7 } :
+		 5'h0A,
+	       proc$v_to_TV_1_get[135:72],
+	       CASE_procv_to_TV_1_get_BITS_71_TO_70_0_procv_ETC__q8,
+	       proc$v_to_TV_1_get[69:0] } ;
+  assign v_td2_to_td_1_f_in$ENQ = CAN_FIRE_RL_mkConnectionGetPut_3 ;
+  assign v_td2_to_td_1_f_in$DEQ = CAN_FIRE_RL_v_td2_to_td_1_rl_xform ;
+  assign v_td2_to_td_1_f_in$CLR = 1'b0 ;
+
+  // submodule v_td2_to_td_1_f_out
+  assign v_td2_to_td_1_f_out$D_IN =
+	     { v_td2_to_td_1_f_in$D_OUT[319:256],
+	       CASE_v_td2_to_td_1_f_inD_OUT_BITS_159_TO_155__ETC__q10,
+	       v_td2_to_td_1_f_in$D_OUT[255:192],
+	       v_td2_to_td_1_f_in$D_OUT[161:160] == 2'b11,
+	       v_td2_to_td_1_f_in$D_OUT[191:160],
+	       x1_avValue_rd__h6363,
+	       x__h6650,
+	       256'h000000000000000000000000000000000000000000000000AAAAAAAAAAAAAAAA } ;
+  assign v_td2_to_td_1_f_out$ENQ = CAN_FIRE_RL_v_td2_to_td_1_rl_xform ;
+  assign v_td2_to_td_1_f_out$DEQ = CAN_FIRE_RL_mkConnectionGetPut_4 ;
+  assign v_td2_to_td_1_f_out$CLR = 1'b0 ;
 
   // remaining internal signals
-  assign proc_RDY_hart0_server_reset_request_put_AND_fa_ETC___d8 =
-	     proc$RDY_hart0_server_reset_request_put &&
-	     fabric_2x3$RDY_reset &&
+  assign tv_encode_RDY_reset__07_AND_proc_RDY_hart0_ser_ETC___d113 =
+	     tv_encode$RDY_reset && proc$RDY_hart0_server_reset_request_put &&
 	     f_reset_reqs$EMPTY_N &&
 	     f_reset_requestor$FULL_N ;
+  always@(v_td2_to_td_0_f_in$D_OUT)
+  begin
+    case (v_td2_to_td_0_f_in$D_OUT[159:155])
+      5'd3, 5'd8, 5'd9, 5'd11: x1_avValue_rd__h5432 = 5'd0;
+      default: x1_avValue_rd__h5432 = 5'd0;
+    endcase
+  end
+  always@(v_td2_to_td_0_f_in$D_OUT)
+  begin
+    case (v_td2_to_td_0_f_in$D_OUT[159:155])
+      5'd3, 5'd8, 5'd9, 5'd11: x__h5725 = 64'd0;
+      default: x__h5725 = 64'd0;
+    endcase
+  end
+  always@(v_td2_to_td_1_f_in$D_OUT)
+  begin
+    case (v_td2_to_td_1_f_in$D_OUT[159:155])
+      5'd3, 5'd8, 5'd9, 5'd11: x1_avValue_rd__h6363 = 5'd0;
+      default: x1_avValue_rd__h6363 = 5'd0;
+    endcase
+  end
+  always@(v_td2_to_td_1_f_in$D_OUT)
+  begin
+    case (v_td2_to_td_1_f_in$D_OUT[159:155])
+      5'd3, 5'd8, 5'd9, 5'd11: x__h6650 = 64'd0;
+      default: x__h6650 = 64'd0;
+    endcase
+  end
+  always@(proc$v_to_TV_0_get)
+  begin
+    case (proc$v_to_TV_0_get[153:142])
+      12'd1,
+      12'd2,
+      12'd3,
+      12'd256,
+      12'd260,
+      12'd261,
+      12'd262,
+      12'd320,
+      12'd321,
+      12'd322,
+      12'd323,
+      12'd324,
+      12'd384,
+      12'd768,
+      12'd769,
+      12'd770,
+      12'd771,
+      12'd772,
+      12'd773,
+      12'd774,
+      12'd832,
+      12'd833,
+      12'd834,
+      12'd835,
+      12'd836,
+      12'd1968,
+      12'd1969,
+      12'd1970,
+      12'd1971,
+      12'd2048,
+      12'd2049,
+      12'd2816,
+      12'd2818,
+      12'd3072,
+      12'd3073,
+      12'd3074,
+      12'd3857,
+      12'd3858,
+      12'd3859,
+      12'd3860:
+	  CASE_procv_to_TV_0_get_BITS_153_TO_142_1_proc_ETC__q1 =
+	      proc$v_to_TV_0_get[153:142];
+      default: CASE_procv_to_TV_0_get_BITS_153_TO_142_1_proc_ETC__q1 =
+		   12'd2303;
+    endcase
+  end
+  always@(proc$v_to_TV_0_get)
+  begin
+    case (proc$v_to_TV_0_get[139:136])
+      4'd0, 4'd1, 4'd3, 4'd4, 4'd5, 4'd7, 4'd8, 4'd9, 4'd11, 4'd14:
+	  CASE_procv_to_TV_0_get_BITS_139_TO_136_0_proc_ETC__q2 =
+	      proc$v_to_TV_0_get[139:136];
+      default: CASE_procv_to_TV_0_get_BITS_139_TO_136_0_proc_ETC__q2 = 4'd15;
+    endcase
+  end
+  always@(proc$v_to_TV_0_get)
+  begin
+    case (proc$v_to_TV_0_get[139:136])
+      4'd0,
+      4'd1,
+      4'd2,
+      4'd3,
+      4'd4,
+      4'd5,
+      4'd6,
+      4'd7,
+      4'd8,
+      4'd9,
+      4'd11,
+      4'd12,
+      4'd13:
+	  CASE_procv_to_TV_0_get_BITS_139_TO_136_0_proc_ETC__q3 =
+	      proc$v_to_TV_0_get[139:136];
+      default: CASE_procv_to_TV_0_get_BITS_139_TO_136_0_proc_ETC__q3 = 4'd15;
+    endcase
+  end
+  always@(proc$v_to_TV_0_get)
+  begin
+    case (proc$v_to_TV_0_get[71:70])
+      2'd0, 2'd1:
+	  CASE_procv_to_TV_0_get_BITS_71_TO_70_0_procv_ETC__q4 =
+	      proc$v_to_TV_0_get[71:70];
+      default: CASE_procv_to_TV_0_get_BITS_71_TO_70_0_procv_ETC__q4 = 2'd2;
+    endcase
+  end
+  always@(proc$v_to_TV_1_get)
+  begin
+    case (proc$v_to_TV_1_get[153:142])
+      12'd1,
+      12'd2,
+      12'd3,
+      12'd256,
+      12'd260,
+      12'd261,
+      12'd262,
+      12'd320,
+      12'd321,
+      12'd322,
+      12'd323,
+      12'd324,
+      12'd384,
+      12'd768,
+      12'd769,
+      12'd770,
+      12'd771,
+      12'd772,
+      12'd773,
+      12'd774,
+      12'd832,
+      12'd833,
+      12'd834,
+      12'd835,
+      12'd836,
+      12'd1968,
+      12'd1969,
+      12'd1970,
+      12'd1971,
+      12'd2048,
+      12'd2049,
+      12'd2816,
+      12'd2818,
+      12'd3072,
+      12'd3073,
+      12'd3074,
+      12'd3857,
+      12'd3858,
+      12'd3859,
+      12'd3860:
+	  CASE_procv_to_TV_1_get_BITS_153_TO_142_1_proc_ETC__q5 =
+	      proc$v_to_TV_1_get[153:142];
+      default: CASE_procv_to_TV_1_get_BITS_153_TO_142_1_proc_ETC__q5 =
+		   12'd2303;
+    endcase
+  end
+  always@(proc$v_to_TV_1_get)
+  begin
+    case (proc$v_to_TV_1_get[139:136])
+      4'd0, 4'd1, 4'd3, 4'd4, 4'd5, 4'd7, 4'd8, 4'd9, 4'd11, 4'd14:
+	  CASE_procv_to_TV_1_get_BITS_139_TO_136_0_proc_ETC__q6 =
+	      proc$v_to_TV_1_get[139:136];
+      default: CASE_procv_to_TV_1_get_BITS_139_TO_136_0_proc_ETC__q6 = 4'd15;
+    endcase
+  end
+  always@(proc$v_to_TV_1_get)
+  begin
+    case (proc$v_to_TV_1_get[139:136])
+      4'd0,
+      4'd1,
+      4'd2,
+      4'd3,
+      4'd4,
+      4'd5,
+      4'd6,
+      4'd7,
+      4'd8,
+      4'd9,
+      4'd11,
+      4'd12,
+      4'd13:
+	  CASE_procv_to_TV_1_get_BITS_139_TO_136_0_proc_ETC__q7 =
+	      proc$v_to_TV_1_get[139:136];
+      default: CASE_procv_to_TV_1_get_BITS_139_TO_136_0_proc_ETC__q7 = 4'd15;
+    endcase
+  end
+  always@(proc$v_to_TV_1_get)
+  begin
+    case (proc$v_to_TV_1_get[71:70])
+      2'd0, 2'd1:
+	  CASE_procv_to_TV_1_get_BITS_71_TO_70_0_procv_ETC__q8 =
+	      proc$v_to_TV_1_get[71:70];
+      default: CASE_procv_to_TV_1_get_BITS_71_TO_70_0_procv_ETC__q8 = 2'd2;
+    endcase
+  end
+  always@(v_td2_to_td_0_f_in$D_OUT)
+  begin
+    case (v_td2_to_td_0_f_in$D_OUT[159:155])
+      5'd2, 5'd6, 5'd7:
+	  CASE_v_td2_to_td_0_f_inD_OUT_BITS_159_TO_155__ETC__q9 = 5'd13;
+      5'd3, 5'd8, 5'd9, 5'd11:
+	  CASE_v_td2_to_td_0_f_inD_OUT_BITS_159_TO_155__ETC__q9 = 5'd6;
+      5'd10, 5'd14, 5'd15, 5'd16, 5'd17, 5'd18, 5'd19, 5'd20:
+	  CASE_v_td2_to_td_0_f_inD_OUT_BITS_159_TO_155__ETC__q9 = 5'd5;
+      default: CASE_v_td2_to_td_0_f_inD_OUT_BITS_159_TO_155__ETC__q9 = 5'd6;
+    endcase
+  end
+  always@(v_td2_to_td_1_f_in$D_OUT)
+  begin
+    case (v_td2_to_td_1_f_in$D_OUT[159:155])
+      5'd2, 5'd6, 5'd7:
+	  CASE_v_td2_to_td_1_f_inD_OUT_BITS_159_TO_155__ETC__q10 = 5'd13;
+      5'd3, 5'd8, 5'd9, 5'd11:
+	  CASE_v_td2_to_td_1_f_inD_OUT_BITS_159_TO_155__ETC__q10 = 5'd6;
+      5'd10, 5'd14, 5'd15, 5'd16, 5'd17, 5'd18, 5'd19, 5'd20:
+	  CASE_v_td2_to_td_1_f_inD_OUT_BITS_159_TO_155__ETC__q10 = 5'd5;
+      default: CASE_v_td2_to_td_1_f_inD_OUT_BITS_159_TO_155__ETC__q10 = 5'd6;
+    endcase
+  end
 
   // handling of inlined registers
 
@@ -3519,34 +3925,34 @@ module mkCoreW(CLK,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_cpu_hart0_reset_from_soc_start)
 	begin
-	  v__h5154 = $stime;
+	  v__h7205 = $stime;
 	  #0;
 	end
-    v__h5148 = v__h5154 / 32'd10;
+    v__h7199 = v__h7205 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_cpu_hart0_reset_from_soc_start)
-	$display("%0d: Core.rl_cpu_hart0_reset_from_soc_start", v__h5148);
+	$display("%0d: Core.rl_cpu_hart0_reset_from_soc_start", v__h7199);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_cpu_hart0_reset_from_dm_start)
 	begin
-	  v__h5328 = $stime;
+	  v__h7403 = $stime;
 	  #0;
 	end
-    v__h5322 = v__h5328 / 32'd10;
+    v__h7397 = v__h7403 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_cpu_hart0_reset_from_dm_start)
-	$display("%0d: Core.rl_cpu_hart0_reset_from_dm_start", v__h5322);
+	$display("%0d: Core.rl_cpu_hart0_reset_from_dm_start", v__h7397);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_cpu_hart0_reset_complete)
 	begin
-	  v__h5598 = $stime;
+	  v__h7674 = $stime;
 	  #0;
 	end
-    v__h5592 = v__h5598 / 32'd10;
+    v__h7668 = v__h7674 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_cpu_hart0_reset_complete)
 	$display("%0d: Core.rl_cpu_hart0_reset_complete; started running proc",
-		 v__h5592);
+		 v__h7668);
   end
   // synopsys translate_on
 endmodule  // mkCoreW
