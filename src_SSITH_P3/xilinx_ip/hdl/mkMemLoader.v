@@ -177,6 +177,7 @@ module mkMemLoader(CLK_portalClk,
 
   // inlined wires
   wire [640 : 0] memReqQ_enqReq_lat_0$wget;
+  wire memReqQ_enqReq_lat_0$whas;
 
   // register busy
   reg busy;
@@ -655,7 +656,6 @@ module mkMemLoader(CLK_portalClk,
   wire MUX_busy$write_1__SEL_1,
        MUX_busy$write_1__SEL_2,
        MUX_expectWrData$write_1__SEL_1,
-       MUX_pendStCnt$write_1__SEL_2,
        MUX_writing$write_1__SEL_2;
 
   // remaining internal signals
@@ -672,11 +672,11 @@ module mkMemLoader(CLK_portalClk,
   wire [31 : 0] IF_hostStartQ_q_rRdPtr_rsCounter_77_BIT_0_84_X_ETC___d187,
 		IF_hostWrAddrQ_q_rRdPtr_rsCounter_1_BIT_0_8_XO_ETC___d41,
 		IF_hostWrAddrQ_q_rWrPtr_rsCounter_BIT_0_XOR_ho_ETC___d11,
-		IF_hostWrDataQ_q_rRdPtr_rsCounter_04_BIT_0_11__ETC___d114,
 		IF_hostWrDataQ_q_rWrPtr_rsCounter_4_BIT_0_1_XO_ETC___d84,
 		IF_hostWrDoneQ_q_rRdPtr_rsCounter_50_BIT_0_57__ETC___d260,
 		IF_hostWrDoneQ_q_rWrPtr_rsCounter_20_BIT_0_27__ETC___d230,
 		IF_mmio_req_wrBE_BIT_7_32_THEN_mmio_req_wrData_ETC___d858,
+		x__h4676,
 		x__h6528;
   wire [7 : 0] IF_reqSel_65_EQ_0_72_THEN_hostWrDataQ_q_wDataO_ETC___d476,
 	       IF_reqSel_65_EQ_1_93_THEN_hostWrDataQ_q_wDataO_ETC___d495,
@@ -1311,9 +1311,6 @@ module mkMemLoader(CLK_portalClk,
 	     mmio_req_wrBE_BIT_0_25_OR_mmio_req_wrBE_BIT_1__ETC___d843 ;
   assign MUX_expectWrData$write_1__SEL_1 =
 	     WILL_FIRE_RL_doNewWrite && hostWrAddrQ_q_memory$DOB[64] ;
-  assign MUX_pendStCnt$write_1__SEL_2 =
-	     WILL_FIRE_RL_doStReq &&
-	     reqSel_65_EQ_7_66_OR_hostWrDataQ_q_wDataOut_wg_ETC___d796 ;
   assign MUX_writing$write_1__SEL_2 =
 	     WILL_FIRE_RL_doStResp && pendStCnt == 8'd1 && !expectWrData ;
   assign MUX_hostStartQ_q_rRdPtr_rsCounter$write_1__VAL_1 =
@@ -1333,7 +1330,7 @@ module mkMemLoader(CLK_portalClk,
 	       hostWrAddrQ_q_rWrPtr_rsCounter | x__h938 :
 	       hostWrAddrQ_q_rWrPtr_rsCounter & y__h1133 ;
   assign MUX_hostWrDataQ_q_rRdPtr_rsCounter$write_1__VAL_1 =
-	     (~hostWrDataQ_q_rRdPtr_rsCounter[IF_hostWrDataQ_q_rRdPtr_rsCounter_04_BIT_0_11__ETC___d114[0]]) ?
+	     (~hostWrDataQ_q_rRdPtr_rsCounter[x__h4676[0]]) ?
 	       hostWrDataQ_q_rRdPtr_rsCounter | x__h4511 :
 	       hostWrDataQ_q_rRdPtr_rsCounter & y__h4698 ;
   assign MUX_hostWrDataQ_q_rWrPtr_rsCounter$write_1__VAL_1 =
@@ -1378,6 +1375,9 @@ module mkMemLoader(CLK_portalClk,
 	       IF_reqSel_65_EQ_1_93_THEN_hostWrDataQ_q_wDataO_ETC___d495,
 	       IF_reqSel_65_EQ_0_72_THEN_hostWrDataQ_q_wDataO_ETC___d476,
 	       IF_reqSel_65_EQ_7_66_THEN_hostWrDataQ_q_wDataO_ETC___d722 } ;
+  assign memReqQ_enqReq_lat_0$whas =
+	     WILL_FIRE_RL_doStReq &&
+	     reqSel_65_EQ_7_66_OR_hostWrDataQ_q_wDataOut_wg_ETC___d796 ;
 
   // register busy
   assign busy$D_IN = !MUX_busy$write_1__SEL_1 ;
@@ -1520,7 +1520,7 @@ module mkMemLoader(CLK_portalClk,
   // register memReqQ_data_0
   assign memReqQ_data_0$D_IN =
 	     { x_addr__h43806,
-	       MUX_pendStCnt$write_1__SEL_2 ?
+	       memReqQ_enqReq_lat_0$whas ?
 		 memReqQ_enqReq_lat_0$wget[575:0] :
 		 memReqQ_enqReq_rl[575:0] } ;
   assign memReqQ_data_0$EN =
@@ -1555,13 +1555,13 @@ module mkMemLoader(CLK_portalClk,
 
   // register pendStCnt
   always@(MUX_expectWrData$write_1__SEL_1 or
-	  MUX_pendStCnt$write_1__SEL_2 or
+	  memReqQ_enqReq_lat_0$whas or
 	  MUX_pendStCnt$write_1__VAL_2 or
 	  WILL_FIRE_RL_doStResp or MUX_pendStCnt$write_1__VAL_3)
   begin
     case (1'b1) // synopsys parallel_case
       MUX_expectWrData$write_1__SEL_1: pendStCnt$D_IN = 8'd0;
-      MUX_pendStCnt$write_1__SEL_2:
+      memReqQ_enqReq_lat_0$whas:
 	  pendStCnt$D_IN = MUX_pendStCnt$write_1__VAL_2;
       WILL_FIRE_RL_doStResp: pendStCnt$D_IN = MUX_pendStCnt$write_1__VAL_3;
       default: pendStCnt$D_IN = 8'b10101010 /* unspecified value */ ;
@@ -1723,7 +1723,7 @@ module mkMemLoader(CLK_portalClk,
 
   // submodule memReqQ_enqReq_dummy2_0
   assign memReqQ_enqReq_dummy2_0$D_IN = 1'd1 ;
-  assign memReqQ_enqReq_dummy2_0$EN = MUX_pendStCnt$write_1__SEL_2 ;
+  assign memReqQ_enqReq_dummy2_0$EN = memReqQ_enqReq_lat_0$whas ;
 
   // submodule memReqQ_enqReq_dummy2_1
   assign memReqQ_enqReq_dummy2_1$D_IN = 1'b0 ;
@@ -1778,10 +1778,6 @@ module mkMemLoader(CLK_portalClk,
 	     hostWrAddrQ_q_rWrPtr_rsCounter_BIT_0_XOR_hostW_ETC___d10 ?
 	       32'd1 :
 	       32'd0 ;
-  assign IF_hostWrDataQ_q_rRdPtr_rsCounter_04_BIT_0_11__ETC___d114 =
-	     hostWrDataQ_q_rRdPtr_rsCounter_04_BIT_0_11_XOR_ETC___d113 ?
-	       32'd1 :
-	       32'd0 ;
   assign IF_hostWrDataQ_q_rWrPtr_rsCounter_4_BIT_0_1_XO_ETC___d84 =
 	     hostWrDataQ_q_rWrPtr_rsCounter_4_BIT_0_1_XOR_h_ETC___d83 ?
 	       32'd1 :
@@ -1795,7 +1791,7 @@ module mkMemLoader(CLK_portalClk,
 	       32'd1 :
 	       32'd0 ;
   assign IF_memReqQ_enqReq_lat_1_whas__96_THEN_memReqQ__ETC___d305 =
-	     MUX_pendStCnt$write_1__SEL_2 ?
+	     memReqQ_enqReq_lat_0$whas ?
 	       memReqQ_enqReq_lat_0$wget[640] :
 	       memReqQ_enqReq_rl[640] ;
   assign IF_mmio_req_wrBE_BIT_7_32_THEN_mmio_req_wrData_ETC___d858 =
@@ -2026,7 +2022,7 @@ module mkMemLoader(CLK_portalClk,
 	     !memReqQ_clearReq_dummy2_1$Q_OUT || !memReqQ_clearReq_rl ;
   assign NOT_memReqQ_enqReq_dummy2_2_read__46_61_OR_IF__ETC___d366 =
 	     (!memReqQ_enqReq_dummy2_2$Q_OUT ||
-	      (MUX_pendStCnt$write_1__SEL_2 ?
+	      (memReqQ_enqReq_lat_0$whas ?
 		 !memReqQ_enqReq_lat_0$wget[640] :
 		 !memReqQ_enqReq_rl[640])) &&
 	     (memReqQ_deqReq_dummy2_2$Q_OUT &&
@@ -2124,9 +2120,11 @@ module mkMemLoader(CLK_portalClk,
   assign x__h3656 =
 	     2'd1 <<
 	     IF_hostWrDataQ_q_rWrPtr_rsCounter_4_BIT_0_1_XO_ETC___d84 ;
-  assign x__h4511 =
-	     2'd1 <<
-	     IF_hostWrDataQ_q_rRdPtr_rsCounter_04_BIT_0_11__ETC___d114 ;
+  assign x__h4511 = 2'd1 << x__h4676 ;
+  assign x__h4676 =
+	     hostWrDataQ_q_rRdPtr_rsCounter_04_BIT_0_11_XOR_ETC___d113 ?
+	       32'd1 :
+	       32'd0 ;
   assign x__h5470 = x_sReadBin__h4920 + 2'd1 ;
   assign x__h6363 = 2'd1 << x__h6528 ;
   assign x__h6528 =
@@ -2147,7 +2145,7 @@ module mkMemLoader(CLK_portalClk,
 	     2'd1 <<
 	     IF_hostWrDoneQ_q_rRdPtr_rsCounter_50_BIT_0_57__ETC___d260 ;
   assign x_addr__h43806 =
-	     MUX_pendStCnt$write_1__SEL_2 ?
+	     memReqQ_enqReq_lat_0$whas ?
 	       memReqQ_enqReq_lat_0$wget[639:576] :
 	       memReqQ_enqReq_rl[639:576] ;
   assign x_dReadBin__h10337 =

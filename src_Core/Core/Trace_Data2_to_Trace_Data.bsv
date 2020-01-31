@@ -47,7 +47,7 @@ endinterface
 
 module mkTrace_Data2_to_Trace_Data (Trace_Data2_to_Trace_Data_IFC);
 
-   Integer verbosity = 1;    // for debugging
+   Integer verbosity = 0;    // for debugging
 
    // Input stream
    FIFOF #(Trace_Data2) f_in <- mkFIFOF;

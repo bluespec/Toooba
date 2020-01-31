@@ -31,13 +31,9 @@ into this socket:
 >================================================================
 Whenever there are changes to the Toooba core, rerun:
 
-  $ make compile SIM=true for a simulation version
-      (which generates RTL and then $ cp Verilog_RTL/* xilinx_ip/hdl/)
-
   $ make compile for a synthesizable (on Xilinx) version
       (which generates RTL and then $ cp Verilog_RTL/* xilinx_ip/hdl/)
 
-The simulation version uses simulation models for the integer divider,
-while the synthesis version uses Xilinx IP.
+The synthesis version uses Xilinx IP for the integer divider.
 
 >================================================================

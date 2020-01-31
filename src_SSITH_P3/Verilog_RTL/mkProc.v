@@ -68,8 +68,6 @@
 // master1_arregion               O     4 reg
 // master1_rready                 O     1
 // RDY_set_verbosity              O     1 const
-// trace_data_out_get             O   362 reg
-// RDY_trace_data_out_get         O     1 reg
 // debug_module_mem_server_awready  O     1 reg
 // debug_module_mem_server_wready  O     1 reg
 // debug_module_mem_server_bvalid  O     1 reg
@@ -94,6 +92,10 @@
 // hart0_csr_mem_server_response_get  O    65 reg
 // RDY_hart0_csr_mem_server_response_get  O     1 reg
 // RDY_hart0_put_other_req_put    O     1 const
+// v_to_TV_0_get                  O   320
+// RDY_v_to_TV_0_get              O     1 reg
+// v_to_TV_1_get                  O   320
+// RDY_v_to_TV_1_get              O     1 reg
 // CLK                            I     1 clock
 // RST_N                          I     1 reset
 // start_startpc                  I    64
@@ -169,11 +171,12 @@
 // EN_hart0_fpr_mem_server_request_put  I     1
 // EN_hart0_csr_mem_server_request_put  I     1
 // EN_hart0_put_other_req_put     I     1
-// EN_trace_data_out_get          I     1
 // EN_hart0_run_halt_server_response_get  I     1
 // EN_hart0_gpr_mem_server_response_get  I     1
 // EN_hart0_fpr_mem_server_response_get  I     1
 // EN_hart0_csr_mem_server_response_get  I     1
+// EN_v_to_TV_0_get               I     1
+// EN_v_to_TV_1_get               I     1
 //
 // Combinational paths from inputs to outputs:
 //   (master0_awready, master0_wready) -> master0_bready
@@ -369,10 +372,6 @@ module mkProc(CLK,
 	      EN_set_verbosity,
 	      RDY_set_verbosity,
 
-	      EN_trace_data_out_get,
-	      trace_data_out_get,
-	      RDY_trace_data_out_get,
-
 	      debug_module_mem_server_awvalid,
 	      debug_module_mem_server_awid,
 	      debug_module_mem_server_awaddr,
@@ -463,7 +462,15 @@ module mkProc(CLK,
 
 	      hart0_put_other_req_put,
 	      EN_hart0_put_other_req_put,
-	      RDY_hart0_put_other_req_put);
+	      RDY_hart0_put_other_req_put,
+
+	      EN_v_to_TV_0_get,
+	      v_to_TV_0_get,
+	      RDY_v_to_TV_0_get,
+
+	      EN_v_to_TV_1_get,
+	      v_to_TV_1_get,
+	      RDY_v_to_TV_1_get);
   input  CLK;
   input  RST_N;
 
@@ -727,11 +734,6 @@ module mkProc(CLK,
   input  EN_set_verbosity;
   output RDY_set_verbosity;
 
-  // actionvalue method trace_data_out_get
-  input  EN_trace_data_out_get;
-  output [361 : 0] trace_data_out_get;
-  output RDY_trace_data_out_get;
-
   // action method debug_module_mem_server_m_awvalid
   input  debug_module_mem_server_awvalid;
   input  [3 : 0] debug_module_mem_server_awid;
@@ -853,8 +855,18 @@ module mkProc(CLK,
   input  EN_hart0_put_other_req_put;
   output RDY_hart0_put_other_req_put;
 
+  // actionvalue method v_to_TV_0_get
+  input  EN_v_to_TV_0_get;
+  output [319 : 0] v_to_TV_0_get;
+  output RDY_v_to_TV_0_get;
+
+  // actionvalue method v_to_TV_1_get
+  input  EN_v_to_TV_1_get;
+  output [319 : 0] v_to_TV_1_get;
+  output RDY_v_to_TV_1_get;
+
   // signals for module outputs
-  wire [361 : 0] trace_data_out_get;
+  wire [319 : 0] v_to_TV_0_get, v_to_TV_1_get;
   wire [64 : 0] hart0_csr_mem_server_response_get,
 		hart0_fpr_mem_server_response_get,
 		hart0_gpr_mem_server_response_get;
@@ -918,7 +930,8 @@ module mkProc(CLK,
        RDY_hart0_server_reset_response_get,
        RDY_set_verbosity,
        RDY_start,
-       RDY_trace_data_out_get,
+       RDY_v_to_TV_0_get,
+       RDY_v_to_TV_1_get,
        debug_module_mem_server_arready,
        debug_module_mem_server_awready,
        debug_module_mem_server_bvalid,
@@ -1369,6 +1382,7 @@ module mkProc(CLK,
 		 core_0$iCacheToParent_fromP_enq_x;
   wire [578 : 0] core_0$dCacheToParent_rsToP_first,
 		 core_0$iCacheToParent_rsToP_first;
+  wire [319 : 0] core_0$v_to_TV_0_get, core_0$v_to_TV_1_get;
   wire [141 : 0] core_0$mmioToPlatform_cRq_first;
   wire [76 : 0] core_0$hart0_csr_mem_server_request_put;
   wire [71 : 0] core_0$dCacheToParent_rqToP_first,
@@ -1426,6 +1440,8 @@ module mkProc(CLK,
        core_0$EN_setSEIP,
        core_0$EN_tlbToMem_memReq_deq,
        core_0$EN_tlbToMem_respLd_enq,
+       core_0$EN_v_to_TV_0_get,
+       core_0$EN_v_to_TV_1_get,
        core_0$RDY_coreIndInv_terminate,
        core_0$RDY_dCacheToParent_fromP_enq,
        core_0$RDY_dCacheToParent_rqToP_deq,
@@ -1465,6 +1481,8 @@ module mkProc(CLK,
        core_0$RDY_tlbToMem_memReq_deq,
        core_0$RDY_tlbToMem_memReq_first,
        core_0$RDY_tlbToMem_respLd_enq,
+       core_0$RDY_v_to_TV_0_get,
+       core_0$RDY_v_to_TV_1_get,
        core_0$hart0_run_halt_server_request_put,
        core_0$hart0_run_halt_server_response_get,
        core_0$mmioToPlatform_cRq_notEmpty,
@@ -1504,13 +1522,6 @@ module mkProc(CLK,
        f_reset_rsps$EMPTY_N,
        f_reset_rsps$ENQ,
        f_reset_rsps$FULL_N;
-
-  // ports of submodule f_trace_data
-  wire [361 : 0] f_trace_data$D_IN, f_trace_data$D_OUT;
-  wire f_trace_data$CLR,
-       f_trace_data$DEQ,
-       f_trace_data$EMPTY_N,
-       f_trace_data$ENQ;
 
   // ports of submodule llc
   reg [644 : 0] llc$dma_memReq_enq_x;
@@ -1933,7 +1944,8 @@ module mkProc(CLK,
        CAN_FIRE_s_external_interrupt_req,
        CAN_FIRE_set_verbosity,
        CAN_FIRE_start,
-       CAN_FIRE_trace_data_out_get,
+       CAN_FIRE_v_to_TV_0_get,
+       CAN_FIRE_v_to_TV_1_get,
        WILL_FIRE_RL_broadcastStats,
        WILL_FIRE_RL_doEnq,
        WILL_FIRE_RL_doEnq_1,
@@ -2051,7 +2063,8 @@ module mkProc(CLK,
        WILL_FIRE_s_external_interrupt_req,
        WILL_FIRE_set_verbosity,
        WILL_FIRE_start,
-       WILL_FIRE_trace_data_out_get;
+       WILL_FIRE_v_to_TV_0_get,
+       WILL_FIRE_v_to_TV_1_get;
 
   // inputs to muxes for submodule ports
   reg [1 : 0] MUX_mmioPlatform_state$write_1__VAL_3,
@@ -2114,64 +2127,64 @@ module mkProc(CLK,
 
   // declarations used by system tasks
   // synopsys translate_off
-  reg [31 : 0] v__h151797;
-  reg [31 : 0] v__h4266;
-  reg [31 : 0] v__h4439;
-  reg [31 : 0] v__h4703;
-  reg [31 : 0] v__h6742;
-  reg [31 : 0] v__h2542;
-  reg [31 : 0] v__h7043;
-  reg [31 : 0] v__h7536;
-  reg [31 : 0] v__h7699;
-  reg [31 : 0] v__h94012;
-  reg [31 : 0] v__h94057;
-  reg [31 : 0] v__h93967;
-  reg [31 : 0] v__h105049;
-  reg [31 : 0] v__h105004;
-  reg [31 : 0] v__h123601;
-  reg [31 : 0] v__h123768;
-  reg [31 : 0] v__h125871;
-  reg [31 : 0] v__h143217;
-  reg [31 : 0] v__h122982;
-  reg [31 : 0] v__h149912;
-  reg [31 : 0] v__h150420;
-  reg [31 : 0] v__h2536;
-  reg [31 : 0] v__h4260;
-  reg [31 : 0] v__h4433;
-  reg [31 : 0] v__h4697;
-  reg [31 : 0] v__h6736;
-  reg [31 : 0] v__h7037;
-  reg [31 : 0] v__h7530;
-  reg [31 : 0] v__h7693;
-  reg [31 : 0] v__h93961;
-  reg [31 : 0] v__h94006;
-  reg [31 : 0] v__h94051;
-  reg [31 : 0] v__h104998;
-  reg [31 : 0] v__h105043;
-  reg [31 : 0] v__h122976;
-  reg [31 : 0] v__h123595;
-  reg [31 : 0] v__h123762;
-  reg [31 : 0] v__h125865;
-  reg [31 : 0] v__h143211;
-  reg [31 : 0] v__h149906;
-  reg [31 : 0] v__h150414;
-  reg [31 : 0] v__h151791;
+  reg [31 : 0] v__h151720;
+  reg [31 : 0] v__h4189;
+  reg [31 : 0] v__h4362;
+  reg [31 : 0] v__h4626;
+  reg [31 : 0] v__h6665;
+  reg [31 : 0] v__h2465;
+  reg [31 : 0] v__h6966;
+  reg [31 : 0] v__h7459;
+  reg [31 : 0] v__h7622;
+  reg [31 : 0] v__h93935;
+  reg [31 : 0] v__h93980;
+  reg [31 : 0] v__h93890;
+  reg [31 : 0] v__h104972;
+  reg [31 : 0] v__h104927;
+  reg [31 : 0] v__h123524;
+  reg [31 : 0] v__h123691;
+  reg [31 : 0] v__h125794;
+  reg [31 : 0] v__h143140;
+  reg [31 : 0] v__h122905;
+  reg [31 : 0] v__h149835;
+  reg [31 : 0] v__h150343;
+  reg [31 : 0] v__h2459;
+  reg [31 : 0] v__h4183;
+  reg [31 : 0] v__h4356;
+  reg [31 : 0] v__h4620;
+  reg [31 : 0] v__h6659;
+  reg [31 : 0] v__h6960;
+  reg [31 : 0] v__h7453;
+  reg [31 : 0] v__h7616;
+  reg [31 : 0] v__h93884;
+  reg [31 : 0] v__h93929;
+  reg [31 : 0] v__h93974;
+  reg [31 : 0] v__h104921;
+  reg [31 : 0] v__h104966;
+  reg [31 : 0] v__h122899;
+  reg [31 : 0] v__h123518;
+  reg [31 : 0] v__h123685;
+  reg [31 : 0] v__h125788;
+  reg [31 : 0] v__h143134;
+  reg [31 : 0] v__h149829;
+  reg [31 : 0] v__h150337;
+  reg [31 : 0] v__h151714;
   // synopsys translate_on
 
   // remaining internal signals
-  reg [63 : 0] CASE_mmioPlatform_curReq_BITS_2_TO_0_0x0_resul_ETC__q5,
-	       CASE_mmioPlatform_curReq_BITS_2_TO_0_0x0_resul_ETC__q6,
-	       CASE_mmioPlatform_curReq_BITS_2_TO_0_0x0_resul_ETC__q9,
-	       CASE_x7447_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q16,
-	       CASE_x7447_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q17,
-	       CASE_x7447_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q18,
-	       CASE_x7447_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q19,
-	       CASE_x7447_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q20,
-	       CASE_x7447_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q21,
-	       CASE_x7447_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q22,
-	       CASE_x7447_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q23,
-	       CASE_x7447_0_n__read_addr7625_1_n__read_addr77_ETC__q26,
-	       CASE_x8824_0_n__read_addr9006_1_n__read_addr90_ETC__q15,
+  reg [63 : 0] CASE_mmioPlatform_curReq_BITS_2_TO_0_0x0_resul_ETC__q13,
+	       CASE_mmioPlatform_curReq_BITS_2_TO_0_0x0_resul_ETC__q14,
+	       CASE_mmioPlatform_curReq_BITS_2_TO_0_0x0_resul_ETC__q17,
+	       CASE_x7370_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q24,
+	       CASE_x7370_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q25,
+	       CASE_x7370_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q26,
+	       CASE_x7370_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q27,
+	       CASE_x7370_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q28,
+	       CASE_x7370_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q29,
+	       CASE_x7370_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q30,
+	       CASE_x7370_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q31,
+	       CASE_x7370_0_n__read_addr7548_1_n__read_addr76_ETC__q34,
+	       CASE_x8747_0_n__read_addr8929_1_n__read_addr90_ETC__q23,
 	       IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d766,
 	       IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d779,
 	       IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d818,
@@ -2181,35 +2194,43 @@ module mkProc(CLK,
 	       IF_mmioPlatform_reqAmofunc_41_EQ_0_42_THEN_IF__ETC___d876,
 	       IF_mmioPlatform_reqSz_36_EQ_0b10_43_THEN_SEXT__ETC___d844,
 	       IF_mmioPlatform_reqSz_36_EQ_0b10_43_THEN_SEXT__ETC___d846,
-	       data64__h137041,
-	       ld_data__h121099,
-	       rd_data_rdata__h119548,
-	       w1__h45424,
-	       w1__h45429,
-	       w2__h45425,
-	       w2__h45431,
-	       x__h45420;
+	       data64__h136964,
+	       ld_data__h121022,
+	       rd_data_rdata__h119471,
+	       w1__h45347,
+	       w1__h45352,
+	       w2__h45348,
+	       w2__h45354,
+	       x__h45343;
   reg [31 : 0] SEL_ARR_mmio_axi4_adapter_f_rsps_to_core_first_ETC___d944;
-  reg [7 : 0] strb8__h137042;
+  reg [11 : 0] CASE_core_0v_to_TV_0_get_BITS_153_TO_142_1_co_ETC__q5,
+	       CASE_core_0v_to_TV_1_get_BITS_153_TO_142_1_co_ETC__q1;
+  reg [7 : 0] strb8__h136965;
   reg [5 : 0] IF_mmioPlatform_reqFunc_01_BITS_5_TO_4_02_EQ_0_ETC___d442;
-  reg [2 : 0] x__h59138;
-  reg [1 : 0] CASE_x7447_0_IF_propDstData_1_0_dummy2_1Q_OUT_ETC__q24,
-	      CASE_x8824_0_IF_propDstData_0_dummy2_1_read__0_ETC__q13,
-	      CASE_x8824_0_IF_propDstData_0_dummy2_1_read__0_ETC__q14;
-  reg CASE_mmioPlatform_reqFunc_BITS_5_TO_4_0_core_0_ETC__q10,
-      CASE_mmioPlatform_reqFunc_BITS_5_TO_4_0_core_0_ETC__q11,
-      CASE_x7447_0_NOT_propDstData_1_0_dummy2_1_read_ETC__q25,
-      CASE_x8824_0_propDstData_0_dummy2_1_read__057__ETC__q12,
+  reg [3 : 0] CASE_core_0v_to_TV_0_get_BITS_139_TO_136_0_co_ETC__q6,
+	      CASE_core_0v_to_TV_0_get_BITS_139_TO_136_0_co_ETC__q7,
+	      CASE_core_0v_to_TV_1_get_BITS_139_TO_136_0_co_ETC__q2,
+	      CASE_core_0v_to_TV_1_get_BITS_139_TO_136_0_co_ETC__q3;
+  reg [2 : 0] x__h59061;
+  reg [1 : 0] CASE_core_0v_to_TV_0_get_BITS_71_TO_70_0_core_ETC__q8,
+	      CASE_core_0v_to_TV_1_get_BITS_71_TO_70_0_core_ETC__q4,
+	      CASE_x7370_0_IF_propDstData_1_0_dummy2_1Q_OUT_ETC__q32,
+	      CASE_x8747_0_IF_propDstData_0_dummy2_1_read__0_ETC__q21,
+	      CASE_x8747_0_IF_propDstData_0_dummy2_1_read__0_ETC__q22;
+  reg CASE_mmioPlatform_reqFunc_BITS_5_TO_4_0_core_0_ETC__q18,
+      CASE_mmioPlatform_reqFunc_BITS_5_TO_4_0_core_0_ETC__q19,
+      CASE_x7370_0_NOT_propDstData_1_0_dummy2_1_read_ETC__q33,
+      CASE_x8747_0_propDstData_0_dummy2_1_read__057__ETC__q20,
       SEL_ARR_propDstIdx_0_dummy2_1_read__019_AND_IF_ETC___d1050,
       SEL_ARR_propDstIdx_1_0_dummy2_1_read__278_AND__ETC___d1319,
-      x__h59145,
-      x__h79863;
+      x__h59068,
+      x__h79786;
   wire [579 : 0] IF_enqDst_1_0_lat_1_whas__223_THEN_enqDst_1_0__ETC___d1270;
   wire [515 : 0] SEL_ARR_IF_propDstData_1_0_dummy2_1_read__326__ETC___d1418;
   wire [513 : 0] IF_enqDst_1_0_lat_1_whas__223_THEN_enqDst_1_0__ETC___d1269;
   wire [511 : 0] IF_enqDst_1_0_lat_0_whas__226_THEN_enqDst_1_0__ETC___d1261,
 		 SEL_ARR_IF_propDstData_1_0_lat_0_whas__150_THE_ETC___d1411,
-		 new_cline__h123904;
+		 new_cline__h123827;
   wire [383 : 0] SEL_ARR_IF_propDstData_1_0_lat_0_whas__150_THE_ETC___d1394;
   wire [255 : 0] SEL_ARR_IF_propDstData_1_0_lat_0_whas__150_THE_ETC___d1377;
   wire [127 : 0] SEL_ARR_IF_propDstData_1_0_lat_0_whas__150_THE_ETC___d1360;
@@ -2228,84 +2249,84 @@ module mkProc(CLK,
 		IF_mmioPlatform_reqFunc_01_BITS_5_TO_4_02_EQ_1_ETC___d603,
 		IF_propDstData_1_0_lat_0_whas__150_THEN_propDs_ETC___d1155,
 		IF_propDstData_1_1_lat_0_whas__188_THEN_propDs_ETC___d1193,
-		data__h29513,
-		failed_testnum__h151840,
-		line_addr__h104978,
-		mem_req_rd_addr_araddr__h123202,
-		mem_req_wr_addr_awaddr__h137126,
-		mmioPlatform_fromHostQ_data_0__h40214,
-		mmioPlatform_mtime__h34827,
-		mmioPlatform_reqData__h46016,
-		n__read_addr__h59006,
-		n__read_addr__h59091,
-		n__read_addr__h77625,
-		n__read_addr__h77704,
-		n__read_snd_addr__h92386,
-		newData__h29594,
-		newData__h32524,
-		op_result__h46032,
-		op_result__h46562,
-		op_result__h46567,
-		op_result__h46572,
-		op_result__h46577,
-		op_result__h46583,
-		op_result__h46590,
-		op_result__h46596,
-		req_addr__h94118,
-		result__h45475,
-		result__h45599,
-		result__h45627,
-		result__h45655,
-		result__h45683,
-		result__h45711,
-		result__h45739,
-		result__h45767,
-		result__h45795,
-		result__h45840,
-		result__h45868,
-		result__h45896,
-		result__h45924,
-		result__h45965,
-		result__h45993,
-		result__h46119,
-		result__h46146,
-		result__h46173,
-		result__h46200,
-		result__h46227,
-		result__h46254,
-		result__h46281,
-		result__h46308,
-		result__h46352,
-		result__h46379,
-		result__h46406,
-		result__h46433,
-		result__h46473,
-		result__h46500,
-		result__h46617,
-		result__h46683,
-		result__h46749,
-		result__h46815,
-		result__h46881,
-		result__h46947,
-		result__h47013,
-		result__h47075,
-		result__h47120,
-		result__h47186,
-		result__h47252,
-		result__h47310,
-		result__h47355,
-		w1___1__h45534,
-		w2___1__h45535,
-		x1_avValue_data__h37886,
-		x1_avValue_data__h42353,
-		x__h29705,
-		x__h32615,
-		x__h34975,
-		x__h38404,
-		x__h38415,
-		x__h40424,
-		x__h40435,
-		x__h47532;
+		data__h29436,
+		failed_testnum__h151763,
+		line_addr__h104901,
+		mem_req_rd_addr_araddr__h123125,
+		mem_req_wr_addr_awaddr__h137049,
+		mmioPlatform_fromHostQ_data_0__h40137,
+		mmioPlatform_mtime__h34750,
+		mmioPlatform_reqData__h45939,
+		n__read_addr__h58929,
+		n__read_addr__h59014,
+		n__read_addr__h77548,
+		n__read_addr__h77627,
+		n__read_snd_addr__h92309,
+		newData__h29517,
+		newData__h32447,
+		op_result__h45955,
+		op_result__h46485,
+		op_result__h46490,
+		op_result__h46495,
+		op_result__h46500,
+		op_result__h46506,
+		op_result__h46513,
+		op_result__h46519,
+		req_addr__h94041,
+		result__h45398,
+		result__h45522,
+		result__h45550,
+		result__h45578,
+		result__h45606,
+		result__h45634,
+		result__h45662,
+		result__h45690,
+		result__h45718,
+		result__h45763,
+		result__h45791,
+		result__h45819,
+		result__h45847,
+		result__h45888,
+		result__h45916,
+		result__h46042,
+		result__h46069,
+		result__h46096,
+		result__h46123,
+		result__h46150,
+		result__h46177,
+		result__h46204,
+		result__h46231,
+		result__h46275,
+		result__h46302,
+		result__h46329,
+		result__h46356,
+		result__h46396,
+		result__h46423,
+		result__h46540,
+		result__h46606,
+		result__h46672,
+		result__h46738,
+		result__h46804,
+		result__h46870,
+		result__h46936,
+		result__h46998,
+		result__h47043,
+		result__h47109,
+		result__h47175,
+		result__h47233,
+		result__h47278,
+		w1___1__h45457,
+		w2___1__h45458,
+		x1_avValue_data__h37809,
+		x1_avValue_data__h42276,
+		x__h29628,
+		x__h32538,
+		x__h34898,
+		x__h38327,
+		x__h38338,
+		x__h40347,
+		x__h40358,
+		x__h47455;
   wire [47 : 0] IF_mmioPlatform_reqBE_04_BIT_7_80_THEN_mmioPla_ETC___d505,
 		IF_mmioPlatform_reqBE_04_BIT_7_80_THEN_mmioPla_ETC___d570,
 		IF_mmioPlatform_reqBE_04_BIT_7_80_THEN_mmioPla_ETC___d671;
@@ -2313,20 +2334,20 @@ module mkProc(CLK,
 		IF_mmioPlatform_reqBE_04_BIT_7_80_THEN_mmioPla_ETC___d565,
 		IF_mmioPlatform_reqBE_04_BIT_7_80_THEN_mmioPla_ETC___d666,
 		IF_mmio_axi4_adapter_f_rsps_to_core_first__17__ETC___d952,
-		mmioPlatform_mtime_BITS_31_TO_0__q4,
-		mmioPlatform_mtime_BITS_63_TO_32__q3,
-		mmioPlatform_mtimecmp_0_BITS_31_TO_0__q2,
-		mmioPlatform_mtimecmp_0_BITS_63_TO_32__q1,
-		v__h29306,
-		v__h29343,
-		w15424_BITS_31_TO_0__q7,
-		w25425_BITS_31_TO_0__q8,
-		x_data__h28096;
+		mmioPlatform_mtime_BITS_31_TO_0__q12,
+		mmioPlatform_mtime_BITS_63_TO_32__q11,
+		mmioPlatform_mtimecmp_0_BITS_31_TO_0__q10,
+		mmioPlatform_mtimecmp_0_BITS_63_TO_32__q9,
+		v__h29229,
+		v__h29266,
+		w15347_BITS_31_TO_0__q15,
+		w25348_BITS_31_TO_0__q16,
+		x_data__h28019;
   wire [8 : 0] SEL_ARR_IF_propDstData_0_dummy2_1_read__057_TH_ETC___d1121;
-  wire [5 : 0] x__h123237, x__h137151;
+  wire [5 : 0] x__h123160, x__h137074;
   wire [4 : 0] SEL_ARR_propDstData_0_dummy2_1_read__057_AND_I_ETC___d1120;
-  wire [3 : 0] b__h122909, b__h2436;
-  wire [2 : 0] n__read_id__h59010, n__read_id__h59095;
+  wire [3 : 0] b__h122832, b__h2359;
+  wire [2 : 0] n__read_id__h58933, n__read_id__h59018;
   wire [1 : 0] IF_enqDst_1_0_lat_0_whas__226_THEN_enqDst_1_0__ETC___d1246,
 	       IF_propDstData_0_dummy2_1_read__057_THEN_IF_pr_ETC___d1073,
 	       IF_propDstData_0_dummy2_1_read__057_THEN_IF_pr_ETC___d1083,
@@ -2387,22 +2408,22 @@ module mkProc(CLK,
        mmioPlatform_fromHostQ_enqReq_dummy2_2_read__8_ETC___d296,
        mmioPlatform_mtimecmp_0_21_ULE_IF_NOT_mmioPlat_ETC___d577,
        mmioPlatform_mtimecmp_0_21_ULE_mmioPlatform_mt_ETC___d322,
-       mmioPlatform_reqBE_BIT_0___h27721,
-       mmioPlatform_reqBE_BIT_4___h27681,
+       mmioPlatform_reqBE_BIT_0___h27644,
+       mmioPlatform_reqBE_BIT_4___h27604,
        mmioPlatform_reqFunc_01_BITS_5_TO_4_02_EQ_0_03_ETC___d428,
        mmioPlatform_reqFunc_01_BITS_5_TO_4_02_EQ_0_03_ETC___d532,
        mmioPlatform_reqFunc_01_BITS_5_TO_4_02_EQ_0_03_ETC___d597,
        mmioPlatform_toHostQ_enqReq_dummy2_2_read__06__ETC___d218,
-       n__read_child__h59011,
-       n__read_child__h59096,
-       n__read_child__h77628,
-       n__read_child__h77707,
-       n__read_snd_id__h92387,
+       n__read_child__h58934,
+       n__read_child__h59019,
+       n__read_child__h77551,
+       n__read_child__h77630,
+       n__read_snd_id__h92310,
        propDstData_0_dummy2_1_read__057_AND_IF_propDs_ETC___d1093,
        propDstData_1_dummy2_1_read__062_AND_IF_propDs_ETC___d1097,
-       x__h58824,
-       x__h72376,
-       x__h77447;
+       x__h58747,
+       x__h72299,
+       x__h77370;
 
   // action method hart0_server_reset_request_put
   assign RDY_hart0_server_reset_request_put = f_reset_reqs$FULL_N ;
@@ -2417,7 +2438,7 @@ module mkProc(CLK,
 	     EN_hart0_server_reset_response_get ;
 
   // action method start
-  assign RDY_start = mmioPlatform_state == 2'd0 ;
+  assign RDY_start = CAN_FIRE_start ;
   assign CAN_FIRE_start = mmioPlatform_state == 2'd0 ;
   assign WILL_FIRE_start = EN_start ;
 
@@ -2660,12 +2681,6 @@ module mkProc(CLK,
   assign CAN_FIRE_set_verbosity = 1'd1 ;
   assign WILL_FIRE_set_verbosity = EN_set_verbosity ;
 
-  // actionvalue method trace_data_out_get
-  assign trace_data_out_get = f_trace_data$D_OUT ;
-  assign RDY_trace_data_out_get = f_trace_data$EMPTY_N ;
-  assign CAN_FIRE_trace_data_out_get = f_trace_data$EMPTY_N ;
-  assign WILL_FIRE_trace_data_out_get = EN_trace_data_out_get ;
-
   // action method debug_module_mem_server_m_awvalid
   assign CAN_FIRE_debug_module_mem_server_m_awvalid = 1'd1 ;
   assign WILL_FIRE_debug_module_mem_server_m_awvalid = 1'd1 ;
@@ -2807,6 +2822,46 @@ module mkProc(CLK,
   assign CAN_FIRE_hart0_put_other_req_put = 1'd1 ;
   assign WILL_FIRE_hart0_put_other_req_put = EN_hart0_put_other_req_put ;
 
+  // actionvalue method v_to_TV_0_get
+  assign v_to_TV_0_get =
+	     { core_0$v_to_TV_0_get[319:154],
+	       core_0$v_to_TV_0_get[154] ?
+		 CASE_core_0v_to_TV_0_get_BITS_153_TO_142_1_co_ETC__q5 :
+		 12'hAAA,
+	       core_0$v_to_TV_0_get[141],
+	       core_0$v_to_TV_0_get[141] ?
+		 { core_0$v_to_TV_0_get[140],
+		   core_0$v_to_TV_0_get[140] ?
+		     CASE_core_0v_to_TV_0_get_BITS_139_TO_136_0_co_ETC__q6 :
+		     CASE_core_0v_to_TV_0_get_BITS_139_TO_136_0_co_ETC__q7 } :
+		 5'h0A,
+	       core_0$v_to_TV_0_get[135:72],
+	       CASE_core_0v_to_TV_0_get_BITS_71_TO_70_0_core_ETC__q8,
+	       core_0$v_to_TV_0_get[69:0] } ;
+  assign RDY_v_to_TV_0_get = core_0$RDY_v_to_TV_0_get ;
+  assign CAN_FIRE_v_to_TV_0_get = core_0$RDY_v_to_TV_0_get ;
+  assign WILL_FIRE_v_to_TV_0_get = EN_v_to_TV_0_get ;
+
+  // actionvalue method v_to_TV_1_get
+  assign v_to_TV_1_get =
+	     { core_0$v_to_TV_1_get[319:154],
+	       core_0$v_to_TV_1_get[154] ?
+		 CASE_core_0v_to_TV_1_get_BITS_153_TO_142_1_co_ETC__q1 :
+		 12'hAAA,
+	       core_0$v_to_TV_1_get[141],
+	       core_0$v_to_TV_1_get[141] ?
+		 { core_0$v_to_TV_1_get[140],
+		   core_0$v_to_TV_1_get[140] ?
+		     CASE_core_0v_to_TV_1_get_BITS_139_TO_136_0_co_ETC__q2 :
+		     CASE_core_0v_to_TV_1_get_BITS_139_TO_136_0_co_ETC__q3 } :
+		 5'h0A,
+	       core_0$v_to_TV_1_get[135:72],
+	       CASE_core_0v_to_TV_1_get_BITS_71_TO_70_0_core_ETC__q4,
+	       core_0$v_to_TV_1_get[69:0] } ;
+  assign RDY_v_to_TV_1_get = core_0$RDY_v_to_TV_1_get ;
+  assign CAN_FIRE_v_to_TV_1_get = core_0$RDY_v_to_TV_1_get ;
+  assign WILL_FIRE_v_to_TV_1_get = EN_v_to_TV_1_get ;
+
   // submodule core_0
   mkCore core_0(.CLK(CLK),
 		.RST_N(RST_N),
@@ -2869,6 +2924,8 @@ module mkProc(CLK,
 		.EN_hart0_fpr_mem_server_response_get(core_0$EN_hart0_fpr_mem_server_response_get),
 		.EN_hart0_csr_mem_server_request_put(core_0$EN_hart0_csr_mem_server_request_put),
 		.EN_hart0_csr_mem_server_response_get(core_0$EN_hart0_csr_mem_server_response_get),
+		.EN_v_to_TV_0_get(core_0$EN_v_to_TV_0_get),
+		.EN_v_to_TV_1_get(core_0$EN_v_to_TV_1_get),
 		.RDY_coreReq_start(),
 		.RDY_coreReq_perfReq(),
 		.coreIndInv_perfResp(),
@@ -2961,7 +3018,11 @@ module mkProc(CLK,
 		.RDY_hart0_fpr_mem_server_response_get(core_0$RDY_hart0_fpr_mem_server_response_get),
 		.RDY_hart0_csr_mem_server_request_put(core_0$RDY_hart0_csr_mem_server_request_put),
 		.hart0_csr_mem_server_response_get(core_0$hart0_csr_mem_server_response_get),
-		.RDY_hart0_csr_mem_server_response_get(core_0$RDY_hart0_csr_mem_server_response_get));
+		.RDY_hart0_csr_mem_server_response_get(core_0$RDY_hart0_csr_mem_server_response_get),
+		.v_to_TV_0_get(core_0$v_to_TV_0_get),
+		.RDY_v_to_TV_0_get(core_0$RDY_v_to_TV_0_get),
+		.v_to_TV_1_get(core_0$v_to_TV_1_get),
+		.RDY_v_to_TV_1_get(core_0$RDY_v_to_TV_1_get));
 
   // submodule enqDst_0_dummy2_0
   RevertReg #(.width(32'd1), .init(1'd1)) enqDst_0_dummy2_0(.CLK(CLK),
@@ -3004,17 +3065,6 @@ module mkProc(CLK,
 					 .CLR(f_reset_rsps$CLR),
 					 .FULL_N(f_reset_rsps$FULL_N),
 					 .EMPTY_N(f_reset_rsps$EMPTY_N));
-
-  // submodule f_trace_data
-  FIFO2 #(.width(32'd362), .guarded(32'd1)) f_trace_data(.RST(RST_N),
-							 .CLK(CLK),
-							 .D_IN(f_trace_data$D_IN),
-							 .ENQ(f_trace_data$ENQ),
-							 .DEQ(f_trace_data$DEQ),
-							 .CLR(f_trace_data$CLR),
-							 .D_OUT(f_trace_data$D_OUT),
-							 .FULL_N(),
-							 .EMPTY_N(f_trace_data$EMPTY_N));
 
   // submodule llc
   mkLLCache llc(.CLK(CLK),
@@ -3621,13 +3671,13 @@ module mkProc(CLK,
 	     !mmio_axi4_adapter_master_xactor_crg_rd_addr_full$port2__read &&
 	     mmio_axi4_adapter_f_reqs_from_core$EMPTY_N &&
 	     mmio_axi4_adapter_f_reqs_from_core$D_OUT[77:76] == 2'd1 &&
-	     b__h2436 == 4'd0 ;
+	     b__h2359 == 4'd0 ;
   assign WILL_FIRE_RL_mmio_axi4_adapter_rl_handle_read_req =
 	     CAN_FIRE_RL_mmio_axi4_adapter_rl_handle_read_req ;
 
   // rule RL_mmio_axi4_adapter_rl_discard_write_rsp
   assign CAN_FIRE_RL_mmio_axi4_adapter_rl_discard_write_rsp =
-	     b__h2436 != 4'd0 &&
+	     b__h2359 != 4'd0 &&
 	     mmio_axi4_adapter_master_xactor_crg_wr_resp_full &&
 	     (mmio_axi4_adapter_master_xactor_rg_wr_resp[1:0] != 2'b0 ||
 	      mmio_axi4_adapter_f_rsps_to_core$FULL_N) ;
@@ -3701,7 +3751,7 @@ module mkProc(CLK,
 
   // rule RL_mmioPlatform_processMTimeCmp
   assign CAN_FIRE_RL_mmioPlatform_processMTimeCmp =
-	     CASE_mmioPlatform_reqFunc_BITS_5_TO_4_0_core_0_ETC__q10 &&
+	     CASE_mmioPlatform_reqFunc_BITS_5_TO_4_0_core_0_ETC__q18 &&
 	     mmioPlatform_curReq[66:64] == 3'd3 &&
 	     mmioPlatform_state == 2'd2 ;
   assign WILL_FIRE_RL_mmioPlatform_processMTimeCmp =
@@ -3718,7 +3768,7 @@ module mkProc(CLK,
 
   // rule RL_mmioPlatform_processMTime
   assign CAN_FIRE_RL_mmioPlatform_processMTime =
-	     CASE_mmioPlatform_reqFunc_BITS_5_TO_4_0_core_0_ETC__q11 &&
+	     CASE_mmioPlatform_reqFunc_BITS_5_TO_4_0_core_0_ETC__q19 &&
 	     mmioPlatform_state == 2'd2 &&
 	     mmioPlatform_curReq[66:64] == 3'd4 ;
   assign WILL_FIRE_RL_mmioPlatform_processMTime =
@@ -3739,7 +3789,7 @@ module mkProc(CLK,
 	     core_0$RDY_mmioToPlatform_pRs_enq &&
 	     (mmioPlatform_reqFunc[5:4] != 2'd2 ||
 	      !mmioPlatform_toHostQ_empty ||
-	      x__h40424 == 64'd0 ||
+	      x__h40347 == 64'd0 ||
 	      !mmioPlatform_toHostQ_full) &&
 	     mmioPlatform_state == 2'd2 &&
 	     mmioPlatform_curReq[66:64] == 3'd5 ;
@@ -4016,13 +4066,13 @@ module mkProc(CLK,
 	     (llc_axi4_adapter_rg_rd_req_beat != 3'd7 ||
 	      llc$RDY_to_mem_toM_deq) &&
 	     !llc$to_mem_toM_first[640] &&
-	     b__h122909 == 4'd0 ;
+	     b__h122832 == 4'd0 ;
   assign WILL_FIRE_RL_llc_axi4_adapter_rl_handle_read_req =
 	     CAN_FIRE_RL_llc_axi4_adapter_rl_handle_read_req ;
 
   // rule RL_llc_axi4_adapter_rl_discard_write_rsp
   assign CAN_FIRE_RL_llc_axi4_adapter_rl_discard_write_rsp =
-	     b__h122909 != 4'd0 &&
+	     b__h122832 != 4'd0 &&
 	     llc_axi4_adapter_master_xactor_crg_wr_resp_full &&
 	     (llc_axi4_adapter_rg_wr_rsp_beat != 3'd7 ||
 	      llc_axi4_adapter_f_pending_writes$EMPTY_N) ;
@@ -4129,7 +4179,7 @@ module mkProc(CLK,
 	       (mmioPlatform_reqFunc[5:4] != 2'd1 &&
 		mmioPlatform_reqFunc[5:4] != 2'd2) ?
 		 mmioPlatform_reqData[31:0] :
-		 x_data__h28096 } ;
+		 x_data__h28019 } ;
   assign MUX_core_0$mmioToPlatform_pRq_enq_1__VAL_3 =
 	     { 7'd106,
 	       (IF_NOT_mmioPlatform_reqFunc_01_BITS_5_TO_4_02__ETC___d515 &&
@@ -4169,7 +4219,7 @@ module mkProc(CLK,
 	       IF_mmio_axi4_adapter_f_rsps_to_core_first__17__ETC___d952 } ;
   assign MUX_core_0$mmioToPlatform_pRs_enq_1__VAL_5 =
 	     { 3'd5, mmioPlatform_amoResp } ;
-  assign MUX_core_0$mmioToPlatform_pRs_enq_1__VAL_6 = { 3'd5, data__h29513 } ;
+  assign MUX_core_0$mmioToPlatform_pRs_enq_1__VAL_6 = { 3'd5, data__h29436 } ;
   assign MUX_core_0$mmioToPlatform_pRs_enq_1__VAL_7 =
 	     { mmioPlatform_reqFunc[5:4] != 2'd0,
 	       (mmioPlatform_reqFunc[5:4] == 2'd0) ?
@@ -4189,7 +4239,7 @@ module mkProc(CLK,
 		 { 1'd1, mmio_axi4_adapter_f_rsps_to_core$D_OUT[63:0] } :
 		 mmio_axi4_adapter_f_rsps_to_core$D_OUT } ;
   assign MUX_llc$dma_memReq_enq_1__VAL_1 =
-	     { req_addr__h94118,
+	     { req_addr__h94041,
 	       (llc_mem_server_axi4_slave_xactor_f_wr_addr$D_OUT[34:32] ==
 		3'd7) ?
 		 llc_mem_server_axi4_slave_xactor_f_wr_data$D_OUT[8:1] :
@@ -4256,7 +4306,7 @@ module mkProc(CLK,
 		 64'd0,
 	       5'd10 } ;
   assign MUX_llc$dma_memReq_enq_1__VAL_2 =
-	     { line_addr__h104978,
+	     { line_addr__h104901,
 	       581'h0000000000000000155555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555554A } ;
   assign MUX_llc$dma_memReq_enq_1__VAL_3 =
 	     { llc_mem_server_tlbQ$D_OUT[64:1],
@@ -4358,7 +4408,7 @@ module mkProc(CLK,
 	     { mmioPlatform_curReq[63:0],
 	       6'd42,
 	       mmioPlatform_reqBE,
-	       x__h45420 } ;
+	       x__h45343 } ;
   assign MUX_mmio_axi4_adapter_f_reqs_from_core$enq_1__VAL_2 =
 	     { mmioPlatform_curReq[63:0],
 	       IF_mmioPlatform_reqFunc_01_BITS_5_TO_4_02_EQ_0_ETC___d442,
@@ -4367,53 +4417,53 @@ module mkProc(CLK,
   assign MUX_mmio_axi4_adapter_f_reqs_from_core$enq_1__VAL_3 =
 	     { mmioPlatform_curReq[63:0], 78'h1AAAAAAAAAAAAAAAAAAA } ;
   assign MUX_mmio_axi4_adapter_f_reqs_from_core$enq_1__VAL_4 =
-	     { x__h47532, 78'h1AAAAAAAAAAAAAAAAAAA } ;
+	     { x__h47455, 78'h1AAAAAAAAAAAAAAAAAAA } ;
   assign MUX_mmio_axi4_adapter_f_rsps_to_core$enq_1__VAL_2 =
 	     { mmio_axi4_adapter_master_xactor_rg_rd_data[2:1] == 2'b0,
 	       mmio_axi4_adapter_master_xactor_rg_rd_data[66:3] } ;
 
   // inlined wires
-  assign mmioPlatform_toHostQ_enqReq_lat_0$wget = { 1'd1, x__h40424 } ;
+  assign mmioPlatform_toHostQ_enqReq_lat_0$wget = { 1'd1, x__h40347 } ;
   assign mmioPlatform_toHostQ_enqReq_lat_0$whas =
 	     WILL_FIRE_RL_mmioPlatform_processToHost &&
 	     mmioPlatform_reqFunc[5:4] == 2'd2 &&
 	     mmioPlatform_toHostQ_empty &&
-	     x__h40424 != 64'd0 ;
+	     x__h40347 != 64'd0 ;
   assign mmioPlatform_fromHostQ_deqReq_lat_0$whas =
 	     WILL_FIRE_RL_mmioPlatform_processFromHost &&
 	     mmioPlatform_reqFunc[5:4] == 2'd2 &&
 	     !mmioPlatform_fromHostQ_empty &&
-	     x__h38404 == 64'd0 ;
+	     x__h38327 == 64'd0 ;
   assign propDstIdx_0_lat_1$whas =
 	     NOT_enqDst_0_dummy2_0_read__040_041_OR_NOT_enq_ETC___d1056 &&
 	     IF_SEL_ARR_propDstIdx_0_dummy2_1_read__019_AND_ETC___d1126 ;
   assign propDstIdx_1_lat_1$whas =
 	     NOT_enqDst_0_dummy2_0_read__040_041_OR_NOT_enq_ETC___d1056 &&
-	     x__h58824 ;
+	     x__h58747 ;
   assign propDstData_0_lat_0$wget =
 	     { core_0$dCacheToParent_rqToP_first, 1'd0 } ;
   assign propDstData_1_lat_0$wget =
 	     { core_0$iCacheToParent_rqToP_first, 1'd1 } ;
   assign enqDst_0_lat_0$wget =
 	     { 1'd1,
-	       CASE_x8824_0_n__read_addr9006_1_n__read_addr90_ETC__q15,
+	       CASE_x8747_0_n__read_addr8929_1_n__read_addr90_ETC__q23,
 	       SEL_ARR_IF_propDstData_0_dummy2_1_read__057_TH_ETC___d1121 } ;
   assign propDstIdx_1_0_lat_1$whas =
 	     NOT_enqDst_1_0_dummy2_0_read__309_310_OR_NOT_e_ETC___d1325 &&
 	     IF_SEL_ARR_propDstIdx_1_0_dummy2_1_read__278_A_ETC___d1423 ;
   assign propDstIdx_1_1_lat_1$whas =
 	     NOT_enqDst_1_0_dummy2_0_read__309_310_OR_NOT_e_ETC___d1325 &&
-	     x__h77447 ;
+	     x__h77370 ;
   assign propDstData_1_0_lat_0$wget =
 	     { core_0$dCacheToParent_rsToP_first, 1'd0 } ;
   assign propDstData_1_1_lat_0$wget =
 	     { core_0$iCacheToParent_rsToP_first, 1'd1 } ;
   assign enqDst_1_0_lat_0$wget =
 	     { 1'd1,
-	       CASE_x7447_0_n__read_addr7625_1_n__read_addr77_ETC__q26,
+	       CASE_x7370_0_n__read_addr7548_1_n__read_addr76_ETC__q34,
 	       SEL_ARR_IF_propDstData_1_0_dummy2_1_read__326__ETC___d1418 } ;
   assign llc_mem_server_enqDst_0_lat_0$wget =
-	     { 1'd1, n__read_snd_addr__h92386, n__read_snd_id__h92387 } ;
+	     { 1'd1, n__read_snd_addr__h92309, n__read_snd_id__h92310 } ;
   assign mmio_axi4_adapter_master_xactor_crg_wr_addr_full$EN_port1__write =
 	     mmio_axi4_adapter_master_xactor_crg_wr_addr_full &&
 	     master1_awready ;
@@ -4462,11 +4512,11 @@ module mkProc(CLK,
   assign mmio_axi4_adapter_ctr_wr_rsps_pending_crg$port0__write_1 =
 	     mmio_axi4_adapter_ctr_wr_rsps_pending_crg + 4'd1 ;
   assign mmio_axi4_adapter_ctr_wr_rsps_pending_crg$port1__write_1 =
-	     b__h2436 - 4'd1 ;
+	     b__h2359 - 4'd1 ;
   assign mmio_axi4_adapter_ctr_wr_rsps_pending_crg$port2__read =
 	     WILL_FIRE_RL_mmio_axi4_adapter_rl_discard_write_rsp ?
 	       mmio_axi4_adapter_ctr_wr_rsps_pending_crg$port1__write_1 :
-	       b__h2436 ;
+	       b__h2359 ;
   assign mmio_axi4_adapter_ctr_wr_rsps_pending_crg$port3__read =
 	     CAN_FIRE_RL_rl_reset ?
 	       4'd0 :
@@ -4519,11 +4569,11 @@ module mkProc(CLK,
   assign llc_axi4_adapter_ctr_wr_rsps_pending_crg$port0__write_1 =
 	     llc_axi4_adapter_ctr_wr_rsps_pending_crg + 4'd1 ;
   assign llc_axi4_adapter_ctr_wr_rsps_pending_crg$port1__write_1 =
-	     b__h122909 - 4'd1 ;
+	     b__h122832 - 4'd1 ;
   assign llc_axi4_adapter_ctr_wr_rsps_pending_crg$port2__read =
 	     CAN_FIRE_RL_llc_axi4_adapter_rl_discard_write_rsp ?
 	       llc_axi4_adapter_ctr_wr_rsps_pending_crg$port1__write_1 :
-	       b__h122909 ;
+	       b__h122832 ;
   assign llc_axi4_adapter_ctr_wr_rsps_pending_crg$port3__read =
 	     CAN_FIRE_RL_rl_reset ?
 	       4'd0 :
@@ -4590,7 +4640,7 @@ module mkProc(CLK,
 
   // register llc_axi4_adapter_master_xactor_rg_rd_addr
   assign llc_axi4_adapter_master_xactor_rg_rd_addr$D_IN =
-	     { 4'd0, mem_req_rd_addr_araddr__h123202, 29'd851968 } ;
+	     { 4'd0, mem_req_rd_addr_araddr__h123125, 29'd851968 } ;
   assign llc_axi4_adapter_master_xactor_rg_rd_addr$EN =
 	     CAN_FIRE_RL_llc_axi4_adapter_rl_handle_read_req ;
 
@@ -4601,13 +4651,13 @@ module mkProc(CLK,
 
   // register llc_axi4_adapter_master_xactor_rg_wr_addr
   assign llc_axi4_adapter_master_xactor_rg_wr_addr$D_IN =
-	     { 4'd0, mem_req_wr_addr_awaddr__h137126, 29'd851968 } ;
+	     { 4'd0, mem_req_wr_addr_awaddr__h137049, 29'd851968 } ;
   assign llc_axi4_adapter_master_xactor_rg_wr_addr$EN =
 	     CAN_FIRE_RL_llc_axi4_adapter_rl_handle_write_req ;
 
   // register llc_axi4_adapter_master_xactor_rg_wr_data
   assign llc_axi4_adapter_master_xactor_rg_wr_data$D_IN =
-	     { 4'd0, data64__h137041, strb8__h137042, 1'd1 } ;
+	     { 4'd0, data64__h136964, strb8__h136965, 1'd1 } ;
   assign llc_axi4_adapter_master_xactor_rg_wr_data$EN =
 	     CAN_FIRE_RL_llc_axi4_adapter_rl_handle_write_req ;
 
@@ -4619,7 +4669,7 @@ module mkProc(CLK,
 	     !llc_axi4_adapter_master_xactor_crg_wr_resp_full$port2__read ;
 
   // register llc_axi4_adapter_rg_cline
-  assign llc_axi4_adapter_rg_cline$D_IN = new_cline__h123904 ;
+  assign llc_axi4_adapter_rg_cline$D_IN = new_cline__h123827 ;
   assign llc_axi4_adapter_rg_cline$EN =
 	     CAN_FIRE_RL_llc_axi4_adapter_rl_handle_read_rsps ;
 
@@ -4780,7 +4830,7 @@ module mkProc(CLK,
   // register mmioPlatform_mtime
   assign mmioPlatform_mtime$D_IN =
 	     MUX_mmioPlatform_amoResp$write_1__SEL_2 ?
-	       newData__h32524 :
+	       newData__h32447 :
 	       MUX_mmioPlatform_mtime$write_1__VAL_2 ;
   assign mmioPlatform_mtime$EN =
 	     WILL_FIRE_RL_mmioPlatform_processMTime &&
@@ -4789,7 +4839,7 @@ module mkProc(CLK,
 	     WILL_FIRE_RL_mmioPlatform_incTime ;
 
   // register mmioPlatform_mtimecmp_0
-  assign mmioPlatform_mtimecmp_0$D_IN = newData__h29594 ;
+  assign mmioPlatform_mtimecmp_0$D_IN = newData__h29517 ;
   assign mmioPlatform_mtimecmp_0$EN =
 	     MUX_mmioPlatform_amoResp$write_1__SEL_1 ;
 
@@ -5206,7 +5256,7 @@ module mkProc(CLK,
   assign core_0$setMEIP_v = m_external_interrupt_req_set_not_clear ;
   assign core_0$setSEIP_v = s_external_interrupt_req_set_not_clear ;
   assign core_0$tlbToMem_respLd_enq_x =
-	     { ld_data__h121099, llc$dma_respLd_first[3] } ;
+	     { ld_data__h121022, llc$dma_respLd_first[3] } ;
   assign core_0$EN_coreReq_start = EN_start ;
   assign core_0$EN_coreReq_perfReq = 1'b0 ;
   assign core_0$EN_coreIndInv_perfResp = 1'b0 ;
@@ -5304,6 +5354,8 @@ module mkProc(CLK,
 	     EN_hart0_csr_mem_server_request_put ;
   assign core_0$EN_hart0_csr_mem_server_response_get =
 	     EN_hart0_csr_mem_server_response_get ;
+  assign core_0$EN_v_to_TV_0_get = EN_v_to_TV_0_get ;
+  assign core_0$EN_v_to_TV_1_get = EN_v_to_TV_1_get ;
 
   // submodule enqDst_0_dummy2_0
   assign enqDst_0_dummy2_0$D_IN = 1'd1 ;
@@ -5332,12 +5384,6 @@ module mkProc(CLK,
   assign f_reset_rsps$ENQ = CAN_FIRE_RL_rl_reset ;
   assign f_reset_rsps$DEQ = EN_hart0_server_reset_response_get ;
   assign f_reset_rsps$CLR = 1'b0 ;
-
-  // submodule f_trace_data
-  assign f_trace_data$D_IN = 362'h0 ;
-  assign f_trace_data$ENQ = 1'b0 ;
-  assign f_trace_data$DEQ = EN_trace_data_out_get ;
-  assign f_trace_data$CLR = 1'b0 ;
 
   // submodule llc
   always@(MUX_llc$dma_memReq_enq_1__SEL_1 or
@@ -5371,7 +5417,7 @@ module mkProc(CLK,
 	       IF_enqDst_1_0_lat_0_whas__226_THEN_enqDst_1_0__ETC___d1261,
 	       IF_enqDst_1_0_lat_0_whas__226_THEN_enqDst_1_0__ETC___d1267 } ;
   assign llc$to_mem_rsFromM_enq_x =
-	     { new_cline__h123904,
+	     { new_cline__h123827,
 	       llc_axi4_adapter_f_pending_reads$D_OUT[4:0] } ;
   assign llc$EN_to_child_rsFromC_enq = CAN_FIRE_RL_doEnq_1 ;
   assign llc$EN_to_child_rqFromC_enq = CAN_FIRE_RL_doEnq ;
@@ -5455,7 +5501,7 @@ module mkProc(CLK,
 
   // submodule llc_mem_server_axi4_slave_xactor_f_rd_data
   assign llc_mem_server_axi4_slave_xactor_f_rd_data$D_IN =
-	     { 4'd0, rd_data_rdata__h119548, 3'd1 } ;
+	     { 4'd0, rd_data_rdata__h119471, 3'd1 } ;
   assign llc_mem_server_axi4_slave_xactor_f_rd_data$ENQ =
 	     CAN_FIRE_RL_llc_mem_server_sendLdRespToMemLoader ;
   assign llc_mem_server_axi4_slave_xactor_f_rd_data$DEQ =
@@ -5738,47 +5784,47 @@ module mkProc(CLK,
 
   // remaining internal signals
   module_amoExec instance_amoExec_0(.amoExec_amo_inst({ mmioPlatform_reqFunc[3:0],
-							mmioPlatform_reqBE_BIT_4___h27681 &&
-							mmioPlatform_reqBE_BIT_0___h27721,
+							mmioPlatform_reqBE_BIT_4___h27604 &&
+							mmioPlatform_reqBE_BIT_0___h27644,
 							2'd0 }),
-				    .amoExec_current_data(x__h34975),
-				    .amoExec_in_data(mmioPlatform_reqData__h46016),
-				    .amoExec_upper_32_bits(mmioPlatform_reqBE_BIT_4___h27681 &&
-							   !mmioPlatform_reqBE_BIT_0___h27721),
-				    .amoExec(x__h29705));
+				    .amoExec_current_data(x__h34898),
+				    .amoExec_in_data(mmioPlatform_reqData__h45939),
+				    .amoExec_upper_32_bits(mmioPlatform_reqBE_BIT_4___h27604 &&
+							   !mmioPlatform_reqBE_BIT_0___h27644),
+				    .amoExec(x__h29628));
   module_amoExec instance_amoExec_1(.amoExec_amo_inst({ mmioPlatform_reqFunc[3:0],
-							mmioPlatform_reqBE_BIT_4___h27681 &&
-							mmioPlatform_reqBE_BIT_0___h27721,
+							mmioPlatform_reqBE_BIT_4___h27604 &&
+							mmioPlatform_reqBE_BIT_0___h27644,
 							2'd0 }),
-				    .amoExec_current_data(mmioPlatform_mtime__h34827),
-				    .amoExec_in_data(mmioPlatform_reqData__h46016),
-				    .amoExec_upper_32_bits(mmioPlatform_reqBE_BIT_4___h27681 &&
-							   !mmioPlatform_reqBE_BIT_0___h27721),
-				    .amoExec(x__h32615));
-  module_amoExec instance_amoExec_2(.amoExec_amo_inst({ mmioPlatform_reqFunc[3:0],
-							mmioPlatform_reqBE_BIT_4___h27681 &&
-							mmioPlatform_reqBE_BIT_0___h27721,
-							2'd0 }),
-				    .amoExec_current_data(mmioPlatform_fromHostQ_data_0__h40214),
-				    .amoExec_in_data(mmioPlatform_reqData__h46016),
-				    .amoExec_upper_32_bits(mmioPlatform_reqBE_BIT_4___h27681 &&
-							   !mmioPlatform_reqBE_BIT_0___h27721),
-				    .amoExec(x__h38415));
+				    .amoExec_current_data(mmioPlatform_mtime__h34750),
+				    .amoExec_in_data(mmioPlatform_reqData__h45939),
+				    .amoExec_upper_32_bits(mmioPlatform_reqBE_BIT_4___h27604 &&
+							   !mmioPlatform_reqBE_BIT_0___h27644),
+				    .amoExec(x__h32538));
   module_amoExec instance_amoExec_3(.amoExec_amo_inst({ mmioPlatform_reqFunc[3:0],
-							mmioPlatform_reqBE_BIT_4___h27681 &&
-							mmioPlatform_reqBE_BIT_0___h27721,
+							mmioPlatform_reqBE_BIT_4___h27604 &&
+							mmioPlatform_reqBE_BIT_0___h27644,
 							2'd0 }),
 				    .amoExec_current_data(64'd0),
-				    .amoExec_in_data(mmioPlatform_reqData__h46016),
-				    .amoExec_upper_32_bits(mmioPlatform_reqBE_BIT_4___h27681 &&
-							   !mmioPlatform_reqBE_BIT_0___h27721),
-				    .amoExec(x__h40435));
+				    .amoExec_in_data(mmioPlatform_reqData__h45939),
+				    .amoExec_upper_32_bits(mmioPlatform_reqBE_BIT_4___h27604 &&
+							   !mmioPlatform_reqBE_BIT_0___h27644),
+				    .amoExec(x__h40358));
+  module_amoExec instance_amoExec_2(.amoExec_amo_inst({ mmioPlatform_reqFunc[3:0],
+							mmioPlatform_reqBE_BIT_4___h27604 &&
+							mmioPlatform_reqBE_BIT_0___h27644,
+							2'd0 }),
+				    .amoExec_current_data(mmioPlatform_fromHostQ_data_0__h40137),
+				    .amoExec_in_data(mmioPlatform_reqData__h45939),
+				    .amoExec_upper_32_bits(mmioPlatform_reqBE_BIT_4___h27604 &&
+							   !mmioPlatform_reqBE_BIT_0___h27644),
+				    .amoExec(x__h38338));
   assign DONTCARE_CONCAT_IF_mmioPlatform_reqFunc_01_BIT_ETC___d645 =
 	     { 1'h0,
 	       (mmioPlatform_reqFunc[5:4] == 2'd2) ?
 		 { mmioPlatform_toHostQ_empty, 64'hAAAAAAAAAAAAAAAA } :
 		 { mmioPlatform_reqFunc[5:4] == 2'd1,
-		   x1_avValue_data__h37886 } } ;
+		   x1_avValue_data__h37809 } } ;
   assign IF_IF_NOT_mmioPlatform_reqFunc_01_BITS_5_TO_4__ETC___d520 =
 	     (IF_NOT_mmioPlatform_reqFunc_01_BITS_5_TO_4_02__ETC___d515 &&
 	      !mmioPlatform_mtip_0 ||
@@ -5794,7 +5840,7 @@ module mkProc(CLK,
 		  core_0$RDY_mmioToPlatform_pRs_enq) :
 	       !mmioPlatform_reqBE[0] || core_0$RDY_mmioToPlatform_pRq_enq ;
   assign IF_NOT_mmioPlatform_reqFunc_01_BITS_5_TO_4_02__ETC___d515 =
-	     newData__h29594 <= mmioPlatform_mtime ;
+	     newData__h29517 <= mmioPlatform_mtime ;
   assign IF_NOT_propDstIdx_0_dummy2_1_read__019_020_OR__ETC___d1054 =
 	     NOT_propDstIdx_0_dummy2_1_read__019_020_OR_IF__ETC___d1053 ?
 	       propDstIdx_1_dummy2_1$Q_OUT &&
@@ -5859,7 +5905,7 @@ module mkProc(CLK,
 	       CAN_FIRE_RL_doEnq_1 ?
 		 512'h55555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555 :
 		 IF_enqDst_1_0_lat_0_whas__226_THEN_enqDst_1_0__ETC___d1261,
-	       x__h72376 } ;
+	       x__h72299 } ;
   assign IF_enqDst_1_0_lat_1_whas__223_THEN_enqDst_1_0__ETC___d1270 =
 	     { CAN_FIRE_RL_doEnq_1 ?
 		 64'hAAAAAAAAAAAAAAAA :
@@ -5897,16 +5943,16 @@ module mkProc(CLK,
 	      core_0$RDY_mmioToPlatform_pRs_enq) ;
   assign IF_mmioPlatform_reqBE_04_BIT_4_05_THEN_SEXT_mm_ETC___d538 =
 	     mmioPlatform_reqBE[4] ?
-	       { {32{mmioPlatform_mtimecmp_0_BITS_63_TO_32__q1[31]}},
-		 mmioPlatform_mtimecmp_0_BITS_63_TO_32__q1 } :
-	       { {32{mmioPlatform_mtimecmp_0_BITS_31_TO_0__q2[31]}},
-		 mmioPlatform_mtimecmp_0_BITS_31_TO_0__q2 } ;
+	       { {32{mmioPlatform_mtimecmp_0_BITS_63_TO_32__q9[31]}},
+		 mmioPlatform_mtimecmp_0_BITS_63_TO_32__q9 } :
+	       { {32{mmioPlatform_mtimecmp_0_BITS_31_TO_0__q10[31]}},
+		 mmioPlatform_mtimecmp_0_BITS_31_TO_0__q10 } ;
   assign IF_mmioPlatform_reqBE_04_BIT_4_05_THEN_SEXT_mm_ETC___d602 =
 	     mmioPlatform_reqBE[4] ?
-	       { {32{mmioPlatform_mtime_BITS_63_TO_32__q3[31]}},
-		 mmioPlatform_mtime_BITS_63_TO_32__q3 } :
-	       { {32{mmioPlatform_mtime_BITS_31_TO_0__q4[31]}},
-		 mmioPlatform_mtime_BITS_31_TO_0__q4 } ;
+	       { {32{mmioPlatform_mtime_BITS_63_TO_32__q11[31]}},
+		 mmioPlatform_mtime_BITS_63_TO_32__q11 } :
+	       { {32{mmioPlatform_mtime_BITS_31_TO_0__q12[31]}},
+		 mmioPlatform_mtime_BITS_31_TO_0__q12 } ;
   assign IF_mmioPlatform_reqBE_04_BIT_7_80_THEN_mmioPla_ETC___d496 =
 	     { mmioPlatform_reqBE[7] ?
 		 mmioPlatform_reqData[63:56] :
@@ -6011,11 +6057,11 @@ module mkProc(CLK,
   assign IF_mmioPlatform_reqFunc_01_BITS_5_TO_4_02_EQ_2_ETC___d684 =
 	     (mmioPlatform_reqFunc[5:4] == 2'd2) ?
 	       { mmioPlatform_fromHostQ_empty ?
-		   x__h40424 == 64'd0 :
-		   x__h38404 == 64'd0,
+		   x__h40347 == 64'd0 :
+		   x__h38327 == 64'd0,
 		 64'hAAAAAAAAAAAAAAAA } :
 	       { mmioPlatform_reqFunc[5:4] == 2'd1,
-		 x1_avValue_data__h42353 } ;
+		 x1_avValue_data__h42276 } ;
   assign IF_mmioPlatform_toHostQ_enqReq_lat_1_whas__56__ETC___d165 =
 	     mmioPlatform_toHostQ_enqReq_lat_0$whas ?
 	       mmioPlatform_toHostQ_enqReq_lat_0$wget[64] :
@@ -6244,48 +6290,48 @@ module mkProc(CLK,
 	     !propDstIdx_1_0_dummy2_1$Q_OUT ||
 	     !CAN_FIRE_RL_srcPropose_2 && !propDstIdx_1_0_rl ;
   assign SEL_ARR_IF_propDstData_0_dummy2_1_read__057_TH_ETC___d1121 =
-	     { CASE_x8824_0_IF_propDstData_0_dummy2_1_read__0_ETC__q13,
-	       CASE_x8824_0_IF_propDstData_0_dummy2_1_read__0_ETC__q14,
+	     { CASE_x8747_0_IF_propDstData_0_dummy2_1_read__0_ETC__q21,
+	       CASE_x8747_0_IF_propDstData_0_dummy2_1_read__0_ETC__q22,
 	       SEL_ARR_propDstData_0_dummy2_1_read__057_AND_I_ETC___d1120 } ;
   assign SEL_ARR_IF_propDstData_1_0_dummy2_1_read__326__ETC___d1418 =
-	     { CASE_x7447_0_IF_propDstData_1_0_dummy2_1Q_OUT_ETC__q24,
-	       !CASE_x7447_0_NOT_propDstData_1_0_dummy2_1_read_ETC__q25,
+	     { CASE_x7370_0_IF_propDstData_1_0_dummy2_1Q_OUT_ETC__q32,
+	       !CASE_x7370_0_NOT_propDstData_1_0_dummy2_1_read_ETC__q33,
 	       SEL_ARR_IF_propDstData_1_0_lat_0_whas__150_THE_ETC___d1411,
-	       x__h79863 } ;
+	       x__h79786 } ;
   assign SEL_ARR_IF_propDstData_1_0_lat_0_whas__150_THE_ETC___d1360 =
-	     { CASE_x7447_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q16,
-	       CASE_x7447_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q17 } ;
+	     { CASE_x7370_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q24,
+	       CASE_x7370_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q25 } ;
   assign SEL_ARR_IF_propDstData_1_0_lat_0_whas__150_THE_ETC___d1377 =
 	     { SEL_ARR_IF_propDstData_1_0_lat_0_whas__150_THE_ETC___d1360,
-	       CASE_x7447_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q18,
-	       CASE_x7447_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q19 } ;
+	       CASE_x7370_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q26,
+	       CASE_x7370_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q27 } ;
   assign SEL_ARR_IF_propDstData_1_0_lat_0_whas__150_THE_ETC___d1394 =
 	     { SEL_ARR_IF_propDstData_1_0_lat_0_whas__150_THE_ETC___d1377,
-	       CASE_x7447_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q20,
-	       CASE_x7447_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q21 } ;
+	       CASE_x7370_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q28,
+	       CASE_x7370_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q29 } ;
   assign SEL_ARR_IF_propDstData_1_0_lat_0_whas__150_THE_ETC___d1411 =
 	     { SEL_ARR_IF_propDstData_1_0_lat_0_whas__150_THE_ETC___d1394,
-	       CASE_x7447_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q22,
-	       CASE_x7447_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q23 } ;
+	       CASE_x7370_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q30,
+	       CASE_x7370_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q31 } ;
   assign SEL_ARR_propDstData_0_dummy2_1_read__057_AND_I_ETC___d1120 =
-	     { CASE_x8824_0_propDstData_0_dummy2_1_read__057__ETC__q12,
-	       x__h59138,
-	       x__h59145 } ;
-  assign b__h122909 =
+	     { CASE_x8747_0_propDstData_0_dummy2_1_read__057__ETC__q20,
+	       x__h59061,
+	       x__h59068 } ;
+  assign b__h122832 =
 	     CAN_FIRE_RL_llc_axi4_adapter_rl_handle_write_req ?
 	       llc_axi4_adapter_ctr_wr_rsps_pending_crg$port0__write_1 :
 	       llc_axi4_adapter_ctr_wr_rsps_pending_crg ;
-  assign b__h2436 =
+  assign b__h2359 =
 	     CAN_FIRE_RL_mmio_axi4_adapter_rl_handle_write_req ?
 	       mmio_axi4_adapter_ctr_wr_rsps_pending_crg$port0__write_1 :
 	       mmio_axi4_adapter_ctr_wr_rsps_pending_crg ;
-  assign data__h29513 =
+  assign data__h29436 =
 	     mmioPlatform_waitLowerMSIPCRs ?
 	       { 63'd0, core_0$mmioToPlatform_cRs_first } :
-	       { v__h29306, 32'd0 } ;
-  assign failed_testnum__h151840 =
+	       { v__h29229, 32'd0 } ;
+  assign failed_testnum__h151763 =
 	     { 1'd0, mmioPlatform_toHostQ_data_0[63:1] } ;
-  assign line_addr__h104978 =
+  assign line_addr__h104901 =
 	     { llc_mem_server_axi4_slave_xactor_f_rd_addr$D_OUT[92:35],
 	       6'b0 } ;
   assign llc_mem_server_axi4_slave_xactor_f_wr_addr_fir_ETC___d1584 =
@@ -6312,14 +6358,14 @@ module mkProc(CLK,
 	      llc_mem_server_axi4_slave_xactor_f_wr_addr$D_OUT[20:18] ==
 	      3'b011) &&
 	     !llc_mem_server_axi4_slave_xactor_f_wr_data$D_OUT[0] ;
-  assign mem_req_rd_addr_araddr__h123202 =
-	     { llc$to_mem_toM_first[68:11], x__h123237 } ;
-  assign mem_req_wr_addr_awaddr__h137126 =
-	     { llc$to_mem_toM_first[639:582], x__h137151 } ;
+  assign mem_req_rd_addr_araddr__h123125 =
+	     { llc$to_mem_toM_first[68:11], x__h123160 } ;
+  assign mem_req_wr_addr_awaddr__h137049 =
+	     { llc$to_mem_toM_first[639:582], x__h137074 } ;
   assign mmioPlatform_cycle_12_ULT_99___d313 = mmioPlatform_cycle < 7'd99 ;
   assign mmioPlatform_fetchingWay_26_ULT_mmioPlatform_r_ETC___d936 =
 	     mmioPlatform_fetchingWay < mmioPlatform_reqFunc[0] ;
-  assign mmioPlatform_fromHostQ_data_0__h40214 =
+  assign mmioPlatform_fromHostQ_data_0__h40137 =
 	     mmioPlatform_fromHostQ_data_0 ;
   assign mmioPlatform_fromHostQ_enqReq_dummy2_2_read__8_ETC___d296 =
 	     mmioPlatform_fromHostQ_enqReq_dummy2_2$Q_OUT &&
@@ -6328,20 +6374,20 @@ module mkProc(CLK,
 	      !mmioPlatform_fromHostQ_deqReq_lat_0$whas &&
 	      !mmioPlatform_fromHostQ_deqReq_rl) &&
 	     mmioPlatform_fromHostQ_full ;
-  assign mmioPlatform_mtime_BITS_31_TO_0__q4 = mmioPlatform_mtime[31:0] ;
-  assign mmioPlatform_mtime_BITS_63_TO_32__q3 = mmioPlatform_mtime[63:32] ;
-  assign mmioPlatform_mtime__h34827 = mmioPlatform_mtime ;
+  assign mmioPlatform_mtime_BITS_31_TO_0__q12 = mmioPlatform_mtime[31:0] ;
+  assign mmioPlatform_mtime_BITS_63_TO_32__q11 = mmioPlatform_mtime[63:32] ;
+  assign mmioPlatform_mtime__h34750 = mmioPlatform_mtime ;
   assign mmioPlatform_mtimecmp_0_21_ULE_IF_NOT_mmioPlat_ETC___d577 =
-	     mmioPlatform_mtimecmp_0 <= newData__h32524 ;
+	     mmioPlatform_mtimecmp_0 <= newData__h32447 ;
   assign mmioPlatform_mtimecmp_0_21_ULE_mmioPlatform_mt_ETC___d322 =
 	     mmioPlatform_mtimecmp_0 <= mmioPlatform_mtime ;
-  assign mmioPlatform_mtimecmp_0_BITS_31_TO_0__q2 =
+  assign mmioPlatform_mtimecmp_0_BITS_31_TO_0__q10 =
 	     mmioPlatform_mtimecmp_0[31:0] ;
-  assign mmioPlatform_mtimecmp_0_BITS_63_TO_32__q1 =
+  assign mmioPlatform_mtimecmp_0_BITS_63_TO_32__q9 =
 	     mmioPlatform_mtimecmp_0[63:32] ;
-  assign mmioPlatform_reqBE_BIT_0___h27721 = mmioPlatform_reqBE[0] ;
-  assign mmioPlatform_reqBE_BIT_4___h27681 = mmioPlatform_reqBE[4] ;
-  assign mmioPlatform_reqData__h46016 = mmioPlatform_reqData ;
+  assign mmioPlatform_reqBE_BIT_0___h27644 = mmioPlatform_reqBE[0] ;
+  assign mmioPlatform_reqBE_BIT_4___h27604 = mmioPlatform_reqBE[4] ;
+  assign mmioPlatform_reqData__h45939 = mmioPlatform_reqData ;
   assign mmioPlatform_reqFunc_01_BITS_5_TO_4_02_EQ_0_03_ETC___d428 =
 	     mmioPlatform_reqFunc[5:4] == 2'd0 || mmioPlatform_reqBE[4] ||
 	     mmioPlatform_reqFunc[5:4] != 2'd1 &&
@@ -6368,104 +6414,104 @@ module mkProc(CLK,
 	      !(!mmioPlatform_toHostQ_empty) &&
 	      !mmioPlatform_toHostQ_deqReq_rl) &&
 	     mmioPlatform_toHostQ_full ;
-  assign n__read_addr__h59006 =
+  assign n__read_addr__h58929 =
 	     propDstData_0_dummy2_1$Q_OUT ?
 	       (CAN_FIRE_RL_srcPropose ?
 		  propDstData_0_lat_0$wget[72:9] :
 		  propDstData_0_rl[72:9]) :
 	       64'd0 ;
-  assign n__read_addr__h59091 =
+  assign n__read_addr__h59014 =
 	     propDstData_1_dummy2_1$Q_OUT ?
 	       (CAN_FIRE_RL_srcPropose_1 ?
 		  propDstData_1_lat_0$wget[72:9] :
 		  propDstData_1_rl[72:9]) :
 	       64'd0 ;
-  assign n__read_addr__h77625 =
+  assign n__read_addr__h77548 =
 	     propDstData_1_0_dummy2_1$Q_OUT ?
 	       IF_propDstData_1_0_lat_0_whas__150_THEN_propDs_ETC___d1155 :
 	       64'd0 ;
-  assign n__read_addr__h77704 =
+  assign n__read_addr__h77627 =
 	     propDstData_1_1_dummy2_1$Q_OUT ?
 	       IF_propDstData_1_1_lat_0_whas__188_THEN_propDs_ETC___d1193 :
 	       64'd0 ;
-  assign n__read_child__h59011 =
+  assign n__read_child__h58934 =
 	     propDstData_0_dummy2_1$Q_OUT &&
 	     (CAN_FIRE_RL_srcPropose ?
 		propDstData_0_lat_0$wget[0] :
 		propDstData_0_rl[0]) ;
-  assign n__read_child__h59096 =
+  assign n__read_child__h59019 =
 	     propDstData_1_dummy2_1$Q_OUT &&
 	     (CAN_FIRE_RL_srcPropose_1 ?
 		propDstData_1_lat_0$wget[0] :
 		propDstData_1_rl[0]) ;
-  assign n__read_child__h77628 =
+  assign n__read_child__h77551 =
 	     propDstData_1_0_dummy2_1$Q_OUT &&
 	     IF_propDstData_1_0_lat_0_whas__150_THEN_propDs_ETC___d1181 ;
-  assign n__read_child__h77707 =
+  assign n__read_child__h77630 =
 	     propDstData_1_1_dummy2_1$Q_OUT &&
 	     IF_propDstData_1_1_lat_0_whas__188_THEN_propDs_ETC___d1219 ;
-  assign n__read_id__h59010 =
+  assign n__read_id__h58933 =
 	     propDstData_0_dummy2_1$Q_OUT ?
 	       (CAN_FIRE_RL_srcPropose ?
 		  propDstData_0_lat_0$wget[3:1] :
 		  propDstData_0_rl[3:1]) :
 	       3'd0 ;
-  assign n__read_id__h59095 =
+  assign n__read_id__h59018 =
 	     propDstData_1_dummy2_1$Q_OUT ?
 	       (CAN_FIRE_RL_srcPropose_1 ?
 		  propDstData_1_lat_0$wget[3:1] :
 		  propDstData_1_rl[3:1]) :
 	       3'd0 ;
-  assign n__read_snd_addr__h92386 =
+  assign n__read_snd_addr__h92309 =
 	     llc_mem_server_propDstData_0_dummy2_1$Q_OUT ?
 	       (CAN_FIRE_RL_llc_mem_server_srcPropose ?
 		  core_0$tlbToMem_memReq_first[64:1] :
 		  llc_mem_server_propDstData_0_rl[64:1]) :
 	       64'd0 ;
-  assign n__read_snd_id__h92387 =
+  assign n__read_snd_id__h92310 =
 	     llc_mem_server_propDstData_0_dummy2_1$Q_OUT &&
 	     (CAN_FIRE_RL_llc_mem_server_srcPropose ?
 		core_0$tlbToMem_memReq_first[0] :
 		llc_mem_server_propDstData_0_rl[0]) ;
-  assign newData__h29594 =
+  assign newData__h29517 =
 	     (mmioPlatform_reqFunc[5:4] != 2'd0 &&
 	      mmioPlatform_reqFunc[5:4] != 2'd1 &&
 	      mmioPlatform_reqFunc[5:4] != 2'd2) ?
-	       x__h29705 :
+	       x__h29628 :
 	       IF_mmioPlatform_reqBE_04_BIT_7_80_THEN_mmioPla_ETC___d513 ;
-  assign newData__h32524 =
+  assign newData__h32447 =
 	     (mmioPlatform_reqFunc[5:4] != 2'd0 &&
 	      mmioPlatform_reqFunc[5:4] != 2'd1 &&
 	      mmioPlatform_reqFunc[5:4] != 2'd2) ?
-	       x__h32615 :
+	       x__h32538 :
 	       IF_mmioPlatform_reqBE_04_BIT_7_80_THEN_mmioPla_ETC___d575 ;
-  assign new_cline__h123904 =
+  assign new_cline__h123827 =
 	     { llc_axi4_adapter_master_xactor_rg_rd_data[66:3],
 	       llc_axi4_adapter_rg_cline[511:64] } ;
-  assign op_result__h46032 =
+  assign op_result__h45955 =
 	     IF_mmioPlatform_reqSz_36_EQ_0b10_43_THEN_SEXT__ETC___d844 +
 	     IF_mmioPlatform_reqSz_36_EQ_0b10_43_THEN_SEXT__ETC___d846 ;
-  assign op_result__h46562 = w1__h45429 ^ w2__h45431 ;
-  assign op_result__h46567 = w1__h45429 & w2__h45431 ;
-  assign op_result__h46572 = w1__h45429 | w2__h45431 ;
-  assign op_result__h46577 =
-	     (w1__h45429 < w2__h45431) ? w1__h45429 : w2__h45431 ;
-  assign op_result__h46583 =
-	     (w1__h45429 <= w2__h45431) ? w2__h45431 : w1__h45429 ;
-  assign op_result__h46590 =
+  assign op_result__h46485 = w1__h45352 ^ w2__h45354 ;
+  assign op_result__h46490 = w1__h45352 & w2__h45354 ;
+  assign op_result__h46495 = w1__h45352 | w2__h45354 ;
+  assign op_result__h46500 =
+	     (w1__h45352 < w2__h45354) ? w1__h45352 : w2__h45354 ;
+  assign op_result__h46506 =
+	     (w1__h45352 <= w2__h45354) ? w2__h45354 : w1__h45352 ;
+  assign op_result__h46513 =
 	     ((IF_mmioPlatform_reqSz_36_EQ_0b10_43_THEN_SEXT__ETC___d844 ^
 	       64'h8000000000000000) <
 	      (IF_mmioPlatform_reqSz_36_EQ_0b10_43_THEN_SEXT__ETC___d846 ^
 	       64'h8000000000000000)) ?
-	       w1__h45429 :
-	       w2__h45431 ;
-  assign op_result__h46596 =
+	       w1__h45352 :
+	       w2__h45354 ;
+  assign op_result__h46519 =
 	     ((IF_mmioPlatform_reqSz_36_EQ_0b10_43_THEN_SEXT__ETC___d844 ^
 	       64'h8000000000000000) <=
 	      (IF_mmioPlatform_reqSz_36_EQ_0b10_43_THEN_SEXT__ETC___d846 ^
 	       64'h8000000000000000)) ?
-	       w2__h45431 :
-	       w1__h45429 ;
+	       w2__h45354 :
+	       w1__h45352 ;
   assign propDstData_0_dummy2_1_read__057_AND_IF_propDs_ETC___d1093 =
 	     propDstData_0_dummy2_1$Q_OUT &&
 	     (CAN_FIRE_RL_srcPropose ?
@@ -6476,129 +6522,129 @@ module mkProc(CLK,
 	     (CAN_FIRE_RL_srcPropose_1 ?
 		propDstData_1_lat_0$wget[4] :
 		propDstData_1_rl[4]) ;
-  assign req_addr__h94118 =
+  assign req_addr__h94041 =
 	     { llc_mem_server_axi4_slave_xactor_f_wr_addr$D_OUT[92:35],
 	       6'b0 } ;
-  assign result__h45475 =
+  assign result__h45398 =
 	     { mmioPlatform_reqData[63:8],
 	       IF_mmioPlatform_reqAmofunc_41_EQ_0_42_THEN_IF__ETC___d876[7:0] } ;
-  assign result__h45599 = { 56'd0, mmioPlatform_reqData[7:0] } ;
-  assign result__h45627 = { 56'd0, mmioPlatform_reqData[15:8] } ;
-  assign result__h45655 = { 56'd0, mmioPlatform_reqData[23:16] } ;
-  assign result__h45683 = { 56'd0, mmioPlatform_reqData[31:24] } ;
-  assign result__h45711 = { 56'd0, mmioPlatform_reqData[39:32] } ;
-  assign result__h45739 = { 56'd0, mmioPlatform_reqData[47:40] } ;
-  assign result__h45767 = { 56'd0, mmioPlatform_reqData[55:48] } ;
-  assign result__h45795 = { 56'd0, mmioPlatform_reqData[63:56] } ;
-  assign result__h45840 = { 48'd0, mmioPlatform_reqData[15:0] } ;
-  assign result__h45868 = { 48'd0, mmioPlatform_reqData[31:16] } ;
-  assign result__h45896 = { 48'd0, mmioPlatform_reqData[47:32] } ;
-  assign result__h45924 = { 48'd0, mmioPlatform_reqData[63:48] } ;
-  assign result__h45965 = { 32'd0, mmioPlatform_reqData[31:0] } ;
-  assign result__h45993 = { 32'd0, mmioPlatform_reqData[63:32] } ;
-  assign result__h46119 =
+  assign result__h45522 = { 56'd0, mmioPlatform_reqData[7:0] } ;
+  assign result__h45550 = { 56'd0, mmioPlatform_reqData[15:8] } ;
+  assign result__h45578 = { 56'd0, mmioPlatform_reqData[23:16] } ;
+  assign result__h45606 = { 56'd0, mmioPlatform_reqData[31:24] } ;
+  assign result__h45634 = { 56'd0, mmioPlatform_reqData[39:32] } ;
+  assign result__h45662 = { 56'd0, mmioPlatform_reqData[47:40] } ;
+  assign result__h45690 = { 56'd0, mmioPlatform_reqData[55:48] } ;
+  assign result__h45718 = { 56'd0, mmioPlatform_reqData[63:56] } ;
+  assign result__h45763 = { 48'd0, mmioPlatform_reqData[15:0] } ;
+  assign result__h45791 = { 48'd0, mmioPlatform_reqData[31:16] } ;
+  assign result__h45819 = { 48'd0, mmioPlatform_reqData[47:32] } ;
+  assign result__h45847 = { 48'd0, mmioPlatform_reqData[63:48] } ;
+  assign result__h45888 = { 32'd0, mmioPlatform_reqData[31:0] } ;
+  assign result__h45916 = { 32'd0, mmioPlatform_reqData[63:32] } ;
+  assign result__h46042 =
 	     { 56'd0, mmio_axi4_adapter_f_rsps_to_core$D_OUT[7:0] } ;
-  assign result__h46146 =
+  assign result__h46069 =
 	     { 56'd0, mmio_axi4_adapter_f_rsps_to_core$D_OUT[15:8] } ;
-  assign result__h46173 =
+  assign result__h46096 =
 	     { 56'd0, mmio_axi4_adapter_f_rsps_to_core$D_OUT[23:16] } ;
-  assign result__h46200 =
+  assign result__h46123 =
 	     { 56'd0, mmio_axi4_adapter_f_rsps_to_core$D_OUT[31:24] } ;
-  assign result__h46227 =
+  assign result__h46150 =
 	     { 56'd0, mmio_axi4_adapter_f_rsps_to_core$D_OUT[39:32] } ;
-  assign result__h46254 =
+  assign result__h46177 =
 	     { 56'd0, mmio_axi4_adapter_f_rsps_to_core$D_OUT[47:40] } ;
-  assign result__h46281 =
+  assign result__h46204 =
 	     { 56'd0, mmio_axi4_adapter_f_rsps_to_core$D_OUT[55:48] } ;
-  assign result__h46308 =
+  assign result__h46231 =
 	     { 56'd0, mmio_axi4_adapter_f_rsps_to_core$D_OUT[63:56] } ;
-  assign result__h46352 =
+  assign result__h46275 =
 	     { 48'd0, mmio_axi4_adapter_f_rsps_to_core$D_OUT[15:0] } ;
-  assign result__h46379 =
+  assign result__h46302 =
 	     { 48'd0, mmio_axi4_adapter_f_rsps_to_core$D_OUT[31:16] } ;
-  assign result__h46406 =
+  assign result__h46329 =
 	     { 48'd0, mmio_axi4_adapter_f_rsps_to_core$D_OUT[47:32] } ;
-  assign result__h46433 =
+  assign result__h46356 =
 	     { 48'd0, mmio_axi4_adapter_f_rsps_to_core$D_OUT[63:48] } ;
-  assign result__h46473 =
+  assign result__h46396 =
 	     { 32'd0, mmio_axi4_adapter_f_rsps_to_core$D_OUT[31:0] } ;
-  assign result__h46500 =
+  assign result__h46423 =
 	     { 32'd0, mmio_axi4_adapter_f_rsps_to_core$D_OUT[63:32] } ;
-  assign result__h46617 =
+  assign result__h46540 =
 	     { mmioPlatform_reqData[63:16],
 	       IF_mmioPlatform_reqAmofunc_41_EQ_0_42_THEN_IF__ETC___d876[7:0],
 	       mmioPlatform_reqData[7:0] } ;
-  assign result__h46683 =
+  assign result__h46606 =
 	     { mmioPlatform_reqData[63:24],
 	       IF_mmioPlatform_reqAmofunc_41_EQ_0_42_THEN_IF__ETC___d876[7:0],
 	       mmioPlatform_reqData[15:0] } ;
-  assign result__h46749 =
+  assign result__h46672 =
 	     { mmioPlatform_reqData[63:32],
 	       IF_mmioPlatform_reqAmofunc_41_EQ_0_42_THEN_IF__ETC___d876[7:0],
 	       mmioPlatform_reqData[23:0] } ;
-  assign result__h46815 =
+  assign result__h46738 =
 	     { mmioPlatform_reqData[63:40],
 	       IF_mmioPlatform_reqAmofunc_41_EQ_0_42_THEN_IF__ETC___d876[7:0],
 	       mmioPlatform_reqData[31:0] } ;
-  assign result__h46881 =
+  assign result__h46804 =
 	     { mmioPlatform_reqData[63:48],
 	       IF_mmioPlatform_reqAmofunc_41_EQ_0_42_THEN_IF__ETC___d876[7:0],
 	       mmioPlatform_reqData[39:0] } ;
-  assign result__h46947 =
+  assign result__h46870 =
 	     { mmioPlatform_reqData[63:56],
 	       IF_mmioPlatform_reqAmofunc_41_EQ_0_42_THEN_IF__ETC___d876[7:0],
 	       mmioPlatform_reqData[47:0] } ;
-  assign result__h47013 =
+  assign result__h46936 =
 	     { IF_mmioPlatform_reqAmofunc_41_EQ_0_42_THEN_IF__ETC___d876[7:0],
 	       mmioPlatform_reqData[55:0] } ;
-  assign result__h47075 =
+  assign result__h46998 =
 	     { mmioPlatform_reqData[63:16],
 	       IF_mmioPlatform_reqAmofunc_41_EQ_0_42_THEN_IF__ETC___d876[15:0] } ;
-  assign result__h47120 =
+  assign result__h47043 =
 	     { mmioPlatform_reqData[63:32],
 	       IF_mmioPlatform_reqAmofunc_41_EQ_0_42_THEN_IF__ETC___d876[15:0],
 	       mmioPlatform_reqData[15:0] } ;
-  assign result__h47186 =
+  assign result__h47109 =
 	     { mmioPlatform_reqData[63:48],
 	       IF_mmioPlatform_reqAmofunc_41_EQ_0_42_THEN_IF__ETC___d876[15:0],
 	       mmioPlatform_reqData[31:0] } ;
-  assign result__h47252 =
+  assign result__h47175 =
 	     { IF_mmioPlatform_reqAmofunc_41_EQ_0_42_THEN_IF__ETC___d876[15:0],
 	       mmioPlatform_reqData[47:0] } ;
-  assign result__h47310 =
+  assign result__h47233 =
 	     { mmioPlatform_reqData[63:32],
 	       IF_mmioPlatform_reqAmofunc_41_EQ_0_42_THEN_IF__ETC___d876[31:0] } ;
-  assign result__h47355 =
+  assign result__h47278 =
 	     { IF_mmioPlatform_reqAmofunc_41_EQ_0_42_THEN_IF__ETC___d876[31:0],
 	       mmioPlatform_reqData[31:0] } ;
-  assign v__h29306 = mmioPlatform_waitUpperMSIPCRs ? v__h29343 : 32'd0 ;
-  assign v__h29343 = { 31'd0, core_0$mmioToPlatform_cRs_first } ;
-  assign w15424_BITS_31_TO_0__q7 = w1__h45424[31:0] ;
-  assign w1___1__h45534 = { 32'd0, w1__h45424[31:0] } ;
-  assign w25425_BITS_31_TO_0__q8 = w2__h45425[31:0] ;
-  assign w2___1__h45535 = { 32'd0, w2__h45425[31:0] } ;
-  assign x1_avValue_data__h37886 =
+  assign v__h29229 = mmioPlatform_waitUpperMSIPCRs ? v__h29266 : 32'd0 ;
+  assign v__h29266 = { 31'd0, core_0$mmioToPlatform_cRs_first } ;
+  assign w15347_BITS_31_TO_0__q15 = w1__h45347[31:0] ;
+  assign w1___1__h45457 = { 32'd0, w1__h45347[31:0] } ;
+  assign w25348_BITS_31_TO_0__q16 = w2__h45348[31:0] ;
+  assign w2___1__h45458 = { 32'd0, w2__h45348[31:0] } ;
+  assign x1_avValue_data__h37809 =
 	     mmioPlatform_toHostQ_empty ?
 	       64'd0 :
 	       mmioPlatform_toHostQ_data_0 ;
-  assign x1_avValue_data__h42353 =
+  assign x1_avValue_data__h42276 =
 	     mmioPlatform_fromHostQ_empty ?
 	       64'd0 :
 	       mmioPlatform_fromHostQ_data_0 ;
-  assign x__h123237 = { llc_axi4_adapter_rg_rd_req_beat, 3'b0 } ;
-  assign x__h137151 = { llc_axi4_adapter_rg_wr_req_beat, 3'b0 } ;
-  assign x__h34975 = mmioPlatform_mtimecmp_0 ;
-  assign x__h38404 =
+  assign x__h123160 = { llc_axi4_adapter_rg_rd_req_beat, 3'b0 } ;
+  assign x__h137074 = { llc_axi4_adapter_rg_wr_req_beat, 3'b0 } ;
+  assign x__h34898 = mmioPlatform_mtimecmp_0 ;
+  assign x__h38327 =
 	     (mmioPlatform_reqFunc[5:4] != 2'd0 &&
 	      mmioPlatform_reqFunc[5:4] != 2'd1 &&
 	      mmioPlatform_reqFunc[5:4] != 2'd2) ?
-	       x__h38415 :
+	       x__h38338 :
 	       IF_mmioPlatform_reqBE_04_BIT_7_80_THEN_mmioPla_ETC___d676 ;
-  assign x__h40424 =
+  assign x__h40347 =
 	     (mmioPlatform_reqFunc[5:4] != 2'd0 &&
 	      mmioPlatform_reqFunc[5:4] != 2'd1 &&
 	      mmioPlatform_reqFunc[5:4] != 2'd2) ?
-	       x__h40435 :
+	       x__h40358 :
 	       { mmioPlatform_reqBE[7] ? mmioPlatform_reqData[63:56] : 8'd0,
 		 mmioPlatform_reqBE[6] ? mmioPlatform_reqData[55:48] : 8'd0,
 		 mmioPlatform_reqBE[5] ? mmioPlatform_reqData[47:40] : 8'd0,
@@ -6607,289 +6653,469 @@ module mkProc(CLK,
 		 mmioPlatform_reqBE[2] ? mmioPlatform_reqData[23:16] : 8'd0,
 		 mmioPlatform_reqBE[1] ? mmioPlatform_reqData[15:8] : 8'd0,
 		 mmioPlatform_reqBE[0] ? mmioPlatform_reqData[7:0] : 8'd0 } ;
-  assign x__h47532 = { mmioPlatform_curReq[63:3], 3'b0 } ;
-  assign x__h58824 =
+  assign x__h47455 = { mmioPlatform_curReq[63:3], 3'b0 } ;
+  assign x__h58747 =
 	     SEL_ARR_propDstIdx_0_dummy2_1_read__019_AND_IF_ETC___d1050 ?
 	       srcRR_0 :
 	       NOT_propDstIdx_0_dummy2_1_read__019_020_OR_IF__ETC___d1053 ;
-  assign x__h72376 =
+  assign x__h72299 =
 	     !CAN_FIRE_RL_doEnq_1 &&
 	     IF_enqDst_1_0_lat_0_whas__226_THEN_enqDst_1_0__ETC___d1267 ;
-  assign x__h77447 =
+  assign x__h77370 =
 	     SEL_ARR_propDstIdx_1_0_dummy2_1_read__278_AND__ETC___d1319 ?
 	       srcRR_1_0 :
 	       NOT_propDstIdx_1_0_dummy2_1_read__278_279_OR_I_ETC___d1322 ;
-  assign x_data__h28096 = { 31'd0, mmioPlatform_reqData[0] } ;
+  assign x_data__h28019 = { 31'd0, mmioPlatform_reqData[0] } ;
+  always@(core_0$v_to_TV_1_get)
+  begin
+    case (core_0$v_to_TV_1_get[153:142])
+      12'd1,
+      12'd2,
+      12'd3,
+      12'd256,
+      12'd260,
+      12'd261,
+      12'd262,
+      12'd320,
+      12'd321,
+      12'd322,
+      12'd323,
+      12'd324,
+      12'd384,
+      12'd768,
+      12'd769,
+      12'd770,
+      12'd771,
+      12'd772,
+      12'd773,
+      12'd774,
+      12'd832,
+      12'd833,
+      12'd834,
+      12'd835,
+      12'd836,
+      12'd1968,
+      12'd1969,
+      12'd1970,
+      12'd1971,
+      12'd2048,
+      12'd2049,
+      12'd2816,
+      12'd2818,
+      12'd3072,
+      12'd3073,
+      12'd3074,
+      12'd3857,
+      12'd3858,
+      12'd3859,
+      12'd3860:
+	  CASE_core_0v_to_TV_1_get_BITS_153_TO_142_1_co_ETC__q1 =
+	      core_0$v_to_TV_1_get[153:142];
+      default: CASE_core_0v_to_TV_1_get_BITS_153_TO_142_1_co_ETC__q1 =
+		   12'd2303;
+    endcase
+  end
+  always@(core_0$v_to_TV_1_get)
+  begin
+    case (core_0$v_to_TV_1_get[139:136])
+      4'd0, 4'd1, 4'd3, 4'd4, 4'd5, 4'd7, 4'd8, 4'd9, 4'd11, 4'd14:
+	  CASE_core_0v_to_TV_1_get_BITS_139_TO_136_0_co_ETC__q2 =
+	      core_0$v_to_TV_1_get[139:136];
+      default: CASE_core_0v_to_TV_1_get_BITS_139_TO_136_0_co_ETC__q2 = 4'd15;
+    endcase
+  end
+  always@(core_0$v_to_TV_1_get)
+  begin
+    case (core_0$v_to_TV_1_get[139:136])
+      4'd0,
+      4'd1,
+      4'd2,
+      4'd3,
+      4'd4,
+      4'd5,
+      4'd6,
+      4'd7,
+      4'd8,
+      4'd9,
+      4'd11,
+      4'd12,
+      4'd13:
+	  CASE_core_0v_to_TV_1_get_BITS_139_TO_136_0_co_ETC__q3 =
+	      core_0$v_to_TV_1_get[139:136];
+      default: CASE_core_0v_to_TV_1_get_BITS_139_TO_136_0_co_ETC__q3 = 4'd15;
+    endcase
+  end
+  always@(core_0$v_to_TV_1_get)
+  begin
+    case (core_0$v_to_TV_1_get[71:70])
+      2'd0, 2'd1:
+	  CASE_core_0v_to_TV_1_get_BITS_71_TO_70_0_core_ETC__q4 =
+	      core_0$v_to_TV_1_get[71:70];
+      default: CASE_core_0v_to_TV_1_get_BITS_71_TO_70_0_core_ETC__q4 = 2'd2;
+    endcase
+  end
+  always@(core_0$v_to_TV_0_get)
+  begin
+    case (core_0$v_to_TV_0_get[153:142])
+      12'd1,
+      12'd2,
+      12'd3,
+      12'd256,
+      12'd260,
+      12'd261,
+      12'd262,
+      12'd320,
+      12'd321,
+      12'd322,
+      12'd323,
+      12'd324,
+      12'd384,
+      12'd768,
+      12'd769,
+      12'd770,
+      12'd771,
+      12'd772,
+      12'd773,
+      12'd774,
+      12'd832,
+      12'd833,
+      12'd834,
+      12'd835,
+      12'd836,
+      12'd1968,
+      12'd1969,
+      12'd1970,
+      12'd1971,
+      12'd2048,
+      12'd2049,
+      12'd2816,
+      12'd2818,
+      12'd3072,
+      12'd3073,
+      12'd3074,
+      12'd3857,
+      12'd3858,
+      12'd3859,
+      12'd3860:
+	  CASE_core_0v_to_TV_0_get_BITS_153_TO_142_1_co_ETC__q5 =
+	      core_0$v_to_TV_0_get[153:142];
+      default: CASE_core_0v_to_TV_0_get_BITS_153_TO_142_1_co_ETC__q5 =
+		   12'd2303;
+    endcase
+  end
+  always@(core_0$v_to_TV_0_get)
+  begin
+    case (core_0$v_to_TV_0_get[139:136])
+      4'd0, 4'd1, 4'd3, 4'd4, 4'd5, 4'd7, 4'd8, 4'd9, 4'd11, 4'd14:
+	  CASE_core_0v_to_TV_0_get_BITS_139_TO_136_0_co_ETC__q6 =
+	      core_0$v_to_TV_0_get[139:136];
+      default: CASE_core_0v_to_TV_0_get_BITS_139_TO_136_0_co_ETC__q6 = 4'd15;
+    endcase
+  end
+  always@(core_0$v_to_TV_0_get)
+  begin
+    case (core_0$v_to_TV_0_get[139:136])
+      4'd0,
+      4'd1,
+      4'd2,
+      4'd3,
+      4'd4,
+      4'd5,
+      4'd6,
+      4'd7,
+      4'd8,
+      4'd9,
+      4'd11,
+      4'd12,
+      4'd13:
+	  CASE_core_0v_to_TV_0_get_BITS_139_TO_136_0_co_ETC__q7 =
+	      core_0$v_to_TV_0_get[139:136];
+      default: CASE_core_0v_to_TV_0_get_BITS_139_TO_136_0_co_ETC__q7 = 4'd15;
+    endcase
+  end
+  always@(core_0$v_to_TV_0_get)
+  begin
+    case (core_0$v_to_TV_0_get[71:70])
+      2'd0, 2'd1:
+	  CASE_core_0v_to_TV_0_get_BITS_71_TO_70_0_core_ETC__q8 =
+	      core_0$v_to_TV_0_get[71:70];
+      default: CASE_core_0v_to_TV_0_get_BITS_71_TO_70_0_core_ETC__q8 = 2'd2;
+    endcase
+  end
   always@(llc_mem_server_f_dword_in_line$D_OUT or llc$dma_respLd_first)
   begin
     case (llc_mem_server_f_dword_in_line$D_OUT)
-      3'd0: rd_data_rdata__h119548 = llc$dma_respLd_first[68:5];
-      3'd1: rd_data_rdata__h119548 = llc$dma_respLd_first[132:69];
-      3'd2: rd_data_rdata__h119548 = llc$dma_respLd_first[196:133];
-      3'd3: rd_data_rdata__h119548 = llc$dma_respLd_first[260:197];
-      3'd4: rd_data_rdata__h119548 = llc$dma_respLd_first[324:261];
-      3'd5: rd_data_rdata__h119548 = llc$dma_respLd_first[388:325];
-      3'd6: rd_data_rdata__h119548 = llc$dma_respLd_first[452:389];
-      3'd7: rd_data_rdata__h119548 = llc$dma_respLd_first[516:453];
-    endcase
-  end
-  always@(llc_axi4_adapter_rg_wr_req_beat or llc$to_mem_toM_first)
-  begin
-    case (llc_axi4_adapter_rg_wr_req_beat)
-      3'd0: strb8__h137042 = llc$to_mem_toM_first[519:512];
-      3'd1: strb8__h137042 = llc$to_mem_toM_first[527:520];
-      3'd2: strb8__h137042 = llc$to_mem_toM_first[535:528];
-      3'd3: strb8__h137042 = llc$to_mem_toM_first[543:536];
-      3'd4: strb8__h137042 = llc$to_mem_toM_first[551:544];
-      3'd5: strb8__h137042 = llc$to_mem_toM_first[559:552];
-      3'd6: strb8__h137042 = llc$to_mem_toM_first[567:560];
-      3'd7: strb8__h137042 = llc$to_mem_toM_first[575:568];
+      3'd0: rd_data_rdata__h119471 = llc$dma_respLd_first[68:5];
+      3'd1: rd_data_rdata__h119471 = llc$dma_respLd_first[132:69];
+      3'd2: rd_data_rdata__h119471 = llc$dma_respLd_first[196:133];
+      3'd3: rd_data_rdata__h119471 = llc$dma_respLd_first[260:197];
+      3'd4: rd_data_rdata__h119471 = llc$dma_respLd_first[324:261];
+      3'd5: rd_data_rdata__h119471 = llc$dma_respLd_first[388:325];
+      3'd6: rd_data_rdata__h119471 = llc$dma_respLd_first[452:389];
+      3'd7: rd_data_rdata__h119471 = llc$dma_respLd_first[516:453];
     endcase
   end
   always@(llc$dma_respLd_first)
   begin
     case (llc$dma_respLd_first[2:0])
-      3'd0: ld_data__h121099 = llc$dma_respLd_first[68:5];
-      3'd1: ld_data__h121099 = llc$dma_respLd_first[132:69];
-      3'd2: ld_data__h121099 = llc$dma_respLd_first[196:133];
-      3'd3: ld_data__h121099 = llc$dma_respLd_first[260:197];
-      3'd4: ld_data__h121099 = llc$dma_respLd_first[324:261];
-      3'd5: ld_data__h121099 = llc$dma_respLd_first[388:325];
-      3'd6: ld_data__h121099 = llc$dma_respLd_first[452:389];
-      3'd7: ld_data__h121099 = llc$dma_respLd_first[516:453];
+      3'd0: ld_data__h121022 = llc$dma_respLd_first[68:5];
+      3'd1: ld_data__h121022 = llc$dma_respLd_first[132:69];
+      3'd2: ld_data__h121022 = llc$dma_respLd_first[196:133];
+      3'd3: ld_data__h121022 = llc$dma_respLd_first[260:197];
+      3'd4: ld_data__h121022 = llc$dma_respLd_first[324:261];
+      3'd5: ld_data__h121022 = llc$dma_respLd_first[388:325];
+      3'd6: ld_data__h121022 = llc$dma_respLd_first[452:389];
+      3'd7: ld_data__h121022 = llc$dma_respLd_first[516:453];
     endcase
   end
   always@(llc_axi4_adapter_rg_wr_req_beat or llc$to_mem_toM_first)
   begin
     case (llc_axi4_adapter_rg_wr_req_beat)
-      3'd0: data64__h137041 = llc$to_mem_toM_first[63:0];
-      3'd1: data64__h137041 = llc$to_mem_toM_first[127:64];
-      3'd2: data64__h137041 = llc$to_mem_toM_first[191:128];
-      3'd3: data64__h137041 = llc$to_mem_toM_first[255:192];
-      3'd4: data64__h137041 = llc$to_mem_toM_first[319:256];
-      3'd5: data64__h137041 = llc$to_mem_toM_first[383:320];
-      3'd6: data64__h137041 = llc$to_mem_toM_first[447:384];
-      3'd7: data64__h137041 = llc$to_mem_toM_first[511:448];
+      3'd0: data64__h136964 = llc$to_mem_toM_first[63:0];
+      3'd1: data64__h136964 = llc$to_mem_toM_first[127:64];
+      3'd2: data64__h136964 = llc$to_mem_toM_first[191:128];
+      3'd3: data64__h136964 = llc$to_mem_toM_first[255:192];
+      3'd4: data64__h136964 = llc$to_mem_toM_first[319:256];
+      3'd5: data64__h136964 = llc$to_mem_toM_first[383:320];
+      3'd6: data64__h136964 = llc$to_mem_toM_first[447:384];
+      3'd7: data64__h136964 = llc$to_mem_toM_first[511:448];
     endcase
   end
-  always@(mmioPlatform_curReq or
-	  result__h45599 or
-	  result__h45627 or
-	  result__h45655 or
-	  result__h45683 or
-	  result__h45711 or
-	  result__h45739 or result__h45767 or result__h45795)
+  always@(llc_axi4_adapter_rg_wr_req_beat or llc$to_mem_toM_first)
   begin
-    case (mmioPlatform_curReq[2:0])
-      3'h0:
-	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d766 =
-	      result__h45599;
-      3'h1:
-	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d766 =
-	      result__h45627;
-      3'h2:
-	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d766 =
-	      result__h45655;
-      3'h3:
-	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d766 =
-	      result__h45683;
-      3'h4:
-	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d766 =
-	      result__h45711;
-      3'h5:
-	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d766 =
-	      result__h45739;
-      3'h6:
-	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d766 =
-	      result__h45767;
-      3'h7:
-	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d766 =
-	      result__h45795;
+    case (llc_axi4_adapter_rg_wr_req_beat)
+      3'd0: strb8__h136965 = llc$to_mem_toM_first[519:512];
+      3'd1: strb8__h136965 = llc$to_mem_toM_first[527:520];
+      3'd2: strb8__h136965 = llc$to_mem_toM_first[535:528];
+      3'd3: strb8__h136965 = llc$to_mem_toM_first[543:536];
+      3'd4: strb8__h136965 = llc$to_mem_toM_first[551:544];
+      3'd5: strb8__h136965 = llc$to_mem_toM_first[559:552];
+      3'd6: strb8__h136965 = llc$to_mem_toM_first[567:560];
+      3'd7: strb8__h136965 = llc$to_mem_toM_first[575:568];
     endcase
   end
   always@(mmioPlatform_curReq or
-	  result__h45840 or
-	  result__h45868 or result__h45896 or result__h45924)
+	  result__h45763 or
+	  result__h45791 or result__h45819 or result__h45847)
   begin
     case (mmioPlatform_curReq[2:0])
       3'h0:
 	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d779 =
-	      result__h45840;
+	      result__h45763;
       3'h2:
 	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d779 =
-	      result__h45868;
+	      result__h45791;
       3'h4:
 	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d779 =
-	      result__h45896;
+	      result__h45819;
       3'h6:
 	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d779 =
-	      result__h45924;
+	      result__h45847;
       default: IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d779 =
 		   64'd0;
     endcase
   end
-  always@(mmioPlatform_curReq or result__h45965 or result__h45993)
+  always@(mmioPlatform_curReq or
+	  result__h45522 or
+	  result__h45550 or
+	  result__h45578 or
+	  result__h45606 or
+	  result__h45634 or
+	  result__h45662 or result__h45690 or result__h45718)
   begin
     case (mmioPlatform_curReq[2:0])
       3'h0:
-	  CASE_mmioPlatform_curReq_BITS_2_TO_0_0x0_resul_ETC__q5 =
-	      result__h45965;
+	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d766 =
+	      result__h45522;
+      3'h1:
+	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d766 =
+	      result__h45550;
+      3'h2:
+	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d766 =
+	      result__h45578;
+      3'h3:
+	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d766 =
+	      result__h45606;
       3'h4:
-	  CASE_mmioPlatform_curReq_BITS_2_TO_0_0x0_resul_ETC__q5 =
-	      result__h45993;
-      default: CASE_mmioPlatform_curReq_BITS_2_TO_0_0x0_resul_ETC__q5 = 64'd0;
+	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d766 =
+	      result__h45634;
+      3'h5:
+	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d766 =
+	      result__h45662;
+      3'h6:
+	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d766 =
+	      result__h45690;
+      3'h7:
+	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d766 =
+	      result__h45718;
+    endcase
+  end
+  always@(mmioPlatform_curReq or result__h45888 or result__h45916)
+  begin
+    case (mmioPlatform_curReq[2:0])
+      3'h0:
+	  CASE_mmioPlatform_curReq_BITS_2_TO_0_0x0_resul_ETC__q13 =
+	      result__h45888;
+      3'h4:
+	  CASE_mmioPlatform_curReq_BITS_2_TO_0_0x0_resul_ETC__q13 =
+	      result__h45916;
+      default: CASE_mmioPlatform_curReq_BITS_2_TO_0_0x0_resul_ETC__q13 =
+		   64'd0;
     endcase
   end
   always@(mmioPlatform_reqSz or
 	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d766 or
 	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d779 or
-	  CASE_mmioPlatform_curReq_BITS_2_TO_0_0x0_resul_ETC__q5 or
+	  CASE_mmioPlatform_curReq_BITS_2_TO_0_0x0_resul_ETC__q13 or
 	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d786)
   begin
     case (mmioPlatform_reqSz)
       2'b0:
-	  w2__h45425 =
+	  w2__h45348 =
 	      IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d766;
       2'b01:
-	  w2__h45425 =
+	  w2__h45348 =
 	      IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d779;
       2'b10:
-	  w2__h45425 = CASE_mmioPlatform_curReq_BITS_2_TO_0_0x0_resul_ETC__q5;
+	  w2__h45348 =
+	      CASE_mmioPlatform_curReq_BITS_2_TO_0_0x0_resul_ETC__q13;
       2'b11:
-	  w2__h45425 =
+	  w2__h45348 =
 	      IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d786;
     endcase
   end
   always@(mmioPlatform_reqSz or
 	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d766 or
 	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d779 or
-	  w2___1__h45535 or
+	  w2___1__h45458 or
 	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d786)
   begin
     case (mmioPlatform_reqSz)
       2'b0:
-	  w2__h45431 =
+	  w2__h45354 =
 	      IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d766;
       2'b01:
-	  w2__h45431 =
+	  w2__h45354 =
 	      IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d779;
-      2'b10: w2__h45431 = w2___1__h45535;
+      2'b10: w2__h45354 = w2___1__h45458;
       2'b11:
-	  w2__h45431 =
+	  w2__h45354 =
 	      IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d786;
     endcase
   end
   always@(mmioPlatform_curReq or
-	  result__h46119 or
-	  result__h46146 or
-	  result__h46173 or
-	  result__h46200 or
-	  result__h46227 or
-	  result__h46254 or result__h46281 or result__h46308)
-  begin
-    case (mmioPlatform_curReq[2:0])
-      3'h0:
-	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d818 =
-	      result__h46119;
-      3'h1:
-	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d818 =
-	      result__h46146;
-      3'h2:
-	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d818 =
-	      result__h46173;
-      3'h3:
-	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d818 =
-	      result__h46200;
-      3'h4:
-	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d818 =
-	      result__h46227;
-      3'h5:
-	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d818 =
-	      result__h46254;
-      3'h6:
-	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d818 =
-	      result__h46281;
-      3'h7:
-	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d818 =
-	      result__h46308;
-    endcase
-  end
-  always@(mmioPlatform_curReq or
-	  result__h46352 or
-	  result__h46379 or result__h46406 or result__h46433)
+	  result__h46275 or
+	  result__h46302 or result__h46329 or result__h46356)
   begin
     case (mmioPlatform_curReq[2:0])
       3'h0:
 	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d830 =
-	      result__h46352;
+	      result__h46275;
       3'h2:
 	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d830 =
-	      result__h46379;
+	      result__h46302;
       3'h4:
 	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d830 =
-	      result__h46406;
+	      result__h46329;
       3'h6:
 	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d830 =
-	      result__h46433;
+	      result__h46356;
       default: IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d830 =
 		   64'd0;
     endcase
   end
-  always@(mmioPlatform_curReq or result__h46473 or result__h46500)
+  always@(mmioPlatform_curReq or
+	  result__h46042 or
+	  result__h46069 or
+	  result__h46096 or
+	  result__h46123 or
+	  result__h46150 or
+	  result__h46177 or result__h46204 or result__h46231)
   begin
     case (mmioPlatform_curReq[2:0])
       3'h0:
-	  CASE_mmioPlatform_curReq_BITS_2_TO_0_0x0_resul_ETC__q6 =
-	      result__h46473;
+	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d818 =
+	      result__h46042;
+      3'h1:
+	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d818 =
+	      result__h46069;
+      3'h2:
+	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d818 =
+	      result__h46096;
+      3'h3:
+	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d818 =
+	      result__h46123;
       3'h4:
-	  CASE_mmioPlatform_curReq_BITS_2_TO_0_0x0_resul_ETC__q6 =
-	      result__h46500;
-      default: CASE_mmioPlatform_curReq_BITS_2_TO_0_0x0_resul_ETC__q6 = 64'd0;
+	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d818 =
+	      result__h46150;
+      3'h5:
+	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d818 =
+	      result__h46177;
+      3'h6:
+	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d818 =
+	      result__h46204;
+      3'h7:
+	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d818 =
+	      result__h46231;
+    endcase
+  end
+  always@(mmioPlatform_curReq or result__h46396 or result__h46423)
+  begin
+    case (mmioPlatform_curReq[2:0])
+      3'h0:
+	  CASE_mmioPlatform_curReq_BITS_2_TO_0_0x0_resul_ETC__q14 =
+	      result__h46396;
+      3'h4:
+	  CASE_mmioPlatform_curReq_BITS_2_TO_0_0x0_resul_ETC__q14 =
+	      result__h46423;
+      default: CASE_mmioPlatform_curReq_BITS_2_TO_0_0x0_resul_ETC__q14 =
+		   64'd0;
     endcase
   end
   always@(mmioPlatform_reqSz or
 	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d818 or
 	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d830 or
-	  CASE_mmioPlatform_curReq_BITS_2_TO_0_0x0_resul_ETC__q6 or
+	  CASE_mmioPlatform_curReq_BITS_2_TO_0_0x0_resul_ETC__q14 or
 	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d837)
   begin
     case (mmioPlatform_reqSz)
       2'b0:
-	  w1__h45424 =
+	  w1__h45347 =
 	      IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d818;
       2'b01:
-	  w1__h45424 =
+	  w1__h45347 =
 	      IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d830;
       2'b10:
-	  w1__h45424 = CASE_mmioPlatform_curReq_BITS_2_TO_0_0x0_resul_ETC__q6;
+	  w1__h45347 =
+	      CASE_mmioPlatform_curReq_BITS_2_TO_0_0x0_resul_ETC__q14;
       2'b11:
-	  w1__h45424 =
+	  w1__h45347 =
 	      IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d837;
     endcase
   end
   always@(mmioPlatform_reqSz or
 	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d818 or
 	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d830 or
-	  w1___1__h45534 or
+	  w1___1__h45457 or
 	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d837)
   begin
     case (mmioPlatform_reqSz)
       2'b0:
-	  w1__h45429 =
+	  w1__h45352 =
 	      IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d818;
       2'b01:
-	  w1__h45429 =
+	  w1__h45352 =
 	      IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d830;
-      2'b10: w1__h45429 = w1___1__h45534;
+      2'b10: w1__h45352 = w1___1__h45457;
       2'b11:
-	  w1__h45429 =
+	  w1__h45352 =
 	      IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d837;
     endcase
   end
   always@(mmioPlatform_reqSz or
 	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d818 or
 	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d830 or
-	  w15424_BITS_31_TO_0__q7 or
+	  w15347_BITS_31_TO_0__q15 or
 	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d837)
   begin
     case (mmioPlatform_reqSz)
@@ -6901,7 +7127,8 @@ module mkProc(CLK,
 	      IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d830;
       2'b10:
 	  IF_mmioPlatform_reqSz_36_EQ_0b10_43_THEN_SEXT__ETC___d844 =
-	      { {32{w15424_BITS_31_TO_0__q7[31]}}, w15424_BITS_31_TO_0__q7 };
+	      { {32{w15347_BITS_31_TO_0__q15[31]}},
+		w15347_BITS_31_TO_0__q15 };
       2'b11:
 	  IF_mmioPlatform_reqSz_36_EQ_0b10_43_THEN_SEXT__ETC___d844 =
 	      IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d837;
@@ -6910,7 +7137,7 @@ module mkProc(CLK,
   always@(mmioPlatform_reqSz or
 	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d766 or
 	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d779 or
-	  w25425_BITS_31_TO_0__q8 or
+	  w25348_BITS_31_TO_0__q16 or
 	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d786)
   begin
     case (mmioPlatform_reqSz)
@@ -6922,135 +7149,137 @@ module mkProc(CLK,
 	      IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d779;
       2'b10:
 	  IF_mmioPlatform_reqSz_36_EQ_0b10_43_THEN_SEXT__ETC___d846 =
-	      { {32{w25425_BITS_31_TO_0__q8[31]}}, w25425_BITS_31_TO_0__q8 };
+	      { {32{w25348_BITS_31_TO_0__q16[31]}},
+		w25348_BITS_31_TO_0__q16 };
       2'b11:
 	  IF_mmioPlatform_reqSz_36_EQ_0b10_43_THEN_SEXT__ETC___d846 =
 	      IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d786;
     endcase
   end
   always@(mmioPlatform_reqAmofunc or
-	  op_result__h46596 or
-	  w2__h45431 or
-	  op_result__h46032 or
-	  op_result__h46562 or
-	  op_result__h46567 or
-	  op_result__h46572 or
-	  op_result__h46590 or op_result__h46577 or op_result__h46583)
+	  op_result__h46519 or
+	  w2__h45354 or
+	  op_result__h45955 or
+	  op_result__h46485 or
+	  op_result__h46490 or
+	  op_result__h46495 or
+	  op_result__h46513 or op_result__h46500 or op_result__h46506)
   begin
     case (mmioPlatform_reqAmofunc)
       4'd0:
 	  IF_mmioPlatform_reqAmofunc_41_EQ_0_42_THEN_IF__ETC___d876 =
-	      w2__h45431;
+	      w2__h45354;
       4'd1:
 	  IF_mmioPlatform_reqAmofunc_41_EQ_0_42_THEN_IF__ETC___d876 =
-	      op_result__h46032;
+	      op_result__h45955;
       4'd2:
 	  IF_mmioPlatform_reqAmofunc_41_EQ_0_42_THEN_IF__ETC___d876 =
-	      op_result__h46562;
+	      op_result__h46485;
       4'd3:
 	  IF_mmioPlatform_reqAmofunc_41_EQ_0_42_THEN_IF__ETC___d876 =
-	      op_result__h46567;
+	      op_result__h46490;
       4'd4:
 	  IF_mmioPlatform_reqAmofunc_41_EQ_0_42_THEN_IF__ETC___d876 =
-	      op_result__h46572;
+	      op_result__h46495;
       4'd5:
 	  IF_mmioPlatform_reqAmofunc_41_EQ_0_42_THEN_IF__ETC___d876 =
-	      op_result__h46590;
+	      op_result__h46513;
       4'd7:
 	  IF_mmioPlatform_reqAmofunc_41_EQ_0_42_THEN_IF__ETC___d876 =
-	      op_result__h46577;
+	      op_result__h46500;
       4'd8:
 	  IF_mmioPlatform_reqAmofunc_41_EQ_0_42_THEN_IF__ETC___d876 =
-	      op_result__h46583;
+	      op_result__h46506;
       default: IF_mmioPlatform_reqAmofunc_41_EQ_0_42_THEN_IF__ETC___d876 =
-		   op_result__h46596;
+		   op_result__h46519;
     endcase
   end
   always@(mmioPlatform_curReq or
-	  result__h47075 or
-	  result__h47120 or result__h47186 or result__h47252)
+	  result__h46998 or
+	  result__h47043 or result__h47109 or result__h47175)
   begin
     case (mmioPlatform_curReq[2:0])
       3'h0:
 	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d909 =
-	      result__h47075;
+	      result__h46998;
       3'h2:
 	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d909 =
-	      result__h47120;
+	      result__h47043;
       3'h4:
 	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d909 =
-	      result__h47186;
+	      result__h47109;
       3'h6:
 	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d909 =
-	      result__h47252;
+	      result__h47175;
       default: IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d909 =
 		   64'd0;
     endcase
   end
   always@(mmioPlatform_curReq or
-	  result__h45475 or
-	  result__h46617 or
-	  result__h46683 or
-	  result__h46749 or
-	  result__h46815 or
-	  result__h46881 or result__h46947 or result__h47013)
+	  result__h45398 or
+	  result__h46540 or
+	  result__h46606 or
+	  result__h46672 or
+	  result__h46738 or
+	  result__h46804 or result__h46870 or result__h46936)
   begin
     case (mmioPlatform_curReq[2:0])
       3'h0:
 	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d900 =
-	      result__h45475;
+	      result__h45398;
       3'h1:
 	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d900 =
-	      result__h46617;
+	      result__h46540;
       3'h2:
 	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d900 =
-	      result__h46683;
+	      result__h46606;
       3'h3:
 	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d900 =
-	      result__h46749;
+	      result__h46672;
       3'h4:
 	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d900 =
-	      result__h46815;
+	      result__h46738;
       3'h5:
 	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d900 =
-	      result__h46881;
+	      result__h46804;
       3'h6:
 	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d900 =
-	      result__h46947;
+	      result__h46870;
       3'h7:
 	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d900 =
-	      result__h47013;
+	      result__h46936;
     endcase
   end
-  always@(mmioPlatform_curReq or result__h47310 or result__h47355)
+  always@(mmioPlatform_curReq or result__h47233 or result__h47278)
   begin
     case (mmioPlatform_curReq[2:0])
       3'h0:
-	  CASE_mmioPlatform_curReq_BITS_2_TO_0_0x0_resul_ETC__q9 =
-	      result__h47310;
+	  CASE_mmioPlatform_curReq_BITS_2_TO_0_0x0_resul_ETC__q17 =
+	      result__h47233;
       3'h4:
-	  CASE_mmioPlatform_curReq_BITS_2_TO_0_0x0_resul_ETC__q9 =
-	      result__h47355;
-      default: CASE_mmioPlatform_curReq_BITS_2_TO_0_0x0_resul_ETC__q9 = 64'd0;
+	  CASE_mmioPlatform_curReq_BITS_2_TO_0_0x0_resul_ETC__q17 =
+	      result__h47278;
+      default: CASE_mmioPlatform_curReq_BITS_2_TO_0_0x0_resul_ETC__q17 =
+		   64'd0;
     endcase
   end
   always@(mmioPlatform_reqSz or
 	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d900 or
 	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d909 or
-	  CASE_mmioPlatform_curReq_BITS_2_TO_0_0x0_resul_ETC__q9 or
+	  CASE_mmioPlatform_curReq_BITS_2_TO_0_0x0_resul_ETC__q17 or
 	  IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d786)
   begin
     case (mmioPlatform_reqSz)
       2'b0:
-	  x__h45420 =
+	  x__h45343 =
 	      IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d900;
       2'b01:
-	  x__h45420 =
+	  x__h45343 =
 	      IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d909;
       2'b10:
-	  x__h45420 = CASE_mmioPlatform_curReq_BITS_2_TO_0_0x0_resul_ETC__q9;
+	  x__h45343 = CASE_mmioPlatform_curReq_BITS_2_TO_0_0x0_resul_ETC__q17;
       2'b11:
-	  x__h45420 =
+	  x__h45343 =
 	      IF_mmioPlatform_curReq_96_BITS_2_TO_0_38_EQ_0x_ETC___d786;
     endcase
   end
@@ -7082,9 +7311,9 @@ module mkProc(CLK,
   begin
     case (mmioPlatform_reqFunc[5:4])
       2'd0, 2'd1:
-	  CASE_mmioPlatform_reqFunc_BITS_5_TO_4_0_core_0_ETC__q10 =
+	  CASE_mmioPlatform_reqFunc_BITS_5_TO_4_0_core_0_ETC__q18 =
 	      core_0$RDY_mmioToPlatform_pRs_enq;
-      default: CASE_mmioPlatform_reqFunc_BITS_5_TO_4_0_core_0_ETC__q10 =
+      default: CASE_mmioPlatform_reqFunc_BITS_5_TO_4_0_core_0_ETC__q18 =
 		   IF_IF_NOT_mmioPlatform_reqFunc_01_BITS_5_TO_4__ETC___d520;
     endcase
   end
@@ -7094,9 +7323,9 @@ module mkProc(CLK,
   begin
     case (mmioPlatform_reqFunc[5:4])
       2'd0, 2'd1:
-	  CASE_mmioPlatform_reqFunc_BITS_5_TO_4_0_core_0_ETC__q11 =
+	  CASE_mmioPlatform_reqFunc_BITS_5_TO_4_0_core_0_ETC__q19 =
 	      core_0$RDY_mmioToPlatform_pRs_enq;
-      default: CASE_mmioPlatform_reqFunc_BITS_5_TO_4_0_core_0_ETC__q11 =
+      default: CASE_mmioPlatform_reqFunc_BITS_5_TO_4_0_core_0_ETC__q19 =
 		   IF_mmioPlatform_mtimecmp_0_21_ULE_IF_NOT_mmioP_ETC___d586;
     endcase
   end
@@ -7134,278 +7363,278 @@ module mkProc(CLK,
 	      IF_propDstIdx_1_1_lat_0_whas__142_THEN_propDst_ETC___d1145;
     endcase
   end
-  always@(x__h58824 or n__read_id__h59010 or n__read_id__h59095)
+  always@(x__h58747 or n__read_id__h58933 or n__read_id__h59018)
   begin
-    case (x__h58824)
-      1'd0: x__h59138 = n__read_id__h59010;
-      1'd1: x__h59138 = n__read_id__h59095;
+    case (x__h58747)
+      1'd0: x__h59061 = n__read_id__h58933;
+      1'd1: x__h59061 = n__read_id__h59018;
     endcase
   end
-  always@(x__h58824 or n__read_child__h59011 or n__read_child__h59096)
+  always@(x__h58747 or n__read_child__h58934 or n__read_child__h59019)
   begin
-    case (x__h58824)
-      1'd0: x__h59145 = n__read_child__h59011;
-      1'd1: x__h59145 = n__read_child__h59096;
+    case (x__h58747)
+      1'd0: x__h59068 = n__read_child__h58934;
+      1'd1: x__h59068 = n__read_child__h59019;
     endcase
   end
-  always@(x__h58824 or
+  always@(x__h58747 or
 	  propDstData_0_dummy2_1_read__057_AND_IF_propDs_ETC___d1093 or
 	  propDstData_1_dummy2_1_read__062_AND_IF_propDs_ETC___d1097)
   begin
-    case (x__h58824)
+    case (x__h58747)
       1'd0:
-	  CASE_x8824_0_propDstData_0_dummy2_1_read__057__ETC__q12 =
+	  CASE_x8747_0_propDstData_0_dummy2_1_read__057__ETC__q20 =
 	      propDstData_0_dummy2_1_read__057_AND_IF_propDs_ETC___d1093;
       1'd1:
-	  CASE_x8824_0_propDstData_0_dummy2_1_read__057__ETC__q12 =
+	  CASE_x8747_0_propDstData_0_dummy2_1_read__057__ETC__q20 =
 	      propDstData_1_dummy2_1_read__062_AND_IF_propDs_ETC___d1097;
     endcase
   end
-  always@(x__h58824 or
+  always@(x__h58747 or
 	  IF_propDstData_0_dummy2_1_read__057_THEN_IF_pr_ETC___d1073 or
 	  IF_propDstData_1_dummy2_1_read__062_THEN_IF_pr_ETC___d1077)
   begin
-    case (x__h58824)
+    case (x__h58747)
       1'd0:
-	  CASE_x8824_0_IF_propDstData_0_dummy2_1_read__0_ETC__q13 =
+	  CASE_x8747_0_IF_propDstData_0_dummy2_1_read__0_ETC__q21 =
 	      IF_propDstData_0_dummy2_1_read__057_THEN_IF_pr_ETC___d1073;
       1'd1:
-	  CASE_x8824_0_IF_propDstData_0_dummy2_1_read__0_ETC__q13 =
+	  CASE_x8747_0_IF_propDstData_0_dummy2_1_read__0_ETC__q21 =
 	      IF_propDstData_1_dummy2_1_read__062_THEN_IF_pr_ETC___d1077;
     endcase
   end
-  always@(x__h58824 or
+  always@(x__h58747 or
 	  IF_propDstData_0_dummy2_1_read__057_THEN_IF_pr_ETC___d1083 or
 	  IF_propDstData_1_dummy2_1_read__062_THEN_IF_pr_ETC___d1087)
   begin
-    case (x__h58824)
+    case (x__h58747)
       1'd0:
-	  CASE_x8824_0_IF_propDstData_0_dummy2_1_read__0_ETC__q14 =
+	  CASE_x8747_0_IF_propDstData_0_dummy2_1_read__0_ETC__q22 =
 	      IF_propDstData_0_dummy2_1_read__057_THEN_IF_pr_ETC___d1083;
       1'd1:
-	  CASE_x8824_0_IF_propDstData_0_dummy2_1_read__0_ETC__q14 =
+	  CASE_x8747_0_IF_propDstData_0_dummy2_1_read__0_ETC__q22 =
 	      IF_propDstData_1_dummy2_1_read__062_THEN_IF_pr_ETC___d1087;
     endcase
   end
-  always@(x__h58824 or n__read_addr__h59006 or n__read_addr__h59091)
+  always@(x__h58747 or n__read_addr__h58929 or n__read_addr__h59014)
   begin
-    case (x__h58824)
+    case (x__h58747)
       1'd0:
-	  CASE_x8824_0_n__read_addr9006_1_n__read_addr90_ETC__q15 =
-	      n__read_addr__h59006;
+	  CASE_x8747_0_n__read_addr8929_1_n__read_addr90_ETC__q23 =
+	      n__read_addr__h58929;
       1'd1:
-	  CASE_x8824_0_n__read_addr9006_1_n__read_addr90_ETC__q15 =
-	      n__read_addr__h59091;
+	  CASE_x8747_0_n__read_addr8929_1_n__read_addr90_ETC__q23 =
+	      n__read_addr__h59014;
     endcase
   end
-  always@(x__h77447 or n__read_child__h77628 or n__read_child__h77707)
+  always@(x__h77370 or n__read_child__h77551 or n__read_child__h77630)
   begin
-    case (x__h77447)
-      1'd0: x__h79863 = n__read_child__h77628;
-      1'd1: x__h79863 = n__read_child__h77707;
+    case (x__h77370)
+      1'd0: x__h79786 = n__read_child__h77551;
+      1'd1: x__h79786 = n__read_child__h77630;
     endcase
   end
-  always@(x__h77447 or
+  always@(x__h77370 or
 	  CAN_FIRE_RL_srcPropose_2 or
 	  propDstData_1_0_lat_0$wget or
 	  propDstData_1_0_rl or
 	  CAN_FIRE_RL_srcPropose_3 or
 	  propDstData_1_1_lat_0$wget or propDstData_1_1_rl)
   begin
-    case (x__h77447)
+    case (x__h77370)
       1'd0:
-	  CASE_x7447_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q16 =
+	  CASE_x7370_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q24 =
 	      CAN_FIRE_RL_srcPropose_2 ?
 		propDstData_1_0_lat_0$wget[512:449] :
 		propDstData_1_0_rl[512:449];
       1'd1:
-	  CASE_x7447_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q16 =
+	  CASE_x7370_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q24 =
 	      CAN_FIRE_RL_srcPropose_3 ?
 		propDstData_1_1_lat_0$wget[512:449] :
 		propDstData_1_1_rl[512:449];
     endcase
   end
-  always@(x__h77447 or
+  always@(x__h77370 or
 	  CAN_FIRE_RL_srcPropose_2 or
 	  propDstData_1_0_lat_0$wget or
 	  propDstData_1_0_rl or
 	  CAN_FIRE_RL_srcPropose_3 or
 	  propDstData_1_1_lat_0$wget or propDstData_1_1_rl)
   begin
-    case (x__h77447)
+    case (x__h77370)
       1'd0:
-	  CASE_x7447_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q17 =
+	  CASE_x7370_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q25 =
 	      CAN_FIRE_RL_srcPropose_2 ?
 		propDstData_1_0_lat_0$wget[448:385] :
 		propDstData_1_0_rl[448:385];
       1'd1:
-	  CASE_x7447_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q17 =
+	  CASE_x7370_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q25 =
 	      CAN_FIRE_RL_srcPropose_3 ?
 		propDstData_1_1_lat_0$wget[448:385] :
 		propDstData_1_1_rl[448:385];
     endcase
   end
-  always@(x__h77447 or
+  always@(x__h77370 or
 	  CAN_FIRE_RL_srcPropose_2 or
 	  propDstData_1_0_lat_0$wget or
 	  propDstData_1_0_rl or
 	  CAN_FIRE_RL_srcPropose_3 or
 	  propDstData_1_1_lat_0$wget or propDstData_1_1_rl)
   begin
-    case (x__h77447)
+    case (x__h77370)
       1'd0:
-	  CASE_x7447_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q18 =
+	  CASE_x7370_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q26 =
 	      CAN_FIRE_RL_srcPropose_2 ?
 		propDstData_1_0_lat_0$wget[384:321] :
 		propDstData_1_0_rl[384:321];
       1'd1:
-	  CASE_x7447_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q18 =
+	  CASE_x7370_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q26 =
 	      CAN_FIRE_RL_srcPropose_3 ?
 		propDstData_1_1_lat_0$wget[384:321] :
 		propDstData_1_1_rl[384:321];
     endcase
   end
-  always@(x__h77447 or
+  always@(x__h77370 or
 	  CAN_FIRE_RL_srcPropose_2 or
 	  propDstData_1_0_lat_0$wget or
 	  propDstData_1_0_rl or
 	  CAN_FIRE_RL_srcPropose_3 or
 	  propDstData_1_1_lat_0$wget or propDstData_1_1_rl)
   begin
-    case (x__h77447)
+    case (x__h77370)
       1'd0:
-	  CASE_x7447_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q19 =
+	  CASE_x7370_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q27 =
 	      CAN_FIRE_RL_srcPropose_2 ?
 		propDstData_1_0_lat_0$wget[320:257] :
 		propDstData_1_0_rl[320:257];
       1'd1:
-	  CASE_x7447_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q19 =
+	  CASE_x7370_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q27 =
 	      CAN_FIRE_RL_srcPropose_3 ?
 		propDstData_1_1_lat_0$wget[320:257] :
 		propDstData_1_1_rl[320:257];
     endcase
   end
-  always@(x__h77447 or
+  always@(x__h77370 or
 	  CAN_FIRE_RL_srcPropose_2 or
 	  propDstData_1_0_lat_0$wget or
 	  propDstData_1_0_rl or
 	  CAN_FIRE_RL_srcPropose_3 or
 	  propDstData_1_1_lat_0$wget or propDstData_1_1_rl)
   begin
-    case (x__h77447)
+    case (x__h77370)
       1'd0:
-	  CASE_x7447_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q20 =
+	  CASE_x7370_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q28 =
 	      CAN_FIRE_RL_srcPropose_2 ?
 		propDstData_1_0_lat_0$wget[256:193] :
 		propDstData_1_0_rl[256:193];
       1'd1:
-	  CASE_x7447_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q20 =
+	  CASE_x7370_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q28 =
 	      CAN_FIRE_RL_srcPropose_3 ?
 		propDstData_1_1_lat_0$wget[256:193] :
 		propDstData_1_1_rl[256:193];
     endcase
   end
-  always@(x__h77447 or
+  always@(x__h77370 or
 	  CAN_FIRE_RL_srcPropose_2 or
 	  propDstData_1_0_lat_0$wget or
 	  propDstData_1_0_rl or
 	  CAN_FIRE_RL_srcPropose_3 or
 	  propDstData_1_1_lat_0$wget or propDstData_1_1_rl)
   begin
-    case (x__h77447)
+    case (x__h77370)
       1'd0:
-	  CASE_x7447_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q21 =
+	  CASE_x7370_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q29 =
 	      CAN_FIRE_RL_srcPropose_2 ?
 		propDstData_1_0_lat_0$wget[192:129] :
 		propDstData_1_0_rl[192:129];
       1'd1:
-	  CASE_x7447_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q21 =
+	  CASE_x7370_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q29 =
 	      CAN_FIRE_RL_srcPropose_3 ?
 		propDstData_1_1_lat_0$wget[192:129] :
 		propDstData_1_1_rl[192:129];
     endcase
   end
-  always@(x__h77447 or
+  always@(x__h77370 or
 	  CAN_FIRE_RL_srcPropose_2 or
 	  propDstData_1_0_lat_0$wget or
 	  propDstData_1_0_rl or
 	  CAN_FIRE_RL_srcPropose_3 or
 	  propDstData_1_1_lat_0$wget or propDstData_1_1_rl)
   begin
-    case (x__h77447)
+    case (x__h77370)
       1'd0:
-	  CASE_x7447_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q22 =
+	  CASE_x7370_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q30 =
 	      CAN_FIRE_RL_srcPropose_2 ?
 		propDstData_1_0_lat_0$wget[128:65] :
 		propDstData_1_0_rl[128:65];
       1'd1:
-	  CASE_x7447_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q22 =
+	  CASE_x7370_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q30 =
 	      CAN_FIRE_RL_srcPropose_3 ?
 		propDstData_1_1_lat_0$wget[128:65] :
 		propDstData_1_1_rl[128:65];
     endcase
   end
-  always@(x__h77447 or
+  always@(x__h77370 or
 	  CAN_FIRE_RL_srcPropose_2 or
 	  propDstData_1_0_lat_0$wget or
 	  propDstData_1_0_rl or
 	  CAN_FIRE_RL_srcPropose_3 or
 	  propDstData_1_1_lat_0$wget or propDstData_1_1_rl)
   begin
-    case (x__h77447)
+    case (x__h77370)
       1'd0:
-	  CASE_x7447_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q23 =
+	  CASE_x7370_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q31 =
 	      CAN_FIRE_RL_srcPropose_2 ?
 		propDstData_1_0_lat_0$wget[64:1] :
 		propDstData_1_0_rl[64:1];
       1'd1:
-	  CASE_x7447_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q23 =
+	  CASE_x7370_0_IF_CAN_FIRE_RL_srcPropose_2_THEN__ETC__q31 =
 	      CAN_FIRE_RL_srcPropose_3 ?
 		propDstData_1_1_lat_0$wget[64:1] :
 		propDstData_1_1_rl[64:1];
     endcase
   end
-  always@(x__h77447 or
+  always@(x__h77370 or
 	  propDstData_1_0_dummy2_1$Q_OUT or
 	  IF_propDstData_1_0_lat_0_whas__150_THEN_propDs_ETC___d1160 or
 	  propDstData_1_1_dummy2_1$Q_OUT or
 	  IF_propDstData_1_1_lat_0_whas__188_THEN_propDs_ETC___d1198)
   begin
-    case (x__h77447)
+    case (x__h77370)
       1'd0:
-	  CASE_x7447_0_IF_propDstData_1_0_dummy2_1Q_OUT_ETC__q24 =
+	  CASE_x7370_0_IF_propDstData_1_0_dummy2_1Q_OUT_ETC__q32 =
 	      propDstData_1_0_dummy2_1$Q_OUT ?
 		IF_propDstData_1_0_lat_0_whas__150_THEN_propDs_ETC___d1160 :
 		2'd0;
       1'd1:
-	  CASE_x7447_0_IF_propDstData_1_0_dummy2_1Q_OUT_ETC__q24 =
+	  CASE_x7370_0_IF_propDstData_1_0_dummy2_1Q_OUT_ETC__q32 =
 	      propDstData_1_1_dummy2_1$Q_OUT ?
 		IF_propDstData_1_1_lat_0_whas__188_THEN_propDs_ETC___d1198 :
 		2'd0;
     endcase
   end
-  always@(x__h77447 or
+  always@(x__h77370 or
 	  NOT_propDstData_1_0_dummy2_1_read__326_337_OR__ETC___d1338 or
 	  NOT_propDstData_1_1_dummy2_1_read__328_339_OR__ETC___d1340)
   begin
-    case (x__h77447)
+    case (x__h77370)
       1'd0:
-	  CASE_x7447_0_NOT_propDstData_1_0_dummy2_1_read_ETC__q25 =
+	  CASE_x7370_0_NOT_propDstData_1_0_dummy2_1_read_ETC__q33 =
 	      NOT_propDstData_1_0_dummy2_1_read__326_337_OR__ETC___d1338;
       1'd1:
-	  CASE_x7447_0_NOT_propDstData_1_0_dummy2_1_read_ETC__q25 =
+	  CASE_x7370_0_NOT_propDstData_1_0_dummy2_1_read_ETC__q33 =
 	      NOT_propDstData_1_1_dummy2_1_read__328_339_OR__ETC___d1340;
     endcase
   end
-  always@(x__h77447 or n__read_addr__h77625 or n__read_addr__h77704)
+  always@(x__h77370 or n__read_addr__h77548 or n__read_addr__h77627)
   begin
-    case (x__h77447)
+    case (x__h77370)
       1'd0:
-	  CASE_x7447_0_n__read_addr7625_1_n__read_addr77_ETC__q26 =
-	      n__read_addr__h77625;
+	  CASE_x7370_0_n__read_addr7548_1_n__read_addr76_ETC__q34 =
+	      n__read_addr__h77548;
       1'd1:
-	  CASE_x7447_0_n__read_addr7625_1_n__read_addr77_ETC__q26 =
-	      n__read_addr__h77704;
+	  CASE_x7370_0_n__read_addr7548_1_n__read_addr76_ETC__q34 =
+	      n__read_addr__h77627;
     endcase
   end
 
@@ -7809,14 +8038,14 @@ module mkProc(CLK,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_tohost)
 	begin
-	  v__h151797 = $stime;
+	  v__h151720 = $stime;
 	  #0;
 	end
-    v__h151791 = v__h151797 / 32'd10;
+    v__h151714 = v__h151720 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_tohost)
 	$display("%0d: mmioPlatform.rl_tohost: 0x%0x (= %0d)",
-		 v__h151791,
+		 v__h151714,
 		 mmioPlatform_toHostQ_data_0,
 		 mmioPlatform_toHostQ_data_0);
     if (RST_N != `BSV_RESET_VALUE)
@@ -7826,7 +8055,7 @@ module mkProc(CLK,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_tohost && mmioPlatform_toHostQ_data_0 != 64'd0 &&
 	  mmioPlatform_toHostQ_data_0[63:1] != 63'd0)
-	$display("FAIL %0d", failed_testnum__h151840);
+	$display("FAIL %0d", failed_testnum__h151763);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_tohost && mmioPlatform_toHostQ_data_0 != 64'd0)
 	$finish(32'd0);
@@ -7834,14 +8063,14 @@ module mkProc(CLK,
       if (WILL_FIRE_RL_mmio_axi4_adapter_rl_handle_read_rsps &&
 	  mmio_axi4_adapter_cfg_verbosity != 4'd0)
 	begin
-	  v__h4266 = $stime;
+	  v__h4189 = $stime;
 	  #0;
 	end
-    v__h4260 = v__h4266 / 32'd10;
+    v__h4183 = v__h4189 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_mmio_axi4_adapter_rl_handle_read_rsps &&
 	  mmio_axi4_adapter_cfg_verbosity != 4'd0)
-	$display("%0d: MMIO_AXI4_Adapter.rl_handle_read_rsps ", v__h4260);
+	$display("%0d: MMIO_AXI4_Adapter.rl_handle_read_rsps ", v__h4183);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_mmio_axi4_adapter_rl_handle_read_rsps &&
 	  mmio_axi4_adapter_cfg_verbosity != 4'd0)
@@ -7901,16 +8130,16 @@ module mkProc(CLK,
 	  mmio_axi4_adapter_cfg_verbosity != 4'd0 &&
 	  mmio_axi4_adapter_master_xactor_rg_rd_data[2:1] != 2'b0)
 	begin
-	  v__h4439 = $stime;
+	  v__h4362 = $stime;
 	  #0;
 	end
-    v__h4433 = v__h4439 / 32'd10;
+    v__h4356 = v__h4362 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_mmio_axi4_adapter_rl_handle_read_rsps &&
 	  mmio_axi4_adapter_cfg_verbosity != 4'd0 &&
 	  mmio_axi4_adapter_master_xactor_rg_rd_data[2:1] != 2'b0)
 	$display("%0d: MMIO_AXI4_Adapter.rl_handle_read_rsp: fabric response error",
-		 v__h4433);
+		 v__h4356);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_mmio_axi4_adapter_rl_handle_read_rsps &&
 	  mmio_axi4_adapter_cfg_verbosity != 4'd0 &&
@@ -8014,15 +8243,15 @@ module mkProc(CLK,
       if (WILL_FIRE_RL_mmio_axi4_adapter_rl_handle_write_req &&
 	  mmio_axi4_adapter_cfg_verbosity != 4'd0)
 	begin
-	  v__h4703 = $stime;
+	  v__h4626 = $stime;
 	  #0;
 	end
-    v__h4697 = v__h4703 / 32'd10;
+    v__h4620 = v__h4626 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_mmio_axi4_adapter_rl_handle_write_req &&
 	  mmio_axi4_adapter_cfg_verbosity != 4'd0)
 	$display("%d: MMIO_AXI4_Adapter.rl_handle_write_req: St request:",
-		 v__h4697);
+		 v__h4620);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_mmio_axi4_adapter_rl_handle_write_req &&
 	  mmio_axi4_adapter_cfg_verbosity != 4'd0)
@@ -8191,14 +8420,14 @@ module mkProc(CLK,
       if (WILL_FIRE_RL_mmio_axi4_adapter_rl_handle_write_req &&
 	  mmio_axi4_adapter_ctr_wr_rsps_pending_crg == 4'd15)
 	begin
-	  v__h6742 = $stime;
+	  v__h6665 = $stime;
 	  #0;
 	end
-    v__h6736 = v__h6742 / 32'd10;
+    v__h6659 = v__h6665 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_mmio_axi4_adapter_rl_handle_write_req &&
 	  mmio_axi4_adapter_ctr_wr_rsps_pending_crg == 4'd15)
-	$display("%0d: ERROR: CreditCounter: overflow", v__h6736);
+	$display("%0d: ERROR: CreditCounter: overflow", v__h6659);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_mmio_axi4_adapter_rl_handle_write_req &&
 	  mmio_axi4_adapter_ctr_wr_rsps_pending_crg == 4'd15)
@@ -8351,15 +8580,15 @@ module mkProc(CLK,
       if (WILL_FIRE_RL_mmio_axi4_adapter_rl_handle_read_req &&
 	  mmio_axi4_adapter_cfg_verbosity != 4'd0)
 	begin
-	  v__h2542 = $stime;
+	  v__h2465 = $stime;
 	  #0;
 	end
-    v__h2536 = v__h2542 / 32'd10;
+    v__h2459 = v__h2465 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_mmio_axi4_adapter_rl_handle_read_req &&
 	  mmio_axi4_adapter_cfg_verbosity != 4'd0)
 	$display("%0d: MMIO_AXI4_Adapter.rl_handle_read_req: Ld request",
-		 v__h2536);
+		 v__h2459);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_mmio_axi4_adapter_rl_handle_read_req &&
 	  mmio_axi4_adapter_cfg_verbosity != 4'd0)
@@ -8624,14 +8853,14 @@ module mkProc(CLK,
       if (WILL_FIRE_RL_mmio_axi4_adapter_rl_discard_write_rsp &&
 	  mmio_axi4_adapter_cfg_verbosity != 4'd0)
 	begin
-	  v__h7043 = $stime;
+	  v__h6966 = $stime;
 	  #0;
 	end
-    v__h7037 = v__h7043 / 32'd10;
+    v__h6960 = v__h6966 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_mmio_axi4_adapter_rl_discard_write_rsp &&
 	  mmio_axi4_adapter_cfg_verbosity != 4'd0)
-	$display("%0d: MMIO_AXI4_Adapter.rl_discard_write_rsp", v__h7037);
+	$display("%0d: MMIO_AXI4_Adapter.rl_discard_write_rsp", v__h6960);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_mmio_axi4_adapter_rl_discard_write_rsp &&
 	  mmio_axi4_adapter_cfg_verbosity != 4'd0)
@@ -8668,15 +8897,15 @@ module mkProc(CLK,
       if (WILL_FIRE_RL_mmio_axi4_adapter_rl_discard_write_rsp &&
 	  mmio_axi4_adapter_master_xactor_rg_wr_resp[1:0] != 2'b0)
 	begin
-	  v__h7536 = $stime;
+	  v__h7459 = $stime;
 	  #0;
 	end
-    v__h7530 = v__h7536 / 32'd10;
+    v__h7453 = v__h7459 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_mmio_axi4_adapter_rl_discard_write_rsp &&
 	  mmio_axi4_adapter_master_xactor_rg_wr_resp[1:0] != 2'b0)
 	$display("%0d: MMIO_AXI4_Adapter.rl_discard_write_rsp: fabric response error: exit",
-		 v__h7530);
+		 v__h7453);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_mmio_axi4_adapter_rl_discard_write_rsp &&
 	  mmio_axi4_adapter_master_xactor_rg_wr_resp[1:0] != 2'b0)
@@ -8716,14 +8945,14 @@ module mkProc(CLK,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_mmio_axi4_adapter_rl_handle_non_Ld_St)
 	begin
-	  v__h7699 = $stime;
+	  v__h7622 = $stime;
 	  #0;
 	end
-    v__h7693 = v__h7699 / 32'd10;
+    v__h7616 = v__h7622 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_mmio_axi4_adapter_rl_handle_non_Ld_St)
 	$display("%0d: ERROR: MMIO_AXI4_Adapter.rl_handle_non_Ld_St",
-		 v__h7693);
+		 v__h7616);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_mmio_axi4_adapter_rl_handle_non_Ld_St) $write("    ");
     if (RST_N != `BSV_RESET_VALUE)
@@ -8914,10 +9143,10 @@ module mkProc(CLK,
 	  llc_mem_server_axi4_slave_xactor_f_wr_addr$D_OUT[20:18] != 3'b010 &&
 	  llc_mem_server_axi4_slave_xactor_f_wr_addr$D_OUT[20:18] != 3'b011)
 	begin
-	  v__h94012 = $stime;
+	  v__h93935 = $stime;
 	  #0;
 	end
-    v__h94006 = v__h94012 / 32'd10;
+    v__h93929 = v__h93935 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_llc_mem_server_sendMemLoaderReqToLLC_wr &&
 	  llc_mem_server_axi4_slave_xactor_f_wr_addr$D_OUT[28:21] == 8'd0 &&
@@ -8926,7 +9155,7 @@ module mkProc(CLK,
 	  llc_mem_server_axi4_slave_xactor_f_wr_addr$D_OUT[20:18] != 3'b010 &&
 	  llc_mem_server_axi4_slave_xactor_f_wr_addr$D_OUT[20:18] != 3'b011)
 	$display("%0d: %m.sendMemLoaderReqToLLC_wr: ERROR: awsize is not code for 1,2,4,8",
-		 v__h94006);
+		 v__h93929);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_llc_mem_server_sendMemLoaderReqToLLC_wr &&
 	  llc_mem_server_axi4_slave_xactor_f_wr_addr$D_OUT[28:21] == 8'd0 &&
@@ -9238,15 +9467,15 @@ module mkProc(CLK,
       if (WILL_FIRE_RL_llc_mem_server_sendMemLoaderReqToLLC_wr &&
 	  llc_mem_server_axi4_slave_xactor_f_wr_addr_fir_ETC___d1623)
 	begin
-	  v__h94057 = $stime;
+	  v__h93980 = $stime;
 	  #0;
 	end
-    v__h94051 = v__h94057 / 32'd10;
+    v__h93974 = v__h93980 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_llc_mem_server_sendMemLoaderReqToLLC_wr &&
 	  llc_mem_server_axi4_slave_xactor_f_wr_addr_fir_ETC___d1623)
 	$display("%0d: %m.sendMemLoaderReqToLLC_wr: ERROR: wlast is 1",
-		 v__h94051);
+		 v__h93974);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_llc_mem_server_sendMemLoaderReqToLLC_wr &&
 	  llc_mem_server_axi4_slave_xactor_f_wr_addr_fir_ETC___d1623)
@@ -9404,15 +9633,15 @@ module mkProc(CLK,
       if (WILL_FIRE_RL_llc_mem_server_sendMemLoaderReqToLLC_wr &&
 	  llc_mem_server_axi4_slave_xactor_f_wr_addr$D_OUT[28:21] != 8'd0)
 	begin
-	  v__h93967 = $stime;
+	  v__h93890 = $stime;
 	  #0;
 	end
-    v__h93961 = v__h93967 / 32'd10;
+    v__h93884 = v__h93890 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_llc_mem_server_sendMemLoaderReqToLLC_wr &&
 	  llc_mem_server_axi4_slave_xactor_f_wr_addr$D_OUT[28:21] != 8'd0)
 	$display("%0d: %m.sendMemLoaderReqToLLC_wr: ERROR: awlen is not 0 (burst length is not 1)",
-		 v__h93961);
+		 v__h93884);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_llc_mem_server_sendMemLoaderReqToLLC_wr &&
 	  llc_mem_server_axi4_slave_xactor_f_wr_addr$D_OUT[28:21] != 8'd0)
@@ -9580,10 +9809,10 @@ module mkProc(CLK,
 	  llc_mem_server_axi4_slave_xactor_f_rd_addr$D_OUT[20:18] != 3'b010 &&
 	  llc_mem_server_axi4_slave_xactor_f_rd_addr$D_OUT[20:18] != 3'b011)
 	begin
-	  v__h105049 = $stime;
+	  v__h104972 = $stime;
 	  #0;
 	end
-    v__h105043 = v__h105049 / 32'd10;
+    v__h104966 = v__h104972 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_llc_mem_server_sendMemLoaderReqToLLC_rd &&
 	  llc_mem_server_axi4_slave_xactor_f_rd_addr$D_OUT[28:21] == 8'd0 &&
@@ -9592,7 +9821,7 @@ module mkProc(CLK,
 	  llc_mem_server_axi4_slave_xactor_f_rd_addr$D_OUT[20:18] != 3'b010 &&
 	  llc_mem_server_axi4_slave_xactor_f_rd_addr$D_OUT[20:18] != 3'b011)
 	$display("%0d: %m.sendMemLoaderReqToLLC_rd: ERROR: arsize is not code for 1,2,4,8",
-		 v__h105043);
+		 v__h104966);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_llc_mem_server_sendMemLoaderReqToLLC_rd &&
 	  llc_mem_server_axi4_slave_xactor_f_rd_addr$D_OUT[28:21] == 8'd0 &&
@@ -9796,15 +10025,15 @@ module mkProc(CLK,
       if (WILL_FIRE_RL_llc_mem_server_sendMemLoaderReqToLLC_rd &&
 	  llc_mem_server_axi4_slave_xactor_f_rd_addr$D_OUT[28:21] != 8'd0)
 	begin
-	  v__h105004 = $stime;
+	  v__h104927 = $stime;
 	  #0;
 	end
-    v__h104998 = v__h105004 / 32'd10;
+    v__h104921 = v__h104927 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_llc_mem_server_sendMemLoaderReqToLLC_rd &&
 	  llc_mem_server_axi4_slave_xactor_f_rd_addr$D_OUT[28:21] != 8'd0)
 	$display("%0d: %m.sendMemLoaderReqToLLC_rd: ERROR: arlen is not 0 (burst length is not 1)",
-		 v__h104998);
+		 v__h104921);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_llc_mem_server_sendMemLoaderReqToLLC_rd &&
 	  llc_mem_server_axi4_slave_xactor_f_rd_addr$D_OUT[28:21] != 8'd0)
@@ -9912,15 +10141,15 @@ module mkProc(CLK,
       if (WILL_FIRE_RL_llc_axi4_adapter_rl_handle_read_rsps &&
 	  NOT_llc_axi4_adapter_cfg_verbosity_read__747_U_ETC___d1764)
 	begin
-	  v__h123601 = $stime;
+	  v__h123524 = $stime;
 	  #0;
 	end
-    v__h123595 = v__h123601 / 32'd10;
+    v__h123518 = v__h123524 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_llc_axi4_adapter_rl_handle_read_rsps &&
 	  NOT_llc_axi4_adapter_cfg_verbosity_read__747_U_ETC___d1764)
 	$display("%0d: LLC_AXI4_Adapter.rl_handle_read_rsps: beat %0d ",
-		 v__h123595,
+		 v__h123518,
 		 llc_axi4_adapter_rg_rd_rsp_beat);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_llc_axi4_adapter_rl_handle_read_rsps &&
@@ -9980,15 +10209,15 @@ module mkProc(CLK,
       if (WILL_FIRE_RL_llc_axi4_adapter_rl_handle_read_rsps &&
 	  llc_axi4_adapter_master_xactor_rg_rd_data[2:1] != 2'b0)
 	begin
-	  v__h123768 = $stime;
+	  v__h123691 = $stime;
 	  #0;
 	end
-    v__h123762 = v__h123768 / 32'd10;
+    v__h123685 = v__h123691 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_llc_axi4_adapter_rl_handle_read_rsps &&
 	  llc_axi4_adapter_master_xactor_rg_rd_data[2:1] != 2'b0)
 	$display("%0d: LLC_AXI4_Adapter.rl_handle_read_rsp: fabric response error; exit",
-		 v__h123762);
+		 v__h123685);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_llc_axi4_adapter_rl_handle_read_rsps &&
 	  llc_axi4_adapter_master_xactor_rg_rd_data[2:1] != 2'b0)
@@ -10169,16 +10398,16 @@ module mkProc(CLK,
 	  llc_axi4_adapter_cfg_verbosity != 4'd0 &&
 	  llc_axi4_adapter_rg_wr_req_beat == 3'd0)
 	begin
-	  v__h125871 = $stime;
+	  v__h125794 = $stime;
 	  #0;
 	end
-    v__h125865 = v__h125871 / 32'd10;
+    v__h125788 = v__h125794 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_llc_axi4_adapter_rl_handle_write_req &&
 	  llc_axi4_adapter_cfg_verbosity != 4'd0 &&
 	  llc_axi4_adapter_rg_wr_req_beat == 3'd0)
 	$display("%d: LLC_AXI4_Adapter.rl_handle_write_req: Wb request from LLC to memory:",
-		 v__h125865);
+		 v__h125788);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_llc_axi4_adapter_rl_handle_write_req &&
 	  llc_axi4_adapter_cfg_verbosity != 4'd0 &&
@@ -11376,14 +11605,14 @@ module mkProc(CLK,
       if (WILL_FIRE_RL_llc_axi4_adapter_rl_handle_write_req &&
 	  llc_axi4_adapter_ctr_wr_rsps_pending_crg == 4'd15)
 	begin
-	  v__h143217 = $stime;
+	  v__h143140 = $stime;
 	  #0;
 	end
-    v__h143211 = v__h143217 / 32'd10;
+    v__h143134 = v__h143140 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_llc_axi4_adapter_rl_handle_write_req &&
 	  llc_axi4_adapter_ctr_wr_rsps_pending_crg == 4'd15)
-	$display("%0d: ERROR: CreditCounter: overflow", v__h143211);
+	$display("%0d: ERROR: CreditCounter: overflow", v__h143134);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_llc_axi4_adapter_rl_handle_write_req &&
 	  llc_axi4_adapter_ctr_wr_rsps_pending_crg == 4'd15)
@@ -11407,7 +11636,7 @@ module mkProc(CLK,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_llc_axi4_adapter_rl_handle_write_req &&
 	  NOT_llc_axi4_adapter_cfg_verbosity_read__747_U_ETC___d1764)
-	$write("'h%h", mem_req_wr_addr_awaddr__h137126);
+	$write("'h%h", mem_req_wr_addr_awaddr__h137049);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_llc_axi4_adapter_rl_handle_write_req &&
 	  NOT_llc_axi4_adapter_cfg_verbosity_read__747_U_ETC___d1764)
@@ -11503,7 +11732,7 @@ module mkProc(CLK,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_llc_axi4_adapter_rl_handle_write_req &&
 	  NOT_llc_axi4_adapter_cfg_verbosity_read__747_U_ETC___d1764)
-	$write("'h%h", data64__h137041);
+	$write("'h%h", data64__h136964);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_llc_axi4_adapter_rl_handle_write_req &&
 	  NOT_llc_axi4_adapter_cfg_verbosity_read__747_U_ETC___d1764)
@@ -11511,7 +11740,7 @@ module mkProc(CLK,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_llc_axi4_adapter_rl_handle_write_req &&
 	  NOT_llc_axi4_adapter_cfg_verbosity_read__747_U_ETC___d1764)
-	$write("'h%h", strb8__h137042);
+	$write("'h%h", strb8__h136965);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_llc_axi4_adapter_rl_handle_write_req &&
 	  NOT_llc_axi4_adapter_cfg_verbosity_read__747_U_ETC___d1764)
@@ -11537,16 +11766,16 @@ module mkProc(CLK,
 	  llc_axi4_adapter_cfg_verbosity != 4'd0 &&
 	  llc_axi4_adapter_rg_rd_req_beat == 3'd0)
 	begin
-	  v__h122982 = $stime;
+	  v__h122905 = $stime;
 	  #0;
 	end
-    v__h122976 = v__h122982 / 32'd10;
+    v__h122899 = v__h122905 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_llc_axi4_adapter_rl_handle_read_req &&
 	  llc_axi4_adapter_cfg_verbosity != 4'd0 &&
 	  llc_axi4_adapter_rg_rd_req_beat == 3'd0)
 	$display("%0d: LLC_AXI4_Adapter.rl_handle_read_req: Ld request from LLC to memory: beat %0d",
-		 v__h122976,
+		 v__h122899,
 		 llc_axi4_adapter_rg_rd_req_beat);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_llc_axi4_adapter_rl_handle_read_req &&
@@ -11634,7 +11863,7 @@ module mkProc(CLK,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_llc_axi4_adapter_rl_handle_read_req &&
 	  NOT_llc_axi4_adapter_cfg_verbosity_read__747_U_ETC___d1764)
-	$write("'h%h", mem_req_rd_addr_araddr__h123202);
+	$write("'h%h", mem_req_rd_addr_araddr__h123125);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_llc_axi4_adapter_rl_handle_read_req &&
 	  NOT_llc_axi4_adapter_cfg_verbosity_read__747_U_ETC___d1764)
@@ -11715,15 +11944,15 @@ module mkProc(CLK,
       if (WILL_FIRE_RL_llc_axi4_adapter_rl_discard_write_rsp &&
 	  NOT_llc_axi4_adapter_cfg_verbosity_read__747_U_ETC___d1764)
 	begin
-	  v__h149912 = $stime;
+	  v__h149835 = $stime;
 	  #0;
 	end
-    v__h149906 = v__h149912 / 32'd10;
+    v__h149829 = v__h149835 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_llc_axi4_adapter_rl_discard_write_rsp &&
 	  NOT_llc_axi4_adapter_cfg_verbosity_read__747_U_ETC___d1764)
 	$display("%0d: LLC_AXI4_Adapter.rl_discard_write_rsp: beat %0d ",
-		 v__h149906,
+		 v__h149829,
 		 llc_axi4_adapter_rg_wr_rsp_beat);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_llc_axi4_adapter_rl_discard_write_rsp &&
@@ -11761,15 +11990,15 @@ module mkProc(CLK,
       if (WILL_FIRE_RL_llc_axi4_adapter_rl_discard_write_rsp &&
 	  llc_axi4_adapter_master_xactor_rg_wr_resp[1:0] != 2'b0)
 	begin
-	  v__h150420 = $stime;
+	  v__h150343 = $stime;
 	  #0;
 	end
-    v__h150414 = v__h150420 / 32'd10;
+    v__h150337 = v__h150343 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_llc_axi4_adapter_rl_discard_write_rsp &&
 	  llc_axi4_adapter_master_xactor_rg_wr_resp[1:0] != 2'b0)
 	$display("%0d: LLC_AXI4_Adapter.rl_discard_write_rsp: fabric response error: exit",
-		 v__h150414);
+		 v__h150337);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_llc_axi4_adapter_rl_discard_write_rsp &&
 	  llc_axi4_adapter_master_xactor_rg_wr_resp[1:0] != 2'b0)
