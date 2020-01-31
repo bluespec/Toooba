@@ -73,12 +73,6 @@ interface CoreW_IFC #(numeric type t_n_interrupt_sources);
 
    interface Vector #(t_n_interrupt_sources, PLIC_Source_IFC)  core_external_interrupt_sources;
 
-   // ----------------
-   // External interrupt [14] to go into Debug Mode
-
-   (* always_ready, always_enabled *)
-   method Action  debug_external_interrupt_req (Bool set_not_clear);
-
 `ifdef INCLUDE_GDB_CONTROL
    // ----------------------------------------------------------------
    // Optional Debug Module interfaces

@@ -136,6 +136,9 @@ interface CoreRenameDebug;
 endinterface
 
 interface Core;
+   // Initialize
+   interface Server #(Bit #(0), Bit #(0))  init_server;
+
     // core request & indication
     interface CoreReq coreReq;
     interface CoreIndInv coreIndInv;
@@ -157,9 +160,6 @@ interface Core;
    // Bluespec: external interrupt requests targeting Machine and Supervisor modes
     method Action setMEIP (Bit #(1) v);
     method Action setSEIP (Bit #(1) v);
-
-   // Bluespec: external interrupt to enter debug mode
-    method Action setDEIP (Bit #(1) v);
 
 `ifdef INCLUDE_GDB_CONTROL
    interface Server #(Bool, Bool)                             hart0_run_halt_server;
@@ -202,7 +202,16 @@ deriving (Bits, Eq, FShow);
 (* synthesize *)
 module mkCore#(CoreId coreId)(Core);
     let verbose = False;
-    Integer verbosity = 0;    // Bluespec
+
+   // ================================================================
+   Integer verbosity = 0;    // More levels of verbosity control than 'Bool verbose'
+
+   // ----------------
+   // Init requests and responses
+
+   FIFOF #(Bit #(0))  f_init_reqs <- mkFIFOF;
+   FIFOF #(Bit #(0))  f_init_rsps <- mkFIFOF;
+
 
     Reg#(Bool) outOfReset <- mkReg(False);
     rule rl_outOfReset if (!outOfReset);
@@ -212,6 +221,8 @@ module mkCore#(CoreId coreId)(Core);
 
     Reg#(Bool) started <- mkReg(False);
 
+   // ================================================================
+
 `ifdef INCLUDE_GDB_CONTROL
     // Using a ConfigReg since scheduling of reads/writes not critical (TODO: verify this)
     Reg #(Core_Run_State) rg_core_run_state <- mkConfigReg (CORE_RUNNING);
@@ -220,6 +231,8 @@ module mkCore#(CoreId coreId)(Core);
 `ifdef INCLUDE_TANDEM_VERIF
    Vector #(SupSize, FIFOF #(Trace_Data2)) v_f_to_TV <- replicateM (mkFIFOF);
 `endif
+
+   // ================================================================
 
     // front end
     FetchStage fetchStage <- mkFetchStage;
@@ -1243,6 +1256,17 @@ module mkCore#(CoreId coreId)(Core);
 
       f_run_halt_reqs.deq;
 
+      // In Debug Mode, debugger may have updated DCSR (hence privilege level, DCSR[1:0]),
+      // and also other VM-related state.
+      // The following TLB actions update to a consistent state.
+      iTlb.flush;
+      dTlb.flush;
+      let vmI = csrf.vmI;
+      let vmD = csrf.vmD;
+      iTlb.updateVMInfo(vmI);
+      dTlb.updateVMInfo(vmD);
+      l2Tlb.updateVMInfo(vmI, vmD);
+
       let startpc = csrf.dpc_read;
       fetchStage.redirect (startpc);
       renameStage.debug_resume;
@@ -1272,6 +1296,28 @@ module mkCore#(CoreId coreId)(Core);
 
    // ================================================================
 `endif
+
+   // ================================================================
+   // Init interface
+
+   rule rl_init;
+     let tok <- pop (f_init_reqs);
+
+      csrf.init;
+      started <= False;
+
+`ifdef INCLUDE_GDB_CONTROL
+      rg_core_run_state <= CORE_RUNNING;
+`endif
+
+      f_init_rsps.enq (tok);
+   endrule
+
+   // ================================================================
+   // INTERFACE
+
+   // Initialize
+   interface  init_server = toGPServer (f_init_reqs, f_init_rsps);
 
     interface CoreReq coreReq;
         method Action start(
@@ -1350,9 +1396,6 @@ module mkCore#(CoreId coreId)(Core);
    // Bluespec: external interrupt requests targeting Machine and Supervisor modes
     method Action setMEIP (v) = csrf.setMEIP (v);
     method Action setSEIP (v) = csrf.setSEIP (v);
-
-   // Bluespec: external interrupt to enter debug mode
-    method Action setDEIP (v) = csrf.setDEIP (v);
 
 `ifdef INCLUDE_GDB_CONTROL
    interface Server  hart0_run_halt_server = toGPServer (f_run_halt_reqs, f_run_halt_rsps);

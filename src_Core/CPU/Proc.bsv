@@ -104,10 +104,10 @@ module mkProc (Proc_IFC);
    Reg #(Bit #(4))  cfg_verbosity <- mkConfigReg (0);
 
    // ----------------
-   // Reset requests and responses    (TODO: to be implemented)
+   // Init requests and responses
 
-   FIFOF #(Bit #(0))  f_reset_reqs <- mkFIFOF;
-   FIFOF #(Bit #(0))  f_reset_rsps <- mkFIFOF;
+   FIFOF #(Bit #(0))  f_init_reqs <- mkFIFOF;
+   FIFOF #(Bit #(0))  f_init_rsps <- mkFIFOF;
 
    // ----------------
    // MMIO
@@ -201,15 +201,22 @@ module mkProc (Proc_IFC);
    end
 
    // ================================================================
-   // Reset
+   // Init
 
-   rule rl_reset;
-      let x <- pop (f_reset_reqs);
+   rule rl_init_start;
+      let x <- pop (f_init_reqs);
 
       llc_axi4_adapter.reset;
       mmio_axi4_adapter.reset;
+      for (Integer j = 0; j < valueof(CoreNum); j = j+1)
+	 core [j].init_server.request.put (?);
+   endrule
 
-      f_reset_rsps.enq (?);
+   rule rl_init_finish;
+      for (Integer j = 0; j < valueof(CoreNum); j = j+1)
+	 let tok <- core [j].init_server.response.get;
+
+      f_init_rsps.enq (?);
    endrule
 
    // ----------------
@@ -245,7 +252,7 @@ module mkProc (Proc_IFC);
    // INTERFACE
 
    // Reset
-   interface Server  hart0_server_reset = toGPServer (f_reset_reqs, f_reset_rsps);
+   interface Server  init_server = toGPServer (f_init_reqs, f_init_rsps);
 
    // ----------------
    // Start the cores running
@@ -279,13 +286,6 @@ module mkProc (Proc_IFC);
 
    method Action  s_external_interrupt_req (x);
       core[0].setSEIP (pack (x));
-   endmethod
-
-   // ----------------
-   // External interrupt [14] to go into Debug Mode
-
-   method Action  debug_external_interrupt_req (Bool set_not_clear);
-      core[0].setDEIP (pack (set_not_clear));
    endmethod
 
    // ----------------

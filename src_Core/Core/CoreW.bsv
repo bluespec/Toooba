@@ -88,29 +88,10 @@ import TV_Taps  :: *;
 import DM_CPU_Req_Rsp ::*;
 
 // ================================================================
-// EXTERNAL_DEBUG_MODULE is used in situations where we DO NOT have a
-// Debug Module controlling the CPU.  In that case, the CPU is
-// 'halted' by asserting the reset signal, during which the external
-// debugger can read/write memory etc.
-
-// EXTERNAL_DEBUG_MODULE and INCLUDE_GDB_CONTROL should never both be defined.
-
-`ifdef EXTERNAL_DEBUG_MODULE
-`undef INCLUDE_GDB_CONTROL
-`endif
-
-// ================================================================
 // The Core module
 
 (* synthesize *)
 module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
-
-`ifdef EXTERNAL_DEBUG_MODULE
-   let clk <- exposeCurrentClock;
-   let cpu_reset <- mkReset(50, True, clk);
-   let cpu_halt <- mkReset(50, True, clk);
-   let cpu_reset_either <- mkResetEither(cpu_reset.new_rst, cpu_halt.new_rst);
-`endif
 
    // ================================================================
    // STATE
@@ -160,6 +141,11 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
    // f_reset_requestor, so that we know whether or not to respond to
    // the SoC.
 
+   // TODO (multicore): currently the incoming 'init' token is from
+   // Debug Module's hart0_get_reset_req, but when we call
+   // proc.init_server here, we are resetting all the cores, i.e., all
+   // the harts.  Needs to be cleaned up.
+
    Bit #(1) reset_requestor_dm  = 0;
    Bit #(1) reset_requestor_soc = 1;
 `ifdef INCLUDE_GDB_CONTROL
@@ -170,9 +156,9 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
    rule rl_cpu_hart0_reset_from_soc_start;
       let req <- pop (f_reset_reqs);
 
-      proc.hart0_server_reset.request.put (?);     // CPU
-      plic.server_reset.request.put (?);           // PLIC
-      fabric_2x3.reset;                            // Local 2x3 Fabric
+      proc.init_server.request.put (?);     // CPU
+      plic.server_reset.request.put (?);    // PLIC
+      fabric_2x3.reset;                     // Local 2x3 Fabric
 `ifdef INCLUDE_TANDEM_VERIF
       tv_encode.reset;
 `endif
@@ -181,7 +167,7 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
       // Remember the requestor, so we can respond to it
       f_reset_requestor.enq (reset_requestor_soc);
 `endif
-      $display ("%0d: Core.rl_cpu_hart0_reset_from_soc_start", cur_cycle);
+      $display ("%0d: Core.rl_cpu_hart0_reset_from_soc_start (requestor %0d)", cur_cycle, reset_requestor_soc);
    endrule
 
 `ifdef INCLUDE_GDB_CONTROL
@@ -189,22 +175,24 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
    rule rl_cpu_hart0_reset_from_dm_start;
       let req <- debug_module.hart0_get_reset_req.get;
 
-      proc.hart0_server_reset.request.put (?);     // CPU
-      plic.server_reset.request.put (?);           // PLIC
-      fabric_2x3.reset;                            // Local 2x3 fabric
+      proc.init_server.request.put (?);     // CPU
+      plic.server_reset.request.put (?);    // PLIC
+      fabric_2x3.reset;                     // Local 2x3 fabric
 `ifdef INCLUDE_TANDEM_VERIF
       tv_encode.reset;
 `endif
 
       // Remember the requestor, so we can respond to it
       f_reset_requestor.enq (reset_requestor_dm);
-      $display ("%0d: Core.rl_cpu_hart0_reset_from_dm_start", cur_cycle);
+      $display ("%0d: Core.rl_cpu_hart0_reset_from_dm_start (requestor %0d)", cur_cycle, reset_requestor_dm);
    endrule
 `endif
 
+   FIFOF #(Bit #(0)) f_proc_start <- mkFIFOF;
+
    rule rl_cpu_hart0_reset_complete;
-      let rsp1 <- proc.hart0_server_reset.response.get;     // CPU
-      let rsp3 <- plic.server_reset.response.get;           // PLIC
+      let rsp1 <- proc.init_server.response.get;     // CPU
+      let rsp3 <- plic.server_reset.response.get;    // PLIC
 
       plic.set_addr_map (zeroExtend (soc_map.m_plic_addr_base),
 			 zeroExtend (soc_map.m_plic_addr_lim));
@@ -217,12 +205,19 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
 	 f_reset_rsps.enq (?);
 
       // Start running the cores
+      f_proc_start.enq (?);
+
+      $display ("%0d: Core.rl_cpu_hart0_reset_complete; starting proc", cur_cycle);
+   endrule
+
+   rule rl_cpu_hart0_reset_proc_start;
+      let x <- pop (f_proc_start);
       proc.start (soc_map_struct.pc_reset_value,
 		  rg_tohost_addr,
 		  rg_fromhost_addr);
-
-      $display ("%0d: Core.rl_cpu_hart0_reset_complete; started running proc", cur_cycle);
+      $display ("%0d: Core.rl_cpu_hart0_reset_proc_start; started running proc", cur_cycle);
    endrule
+
 
 `ifdef INCLUDE_GDB_CONTROL
    // ================================================================
@@ -405,13 +400,6 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
    // External interrupt sources
 
    interface core_external_interrupt_sources = plic.v_sources;
-
-   // ----------------
-   // External interrupt [14] to go into Debug Mode
-
-   method Action  debug_external_interrupt_req (Bool set_not_clear);
-      proc.debug_external_interrupt_req (set_not_clear);
-   endmethod
 
 `ifdef INCLUDE_GDB_CONTROL
    // ----------------------------------------------------------------

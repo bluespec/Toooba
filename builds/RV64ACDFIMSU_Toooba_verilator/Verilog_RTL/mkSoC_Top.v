@@ -275,8 +275,7 @@ module mkSoC_Top(CLK,
        corew$cpu_imem_master_rvalid,
        corew$cpu_imem_master_wlast,
        corew$cpu_imem_master_wready,
-       corew$cpu_imem_master_wvalid,
-       corew$debug_external_interrupt_req_set_not_clear;
+       corew$cpu_imem_master_wvalid;
 
   // ports of submodule fabric
   wire [63 : 0] fabric$v_from_masters_0_araddr,
@@ -682,10 +681,10 @@ module mkSoC_Top(CLK,
 
   // declarations used by system tasks
   // synopsys translate_off
-  reg [31 : 0] v__h8723;
-  reg [31 : 0] v__h8983;
-  reg [31 : 0] v__h8717;
-  reg [31 : 0] v__h8977;
+  reg [31 : 0] v__h8689;
+  reg [31 : 0] v__h8949;
+  reg [31 : 0] v__h8683;
+  reg [31 : 0] v__h8943;
   // synopsys translate_on
 
   // action method set_verbosity
@@ -813,7 +812,6 @@ module mkSoC_Top(CLK,
 		.cpu_imem_master_rresp(corew$cpu_imem_master_rresp),
 		.cpu_imem_master_rvalid(corew$cpu_imem_master_rvalid),
 		.cpu_imem_master_wready(corew$cpu_imem_master_wready),
-		.debug_external_interrupt_req_set_not_clear(corew$debug_external_interrupt_req_set_not_clear),
 		.set_htif_addrs_fromhost_addr(corew$set_htif_addrs_fromhost_addr),
 		.set_htif_addrs_tohost_addr(corew$set_htif_addrs_tohost_addr),
 		.set_verbosity_logdelay(corew$set_verbosity_logdelay),
@@ -1462,7 +1460,6 @@ module mkSoC_Top(CLK,
   assign corew$cpu_imem_master_rresp = fabric$v_from_masters_0_rresp ;
   assign corew$cpu_imem_master_rvalid = fabric$v_from_masters_0_rvalid ;
   assign corew$cpu_imem_master_wready = fabric$v_from_masters_0_wready ;
-  assign corew$debug_external_interrupt_req_set_not_clear = 1'd0 ;
   assign corew$set_htif_addrs_fromhost_addr = 64'h0000000080001040 ;
   assign corew$set_htif_addrs_tohost_addr = set_watch_tohost_tohost_addr ;
   assign corew$set_verbosity_logdelay = set_verbosity_logdelay ;
@@ -1698,23 +1695,23 @@ module mkSoC_Top(CLK,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_reset_start_2)
 	begin
-	  v__h8723 = $stime;
+	  v__h8689 = $stime;
 	  #0;
 	end
-    v__h8717 = v__h8723 / 32'd10;
+    v__h8683 = v__h8689 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_reset_start_2)
-	$display("%0d: SoC_Top. Reset start ...", v__h8717);
+	$display("%0d: SoC_Top. Reset start ...", v__h8683);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_reset_complete)
 	begin
-	  v__h8983 = $stime;
+	  v__h8949 = $stime;
 	  #0;
 	end
-    v__h8977 = v__h8983 / 32'd10;
+    v__h8943 = v__h8949 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_reset_complete)
-	$display("%0d: SoC_Top. Reset complete ...", v__h8977);
+	$display("%0d: SoC_Top. Reset complete ...", v__h8943);
   end
   // synopsys translate_on
 endmodule  // mkSoC_Top

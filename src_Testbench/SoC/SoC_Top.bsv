@@ -174,8 +174,6 @@ module mkSoC_Top (SoC_Top_IFC);
    // ----------------
    // Connect interrupt sources for CPU external interrupt request inputs.
 
-   // Reg #(Bool) rg_intr_prev <- mkReg (False);    // For debugging only
-
    (* fire_when_enabled, no_implicit_conditions *)
    rule rl_connect_external_interrupt_requests;
       Bool intr = uart0.intr;
@@ -186,18 +184,6 @@ module mkSoC_Top (SoC_Top_IFC);
       // Tie off remaining interrupt request lines (1..N)
       for (Integer j = 1; j < valueOf (N_External_Interrupt_Sources); j = j + 1)
 	 corew.core_external_interrupt_sources [j].m_interrupt_req (False);
-
-      // Tie off debugger interrupt
-      corew.debug_external_interrupt_req (False);
-
-      /* For debugging only
-      if ((! rg_intr_prev) && intr)
-	 $display ("SoC_Top: intr posedge");
-      else if (rg_intr_prev && (! intr))
-	 $display ("SoC_Top: intr negedge");
-
-      rg_intr_prev <= intr;
-      */
    endrule
 
    // ================================================================

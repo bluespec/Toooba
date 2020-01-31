@@ -1,5 +1,6 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
+// Portions Copyright (c) 2019-2020 Bluespec, Inc.
 // 
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
@@ -21,8 +22,6 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// Portions Copyright (c) Bluespec, Inc.
-
 `include "ProcConfig.bsv"
 import Types::*;
 import ProcTypes::*;
@@ -37,9 +36,22 @@ import GetPut::*;
 import BuildVector::*;
 //import TRNG::*;
 
+// ================================================================
+// BSV additional libs
+
+import Cur_Cycle  :: *;
+
+// ================================================================
+// Project imports from Toooba
+
 import SoC_Map :: *;
 
+// ================================================================
+
 interface CsrFile;
+   // Initialize to platform-level reset spec
+   method Action init;
+
     // Read
     method Data rd(CSR csr);
     // normal write by CSRXXX inst to any CSR
@@ -81,9 +93,6 @@ interface CsrFile;
     method Action setMEIP (Bit #(1) v);
     method Action setSEIP (Bit #(1) v);
 
-   // Bluespec: external interrupt to enter debug mode
-    method Action setDEIP (Bit #(1) v);
-
     // performance stats is collected or not
     method Bool doPerfStats;
     // send/recv updates on stats CSR globally
@@ -107,8 +116,10 @@ interface CsrFile;
    method Bit #(1) dcsr_step_bit;
 
    // Update 'cause' in DCSR
+   // Is invoked by logic that stops a hart, to enter Debug Mode
    (* always_ready *)
    method Action dcsr_cause_write (Bit #(3)  dcsr_cause);
+
 `endif
 endinterface
 
@@ -329,7 +340,6 @@ module mkCsrFile #(Data hartid)(CsrFile);
         readOnlyReg(1'b0), mideleg_1_0_reg
     );
     // mie
-    Reg #(Bit #(1)) debug_int_en = readOnlyReg (1);
     Vector#(4, Reg#(Bit#(1))) external_int_en_vec = replicate(readOnlyReg(0));
     external_int_en_vec[prvU] <- mkCsrReg(0);
     external_int_en_vec[prvS] <- mkCsrReg(0);
@@ -342,10 +352,8 @@ module mkCsrFile #(Data hartid)(CsrFile);
     software_int_en_vec[prvU] <- mkCsrReg(0);
     software_int_en_vec[prvS] <- mkCsrReg(0);
     software_int_en_vec[prvM] <- mkCsrReg(0);
-    Reg#(Data) mie_csr = concatReg15(
-        readOnlyReg(49'b0),
-        debug_int_en,                // mie [14]
-        readOnlyReg(2'b0),
+    Reg#(Data) mie_csr = concatReg13(
+        readOnlyReg(52'b0),
         external_int_en_vec[prvM], readOnlyReg(1'b0),
         external_int_en_vec[prvS], external_int_en_vec[prvU],
         timer_int_en_vec[prvM],    readOnlyReg(1'b0),
@@ -382,7 +390,6 @@ module mkCsrFile #(Data hartid)(CsrFile);
     // mtval (mbadaddr in spike)
     Reg#(Data) mtval_csr <- mkCsrReg(0);
     // mip
-    Reg #(Bit #(1)) debug_int_pend <- mkCsrReg (0);
     Vector#(4, Reg#(Bit#(1))) external_int_pend_vec = replicate(readOnlyReg(0));
     external_int_pend_vec[prvU] <- mkCsrReg(0);
     external_int_pend_vec[prvS] <- mkCsrReg(0);
@@ -395,10 +402,8 @@ module mkCsrFile #(Data hartid)(CsrFile);
     software_int_pend_vec[prvU] <- mkCsrReg(0);
     software_int_pend_vec[prvS] <- mkCsrReg(0);
     software_int_pend_vec[prvM] <- mkCsrReg(0);
-    Reg#(Data) mip_csr = concatReg15(
-        readOnlyReg(49'b0),
-        debug_int_pend,
-        readOnlyReg(2'b0),
+    Reg#(Data) mip_csr = concatReg13(
+        readOnlyReg(52'b0),
         external_int_pend_vec[prvM], readOnlyReg(1'b0),
         external_int_pend_vec[prvS], external_int_pend_vec[prvU],
         readOnlyReg(timer_int_pend_vec[prvM]), // MTIP is read-only to software
@@ -664,12 +669,43 @@ module mkCsrFile #(Data hartid)(CsrFile);
         endcase);
     endfunction
 
+   // ================================================================
+   // INTERFACE
+
+   method Action init;
+      // Note: we initialize only certain CSRs (platform-level spec)
+      // Current privilege
+      prv_reg <= prvM;
+
+      // Machine-level CSRs
+      mstatus_csr <= 0;
+      mie_csr <= 0;
+      mip_csr <= 0;
+      minstret_csr <= 0;
+      mcycle_csr <= 0;
+
+      // User-level CSRs
+      time_reg <= 0;
+
+`ifdef INCLUDE_GDB_CONTROL
+      // Debug Module CSRs
+      rg_dcsr <= zeroExtend (dcsr_reset_value);
+      rg_dpc  <= truncate (soc_map_struct.pc_reset_value);
+`endif
+   endmethod
+
     method Data rd(CSR csr);
         return get_csr(csr)._read;
     endmethod
 
     method Action csrInstWr(CSR csr, Data x);
         get_csr(csr)._write(x);
+`ifdef INCLUDE_GDB_CONTROL
+        if (csr == CSRdcsr) begin
+	   let prv = x [1:0];
+	   prv_reg <= prv;
+	end
+`endif
     endmethod
 
     method Bool fpuInstNeedWr(Bit#(5) fflags, Bool fpu_dirty);
@@ -898,11 +934,6 @@ module mkCsrFile #(Data hartid)(CsrFile);
        external_int_pend_vec[prvS] <= v;
     endmethod
 
-   // Bluespec: external interrupt to enter debug mode
-    method Action setDEIP (Bit #(1) v);
-       debug_int_pend <= v;
-    endmethod
-
     method terminate = terminate_module.terminate;
 
     // performance stats
@@ -940,9 +971,16 @@ module mkCsrFile #(Data hartid)(CsrFile);
    endmethod
 
    // Update 'cause' in DCSR
+   // Is invoked by logic that stops a hart, to enter Debug Mode
    method Action dcsr_cause_write (Bit #(3) dcsr_cause);
       rg_dcsr <= { 32'b0, rg_dcsr [31:9], dcsr_cause, rg_dcsr [5:2], prv_reg };
+
+      /*
+      $display ("%0d: %m mkCsrFile.method-dcsr_cause_write: cause %0d, prv %0d",
+		cur_cycle, dcsr_cause, prv_reg);
+      */
    endmethod
+
 `endif
 
 endmodule

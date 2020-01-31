@@ -34,8 +34,8 @@ import Trace_Data2 :: *;
 //       because the RISCY-OOO mkProc contains those elements.
 
 interface Proc_IFC;
-   // Reset
-   interface Server #(Token, Token)  hart0_server_reset;
+   // Init
+   interface Server #(Token, Token)  init_server;
 
    // ----------------
    // Start the cores running
@@ -58,12 +58,6 @@ interface Proc_IFC;
 
    (* always_ready, always_enabled *)
    method Action  s_external_interrupt_req (Bool set_not_clear);
-
-   // ----------------
-   // External interrupt [14] to go into Debug Mode
-
-   (* always_ready, always_enabled *)
-   method Action  debug_external_interrupt_req (Bool set_not_clear);
 
    // ----------------
    // Non-maskable interrupt
