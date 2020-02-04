@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2019 Bluespec, Inc. All Rights Reserved
+// Copyright (c) 2016-2020 Bluespec, Inc. All Rights Reserved
 
 package Proc_IFC;
 
@@ -34,11 +34,10 @@ import Trace_Data2 :: *;
 //       because the RISCY-OOO mkProc contains those elements.
 
 interface Proc_IFC;
-   // Init
-   interface Server #(Token, Token)  init_server;
 
    // ----------------
    // Start the cores running
+   // Use toHostAddr = 0 if not monitoring tohost
    method Action start (Addr startpc, Addr tohostAddr, Addr fromhostAddr);
 
    // ----------------

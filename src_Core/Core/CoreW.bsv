@@ -91,7 +91,53 @@ import DM_CPU_Req_Rsp ::*;
 // The Core module
 
 (* synthesize *)
-module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
+module mkCoreW #(Reset dm_power_on_reset)
+               (CoreW_IFC #(N_External_Interrupt_Sources));
+
+   // ================================================================
+   // Notes on 'reset'
+   
+   // This module's default reset (Verilog RST_N) is a
+   // 'non-debug-module reset', or 'ndm-reset': it resets everything
+   // in mkCoreW other than the optional RISC-V Debug Module (DM).
+
+   // DM is reset ONLY by 'dm_power_on_reset' (parameter of this module).
+   // This is expected to be performed exactly once, on power-up.
+
+   // Note: DM has an internal functionality that the DM spec calls
+   //   'dm_reset'. This is not really an electrical reset, it is just
+   //   a module initializer wholly within the DM to put it into a
+   //   known state.  To be able to do a dm_reset, the DM has to be
+   //   working already, at least to the point that it can field DMI
+   //   requests from the external debugger asking the DM to proform a
+   //   dm_reset.
+
+   // DM can ask the environment to perform an 'ndm-reset', which the
+   // environment does by asserting the default reset (RST_N).  At the
+   // same time, the environment may also reset part or all of the
+   // rest of the SoC.
+
+   // DM can also individually reset each hart in mkCPU.
+   // 'hart' = hardware thread = independent PC and fetch-and-execute pipeline.
+   // mkCPU (instantiated in this module) has one or more harts.
+   // This hart-reset logic is entirely within this module.
+
+   // ================================================================
+   // The CPU's (hart's) reset is the ``or'' of the default reset
+   // (power-on reset) and the Debug Module's 'hart_reset' control.
+
+   let ndm_reset <- exposeCurrentReset;
+
+`ifdef INCLUDE_GDB_CONTROL
+   let clk <- exposeCurrentClock;
+   Bool    initial_reset_val   = False;
+   Integer hart_reset_duration = 10;    // NOTE: assuming 10 cycle reset enough for hart
+   let dm_hart0_reset_controller <- mkReset(hart_reset_duration, initial_reset_val, clk);
+
+   let hart0_reset <- mkResetEither (ndm_reset, dm_hart0_reset_controller.new_rst);
+`else
+   let hart0_reset = ndm_reset;
+`endif
 
    // ================================================================
    // STATE
@@ -100,7 +146,8 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
    SoC_Map_IFC  soc_map  <- mkSoC_Map;
 
    // RISCY-OOO processor
-   Proc_IFC proc <- mkProc;
+   // TODO (when we do multicore): need resets for each core.
+   Proc_IFC proc <- mkProc (reset_by hart0_reset);
 
    // A 2x3 fabric for connecting {CPU, Debug_Module} to {Fabric, PLIC}
    Fabric_2x3_IFC  fabric_2x3 <- mkFabric_2x3;
@@ -108,13 +155,9 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
    // PLIC (Platform-Level Interrupt Controller)
    PLIC_IFC_16_2_7  plic <- mkPLIC_16_2_7;
 
-   // Reset requests from SoC and responses to SoC
-   FIFOF #(Bit #(0)) f_reset_reqs <- mkFIFOF;
-   FIFOF #(Bit #(0)) f_reset_rsps <- mkFIFOF;
-
 `ifdef INCLUDE_GDB_CONTROL
    // Debug Module
-   Debug_Module_IFC  debug_module <- mkDebug_Module;
+   Debug_Module_IFC  debug_module <- mkDebug_Module (reset_by dm_power_on_reset);
 `endif
 
 `ifdef INCLUDE_TANDEM_VERIF
@@ -127,97 +170,37 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
    TV_Encode_IFC tv_encode <- mkTV_Encode;
 `endif
 
-   // HTIF locations (for debugging only)
-   Reg #(Bit #(64)) rg_tohost_addr   <- mkReg (0);
-   Reg #(Bit #(64)) rg_fromhost_addr <- mkReg (0);
-
    // ================================================================
-   // RESET
-   // There are two sources of reset requests to the CPU: externally
-   // from the SoC and, optionally, the DM.  The SoC requires a
-   // response, the DM does not.  When both requestors are present
-   // (i.e., DM is present), we merge the reset requests into the CPU,
-   // and we remember which one was the requestor in
-   // f_reset_requestor, so that we know whether or not to respond to
-   // the SoC.
-
-   // TODO (multicore): currently the incoming 'init' token is from
-   // Debug Module's hart0_get_reset_req, but when we call
-   // proc.init_server here, we are resetting all the cores, i.e., all
-   // the harts.  Needs to be cleaned up.
-
-   Bit #(1) reset_requestor_dm  = 0;
-   Bit #(1) reset_requestor_soc = 1;
-`ifdef INCLUDE_GDB_CONTROL
-   FIFOF #(Bit #(1)) f_reset_requestor <- mkFIFOF;
-`endif
-
-   // Reset-hart0 request from SoC
-   rule rl_cpu_hart0_reset_from_soc_start;
-      let req <- pop (f_reset_reqs);
-
-      proc.init_server.request.put (?);     // CPU
-      plic.server_reset.request.put (?);    // PLIC
-      fabric_2x3.reset;                     // Local 2x3 Fabric
-`ifdef INCLUDE_TANDEM_VERIF
-      tv_encode.reset;
-`endif
+   // Hart-reset from DM
 
 `ifdef INCLUDE_GDB_CONTROL
-      // Remember the requestor, so we can respond to it
-      f_reset_requestor.enq (reset_requestor_soc);
-`endif
-      $display ("%0d: Core.rl_cpu_hart0_reset_from_soc_start (requestor %0d)", cur_cycle, reset_requestor_soc);
+   Reg #(Bit #(8))  rg_hart0_reset_delay <- mkReg (0);
+   Reg #(Bit #(64)) rg_tohost_addr       <- mkReg (0);
+   Reg #(Bit #(64)) rg_fromhost_addr     <- mkReg (0);
+
+   rule rl_dm_hart0_reset (rg_hart0_reset_delay == 0);
+      let x <- debug_module.hart0_reset_client.request.get;
+      dm_hart0_reset_controller.assertReset;
+      rg_hart0_reset_delay <= fromInteger (hart_reset_duration + 200);    // NOTE: heuristic
+
+      $display ("%0d: %m.rl_dm_hart0_reset: asserting hart0 reset for %0d cycles",
+		cur_cycle, hart_reset_duration);
    endrule
 
-`ifdef INCLUDE_GDB_CONTROL
-   // Reset-hart0 from Debug Module
-   rule rl_cpu_hart0_reset_from_dm_start;
-      let req <- debug_module.hart0_get_reset_req.get;
+   rule rl_dm_hart0_reset_wait (rg_hart0_reset_delay != 0);
+      if (rg_hart0_reset_delay == 1) begin
+	 let pc = soc_map_struct.pc_reset_value;
+	 proc.start (pc, rg_tohost_addr, rg_fromhost_addr);
 
-      proc.init_server.request.put (?);     // CPU
-      plic.server_reset.request.put (?);    // PLIC
-      fabric_2x3.reset;                     // Local 2x3 fabric
-`ifdef INCLUDE_TANDEM_VERIF
-      tv_encode.reset;
-`endif
-
-      // Remember the requestor, so we can respond to it
-      f_reset_requestor.enq (reset_requestor_dm);
-      $display ("%0d: Core.rl_cpu_hart0_reset_from_dm_start (requestor %0d)", cur_cycle, reset_requestor_dm);
-   endrule
-`endif
-
-   FIFOF #(Bit #(0)) f_proc_start <- mkFIFOF;
-
-   rule rl_cpu_hart0_reset_complete;
-      let rsp1 <- proc.init_server.response.get;     // CPU
-      let rsp3 <- plic.server_reset.response.get;    // PLIC
-
-      plic.set_addr_map (zeroExtend (soc_map.m_plic_addr_base),
-			 zeroExtend (soc_map.m_plic_addr_lim));
-
-      Bit #(1) requestor = reset_requestor_soc;
-`ifdef INCLUDE_GDB_CONTROL
-      requestor <- pop (f_reset_requestor);
-`endif
-      if (requestor == reset_requestor_soc)
-	 f_reset_rsps.enq (?);
-
-      // Start running the cores
-      f_proc_start.enq (?);
-
-      $display ("%0d: Core.rl_cpu_hart0_reset_complete; starting proc", cur_cycle);
+	 Bool is_running = True;
+	 debug_module.hart0_reset_client.response.put (is_running);
+	 $display ("%0d: %m.rl_dm_hart0_reset_wait: proc.start (pc %0h, tohostAddr %0h, fromhostAddr %0h",
+		   cur_cycle, pc, rg_tohost_addr, rg_fromhost_addr);
+      end
+      rg_hart0_reset_delay <= rg_hart0_reset_delay - 1;
    endrule
 
-   rule rl_cpu_hart0_reset_proc_start;
-      let x <- pop (f_proc_start);
-      proc.start (soc_map_struct.pc_reset_value,
-		  rg_tohost_addr,
-		  rg_fromhost_addr);
-      $display ("%0d: Core.rl_cpu_hart0_reset_proc_start; started running proc", cur_cycle);
-   endrule
-
+`endif
 
 `ifdef INCLUDE_GDB_CONTROL
    // ================================================================
@@ -359,13 +342,6 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
       // $display ("%0d: Core.rl_relay_external_interrupts: relaying: %d", cur_cycle, pack (x));
    endrule
 
-   // TODO: fixup.  Need to combine NMIs from multiple sources (cache, fabric, devices, ...)
-   rule rl_relay_non_maskable_interrupt;
-      proc.non_maskable_interrupt_req (False);
-
-      // $display ("%0d: Core.rl_relay_non_maskable_interrupts: relaying: %d", cur_cycle, pack (x));
-   endrule
-
    // ================================================================
    // INTERFACE
 
@@ -377,15 +353,25 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
       proc.set_verbosity (verbosity);
    endmethod
 
-   method Action  set_htif_addrs  (Bit #(64) tohost_addr, Bit #(64) fromhost_addr);
+   // ----------------------------------------------------------------
+   // Start
+
+   method Action start (Bit #(64) tohost_addr, Bit #(64) fromhost_addr);
+      plic.set_addr_map (zeroExtend (soc_map.m_plic_addr_base),
+			 zeroExtend (soc_map.m_plic_addr_lim));
+
+      let pc = soc_map_struct.pc_reset_value;
+      proc.start (pc, tohost_addr, fromhost_addr);
+
+`ifdef INCLUDE_GDB_CONTROL
+      // Save for potential future use by rl_dm_hart0_reset
       rg_tohost_addr   <= tohost_addr;
       rg_fromhost_addr <= fromhost_addr;
+`endif
+
+      $display ("%0d: %m.method start: proc.start (pc %0d, tohostAddr %0h, fromhostAddr %0h)",
+		cur_cycle, pc, tohost_addr, fromhost_addr);
    endmethod
-
-   // ----------------------------------------------------------------
-   // Soft reset
-
-   interface Server  cpu_reset_server = toGPServer (f_reset_reqs, f_reset_rsps);
 
    // ----------------------------------------------------------------
    // AXI4 Fabric interfaces
@@ -401,6 +387,14 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
 
    interface core_external_interrupt_sources = plic.v_sources;
 
+   // ----------------------------------------------------------------
+   // Non-maskable interrupt request
+
+   method Action nmi_req (Bool set_not_clear);
+      // TODO: fixup; passing const False for now
+      proc.non_maskable_interrupt_req (False);
+   endmethod
+
 `ifdef INCLUDE_GDB_CONTROL
    // ----------------------------------------------------------------
    // Optional DM interfaces
@@ -408,13 +402,13 @@ module mkCoreW (CoreW_IFC #(N_External_Interrupt_Sources));
    // ----------------
    // DMI (Debug Module Interface) facing remote debugger
 
-   interface DMI  dm_dmi = debug_module.dmi;
+   interface DMI dmi = debug_module.dmi;
 
    // ----------------
    // Facing Platform
 
    // Non-Debug-Module Reset (reset all except DM)
-   interface Get  dm_ndm_reset_req_get = debug_module.get_ndm_reset_req;
+   interface Client ndm_reset_client = debug_module.ndm_reset_client;
 `endif
 
 `ifdef INCLUDE_TANDEM_VERIF

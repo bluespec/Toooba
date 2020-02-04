@@ -3633,9 +3633,9 @@ module mkReorderBufferSynth(CLK,
        MUX_m_valid_1_23_dummy2_1$write_1__SEL_1,
        MUX_m_valid_1_23_dummy2_1$write_1__SEL_2,
        MUX_m_valid_1_23_dummy_1_0$wset_1__VAL_1,
+       MUX_m_valid_1_24_dummy2_1$write_1__SEL_1,
        MUX_m_valid_1_24_dummy2_1$write_1__SEL_2,
        MUX_m_valid_1_24_dummy_1_0$wset_1__VAL_1,
-       MUX_m_valid_1_24_lat_1$wset_1__SEL_1,
        MUX_m_valid_1_25_dummy2_1$write_1__SEL_1,
        MUX_m_valid_1_25_dummy2_1$write_1__SEL_2,
        MUX_m_valid_1_25_dummy_1_0$wset_1__VAL_1,
@@ -9238,12 +9238,12 @@ module mkReorderBufferSynth(CLK,
   assign MUX_m_valid_1_23_dummy2_1$write_1__SEL_2 =
 	     WILL_FIRE_RL_m_canon_enq && m_enqP_1 == 5'd23 &&
 	     SEL_ARR_m_enqEn_0_whas__20_m_enqEn_1_whas__21__ETC___d1420 ;
+  assign MUX_m_valid_1_24_dummy2_1$write_1__SEL_1 =
+	     EN_specUpdate_incorrectSpeculation &&
+	     (m_wrongSpecEn$wget[16] || m_row_1_24$dependsOn_wrongSpec) ;
   assign MUX_m_valid_1_24_dummy2_1$write_1__SEL_2 =
 	     WILL_FIRE_RL_m_canon_enq && m_enqP_1 == 5'd24 &&
 	     SEL_ARR_m_enqEn_0_whas__20_m_enqEn_1_whas__21__ETC___d1420 ;
-  assign MUX_m_valid_1_24_lat_1$wset_1__SEL_1 =
-	     EN_specUpdate_incorrectSpeculation &&
-	     (m_wrongSpecEn$wget[16] || m_row_1_24$dependsOn_wrongSpec) ;
   assign MUX_m_valid_1_25_dummy2_1$write_1__SEL_1 =
 	     EN_specUpdate_incorrectSpeculation &&
 	     (m_wrongSpecEn$wget[16] || m_row_1_25$dependsOn_wrongSpec) ;
@@ -10302,7 +10302,7 @@ module mkReorderBufferSynth(CLK,
   // register m_valid_1_24_rl
   assign m_valid_1_24_rl$D_IN =
 	     m_valid_1_24_lat_1$whas ?
-	       !MUX_m_valid_1_24_lat_1$wset_1__SEL_1 :
+	       !MUX_m_valid_1_24_dummy2_1$write_1__SEL_1 :
 	       !MUX_m_valid_1_24_dummy_1_0$wset_1__VAL_1 && m_valid_1_24_rl ;
   assign m_valid_1_24_rl$EN = 1'd1 ;
 

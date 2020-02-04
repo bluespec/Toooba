@@ -108,8 +108,7 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
 					     awregion: fabric_default_region,
 					     awuser:   fabric_default_user};
 
-	 let mem_req_wr_data = AXI4_Wr_Data {wid:    fabric_default_id,
-					     wdata:  st_val,
+	 let mem_req_wr_data = AXI4_Wr_Data {wdata:  st_val,
 					     wstrb:  strb,
 					     wlast:  True,
 					     wuser:  fabric_default_user};

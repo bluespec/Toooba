@@ -49,9 +49,6 @@ import SoC_Map :: *;
 // ================================================================
 
 interface CsrFile;
-   // Initialize to platform-level reset spec
-   method Action init;
-
     // Read
     method Data rd(CSR csr);
     // normal write by CSRXXX inst to any CSR
@@ -671,28 +668,6 @@ module mkCsrFile #(Data hartid)(CsrFile);
 
    // ================================================================
    // INTERFACE
-
-   method Action init;
-      // Note: we initialize only certain CSRs (platform-level spec)
-      // Current privilege
-      prv_reg <= prvM;
-
-      // Machine-level CSRs
-      mstatus_csr <= 0;
-      mie_csr <= 0;
-      mip_csr <= 0;
-      minstret_csr <= 0;
-      mcycle_csr <= 0;
-
-      // User-level CSRs
-      time_reg <= 0;
-
-`ifdef INCLUDE_GDB_CONTROL
-      // Debug Module CSRs
-      rg_dcsr <= zeroExtend (dcsr_reset_value);
-      rg_dpc  <= truncate (soc_map_struct.pc_reset_value);
-`endif
-   endmethod
 
     method Data rd(CSR csr);
         return get_csr(csr)._read;

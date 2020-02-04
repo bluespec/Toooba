@@ -7,9 +7,7 @@
 // Ports:
 // Name                         I/O  size props
 // RDY_set_verbosity              O     1 const
-// RDY_set_htif_addrs             O     1 const
-// RDY_cpu_reset_server_request_put  O     1 reg
-// RDY_cpu_reset_server_response_get  O     1 reg
+// RDY_start                      O     1
 // cpu_imem_master_awvalid        O     1
 // cpu_imem_master_awid           O     4 reg
 // cpu_imem_master_awaddr         O    64 reg
@@ -22,7 +20,6 @@
 // cpu_imem_master_awqos          O     4 reg
 // cpu_imem_master_awregion       O     4 reg
 // cpu_imem_master_wvalid         O     1
-// cpu_imem_master_wid            O     4 reg
 // cpu_imem_master_wdata          O    64 reg
 // cpu_imem_master_wstrb          O     8 reg
 // cpu_imem_master_wlast          O     1 reg
@@ -51,7 +48,6 @@
 // cpu_dmem_master_awqos          O     4 reg
 // cpu_dmem_master_awregion       O     4 reg
 // cpu_dmem_master_wvalid         O     1 reg
-// cpu_dmem_master_wid            O     4 reg
 // cpu_dmem_master_wdata          O    64 reg
 // cpu_dmem_master_wstrb          O     8 reg
 // cpu_dmem_master_wlast          O     1 reg
@@ -68,19 +64,22 @@
 // cpu_dmem_master_arqos          O     4 reg
 // cpu_dmem_master_arregion       O     4 reg
 // cpu_dmem_master_rready         O     1 reg
-// RDY_dm_dmi_read_addr           O     1
-// dm_dmi_read_data               O    32
-// RDY_dm_dmi_read_data           O     1
-// RDY_dm_dmi_write               O     1
-// RDY_dm_ndm_reset_req_get_get   O     1 reg
+// RDY_dmi_read_addr              O     1
+// dmi_read_data                  O    32
+// RDY_dmi_read_data              O     1
+// RDY_dmi_write                  O     1
+// ndm_reset_client_request_get   O     1 reg
+// RDY_ndm_reset_client_request_get  O     1 reg
+// RDY_ndm_reset_client_response_put  O     1 reg
 // tv_verifier_info_get_get       O   608 reg
 // RDY_tv_verifier_info_get_get   O     1 reg
+// RST_N_dm_power_on_reset        I     1 reset
 // CLK                            I     1 clock
 // RST_N                          I     1 reset
 // set_verbosity_verbosity        I     4
 // set_verbosity_logdelay         I    64 unused
-// set_htif_addrs_tohost_addr     I    64 reg
-// set_htif_addrs_fromhost_addr   I    64 reg
+// start_tohost_addr              I    64
+// start_fromhost_addr            I    64
 // cpu_imem_master_awready        I     1
 // cpu_imem_master_wready         I     1
 // cpu_imem_master_bvalid         I     1
@@ -119,26 +118,24 @@
 // core_external_interrupt_sources_13_m_interrupt_req_set_not_clear  I     1
 // core_external_interrupt_sources_14_m_interrupt_req_set_not_clear  I     1
 // core_external_interrupt_sources_15_m_interrupt_req_set_not_clear  I     1
-// debug_external_interrupt_req_set_not_clear  I     1
-// dm_dmi_read_addr_dm_addr       I     7
-// dm_dmi_write_dm_addr           I     7
-// dm_dmi_write_dm_word           I    32
+// nmi_req_set_not_clear          I     1 unused
+// dmi_read_addr_dm_addr          I     7
+// dmi_write_dm_addr              I     7
+// dmi_write_dm_word              I    32
+// ndm_reset_client_response_put  I     1 reg
 // EN_set_verbosity               I     1
-// EN_set_htif_addrs              I     1
-// EN_cpu_reset_server_request_put  I     1
-// EN_cpu_reset_server_response_get  I     1
-// EN_dm_dmi_read_addr            I     1
-// EN_dm_dmi_write                I     1
-// EN_dm_ndm_reset_req_get_get    I     1
-// EN_dm_dmi_read_data            I     1
+// EN_start                       I     1
+// EN_dmi_read_addr               I     1
+// EN_dmi_write                   I     1
+// EN_ndm_reset_client_response_put  I     1
+// EN_dmi_read_data               I     1
+// EN_ndm_reset_client_request_get  I     1
 // EN_tv_verifier_info_get_get    I     1
 //
 // Combinational paths from inputs to outputs:
 //   (cpu_imem_master_awready, cpu_imem_master_wready) -> cpu_imem_master_bready
-//   (dm_dmi_read_addr_dm_addr, EN_dm_dmi_read_addr) -> RDY_dm_dmi_read_data
-//   (dm_dmi_read_addr_dm_addr,
-//    EN_dm_dmi_read_addr,
-//    EN_dm_dmi_read_data) -> dm_dmi_read_data
+//   (dmi_read_addr_dm_addr, EN_dmi_read_addr) -> RDY_dmi_read_data
+//   (dmi_read_addr_dm_addr, EN_dmi_read_addr, EN_dmi_read_data) -> dmi_read_data
 //
 //
 
@@ -155,7 +152,8 @@
   `define BSV_RESET_EDGE negedge
 `endif
 
-module mkCoreW(CLK,
+module mkCoreW(RST_N_dm_power_on_reset,
+	       CLK,
 	       RST_N,
 
 	       set_verbosity_verbosity,
@@ -163,16 +161,10 @@ module mkCoreW(CLK,
 	       EN_set_verbosity,
 	       RDY_set_verbosity,
 
-	       set_htif_addrs_tohost_addr,
-	       set_htif_addrs_fromhost_addr,
-	       EN_set_htif_addrs,
-	       RDY_set_htif_addrs,
-
-	       EN_cpu_reset_server_request_put,
-	       RDY_cpu_reset_server_request_put,
-
-	       EN_cpu_reset_server_response_get,
-	       RDY_cpu_reset_server_response_get,
+	       start_tohost_addr,
+	       start_fromhost_addr,
+	       EN_start,
+	       RDY_start,
 
 	       cpu_imem_master_awvalid,
 
@@ -199,8 +191,6 @@ module mkCoreW(CLK,
 	       cpu_imem_master_awready,
 
 	       cpu_imem_master_wvalid,
-
-	       cpu_imem_master_wid,
 
 	       cpu_imem_master_wdata,
 
@@ -273,8 +263,6 @@ module mkCoreW(CLK,
 	       cpu_dmem_master_awready,
 
 	       cpu_dmem_master_wvalid,
-
-	       cpu_dmem_master_wid,
 
 	       cpu_dmem_master_wdata,
 
@@ -354,27 +342,33 @@ module mkCoreW(CLK,
 
 	       core_external_interrupt_sources_15_m_interrupt_req_set_not_clear,
 
-	       debug_external_interrupt_req_set_not_clear,
+	       nmi_req_set_not_clear,
 
-	       dm_dmi_read_addr_dm_addr,
-	       EN_dm_dmi_read_addr,
-	       RDY_dm_dmi_read_addr,
+	       dmi_read_addr_dm_addr,
+	       EN_dmi_read_addr,
+	       RDY_dmi_read_addr,
 
-	       EN_dm_dmi_read_data,
-	       dm_dmi_read_data,
-	       RDY_dm_dmi_read_data,
+	       EN_dmi_read_data,
+	       dmi_read_data,
+	       RDY_dmi_read_data,
 
-	       dm_dmi_write_dm_addr,
-	       dm_dmi_write_dm_word,
-	       EN_dm_dmi_write,
-	       RDY_dm_dmi_write,
+	       dmi_write_dm_addr,
+	       dmi_write_dm_word,
+	       EN_dmi_write,
+	       RDY_dmi_write,
 
-	       EN_dm_ndm_reset_req_get_get,
-	       RDY_dm_ndm_reset_req_get_get,
+	       EN_ndm_reset_client_request_get,
+	       ndm_reset_client_request_get,
+	       RDY_ndm_reset_client_request_get,
+
+	       ndm_reset_client_response_put,
+	       EN_ndm_reset_client_response_put,
+	       RDY_ndm_reset_client_response_put,
 
 	       EN_tv_verifier_info_get_get,
 	       tv_verifier_info_get_get,
 	       RDY_tv_verifier_info_get_get);
+  input  RST_N_dm_power_on_reset;
   input  CLK;
   input  RST_N;
 
@@ -384,19 +378,11 @@ module mkCoreW(CLK,
   input  EN_set_verbosity;
   output RDY_set_verbosity;
 
-  // action method set_htif_addrs
-  input  [63 : 0] set_htif_addrs_tohost_addr;
-  input  [63 : 0] set_htif_addrs_fromhost_addr;
-  input  EN_set_htif_addrs;
-  output RDY_set_htif_addrs;
-
-  // action method cpu_reset_server_request_put
-  input  EN_cpu_reset_server_request_put;
-  output RDY_cpu_reset_server_request_put;
-
-  // action method cpu_reset_server_response_get
-  input  EN_cpu_reset_server_response_get;
-  output RDY_cpu_reset_server_response_get;
+  // action method start
+  input  [63 : 0] start_tohost_addr;
+  input  [63 : 0] start_fromhost_addr;
+  input  EN_start;
+  output RDY_start;
 
   // value method cpu_imem_master_m_awvalid
   output cpu_imem_master_awvalid;
@@ -438,9 +424,6 @@ module mkCoreW(CLK,
 
   // value method cpu_imem_master_m_wvalid
   output cpu_imem_master_wvalid;
-
-  // value method cpu_imem_master_m_wid
-  output [3 : 0] cpu_imem_master_wid;
 
   // value method cpu_imem_master_m_wdata
   output [63 : 0] cpu_imem_master_wdata;
@@ -552,9 +535,6 @@ module mkCoreW(CLK,
 
   // value method cpu_dmem_master_m_wvalid
   output cpu_dmem_master_wvalid;
-
-  // value method cpu_dmem_master_m_wid
-  output [3 : 0] cpu_dmem_master_wid;
 
   // value method cpu_dmem_master_m_wdata
   output [63 : 0] cpu_dmem_master_wdata;
@@ -674,28 +654,34 @@ module mkCoreW(CLK,
   // action method core_external_interrupt_sources_15_m_interrupt_req
   input  core_external_interrupt_sources_15_m_interrupt_req_set_not_clear;
 
-  // action method debug_external_interrupt_req
-  input  debug_external_interrupt_req_set_not_clear;
+  // action method nmi_req
+  input  nmi_req_set_not_clear;
 
-  // action method dm_dmi_read_addr
-  input  [6 : 0] dm_dmi_read_addr_dm_addr;
-  input  EN_dm_dmi_read_addr;
-  output RDY_dm_dmi_read_addr;
+  // action method dmi_read_addr
+  input  [6 : 0] dmi_read_addr_dm_addr;
+  input  EN_dmi_read_addr;
+  output RDY_dmi_read_addr;
 
-  // actionvalue method dm_dmi_read_data
-  input  EN_dm_dmi_read_data;
-  output [31 : 0] dm_dmi_read_data;
-  output RDY_dm_dmi_read_data;
+  // actionvalue method dmi_read_data
+  input  EN_dmi_read_data;
+  output [31 : 0] dmi_read_data;
+  output RDY_dmi_read_data;
 
-  // action method dm_dmi_write
-  input  [6 : 0] dm_dmi_write_dm_addr;
-  input  [31 : 0] dm_dmi_write_dm_word;
-  input  EN_dm_dmi_write;
-  output RDY_dm_dmi_write;
+  // action method dmi_write
+  input  [6 : 0] dmi_write_dm_addr;
+  input  [31 : 0] dmi_write_dm_word;
+  input  EN_dmi_write;
+  output RDY_dmi_write;
 
-  // action method dm_ndm_reset_req_get_get
-  input  EN_dm_ndm_reset_req_get_get;
-  output RDY_dm_ndm_reset_req_get_get;
+  // actionvalue method ndm_reset_client_request_get
+  input  EN_ndm_reset_client_request_get;
+  output ndm_reset_client_request_get;
+  output RDY_ndm_reset_client_request_get;
+
+  // action method ndm_reset_client_response_put
+  input  ndm_reset_client_response_put;
+  input  EN_ndm_reset_client_response_put;
+  output RDY_ndm_reset_client_response_put;
 
   // actionvalue method tv_verifier_info_get_get
   input  EN_tv_verifier_info_get_get;
@@ -710,7 +696,7 @@ module mkCoreW(CLK,
 		cpu_imem_master_araddr,
 		cpu_imem_master_awaddr,
 		cpu_imem_master_wdata;
-  wire [31 : 0] dm_dmi_read_data;
+  wire [31 : 0] dmi_read_data;
   wire [7 : 0] cpu_dmem_master_arlen,
 	       cpu_dmem_master_awlen,
 	       cpu_dmem_master_wstrb,
@@ -725,7 +711,6 @@ module mkCoreW(CLK,
 	       cpu_dmem_master_awid,
 	       cpu_dmem_master_awqos,
 	       cpu_dmem_master_awregion,
-	       cpu_dmem_master_wid,
 	       cpu_imem_master_arcache,
 	       cpu_imem_master_arid,
 	       cpu_imem_master_arqos,
@@ -733,8 +718,7 @@ module mkCoreW(CLK,
 	       cpu_imem_master_awcache,
 	       cpu_imem_master_awid,
 	       cpu_imem_master_awqos,
-	       cpu_imem_master_awregion,
-	       cpu_imem_master_wid;
+	       cpu_imem_master_awregion;
   wire [2 : 0] cpu_dmem_master_arprot,
 	       cpu_dmem_master_arsize,
 	       cpu_dmem_master_awprot,
@@ -747,14 +731,13 @@ module mkCoreW(CLK,
 	       cpu_dmem_master_awburst,
 	       cpu_imem_master_arburst,
 	       cpu_imem_master_awburst;
-  wire RDY_cpu_reset_server_request_put,
-       RDY_cpu_reset_server_response_get,
-       RDY_dm_dmi_read_addr,
-       RDY_dm_dmi_read_data,
-       RDY_dm_dmi_write,
-       RDY_dm_ndm_reset_req_get_get,
-       RDY_set_htif_addrs,
+  wire RDY_dmi_read_addr,
+       RDY_dmi_read_data,
+       RDY_dmi_write,
+       RDY_ndm_reset_client_request_get,
+       RDY_ndm_reset_client_response_put,
        RDY_set_verbosity,
+       RDY_start,
        RDY_tv_verifier_info_get_get,
        cpu_dmem_master_arlock,
        cpu_dmem_master_arvalid,
@@ -771,12 +754,18 @@ module mkCoreW(CLK,
        cpu_imem_master_bready,
        cpu_imem_master_rready,
        cpu_imem_master_wlast,
-       cpu_imem_master_wvalid;
+       cpu_imem_master_wvalid,
+       ndm_reset_client_request_get;
 
   // register rg_fromhost_addr
   reg [63 : 0] rg_fromhost_addr;
   wire [63 : 0] rg_fromhost_addr$D_IN;
   wire rg_fromhost_addr$EN;
+
+  // register rg_hart0_reset_delay
+  reg [7 : 0] rg_hart0_reset_delay;
+  wire [7 : 0] rg_hart0_reset_delay$D_IN;
+  wire rg_hart0_reset_delay$EN;
 
   // register rg_tohost_addr
   reg [63 : 0] rg_tohost_addr;
@@ -809,8 +798,7 @@ module mkCoreW(CLK,
 	       debug_module$master_awqos,
 	       debug_module$master_awregion,
 	       debug_module$master_bid,
-	       debug_module$master_rid,
-	       debug_module$master_wid;
+	       debug_module$master_rid;
   wire [2 : 0] debug_module$master_arprot,
 	       debug_module$master_arsize,
 	       debug_module$master_awprot,
@@ -822,7 +810,6 @@ module mkCoreW(CLK,
   wire debug_module$EN_dmi_read_addr,
        debug_module$EN_dmi_read_data,
        debug_module$EN_dmi_write,
-       debug_module$EN_get_ndm_reset_req_get,
        debug_module$EN_hart0_client_run_halt_request_get,
        debug_module$EN_hart0_client_run_halt_response_put,
        debug_module$EN_hart0_csr_mem_client_request_get,
@@ -830,23 +817,29 @@ module mkCoreW(CLK,
        debug_module$EN_hart0_fpr_mem_client_request_get,
        debug_module$EN_hart0_fpr_mem_client_response_put,
        debug_module$EN_hart0_get_other_req_get,
-       debug_module$EN_hart0_get_reset_req_get,
        debug_module$EN_hart0_gpr_mem_client_request_get,
        debug_module$EN_hart0_gpr_mem_client_response_put,
+       debug_module$EN_hart0_reset_client_request_get,
+       debug_module$EN_hart0_reset_client_response_put,
+       debug_module$EN_ndm_reset_client_request_get,
+       debug_module$EN_ndm_reset_client_response_put,
        debug_module$RDY_dmi_read_addr,
        debug_module$RDY_dmi_read_data,
        debug_module$RDY_dmi_write,
-       debug_module$RDY_get_ndm_reset_req_get,
        debug_module$RDY_hart0_client_run_halt_request_get,
        debug_module$RDY_hart0_client_run_halt_response_put,
        debug_module$RDY_hart0_csr_mem_client_request_get,
        debug_module$RDY_hart0_csr_mem_client_response_put,
        debug_module$RDY_hart0_get_other_req_get,
-       debug_module$RDY_hart0_get_reset_req_get,
        debug_module$RDY_hart0_gpr_mem_client_request_get,
        debug_module$RDY_hart0_gpr_mem_client_response_put,
+       debug_module$RDY_hart0_reset_client_request_get,
+       debug_module$RDY_hart0_reset_client_response_put,
+       debug_module$RDY_ndm_reset_client_request_get,
+       debug_module$RDY_ndm_reset_client_response_put,
        debug_module$hart0_client_run_halt_request_get,
        debug_module$hart0_client_run_halt_response_put,
+       debug_module$hart0_reset_client_response_put,
        debug_module$master_arlock,
        debug_module$master_arready,
        debug_module$master_arvalid,
@@ -860,7 +853,9 @@ module mkCoreW(CLK,
        debug_module$master_rvalid,
        debug_module$master_wlast,
        debug_module$master_wready,
-       debug_module$master_wvalid;
+       debug_module$master_wvalid,
+       debug_module$ndm_reset_client_request_get,
+       debug_module$ndm_reset_client_response_put;
 
   // ports of submodule dm_csr_tap
   wire [426 : 0] dm_csr_tap$trace_data_out_get;
@@ -895,6 +890,9 @@ module mkCoreW(CLK,
        dm_gpr_tap_ifc$RDY_server_response_get,
        dm_gpr_tap_ifc$RDY_trace_data_out_get;
 
+  // ports of submodule dm_hart0_reset_controller
+  wire dm_hart0_reset_controller$ASSERT_IN, dm_hart0_reset_controller$OUT_RST;
+
   // ports of submodule dm_mem_tap
   wire [426 : 0] dm_mem_tap$trace_data_out_get;
   wire [63 : 0] dm_mem_tap$master_araddr,
@@ -921,7 +919,6 @@ module mkCoreW(CLK,
 	       dm_mem_tap$master_awregion,
 	       dm_mem_tap$master_bid,
 	       dm_mem_tap$master_rid,
-	       dm_mem_tap$master_wid,
 	       dm_mem_tap$slave_arcache,
 	       dm_mem_tap$slave_arid,
 	       dm_mem_tap$slave_arqos,
@@ -931,8 +928,7 @@ module mkCoreW(CLK,
 	       dm_mem_tap$slave_awqos,
 	       dm_mem_tap$slave_awregion,
 	       dm_mem_tap$slave_bid,
-	       dm_mem_tap$slave_rid,
-	       dm_mem_tap$slave_wid;
+	       dm_mem_tap$slave_rid;
   wire [2 : 0] dm_mem_tap$master_arprot,
 	       dm_mem_tap$master_arsize,
 	       dm_mem_tap$master_awprot,
@@ -979,29 +975,6 @@ module mkCoreW(CLK,
        dm_mem_tap$slave_wlast,
        dm_mem_tap$slave_wready,
        dm_mem_tap$slave_wvalid;
-
-  // ports of submodule f_reset_reqs
-  wire f_reset_reqs$CLR,
-       f_reset_reqs$DEQ,
-       f_reset_reqs$EMPTY_N,
-       f_reset_reqs$ENQ,
-       f_reset_reqs$FULL_N;
-
-  // ports of submodule f_reset_requestor
-  wire f_reset_requestor$CLR,
-       f_reset_requestor$DEQ,
-       f_reset_requestor$D_IN,
-       f_reset_requestor$D_OUT,
-       f_reset_requestor$EMPTY_N,
-       f_reset_requestor$ENQ,
-       f_reset_requestor$FULL_N;
-
-  // ports of submodule f_reset_rsps
-  wire f_reset_rsps$CLR,
-       f_reset_rsps$DEQ,
-       f_reset_rsps$EMPTY_N,
-       f_reset_rsps$ENQ,
-       f_reset_rsps$FULL_N;
 
   // ports of submodule fabric_2x3
   wire [63 : 0] fabric_2x3$v_from_masters_0_araddr,
@@ -1050,7 +1023,6 @@ module mkCoreW(CLK,
 	       fabric_2x3$v_from_masters_0_awregion,
 	       fabric_2x3$v_from_masters_0_bid,
 	       fabric_2x3$v_from_masters_0_rid,
-	       fabric_2x3$v_from_masters_0_wid,
 	       fabric_2x3$v_from_masters_1_arcache,
 	       fabric_2x3$v_from_masters_1_arid,
 	       fabric_2x3$v_from_masters_1_arqos,
@@ -1061,7 +1033,6 @@ module mkCoreW(CLK,
 	       fabric_2x3$v_from_masters_1_awregion,
 	       fabric_2x3$v_from_masters_1_bid,
 	       fabric_2x3$v_from_masters_1_rid,
-	       fabric_2x3$v_from_masters_1_wid,
 	       fabric_2x3$v_to_slaves_0_arcache,
 	       fabric_2x3$v_to_slaves_0_arid,
 	       fabric_2x3$v_to_slaves_0_arqos,
@@ -1072,7 +1043,6 @@ module mkCoreW(CLK,
 	       fabric_2x3$v_to_slaves_0_awregion,
 	       fabric_2x3$v_to_slaves_0_bid,
 	       fabric_2x3$v_to_slaves_0_rid,
-	       fabric_2x3$v_to_slaves_0_wid,
 	       fabric_2x3$v_to_slaves_1_arcache,
 	       fabric_2x3$v_to_slaves_1_arid,
 	       fabric_2x3$v_to_slaves_1_arqos,
@@ -1083,7 +1053,6 @@ module mkCoreW(CLK,
 	       fabric_2x3$v_to_slaves_1_awregion,
 	       fabric_2x3$v_to_slaves_1_bid,
 	       fabric_2x3$v_to_slaves_1_rid,
-	       fabric_2x3$v_to_slaves_1_wid,
 	       fabric_2x3$v_to_slaves_2_arcache,
 	       fabric_2x3$v_to_slaves_2_arid,
 	       fabric_2x3$v_to_slaves_2_arqos,
@@ -1093,8 +1062,7 @@ module mkCoreW(CLK,
 	       fabric_2x3$v_to_slaves_2_awqos,
 	       fabric_2x3$v_to_slaves_2_awregion,
 	       fabric_2x3$v_to_slaves_2_bid,
-	       fabric_2x3$v_to_slaves_2_rid,
-	       fabric_2x3$v_to_slaves_2_wid;
+	       fabric_2x3$v_to_slaves_2_rid;
   wire [2 : 0] fabric_2x3$v_from_masters_0_arprot,
 	       fabric_2x3$v_from_masters_0_arsize,
 	       fabric_2x3$v_from_masters_0_awprot,
@@ -1137,7 +1105,6 @@ module mkCoreW(CLK,
 	       fabric_2x3$v_to_slaves_2_rresp;
   wire fabric_2x3$EN_reset,
        fabric_2x3$EN_set_verbosity,
-       fabric_2x3$RDY_reset,
        fabric_2x3$v_from_masters_0_arlock,
        fabric_2x3$v_from_masters_0_arready,
        fabric_2x3$v_from_masters_0_arvalid,
@@ -1209,6 +1176,9 @@ module mkCoreW(CLK,
        fabric_2x3$v_to_slaves_2_wready,
        fabric_2x3$v_to_slaves_2_wvalid;
 
+  // ports of submodule hart0_reset
+  wire hart0_reset$RST_OUT;
+
   // ports of submodule plic
   wire [63 : 0] plic$axi4_slave_araddr,
 		plic$axi4_slave_awaddr,
@@ -1229,7 +1199,6 @@ module mkCoreW(CLK,
 	       plic$axi4_slave_awregion,
 	       plic$axi4_slave_bid,
 	       plic$axi4_slave_rid,
-	       plic$axi4_slave_wid,
 	       plic$set_verbosity_verbosity;
   wire [2 : 0] plic$axi4_slave_arprot,
 	       plic$axi4_slave_arsize,
@@ -1244,8 +1213,6 @@ module mkCoreW(CLK,
        plic$EN_set_addr_map,
        plic$EN_set_verbosity,
        plic$EN_show_PLIC_state,
-       plic$RDY_server_reset_request_put,
-       plic$RDY_server_reset_response_get,
        plic$axi4_slave_arlock,
        plic$axi4_slave_arready,
        plic$axi4_slave_arvalid,
@@ -1320,7 +1287,6 @@ module mkCoreW(CLK,
 	       proc$debug_module_mem_server_awregion,
 	       proc$debug_module_mem_server_bid,
 	       proc$debug_module_mem_server_rid,
-	       proc$debug_module_mem_server_wid,
 	       proc$hart0_put_other_req_put,
 	       proc$master0_arcache,
 	       proc$master0_arid,
@@ -1332,7 +1298,6 @@ module mkCoreW(CLK,
 	       proc$master0_awregion,
 	       proc$master0_bid,
 	       proc$master0_rid,
-	       proc$master0_wid,
 	       proc$master1_arcache,
 	       proc$master1_arid,
 	       proc$master1_arqos,
@@ -1343,7 +1308,6 @@ module mkCoreW(CLK,
 	       proc$master1_awregion,
 	       proc$master1_bid,
 	       proc$master1_rid,
-	       proc$master1_wid,
 	       proc$set_verbosity_verbosity;
   wire [2 : 0] proc$debug_module_mem_server_arprot,
 	       proc$debug_module_mem_server_arsize,
@@ -1378,8 +1342,6 @@ module mkCoreW(CLK,
        proc$EN_hart0_put_other_req_put,
        proc$EN_hart0_run_halt_server_request_put,
        proc$EN_hart0_run_halt_server_response_get,
-       proc$EN_hart0_server_reset_request_put,
-       proc$EN_hart0_server_reset_response_get,
        proc$EN_set_verbosity,
        proc$EN_start,
        proc$EN_v_to_TV_0_get,
@@ -1390,12 +1352,9 @@ module mkCoreW(CLK,
        proc$RDY_hart0_gpr_mem_server_response_get,
        proc$RDY_hart0_run_halt_server_request_put,
        proc$RDY_hart0_run_halt_server_response_get,
-       proc$RDY_hart0_server_reset_request_put,
-       proc$RDY_hart0_server_reset_response_get,
        proc$RDY_start,
        proc$RDY_v_to_TV_0_get,
        proc$RDY_v_to_TV_1_get,
-       proc$debug_external_interrupt_req_set_not_clear,
        proc$debug_module_mem_server_arlock,
        proc$debug_module_mem_server_arready,
        proc$debug_module_mem_server_arvalid,
@@ -1462,7 +1421,6 @@ module mkCoreW(CLK,
        tv_encode$EN_v_cpu_in_1_put,
        tv_encode$RDY_dm_in_put,
        tv_encode$RDY_out_get,
-       tv_encode$RDY_reset,
        tv_encode$RDY_v_cpu_in_0_put,
        tv_encode$RDY_v_cpu_in_1_put;
 
@@ -1514,9 +1472,8 @@ module mkCoreW(CLK,
        CAN_FIRE_RL_mkConnectionGetPut_2,
        CAN_FIRE_RL_mkConnectionGetPut_3,
        CAN_FIRE_RL_mkConnectionGetPut_4,
-       CAN_FIRE_RL_rl_cpu_hart0_reset_complete,
-       CAN_FIRE_RL_rl_cpu_hart0_reset_from_dm_start,
-       CAN_FIRE_RL_rl_cpu_hart0_reset_from_soc_start,
+       CAN_FIRE_RL_rl_dm_hart0_reset,
+       CAN_FIRE_RL_rl_dm_hart0_reset_wait,
        CAN_FIRE_RL_rl_merge_dm_csr_trace_data,
        CAN_FIRE_RL_rl_merge_dm_gpr_trace_data,
        CAN_FIRE_RL_rl_merge_dm_mem_trace_data,
@@ -1531,7 +1488,6 @@ module mkCoreW(CLK,
        CAN_FIRE_RL_rl_rd_data_channel_3,
        CAN_FIRE_RL_rl_rd_data_channel_4,
        CAN_FIRE_RL_rl_relay_external_interrupts,
-       CAN_FIRE_RL_rl_relay_non_maskable_interrupt,
        CAN_FIRE_RL_rl_wr_addr_channel,
        CAN_FIRE_RL_rl_wr_addr_channel_1,
        CAN_FIRE_RL_rl_wr_addr_channel_2,
@@ -1575,15 +1531,14 @@ module mkCoreW(CLK,
        CAN_FIRE_cpu_imem_master_m_bvalid,
        CAN_FIRE_cpu_imem_master_m_rvalid,
        CAN_FIRE_cpu_imem_master_m_wready,
-       CAN_FIRE_cpu_reset_server_request_put,
-       CAN_FIRE_cpu_reset_server_response_get,
-       CAN_FIRE_debug_external_interrupt_req,
-       CAN_FIRE_dm_dmi_read_addr,
-       CAN_FIRE_dm_dmi_read_data,
-       CAN_FIRE_dm_dmi_write,
-       CAN_FIRE_dm_ndm_reset_req_get_get,
-       CAN_FIRE_set_htif_addrs,
+       CAN_FIRE_dmi_read_addr,
+       CAN_FIRE_dmi_read_data,
+       CAN_FIRE_dmi_write,
+       CAN_FIRE_ndm_reset_client_request_get,
+       CAN_FIRE_ndm_reset_client_response_put,
+       CAN_FIRE_nmi_req,
        CAN_FIRE_set_verbosity,
+       CAN_FIRE_start,
        CAN_FIRE_tv_verifier_info_get_get,
        WILL_FIRE_RL_ClientServerRequest,
        WILL_FIRE_RL_ClientServerRequest_1,
@@ -1600,9 +1555,8 @@ module mkCoreW(CLK,
        WILL_FIRE_RL_mkConnectionGetPut_2,
        WILL_FIRE_RL_mkConnectionGetPut_3,
        WILL_FIRE_RL_mkConnectionGetPut_4,
-       WILL_FIRE_RL_rl_cpu_hart0_reset_complete,
-       WILL_FIRE_RL_rl_cpu_hart0_reset_from_dm_start,
-       WILL_FIRE_RL_rl_cpu_hart0_reset_from_soc_start,
+       WILL_FIRE_RL_rl_dm_hart0_reset,
+       WILL_FIRE_RL_rl_dm_hart0_reset_wait,
        WILL_FIRE_RL_rl_merge_dm_csr_trace_data,
        WILL_FIRE_RL_rl_merge_dm_gpr_trace_data,
        WILL_FIRE_RL_rl_merge_dm_mem_trace_data,
@@ -1617,7 +1571,6 @@ module mkCoreW(CLK,
        WILL_FIRE_RL_rl_rd_data_channel_3,
        WILL_FIRE_RL_rl_rd_data_channel_4,
        WILL_FIRE_RL_rl_relay_external_interrupts,
-       WILL_FIRE_RL_rl_relay_non_maskable_interrupt,
        WILL_FIRE_RL_rl_wr_addr_channel,
        WILL_FIRE_RL_rl_wr_addr_channel_1,
        WILL_FIRE_RL_rl_wr_addr_channel_2,
@@ -1661,64 +1614,54 @@ module mkCoreW(CLK,
        WILL_FIRE_cpu_imem_master_m_bvalid,
        WILL_FIRE_cpu_imem_master_m_rvalid,
        WILL_FIRE_cpu_imem_master_m_wready,
-       WILL_FIRE_cpu_reset_server_request_put,
-       WILL_FIRE_cpu_reset_server_response_get,
-       WILL_FIRE_debug_external_interrupt_req,
-       WILL_FIRE_dm_dmi_read_addr,
-       WILL_FIRE_dm_dmi_read_data,
-       WILL_FIRE_dm_dmi_write,
-       WILL_FIRE_dm_ndm_reset_req_get_get,
-       WILL_FIRE_set_htif_addrs,
+       WILL_FIRE_dmi_read_addr,
+       WILL_FIRE_dmi_read_data,
+       WILL_FIRE_dmi_write,
+       WILL_FIRE_ndm_reset_client_request_get,
+       WILL_FIRE_ndm_reset_client_response_put,
+       WILL_FIRE_nmi_req,
        WILL_FIRE_set_verbosity,
+       WILL_FIRE_start,
        WILL_FIRE_tv_verifier_info_get_get;
+
+  // inputs to muxes for submodule ports
+  wire [7 : 0] MUX_rg_hart0_reset_delay$write_1__VAL_1;
+  wire MUX_proc$start_1__SEL_1;
 
   // declarations used by system tasks
   // synopsys translate_off
-  reg [31 : 0] v__h7205;
-  reg [31 : 0] v__h7403;
-  reg [31 : 0] v__h7674;
-  reg [31 : 0] v__h7199;
-  reg [31 : 0] v__h7397;
-  reg [31 : 0] v__h7668;
+  reg [31 : 0] v__h6860;
+  reg [31 : 0] v__h7003;
+  reg [31 : 0] v__h15013;
+  reg [31 : 0] v__h6854;
+  reg [31 : 0] v__h6997;
+  reg [31 : 0] v__h15007;
   // synopsys translate_on
 
   // remaining internal signals
-  reg [63 : 0] x__h5725, x__h6650;
+  reg [63 : 0] x__h5570, x__h6495;
   reg [11 : 0] CASE_procv_to_TV_0_get_BITS_153_TO_142_1_proc_ETC__q1,
-	       CASE_procv_to_TV_1_get_BITS_153_TO_142_1_proc_ETC__q5;
-  reg [4 : 0] CASE_v_td2_to_td_0_f_inD_OUT_BITS_159_TO_155__ETC__q9,
+	       CASE_procv_to_TV_1_get_BITS_153_TO_142_1_proc_ETC__q6;
+  reg [4 : 0] CASE_v_td2_to_td_0_f_inD_OUT_BITS_159_TO_155__ETC__q5,
 	      CASE_v_td2_to_td_1_f_inD_OUT_BITS_159_TO_155__ETC__q10,
-	      x1_avValue_rd__h5432,
-	      x1_avValue_rd__h6363;
+	      x1_avValue_rd__h5277,
+	      x1_avValue_rd__h6208;
   reg [3 : 0] CASE_procv_to_TV_0_get_BITS_139_TO_136_0_proc_ETC__q2,
 	      CASE_procv_to_TV_0_get_BITS_139_TO_136_0_proc_ETC__q3,
-	      CASE_procv_to_TV_1_get_BITS_139_TO_136_0_proc_ETC__q6,
-	      CASE_procv_to_TV_1_get_BITS_139_TO_136_0_proc_ETC__q7;
+	      CASE_procv_to_TV_1_get_BITS_139_TO_136_0_proc_ETC__q7,
+	      CASE_procv_to_TV_1_get_BITS_139_TO_136_0_proc_ETC__q8;
   reg [1 : 0] CASE_procv_to_TV_0_get_BITS_71_TO_70_0_procv_ETC__q4,
-	      CASE_procv_to_TV_1_get_BITS_71_TO_70_0_procv_ETC__q8;
-  wire tv_encode_RDY_reset__07_AND_proc_RDY_hart0_ser_ETC___d113;
+	      CASE_procv_to_TV_1_get_BITS_71_TO_70_0_procv_ETC__q9;
 
   // action method set_verbosity
   assign RDY_set_verbosity = 1'd1 ;
   assign CAN_FIRE_set_verbosity = 1'd1 ;
   assign WILL_FIRE_set_verbosity = EN_set_verbosity ;
 
-  // action method set_htif_addrs
-  assign RDY_set_htif_addrs = 1'd1 ;
-  assign CAN_FIRE_set_htif_addrs = 1'd1 ;
-  assign WILL_FIRE_set_htif_addrs = EN_set_htif_addrs ;
-
-  // action method cpu_reset_server_request_put
-  assign RDY_cpu_reset_server_request_put = f_reset_reqs$FULL_N ;
-  assign CAN_FIRE_cpu_reset_server_request_put = f_reset_reqs$FULL_N ;
-  assign WILL_FIRE_cpu_reset_server_request_put =
-	     EN_cpu_reset_server_request_put ;
-
-  // action method cpu_reset_server_response_get
-  assign RDY_cpu_reset_server_response_get = f_reset_rsps$EMPTY_N ;
-  assign CAN_FIRE_cpu_reset_server_response_get = f_reset_rsps$EMPTY_N ;
-  assign WILL_FIRE_cpu_reset_server_response_get =
-	     EN_cpu_reset_server_response_get ;
+  // action method start
+  assign RDY_start = proc$RDY_start ;
+  assign CAN_FIRE_start = proc$RDY_start ;
+  assign WILL_FIRE_start = EN_start ;
 
   // value method cpu_imem_master_m_awvalid
   assign cpu_imem_master_awvalid = proc$master0_awvalid ;
@@ -1759,9 +1702,6 @@ module mkCoreW(CLK,
 
   // value method cpu_imem_master_m_wvalid
   assign cpu_imem_master_wvalid = proc$master0_wvalid ;
-
-  // value method cpu_imem_master_m_wid
-  assign cpu_imem_master_wid = proc$master0_wid ;
 
   // value method cpu_imem_master_m_wdata
   assign cpu_imem_master_wdata = proc$master0_wdata ;
@@ -1866,9 +1806,6 @@ module mkCoreW(CLK,
 
   // value method cpu_dmem_master_m_wvalid
   assign cpu_dmem_master_wvalid = fabric_2x3$v_to_slaves_0_wvalid ;
-
-  // value method cpu_dmem_master_m_wid
-  assign cpu_dmem_master_wid = fabric_2x3$v_to_slaves_0_wid ;
 
   // value method cpu_dmem_master_m_wdata
   assign cpu_dmem_master_wdata = fabric_2x3$v_to_slaves_0_wdata ;
@@ -1998,32 +1935,43 @@ module mkCoreW(CLK,
   assign CAN_FIRE_core_external_interrupt_sources_15_m_interrupt_req = 1'd1 ;
   assign WILL_FIRE_core_external_interrupt_sources_15_m_interrupt_req = 1'd1 ;
 
-  // action method debug_external_interrupt_req
-  assign CAN_FIRE_debug_external_interrupt_req = 1'd1 ;
-  assign WILL_FIRE_debug_external_interrupt_req = 1'd1 ;
+  // action method nmi_req
+  assign CAN_FIRE_nmi_req = 1'd1 ;
+  assign WILL_FIRE_nmi_req = 1'd1 ;
 
-  // action method dm_dmi_read_addr
-  assign RDY_dm_dmi_read_addr = debug_module$RDY_dmi_read_addr ;
-  assign CAN_FIRE_dm_dmi_read_addr = debug_module$RDY_dmi_read_addr ;
-  assign WILL_FIRE_dm_dmi_read_addr = EN_dm_dmi_read_addr ;
+  // action method dmi_read_addr
+  assign RDY_dmi_read_addr = debug_module$RDY_dmi_read_addr ;
+  assign CAN_FIRE_dmi_read_addr = debug_module$RDY_dmi_read_addr ;
+  assign WILL_FIRE_dmi_read_addr = EN_dmi_read_addr ;
 
-  // actionvalue method dm_dmi_read_data
-  assign dm_dmi_read_data = debug_module$dmi_read_data ;
-  assign RDY_dm_dmi_read_data = debug_module$RDY_dmi_read_data ;
-  assign CAN_FIRE_dm_dmi_read_data = debug_module$RDY_dmi_read_data ;
-  assign WILL_FIRE_dm_dmi_read_data = EN_dm_dmi_read_data ;
+  // actionvalue method dmi_read_data
+  assign dmi_read_data = debug_module$dmi_read_data ;
+  assign RDY_dmi_read_data = debug_module$RDY_dmi_read_data ;
+  assign CAN_FIRE_dmi_read_data = debug_module$RDY_dmi_read_data ;
+  assign WILL_FIRE_dmi_read_data = EN_dmi_read_data ;
 
-  // action method dm_dmi_write
-  assign RDY_dm_dmi_write = debug_module$RDY_dmi_write ;
-  assign CAN_FIRE_dm_dmi_write = debug_module$RDY_dmi_write ;
-  assign WILL_FIRE_dm_dmi_write = EN_dm_dmi_write ;
+  // action method dmi_write
+  assign RDY_dmi_write = debug_module$RDY_dmi_write ;
+  assign CAN_FIRE_dmi_write = debug_module$RDY_dmi_write ;
+  assign WILL_FIRE_dmi_write = EN_dmi_write ;
 
-  // action method dm_ndm_reset_req_get_get
-  assign RDY_dm_ndm_reset_req_get_get =
-	     debug_module$RDY_get_ndm_reset_req_get ;
-  assign CAN_FIRE_dm_ndm_reset_req_get_get =
-	     debug_module$RDY_get_ndm_reset_req_get ;
-  assign WILL_FIRE_dm_ndm_reset_req_get_get = EN_dm_ndm_reset_req_get_get ;
+  // actionvalue method ndm_reset_client_request_get
+  assign ndm_reset_client_request_get =
+	     debug_module$ndm_reset_client_request_get ;
+  assign RDY_ndm_reset_client_request_get =
+	     debug_module$RDY_ndm_reset_client_request_get ;
+  assign CAN_FIRE_ndm_reset_client_request_get =
+	     debug_module$RDY_ndm_reset_client_request_get ;
+  assign WILL_FIRE_ndm_reset_client_request_get =
+	     EN_ndm_reset_client_request_get ;
+
+  // action method ndm_reset_client_response_put
+  assign RDY_ndm_reset_client_response_put =
+	     debug_module$RDY_ndm_reset_client_response_put ;
+  assign CAN_FIRE_ndm_reset_client_response_put =
+	     debug_module$RDY_ndm_reset_client_response_put ;
+  assign WILL_FIRE_ndm_reset_client_response_put =
+	     EN_ndm_reset_client_response_put ;
 
   // actionvalue method tv_verifier_info_get_get
   assign tv_verifier_info_get_get = tv_encode$out_get ;
@@ -2033,7 +1981,7 @@ module mkCoreW(CLK,
 
   // submodule debug_module
   mkDebug_Module debug_module(.CLK(CLK),
-			      .RST_N(RST_N),
+			      .RST_N(RST_N_dm_power_on_reset),
 			      .dmi_read_addr_dm_addr(debug_module$dmi_read_addr_dm_addr),
 			      .dmi_write_dm_addr(debug_module$dmi_write_dm_addr),
 			      .dmi_write_dm_word(debug_module$dmi_write_dm_word),
@@ -2041,6 +1989,7 @@ module mkCoreW(CLK,
 			      .hart0_csr_mem_client_response_put(debug_module$hart0_csr_mem_client_response_put),
 			      .hart0_fpr_mem_client_response_put(debug_module$hart0_fpr_mem_client_response_put),
 			      .hart0_gpr_mem_client_response_put(debug_module$hart0_gpr_mem_client_response_put),
+			      .hart0_reset_client_response_put(debug_module$hart0_reset_client_response_put),
 			      .master_arready(debug_module$master_arready),
 			      .master_awready(debug_module$master_awready),
 			      .master_bid(debug_module$master_bid),
@@ -2052,10 +2001,12 @@ module mkCoreW(CLK,
 			      .master_rresp(debug_module$master_rresp),
 			      .master_rvalid(debug_module$master_rvalid),
 			      .master_wready(debug_module$master_wready),
+			      .ndm_reset_client_response_put(debug_module$ndm_reset_client_response_put),
 			      .EN_dmi_read_addr(debug_module$EN_dmi_read_addr),
 			      .EN_dmi_read_data(debug_module$EN_dmi_read_data),
 			      .EN_dmi_write(debug_module$EN_dmi_write),
-			      .EN_hart0_get_reset_req_get(debug_module$EN_hart0_get_reset_req_get),
+			      .EN_hart0_reset_client_request_get(debug_module$EN_hart0_reset_client_request_get),
+			      .EN_hart0_reset_client_response_put(debug_module$EN_hart0_reset_client_response_put),
 			      .EN_hart0_client_run_halt_request_get(debug_module$EN_hart0_client_run_halt_request_get),
 			      .EN_hart0_client_run_halt_response_put(debug_module$EN_hart0_client_run_halt_response_put),
 			      .EN_hart0_get_other_req_get(debug_module$EN_hart0_get_other_req_get),
@@ -2065,12 +2016,15 @@ module mkCoreW(CLK,
 			      .EN_hart0_fpr_mem_client_response_put(debug_module$EN_hart0_fpr_mem_client_response_put),
 			      .EN_hart0_csr_mem_client_request_get(debug_module$EN_hart0_csr_mem_client_request_get),
 			      .EN_hart0_csr_mem_client_response_put(debug_module$EN_hart0_csr_mem_client_response_put),
-			      .EN_get_ndm_reset_req_get(debug_module$EN_get_ndm_reset_req_get),
+			      .EN_ndm_reset_client_request_get(debug_module$EN_ndm_reset_client_request_get),
+			      .EN_ndm_reset_client_response_put(debug_module$EN_ndm_reset_client_response_put),
 			      .RDY_dmi_read_addr(debug_module$RDY_dmi_read_addr),
 			      .dmi_read_data(debug_module$dmi_read_data),
 			      .RDY_dmi_read_data(debug_module$RDY_dmi_read_data),
 			      .RDY_dmi_write(debug_module$RDY_dmi_write),
-			      .RDY_hart0_get_reset_req_get(debug_module$RDY_hart0_get_reset_req_get),
+			      .hart0_reset_client_request_get(),
+			      .RDY_hart0_reset_client_request_get(debug_module$RDY_hart0_reset_client_request_get),
+			      .RDY_hart0_reset_client_response_put(debug_module$RDY_hart0_reset_client_response_put),
 			      .hart0_client_run_halt_request_get(debug_module$hart0_client_run_halt_request_get),
 			      .RDY_hart0_client_run_halt_request_get(debug_module$RDY_hart0_client_run_halt_request_get),
 			      .RDY_hart0_client_run_halt_response_put(debug_module$RDY_hart0_client_run_halt_response_put),
@@ -2085,7 +2039,9 @@ module mkCoreW(CLK,
 			      .hart0_csr_mem_client_request_get(debug_module$hart0_csr_mem_client_request_get),
 			      .RDY_hart0_csr_mem_client_request_get(debug_module$RDY_hart0_csr_mem_client_request_get),
 			      .RDY_hart0_csr_mem_client_response_put(debug_module$RDY_hart0_csr_mem_client_response_put),
-			      .RDY_get_ndm_reset_req_get(debug_module$RDY_get_ndm_reset_req_get),
+			      .ndm_reset_client_request_get(debug_module$ndm_reset_client_request_get),
+			      .RDY_ndm_reset_client_request_get(debug_module$RDY_ndm_reset_client_request_get),
+			      .RDY_ndm_reset_client_response_put(debug_module$RDY_ndm_reset_client_response_put),
 			      .master_awvalid(debug_module$master_awvalid),
 			      .master_awid(debug_module$master_awid),
 			      .master_awaddr(debug_module$master_awaddr),
@@ -2098,7 +2054,6 @@ module mkCoreW(CLK,
 			      .master_awqos(debug_module$master_awqos),
 			      .master_awregion(debug_module$master_awregion),
 			      .master_wvalid(debug_module$master_wvalid),
-			      .master_wid(debug_module$master_wid),
 			      .master_wdata(debug_module$master_wdata),
 			      .master_wstrb(debug_module$master_wstrb),
 			      .master_wlast(debug_module$master_wlast),
@@ -2154,6 +2109,15 @@ module mkCoreW(CLK,
 			      .trace_data_out_get(dm_gpr_tap_ifc$trace_data_out_get),
 			      .RDY_trace_data_out_get(dm_gpr_tap_ifc$RDY_trace_data_out_get));
 
+  // submodule dm_hart0_reset_controller
+  MakeResetA #(.RSTDELAY(32'd10),
+	       .init(1'd1)) dm_hart0_reset_controller(.CLK(CLK),
+						      .RST(RST_N),
+						      .DST_CLK(CLK),
+						      .ASSERT_IN(dm_hart0_reset_controller$ASSERT_IN),
+						      .ASSERT_OUT(),
+						      .OUT_RST(dm_hart0_reset_controller$OUT_RST));
+
   // submodule dm_mem_tap
   mkDM_Mem_Tap dm_mem_tap(.CLK(CLK),
 			  .RST_N(RST_N),
@@ -2193,7 +2157,6 @@ module mkCoreW(CLK,
 			  .slave_bready(dm_mem_tap$slave_bready),
 			  .slave_rready(dm_mem_tap$slave_rready),
 			  .slave_wdata(dm_mem_tap$slave_wdata),
-			  .slave_wid(dm_mem_tap$slave_wid),
 			  .slave_wlast(dm_mem_tap$slave_wlast),
 			  .slave_wstrb(dm_mem_tap$slave_wstrb),
 			  .slave_wvalid(dm_mem_tap$slave_wvalid),
@@ -2221,7 +2184,6 @@ module mkCoreW(CLK,
 			  .master_awqos(dm_mem_tap$master_awqos),
 			  .master_awregion(dm_mem_tap$master_awregion),
 			  .master_wvalid(dm_mem_tap$master_wvalid),
-			  .master_wid(dm_mem_tap$master_wid),
 			  .master_wdata(dm_mem_tap$master_wdata),
 			  .master_wstrb(dm_mem_tap$master_wstrb),
 			  .master_wlast(dm_mem_tap$master_wlast),
@@ -2240,35 +2202,6 @@ module mkCoreW(CLK,
 			  .master_rready(dm_mem_tap$master_rready),
 			  .trace_data_out_get(dm_mem_tap$trace_data_out_get),
 			  .RDY_trace_data_out_get(dm_mem_tap$RDY_trace_data_out_get));
-
-  // submodule f_reset_reqs
-  FIFO20 #(.guarded(32'd1)) f_reset_reqs(.RST(RST_N),
-					 .CLK(CLK),
-					 .ENQ(f_reset_reqs$ENQ),
-					 .DEQ(f_reset_reqs$DEQ),
-					 .CLR(f_reset_reqs$CLR),
-					 .FULL_N(f_reset_reqs$FULL_N),
-					 .EMPTY_N(f_reset_reqs$EMPTY_N));
-
-  // submodule f_reset_requestor
-  FIFO2 #(.width(32'd1), .guarded(32'd1)) f_reset_requestor(.RST(RST_N),
-							    .CLK(CLK),
-							    .D_IN(f_reset_requestor$D_IN),
-							    .ENQ(f_reset_requestor$ENQ),
-							    .DEQ(f_reset_requestor$DEQ),
-							    .CLR(f_reset_requestor$CLR),
-							    .D_OUT(f_reset_requestor$D_OUT),
-							    .FULL_N(f_reset_requestor$FULL_N),
-							    .EMPTY_N(f_reset_requestor$EMPTY_N));
-
-  // submodule f_reset_rsps
-  FIFO20 #(.guarded(32'd1)) f_reset_rsps(.RST(RST_N),
-					 .CLK(CLK),
-					 .ENQ(f_reset_rsps$ENQ),
-					 .DEQ(f_reset_rsps$DEQ),
-					 .CLR(f_reset_rsps$CLR),
-					 .FULL_N(f_reset_rsps$FULL_N),
-					 .EMPTY_N(f_reset_rsps$EMPTY_N));
 
   // submodule fabric_2x3
   mkFabric_2x3 fabric_2x3(.CLK(CLK),
@@ -2299,7 +2232,6 @@ module mkCoreW(CLK,
 			  .v_from_masters_0_bready(fabric_2x3$v_from_masters_0_bready),
 			  .v_from_masters_0_rready(fabric_2x3$v_from_masters_0_rready),
 			  .v_from_masters_0_wdata(fabric_2x3$v_from_masters_0_wdata),
-			  .v_from_masters_0_wid(fabric_2x3$v_from_masters_0_wid),
 			  .v_from_masters_0_wlast(fabric_2x3$v_from_masters_0_wlast),
 			  .v_from_masters_0_wstrb(fabric_2x3$v_from_masters_0_wstrb),
 			  .v_from_masters_0_wvalid(fabric_2x3$v_from_masters_0_wvalid),
@@ -2328,7 +2260,6 @@ module mkCoreW(CLK,
 			  .v_from_masters_1_bready(fabric_2x3$v_from_masters_1_bready),
 			  .v_from_masters_1_rready(fabric_2x3$v_from_masters_1_rready),
 			  .v_from_masters_1_wdata(fabric_2x3$v_from_masters_1_wdata),
-			  .v_from_masters_1_wid(fabric_2x3$v_from_masters_1_wid),
 			  .v_from_masters_1_wlast(fabric_2x3$v_from_masters_1_wlast),
 			  .v_from_masters_1_wstrb(fabric_2x3$v_from_masters_1_wstrb),
 			  .v_from_masters_1_wvalid(fabric_2x3$v_from_masters_1_wvalid),
@@ -2367,7 +2298,7 @@ module mkCoreW(CLK,
 			  .v_to_slaves_2_wready(fabric_2x3$v_to_slaves_2_wready),
 			  .EN_reset(fabric_2x3$EN_reset),
 			  .EN_set_verbosity(fabric_2x3$EN_set_verbosity),
-			  .RDY_reset(fabric_2x3$RDY_reset),
+			  .RDY_reset(),
 			  .RDY_set_verbosity(),
 			  .v_from_masters_0_awready(fabric_2x3$v_from_masters_0_awready),
 			  .v_from_masters_0_wready(fabric_2x3$v_from_masters_0_wready),
@@ -2403,7 +2334,6 @@ module mkCoreW(CLK,
 			  .v_to_slaves_0_awqos(fabric_2x3$v_to_slaves_0_awqos),
 			  .v_to_slaves_0_awregion(fabric_2x3$v_to_slaves_0_awregion),
 			  .v_to_slaves_0_wvalid(fabric_2x3$v_to_slaves_0_wvalid),
-			  .v_to_slaves_0_wid(fabric_2x3$v_to_slaves_0_wid),
 			  .v_to_slaves_0_wdata(fabric_2x3$v_to_slaves_0_wdata),
 			  .v_to_slaves_0_wstrb(fabric_2x3$v_to_slaves_0_wstrb),
 			  .v_to_slaves_0_wlast(fabric_2x3$v_to_slaves_0_wlast),
@@ -2432,7 +2362,6 @@ module mkCoreW(CLK,
 			  .v_to_slaves_1_awqos(fabric_2x3$v_to_slaves_1_awqos),
 			  .v_to_slaves_1_awregion(fabric_2x3$v_to_slaves_1_awregion),
 			  .v_to_slaves_1_wvalid(fabric_2x3$v_to_slaves_1_wvalid),
-			  .v_to_slaves_1_wid(fabric_2x3$v_to_slaves_1_wid),
 			  .v_to_slaves_1_wdata(fabric_2x3$v_to_slaves_1_wdata),
 			  .v_to_slaves_1_wstrb(fabric_2x3$v_to_slaves_1_wstrb),
 			  .v_to_slaves_1_wlast(fabric_2x3$v_to_slaves_1_wlast),
@@ -2461,7 +2390,6 @@ module mkCoreW(CLK,
 			  .v_to_slaves_2_awqos(fabric_2x3$v_to_slaves_2_awqos),
 			  .v_to_slaves_2_awregion(fabric_2x3$v_to_slaves_2_awregion),
 			  .v_to_slaves_2_wvalid(fabric_2x3$v_to_slaves_2_wvalid),
-			  .v_to_slaves_2_wid(fabric_2x3$v_to_slaves_2_wid),
 			  .v_to_slaves_2_wdata(fabric_2x3$v_to_slaves_2_wdata),
 			  .v_to_slaves_2_wstrb(fabric_2x3$v_to_slaves_2_wstrb),
 			  .v_to_slaves_2_wlast(fabric_2x3$v_to_slaves_2_wlast),
@@ -2478,6 +2406,11 @@ module mkCoreW(CLK,
 			  .v_to_slaves_2_arqos(fabric_2x3$v_to_slaves_2_arqos),
 			  .v_to_slaves_2_arregion(fabric_2x3$v_to_slaves_2_arregion),
 			  .v_to_slaves_2_rready(fabric_2x3$v_to_slaves_2_rready));
+
+  // submodule hart0_reset
+  ResetEither hart0_reset(.A_RST(RST_N),
+			  .B_RST(dm_hart0_reset_controller$OUT_RST),
+			  .RST_OUT(hart0_reset$RST_OUT));
 
   // submodule plic
   mkPLIC_16_2_7 plic(.CLK(CLK),
@@ -2507,7 +2440,6 @@ module mkCoreW(CLK,
 		     .axi4_slave_bready(plic$axi4_slave_bready),
 		     .axi4_slave_rready(plic$axi4_slave_rready),
 		     .axi4_slave_wdata(plic$axi4_slave_wdata),
-		     .axi4_slave_wid(plic$axi4_slave_wid),
 		     .axi4_slave_wlast(plic$axi4_slave_wlast),
 		     .axi4_slave_wstrb(plic$axi4_slave_wstrb),
 		     .axi4_slave_wvalid(plic$axi4_slave_wvalid),
@@ -2537,8 +2469,8 @@ module mkCoreW(CLK,
 		     .EN_set_addr_map(plic$EN_set_addr_map),
 		     .RDY_set_verbosity(),
 		     .RDY_show_PLIC_state(),
-		     .RDY_server_reset_request_put(plic$RDY_server_reset_request_put),
-		     .RDY_server_reset_response_get(plic$RDY_server_reset_response_get),
+		     .RDY_server_reset_request_put(),
+		     .RDY_server_reset_response_get(),
 		     .RDY_set_addr_map(),
 		     .axi4_slave_awready(plic$axi4_slave_awready),
 		     .axi4_slave_wready(plic$axi4_slave_wready),
@@ -2556,8 +2488,7 @@ module mkCoreW(CLK,
 
   // submodule proc
   mkProc proc(.CLK(CLK),
-	      .RST_N(RST_N),
-	      .debug_external_interrupt_req_set_not_clear(proc$debug_external_interrupt_req_set_not_clear),
+	      .RST_N(hart0_reset$RST_OUT),
 	      .debug_module_mem_server_araddr(proc$debug_module_mem_server_araddr),
 	      .debug_module_mem_server_arburst(proc$debug_module_mem_server_arburst),
 	      .debug_module_mem_server_arcache(proc$debug_module_mem_server_arcache),
@@ -2583,7 +2514,6 @@ module mkCoreW(CLK,
 	      .debug_module_mem_server_bready(proc$debug_module_mem_server_bready),
 	      .debug_module_mem_server_rready(proc$debug_module_mem_server_rready),
 	      .debug_module_mem_server_wdata(proc$debug_module_mem_server_wdata),
-	      .debug_module_mem_server_wid(proc$debug_module_mem_server_wid),
 	      .debug_module_mem_server_wlast(proc$debug_module_mem_server_wlast),
 	      .debug_module_mem_server_wstrb(proc$debug_module_mem_server_wstrb),
 	      .debug_module_mem_server_wvalid(proc$debug_module_mem_server_wvalid),
@@ -2621,8 +2551,6 @@ module mkCoreW(CLK,
 	      .start_fromhostAddr(proc$start_fromhostAddr),
 	      .start_startpc(proc$start_startpc),
 	      .start_tohostAddr(proc$start_tohostAddr),
-	      .EN_hart0_server_reset_request_put(proc$EN_hart0_server_reset_request_put),
-	      .EN_hart0_server_reset_response_get(proc$EN_hart0_server_reset_response_get),
 	      .EN_start(proc$EN_start),
 	      .EN_set_verbosity(proc$EN_set_verbosity),
 	      .EN_hart0_run_halt_server_request_put(proc$EN_hart0_run_halt_server_request_put),
@@ -2636,8 +2564,6 @@ module mkCoreW(CLK,
 	      .EN_hart0_put_other_req_put(proc$EN_hart0_put_other_req_put),
 	      .EN_v_to_TV_0_get(proc$EN_v_to_TV_0_get),
 	      .EN_v_to_TV_1_get(proc$EN_v_to_TV_1_get),
-	      .RDY_hart0_server_reset_request_put(proc$RDY_hart0_server_reset_request_put),
-	      .RDY_hart0_server_reset_response_get(proc$RDY_hart0_server_reset_response_get),
 	      .RDY_start(proc$RDY_start),
 	      .master0_awvalid(proc$master0_awvalid),
 	      .master0_awid(proc$master0_awid),
@@ -2651,7 +2577,6 @@ module mkCoreW(CLK,
 	      .master0_awqos(proc$master0_awqos),
 	      .master0_awregion(proc$master0_awregion),
 	      .master0_wvalid(proc$master0_wvalid),
-	      .master0_wid(proc$master0_wid),
 	      .master0_wdata(proc$master0_wdata),
 	      .master0_wstrb(proc$master0_wstrb),
 	      .master0_wlast(proc$master0_wlast),
@@ -2680,7 +2605,6 @@ module mkCoreW(CLK,
 	      .master1_awqos(proc$master1_awqos),
 	      .master1_awregion(proc$master1_awregion),
 	      .master1_wvalid(proc$master1_wvalid),
-	      .master1_wid(proc$master1_wid),
 	      .master1_wdata(proc$master1_wdata),
 	      .master1_wstrb(proc$master1_wstrb),
 	      .master1_wlast(proc$master1_wlast),
@@ -2784,7 +2708,7 @@ module mkCoreW(CLK,
 			.EN_v_cpu_in_1_put(tv_encode$EN_v_cpu_in_1_put),
 			.EN_dm_in_put(tv_encode$EN_dm_in_put),
 			.EN_out_get(tv_encode$EN_out_get),
-			.RDY_reset(tv_encode$RDY_reset),
+			.RDY_reset(),
 			.RDY_v_cpu_in_0_put(tv_encode$RDY_v_cpu_in_0_put),
 			.RDY_v_cpu_in_1_put(tv_encode$RDY_v_cpu_in_1_put),
 			.RDY_dm_in_put(tv_encode$RDY_dm_in_put),
@@ -2835,16 +2759,31 @@ module mkCoreW(CLK,
 								.FULL_N(v_td2_to_td_1_f_out$FULL_N),
 								.EMPTY_N(v_td2_to_td_1_f_out$EMPTY_N));
 
+  // rule RL_rl_dm_hart0_reset
+  assign CAN_FIRE_RL_rl_dm_hart0_reset =
+	     debug_module$RDY_hart0_reset_client_request_get &&
+	     rg_hart0_reset_delay == 8'd0 ;
+  assign WILL_FIRE_RL_rl_dm_hart0_reset = CAN_FIRE_RL_rl_dm_hart0_reset ;
+
+  // rule RL_rl_dm_hart0_reset_wait
+  assign CAN_FIRE_RL_rl_dm_hart0_reset_wait =
+	     (rg_hart0_reset_delay != 8'd1 ||
+	      proc$RDY_start &&
+	      debug_module$RDY_hart0_reset_client_response_put) &&
+	     rg_hart0_reset_delay != 8'd0 ;
+  assign WILL_FIRE_RL_rl_dm_hart0_reset_wait =
+	     CAN_FIRE_RL_rl_dm_hart0_reset_wait && !EN_start ;
+
   // rule RL_ClientServerRequest
   assign CAN_FIRE_RL_ClientServerRequest =
-	     debug_module$RDY_hart0_client_run_halt_request_get &&
-	     proc$RDY_hart0_run_halt_server_request_put ;
+	     proc$RDY_hart0_run_halt_server_request_put &&
+	     debug_module$RDY_hart0_client_run_halt_request_get ;
   assign WILL_FIRE_RL_ClientServerRequest = CAN_FIRE_RL_ClientServerRequest ;
 
   // rule RL_ClientServerResponse
   assign CAN_FIRE_RL_ClientServerResponse =
-	     debug_module$RDY_hart0_client_run_halt_response_put &&
-	     proc$RDY_hart0_run_halt_server_response_get ;
+	     proc$RDY_hart0_run_halt_server_response_get &&
+	     debug_module$RDY_hart0_client_run_halt_response_put ;
   assign WILL_FIRE_RL_ClientServerResponse =
 	     CAN_FIRE_RL_ClientServerResponse ;
 
@@ -2886,6 +2825,10 @@ module mkCoreW(CLK,
   assign CAN_FIRE_RL_rl_wr_data_channel = 1'd1 ;
   assign WILL_FIRE_RL_rl_wr_data_channel = 1'd1 ;
 
+  // rule RL_rl_wr_response_channel
+  assign CAN_FIRE_RL_rl_wr_response_channel = 1'd1 ;
+  assign WILL_FIRE_RL_rl_wr_response_channel = 1'd1 ;
+
   // rule RL_rl_rd_addr_channel
   assign CAN_FIRE_RL_rl_rd_addr_channel = 1'd1 ;
   assign WILL_FIRE_RL_rl_rd_addr_channel = 1'd1 ;
@@ -2896,22 +2839,22 @@ module mkCoreW(CLK,
 
   // rule RL_ClientServerRequest_1
   assign CAN_FIRE_RL_ClientServerRequest_1 =
-	     dm_gpr_tap_ifc$RDY_server_request_put &&
-	     debug_module$RDY_hart0_gpr_mem_client_request_get ;
+	     debug_module$RDY_hart0_gpr_mem_client_request_get &&
+	     dm_gpr_tap_ifc$RDY_server_request_put ;
   assign WILL_FIRE_RL_ClientServerRequest_1 =
 	     CAN_FIRE_RL_ClientServerRequest_1 ;
 
   // rule RL_ClientServerResponse_1
   assign CAN_FIRE_RL_ClientServerResponse_1 =
-	     dm_gpr_tap_ifc$RDY_server_response_get &&
-	     debug_module$RDY_hart0_gpr_mem_client_response_put ;
+	     debug_module$RDY_hart0_gpr_mem_client_response_put &&
+	     dm_gpr_tap_ifc$RDY_server_response_get ;
   assign WILL_FIRE_RL_ClientServerResponse_1 =
 	     CAN_FIRE_RL_ClientServerResponse_1 ;
 
   // rule RL_ClientServerResponse_2
   assign CAN_FIRE_RL_ClientServerResponse_2 =
-	     dm_gpr_tap_ifc$RDY_client_response_put &&
-	     proc$RDY_hart0_gpr_mem_server_response_get ;
+	     proc$RDY_hart0_gpr_mem_server_response_get &&
+	     dm_gpr_tap_ifc$RDY_client_response_put ;
   assign WILL_FIRE_RL_ClientServerResponse_2 =
 	     CAN_FIRE_RL_ClientServerResponse_2 ;
 
@@ -2924,22 +2867,22 @@ module mkCoreW(CLK,
 
   // rule RL_ClientServerRequest_3
   assign CAN_FIRE_RL_ClientServerRequest_3 =
-	     dm_csr_tap$RDY_server_request_put &&
-	     debug_module$RDY_hart0_csr_mem_client_request_get ;
+	     debug_module$RDY_hart0_csr_mem_client_request_get &&
+	     dm_csr_tap$RDY_server_request_put ;
   assign WILL_FIRE_RL_ClientServerRequest_3 =
 	     CAN_FIRE_RL_ClientServerRequest_3 ;
 
   // rule RL_ClientServerResponse_3
   assign CAN_FIRE_RL_ClientServerResponse_3 =
-	     dm_csr_tap$RDY_server_response_get &&
-	     debug_module$RDY_hart0_csr_mem_client_response_put ;
+	     debug_module$RDY_hart0_csr_mem_client_response_put &&
+	     dm_csr_tap$RDY_server_response_get ;
   assign WILL_FIRE_RL_ClientServerResponse_3 =
 	     CAN_FIRE_RL_ClientServerResponse_3 ;
 
   // rule RL_ClientServerResponse_4
   assign CAN_FIRE_RL_ClientServerResponse_4 =
-	     dm_csr_tap$RDY_client_response_put &&
-	     proc$RDY_hart0_csr_mem_server_response_get ;
+	     proc$RDY_hart0_csr_mem_server_response_get &&
+	     dm_csr_tap$RDY_client_response_put ;
   assign WILL_FIRE_RL_ClientServerResponse_4 =
 	     CAN_FIRE_RL_ClientServerResponse_4 ;
 
@@ -3042,54 +2985,19 @@ module mkCoreW(CLK,
   assign CAN_FIRE_RL_rl_relay_external_interrupts = 1'd1 ;
   assign WILL_FIRE_RL_rl_relay_external_interrupts = 1'd1 ;
 
-  // rule RL_rl_cpu_hart0_reset_from_soc_start
-  assign CAN_FIRE_RL_rl_cpu_hart0_reset_from_soc_start =
-	     plic$RDY_server_reset_request_put && fabric_2x3$RDY_reset &&
-	     tv_encode_RDY_reset__07_AND_proc_RDY_hart0_ser_ETC___d113 ;
-  assign WILL_FIRE_RL_rl_cpu_hart0_reset_from_soc_start =
-	     CAN_FIRE_RL_rl_cpu_hart0_reset_from_soc_start ;
-
-  // rule RL_rl_cpu_hart0_reset_from_dm_start
-  assign CAN_FIRE_RL_rl_cpu_hart0_reset_from_dm_start =
-	     plic$RDY_server_reset_request_put && fabric_2x3$RDY_reset &&
-	     tv_encode$RDY_reset &&
-	     debug_module$RDY_hart0_get_reset_req_get &&
-	     proc$RDY_hart0_server_reset_request_put &&
-	     f_reset_requestor$FULL_N ;
-  assign WILL_FIRE_RL_rl_cpu_hart0_reset_from_dm_start =
-	     CAN_FIRE_RL_rl_cpu_hart0_reset_from_dm_start &&
-	     !WILL_FIRE_RL_rl_cpu_hart0_reset_from_soc_start ;
-
-  // rule RL_rl_cpu_hart0_reset_complete
-  assign CAN_FIRE_RL_rl_cpu_hart0_reset_complete =
-	     plic$RDY_server_reset_response_get && proc$RDY_start &&
-	     proc$RDY_hart0_server_reset_response_get &&
-	     f_reset_requestor$EMPTY_N &&
-	     (!f_reset_requestor$D_OUT || f_reset_rsps$FULL_N) ;
-  assign WILL_FIRE_RL_rl_cpu_hart0_reset_complete =
-	     CAN_FIRE_RL_rl_cpu_hart0_reset_complete ;
-
-  // rule RL_rl_wr_response_channel
-  assign CAN_FIRE_RL_rl_wr_response_channel = 1'd1 ;
-  assign WILL_FIRE_RL_rl_wr_response_channel = 1'd1 ;
-
   // rule RL_ClientServerRequest_2
   assign CAN_FIRE_RL_ClientServerRequest_2 =
-	     dm_gpr_tap_ifc$RDY_client_request_get &&
-	     proc$RDY_hart0_gpr_mem_server_request_put ;
+	     proc$RDY_hart0_gpr_mem_server_request_put &&
+	     dm_gpr_tap_ifc$RDY_client_request_get ;
   assign WILL_FIRE_RL_ClientServerRequest_2 =
 	     CAN_FIRE_RL_ClientServerRequest_2 ;
 
   // rule RL_ClientServerRequest_4
   assign CAN_FIRE_RL_ClientServerRequest_4 =
-	     dm_csr_tap$RDY_client_request_get &&
-	     proc$RDY_hart0_csr_mem_server_request_put ;
+	     proc$RDY_hart0_csr_mem_server_request_put &&
+	     dm_csr_tap$RDY_client_request_get ;
   assign WILL_FIRE_RL_ClientServerRequest_4 =
 	     CAN_FIRE_RL_ClientServerRequest_4 ;
-
-  // rule RL_rl_relay_non_maskable_interrupt
-  assign CAN_FIRE_RL_rl_relay_non_maskable_interrupt = 1'd1 ;
-  assign WILL_FIRE_RL_rl_relay_non_maskable_interrupt = 1'd1 ;
 
   // rule RL_v_td2_to_td_0_rl_xform
   assign CAN_FIRE_RL_v_td2_to_td_0_rl_xform =
@@ -3103,18 +3011,34 @@ module mkCoreW(CLK,
   assign WILL_FIRE_RL_v_td2_to_td_1_rl_xform =
 	     CAN_FIRE_RL_v_td2_to_td_1_rl_xform ;
 
+  // inputs to muxes for submodule ports
+  assign MUX_proc$start_1__SEL_1 =
+	     WILL_FIRE_RL_rl_dm_hart0_reset_wait &&
+	     rg_hart0_reset_delay == 8'd1 ;
+  assign MUX_rg_hart0_reset_delay$write_1__VAL_1 =
+	     rg_hart0_reset_delay - 8'd1 ;
+
   // register rg_fromhost_addr
-  assign rg_fromhost_addr$D_IN = set_htif_addrs_fromhost_addr ;
-  assign rg_fromhost_addr$EN = EN_set_htif_addrs ;
+  assign rg_fromhost_addr$D_IN = start_fromhost_addr ;
+  assign rg_fromhost_addr$EN = EN_start ;
+
+  // register rg_hart0_reset_delay
+  assign rg_hart0_reset_delay$D_IN =
+	     WILL_FIRE_RL_rl_dm_hart0_reset_wait ?
+	       MUX_rg_hart0_reset_delay$write_1__VAL_1 :
+	       8'd210 ;
+  assign rg_hart0_reset_delay$EN =
+	     WILL_FIRE_RL_rl_dm_hart0_reset_wait ||
+	     WILL_FIRE_RL_rl_dm_hart0_reset ;
 
   // register rg_tohost_addr
-  assign rg_tohost_addr$D_IN = set_htif_addrs_tohost_addr ;
-  assign rg_tohost_addr$EN = EN_set_htif_addrs ;
+  assign rg_tohost_addr$D_IN = start_tohost_addr ;
+  assign rg_tohost_addr$EN = EN_start ;
 
   // submodule debug_module
-  assign debug_module$dmi_read_addr_dm_addr = dm_dmi_read_addr_dm_addr ;
-  assign debug_module$dmi_write_dm_addr = dm_dmi_write_dm_addr ;
-  assign debug_module$dmi_write_dm_word = dm_dmi_write_dm_word ;
+  assign debug_module$dmi_read_addr_dm_addr = dmi_read_addr_dm_addr ;
+  assign debug_module$dmi_write_dm_addr = dmi_write_dm_addr ;
+  assign debug_module$dmi_write_dm_word = dmi_write_dm_word ;
   assign debug_module$hart0_client_run_halt_response_put =
 	     proc$hart0_run_halt_server_response_get ;
   assign debug_module$hart0_csr_mem_client_response_put =
@@ -3122,6 +3046,7 @@ module mkCoreW(CLK,
   assign debug_module$hart0_fpr_mem_client_response_put = 65'h0 ;
   assign debug_module$hart0_gpr_mem_client_response_put =
 	     dm_gpr_tap_ifc$server_response_get ;
+  assign debug_module$hart0_reset_client_response_put = 1'd1 ;
   assign debug_module$master_arready = dm_mem_tap$slave_arready ;
   assign debug_module$master_awready = dm_mem_tap$slave_awready ;
   assign debug_module$master_bid = dm_mem_tap$slave_bid ;
@@ -3133,11 +3058,15 @@ module mkCoreW(CLK,
   assign debug_module$master_rresp = dm_mem_tap$slave_rresp ;
   assign debug_module$master_rvalid = dm_mem_tap$slave_rvalid ;
   assign debug_module$master_wready = dm_mem_tap$slave_wready ;
-  assign debug_module$EN_dmi_read_addr = EN_dm_dmi_read_addr ;
-  assign debug_module$EN_dmi_read_data = EN_dm_dmi_read_data ;
-  assign debug_module$EN_dmi_write = EN_dm_dmi_write ;
-  assign debug_module$EN_hart0_get_reset_req_get =
-	     WILL_FIRE_RL_rl_cpu_hart0_reset_from_dm_start ;
+  assign debug_module$ndm_reset_client_response_put =
+	     ndm_reset_client_response_put ;
+  assign debug_module$EN_dmi_read_addr = EN_dmi_read_addr ;
+  assign debug_module$EN_dmi_read_data = EN_dmi_read_data ;
+  assign debug_module$EN_dmi_write = EN_dmi_write ;
+  assign debug_module$EN_hart0_reset_client_request_get =
+	     CAN_FIRE_RL_rl_dm_hart0_reset ;
+  assign debug_module$EN_hart0_reset_client_response_put =
+	     MUX_proc$start_1__SEL_1 ;
   assign debug_module$EN_hart0_client_run_halt_request_get =
 	     CAN_FIRE_RL_ClientServerRequest ;
   assign debug_module$EN_hart0_client_run_halt_response_put =
@@ -3154,7 +3083,10 @@ module mkCoreW(CLK,
 	     CAN_FIRE_RL_ClientServerRequest_3 ;
   assign debug_module$EN_hart0_csr_mem_client_response_put =
 	     CAN_FIRE_RL_ClientServerResponse_3 ;
-  assign debug_module$EN_get_ndm_reset_req_get = EN_dm_ndm_reset_req_get_get ;
+  assign debug_module$EN_ndm_reset_client_request_get =
+	     EN_ndm_reset_client_request_get ;
+  assign debug_module$EN_ndm_reset_client_response_put =
+	     EN_ndm_reset_client_response_put ;
 
   // submodule dm_csr_tap
   assign dm_csr_tap$client_response_put =
@@ -3187,6 +3119,9 @@ module mkCoreW(CLK,
 	     CAN_FIRE_RL_ClientServerResponse_1 ;
   assign dm_gpr_tap_ifc$EN_trace_data_out_get =
 	     CAN_FIRE_RL_rl_merge_dm_gpr_trace_data ;
+
+  // submodule dm_hart0_reset_controller
+  assign dm_hart0_reset_controller$ASSERT_IN = CAN_FIRE_RL_rl_dm_hart0_reset ;
 
   // submodule dm_mem_tap
   assign dm_mem_tap$master_arready = fabric_2x3$v_from_masters_1_arready ;
@@ -3225,35 +3160,11 @@ module mkCoreW(CLK,
   assign dm_mem_tap$slave_bready = debug_module$master_bready ;
   assign dm_mem_tap$slave_rready = debug_module$master_rready ;
   assign dm_mem_tap$slave_wdata = debug_module$master_wdata ;
-  assign dm_mem_tap$slave_wid = debug_module$master_wid ;
   assign dm_mem_tap$slave_wlast = debug_module$master_wlast ;
   assign dm_mem_tap$slave_wstrb = debug_module$master_wstrb ;
   assign dm_mem_tap$slave_wvalid = debug_module$master_wvalid ;
   assign dm_mem_tap$EN_trace_data_out_get =
 	     WILL_FIRE_RL_rl_merge_dm_mem_trace_data ;
-
-  // submodule f_reset_reqs
-  assign f_reset_reqs$ENQ = EN_cpu_reset_server_request_put ;
-  assign f_reset_reqs$DEQ =
-	     plic$RDY_server_reset_request_put && fabric_2x3$RDY_reset &&
-	     tv_encode_RDY_reset__07_AND_proc_RDY_hart0_ser_ETC___d113 ;
-  assign f_reset_reqs$CLR = 1'b0 ;
-
-  // submodule f_reset_requestor
-  assign f_reset_requestor$D_IN =
-	     !WILL_FIRE_RL_rl_cpu_hart0_reset_from_dm_start ;
-  assign f_reset_requestor$ENQ =
-	     WILL_FIRE_RL_rl_cpu_hart0_reset_from_dm_start ||
-	     WILL_FIRE_RL_rl_cpu_hart0_reset_from_soc_start ;
-  assign f_reset_requestor$DEQ = CAN_FIRE_RL_rl_cpu_hart0_reset_complete ;
-  assign f_reset_requestor$CLR = 1'b0 ;
-
-  // submodule f_reset_rsps
-  assign f_reset_rsps$ENQ =
-	     WILL_FIRE_RL_rl_cpu_hart0_reset_complete &&
-	     f_reset_requestor$D_OUT ;
-  assign f_reset_rsps$DEQ = EN_cpu_reset_server_response_get ;
-  assign f_reset_rsps$CLR = 1'b0 ;
 
   // submodule fabric_2x3
   assign fabric_2x3$set_verbosity_verbosity = 4'h0 ;
@@ -3282,7 +3193,6 @@ module mkCoreW(CLK,
   assign fabric_2x3$v_from_masters_0_bready = proc$master1_bready ;
   assign fabric_2x3$v_from_masters_0_rready = proc$master1_rready ;
   assign fabric_2x3$v_from_masters_0_wdata = proc$master1_wdata ;
-  assign fabric_2x3$v_from_masters_0_wid = proc$master1_wid ;
   assign fabric_2x3$v_from_masters_0_wlast = proc$master1_wlast ;
   assign fabric_2x3$v_from_masters_0_wstrb = proc$master1_wstrb ;
   assign fabric_2x3$v_from_masters_0_wvalid = proc$master1_wvalid ;
@@ -3311,7 +3221,6 @@ module mkCoreW(CLK,
   assign fabric_2x3$v_from_masters_1_bready = dm_mem_tap$master_bready ;
   assign fabric_2x3$v_from_masters_1_rready = dm_mem_tap$master_rready ;
   assign fabric_2x3$v_from_masters_1_wdata = dm_mem_tap$master_wdata ;
-  assign fabric_2x3$v_from_masters_1_wid = dm_mem_tap$master_wid ;
   assign fabric_2x3$v_from_masters_1_wlast = dm_mem_tap$master_wlast ;
   assign fabric_2x3$v_from_masters_1_wstrb = dm_mem_tap$master_wstrb ;
   assign fabric_2x3$v_from_masters_1_wvalid = dm_mem_tap$master_wvalid ;
@@ -3353,9 +3262,7 @@ module mkCoreW(CLK,
 	     proc$debug_module_mem_server_rvalid ;
   assign fabric_2x3$v_to_slaves_2_wready =
 	     proc$debug_module_mem_server_wready ;
-  assign fabric_2x3$EN_reset =
-	     WILL_FIRE_RL_rl_cpu_hart0_reset_from_dm_start ||
-	     WILL_FIRE_RL_rl_cpu_hart0_reset_from_soc_start ;
+  assign fabric_2x3$EN_reset = 1'b0 ;
   assign fabric_2x3$EN_set_verbosity = 1'b0 ;
 
   // submodule plic
@@ -3384,7 +3291,6 @@ module mkCoreW(CLK,
   assign plic$axi4_slave_bready = fabric_2x3$v_to_slaves_1_bready ;
   assign plic$axi4_slave_rready = fabric_2x3$v_to_slaves_1_rready ;
   assign plic$axi4_slave_wdata = fabric_2x3$v_to_slaves_1_wdata ;
-  assign plic$axi4_slave_wid = fabric_2x3$v_to_slaves_1_wid ;
   assign plic$axi4_slave_wlast = fabric_2x3$v_to_slaves_1_wlast ;
   assign plic$axi4_slave_wstrb = fabric_2x3$v_to_slaves_1_wstrb ;
   assign plic$axi4_slave_wvalid = fabric_2x3$v_to_slaves_1_wvalid ;
@@ -3425,16 +3331,11 @@ module mkCoreW(CLK,
 	     core_external_interrupt_sources_9_m_interrupt_req_set_not_clear ;
   assign plic$EN_set_verbosity = 1'b0 ;
   assign plic$EN_show_PLIC_state = 1'b0 ;
-  assign plic$EN_server_reset_request_put =
-	     WILL_FIRE_RL_rl_cpu_hart0_reset_from_dm_start ||
-	     WILL_FIRE_RL_rl_cpu_hart0_reset_from_soc_start ;
-  assign plic$EN_server_reset_response_get =
-	     CAN_FIRE_RL_rl_cpu_hart0_reset_complete ;
-  assign plic$EN_set_addr_map = CAN_FIRE_RL_rl_cpu_hart0_reset_complete ;
+  assign plic$EN_server_reset_request_put = 1'b0 ;
+  assign plic$EN_server_reset_response_get = 1'b0 ;
+  assign plic$EN_set_addr_map = EN_start ;
 
   // submodule proc
-  assign proc$debug_external_interrupt_req_set_not_clear =
-	     debug_external_interrupt_req_set_not_clear ;
   assign proc$debug_module_mem_server_araddr =
 	     fabric_2x3$v_to_slaves_2_araddr ;
   assign proc$debug_module_mem_server_arburst =
@@ -3478,7 +3379,6 @@ module mkCoreW(CLK,
   assign proc$debug_module_mem_server_rready =
 	     fabric_2x3$v_to_slaves_2_rready ;
   assign proc$debug_module_mem_server_wdata = fabric_2x3$v_to_slaves_2_wdata ;
-  assign proc$debug_module_mem_server_wid = fabric_2x3$v_to_slaves_2_wid ;
   assign proc$debug_module_mem_server_wlast = fabric_2x3$v_to_slaves_2_wlast ;
   assign proc$debug_module_mem_server_wstrb = fabric_2x3$v_to_slaves_2_wstrb ;
   assign proc$debug_module_mem_server_wvalid =
@@ -3519,15 +3419,17 @@ module mkCoreW(CLK,
   assign proc$s_external_interrupt_req_set_not_clear =
 	     plic$v_targets_1_m_eip ;
   assign proc$set_verbosity_verbosity = set_verbosity_verbosity ;
-  assign proc$start_fromhostAddr = rg_fromhost_addr ;
+  assign proc$start_fromhostAddr =
+	     MUX_proc$start_1__SEL_1 ?
+	       rg_fromhost_addr :
+	       start_fromhost_addr ;
   assign proc$start_startpc = 64'h0000000070000000 ;
-  assign proc$start_tohostAddr = rg_tohost_addr ;
-  assign proc$EN_hart0_server_reset_request_put =
-	     WILL_FIRE_RL_rl_cpu_hart0_reset_from_dm_start ||
-	     WILL_FIRE_RL_rl_cpu_hart0_reset_from_soc_start ;
-  assign proc$EN_hart0_server_reset_response_get =
-	     CAN_FIRE_RL_rl_cpu_hart0_reset_complete ;
-  assign proc$EN_start = CAN_FIRE_RL_rl_cpu_hart0_reset_complete ;
+  assign proc$start_tohostAddr =
+	     MUX_proc$start_1__SEL_1 ? rg_tohost_addr : start_tohost_addr ;
+  assign proc$EN_start =
+	     WILL_FIRE_RL_rl_dm_hart0_reset_wait &&
+	     rg_hart0_reset_delay == 8'd1 ||
+	     EN_start ;
   assign proc$EN_set_verbosity = EN_set_verbosity ;
   assign proc$EN_hart0_run_halt_server_request_put =
 	     CAN_FIRE_RL_ClientServerRequest ;
@@ -3574,9 +3476,7 @@ module mkCoreW(CLK,
   end
   assign tv_encode$v_cpu_in_0_put = v_td2_to_td_0_f_out$D_OUT ;
   assign tv_encode$v_cpu_in_1_put = v_td2_to_td_1_f_out$D_OUT ;
-  assign tv_encode$EN_reset =
-	     WILL_FIRE_RL_rl_cpu_hart0_reset_from_dm_start ||
-	     WILL_FIRE_RL_rl_cpu_hart0_reset_from_soc_start ;
+  assign tv_encode$EN_reset = 1'b0 ;
   assign tv_encode$EN_v_cpu_in_0_put = CAN_FIRE_RL_mkConnectionGetPut_2 ;
   assign tv_encode$EN_v_cpu_in_1_put = CAN_FIRE_RL_mkConnectionGetPut_4 ;
   assign tv_encode$EN_dm_in_put =
@@ -3608,12 +3508,12 @@ module mkCoreW(CLK,
   // submodule v_td2_to_td_0_f_out
   assign v_td2_to_td_0_f_out$D_IN =
 	     { v_td2_to_td_0_f_in$D_OUT[319:256],
-	       CASE_v_td2_to_td_0_f_inD_OUT_BITS_159_TO_155__ETC__q9,
+	       CASE_v_td2_to_td_0_f_inD_OUT_BITS_159_TO_155__ETC__q5,
 	       v_td2_to_td_0_f_in$D_OUT[255:192],
 	       v_td2_to_td_0_f_in$D_OUT[161:160] == 2'b11,
 	       v_td2_to_td_0_f_in$D_OUT[191:160],
-	       x1_avValue_rd__h5432,
-	       x__h5725,
+	       x1_avValue_rd__h5277,
+	       x__h5570,
 	       256'h000000000000000000000000000000000000000000000000AAAAAAAAAAAAAAAA } ;
   assign v_td2_to_td_0_f_out$ENQ = CAN_FIRE_RL_v_td2_to_td_0_rl_xform ;
   assign v_td2_to_td_0_f_out$DEQ = CAN_FIRE_RL_mkConnectionGetPut_2 ;
@@ -3623,17 +3523,17 @@ module mkCoreW(CLK,
   assign v_td2_to_td_1_f_in$D_IN =
 	     { proc$v_to_TV_1_get[319:154],
 	       proc$v_to_TV_1_get[154] ?
-		 CASE_procv_to_TV_1_get_BITS_153_TO_142_1_proc_ETC__q5 :
+		 CASE_procv_to_TV_1_get_BITS_153_TO_142_1_proc_ETC__q6 :
 		 12'hAAA,
 	       proc$v_to_TV_1_get[141],
 	       proc$v_to_TV_1_get[141] ?
 		 { proc$v_to_TV_1_get[140],
 		   proc$v_to_TV_1_get[140] ?
-		     CASE_procv_to_TV_1_get_BITS_139_TO_136_0_proc_ETC__q6 :
-		     CASE_procv_to_TV_1_get_BITS_139_TO_136_0_proc_ETC__q7 } :
+		     CASE_procv_to_TV_1_get_BITS_139_TO_136_0_proc_ETC__q7 :
+		     CASE_procv_to_TV_1_get_BITS_139_TO_136_0_proc_ETC__q8 } :
 		 5'h0A,
 	       proc$v_to_TV_1_get[135:72],
-	       CASE_procv_to_TV_1_get_BITS_71_TO_70_0_procv_ETC__q8,
+	       CASE_procv_to_TV_1_get_BITS_71_TO_70_0_procv_ETC__q9,
 	       proc$v_to_TV_1_get[69:0] } ;
   assign v_td2_to_td_1_f_in$ENQ = CAN_FIRE_RL_mkConnectionGetPut_3 ;
   assign v_td2_to_td_1_f_in$DEQ = CAN_FIRE_RL_v_td2_to_td_1_rl_xform ;
@@ -3646,44 +3546,40 @@ module mkCoreW(CLK,
 	       v_td2_to_td_1_f_in$D_OUT[255:192],
 	       v_td2_to_td_1_f_in$D_OUT[161:160] == 2'b11,
 	       v_td2_to_td_1_f_in$D_OUT[191:160],
-	       x1_avValue_rd__h6363,
-	       x__h6650,
+	       x1_avValue_rd__h6208,
+	       x__h6495,
 	       256'h000000000000000000000000000000000000000000000000AAAAAAAAAAAAAAAA } ;
   assign v_td2_to_td_1_f_out$ENQ = CAN_FIRE_RL_v_td2_to_td_1_rl_xform ;
   assign v_td2_to_td_1_f_out$DEQ = CAN_FIRE_RL_mkConnectionGetPut_4 ;
   assign v_td2_to_td_1_f_out$CLR = 1'b0 ;
 
   // remaining internal signals
-  assign tv_encode_RDY_reset__07_AND_proc_RDY_hart0_ser_ETC___d113 =
-	     tv_encode$RDY_reset && proc$RDY_hart0_server_reset_request_put &&
-	     f_reset_reqs$EMPTY_N &&
-	     f_reset_requestor$FULL_N ;
   always@(v_td2_to_td_0_f_in$D_OUT)
   begin
     case (v_td2_to_td_0_f_in$D_OUT[159:155])
-      5'd3, 5'd8, 5'd9, 5'd11: x1_avValue_rd__h5432 = 5'd0;
-      default: x1_avValue_rd__h5432 = 5'd0;
+      5'd3, 5'd8, 5'd9, 5'd11: x1_avValue_rd__h5277 = 5'd0;
+      default: x1_avValue_rd__h5277 = 5'd0;
     endcase
   end
   always@(v_td2_to_td_0_f_in$D_OUT)
   begin
     case (v_td2_to_td_0_f_in$D_OUT[159:155])
-      5'd3, 5'd8, 5'd9, 5'd11: x__h5725 = 64'd0;
-      default: x__h5725 = 64'd0;
+      5'd3, 5'd8, 5'd9, 5'd11: x__h5570 = 64'd0;
+      default: x__h5570 = 64'd0;
     endcase
   end
   always@(v_td2_to_td_1_f_in$D_OUT)
   begin
     case (v_td2_to_td_1_f_in$D_OUT[159:155])
-      5'd3, 5'd8, 5'd9, 5'd11: x1_avValue_rd__h6363 = 5'd0;
-      default: x1_avValue_rd__h6363 = 5'd0;
+      5'd3, 5'd8, 5'd9, 5'd11: x1_avValue_rd__h6208 = 5'd0;
+      default: x1_avValue_rd__h6208 = 5'd0;
     endcase
   end
   always@(v_td2_to_td_1_f_in$D_OUT)
   begin
     case (v_td2_to_td_1_f_in$D_OUT[159:155])
-      5'd3, 5'd8, 5'd9, 5'd11: x__h6650 = 64'd0;
-      default: x__h6650 = 64'd0;
+      5'd3, 5'd8, 5'd9, 5'd11: x__h6495 = 64'd0;
+      default: x__h6495 = 64'd0;
     endcase
   end
   always@(proc$v_to_TV_0_get)
@@ -3774,6 +3670,18 @@ module mkCoreW(CLK,
       default: CASE_procv_to_TV_0_get_BITS_71_TO_70_0_procv_ETC__q4 = 2'd2;
     endcase
   end
+  always@(v_td2_to_td_0_f_in$D_OUT)
+  begin
+    case (v_td2_to_td_0_f_in$D_OUT[159:155])
+      5'd2, 5'd6, 5'd7:
+	  CASE_v_td2_to_td_0_f_inD_OUT_BITS_159_TO_155__ETC__q5 = 5'd13;
+      5'd3, 5'd8, 5'd9, 5'd11:
+	  CASE_v_td2_to_td_0_f_inD_OUT_BITS_159_TO_155__ETC__q5 = 5'd6;
+      5'd10, 5'd14, 5'd15, 5'd16, 5'd17, 5'd18, 5'd19, 5'd20:
+	  CASE_v_td2_to_td_0_f_inD_OUT_BITS_159_TO_155__ETC__q5 = 5'd5;
+      default: CASE_v_td2_to_td_0_f_inD_OUT_BITS_159_TO_155__ETC__q5 = 5'd6;
+    endcase
+  end
   always@(proc$v_to_TV_1_get)
   begin
     case (proc$v_to_TV_1_get[153:142])
@@ -3817,9 +3725,9 @@ module mkCoreW(CLK,
       12'd3858,
       12'd3859,
       12'd3860:
-	  CASE_procv_to_TV_1_get_BITS_153_TO_142_1_proc_ETC__q5 =
+	  CASE_procv_to_TV_1_get_BITS_153_TO_142_1_proc_ETC__q6 =
 	      proc$v_to_TV_1_get[153:142];
-      default: CASE_procv_to_TV_1_get_BITS_153_TO_142_1_proc_ETC__q5 =
+      default: CASE_procv_to_TV_1_get_BITS_153_TO_142_1_proc_ETC__q6 =
 		   12'd2303;
     endcase
   end
@@ -3827,9 +3735,9 @@ module mkCoreW(CLK,
   begin
     case (proc$v_to_TV_1_get[139:136])
       4'd0, 4'd1, 4'd3, 4'd4, 4'd5, 4'd7, 4'd8, 4'd9, 4'd11, 4'd14:
-	  CASE_procv_to_TV_1_get_BITS_139_TO_136_0_proc_ETC__q6 =
+	  CASE_procv_to_TV_1_get_BITS_139_TO_136_0_proc_ETC__q7 =
 	      proc$v_to_TV_1_get[139:136];
-      default: CASE_procv_to_TV_1_get_BITS_139_TO_136_0_proc_ETC__q6 = 4'd15;
+      default: CASE_procv_to_TV_1_get_BITS_139_TO_136_0_proc_ETC__q7 = 4'd15;
     endcase
   end
   always@(proc$v_to_TV_1_get)
@@ -3848,30 +3756,18 @@ module mkCoreW(CLK,
       4'd11,
       4'd12,
       4'd13:
-	  CASE_procv_to_TV_1_get_BITS_139_TO_136_0_proc_ETC__q7 =
+	  CASE_procv_to_TV_1_get_BITS_139_TO_136_0_proc_ETC__q8 =
 	      proc$v_to_TV_1_get[139:136];
-      default: CASE_procv_to_TV_1_get_BITS_139_TO_136_0_proc_ETC__q7 = 4'd15;
+      default: CASE_procv_to_TV_1_get_BITS_139_TO_136_0_proc_ETC__q8 = 4'd15;
     endcase
   end
   always@(proc$v_to_TV_1_get)
   begin
     case (proc$v_to_TV_1_get[71:70])
       2'd0, 2'd1:
-	  CASE_procv_to_TV_1_get_BITS_71_TO_70_0_procv_ETC__q8 =
+	  CASE_procv_to_TV_1_get_BITS_71_TO_70_0_procv_ETC__q9 =
 	      proc$v_to_TV_1_get[71:70];
-      default: CASE_procv_to_TV_1_get_BITS_71_TO_70_0_procv_ETC__q8 = 2'd2;
-    endcase
-  end
-  always@(v_td2_to_td_0_f_in$D_OUT)
-  begin
-    case (v_td2_to_td_0_f_in$D_OUT[159:155])
-      5'd2, 5'd6, 5'd7:
-	  CASE_v_td2_to_td_0_f_inD_OUT_BITS_159_TO_155__ETC__q9 = 5'd13;
-      5'd3, 5'd8, 5'd9, 5'd11:
-	  CASE_v_td2_to_td_0_f_inD_OUT_BITS_159_TO_155__ETC__q9 = 5'd6;
-      5'd10, 5'd14, 5'd15, 5'd16, 5'd17, 5'd18, 5'd19, 5'd20:
-	  CASE_v_td2_to_td_0_f_inD_OUT_BITS_159_TO_155__ETC__q9 = 5'd5;
-      default: CASE_v_td2_to_td_0_f_inD_OUT_BITS_159_TO_155__ETC__q9 = 5'd6;
+      default: CASE_procv_to_TV_1_get_BITS_71_TO_70_0_procv_ETC__q9 = 2'd2;
     endcase
   end
   always@(v_td2_to_td_1_f_in$D_OUT)
@@ -3894,12 +3790,16 @@ module mkCoreW(CLK,
     if (RST_N == `BSV_RESET_VALUE)
       begin
         rg_fromhost_addr <= `BSV_ASSIGNMENT_DELAY 64'd0;
+	rg_hart0_reset_delay <= `BSV_ASSIGNMENT_DELAY 8'd0;
 	rg_tohost_addr <= `BSV_ASSIGNMENT_DELAY 64'd0;
       end
     else
       begin
         if (rg_fromhost_addr$EN)
 	  rg_fromhost_addr <= `BSV_ASSIGNMENT_DELAY rg_fromhost_addr$D_IN;
+	if (rg_hart0_reset_delay$EN)
+	  rg_hart0_reset_delay <= `BSV_ASSIGNMENT_DELAY
+	      rg_hart0_reset_delay$D_IN;
 	if (rg_tohost_addr$EN)
 	  rg_tohost_addr <= `BSV_ASSIGNMENT_DELAY rg_tohost_addr$D_IN;
       end
@@ -3911,6 +3811,7 @@ module mkCoreW(CLK,
   initial
   begin
     rg_fromhost_addr = 64'hAAAAAAAAAAAAAAAA;
+    rg_hart0_reset_delay = 8'hAA;
     rg_tohost_addr = 64'hAAAAAAAAAAAAAAAA;
   end
   `endif // BSV_NO_INITIAL_BLOCKS
@@ -3923,36 +3824,55 @@ module mkCoreW(CLK,
   begin
     #0;
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_cpu_hart0_reset_from_soc_start)
-	begin
-	  v__h7205 = $stime;
-	  #0;
-	end
-    v__h7199 = v__h7205 / 32'd10;
+      if (RST_N_dm_power_on_reset != `BSV_RESET_VALUE)
+	if (WILL_FIRE_RL_rl_dm_hart0_reset)
+	  begin
+	    v__h6860 = $stime;
+	    #0;
+	  end
+    v__h6854 = v__h6860 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_cpu_hart0_reset_from_soc_start)
-	$display("%0d: Core.rl_cpu_hart0_reset_from_soc_start", v__h7199);
+      if (RST_N_dm_power_on_reset != `BSV_RESET_VALUE)
+	if (WILL_FIRE_RL_rl_dm_hart0_reset)
+	  $display("%0d: %m.rl_dm_hart0_reset: asserting hart0 reset for %0d cycles",
+		   v__h6854,
+		   $signed(32'd10));
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_cpu_hart0_reset_from_dm_start)
-	begin
-	  v__h7403 = $stime;
-	  #0;
-	end
-    v__h7397 = v__h7403 / 32'd10;
+      if (hart0_reset$RST_OUT != `BSV_RESET_VALUE)
+	if (RST_N_dm_power_on_reset != `BSV_RESET_VALUE)
+	  if (WILL_FIRE_RL_rl_dm_hart0_reset_wait &&
+	      rg_hart0_reset_delay == 8'd1)
+	    begin
+	      v__h7003 = $stime;
+	      #0;
+	    end
+    v__h6997 = v__h7003 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_cpu_hart0_reset_from_dm_start)
-	$display("%0d: Core.rl_cpu_hart0_reset_from_dm_start", v__h7397);
+      if (hart0_reset$RST_OUT != `BSV_RESET_VALUE)
+	if (RST_N_dm_power_on_reset != `BSV_RESET_VALUE)
+	  if (WILL_FIRE_RL_rl_dm_hart0_reset_wait &&
+	      rg_hart0_reset_delay == 8'd1)
+	    $display("%0d: %m.rl_dm_hart0_reset_wait: proc.start (pc %0h, tohostAddr %0h, fromhostAddr %0h",
+		     v__h6997,
+		     64'h0000000070000000,
+		     rg_tohost_addr,
+		     rg_fromhost_addr);
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_cpu_hart0_reset_complete)
-	begin
-	  v__h7674 = $stime;
-	  #0;
-	end
-    v__h7668 = v__h7674 / 32'd10;
+      if (hart0_reset$RST_OUT != `BSV_RESET_VALUE)
+	if (EN_start)
+	  begin
+	    v__h15013 = $stime;
+	    #0;
+	  end
+    v__h15007 = v__h15013 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_cpu_hart0_reset_complete)
-	$display("%0d: Core.rl_cpu_hart0_reset_complete; started running proc",
-		 v__h7668);
+      if (hart0_reset$RST_OUT != `BSV_RESET_VALUE)
+	if (EN_start)
+	  $display("%0d: %m.method start: proc.start (pc %0d, tohostAddr %0h, fromhostAddr %0h)",
+		   v__h15007,
+		   64'h0000000070000000,
+		   start_tohost_addr,
+		   start_fromhost_addr);
   end
   // synopsys translate_on
 endmodule  // mkCoreW

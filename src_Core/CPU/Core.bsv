@@ -136,9 +136,6 @@ interface CoreRenameDebug;
 endinterface
 
 interface Core;
-   // Initialize
-   interface Server #(Bit #(0), Bit #(0))  init_server;
-
     // core request & indication
     interface CoreReq coreReq;
     interface CoreIndInv coreIndInv;
@@ -205,13 +202,6 @@ module mkCore#(CoreId coreId)(Core);
 
    // ================================================================
    Integer verbosity = 0;    // More levels of verbosity control than 'Bool verbose'
-
-   // ----------------
-   // Init requests and responses
-
-   FIFOF #(Bit #(0))  f_init_reqs <- mkFIFOF;
-   FIFOF #(Bit #(0))  f_init_rsps <- mkFIFOF;
-
 
     Reg#(Bool) outOfReset <- mkReg(False);
     rule rl_outOfReset if (!outOfReset);
@@ -1298,26 +1288,7 @@ module mkCore#(CoreId coreId)(Core);
 `endif
 
    // ================================================================
-   // Init interface
-
-   rule rl_init;
-     let tok <- pop (f_init_reqs);
-
-      csrf.init;
-      started <= False;
-
-`ifdef INCLUDE_GDB_CONTROL
-      rg_core_run_state <= CORE_RUNNING;
-`endif
-
-      f_init_rsps.enq (tok);
-   endrule
-
-   // ================================================================
    // INTERFACE
-
-   // Initialize
-   interface  init_server = toGPServer (f_init_reqs, f_init_rsps);
 
     interface CoreReq coreReq;
         method Action start(
@@ -1330,7 +1301,7 @@ module mkCore#(CoreId coreId)(Core);
 	   rg_core_run_state <= CORE_RUNNING;
 `endif
             mmio.setHtifAddrs(toHostAddr, fromHostAddr);
-            // start rename debug
+
             commitStage.startRenameDebug;
         endmethod
 

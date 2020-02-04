@@ -18,7 +18,6 @@
 // master0_awqos                  O     4 reg
 // master0_awregion               O     4 reg
 // master0_wvalid                 O     1
-// master0_wid                    O     4 reg
 // master0_wdata                  O    64 reg
 // master0_wstrb                  O     8 reg
 // master0_wlast                  O     1 reg
@@ -47,7 +46,6 @@
 // master1_awqos                  O     4 reg
 // master1_awregion               O     4 reg
 // master1_wvalid                 O     1 reg
-// master1_wid                    O     4 reg
 // master1_wdata                  O    64 reg
 // master1_wstrb                  O     8 reg
 // master1_wlast                  O     1 reg
@@ -64,12 +62,12 @@
 // master1_arqos                  O     4 reg
 // master1_arregion               O     4 reg
 // master1_rready                 O     1 reg
+// jtag_tdo                       O     1
 // tv_verifier_info_tx_tvalid     O     1 reg
 // tv_verifier_info_tx_tdata      O   608 reg
 // tv_verifier_info_tx_tstrb      O    76 reg
 // tv_verifier_info_tx_tkeep      O    76 reg
 // tv_verifier_info_tx_tlast      O     1 reg
-// jtag_tdo                       O     1
 // CLK_jtag_tclk_out              O     1 clock
 // CLK_GATE_jtag_tclk_out         O     1 const
 // CLK                            I     1 clock
@@ -97,11 +95,11 @@
 // master1_rresp                  I     2 reg
 // master1_rlast                  I     1 reg
 // cpu_external_interrupt_req     I    16
-// debug_external_interrupt_req_set_not_clear  I     1
-// tv_verifier_info_tx_tready     I     1
+// debug_external_interrupt_req_set_not_clear  I     1 unused
 // jtag_tdi                       I     1
 // jtag_tms                       I     1
 // jtag_tclk                      I     1
+// tv_verifier_info_tx_tready     I     1
 //
 // Combinational paths from inputs to outputs:
 //   (master0_awready, master0_wready) -> master0_bready
@@ -149,8 +147,6 @@ module mkP3_Core(CLK,
 		 master0_awready,
 
 		 master0_wvalid,
-
-		 master0_wid,
 
 		 master0_wdata,
 
@@ -224,8 +220,6 @@ module mkP3_Core(CLK,
 
 		 master1_wvalid,
 
-		 master1_wid,
-
 		 master1_wdata,
 
 		 master1_wstrb,
@@ -276,6 +270,14 @@ module mkP3_Core(CLK,
 
 		 debug_external_interrupt_req_set_not_clear,
 
+		 jtag_tdi,
+
+		 jtag_tms,
+
+		 jtag_tclk,
+
+		 jtag_tdo,
+
 		 tv_verifier_info_tx_tvalid,
 
 		 tv_verifier_info_tx_tdata,
@@ -287,14 +289,6 @@ module mkP3_Core(CLK,
 		 tv_verifier_info_tx_tlast,
 
 		 tv_verifier_info_tx_tready,
-
-		 jtag_tdi,
-
-		 jtag_tms,
-
-		 jtag_tclk,
-
-		 jtag_tdo,
 
 		 CLK_jtag_tclk_out,
 		 CLK_GATE_jtag_tclk_out);
@@ -341,9 +335,6 @@ module mkP3_Core(CLK,
 
   // value method master0_m_wvalid
   output master0_wvalid;
-
-  // value method master0_m_wid
-  output [3 : 0] master0_wid;
 
   // value method master0_m_wdata
   output [63 : 0] master0_wdata;
@@ -456,9 +447,6 @@ module mkP3_Core(CLK,
   // value method master1_m_wvalid
   output master1_wvalid;
 
-  // value method master1_m_wid
-  output [3 : 0] master1_wid;
-
   // value method master1_m_wdata
   output [63 : 0] master1_wdata;
 
@@ -535,6 +523,18 @@ module mkP3_Core(CLK,
   // action method debug_external_interrupt_req
   input  debug_external_interrupt_req_set_not_clear;
 
+  // action method jtag_tdi
+  input  jtag_tdi;
+
+  // action method jtag_tms
+  input  jtag_tms;
+
+  // action method jtag_tclk
+  input  jtag_tclk;
+
+  // value method jtag_tdo
+  output jtag_tdo;
+
   // value method tv_verifier_info_tx_m_tvalid
   output tv_verifier_info_tx_tvalid;
 
@@ -558,18 +558,6 @@ module mkP3_Core(CLK,
 
   // action method tv_verifier_info_tx_m_tready
   input  tv_verifier_info_tx_tready;
-
-  // action method jtag_tdi
-  input  jtag_tdi;
-
-  // action method jtag_tms
-  input  jtag_tms;
-
-  // action method jtag_tclk
-  input  jtag_tclk;
-
-  // value method jtag_tdo
-  output jtag_tdo;
 
   // oscillator and gates for output clock CLK_jtag_tclk_out
   output CLK_jtag_tclk_out;
@@ -598,7 +586,6 @@ module mkP3_Core(CLK,
 	       master0_awid,
 	       master0_awqos,
 	       master0_awregion,
-	       master0_wid,
 	       master1_arcache,
 	       master1_arid,
 	       master1_arqos,
@@ -606,8 +593,7 @@ module mkP3_Core(CLK,
 	       master1_awcache,
 	       master1_awid,
 	       master1_awqos,
-	       master1_awregion,
-	       master1_wid;
+	       master1_awregion;
   wire [2 : 0] master0_arprot,
 	       master0_arsize,
 	       master0_awprot,
@@ -661,9 +647,10 @@ module mkP3_Core(CLK,
   reg [33 : 0] bus_dmi_rsp_fifof_q_1$D_IN;
   wire bus_dmi_rsp_fifof_q_1$EN;
 
-  // register rg_once
-  reg rg_once;
-  wire rg_once$D_IN, rg_once$EN;
+  // register rg_ndm_reset_delay
+  reg [7 : 0] rg_ndm_reset_delay;
+  wire [7 : 0] rg_ndm_reset_delay$D_IN;
+  wire rg_ndm_reset_delay$EN;
 
   // ports of submodule bus_dmi_req_fifof
   wire [40 : 0] bus_dmi_req_fifof$D_IN, bus_dmi_req_fifof$D_OUT;
@@ -683,17 +670,17 @@ module mkP3_Core(CLK,
 		corew$cpu_imem_master_awaddr,
 		corew$cpu_imem_master_rdata,
 		corew$cpu_imem_master_wdata,
-		corew$set_htif_addrs_fromhost_addr,
-		corew$set_htif_addrs_tohost_addr,
-		corew$set_verbosity_logdelay;
-  wire [31 : 0] corew$dm_dmi_read_data, corew$dm_dmi_write_dm_word;
+		corew$set_verbosity_logdelay,
+		corew$start_fromhost_addr,
+		corew$start_tohost_addr;
+  wire [31 : 0] corew$dmi_read_data, corew$dmi_write_dm_word;
   wire [7 : 0] corew$cpu_dmem_master_arlen,
 	       corew$cpu_dmem_master_awlen,
 	       corew$cpu_dmem_master_wstrb,
 	       corew$cpu_imem_master_arlen,
 	       corew$cpu_imem_master_awlen,
 	       corew$cpu_imem_master_wstrb;
-  wire [6 : 0] corew$dm_dmi_read_addr_dm_addr, corew$dm_dmi_write_dm_addr;
+  wire [6 : 0] corew$dmi_read_addr_dm_addr, corew$dmi_write_dm_addr;
   wire [3 : 0] corew$cpu_dmem_master_arcache,
 	       corew$cpu_dmem_master_arid,
 	       corew$cpu_dmem_master_arqos,
@@ -704,7 +691,6 @@ module mkP3_Core(CLK,
 	       corew$cpu_dmem_master_awregion,
 	       corew$cpu_dmem_master_bid,
 	       corew$cpu_dmem_master_rid,
-	       corew$cpu_dmem_master_wid,
 	       corew$cpu_imem_master_arcache,
 	       corew$cpu_imem_master_arid,
 	       corew$cpu_imem_master_arqos,
@@ -715,7 +701,6 @@ module mkP3_Core(CLK,
 	       corew$cpu_imem_master_awregion,
 	       corew$cpu_imem_master_bid,
 	       corew$cpu_imem_master_rid,
-	       corew$cpu_imem_master_wid,
 	       corew$set_verbosity_verbosity;
   wire [2 : 0] corew$cpu_dmem_master_arprot,
 	       corew$cpu_dmem_master_arsize,
@@ -733,21 +718,19 @@ module mkP3_Core(CLK,
 	       corew$cpu_imem_master_awburst,
 	       corew$cpu_imem_master_bresp,
 	       corew$cpu_imem_master_rresp;
-  wire corew$EN_cpu_reset_server_request_put,
-       corew$EN_cpu_reset_server_response_get,
-       corew$EN_dm_dmi_read_addr,
-       corew$EN_dm_dmi_read_data,
-       corew$EN_dm_dmi_write,
-       corew$EN_dm_ndm_reset_req_get_get,
-       corew$EN_set_htif_addrs,
+  wire corew$EN_dmi_read_addr,
+       corew$EN_dmi_read_data,
+       corew$EN_dmi_write,
+       corew$EN_ndm_reset_client_request_get,
+       corew$EN_ndm_reset_client_response_put,
        corew$EN_set_verbosity,
+       corew$EN_start,
        corew$EN_tv_verifier_info_get_get,
-       corew$RDY_cpu_reset_server_request_put,
-       corew$RDY_cpu_reset_server_response_get,
-       corew$RDY_dm_dmi_read_addr,
-       corew$RDY_dm_dmi_read_data,
-       corew$RDY_dm_dmi_write,
-       corew$RDY_dm_ndm_reset_req_get_get,
+       corew$RDY_dmi_read_addr,
+       corew$RDY_dmi_read_data,
+       corew$RDY_dmi_write,
+       corew$RDY_ndm_reset_client_request_get,
+       corew$RDY_ndm_reset_client_response_put,
        corew$RDY_tv_verifier_info_get_get,
        corew$core_external_interrupt_sources_0_m_interrupt_req_set_not_clear,
        corew$core_external_interrupt_sources_10_m_interrupt_req_set_not_clear,
@@ -793,7 +776,8 @@ module mkP3_Core(CLK,
        corew$cpu_imem_master_wlast,
        corew$cpu_imem_master_wready,
        corew$cpu_imem_master_wvalid,
-       corew$debug_external_interrupt_req_set_not_clear;
+       corew$ndm_reset_client_response_put,
+       corew$nmi_req_set_not_clear;
 
   // ports of submodule jtagtap
   wire [31 : 0] jtagtap$dmi_req_data, jtagtap$dmi_rsp_data;
@@ -808,6 +792,12 @@ module mkP3_Core(CLK,
        jtagtap$jtag_tdi,
        jtagtap$jtag_tdo,
        jtagtap$jtag_tms;
+
+  // ports of submodule ndm_reset
+  wire ndm_reset$RST_OUT;
+
+  // ports of submodule ndm_reset_controller
+  wire ndm_reset_controller$ASSERT_IN, ndm_reset_controller$OUT_RST;
 
   // ports of submodule tv_xactor
   wire [607 : 0] tv_xactor$axi_out_tdata, tv_xactor$tv_in_put;
@@ -834,13 +824,13 @@ module mkP3_Core(CLK,
        CAN_FIRE_RL_mkConnectionVtoAf_6,
        CAN_FIRE_RL_mkConnectionVtoAf_7,
        CAN_FIRE_RL_mkConnectionVtoAf_8,
+       CAN_FIRE_RL_rl_always,
        CAN_FIRE_RL_rl_dmi_req,
        CAN_FIRE_RL_rl_dmi_req_cpu,
        CAN_FIRE_RL_rl_dmi_rsp,
        CAN_FIRE_RL_rl_dmi_rsp_cpu,
-       CAN_FIRE_RL_rl_ndmreset,
-       CAN_FIRE_RL_rl_once,
-       CAN_FIRE_RL_rl_reset_response,
+       CAN_FIRE_RL_rl_ndm_reset,
+       CAN_FIRE_RL_rl_ndm_reset_wait,
        CAN_FIRE_debug_external_interrupt_req,
        CAN_FIRE_interrupt_reqs,
        CAN_FIRE_jtag_tclk,
@@ -872,13 +862,13 @@ module mkP3_Core(CLK,
        WILL_FIRE_RL_mkConnectionVtoAf_6,
        WILL_FIRE_RL_mkConnectionVtoAf_7,
        WILL_FIRE_RL_mkConnectionVtoAf_8,
+       WILL_FIRE_RL_rl_always,
        WILL_FIRE_RL_rl_dmi_req,
        WILL_FIRE_RL_rl_dmi_req_cpu,
        WILL_FIRE_RL_rl_dmi_rsp,
        WILL_FIRE_RL_rl_dmi_rsp_cpu,
-       WILL_FIRE_RL_rl_ndmreset,
-       WILL_FIRE_RL_rl_once,
-       WILL_FIRE_RL_rl_reset_response,
+       WILL_FIRE_RL_rl_ndm_reset,
+       WILL_FIRE_RL_rl_ndm_reset_wait,
        WILL_FIRE_debug_external_interrupt_req,
        WILL_FIRE_interrupt_reqs,
        WILL_FIRE_jtag_tclk,
@@ -899,9 +889,10 @@ module mkP3_Core(CLK,
   // inputs to muxes for submodule ports
   wire [33 : 0] MUX_bus_dmi_rsp_fifof_q_0$write_1__VAL_1,
 		MUX_bus_dmi_rsp_fifof_q_0$write_1__VAL_2,
-		MUX_bus_dmi_rsp_fifof_q_1$write_1__VAL_1,
+		MUX_bus_dmi_rsp_fifof_q_1$write_1__VAL_2,
 		MUX_bus_dmi_rsp_fifof_x_wire$wset_1__VAL_1,
 		MUX_bus_dmi_rsp_fifof_x_wire$wset_1__VAL_2;
+  wire [7 : 0] MUX_rg_ndm_reset_delay$write_1__VAL_1;
   wire [1 : 0] MUX_bus_dmi_rsp_fifof_cntr_r$write_1__VAL_2;
   wire MUX_bus_dmi_rsp_fifof_q_0$write_1__SEL_1,
        MUX_bus_dmi_rsp_fifof_q_0$write_1__SEL_2,
@@ -909,9 +900,17 @@ module mkP3_Core(CLK,
        MUX_bus_dmi_rsp_fifof_q_1$write_1__SEL_2,
        MUX_bus_dmi_rsp_fifof_x_wire$wset_1__SEL_1;
 
+  // declarations used by system tasks
+  // synopsys translate_off
+  reg [31 : 0] v__h1278;
+  reg [31 : 0] v__h1389;
+  reg [31 : 0] v__h1272;
+  reg [31 : 0] v__h1383;
+  // synopsys translate_on
+
   // remaining internal signals
-  wire [1 : 0] bus_dmi_rsp_fifof_cntr_r_0_MINUS_1___d28;
-  wire IF_bus_dmi_req_fifof_first__7_BITS_1_TO_0_8_EQ_ETC___d78,
+  wire [1 : 0] bus_dmi_rsp_fifof_cntr_r_9_MINUS_1___d37;
+  wire IF_bus_dmi_req_fifof_first__6_BITS_1_TO_0_7_EQ_ETC___d87,
        _dfoo1,
        _dfoo3;
 
@@ -958,9 +957,6 @@ module mkP3_Core(CLK,
 
   // value method master0_m_wvalid
   assign master0_wvalid = corew$cpu_imem_master_wvalid ;
-
-  // value method master0_m_wid
-  assign master0_wid = corew$cpu_imem_master_wid ;
 
   // value method master0_m_wdata
   assign master0_wdata = corew$cpu_imem_master_wdata ;
@@ -1066,9 +1062,6 @@ module mkP3_Core(CLK,
   // value method master1_m_wvalid
   assign master1_wvalid = corew$cpu_dmem_master_wvalid ;
 
-  // value method master1_m_wid
-  assign master1_wid = corew$cpu_dmem_master_wid ;
-
   // value method master1_m_wdata
   assign master1_wdata = corew$cpu_dmem_master_wdata ;
 
@@ -1141,6 +1134,21 @@ module mkP3_Core(CLK,
   assign CAN_FIRE_debug_external_interrupt_req = 1'd1 ;
   assign WILL_FIRE_debug_external_interrupt_req = 1'd1 ;
 
+  // action method jtag_tdi
+  assign CAN_FIRE_jtag_tdi = 1'd1 ;
+  assign WILL_FIRE_jtag_tdi = 1'd1 ;
+
+  // action method jtag_tms
+  assign CAN_FIRE_jtag_tms = 1'd1 ;
+  assign WILL_FIRE_jtag_tms = 1'd1 ;
+
+  // action method jtag_tclk
+  assign CAN_FIRE_jtag_tclk = 1'd1 ;
+  assign WILL_FIRE_jtag_tclk = 1'd1 ;
+
+  // value method jtag_tdo
+  assign jtag_tdo = jtagtap$jtag_tdo ;
+
   // value method tv_verifier_info_tx_m_tvalid
   assign tv_verifier_info_tx_tvalid = tv_xactor$axi_out_tvalid ;
 
@@ -1160,21 +1168,6 @@ module mkP3_Core(CLK,
   assign CAN_FIRE_tv_verifier_info_tx_m_tready = 1'd1 ;
   assign WILL_FIRE_tv_verifier_info_tx_m_tready = 1'd1 ;
 
-  // action method jtag_tdi
-  assign CAN_FIRE_jtag_tdi = 1'd1 ;
-  assign WILL_FIRE_jtag_tdi = 1'd1 ;
-
-  // action method jtag_tms
-  assign CAN_FIRE_jtag_tms = 1'd1 ;
-  assign WILL_FIRE_jtag_tms = 1'd1 ;
-
-  // action method jtag_tclk
-  assign CAN_FIRE_jtag_tclk = 1'd1 ;
-  assign WILL_FIRE_jtag_tclk = 1'd1 ;
-
-  // value method jtag_tdo
-  assign jtag_tdo = jtagtap$jtag_tdo ;
-
   // submodule bus_dmi_req_fifof
   FIFO2 #(.width(32'd41), .guarded(32'd1)) bus_dmi_req_fifof(.RST(RST_N),
 							     .CLK(CLK),
@@ -1187,8 +1180,9 @@ module mkP3_Core(CLK,
 							     .EMPTY_N(bus_dmi_req_fifof$EMPTY_N));
 
   // submodule corew
-  mkCoreW corew(.CLK(CLK),
-		.RST_N(RST_N),
+  mkCoreW corew(.RST_N_dm_power_on_reset(RST_N),
+		.CLK(CLK),
+		.RST_N(ndm_reset$RST_OUT),
 		.core_external_interrupt_sources_0_m_interrupt_req_set_not_clear(corew$core_external_interrupt_sources_0_m_interrupt_req_set_not_clear),
 		.core_external_interrupt_sources_10_m_interrupt_req_set_not_clear(corew$core_external_interrupt_sources_10_m_interrupt_req_set_not_clear),
 		.core_external_interrupt_sources_11_m_interrupt_req_set_not_clear(corew$core_external_interrupt_sources_11_m_interrupt_req_set_not_clear),
@@ -1227,27 +1221,25 @@ module mkP3_Core(CLK,
 		.cpu_imem_master_rresp(corew$cpu_imem_master_rresp),
 		.cpu_imem_master_rvalid(corew$cpu_imem_master_rvalid),
 		.cpu_imem_master_wready(corew$cpu_imem_master_wready),
-		.debug_external_interrupt_req_set_not_clear(corew$debug_external_interrupt_req_set_not_clear),
-		.dm_dmi_read_addr_dm_addr(corew$dm_dmi_read_addr_dm_addr),
-		.dm_dmi_write_dm_addr(corew$dm_dmi_write_dm_addr),
-		.dm_dmi_write_dm_word(corew$dm_dmi_write_dm_word),
-		.set_htif_addrs_fromhost_addr(corew$set_htif_addrs_fromhost_addr),
-		.set_htif_addrs_tohost_addr(corew$set_htif_addrs_tohost_addr),
+		.dmi_read_addr_dm_addr(corew$dmi_read_addr_dm_addr),
+		.dmi_write_dm_addr(corew$dmi_write_dm_addr),
+		.dmi_write_dm_word(corew$dmi_write_dm_word),
+		.ndm_reset_client_response_put(corew$ndm_reset_client_response_put),
+		.nmi_req_set_not_clear(corew$nmi_req_set_not_clear),
 		.set_verbosity_logdelay(corew$set_verbosity_logdelay),
 		.set_verbosity_verbosity(corew$set_verbosity_verbosity),
+		.start_fromhost_addr(corew$start_fromhost_addr),
+		.start_tohost_addr(corew$start_tohost_addr),
 		.EN_set_verbosity(corew$EN_set_verbosity),
-		.EN_set_htif_addrs(corew$EN_set_htif_addrs),
-		.EN_cpu_reset_server_request_put(corew$EN_cpu_reset_server_request_put),
-		.EN_cpu_reset_server_response_get(corew$EN_cpu_reset_server_response_get),
-		.EN_dm_dmi_read_addr(corew$EN_dm_dmi_read_addr),
-		.EN_dm_dmi_read_data(corew$EN_dm_dmi_read_data),
-		.EN_dm_dmi_write(corew$EN_dm_dmi_write),
-		.EN_dm_ndm_reset_req_get_get(corew$EN_dm_ndm_reset_req_get_get),
+		.EN_start(corew$EN_start),
+		.EN_dmi_read_addr(corew$EN_dmi_read_addr),
+		.EN_dmi_read_data(corew$EN_dmi_read_data),
+		.EN_dmi_write(corew$EN_dmi_write),
+		.EN_ndm_reset_client_request_get(corew$EN_ndm_reset_client_request_get),
+		.EN_ndm_reset_client_response_put(corew$EN_ndm_reset_client_response_put),
 		.EN_tv_verifier_info_get_get(corew$EN_tv_verifier_info_get_get),
 		.RDY_set_verbosity(),
-		.RDY_set_htif_addrs(),
-		.RDY_cpu_reset_server_request_put(corew$RDY_cpu_reset_server_request_put),
-		.RDY_cpu_reset_server_response_get(corew$RDY_cpu_reset_server_response_get),
+		.RDY_start(),
 		.cpu_imem_master_awvalid(corew$cpu_imem_master_awvalid),
 		.cpu_imem_master_awid(corew$cpu_imem_master_awid),
 		.cpu_imem_master_awaddr(corew$cpu_imem_master_awaddr),
@@ -1260,7 +1252,6 @@ module mkP3_Core(CLK,
 		.cpu_imem_master_awqos(corew$cpu_imem_master_awqos),
 		.cpu_imem_master_awregion(corew$cpu_imem_master_awregion),
 		.cpu_imem_master_wvalid(corew$cpu_imem_master_wvalid),
-		.cpu_imem_master_wid(corew$cpu_imem_master_wid),
 		.cpu_imem_master_wdata(corew$cpu_imem_master_wdata),
 		.cpu_imem_master_wstrb(corew$cpu_imem_master_wstrb),
 		.cpu_imem_master_wlast(corew$cpu_imem_master_wlast),
@@ -1289,7 +1280,6 @@ module mkP3_Core(CLK,
 		.cpu_dmem_master_awqos(corew$cpu_dmem_master_awqos),
 		.cpu_dmem_master_awregion(corew$cpu_dmem_master_awregion),
 		.cpu_dmem_master_wvalid(corew$cpu_dmem_master_wvalid),
-		.cpu_dmem_master_wid(corew$cpu_dmem_master_wid),
 		.cpu_dmem_master_wdata(corew$cpu_dmem_master_wdata),
 		.cpu_dmem_master_wstrb(corew$cpu_dmem_master_wstrb),
 		.cpu_dmem_master_wlast(corew$cpu_dmem_master_wlast),
@@ -1306,11 +1296,13 @@ module mkP3_Core(CLK,
 		.cpu_dmem_master_arqos(corew$cpu_dmem_master_arqos),
 		.cpu_dmem_master_arregion(corew$cpu_dmem_master_arregion),
 		.cpu_dmem_master_rready(corew$cpu_dmem_master_rready),
-		.RDY_dm_dmi_read_addr(corew$RDY_dm_dmi_read_addr),
-		.dm_dmi_read_data(corew$dm_dmi_read_data),
-		.RDY_dm_dmi_read_data(corew$RDY_dm_dmi_read_data),
-		.RDY_dm_dmi_write(corew$RDY_dm_dmi_write),
-		.RDY_dm_ndm_reset_req_get_get(corew$RDY_dm_ndm_reset_req_get_get),
+		.RDY_dmi_read_addr(corew$RDY_dmi_read_addr),
+		.dmi_read_data(corew$dmi_read_data),
+		.RDY_dmi_read_data(corew$RDY_dmi_read_data),
+		.RDY_dmi_write(corew$RDY_dmi_write),
+		.ndm_reset_client_request_get(),
+		.RDY_ndm_reset_client_request_get(corew$RDY_ndm_reset_client_request_get),
+		.RDY_ndm_reset_client_response_put(corew$RDY_ndm_reset_client_response_put),
 		.tv_verifier_info_get_get(corew$tv_verifier_info_get_get),
 		.RDY_tv_verifier_info_get_get(corew$RDY_tv_verifier_info_get_get));
 
@@ -1333,6 +1325,19 @@ module mkP3_Core(CLK,
 		    .CLK_jtag_tclk_out(jtagtap$CLK_jtag_tclk_out),
 		    .CLK_GATE_jtag_tclk_out());
 
+  // submodule ndm_reset
+  ResetEither ndm_reset(.A_RST(RST_N),
+			.B_RST(ndm_reset_controller$OUT_RST),
+			.RST_OUT(ndm_reset$RST_OUT));
+
+  // submodule ndm_reset_controller
+  MakeResetA #(.RSTDELAY(32'd10), .init(1'd1)) ndm_reset_controller(.CLK(CLK),
+								    .RST(RST_N),
+								    .DST_CLK(CLK),
+								    .ASSERT_IN(ndm_reset_controller$ASSERT_IN),
+								    .ASSERT_OUT(),
+								    .OUT_RST(ndm_reset_controller$OUT_RST));
+
   // submodule tv_xactor
   mkTV_Xactor tv_xactor(.CLK(CLK),
 			.RST_N(RST_N),
@@ -1346,21 +1351,15 @@ module mkP3_Core(CLK,
 			.axi_out_tkeep(tv_xactor$axi_out_tkeep),
 			.axi_out_tlast(tv_xactor$axi_out_tlast));
 
-  // rule RL_rl_once
-  assign CAN_FIRE_RL_rl_once =
-	     corew$RDY_cpu_reset_server_request_put && !rg_once ;
-  assign WILL_FIRE_RL_rl_once = CAN_FIRE_RL_rl_once ;
+  // rule RL_rl_always
+  assign CAN_FIRE_RL_rl_always = 1'd1 ;
+  assign WILL_FIRE_RL_rl_always = 1'd1 ;
 
-  // rule RL_rl_reset_response
-  assign CAN_FIRE_RL_rl_reset_response =
-	     corew$RDY_cpu_reset_server_response_get ;
-  assign WILL_FIRE_RL_rl_reset_response =
-	     corew$RDY_cpu_reset_server_response_get ;
-
-  // rule RL_rl_ndmreset
-  assign CAN_FIRE_RL_rl_ndmreset =
-	     corew$RDY_dm_ndm_reset_req_get_get && rg_once ;
-  assign WILL_FIRE_RL_rl_ndmreset = CAN_FIRE_RL_rl_ndmreset ;
+  // rule RL_rl_ndm_reset
+  assign CAN_FIRE_RL_rl_ndm_reset =
+	     corew$RDY_ndm_reset_client_request_get &&
+	     rg_ndm_reset_delay == 8'd0 ;
+  assign WILL_FIRE_RL_rl_ndm_reset = CAN_FIRE_RL_rl_ndm_reset ;
 
   // rule RL_mkConnectionVtoAf
   assign CAN_FIRE_RL_mkConnectionVtoAf = 1'd1 ;
@@ -1409,14 +1408,21 @@ module mkP3_Core(CLK,
   // rule RL_rl_dmi_req_cpu
   assign CAN_FIRE_RL_rl_dmi_req_cpu =
 	     bus_dmi_req_fifof$EMPTY_N &&
-	     IF_bus_dmi_req_fifof_first__7_BITS_1_TO_0_8_EQ_ETC___d78 ;
+	     IF_bus_dmi_req_fifof_first__6_BITS_1_TO_0_7_EQ_ETC___d87 ;
   assign WILL_FIRE_RL_rl_dmi_req_cpu = CAN_FIRE_RL_rl_dmi_req_cpu ;
 
   // rule RL_rl_dmi_rsp_cpu
   assign CAN_FIRE_RL_rl_dmi_rsp_cpu =
-	     bus_dmi_rsp_fifof_cntr_r != 2'd2 && corew$RDY_dm_dmi_read_data ;
+	     bus_dmi_rsp_fifof_cntr_r != 2'd2 && corew$RDY_dmi_read_data ;
   assign WILL_FIRE_RL_rl_dmi_rsp_cpu =
 	     CAN_FIRE_RL_rl_dmi_rsp_cpu && !WILL_FIRE_RL_rl_dmi_req_cpu ;
+
+  // rule RL_rl_ndm_reset_wait
+  assign CAN_FIRE_RL_rl_ndm_reset_wait =
+	     (rg_ndm_reset_delay != 8'd1 ||
+	      corew$RDY_ndm_reset_client_response_put) &&
+	     rg_ndm_reset_delay != 8'd0 ;
+  assign WILL_FIRE_RL_rl_ndm_reset_wait = CAN_FIRE_RL_rl_ndm_reset_wait ;
 
   // rule RL_mkConnectionGetPut
   assign CAN_FIRE_RL_mkConnectionGetPut =
@@ -1458,37 +1464,38 @@ module mkP3_Core(CLK,
 
   // inputs to muxes for submodule ports
   assign MUX_bus_dmi_rsp_fifof_q_0$write_1__SEL_1 =
-	     WILL_FIRE_RL_bus_dmi_rsp_fifof_both && _dfoo3 ;
-  assign MUX_bus_dmi_rsp_fifof_q_0$write_1__SEL_2 =
 	     WILL_FIRE_RL_bus_dmi_rsp_fifof_incCtr &&
 	     bus_dmi_rsp_fifof_cntr_r == 2'd0 ;
+  assign MUX_bus_dmi_rsp_fifof_q_0$write_1__SEL_2 =
+	     WILL_FIRE_RL_bus_dmi_rsp_fifof_both && _dfoo3 ;
   assign MUX_bus_dmi_rsp_fifof_q_1$write_1__SEL_1 =
-	     WILL_FIRE_RL_bus_dmi_rsp_fifof_both && _dfoo1 ;
-  assign MUX_bus_dmi_rsp_fifof_q_1$write_1__SEL_2 =
 	     WILL_FIRE_RL_bus_dmi_rsp_fifof_incCtr &&
 	     bus_dmi_rsp_fifof_cntr_r == 2'd1 ;
+  assign MUX_bus_dmi_rsp_fifof_q_1$write_1__SEL_2 =
+	     WILL_FIRE_RL_bus_dmi_rsp_fifof_both && _dfoo1 ;
   assign MUX_bus_dmi_rsp_fifof_x_wire$wset_1__SEL_1 =
 	     WILL_FIRE_RL_rl_dmi_req_cpu &&
 	     bus_dmi_req_fifof$D_OUT[1:0] != 2'd1 ;
   assign MUX_bus_dmi_rsp_fifof_cntr_r$write_1__VAL_2 =
 	     bus_dmi_rsp_fifof_cntr_r + 2'd1 ;
   assign MUX_bus_dmi_rsp_fifof_q_0$write_1__VAL_1 =
-	     (bus_dmi_rsp_fifof_cntr_r == 2'd1) ?
-	       MUX_bus_dmi_rsp_fifof_q_0$write_1__VAL_2 :
-	       bus_dmi_rsp_fifof_q_1 ;
-  assign MUX_bus_dmi_rsp_fifof_q_0$write_1__VAL_2 =
 	     MUX_bus_dmi_rsp_fifof_x_wire$wset_1__SEL_1 ?
 	       MUX_bus_dmi_rsp_fifof_x_wire$wset_1__VAL_1 :
 	       MUX_bus_dmi_rsp_fifof_x_wire$wset_1__VAL_2 ;
-  assign MUX_bus_dmi_rsp_fifof_q_1$write_1__VAL_1 =
+  assign MUX_bus_dmi_rsp_fifof_q_0$write_1__VAL_2 =
+	     (bus_dmi_rsp_fifof_cntr_r == 2'd1) ?
+	       MUX_bus_dmi_rsp_fifof_q_0$write_1__VAL_1 :
+	       bus_dmi_rsp_fifof_q_1 ;
+  assign MUX_bus_dmi_rsp_fifof_q_1$write_1__VAL_2 =
 	     (bus_dmi_rsp_fifof_cntr_r == 2'd2) ?
-	       MUX_bus_dmi_rsp_fifof_q_0$write_1__VAL_2 :
+	       MUX_bus_dmi_rsp_fifof_q_0$write_1__VAL_1 :
 	       34'd0 ;
   assign MUX_bus_dmi_rsp_fifof_x_wire$wset_1__VAL_1 =
 	     { 32'hAAAAAAAA,
 	       (bus_dmi_req_fifof$D_OUT[1:0] == 2'd2) ? 2'd0 : 2'd2 } ;
   assign MUX_bus_dmi_rsp_fifof_x_wire$wset_1__VAL_2 =
-	     { corew$dm_dmi_read_data, 2'd0 } ;
+	     { corew$dmi_read_data, 2'd0 } ;
+  assign MUX_rg_ndm_reset_delay$write_1__VAL_1 = rg_ndm_reset_delay - 8'd1 ;
 
   // inlined wires
   assign bus_dmi_rsp_fifof_enqueueing$whas =
@@ -1503,7 +1510,7 @@ module mkP3_Core(CLK,
   // register bus_dmi_rsp_fifof_cntr_r
   assign bus_dmi_rsp_fifof_cntr_r$D_IN =
 	     WILL_FIRE_RL_bus_dmi_rsp_fifof_decCtr ?
-	       bus_dmi_rsp_fifof_cntr_r_0_MINUS_1___d28 :
+	       bus_dmi_rsp_fifof_cntr_r_9_MINUS_1___d37 :
 	       MUX_bus_dmi_rsp_fifof_cntr_r$write_1__VAL_2 ;
   assign bus_dmi_rsp_fifof_cntr_r$EN =
 	     WILL_FIRE_RL_bus_dmi_rsp_fifof_decCtr ||
@@ -1530,25 +1537,25 @@ module mkP3_Core(CLK,
     endcase
   end
   assign bus_dmi_rsp_fifof_q_0$EN =
-	     WILL_FIRE_RL_bus_dmi_rsp_fifof_both && _dfoo3 ||
 	     WILL_FIRE_RL_bus_dmi_rsp_fifof_incCtr &&
 	     bus_dmi_rsp_fifof_cntr_r == 2'd0 ||
+	     WILL_FIRE_RL_bus_dmi_rsp_fifof_both && _dfoo3 ||
 	     WILL_FIRE_RL_bus_dmi_rsp_fifof_decCtr ;
 
   // register bus_dmi_rsp_fifof_q_1
   always@(MUX_bus_dmi_rsp_fifof_q_1$write_1__SEL_1 or
-	  MUX_bus_dmi_rsp_fifof_q_1$write_1__VAL_1 or
+	  MUX_bus_dmi_rsp_fifof_q_0$write_1__VAL_1 or
 	  MUX_bus_dmi_rsp_fifof_q_1$write_1__SEL_2 or
-	  MUX_bus_dmi_rsp_fifof_q_0$write_1__VAL_2 or
+	  MUX_bus_dmi_rsp_fifof_q_1$write_1__VAL_2 or
 	  WILL_FIRE_RL_bus_dmi_rsp_fifof_decCtr)
   begin
     case (1'b1) // synopsys parallel_case
       MUX_bus_dmi_rsp_fifof_q_1$write_1__SEL_1:
 	  bus_dmi_rsp_fifof_q_1$D_IN =
-	      MUX_bus_dmi_rsp_fifof_q_1$write_1__VAL_1;
+	      MUX_bus_dmi_rsp_fifof_q_0$write_1__VAL_1;
       MUX_bus_dmi_rsp_fifof_q_1$write_1__SEL_2:
 	  bus_dmi_rsp_fifof_q_1$D_IN =
-	      MUX_bus_dmi_rsp_fifof_q_0$write_1__VAL_2;
+	      MUX_bus_dmi_rsp_fifof_q_1$write_1__VAL_2;
       WILL_FIRE_RL_bus_dmi_rsp_fifof_decCtr:
 	  bus_dmi_rsp_fifof_q_1$D_IN = 34'd0;
       default: bus_dmi_rsp_fifof_q_1$D_IN =
@@ -1556,14 +1563,18 @@ module mkP3_Core(CLK,
     endcase
   end
   assign bus_dmi_rsp_fifof_q_1$EN =
-	     WILL_FIRE_RL_bus_dmi_rsp_fifof_both && _dfoo1 ||
 	     WILL_FIRE_RL_bus_dmi_rsp_fifof_incCtr &&
 	     bus_dmi_rsp_fifof_cntr_r == 2'd1 ||
+	     WILL_FIRE_RL_bus_dmi_rsp_fifof_both && _dfoo1 ||
 	     WILL_FIRE_RL_bus_dmi_rsp_fifof_decCtr ;
 
-  // register rg_once
-  assign rg_once$D_IN = !WILL_FIRE_RL_rl_ndmreset ;
-  assign rg_once$EN = WILL_FIRE_RL_rl_ndmreset || WILL_FIRE_RL_rl_once ;
+  // register rg_ndm_reset_delay
+  assign rg_ndm_reset_delay$D_IN =
+	     WILL_FIRE_RL_rl_ndm_reset_wait ?
+	       MUX_rg_ndm_reset_delay$write_1__VAL_1 :
+	       8'd110 ;
+  assign rg_ndm_reset_delay$EN =
+	     WILL_FIRE_RL_rl_ndm_reset_wait || WILL_FIRE_RL_rl_ndm_reset ;
 
   // submodule bus_dmi_req_fifof
   assign bus_dmi_req_fifof$D_IN = bus_dmi_req_data_wire$wget ;
@@ -1626,28 +1637,27 @@ module mkP3_Core(CLK,
   assign corew$cpu_imem_master_rresp = master0_rresp ;
   assign corew$cpu_imem_master_rvalid = master0_rvalid ;
   assign corew$cpu_imem_master_wready = master0_wready ;
-  assign corew$debug_external_interrupt_req_set_not_clear =
-	     debug_external_interrupt_req_set_not_clear ;
-  assign corew$dm_dmi_read_addr_dm_addr = bus_dmi_req_fifof$D_OUT[40:34] ;
-  assign corew$dm_dmi_write_dm_addr = bus_dmi_req_fifof$D_OUT[40:34] ;
-  assign corew$dm_dmi_write_dm_word = bus_dmi_req_fifof$D_OUT[33:2] ;
-  assign corew$set_htif_addrs_fromhost_addr = 64'h0 ;
-  assign corew$set_htif_addrs_tohost_addr = 64'h0 ;
+  assign corew$dmi_read_addr_dm_addr = bus_dmi_req_fifof$D_OUT[40:34] ;
+  assign corew$dmi_write_dm_addr = bus_dmi_req_fifof$D_OUT[40:34] ;
+  assign corew$dmi_write_dm_word = bus_dmi_req_fifof$D_OUT[33:2] ;
+  assign corew$ndm_reset_client_response_put = 1'd1 ;
+  assign corew$nmi_req_set_not_clear = 1'd0 ;
   assign corew$set_verbosity_logdelay = 64'h0 ;
   assign corew$set_verbosity_verbosity = 4'h0 ;
+  assign corew$start_fromhost_addr = 64'h0 ;
+  assign corew$start_tohost_addr = 64'h0 ;
   assign corew$EN_set_verbosity = 1'b0 ;
-  assign corew$EN_set_htif_addrs = 1'b0 ;
-  assign corew$EN_cpu_reset_server_request_put = CAN_FIRE_RL_rl_once ;
-  assign corew$EN_cpu_reset_server_response_get =
-	     corew$RDY_cpu_reset_server_response_get ;
-  assign corew$EN_dm_dmi_read_addr =
+  assign corew$EN_start = 1'b0 ;
+  assign corew$EN_dmi_read_addr =
 	     WILL_FIRE_RL_rl_dmi_req_cpu &&
 	     bus_dmi_req_fifof$D_OUT[1:0] == 2'd1 ;
-  assign corew$EN_dm_dmi_read_data = WILL_FIRE_RL_rl_dmi_rsp_cpu ;
-  assign corew$EN_dm_dmi_write =
+  assign corew$EN_dmi_read_data = WILL_FIRE_RL_rl_dmi_rsp_cpu ;
+  assign corew$EN_dmi_write =
 	     WILL_FIRE_RL_rl_dmi_req_cpu &&
 	     bus_dmi_req_fifof$D_OUT[1:0] == 2'd2 ;
-  assign corew$EN_dm_ndm_reset_req_get_get = CAN_FIRE_RL_rl_ndmreset ;
+  assign corew$EN_ndm_reset_client_request_get = CAN_FIRE_RL_rl_ndm_reset ;
+  assign corew$EN_ndm_reset_client_response_put =
+	     WILL_FIRE_RL_rl_ndm_reset_wait && rg_ndm_reset_delay == 8'd1 ;
   assign corew$EN_tv_verifier_info_get_get = CAN_FIRE_RL_mkConnectionGetPut ;
 
   // submodule jtagtap
@@ -1659,26 +1669,29 @@ module mkP3_Core(CLK,
   assign jtagtap$jtag_tdi = jtag_tdi ;
   assign jtagtap$jtag_tms = jtag_tms ;
 
+  // submodule ndm_reset_controller
+  assign ndm_reset_controller$ASSERT_IN = CAN_FIRE_RL_rl_ndm_reset ;
+
   // submodule tv_xactor
   assign tv_xactor$axi_out_tready = tv_verifier_info_tx_tready ;
   assign tv_xactor$tv_in_put = corew$tv_verifier_info_get_get ;
   assign tv_xactor$EN_tv_in_put = CAN_FIRE_RL_mkConnectionGetPut ;
 
   // remaining internal signals
-  assign IF_bus_dmi_req_fifof_first__7_BITS_1_TO_0_8_EQ_ETC___d78 =
+  assign IF_bus_dmi_req_fifof_first__6_BITS_1_TO_0_7_EQ_ETC___d87 =
 	     (bus_dmi_req_fifof$D_OUT[1:0] == 2'd1) ?
-	       corew$RDY_dm_dmi_read_addr :
+	       corew$RDY_dmi_read_addr :
 	       (bus_dmi_req_fifof$D_OUT[1:0] == 2'd2 ||
 		bus_dmi_rsp_fifof_cntr_r != 2'd2) &&
 	       (bus_dmi_req_fifof$D_OUT[1:0] != 2'd2 ||
-		bus_dmi_rsp_fifof_cntr_r != 2'd2 && corew$RDY_dm_dmi_write) ;
+		bus_dmi_rsp_fifof_cntr_r != 2'd2 && corew$RDY_dmi_write) ;
   assign _dfoo1 =
 	     bus_dmi_rsp_fifof_cntr_r != 2'd2 ||
-	     bus_dmi_rsp_fifof_cntr_r_0_MINUS_1___d28 == 2'd1 ;
+	     bus_dmi_rsp_fifof_cntr_r_9_MINUS_1___d37 == 2'd1 ;
   assign _dfoo3 =
 	     bus_dmi_rsp_fifof_cntr_r != 2'd1 ||
-	     bus_dmi_rsp_fifof_cntr_r_0_MINUS_1___d28 == 2'd0 ;
-  assign bus_dmi_rsp_fifof_cntr_r_0_MINUS_1___d28 =
+	     bus_dmi_rsp_fifof_cntr_r_9_MINUS_1___d37 == 2'd0 ;
+  assign bus_dmi_rsp_fifof_cntr_r_9_MINUS_1___d37 =
 	     bus_dmi_rsp_fifof_cntr_r - 2'd1 ;
 
   // handling of inlined registers
@@ -1690,7 +1703,7 @@ module mkP3_Core(CLK,
         bus_dmi_rsp_fifof_cntr_r <= `BSV_ASSIGNMENT_DELAY 2'd0;
 	bus_dmi_rsp_fifof_q_0 <= `BSV_ASSIGNMENT_DELAY 34'd0;
 	bus_dmi_rsp_fifof_q_1 <= `BSV_ASSIGNMENT_DELAY 34'd0;
-	rg_once <= `BSV_ASSIGNMENT_DELAY 1'd0;
+	rg_ndm_reset_delay <= `BSV_ASSIGNMENT_DELAY 8'd0;
       end
     else
       begin
@@ -1703,7 +1716,8 @@ module mkP3_Core(CLK,
 	if (bus_dmi_rsp_fifof_q_1$EN)
 	  bus_dmi_rsp_fifof_q_1 <= `BSV_ASSIGNMENT_DELAY
 	      bus_dmi_rsp_fifof_q_1$D_IN;
-	if (rg_once$EN) rg_once <= `BSV_ASSIGNMENT_DELAY rg_once$D_IN;
+	if (rg_ndm_reset_delay$EN)
+	  rg_ndm_reset_delay <= `BSV_ASSIGNMENT_DELAY rg_ndm_reset_delay$D_IN;
       end
   end
 
@@ -1715,9 +1729,41 @@ module mkP3_Core(CLK,
     bus_dmi_rsp_fifof_cntr_r = 2'h2;
     bus_dmi_rsp_fifof_q_0 = 34'h2AAAAAAAA;
     bus_dmi_rsp_fifof_q_1 = 34'h2AAAAAAAA;
-    rg_once = 1'h0;
+    rg_ndm_reset_delay = 8'hAA;
   end
   `endif // BSV_NO_INITIAL_BLOCKS
+  // synopsys translate_on
+
+  // handling of system tasks
+
+  // synopsys translate_off
+  always@(negedge CLK)
+  begin
+    #0;
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_rl_ndm_reset)
+	begin
+	  v__h1278 = $stime;
+	  #0;
+	end
+    v__h1272 = v__h1278 / 32'd10;
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_rl_ndm_reset)
+	$display("%0d: %m.rl_ndm_reset: asserting NDM reset (for non-DebugModule) for %0d cycles",
+		 v__h1272,
+		 $signed(32'd10));
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_rl_ndm_reset_wait && rg_ndm_reset_delay == 8'd1)
+	begin
+	  v__h1389 = $stime;
+	  #0;
+	end
+    v__h1383 = v__h1389 / 32'd10;
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_rl_ndm_reset_wait && rg_ndm_reset_delay == 8'd1)
+	$display("%0d: %m.rl_ndm_reset_wait: sent NDM reset ack (for non-DebugModule) to Debug Module",
+		 v__h1383);
+  end
   // synopsys translate_on
 endmodule  // mkP3_Core
 

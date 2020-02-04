@@ -1,5 +1,7 @@
 package Proc;
 
+// Note: this module corresponds to module 'mkCPU' in Piccolo/Flute.
+
 // Copyright (c) 2018 Massachusetts Institute of Technology
 // Portions Copyright (c) 2019-2020 Bluespec, Inc.
 // 
@@ -104,12 +106,6 @@ module mkProc (Proc_IFC);
    Reg #(Bit #(4))  cfg_verbosity <- mkConfigReg (0);
 
    // ----------------
-   // Init requests and responses
-
-   FIFOF #(Bit #(0))  f_init_reqs <- mkFIFOF;
-   FIFOF #(Bit #(0))  f_init_rsps <- mkFIFOF;
-
-   // ----------------
    // MMIO
 
    MMIO_AXI4_Adapter_IFC mmio_axi4_adapter <- mkMMIO_AXI4_Adapter;
@@ -201,25 +197,6 @@ module mkProc (Proc_IFC);
    end
 
    // ================================================================
-   // Init
-
-   rule rl_init_start;
-      let x <- pop (f_init_reqs);
-
-      llc_axi4_adapter.reset;
-      mmio_axi4_adapter.reset;
-      for (Integer j = 0; j < valueof(CoreNum); j = j+1)
-	 core [j].init_server.request.put (?);
-   endrule
-
-   rule rl_init_finish;
-      for (Integer j = 0; j < valueof(CoreNum); j = j+1)
-	 let tok <- core [j].init_server.response.get;
-
-      f_init_rsps.enq (?);
-   endrule
-
-   // ----------------
    // Termination detection
 
    for(Integer i = 0; i < valueof(CoreNum); i = i+1) begin
@@ -229,7 +206,9 @@ module mkProc (Proc_IFC);
       endrule
    end
 
+   // ================================================================
    // Print out values written 'tohost'
+
    rule rl_tohost;
       let x <- mmioPlatform.to_host;
       $display ("%0d: mmioPlatform.rl_tohost: 0x%0x (= %0d)", cur_cycle, x, x);
@@ -251,11 +230,9 @@ module mkProc (Proc_IFC);
    // ================================================================
    // INTERFACE
 
-   // Reset
-   interface Server  init_server = toGPServer (f_init_reqs, f_init_rsps);
-
    // ----------------
    // Start the cores running
+   // Use toHostAddr = 0 if not monitoring tohost
    method Action start (Addr startpc, Addr tohostAddr, Addr fromhostAddr);
       action
 	 for(Integer i = 0; i < valueof(CoreNum); i = i+1)
@@ -264,8 +241,8 @@ module mkProc (Proc_IFC);
 
       mmioPlatform.start (tohostAddr, fromhostAddr);
 
-      $display ("Proc.start: startpc = 0x%0h, tohostAddr = 0x%0h, fromhostAddr = %0h",
-		startpc, tohostAddr, fromhostAddr);
+      $display ("%0d: %m.method start: startpc %0h, tohostAddr %0h, fromhostAddr %0h",
+		cur_cycle, startpc, tohostAddr, fromhostAddr);
    endmethod
 
    // ----------------
@@ -312,18 +289,19 @@ module mkProc (Proc_IFC);
 `ifdef INCLUDE_GDB_CONTROL
    // run/halt, gpr, mem and csr control goes to core
    interface Server  hart0_run_halt_server = core [0].hart0_run_halt_server;
+
+   interface Put  hart0_put_other_req;
+      method Action  put (Bit #(4) req);
+	 cfg_verbosity <= req;
+      endmethod
+   endinterface
+
    interface Server  hart0_gpr_mem_server  = core[0].hart0_gpr_mem_server;
 `ifdef ISA_F
    interface Server  hart0_fpr_mem_server  = core[0].hart0_fpr_mem_server;
 `endif
    interface Server  hart0_csr_mem_server  = core[0].hart0_csr_mem_server;
 
-   // We don't implement 'other' functionality
-   interface Put  hart0_put_other_req;
-      method Action  put (Bit #(4) req);
-	 cfg_verbosity <= req;
-      endmethod
-   endinterface
 `endif
 
 `ifdef INCLUDE_TANDEM_VERIF

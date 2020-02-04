@@ -1,5 +1,6 @@
 
 // Copyright (c) 2018 Massachusetts Institute of Technology
+// Portions (c) 2019-2020 Bluespec, Inc.
 // 
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
@@ -20,8 +21,6 @@
 // ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-
-// Portions (c) 2019 Bluespec, Inc.
 
 // This file is adapted from: MIT-riscy/riscy-OOO/procs/lib/MMIOPlatform.bsv
 // Modifications to fit into Bluespec's RISC-V execution environments.
