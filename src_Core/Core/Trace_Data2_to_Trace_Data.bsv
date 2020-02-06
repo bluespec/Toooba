@@ -45,6 +45,7 @@ endinterface
 
 // ================================================================
 
+(* synthesize *)
 module mkTrace_Data2_to_Trace_Data (Trace_Data2_to_Trace_Data_IFC);
 
    Integer verbosity = 0;    // for debugging
@@ -116,13 +117,14 @@ module mkTrace_Data2_to_Trace_Data (Trace_Data2_to_Trace_Data_IFC);
 
    rule rl_xform;
       Trace_Data2 td2 <- pop (f_in);
-      match { .serialnum, .td } <- fav_xform (td2);
-      f_out.enq (tuple2 (serialnum, td));
 
       if (verbosity != 0)
 	 $display ("%0d: %m.rl_xform: serialnum:%0d  PC:0x%0h  instr:0x%08h",
 		   cur_cycle, td2.serialnum, td2.pc, td2.orig_inst,
 		   "  iType:", fshow (td2.iType));
+
+      match { .serialnum, .td } <- fav_xform (td2);
+      f_out.enq (tuple2 (serialnum, td));
    endrule
 
    // ================================================================

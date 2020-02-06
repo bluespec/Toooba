@@ -182,7 +182,6 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 	 inIfc.v_to_TV [way].put (x);
       endaction
    endfunction
-
 `endif
 
     // func units
@@ -467,10 +466,6 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 	});
         commitTrap <= commitTrap_val;
 
-`ifdef INCLUDE_TANDEM_VERIF
-        fa_to_TV (rg_serialnum, x, 0);
-`endif
-
         if (verbosity >= 1) begin
 	   $display ("instret:%0d  PC:0x%0h  instr:0x%08h", rg_serialnum, x.pc, x.orig_inst,
 		     "  iType:", fshow (x.iType), "    [doCommitTrap]");
@@ -479,6 +474,11 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 	   $display ("CommitStage.doCommitTrap_flush: deq_data:   ", fshow (x));
 	   $display ("CommitStage.doCommitTrap_flush: commitTrap: ", fshow (commitTrap_val));
 	end
+
+`ifdef INCLUDE_TANDEM_VERIF
+        fa_to_TV (rg_serialnum, x, 0);
+`endif
+        rg_serialnum <= rg_serialnum + 1;
 
         // flush everything. Only increment epoch and stall fetch when we haven
         // not done it yet (we may have already done them at rename stage)
@@ -627,16 +627,16 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         rob.deqPort[0].deq;
         let x = rob.deqPort[0].deq_data;
 
-`ifdef INCLUDE_TANDEM_VERIF
-        fa_to_TV (rg_serialnum, x, 0);
-`endif
-
         if(verbose) $display("[doCommitSystemInst] ", fshow(x));
         if (verbosity >= 1) begin
 	   $display("instret:%0d  PC:0x%0h  instr:0x%08h", rg_serialnum, x.pc, x.orig_inst,
 		    "   iType:", fshow (x.iType), "    [doCommitSystemInst]");
-	   rg_serialnum <= rg_serialnum + 1;
 	end
+
+`ifdef INCLUDE_TANDEM_VERIF
+        fa_to_TV (rg_serialnum, x, 0);
+`endif
+        rg_serialnum <= rg_serialnum + 1;
 
         // we claim a phy reg for every inst, so commit its renaming
         regRenamingTable.commit[0].commit;
@@ -795,17 +795,16 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                     stop = True;
                 end
                 else begin
-`ifdef INCLUDE_TANDEM_VERIF
-		    fa_to_TV (rg_serialnum + instret, x, i);
-`endif
-
                     if (verbose) $display("[doCommitNormalInst - %d] ", i, fshow(inst_tag), " ; ", fshow(x));
 
 		    if (verbosity >= 1) begin
 		       $display("instret:%0d  PC:0x%0h  instr:0x%08h", rg_serialnum + instret, x.pc, x.orig_inst,
 				"   iType:", fshow (x.iType), "    [doCommitNormalInst [%0d]]", i);
-		       instret = instret + 1;
 		    end
+`ifdef INCLUDE_TANDEM_VERIF
+		    fa_to_TV (rg_serialnum + instret, x, i);
+`endif
+		   instret = instret + 1;
 
                     // inst can be committed, deq it
                     rob.deqPort[i].deq;

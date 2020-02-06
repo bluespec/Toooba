@@ -318,6 +318,12 @@ module mkCoreW #(Reset dm_power_on_reset)
    AXI4_Master_IFC #(Wd_Id, Wd_Addr, Wd_Data, Wd_User)
    dm_master_local = dummy_AXI4_Master_ifc;
 
+`ifdef INCLUDE_TANDEM_VERIF
+   // TV, no DM: stub out the dm input to TV
+   Get #(Trace_Data) gs = getstub;
+   mkConnection (tv_encode.dm_in, gs);
+`endif
+
 `endif    // for ifdef INCLUDE_GDB_CONTROL
 
 

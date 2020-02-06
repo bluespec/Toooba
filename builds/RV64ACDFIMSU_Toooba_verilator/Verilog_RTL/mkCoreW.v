@@ -2271,7 +2271,7 @@ module mkCoreW(RST_N_dm_power_on_reset,
     v__h6484 = v__h6490 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_start)
-	$display("%0d: %m.method start: proc.start (pc %0d, tohostAddr %0h, fromhostAddr %0h)",
+	$display("%0d: %m.method start: proc.start (pc %0h, tohostAddr %0h, fromhostAddr %0h)",
 		 v__h6484,
 		 64'h0000000000001000,
 		 start_tohost_addr,
