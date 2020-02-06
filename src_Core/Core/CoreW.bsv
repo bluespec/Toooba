@@ -192,6 +192,11 @@ module mkCoreW #(Reset dm_power_on_reset)
 	 let pc = soc_map_struct.pc_reset_value;
 	 proc.start (pc, rg_tohost_addr, rg_fromhost_addr);
 
+`ifdef INCLUDE_TANDEM_VERIF
+         // Reset the TV encoder whenever the core is being restarted
+         tv_encode.reset;
+`endif
+
 	 Bool is_running = True;
 	 debug_module.hart0_reset_client.response.put (is_running);
 	 $display ("%0d: %m.rl_dm_hart0_reset_wait: proc.start (pc %0h, tohostAddr %0h, fromhostAddr %0h",
@@ -363,13 +368,19 @@ module mkCoreW #(Reset dm_power_on_reset)
       let pc = soc_map_struct.pc_reset_value;
       proc.start (pc, tohost_addr, fromhost_addr);
 
+`ifdef INCLUDE_TANDEM_VERIF
+      // Reset the TV encoder whenever the core is being restarted
+      tv_encode.reset;
+`endif
+
+
 `ifdef INCLUDE_GDB_CONTROL
       // Save for potential future use by rl_dm_hart0_reset
       rg_tohost_addr   <= tohost_addr;
       rg_fromhost_addr <= fromhost_addr;
 `endif
 
-      $display ("%0d: %m.method start: proc.start (pc %0d, tohostAddr %0h, fromhostAddr %0h)",
+      $display ("%0d: %m.method start: proc.start (pc %0h, tohostAddr %0h, fromhostAddr %0h)",
 		cur_cycle, pc, tohost_addr, fromhost_addr);
    endmethod
 
