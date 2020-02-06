@@ -181,12 +181,25 @@ module mkP3_Core (P3_Core_IFC);
    rule rl_ndm_reset_wait (rg_ndm_reset_delay != 0);
       if (rg_ndm_reset_delay == 1) begin
 	 Bool is_running = True;
+         // Restart the corew
+         corew.start (0, 0);
 	 corew.ndm_reset_client.response.put (is_running);
 	 $display ("%0d: %m.rl_ndm_reset_wait: sent NDM reset ack (for non-DebugModule) to Debug Module",
 		   cur_cycle);
       end
       rg_ndm_reset_delay <= rg_ndm_reset_delay - 1;
    endrule
+
+   // ================================================================
+   // Start the corew after a PoR
+   Reg #(Bool) rg_corew_start_after_por <- mkReg(False);
+   rule rl_step_0 (!rg_corew_start_after_por);
+      corew.start (0, 0);
+      rg_corew_start_after_por <= True;
+   endrule
+   // ================================================================
+
+
 
    // ================================================================
    // Instantiate JTAG TAP controller,
