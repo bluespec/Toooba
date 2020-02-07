@@ -4,7 +4,7 @@ package Trace_Data2_to_Trace_Data;
 
 // ================================================================
 // This package defines a module to transform a stream of Trace_Data2
-// to a stream of (serialnum, Trace_Data)
+// to a stream of (serial_num, Trace_Data)
 
 // ================================================================
 // BSV library imports
@@ -35,11 +35,10 @@ import Trace_Data2 :: *;
 // ================================================================
 
 interface Trace_Data2_to_Trace_Data_IFC;
-   method Action init;
-
    // From Toooba's CommitStage
    interface Put #(Trace_Data2) in;
 
+   // To Trace Encoder
    interface Get #(Tuple2 #(Bit #(64), Trace_Data)) out;
 endinterface
 
@@ -48,7 +47,7 @@ endinterface
 (* synthesize *)
 module mkTrace_Data2_to_Trace_Data (Trace_Data2_to_Trace_Data_IFC);
 
-   Integer verbosity = 0;    // for debugging
+   Integer verbosity = 1;    // for debugging
 
    // Input stream
    FIFOF #(Trace_Data2) f_in <- mkFIFOF;
@@ -57,83 +56,153 @@ module mkTrace_Data2_to_Trace_Data (Trace_Data2_to_Trace_Data_IFC);
    FIFOF #(Tuple2 #(Bit #(64), Trace_Data))  f_out <- mkFIFOF;
 
    // ================================================================
-   // Transformer: Trace_Data2 -> (serialnum, Trace_Data)
+   // Transformer: Trace_Data2 -> (serial_num, Trace_Data)
 
-   function ActionValue #(Tuple2 #(Bit #(64), Trace_Data)) fav_xform (Trace_Data2  td2);
+   function ActionValue #(Tuple2 #(Bit #(64), Trace_Data)) fav_td2_to_td (Trace_Data2  td2);
       actionvalue
-	 let serialnum = td2.serialnum;
-	 Trace_Data td    = ?;
-	 ISize      isize = ((td2.orig_inst [1:0] == 2'b11) ? ISIZE32BIT : ISIZE16BIT);
+	 let serial_num     = td2.serial_num;
+	 Trace_Data td      = ?;
+	 ISize isize        = ((td2.orig_inst [1:0] == 2'b11) ? ISIZE32BIT : ISIZE16BIT);
+	 Addr  fall_thru_PC = td2.pc + ((td2.orig_inst [1:0] == 2'b11) ? 4 : 2);
 
-	 if (   (td2.iType == Alu)
-	     || (td2.iType == J)
-	     || (td2.iType == Jr)
-	     || (td2.iType == Auipc))
-	    td = mkTrace_I_RD (td2.pc,
+	 Bit #(5) gpr_rd = 0;
+	 if (td2.dst matches tagged Valid (tagged Gpr .r)) gpr_rd = r;
+
+	 if (serial_num == 0)
+	    td = mkTrace_RESET;
+
+	 else if (td2.ppc_vaddr_csrData matches tagged PPC .target_addr
+		  &&&   (td2.iType == Br))
+	    td = mkTrace_OTHER (target_addr, isize, td2.orig_inst);
+
+	 else if (td2.ppc_vaddr_csrData matches tagged PPC .target_addr
+		  &&& (   (td2.iType == J)
+		       || (td2.iType == Jr)))
+	    td = mkTrace_I_RD (target_addr,
 			       isize,
 			       td2.orig_inst,
-			       0,    // TODO: rd
+			       gpr_rd,
+			       0);   // TODO: return-pc
+
+	 else if (   (td2.iType == Alu)
+		  || (td2.iType == Auipc))
+	    td = mkTrace_I_RD (fall_thru_PC,
+			       isize,
+			       td2.orig_inst,
+			       gpr_rd,
 			       0);   // TODO: rd_val
 
-	 else if (   (td2.iType == Br)
-		  || (td2.iType == Fence)
+	 else if (td2.dst matches tagged Valid (tagged Fpu .fpr_rd)
+		  &&& (td2.iType == Fpu))
+	    td = mkTrace_F_FRD (fall_thru_PC,
+				isize,
+				td2.orig_inst,
+				fpr_rd,
+				?,    // TODO: rdval
+				?,    // TODO: Bit#(5) fflags
+				?);   // TODO: mstatus)
+
+	 else if (td2.iType == Fpu)
+	    td = mkTrace_F_GRD (fall_thru_PC,
+				isize,
+				td2.orig_inst,
+				gpr_rd,
+				?,    // TODO: rdval
+				?,    // TODO: Bit#(5) fflags
+				?);   // TODO: mstatus)
+
+	 else if (td2.ppc_vaddr_csrData matches tagged VAddr .eaddr
+		  &&& (td2.iType == Ld))
+	    td = mkTrace_I_LOAD (fall_thru_PC,
+				 isize,
+				 td2.orig_inst,
+				 gpr_rd,
+				 ?,    // TODO: rd_val
+				 eaddr);
+
+	 else if (td2.ppc_vaddr_csrData matches tagged VAddr .eaddr
+		  &&& (td2.iType == St))
+	    td = mkTrace_I_STORE (fall_thru_PC,
+				  ?,    // TODO: funct3,
+				  isize,
+				  td2.orig_inst,
+				  ?,    // store-value
+				  eaddr);
+
+	 else if (td2.ppc_vaddr_csrData matches tagged CSRData .csr_data
+		  &&& (td2.iType == Csr))
+	    begin
+	       Bool     csr_valid = False;
+	       CSR_Addr csr_addr  = 0;
+	       if (td2.csr matches tagged Valid .c) begin
+		  csr_valid = True;
+		  csr_addr  = pack (c);
+	       end
+	       td = mkTrace_CSRRX (fall_thru_PC,
+				   isize,
+				   td2.orig_inst,
+				   gpr_rd,
+				   ?,    // TODO: rdval
+				   csr_valid,
+				   csr_addr,
+				   csr_data);
+	    end
+
+	 else if (   (td2.iType == Fence)
 		  || (td2.iType == FenceI)
 		  || (td2.iType == SFence)
 		  || (td2.iType == Ecall)
 		  || (td2.iType == Ebreak)
 		  || (td2.iType == Mret)
 		  || (td2.iType == Sret))
-	    td = mkTrace_OTHER (td2.pc, isize, td2.orig_inst);
+	    td = mkTrace_OTHER (fall_thru_PC, isize, td2.orig_inst);
 
 	 else if (   (td2.iType == Amo)
 		  || (td2.iType == Lr)
 		  || (td2.iType == Sc))
-	    td = mkTrace_AMO (td2.pc,
+	    td = mkTrace_AMO (fall_thru_PC,
 			      0,                // TODO: funct3
 			      isize,
 			      td2.orig_inst,
-			      0,                // TODO: rd
+			      gpr_rd,
 			      0,                // TODO: rd_val
 			      0,                // TODO: rs2_val
 			      0                 // TODO: eaddr
 			      );
+
+	 else if (   (td2.iType == Unsupported)
+		  || (td2.iType == Nop)
+		  || (td2.iType == Interrupt))
+	    td = mkTrace_OTHER (fall_thru_PC, isize, td2.orig_inst);
+
 	 else begin
-	    if (verbosity != 0) begin
-	       $display ("    fav_xform: TBD: Using mkTrace_I_RD for now");
+	    if (verbosity > 0) begin
+	       $display ("    fav_td2_to_td: TBD: Unknown iType: Using mkTrace_OTHER for now");
 	       $display ("      ", fshow (td2));
 	    end
-	    td = mkTrace_I_RD (td2.pc,
-			       isize,
-			       td2.orig_inst,
-			       0,    // TODO: rd
-			       0);   // TODO: rd_val
+	    td = mkTrace_OTHER (fall_thru_PC, isize, td2.orig_inst);
 	 end
-	 return tuple2 (serialnum, td);
+	 return tuple2 (serial_num, td);
       endactionvalue
    endfunction
 
    // ================================================================
    // RULES
 
-   rule rl_xform;
+   rule rl_td2_to_td;
       Trace_Data2 td2 <- pop (f_in);
 
-      if (verbosity != 0)
-	 $display ("%0d: %m.rl_xform: serialnum:%0d  PC:0x%0h  instr:0x%08h",
-		   cur_cycle, td2.serialnum, td2.pc, td2.orig_inst,
+      if (verbosity > 1)
+	 $display ("%0d: %m.rl_td2_to_td: serial_num:%0d  PC:0x%0h  instr:0x%08h",
+		   cur_cycle, td2.serial_num, td2.pc, td2.orig_inst,
 		   "  iType:", fshow (td2.iType));
 
-      match { .serialnum, .td } <- fav_xform (td2);
-      f_out.enq (tuple2 (serialnum, td));
+      match { .serial_num, .td } <- fav_td2_to_td (td2);
+      f_out.enq (tuple2 (serial_num, td));
    endrule
 
    // ================================================================
    // INTERFACE
-
-   method Action init;
-      f_in.clear;
-      f_out.clear;
-   endmethod
 
    interface in  = toPut (f_in);
    interface out = toGet (f_out);

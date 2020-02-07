@@ -158,20 +158,21 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
     Integer verbosity = 1;   // Bluespec: for lightweight verbosity trace
 
     // Used to inform tandem-verifier about program order.
+    // 0 is used to indicate we've just come out of reset
     // TODO: we could use fewer bits and allow and recognize wraparound.
-    Reg #(Bit #(64)) rg_serialnum <- mkReg (0);
-
+    Reg #(Bit #(64)) rg_serial_num <- mkReg (0);
 
 `ifdef INCLUDE_GDB_CONTROL
    Reg #(Run_State) rg_run_state   <- mkReg (RUN_STATE_RUNNING);
 `endif
 
 `ifdef INCLUDE_TANDEM_VERIF
-   function Action fa_to_TV (Bit #(64) serialnum, ToReorderBuffer  deq_data, Integer way);
+   function Action fa_to_TV (Bit #(64) serial_num, ToReorderBuffer  deq_data, Integer way);
       action
-	 let x = Trace_Data2 {serialnum:            serialnum,
+	 let x = Trace_Data2 {serial_num:           serial_num,
 			      pc:                   deq_data.pc,
 			      orig_inst:            deq_data.orig_inst,
+			      dst:                  deq_data.dst,
 			      iType:                deq_data.iType,
 			      csr:                  deq_data.csr,
 			      trap:                 deq_data.trap,
@@ -182,6 +183,14 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 	 inIfc.v_to_TV [way].put (x);
       endaction
    endfunction
+
+   Reg #(Bool) rg_just_after_reset <- mkReg (True);
+
+   rule rl_send_tv_reset (rg_just_after_reset);
+      fa_to_TV (0, ?, 0);
+      rg_just_after_reset <= False;
+      rg_serial_num       <= 1;
+   endrule
 `endif
 
     // func units
@@ -467,7 +476,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         commitTrap <= commitTrap_val;
 
         if (verbosity >= 1) begin
-	   $display ("instret:%0d  PC:0x%0h  instr:0x%08h", rg_serialnum, x.pc, x.orig_inst,
+	   $display ("instret:%0d  PC:0x%0h  instr:0x%08h", rg_serial_num, x.pc, x.orig_inst,
 		     "  iType:", fshow (x.iType), "    [doCommitTrap]");
 	end
         if (verbose) begin
@@ -476,9 +485,9 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 	end
 
 `ifdef INCLUDE_TANDEM_VERIF
-        fa_to_TV (rg_serialnum, x, 0);
+        fa_to_TV (rg_serial_num, x, 0);
 `endif
-        rg_serialnum <= rg_serialnum + 1;
+        rg_serial_num <= rg_serial_num + 1;
 
         // flush everything. Only increment epoch and stall fetch when we haven
         // not done it yet (we may have already done them at rename stage)
@@ -629,14 +638,14 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
         if(verbose) $display("[doCommitSystemInst] ", fshow(x));
         if (verbosity >= 1) begin
-	   $display("instret:%0d  PC:0x%0h  instr:0x%08h", rg_serialnum, x.pc, x.orig_inst,
+	   $display("instret:%0d  PC:0x%0h  instr:0x%08h", rg_serial_num, x.pc, x.orig_inst,
 		    "   iType:", fshow (x.iType), "    [doCommitSystemInst]");
 	end
 
 `ifdef INCLUDE_TANDEM_VERIF
-        fa_to_TV (rg_serialnum, x, 0);
+        fa_to_TV (rg_serial_num, x, 0);
 `endif
-        rg_serialnum <= rg_serialnum + 1;
+        rg_serial_num <= rg_serial_num + 1;
 
         // we claim a phy reg for every inst, so commit its renaming
         regRenamingTable.commit[0].commit;
@@ -798,13 +807,13 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                     if (verbose) $display("[doCommitNormalInst - %d] ", i, fshow(inst_tag), " ; ", fshow(x));
 
 		    if (verbosity >= 1) begin
-		       $display("instret:%0d  PC:0x%0h  instr:0x%08h", rg_serialnum + instret, x.pc, x.orig_inst,
+		       $display("instret:%0d  PC:0x%0h  instr:0x%08h", rg_serial_num + instret, x.pc, x.orig_inst,
 				"   iType:", fshow (x.iType), "    [doCommitNormalInst [%0d]]", i);
 		    end
 `ifdef INCLUDE_TANDEM_VERIF
-		    fa_to_TV (rg_serialnum + instret, x, i);
+		    fa_to_TV (rg_serial_num + instret, x, i);
 `endif
-		   instret = instret + 1;
+		    instret = instret + 1;
 
                     // inst can be committed, deq it
                     rob.deqPort[i].deq;
@@ -857,7 +866,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                 end
             end
         end
-        rg_serialnum <= rg_serialnum + instret;
+        rg_serial_num <= rg_serial_num + instret;
 
         // write FPU csr
         if(csrf.fpuInstNeedWr(fflags, will_dirty_fpu_state)) begin
@@ -903,6 +912,9 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         end
 `endif
     endrule
+
+   // ================================================================
+   // INTERFACE
 
     method Data getPerf(ComStagePerfType t);
         return (case(t)

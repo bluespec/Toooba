@@ -24,9 +24,10 @@ import ReorderBuffer :: *;
 // add to the critical path or scheduling requirements of CommitStage.
 
 typedef struct {
-   Bit #(64)          serialnum;    // instruction serial number
+   Bit #(64)          serial_num;   // TV message serial number
    Addr               pc;
    Bit #(32)          orig_inst;    // original 16b or 32b instruction ([1:0] will distinguish 16b or 32b)
+   Maybe#(ArchRIndx)  dst;          // Invalid, GPR or FPR destination ("Rd")
    IType              iType;
    Maybe #(CSR)       csr;
    Maybe #(Trap)      trap;

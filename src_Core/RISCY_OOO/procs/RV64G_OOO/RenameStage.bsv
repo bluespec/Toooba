@@ -347,6 +347,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         // just place it in the reorder buffer
         let y = ToReorderBuffer{pc: pc,
 				orig_inst: orig_inst,
+				dst: arch_regs.dst,
                                 iType: dInst.iType,
                                 csr: dInst.csr,
                                 claimed_phy_reg: False, // no renaming is done
@@ -446,6 +447,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         let x = fetchStage.pipelines[0].first;
         let pc = x.pc;
         let orig_inst = x.orig_inst;
+        let dst = x.regs.dst;
         let ppc = x.ppc;
         let main_epoch = x.main_epoch;
         let dpTrain = x.dpTrain;
@@ -520,6 +522,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         RobInstState rob_inst_state = to_exec ? NotDone : Executed;
         let y = ToReorderBuffer{pc: pc,
 				orig_inst: orig_inst,
+				dst: arch_regs.dst,
                                 iType: dInst.iType,
                                 csr: dInst.csr,
                                 claimed_phy_reg: True, // XXX we always claim a free reg in rename
@@ -685,6 +688,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         RobInstState rob_inst_state = NotDone; // mem inst always needs execution
         let y = ToReorderBuffer{pc: pc,
 				orig_inst: orig_inst,
+				dst: arch_regs.dst,
                                 iType: dInst.iType,
                                 csr: dInst.csr,
                                 claimed_phy_reg: True, // XXX we always claim a free reg in rename
@@ -1037,6 +1041,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
 
                         let y = ToReorderBuffer{pc: pc,
 						orig_inst: orig_inst,
+						dst: arch_regs.dst,
                                                 iType: dInst.iType,
                                                 csr: dInst.csr,
                                                 claimed_phy_reg: True, // XXX we always claim a free reg in rename

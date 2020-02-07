@@ -47,6 +47,7 @@ typedef union tagged {
 typedef struct {
     Addr               pc;
     Bit #(32)          orig_inst;    // original 16b or 32b instruction ([1:0] will distinguish 16b or 32b)
+    Maybe#(ArchRIndx)  dst;          // Invalid, GPR or FPR destination ("Rd")
     IType              iType;
     Maybe#(CSR)        csr;
     Bool               claimed_phy_reg; // whether we need to commmit renaming
@@ -170,6 +171,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
 
     Reg#(Addr)                                                      pc                   <- mkRegU;
     Reg #(Bit #(32))                                                orig_inst            <- mkRegU;
+    Reg #(Maybe #(ArchRIndx))                                       rg_dst_reg           <- mkRegU;
     Reg#(IType)                                                     iType                <- mkRegU;
     Reg#(Maybe#(CSR))                                               csr                  <- mkRegU;
     Reg#(Bool)                                                      claimed_phy_reg      <- mkRegU;
@@ -259,6 +261,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     method Action write_enq(ToReorderBuffer x);
         pc <= x.pc;
         orig_inst <= x.orig_inst;
+        rg_dst_reg <= x.dst;
         iType <= x.iType;
         csr <= x.csr;
         claimed_phy_reg <= x.claimed_phy_reg;
@@ -292,6 +295,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         return ToReorderBuffer {
             pc: pc,
 	    orig_inst: orig_inst,
+	    dst: rg_dst_reg,
             iType: iType,
             csr: csr,
             claimed_phy_reg: claimed_phy_reg,
