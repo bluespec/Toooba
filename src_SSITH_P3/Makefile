@@ -31,21 +31,12 @@ BSC_COMPILATION_FLAGS += \
 	-D Near_Mem_Caches    \
 	-D FABRIC64    \
 	-D INCLUDE_GDB_CONTROL \
-	-D INCLUDE_TANDEM_VERIF \
 	-D BRVF_TRACE \
 	-D XILINX_BSCAN  -D XILINX_XCVU9P  -D JTAG_TAP \
 
 
 # Only used if we don't have INCLUDE_GDB_CONTROL
 #	-D EXTERNAL_DEBUG_MODULE
-
-#================================================================
-# Parameter settings for MIT RISCY
-# We include 'BSC_COMPILATION_FLAGS += D BSIM' to use simulation
-# models for the integer divier. Omit this for synthesis.
-ifeq ($(SIM), true)
-        BSC_COMPILATION_FLAGS += -D BSIM
-endif
 
 include $(REPO)/builds/Resources/Include_RISCY_Config.mk
 
@@ -78,6 +69,9 @@ TOPMODULE = mkP3_Core
 
 # ================================================================
 # bsc compilation flags
+# Parameter settings for MIT RISCY
+# We include 'BSC_COMPILATION_FLAGS += D BSIM' to use simulation
+# models for the integer divier. Omit this for synthesis.
 
 BSC_COMPILATION_FLAGS += \
 	-keep-fires -aggressive-conditions -no-warn-action-shadowing -no-show-timestamps \
@@ -87,7 +81,7 @@ BSC_COMPILATION_FLAGS += \
 # ================================================================
 # Generate Verilog RTL from BSV sources (needs Bluespec 'bsc' compiler)
 
-RTL_GEN_DIRS = -vdir Verilog_RTL  -bdir build_dir  -info-dir build_dir
+BUILD_DIRS = -bdir build_dir  -info-dir build_dir
 
 build_dir:
 	mkdir -p $@
@@ -95,13 +89,19 @@ build_dir:
 Verilog_RTL:
 	mkdir -p $@
 
+Verilog_RTL_sim:
+	mkdir -p $@
+
 .PHONY: compile
-compile:  build_dir  Verilog_RTL
-	@echo  "INFO: Generating RTL into Verilog_RTL ..."
-	bsc -u -elab -verilog  $(RTL_GEN_DIRS)  $(BSC_COMPILATION_FLAGS)  $(BSC_PATH)  $(TOPFILE)
-	@echo  "INFO: Generated RTL into Verilog_RTL"
+compile:  build_dir Verilog_RTL Verilog_RTL_sim
+	@echo  "INFO: Generating RTL into Verilog_RTL for synthesis ..."
+	bsc -u -elab -verilog  -vdir Verilog_RTL $(BUILD_DIRS)  $(BSC_COMPILATION_FLAGS)  $(BSC_PATH)  $(TOPFILE)
+	@echo  "INFO: Generated Synth RTL into Verilog_RTL"
 	cp  Verilog_RTL/*  xilinx_ip/hdl/
 	@echo  "INFO: Copied RTL from  Verilog_RTL/  to  xilinx_ip/hdl/"
+	rm -f build_dir/*
+	@echo  "INFO: Generating RTL into Verilog_RTL_sim for simulation ..."
+	bsc -u -elab -verilog  -vdir Verilog_RTL_sim $(BUILD_DIRS)  $(BSC_COMPILATION_FLAGS)  -D BSIM $(BSC_PATH)  $(TOPFILE)
 
 # ================================================================
 
@@ -111,6 +111,6 @@ clean:
 
 .PHONY: full_clean
 full_clean: clean
-	rm -r -f  *.log  Verilog_RTL
+	rm -r -f  *.log  Verilog_RTL Verilog_RTL_sim
 
 # ================================================================
