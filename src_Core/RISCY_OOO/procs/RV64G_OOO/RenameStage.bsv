@@ -347,8 +347,9 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         // just place it in the reorder buffer
         let y = ToReorderBuffer{pc: pc,
 				orig_inst: orig_inst,
-				dst: arch_regs.dst,
                                 iType: dInst.iType,
+				dst: arch_regs.dst,
+				dst_data: ?,    // Available only after execution
                                 csr: dInst.csr,
                                 claimed_phy_reg: False, // no renaming is done
                                 trap: firstTrap,
@@ -522,8 +523,9 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         RobInstState rob_inst_state = to_exec ? NotDone : Executed;
         let y = ToReorderBuffer{pc: pc,
 				orig_inst: orig_inst,
-				dst: arch_regs.dst,
                                 iType: dInst.iType,
+				dst: arch_regs.dst,
+				dst_data: ?,    // Available only after execution
                                 csr: dInst.csr,
                                 claimed_phy_reg: True, // XXX we always claim a free reg in rename
                                 trap: Invalid, // no trap
@@ -688,8 +690,9 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         RobInstState rob_inst_state = NotDone; // mem inst always needs execution
         let y = ToReorderBuffer{pc: pc,
 				orig_inst: orig_inst,
-				dst: arch_regs.dst,
                                 iType: dInst.iType,
+				dst: arch_regs.dst,
+				dst_data: ?,    // Available only after execution
                                 csr: dInst.csr,
                                 claimed_phy_reg: True, // XXX we always claim a free reg in rename
                                 trap: Invalid, // no trap
@@ -1041,8 +1044,9 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
 
                         let y = ToReorderBuffer{pc: pc,
 						orig_inst: orig_inst,
-						dst: arch_regs.dst,
                                                 iType: dInst.iType,
+						dst: arch_regs.dst,
+						dst_data: ?,    // Available only after execution
                                                 csr: dInst.csr,
                                                 claimed_phy_reg: True, // XXX we always claim a free reg in rename
                                                 trap: Invalid, // no trap

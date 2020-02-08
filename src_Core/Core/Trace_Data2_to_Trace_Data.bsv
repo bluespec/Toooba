@@ -71,6 +71,16 @@ module mkTrace_Data2_to_Trace_Data (Trace_Data2_to_Trace_Data_IFC);
 	 if (serial_num == 0)
 	    td = mkTrace_RESET;
 
+	 else if (isValid (td2.trap))
+	    td = mkTrace_TRAP (td2.tvec,
+			       isize,
+			       td2.orig_inst,
+			       td2.prv,
+			       td2.status,
+			       td2.cause,
+			       td2.epc,
+			       td2.tval);
+
 	 else if (td2.ppc_vaddr_csrData matches tagged PPC .target_addr
 		  &&&   (td2.iType == Br))
 	    td = mkTrace_OTHER (target_addr, isize, td2.orig_inst);
@@ -82,7 +92,7 @@ module mkTrace_Data2_to_Trace_Data (Trace_Data2_to_Trace_Data_IFC);
 			       isize,
 			       td2.orig_inst,
 			       gpr_rd,
-			       0);   // TODO: return-pc
+			       td2.dst_data);   // return-pc
 
 	 else if (   (td2.iType == Alu)
 		  || (td2.iType == Auipc))
@@ -90,7 +100,7 @@ module mkTrace_Data2_to_Trace_Data (Trace_Data2_to_Trace_Data_IFC);
 			       isize,
 			       td2.orig_inst,
 			       gpr_rd,
-			       0);   // TODO: rd_val
+			       td2.dst_data);   // rd_val
 
 	 else if (td2.dst matches tagged Valid (tagged Fpu .fpr_rd)
 		  &&& (td2.iType == Fpu))
@@ -98,7 +108,7 @@ module mkTrace_Data2_to_Trace_Data (Trace_Data2_to_Trace_Data_IFC);
 				isize,
 				td2.orig_inst,
 				fpr_rd,
-				?,    // TODO: rdval
+				td2.dst_data,    // rdval
 				?,    // TODO: Bit#(5) fflags
 				?);   // TODO: mstatus)
 
@@ -107,7 +117,7 @@ module mkTrace_Data2_to_Trace_Data (Trace_Data2_to_Trace_Data_IFC);
 				isize,
 				td2.orig_inst,
 				gpr_rd,
-				?,    // TODO: rdval
+				td2.dst_data,    // rdval
 				?,    // TODO: Bit#(5) fflags
 				?);   // TODO: mstatus)
 
@@ -117,7 +127,7 @@ module mkTrace_Data2_to_Trace_Data (Trace_Data2_to_Trace_Data_IFC);
 				 isize,
 				 td2.orig_inst,
 				 gpr_rd,
-				 ?,    // TODO: rd_val
+				 td2.dst_data,    // rd_val
 				 eaddr);
 
 	 else if (td2.ppc_vaddr_csrData matches tagged VAddr .eaddr
@@ -157,18 +167,18 @@ module mkTrace_Data2_to_Trace_Data (Trace_Data2_to_Trace_Data_IFC);
 		  || (td2.iType == Sret))
 	    td = mkTrace_OTHER (fall_thru_PC, isize, td2.orig_inst);
 
-	 else if (   (td2.iType == Amo)
-		  || (td2.iType == Lr)
-		  || (td2.iType == Sc))
+	 else if (td2.ppc_vaddr_csrData matches tagged VAddr .eaddr
+		  &&& (   (td2.iType == Amo)
+		       || (td2.iType == Lr)
+		       || (td2.iType == Sc)))
 	    td = mkTrace_AMO (fall_thru_PC,
 			      0,                // TODO: funct3
 			      isize,
 			      td2.orig_inst,
 			      gpr_rd,
-			      0,                // TODO: rd_val
+			      td2.dst_data,     // rd_val
 			      0,                // TODO: rs2_val
-			      0                 // TODO: eaddr
-			      );
+			      eaddr);
 
 	 else if (   (td2.iType == Unsupported)
 		  || (td2.iType == Nop)

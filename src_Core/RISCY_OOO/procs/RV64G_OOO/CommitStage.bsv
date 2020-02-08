@@ -28,6 +28,7 @@ import GetPut::*;
 import Cntrs::*;
 import ConfigReg::*;
 import FIFO::*;
+import FIFOF::*;
 import Types::*;
 import ProcTypes::*;
 import CCTypes::*;
@@ -162,24 +163,42 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
     // TODO: we could use fewer bits and allow and recognize wraparound.
     Reg #(Bit #(64)) rg_serial_num <- mkReg (0);
 
+`ifdef INCLUDE_TANDEM_VERIF
+    FIFOF #(ToReorderBuffer) f_rob_data <- mkFIFOF;
+`endif
+
 `ifdef INCLUDE_GDB_CONTROL
    Reg #(Run_State) rg_run_state   <- mkReg (RUN_STATE_RUNNING);
 `endif
 
 `ifdef INCLUDE_TANDEM_VERIF
-   function Action fa_to_TV (Bit #(64) serial_num, ToReorderBuffer  deq_data, Integer way);
+   Integer way0 = 0;
+
+   function Action fa_to_TV (Integer          way,
+			     Bit #(64)        serial_num,
+			     ToReorderBuffer  deq_data,
+			     Trap_Updates     trap_updates);
       action
 	 let x = Trace_Data2 {serial_num:           serial_num,
 			      pc:                   deq_data.pc,
 			      orig_inst:            deq_data.orig_inst,
-			      dst:                  deq_data.dst,
 			      iType:                deq_data.iType,
+			      dst:                  deq_data.dst,
+			      dst_data:             deq_data.dst_data,
 			      csr:                  deq_data.csr,
 			      trap:                 deq_data.trap,
 			      tval:                 deq_data.tval,
 			      ppc_vaddr_csrData:    deq_data.ppc_vaddr_csrData,
 			      fflags:               deq_data.fflags,
-			      will_dirty_fpu_state: deq_data.will_dirty_fpu_state};
+			      will_dirty_fpu_state: deq_data.will_dirty_fpu_state,
+
+			      // Trap updates
+			      prv:                  trap_updates.prv,
+			      tvec:                 trap_updates.new_pc,
+			      status:               trap_updates.status,
+			      cause:                trap_updates.cause,
+			      epc:                  trap_updates.epc
+			      };
 	 inIfc.v_to_TV [way].put (x);
       endaction
    endfunction
@@ -187,7 +206,8 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
    Reg #(Bool) rg_just_after_reset <- mkReg (True);
 
    rule rl_send_tv_reset (rg_just_after_reset);
-      fa_to_TV (0, ?, 0);
+      Bit #(64) serial_num = 0;
+      fa_to_TV (way0, serial_num, ?, ?);
       rg_just_after_reset <= False;
       rg_serial_num       <= 1;
    endrule
@@ -474,6 +494,9 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
             addr: vaddr
 	});
         commitTrap <= commitTrap_val;
+`ifdef INCLUDE_TANDEM_VERIF
+        f_rob_data.enq (x);    // Save data to be sent to TV in rule doCommitTrap_handle, next
+`endif
 
         if (verbosity >= 1) begin
 	   $display ("instret:%0d  PC:0x%0h  instr:0x%08h", rg_serial_num, x.pc, x.orig_inst,
@@ -483,11 +506,6 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 	   $display ("CommitStage.doCommitTrap_flush: deq_data:   ", fshow (x));
 	   $display ("CommitStage.doCommitTrap_flush: commitTrap: ", fshow (commitTrap_val));
 	end
-
-`ifdef INCLUDE_TANDEM_VERIF
-        fa_to_TV (rg_serial_num, x, 0);
-`endif
-        rg_serial_num <= rg_serial_num + 1;
 
         // flush everything. Only increment epoch and stall fetch when we haven
         // not done it yet (we may have already done them at rename stage)
@@ -525,6 +543,11 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
         // reset commitTrap
         commitTrap <= Invalid;
+
+`ifdef INCLUDE_TANDEM_VERIF
+        let x = f_rob_data.first;
+        f_rob_data.deq;
+`endif
 
         // notify commit of interrupt (so MMIO pRq may be handled)
         if(trap.trap matches tagged Interrupt .inter) begin
@@ -573,8 +596,15 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
        if (! debugger_halt) begin
           // trap handling & redirect
-          let new_pc <- csrf.trap(trap.trap, trap.pc, trap.addr);
-          inIfc.redirectPc(new_pc);
+          // let new_pc <- csrf.trap(trap.trap, trap.pc, trap.addr);    // OLD: WITHOUT TV INFO
+          // inIfc.redirectPc(new_pc);                                  // OLD: WITHOUT TV INFO
+	  let trap_updates <- csrf.trap(trap.trap, trap.pc, trap.addr);
+          inIfc.redirectPc(trap_updates.new_pc);
+
+`ifdef INCLUDE_TANDEM_VERIF
+          fa_to_TV (way0, rg_serial_num, x, trap_updates);
+`endif
+          rg_serial_num <= rg_serial_num + 1;
 
           // system consistency
           // TODO spike flushes TLB here, but perhaps it is because spike's TLB
@@ -643,7 +673,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 	end
 
 `ifdef INCLUDE_TANDEM_VERIF
-        fa_to_TV (rg_serial_num, x, 0);
+        fa_to_TV (way0, rg_serial_num, x, ?);
 `endif
         rg_serial_num <= rg_serial_num + 1;
 
@@ -811,7 +841,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 				"   iType:", fshow (x.iType), "    [doCommitNormalInst [%0d]]", i);
 		    end
 `ifdef INCLUDE_TANDEM_VERIF
-		    fa_to_TV (rg_serial_num + instret, x, i);
+		    fa_to_TV (i, rg_serial_num + instret, x, ?);
 `endif
 		    instret = instret + 1;
 

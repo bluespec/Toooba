@@ -31,6 +31,8 @@ import Assert::*;
 import Ehr::*;
 import RevertingVirtualReg::*;
 
+import Cur_Cycle :: *;
+
 // right after execution, full_result has more up-to-date data (e.g. ppc of mispredicted branch)
 // some parts of full_result are for verification
 // but some are truly used for execution
@@ -47,8 +49,9 @@ typedef union tagged {
 typedef struct {
     Addr               pc;
     Bit #(32)          orig_inst;    // original 16b or 32b instruction ([1:0] will distinguish 16b or 32b)
-    Maybe#(ArchRIndx)  dst;          // Invalid, GPR or FPR destination ("Rd")
     IType              iType;
+    Maybe#(ArchRIndx)  dst;          // Invalid, GPR or FPR destination ("Rd")
+    Data               dst_data;     // Output of instruction into destination register
     Maybe#(CSR)        csr;
     Bool               claimed_phy_reg; // whether we need to commmit renaming
     Maybe#(Trap)       trap;
@@ -84,7 +87,7 @@ typedef enum {
 } RobInstState deriving (Bits, Eq, FShow);
 
 interface Row_setExecuted_doFinishAlu;
-    method Action set(Maybe#(Data) csrData, ControlFlow cf);
+    method Action set(Data dst_data, Maybe#(Data) csrData, ControlFlow cf);
 endinterface
 
 interface Row_setExecuted_doFinishFpuMulDiv;
@@ -171,8 +174,9 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
 
     Reg#(Addr)                                                      pc                   <- mkRegU;
     Reg #(Bit #(32))                                                orig_inst            <- mkRegU;
-    Reg #(Maybe #(ArchRIndx))                                       rg_dst_reg           <- mkRegU;
     Reg#(IType)                                                     iType                <- mkRegU;
+    Reg #(Maybe #(ArchRIndx))                                       rg_dst_reg           <- mkRegU;
+    Reg #(Data)                                                     rg_dst_data          <- mkRegU;
     Reg#(Maybe#(CSR))                                               csr                  <- mkRegU;
     Reg#(Bool)                                                      claimed_phy_reg      <- mkRegU;
     Ehr#(3, Maybe#(Trap))                                           trap                 <- mkEhr(?);
@@ -199,9 +203,12 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     Vector#(aluExeNum, Row_setExecuted_doFinishAlu) aluSetExe;
     for(Integer i = 0; i < valueof(aluExeNum); i = i+1) begin
         aluSetExe[i] = (interface Row_setExecuted_doFinishAlu;
-            method Action set(Maybe#(Data) csrData, ControlFlow cf);
+            method Action set(Data dst_data, Maybe#(Data) csrData, ControlFlow cf);
                 // inst is done
-                rob_inst_state[state_finishAlu_port(i)] <= Executed; 
+                rob_inst_state[state_finishAlu_port(i)] <= Executed;
+	        // Destination register data, for Tandem Verification
+                rg_dst_data <= dst_data;
+
                 // update PPC or csrData (vaddr is always useless for ALU results)
                 if(csrData matches tagged Valid .d) begin
                     ppc_vaddr_csrData[pvc_finishAlu_port(i)] <= CSRData (d);
@@ -261,8 +268,9 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     method Action write_enq(ToReorderBuffer x);
         pc <= x.pc;
         orig_inst <= x.orig_inst;
-        rg_dst_reg <= x.dst;
         iType <= x.iType;
+        rg_dst_reg <= x.dst;
+        // rg_dst_data will be written after inst execution
         csr <= x.csr;
         claimed_phy_reg <= x.claimed_phy_reg;
         trap[trap_enq_port] <= x.trap;
@@ -295,8 +303,9 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         return ToReorderBuffer {
             pc: pc,
 	    orig_inst: orig_inst,
-	    dst: rg_dst_reg,
             iType: iType,
+	    dst: rg_dst_reg,
+	    dst_data: rg_dst_data,
             csr: csr,
             claimed_phy_reg: claimed_phy_reg,
             trap: trap[trap_deq_port],
@@ -383,7 +392,7 @@ endinterface
 // not raise false conflicts between the superscalar enq/deq actions
 
 interface ROB_setExecuted_doFinishAlu;
-    method Action set(InstTag x, Maybe#(Data) csrData, ControlFlow cf);
+    method Action set(InstTag x, Data dst_data, Maybe#(Data) csrData, ControlFlow cf);
 endinterface
 
 interface ROB_setExecuted_doFinishFpuMulDiv;
@@ -895,11 +904,11 @@ module mkSupReorderBuffer#(
     for(Integer i = 0; i < valueof(aluExeNum); i = i+1) begin
         aluSetExeIfc[i] = (interface ROB_setExecuted_doFinishAlu;
             method Action set(
-                InstTag x, Maybe#(Data) csrData, ControlFlow cf
+                InstTag x, Data dst_data, Maybe#(Data) csrData, ControlFlow cf
             ) if(
                 all(id, readVReg(setExeAlu_SB_enq)) // ordering: < enq
             );
-                row[x.way][x.ptr].setExecuted_doFinishAlu[i].set(csrData, cf);
+                row[x.way][x.ptr].setExecuted_doFinishAlu[i].set(dst_data, csrData, cf);
             endmethod
         endinterface);
     end

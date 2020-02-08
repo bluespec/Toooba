@@ -27,14 +27,22 @@ typedef struct {
    Bit #(64)          serial_num;   // TV message serial number
    Addr               pc;
    Bit #(32)          orig_inst;    // original 16b or 32b instruction ([1:0] will distinguish 16b or 32b)
-   Maybe#(ArchRIndx)  dst;          // Invalid, GPR or FPR destination ("Rd")
    IType              iType;
+   Maybe#(ArchRIndx)  dst;          // Invalid, GPR or FPR destination ("Rd")
+   Data               dst_data;
    Maybe #(CSR)       csr;
    Maybe #(Trap)      trap;
    Addr               tval;    // in case of trap
    PPCVAddrCSRData    ppc_vaddr_csrData;
    Bit #(5)           fflags;
    Bool               will_dirty_fpu_state; // True means 2'b11 will be written to FS
+
+   // Trap updates
+   Bit #(2)  prv;
+   Addr      tvec;
+   Data      status;
+   Data      cause;
+   Data      epc;
    } Trace_Data2
 deriving (Bits, Eq, FShow);
 

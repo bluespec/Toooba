@@ -41,6 +41,8 @@ import SpecFifo::*;
 import HasSpecBits::*;
 import Bypass::*;
 
+import Cur_Cycle :: *;
+
 // ALU pipeline has 4 stages
 // dispatch -> reg read -> exe -> finish (write reg)
 // bypass is sent out from the end of exe stage
@@ -139,7 +141,7 @@ interface AluExeInput;
     method Addr rob_getPC(InstTag t);
     method Addr rob_getPredPC(InstTag t);
     method Bit #(32) rob_getOrig_Inst (InstTag t);
-    method Action rob_setExecuted(InstTag t, Maybe#(Data) csrData, ControlFlow cf);
+    method Action rob_setExecuted(InstTag t, Data dst_data, Maybe#(Data) csrData, ControlFlow cf);
     // Fetch stage
     method Action fetch_train_predictors(FetchTrainBP train);
 
@@ -318,6 +320,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
         // update the instruction in the reorder buffer.
         inIfc.rob_setExecuted(
             x.tag,
+	    x.data,
             x.csrData,
             x.controlFlow
         );

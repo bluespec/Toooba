@@ -47,6 +47,22 @@ import Cur_Cycle  :: *;
 import SoC_Map :: *;
 
 // ================================================================
+// Information returned on traps.
+
+typedef struct {
+   Addr      new_pc;
+
+`ifdef INCLUDE_TANDEM_VERIF
+   // The fields below are for tandem verification only
+   Bit #(2)  prv;
+   Data      status;
+   Data      cause;
+   Data      epc;
+`endif
+   } Trap_Updates
+deriving (Bits, FShow);
+
+// ================================================================
 
 interface CsrFile;
     // Read
@@ -59,7 +75,7 @@ interface CsrFile;
 
     // Methods for handling traps
     method Maybe#(Interrupt) pending_interrupt;
-    method ActionValue#(Addr) trap(Trap t, Addr pc, Addr faultAddr);
+    method ActionValue#(Trap_Updates) trap(Trap t, Addr pc, Addr faultAddr);
     method ActionValue#(Addr) sret;
     method ActionValue#(Addr) mret;
 
@@ -276,6 +292,9 @@ module mkCsrFile #(Data hartid)(CsrFile);
     Reg#(Bit#(1)) sd_reg   =  readOnlyReg(
         ((xs_reg == 2'b11) || (fs_reg == 2'b11)) ? 1 : 0
     );
+    function Bit #(1) fn_sd_val (Bit #(2) xs_val, Bit #(2) fs_val);
+       return (((xs_val == 2'b11) || (fs_val == 2'b11)) ? 1 : 0);
+    endfunction
     Reg#(Bit#(2)) sxl_reg  =  readOnlyReg(getXLBits);
     Reg#(Bit#(2)) uxl_reg  =  readOnlyReg(getXLBits);
     Reg#(Bit#(1)) tsr_reg  <- mkCsrReg(0);
@@ -314,6 +333,25 @@ module mkCsrFile #(Data hartid)(CsrFile);
         ie_vec[prvM],      readOnlyReg(1'b0),
         ie_vec[prvS],      ie_vec[prvU]
     );
+    function Data fn_mstatus_val (Bit #(2) sxl_val, Bit #(2) uxl_val,
+				  Bit #(1) tsr_val, Bit #(1) tw_val,  Bit #(1) tvm_val,
+				  Bit #(1) mxr_val, Bit #(1) sum_val, Bit #(1) mprv_val,
+				  Bit #(2) xs_val,  Bit #(2) fs_val,
+				  Bit #(2) mpp_val, Bit #(1) spp_val,
+				  Bit #(1) prev_ie_vec_prvM_val,
+				  Bit #(1) prev_ie_vec_prvS_val, Bit #(1) prev_ie_vec_prvU_val,
+				  Bit #(1) ie_vec_prvM_val,
+				  Bit #(1) ie_vec_prvS_val,      Bit #(1) ie_vec_prvU_val);
+       return {fn_sd_val (xs_val, fs_val),
+	       27'b0, sxl_val, uxl_val, 9'b0,
+	       tsr_val, tw_val, tvm_val, mxr_val, sum_val, mprv_val, xs_val, fs_val,
+	       mpp_val, 2'b0, spp_val,
+	       prev_ie_vec_prvM_val, 1'b0,
+	       prev_ie_vec_prvS_val, prev_ie_vec_prvU_val,
+	       ie_vec_prvM_val,      1'b0,
+	       ie_vec_prvS_val,      ie_vec_prvU_val};
+    endfunction
+
     // misa
     Reg#(Data) misa_csr = readOnlyReg({getXLBits, 36'b0, getExtensionBits(isa)});
     // medeleg: some exceptions don't exist, fix corresponding bits to 0
@@ -384,6 +422,10 @@ module mkCsrFile #(Data hartid)(CsrFile);
     Reg#(Data) mcause_csr = concatReg3(
         mcause_interrupt_reg, readOnlyReg(59'b0), mcause_code_reg
     );
+    function Data fn_mcause_val (Bit #(1) mcause_interrupt_val, Bit #(4) mcause_code_val);
+       return { mcause_interrupt_val, 59'b0, mcause_code_val };
+    endfunction
+
     // mtval (mbadaddr in spike)
     Reg#(Data) mtval_csr <- mkCsrReg(0);
     // mip
@@ -433,6 +475,24 @@ module mkCsrFile #(Data hartid)(CsrFile);
         readOnlyReg(2'b0), prev_ie_vec[prvS], prev_ie_vec[prvU],
         readOnlyReg(2'b0), ie_vec[prvS], ie_vec[prvU]
     );
+    function Data fn_sstatus_val (Bit #(2) uxl_val,
+				  Bit #(1) mxr_val, Bit #(1) sum_val,
+				  Bit #(2) xs_val,  Bit #(2) fs_val,
+				  Bit #(1) spp_val,
+				  Bit #(1) prev_ie_vec_prvS_val,
+				  Bit #(1) prev_ie_vec_prvU_val,
+				  Bit #(1) ie_vec_prvS_val,
+				  Bit #(1) ie_vec_prvU_val);
+       return {fn_sd_val (xs_val, fs_val),
+	       29'b0, uxl_val, 12'b0,
+	       mxr_val, sum_val, 1'b0, xs_val, fs_val,
+	       4'b0, spp_val,
+	       2'b0,
+	       prev_ie_vec_prvS_val, prev_ie_vec_prvU_val,
+	       2'b0,
+	       ie_vec_prvS_val,      ie_vec_prvU_val};
+    endfunction
+
     // sie: restricted view of mie
     Reg#(Data) sie_csr = concatReg9(
         readOnlyReg(54'b0),
@@ -468,6 +528,10 @@ module mkCsrFile #(Data hartid)(CsrFile);
     Reg#(Data) scause_csr = concatReg3(
         scause_interrupt_reg, readOnlyReg(59'b0), scause_code_reg
     );
+    function Data fn_scause_val (Bit #(1) scause_interrupt_val, Bit #(4) scause_code_val);
+       return { scause_interrupt_val, 59'b0, scause_code_val };
+    endfunction
+
     // stval (sbadaddr in spike)
     Reg#(Data) stval_csr <- mkCsrReg(0);
     // sip: restricted view of mip
@@ -726,7 +790,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
         end
     endmethod
 
-    method ActionValue#(Addr) trap(Trap t, Addr pc, Addr addr);
+    method ActionValue#(Trap_Updates) trap(Trap t, Addr pc, Addr addr);
         // figure out trap cause & trap val
         Bit#(1) cause_interrupt = 0;
         Bit#(4) cause_code = 0;
@@ -780,7 +844,21 @@ module mkCsrFile #(Data hartid)(CsrFile);
             scause_code_reg <= cause_code;
             stval_csr <= trap_val;
             // return next pc
-            return getNextPc(stvec_mode_low_reg, stvec_base_hi_reg);
+            // return getNextPc(stvec_mode_low_reg, stvec_base_hi_reg);
+	    Data sstatus_val = fn_sstatus_val (uxl_reg,
+					       mxr_reg, sum_reg,
+					       xs_reg,  fs_reg,
+					       prv_reg [0],
+					       /* prev_ie_vec_[prvS] */ ie_vec[prvS],
+					       prev_ie_vec [prvU],
+					       /* ie_vec [prvS] */ 0,
+					       ie_vec [prvU]);
+	    Data scause_val = fn_scause_val (cause_interrupt, cause_code);
+	    return Trap_Updates {new_pc: getNextPc(stvec_mode_low_reg, stvec_base_hi_reg),
+				 prv:    prvS,
+				 status: sstatus_val,
+				 cause:  scause_val,
+				 epc:    pc};
         end
         else begin
             // ie/prv stack
@@ -794,7 +872,24 @@ module mkCsrFile #(Data hartid)(CsrFile);
             mcause_code_reg <= cause_code;
             mtval_csr <= trap_val;
             // return next pc
-            return getNextPc(mtvec_mode_low_reg, mtvec_base_hi_reg);
+            // return getNextPc(mtvec_mode_low_reg, mtvec_base_hi_reg);
+	    Data mstatus_val = fn_mstatus_val (sxl_reg, uxl_reg,
+					       tsr_reg, tw_reg,  tvm_reg,
+					       mxr_reg, sum_reg, mprv_reg,
+					       xs_reg,  fs_reg,
+					       /* mpp */ prv_reg, spp_reg,
+					       /* prev_ie_vec [prvM] */ ie_vec [prvM],
+					       prev_ie_vec [prvS],
+					       prev_ie_vec [prvU],
+					       /* ie_vec [prvM] */ 0,
+					       ie_vec [prvS],
+					       ie_vec [prvU]);
+	    Data mcause_val = fn_mcause_val (cause_interrupt, cause_code);
+	    return Trap_Updates {new_pc: getNextPc(mtvec_mode_low_reg, mtvec_base_hi_reg),
+				 prv:    prvM,
+				 status: mstatus_val,
+				 cause:  mcause_val,
+				 epc:    pc};
         end
         // XXX yield load reservation should be done outside this method
     endmethod
