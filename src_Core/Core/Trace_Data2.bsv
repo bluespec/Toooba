@@ -36,6 +36,7 @@ typedef struct {
    PPCVAddrCSRData    ppc_vaddr_csrData;
    Bit #(5)           fflags;
    Bool               will_dirty_fpu_state; // True means 2'b11 will be written to FS
+   Data               mstatus;    // For Fpu ops, since [MX] bit may have changed
 
    // Trap updates
    Bit #(2)  prv;

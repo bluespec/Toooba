@@ -47,7 +47,7 @@ import Cur_Cycle  :: *;
 import SoC_Map :: *;
 
 // ================================================================
-// Information returned on traps.
+// Information returned on traps and mret/sret/uret
 
 typedef struct {
    Addr      new_pc;
@@ -60,6 +60,17 @@ typedef struct {
    Data      epc;
 `endif
    } Trap_Updates
+deriving (Bits, FShow);
+
+typedef struct {
+   Addr      new_pc;
+
+`ifdef INCLUDE_TANDEM_VERIF
+   // The fields below are for tandem verification only
+   Bit #(2)  prv;
+   Data      status;
+`endif
+   } RET_Updates
 deriving (Bits, FShow);
 
 // ================================================================
@@ -76,8 +87,8 @@ interface CsrFile;
     // Methods for handling traps
     method Maybe#(Interrupt) pending_interrupt;
     method ActionValue#(Trap_Updates) trap(Trap t, Addr pc, Addr faultAddr);
-    method ActionValue#(Addr) sret;
-    method ActionValue#(Addr) mret;
+    method ActionValue#(RET_Updates) sret;
+    method ActionValue#(RET_Updates) mret;
 
     // Outputs for CSRs that the rest of the processor needs to know about
     method VMInfo vmI;
@@ -848,7 +859,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
 	    Data sstatus_val = fn_sstatus_val (uxl_reg,
 					       mxr_reg, sum_reg,
 					       xs_reg,  fs_reg,
-					       prv_reg [0],
+					       /* spp_reg */ prv_reg [0],
 					       /* prev_ie_vec_[prvS] */ ie_vec[prvS],
 					       prev_ie_vec [prvU],
 					       /* ie_vec [prvS] */ 0,
@@ -894,20 +905,46 @@ module mkCsrFile #(Data hartid)(CsrFile);
         // XXX yield load reservation should be done outside this method
     endmethod
 
-    method ActionValue#(Addr) mret;
+    method ActionValue#(RET_Updates) mret;
         prv_reg <= prev_prv_vec[prvM];
         prev_prv_vec[prvM] <= prvU;
         ie_vec[prvM] <= prev_ie_vec[prvM];
         prev_ie_vec[prvM] <= 1;
-        return mepc_csr;
+
+        Data mstatus_val = fn_mstatus_val(sxl_reg, uxl_reg,
+					  tsr_reg, tw_reg,  tvm_reg,
+					  mxr_reg, sum_reg, mprv_reg,
+					  xs_reg,  fs_reg,
+					  /* mpp */ prvU,
+					  spp_reg,
+					  /* prev_ie_vec [prvM] */ 1,
+					  prev_ie_vec [prvS],
+					  prev_ie_vec [prvU],
+					  /* ie_vec [prvM] */ prev_ie_vec[prvM],
+					  ie_vec [prvS],
+					  ie_vec [prvU]);
+        return RET_Updates {new_pc: mepc_csr,
+			    prv:    prev_prv_vec[prvM],
+			    status: mstatus_val};
     endmethod
 
-    method ActionValue#(Addr) sret;
+    method ActionValue#(RET_Updates) sret;
         prv_reg <= prev_prv_vec[prvS];
         prev_prv_vec[prvS] <= prvU;
         ie_vec[prvS] <= prev_ie_vec[prvS];
         prev_ie_vec[prvS] <= 1;
-        return sepc_csr;
+
+        Data sstatus_val = fn_sstatus_val (uxl_reg,
+					   mxr_reg, sum_reg,
+					   xs_reg,  fs_reg,
+					   /* spp_reg */ prvU [0],
+					   /* prev_ie_vec_[prvS] */ 1,
+					   prev_ie_vec [prvU],
+					   /* ie_vec [prvS] */ prev_ie_vec[prvS],
+					   ie_vec [prvU]);
+        return RET_Updates {new_pc: sepc_csr,
+			    prv:    prev_prv_vec[prvS],
+			    status: sstatus_val};
     endmethod
 
     method VMInfo vmI;

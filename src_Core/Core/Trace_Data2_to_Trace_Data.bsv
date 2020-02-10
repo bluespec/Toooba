@@ -109,8 +109,8 @@ module mkTrace_Data2_to_Trace_Data (Trace_Data2_to_Trace_Data_IFC);
 				td2.orig_inst,
 				fpr_rd,
 				td2.dst_data,    // rdval
-				?,    // TODO: Bit#(5) fflags
-				?);   // TODO: mstatus)
+				td2.fflags,
+				td2.mstatus);   // [FX] updated
 
 	 else if (td2.iType == Fpu)
 	    td = mkTrace_F_GRD (fall_thru_PC,
@@ -118,8 +118,8 @@ module mkTrace_Data2_to_Trace_Data (Trace_Data2_to_Trace_Data_IFC);
 				td2.orig_inst,
 				gpr_rd,
 				td2.dst_data,    // rdval
-				?,    // TODO: Bit#(5) fflags
-				?);   // TODO: mstatus)
+				td2.fflags,
+				td2.mstatus);    // [FX] updated
 
 	 else if (td2.ppc_vaddr_csrData matches tagged VAddr .eaddr
 		  &&& (td2.iType == Ld))
@@ -127,7 +127,7 @@ module mkTrace_Data2_to_Trace_Data (Trace_Data2_to_Trace_Data_IFC);
 				 isize,
 				 td2.orig_inst,
 				 gpr_rd,
-				 td2.dst_data,    // rd_val
+				 td2.dst_data,    // rd_val    // TODO: setup in Mem pipeline
 				 eaddr);
 
 	 else if (td2.ppc_vaddr_csrData matches tagged VAddr .eaddr
@@ -142,29 +142,36 @@ module mkTrace_Data2_to_Trace_Data (Trace_Data2_to_Trace_Data_IFC);
 	 else if (td2.ppc_vaddr_csrData matches tagged CSRData .csr_data
 		  &&& (td2.iType == Csr))
 	    begin
+	       Bit #(3) funct3     = td2.orig_inst [14:12];
+	       Bit #(5) rs1_or_imm = td2.orig_inst [19:15];
 	       Bool     csr_valid = False;
 	       CSR_Addr csr_addr  = 0;
 	       if (td2.csr matches tagged Valid .c) begin
-		  csr_valid = True;
 		  csr_addr  = pack (c);
+		  csr_valid = (   (funct3 [1:0] == 2'b01)    // CSRRW, CSRRWI
+			       || (   (   (funct3 [1:0] == 2'b10)     // CSRRS, CSRRSI
+				       || (funct3 [1:0] == 2'b11))    // CSRRC, CSRRCI
+				   && (rs1_or_imm != 0)));
 	       end
 	       td = mkTrace_CSRRX (fall_thru_PC,
 				   isize,
 				   td2.orig_inst,
 				   gpr_rd,
-				   ?,    // TODO: rdval
+				   td2.dst_data,    // rdval
 				   csr_valid,
 				   csr_addr,
 				   csr_data);
 	    end
 
+	 else if (   (td2.iType == Mret)
+		  || (td2.iType == Sret))
+	    td = mkTrace_RET (fall_thru_PC, isize, td2.orig_inst, td2.prv, td2.status);
+
 	 else if (   (td2.iType == Fence)
 		  || (td2.iType == FenceI)
 		  || (td2.iType == SFence)
-		  || (td2.iType == Ecall)
-		  || (td2.iType == Ebreak)
-		  || (td2.iType == Mret)
-		  || (td2.iType == Sret))
+		  || (td2.iType == Ecall)    // Handled by TRAP above?
+		  || (td2.iType == Ebreak))  // Handled by TRAP above?
 	    td = mkTrace_OTHER (fall_thru_PC, isize, td2.orig_inst);
 
 	 else if (td2.ppc_vaddr_csrData matches tagged VAddr .eaddr

@@ -91,7 +91,7 @@ interface Row_setExecuted_doFinishAlu;
 endinterface
 
 interface Row_setExecuted_doFinishFpuMulDiv;
-    method Action set(Bit#(5) fflags);
+    method Action set(Data dst_data, Bit#(5) fflags);
 endinterface
 
 interface ReorderBufferRowEhr#(numeric type aluExeNum, numeric type fpuMulDivExeNum);
@@ -224,9 +224,10 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     Vector#(fpuMulDivExeNum, Row_setExecuted_doFinishFpuMulDiv) fpuMulDivExe;
     for(Integer i = 0; i < valueof(fpuMulDivExeNum); i = i+1) begin
         fpuMulDivExe[i] = (interface Row_setExecuted_doFinishFpuMulDiv;
-            method Action set(Bit#(5) new_fflags);
+            method Action set(Data dst_data, Bit#(5) new_fflags);
                 // inst is done
                 rob_inst_state[state_finishFpuMulDiv_port(i)] <= Executed; 
+	        rg_dst_data <= dst_data;
                 // update fflags
                 fflags[fflags_finishFpuMulDiv_port(i)] <= new_fflags;
             endmethod
@@ -396,7 +397,7 @@ interface ROB_setExecuted_doFinishAlu;
 endinterface
 
 interface ROB_setExecuted_doFinishFpuMulDiv;
-    method Action set(InstTag x, Bit#(5) fflags);
+    method Action set(InstTag x, Data dst_data, Bit#(5) fflags);
 endinterface
 
 interface ROB_getOrigPC;
@@ -917,11 +918,11 @@ module mkSupReorderBuffer#(
     for(Integer i = 0; i < valueof(fpuMulDivExeNum); i = i+1) begin
         fpuMulDivSetExeIfc[i] = (interface ROB_setExecuted_doFinishFpuMulDiv;
             method Action set(
-                InstTag x, Bit#(5) fflags
+                InstTag x, Data dst_data, Bit#(5) fflags
             ) if(
                 all(id, readVReg(setExeFpuMulDiv_SB_enq)) // ordering: < enq
             );
-                row[x.way][x.ptr].setExecuted_doFinishFpuMulDiv[i].set(fflags);
+                row[x.way][x.ptr].setExecuted_doFinishFpuMulDiv[i].set(dst_data, fflags);
             endmethod
         endinterface);
     end

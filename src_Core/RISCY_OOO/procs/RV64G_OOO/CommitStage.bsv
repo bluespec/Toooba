@@ -174,11 +174,17 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 `ifdef INCLUDE_TANDEM_VERIF
    Integer way0 = 0;
 
-   function Action fa_to_TV (Integer          way,
-			     Bit #(64)        serial_num,
-			     ToReorderBuffer  deq_data,
-			     Trap_Updates     trap_updates);
+   Maybe #(Trap_Updates) no_trap_updates = tagged Invalid;
+   Maybe #(RET_Updates)  no_ret_updates  = tagged Invalid;
+
+   function Action fa_to_TV (Integer                way,
+			     Bit #(64)              serial_num,
+			     ToReorderBuffer        deq_data,
+			     Maybe #(Trap_Updates)  m_trap_updates,
+			     Maybe #(RET_Updates)   m_ret_updates);
       action
+	 CsrFile csrf  = inIfc.csrfIfc;
+         let mstatus   = csrf.rd (CSRmstatus);
 	 let x = Trace_Data2 {serial_num:           serial_num,
 			      pc:                   deq_data.pc,
 			      orig_inst:            deq_data.orig_inst,
@@ -191,13 +197,22 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 			      ppc_vaddr_csrData:    deq_data.ppc_vaddr_csrData,
 			      fflags:               deq_data.fflags,
 			      will_dirty_fpu_state: deq_data.will_dirty_fpu_state,
+			      mstatus:              mstatus,    // For Fpu ops, since [FX] bit changed
 
-			      // Trap updates
-			      prv:                  trap_updates.prv,
-			      tvec:                 trap_updates.new_pc,
-			      status:               trap_updates.status,
-			      cause:                trap_updates.cause,
-			      epc:                  trap_updates.epc
+			      // Trap and RET updates
+			      prv:                  (  m_trap_updates matches tagged Valid .tu
+						     ? tu.prv
+						     : (m_ret_updates matches tagged Valid .ru
+							? ru.prv
+							: ?)),
+			      status:               (  m_trap_updates matches tagged Valid .tu
+						     ? tu.status
+						     : (m_ret_updates matches tagged Valid .ru
+							? ru.status
+							: ?)),
+			      tvec:                 fromMaybe (?, m_trap_updates).new_pc,
+			      cause:                fromMaybe (?, m_trap_updates).cause,
+			      epc:                  fromMaybe (?, m_trap_updates).epc
 			      };
 	 inIfc.v_to_TV [way].put (x);
       endaction
@@ -207,7 +222,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
    rule rl_send_tv_reset (rg_just_after_reset);
       Bit #(64) serial_num = 0;
-      fa_to_TV (way0, serial_num, ?, ?);
+      fa_to_TV (way0, serial_num, ?, no_trap_updates, no_ret_updates);
       rg_just_after_reset <= False;
       rg_serial_num       <= 1;
    endrule
@@ -602,7 +617,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
           inIfc.redirectPc(trap_updates.new_pc);
 
 `ifdef INCLUDE_TANDEM_VERIF
-          fa_to_TV (way0, rg_serial_num, x, trap_updates);
+          fa_to_TV (way0, rg_serial_num, x, tagged Valid trap_updates, no_ret_updates);
 `endif
           rg_serial_num <= rg_serial_num + 1;
 
@@ -672,11 +687,6 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 		    "   iType:", fshow (x.iType), "    [doCommitSystemInst]");
 	end
 
-`ifdef INCLUDE_TANDEM_VERIF
-        fa_to_TV (way0, rg_serial_num, x, ?);
-`endif
-        rg_serial_num <= rg_serial_num + 1;
-
         // we claim a phy reg for every inst, so commit its renaming
         regRenamingTable.commit[0].commit;
 
@@ -705,13 +715,29 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         // redirect (Sret and Mret redirect pc is got from CSRF)
         Addr next_pc = x.ppc_vaddr_csrData matches tagged PPC .ppc ? ppc : (x.pc + 4);
         doAssert(next_pc == x.pc + 4, "ppc must be pc + 4");
+`ifdef INCLUDE_TANDEM_VERIF
+        Maybe #(RET_Updates) m_ret_updates = no_ret_updates;
+`endif
         if(x.iType == Sret) begin
-            next_pc <- csrf.sret;
+	   RET_Updates ret_updates <- csrf.sret;
+           next_pc = ret_updates.new_pc;
+`ifdef INCLUDE_TANDEM_VERIF
+	   m_ret_updates = tagged Valid ret_updates;
+`endif
         end
         else if(x.iType == Mret) begin
-            next_pc <- csrf.mret;
+	   RET_Updates ret_updates <- csrf.mret;
+           next_pc = ret_updates.new_pc;
+`ifdef INCLUDE_TANDEM_VERIF
+	   m_ret_updates = tagged Valid ret_updates;
+`endif
         end
         inIfc.redirectPc(next_pc);
+
+`ifdef INCLUDE_TANDEM_VERIF
+        fa_to_TV (way0, rg_serial_num, x, no_trap_updates, m_ret_updates);
+`endif
+        rg_serial_num <= rg_serial_num + 1;
 
         // rename stage only sends out system inst when ROB is empty, so no
         // need to flush ROB again
@@ -841,7 +867,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 				"   iType:", fshow (x.iType), "    [doCommitNormalInst [%0d]]", i);
 		    end
 `ifdef INCLUDE_TANDEM_VERIF
-		    fa_to_TV (i, rg_serial_num + instret, x, ?);
+		    fa_to_TV (i, rg_serial_num + instret, x, no_trap_updates, no_ret_updates);
 `endif
 		    instret = instret + 1;
 
