@@ -127,7 +127,7 @@ module mkTrace_Data2_to_Trace_Data (Trace_Data2_to_Trace_Data_IFC);
 				 isize,
 				 td2.orig_inst,
 				 gpr_rd,
-				 td2.dst_data,    // rd_val    // TODO: setup in Mem pipeline
+				 td2.dst_data,    // rd_val
 				 eaddr);
 
 	 else if (td2.ppc_vaddr_csrData matches tagged VAddr .eaddr

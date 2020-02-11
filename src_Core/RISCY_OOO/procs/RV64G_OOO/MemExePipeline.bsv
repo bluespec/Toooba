@@ -50,6 +50,8 @@ import L1CoCache::*;
 import Bypass::*;
 import LatencyTimer::*;
 
+import Cur_Cycle :: *;
+
 typedef struct {
     // inst info
     MemFunc mem_func;
@@ -145,6 +147,9 @@ interface MemExeInput;
     // ROB
     method Addr rob_getPC(InstTag t);
     method Action rob_setExecuted_doFinishMem(InstTag t, Addr vaddr, Bool access_at_commit, Bool non_mmio_st_done);
+`ifdef INCLUDE_TANDEM_VERIF
+    method Action rob_setExecuted_doFinishMem_RegData (InstTag t, Data dst_data);
+`endif
     method Action rob_setExecuted_deqLSQ(InstTag t, Maybe#(Exception) cause, Maybe#(LdKilledBy) ld_killed);
     // MMIO
     method Bool isMMIOAddr(Addr a);
@@ -629,6 +634,11 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         if(verbose) $display(rule_name, " ", fshow(tag), "; ", fshow(data), "; ", fshow(res));
         if(res.dst matches tagged Valid .dst) begin
             inIfc.writeRegFile(dst.indx, res.data);
+
+`ifdef INCLUDE_TANDEM_VERIF
+	    inIfc.rob_setExecuted_doFinishMem_RegData (res.instTag, res.data);
+`endif
+
 `ifdef PERF_COUNT
             // perf: load to use latency
             let lat <- ldToUseLatTimer.done(tag);
@@ -766,6 +776,9 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         if(lsqDeqLd.dst matches tagged Valid .dst) begin
             inIfc.writeRegFile(dst.indx, resp);
             inIfc.setRegReadyAggr_mem(dst.indx);
+`ifdef INCLUDE_TANDEM_VERIF
+	    inIfc.rob_setExecuted_doFinishMem_RegData (lsqDeqLd.instTag, resp);
+`endif
         end
         inIfc.rob_setExecuted_deqLSQ(lsqDeqLd.instTag, Invalid, Invalid);
         if(verbose) $display("[doDeqLdQ_Lr_deq] ", fshow(lsqDeqLd), "; ", fshow(d), "; ", fshow(resp));
@@ -841,6 +854,9 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         if(lsqDeqLd.dst matches tagged Valid .dst) begin
             inIfc.writeRegFile(dst.indx, resp);
             inIfc.setRegReadyAggr_mem(dst.indx);
+`ifdef INCLUDE_TANDEM_VERIF
+	    inIfc.rob_setExecuted_doFinishMem_RegData (lsqDeqLd.instTag, resp);
+`endif
         end
         inIfc.rob_setExecuted_deqLSQ(lsqDeqLd.instTag, Invalid, Invalid);
         if(verbose) $display("[doDeqLdQ_MMIO_deq] ", fshow(lsqDeqLd), "; ", fshow(d), "; ", fshow(resp));
@@ -1061,6 +1077,9 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         if(lsqDeqSt.dst matches tagged Valid .dst) begin
             inIfc.writeRegFile(dst.indx, resp);
             inIfc.setRegReadyAggr_mem(dst.indx);
+`ifdef INCLUDE_TANDEM_VERIF
+	    inIfc.rob_setExecuted_doFinishMem_RegData (lsqDeqSt.instTag, resp);
+`endif
         end
         inIfc.rob_setExecuted_deqLSQ(lsqDeqSt.instTag, Invalid, Invalid);
         if(verbose) $display("[doDeqStQ_ScAmo_deq] ", fshow(lsqDeqSt), "; ", fshow(resp));
@@ -1157,6 +1176,9 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         if(lsqDeqSt.dst matches tagged Valid .dst) begin
             inIfc.writeRegFile(dst.indx, resp);
             inIfc.setRegReadyAggr_mem(dst.indx);
+`ifdef INCLUDE_TANDEM_VERIF
+	    inIfc.rob_setExecuted_doFinishMem_RegData (lsqDeqSt.instTag, resp);
+`endif
         end
         inIfc.rob_setExecuted_deqLSQ(lsqDeqSt.instTag, Invalid, Invalid);
         if(verbose) $display("[doDeqStQ_MMIO_deq] ", fshow(lsqDeqSt), "; ", fshow(resp));

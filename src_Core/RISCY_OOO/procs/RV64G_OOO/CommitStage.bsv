@@ -705,6 +705,12 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                 doAssert(False, "must have csr data");
             end
             csrf.csrInstWr(csr_idx, csr_data);
+
+`ifdef INCLUDE_TANDEM_VERIF
+            Data data_warl_xformed = csrf.warl_xform (csr_idx, csr_data);
+	    x.ppc_vaddr_csrData = tagged CSRData data_warl_xformed;
+`endif
+
             // check if satp is modified or not
             write_satp = csr_idx == CSRsatp;
 `ifdef SECURITY

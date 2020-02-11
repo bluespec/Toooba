@@ -392,6 +392,9 @@ module mkCore#(CoreId coreId)(Core);
             method csrf_rd = csrf.rd;
             method rob_getPC = rob.getOrigPC[valueof(AluExeNum)].get; // last getPC port
             method rob_setExecuted_doFinishMem = rob.setExecuted_doFinishMem;
+`ifdef INCLUDE_TANDEM_VERIF
+	    method rob_setExecuted_doFinishMem_RegData = rob.setExecuted_doFinishMem_RegData;
+`endif
             method rob_setExecuted_deqLSQ = rob.setExecuted_deqLSQ;
             method isMMIOAddr = mmio.isMMIOAddr;
             method mmioReq = mmio.dataReq;

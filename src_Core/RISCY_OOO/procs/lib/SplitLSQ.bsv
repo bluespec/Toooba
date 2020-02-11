@@ -280,6 +280,9 @@ typedef struct {
 typedef struct {
     Bool wrongPath;
     Maybe#(PhyDst) dst;
+`ifdef INCLUDE_TANDEM_VERIF
+    InstTag instTag;    // For recording Ld data in ROB
+`endif
     Data data;
 } LSQRespLdResult deriving(Bits, Eq, FShow);
 
@@ -1974,6 +1977,9 @@ module mkSplitLSQ(SplitLSQ);
         let res = LSQRespLdResult {
             wrongPath: False,
             dst: Invalid,
+`ifdef INCLUDE_TANDEM_VERIF
+	    instTag: ld_instTag [t],    // For recording Ld data in ROB
+`endif
             data: ?
         };
         if(ld_waitWPResp_resp[t]) begin

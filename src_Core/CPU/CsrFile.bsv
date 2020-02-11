@@ -84,6 +84,9 @@ interface CsrFile;
     method Bool fpuInstNeedWr(Bit#(5) fflags, Bool fpu_dirty);
     method Action fpuInstWr(Bit#(5) fflags); // FPU must become dirty
 
+    // The WARL transform performed during CSRRx writes to a CSR
+    method Data warl_xform (CSR csr, Data x);
+
     // Methods for handling traps
     method Maybe#(Interrupt) pending_interrupt;
     method ActionValue#(Trap_Updates) trap(Trap t, Addr pc, Addr faultAddr);
@@ -443,15 +446,15 @@ module mkCsrFile #(Data hartid)(CsrFile);
     Vector#(4, Reg#(Bit#(1))) external_int_pend_vec = replicate(readOnlyReg(0));
     external_int_pend_vec[prvU] <- mkCsrReg(0);
     external_int_pend_vec[prvS] <- mkCsrReg(0);
-    external_int_pend_vec[prvM] <- mkCsrReg(0);
+    external_int_pend_vec[prvM] <- mkCsrReg(0);    // TODO: bug (writeable by CSRRx)?
     Vector#(4, Reg#(Bit#(1))) timer_int_pend_vec = replicate(readOnlyReg(0));
     timer_int_pend_vec[prvU] <- mkCsrReg(0);
     timer_int_pend_vec[prvS] <- mkCsrReg(0);
-    timer_int_pend_vec[prvM] <- mkCsrReg(0);
+    timer_int_pend_vec[prvM] <- mkCsrReg(0);    // TODO: bug (writeable by CSRRx)?
     Vector#(4, Reg#(Bit#(1))) software_int_pend_vec = replicate(readOnlyReg(0));
     software_int_pend_vec[prvU] <- mkCsrReg(0);
     software_int_pend_vec[prvS] <- mkCsrReg(0);
-    software_int_pend_vec[prvM] <- mkCsrReg(0);
+    software_int_pend_vec[prvM] <- mkCsrReg(0);    // TODO: bug (writeable by CSRRx)?
     Reg#(Data) mip_csr = concatReg13(
         readOnlyReg(52'b0),
         external_int_pend_vec[prvM], readOnlyReg(1'b0),
@@ -609,7 +612,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
 				  1'h0,    // [11]     stepie
 				  1'h0,    // [10]     stopcount
 				  1'h0,    // [9]      stoptime
-				  3'h0,    // [8:7]    cause    // WARNING: 0 is non-standard
+				  3'h0,    // [8:6]    cause    // WARNING: 0 is non-standard
 				  1'h0,    // [5]      reserved
 				  1'h1,    // [4]      mprven
 				  1'h0,    // [3]      nmip    // non-maskable interrupt pending
@@ -742,6 +745,83 @@ module mkCsrFile #(Data hartid)(CsrFile);
     endfunction
 
    // ================================================================
+   // This function is the WARL (Write Any Read Legal) transform
+   // performed during CSR writes.  Currently it duplicates the logic
+   // in the _write method of CSRs; ideally this function should be
+   // separate from the _write method, which should remain as an
+   // ordinary _write.  The WARL'd value is needed for Tandem
+   // Verification.
+
+   function Data fv_warl_xform (CSR csr, Data x);
+      Asid      x_asid = truncate (x [59:44]);
+      Bit #(16) asid   = zeroExtend (x_asid);
+      return (
+	 case (csr)
+	    // Machine CSRs
+	    CSRmisa:      {getXLBits, 36'b0, getExtensionBits(isa)};
+	    CSRmvendorid: 0;
+	    CSRmarchid:   0;
+	    CSRmimpid:    0;
+	    CSRmhartid:   hartid;
+	    CSRmstatus:   fn_mstatus_val (getXLBits,    // sxl
+					  getXLBits,    // uxl
+					  x [22],       // tsr
+					  x [21],       // tw
+					  x [20],       // tvm
+					  x [19],       // mxr
+					  x [18],       // sum
+					  x [17],       // mprv
+					  2'b0,         // xs
+					  ((isa.f || isa.d) ? x [14:13] : 2'b0),    // fs
+					  x [12:11],    // mpp
+					  x [8],        // spp
+					  x [7],        // prev_ie_vec[prvM]
+					  x [5],        // prev_ie_vec[prvS]
+					  x [4],        // prev_ie_vec[prvU]
+					  x [3],        // ie_vec[prvM]
+					  x [1],        // ie_vec[prvS]
+					  x [0]);       // ie_vec[prvU]
+	    CSRmtvec:      { x[63:2], 1'b0, x[0]};
+	    CSRmedeleg:    { 52'b0, x[11], 1'b0, x[9:8], x[7], 1'b0, x[5:4], x[3], 1'b0, x[1:0]};
+	    CSRmideleg:    { 52'b0, x[11], 1'b0, x[9:8], x[7], 1'b0, x[5:4], x[3], 1'b0, x[1:0]};
+	    CSRmip:        { 52'b0, x[11], 1'b0, x[9:8], x[7], 1'b0, x[5:4], x[3], 1'b0, x[1:0]};
+	    CSRmie:        { 52'b0, x[11], 1'b0, x[9:8], x[7], 1'b0, x[5:4], x[3], 1'b0, x[1:0]};
+	    CSRmcounteren: { 61'b0, x[2:0]};
+	    CSRmcause:     { x[63], 59'b0, x[3:0] };
+
+	    // Supervisor level CSRs
+	    CSRsstatus:   fn_sstatus_val (getXLBits,    // uxl
+					  x [19],       // mxr
+					  x [18],       // sum
+					  2'b0,         // xs
+					  ((isa.f || isa.d) ? x [14:13] : 2'b0),    // fs
+					  x [8],        // spp
+					  x [5],        // prev_ie_vec[prvS]
+					  x [4],        // prev_ie_vec[prvU]
+					  x [1],        // ie_vec[prvS]
+					  x [0]);       // ie_vec[prvU]
+	    CSRstvec:      { x[63:2], 1'b0, x[0]};
+	    CSRsip:        { 52'b0, 2'b0, x[9:8], 2'b0, x[5:4], 2'b0, x[1:0]};
+	    CSRsie:        { 52'b0, 2'b0, x[9:8], 2'b0, x[5:4], 2'b0, x[1:0]};
+	    CSRscounteren: { 61'b0, x[2:0]};
+	    CSRscause:     { x[63], 59'b0, x[3:0] };
+	    CSRsatp:       { x[63], 3'b0, asid,  x [43:0] };
+
+	    // User level CSRs
+	    CSRfflags:     { 59'b0, x [4:0] };
+	    CSRfrm:        { 61'b0, x [2:0] };
+	    CSRfcsr:       { 56'b0, x [7:0] };
+
+`ifdef INCLUDE_GDB_CONTROL
+	    // Debug Mode CSRs
+	    CSRdcsr:       { 32'b0, x[31:28], 12'b0, x[14], 1'b0, x[13:6], 1'b0, x[4:0] };
+`endif
+
+	    default:       x;
+         endcase);
+   endfunction
+
+   // ================================================================
    // INTERFACE
 
     method Data rd(CSR csr);
@@ -770,6 +850,10 @@ module mkCsrFile #(Data hartid)(CsrFile);
     method Action fpuInstWr(Bit#(5) fflags);
         fs_reg <= 2'b11; // FPU must be dirty
         fflags_reg <= fflags_reg | fflags;
+    endmethod
+
+    method Data warl_xform (CSR csr, Data x);
+       return fv_warl_xform (csr, x);
     endmethod
 
     method Maybe#(Interrupt) pending_interrupt;
@@ -865,11 +949,14 @@ module mkCsrFile #(Data hartid)(CsrFile);
 					       /* ie_vec [prvS] */ 0,
 					       ie_vec [prvU]);
 	    Data scause_val = fn_scause_val (cause_interrupt, cause_code);
-	    return Trap_Updates {new_pc: getNextPc(stvec_mode_low_reg, stvec_base_hi_reg),
-				 prv:    prvS,
+	    return Trap_Updates {new_pc: getNextPc(stvec_mode_low_reg, stvec_base_hi_reg)
+`ifdef INCLUDE_TANDEM_VERIF
+				 , prv:    prvS,
 				 status: sstatus_val,
 				 cause:  scause_val,
-				 epc:    pc};
+				 epc:    pc
+`endif
+				 };
         end
         else begin
             // ie/prv stack
@@ -896,11 +983,14 @@ module mkCsrFile #(Data hartid)(CsrFile);
 					       ie_vec [prvS],
 					       ie_vec [prvU]);
 	    Data mcause_val = fn_mcause_val (cause_interrupt, cause_code);
-	    return Trap_Updates {new_pc: getNextPc(mtvec_mode_low_reg, mtvec_base_hi_reg),
-				 prv:    prvM,
+	    return Trap_Updates {new_pc: getNextPc(mtvec_mode_low_reg, mtvec_base_hi_reg)
+`ifdef INCLUDE_TANDEM_VERIF
+				 , prv:    prvM,
 				 status: mstatus_val,
 				 cause:  mcause_val,
-				 epc:    pc};
+				 epc:    pc
+`endif
+				 };
         end
         // XXX yield load reservation should be done outside this method
     endmethod
@@ -923,9 +1013,12 @@ module mkCsrFile #(Data hartid)(CsrFile);
 					  /* ie_vec [prvM] */ prev_ie_vec[prvM],
 					  ie_vec [prvS],
 					  ie_vec [prvU]);
-        return RET_Updates {new_pc: mepc_csr,
-			    prv:    prev_prv_vec[prvM],
-			    status: mstatus_val};
+        return RET_Updates {new_pc: mepc_csr
+`ifdef INCLUDE_TANDEM_VERIF
+			    , prv:    prev_prv_vec[prvM],
+			    status: mstatus_val
+`endif
+			    };
     endmethod
 
     method ActionValue#(RET_Updates) sret;
@@ -942,9 +1035,12 @@ module mkCsrFile #(Data hartid)(CsrFile);
 					   prev_ie_vec [prvU],
 					   /* ie_vec [prvS] */ prev_ie_vec[prvS],
 					   ie_vec [prvU]);
-        return RET_Updates {new_pc: sepc_csr,
-			    prv:    prev_prv_vec[prvS],
-			    status: sstatus_val};
+        return RET_Updates {new_pc: sepc_csr
+`ifdef INCLUDE_TANDEM_VERIF
+			    , prv:    prev_prv_vec[prvS],
+			    status: sstatus_val
+`endif
+			    };
     endmethod
 
     method VMInfo vmI;

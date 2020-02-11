@@ -109,6 +109,12 @@ interface ReorderBufferRowEhr#(numeric type aluExeNum, numeric type fpuMulDivExe
     // perform), and non-MMIO St can become Executed (NOTE faulting
     // instructions are not Executed, they are set at deqLSQ time)
     method Action setExecuted_doFinishMem(Addr vaddr, Bool access_at_commit, Bool non_mmio_st_done);
+
+`ifdef INCLUDE_TANDEM_VERIF
+    // Used after a Ld, Lr, Sc, Amo to record reg data
+    method Action setExecuted_doFinishMem_RegData (Data dst_data);
+`endif
+
 `ifdef INORDER_CORE
     // in-order core sets LSQ tag after getting out of issue queue
     method Action setLSQTag(LdStQTag t, Bool isFence);
@@ -257,6 +263,13 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         // udpate non mmio st
         nonMMIOStDone[nonMMIOSt_finishMem_port] <= non_mmio_st_done;
     endmethod
+
+`ifdef INCLUDE_TANDEM_VERIF
+    // Used after a Ld, Lr, Sc, Amo to record reg data
+    method Action setExecuted_doFinishMem_RegData (Data dst_data);
+       rg_dst_data <= dst_data;
+    endmethod
+`endif
 
 `ifdef INORDER_CORE
     method Action setLSQTag(LdStQTag t, Bool isFence);
@@ -427,6 +440,12 @@ interface SupReorderBuffer#(numeric type aluExeNum, numeric type fpuMulDivExeNum
     interface Vector#(fpuMulDivExeNum, ROB_setExecuted_doFinishFpuMulDiv) setExecuted_doFinishFpuMulDiv;
     // doFinishMem, after addr translation
     method Action setExecuted_doFinishMem(InstTag x, Addr vaddr, Bool access_at_commit, Bool non_mmio_st_done);
+
+`ifdef INCLUDE_TANDEM_VERIF
+    // Used after a Ld, Lr, Sc, Amo to record reg data
+    method Action setExecuted_doFinishMem_RegData (InstTag x, Data dst_data);
+`endif
+
 `ifdef INORDER_CORE
     // in-order core sets LSQ tag after getting out of issue queue
     method Action setLSQTag(InstTag x, LdStQTag t, Bool isFence);
@@ -996,6 +1015,13 @@ module mkSupReorderBuffer#(
     );
         row[x.way][x.ptr].setExecuted_doFinishMem(vaddr, access_at_commit, non_mmio_st_done);
     endmethod
+
+`ifdef INCLUDE_TANDEM_VERIF
+    // Used after a Ld, Lr, Sc, Amo to record reg data
+    method Action setExecuted_doFinishMem_RegData (InstTag x, Data dst_data);
+       row[x.way][x.ptr].setExecuted_doFinishMem_RegData (dst_data);
+    endmethod
+`endif
 
 `ifdef INORDER_CORE
     method Action setLSQTag(InstTag x, LdStQTag t, Bool isFence);
