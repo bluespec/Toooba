@@ -168,10 +168,11 @@ module mkAluDispToRegFifo(CLK,
 	       CASE_m_m_row_0_BITS_118_TO_107_1_m_m_row_0_BIT_ETC__q6;
   reg [2 : 0] CASE_enq_x_BITS_135_TO_133_0_enq_x_BITS_135_TO_ETC__q1,
 	      CASE_m_m_row_0_BITS_123_TO_121_0_m_m_row_0_BIT_ETC__q4;
-  wire [11 : 0] IF_m_m_specBits_0_dummy2_0_read__01_AND_m_m_sp_ETC___d304,
+  wire [11 : 0] IF_m_m_specBits_0_dummy2_0_read__02_AND_m_m_sp_ETC___d305,
 		IF_m_m_specBits_0_lat_0_whas__0_THEN_m_m_specB_ETC___d13,
-		sb__h10570,
+		sb__h10657,
 		upd__h2322;
+  wire IF_m_m_valid_0_lat_0_whas_THEN_m_m_valid_0_lat_ETC___d6;
 
   // action method enq
   assign RDY_enq =
@@ -196,7 +197,7 @@ module mkAluDispToRegFifo(CLK,
 	       m_m_row_0[119],
 	       CASE_m_m_row_0_BITS_118_TO_107_1_m_m_row_0_BIT_ETC__q6,
 	       m_m_row_0[106:0],
-	       IF_m_m_specBits_0_dummy2_0_read__01_AND_m_m_sp_ETC___d304 } ;
+	       IF_m_m_specBits_0_dummy2_0_read__02_AND_m_m_sp_ETC___d305 } ;
   assign RDY_first = RDY_deq ;
 
   // action method specUpdate_incorrectSpeculation
@@ -259,13 +260,13 @@ module mkAluDispToRegFifo(CLK,
   assign MUX_m_m_valid_0_dummy2_0$write_1__SEL_1 =
 	     EN_specUpdate_incorrectSpeculation &&
 	     (specUpdate_incorrectSpeculation_kill_all ||
-	      IF_m_m_specBits_0_dummy2_0_read__01_AND_m_m_sp_ETC___d304[specUpdate_incorrectSpeculation_kill_tag]) ;
+	      IF_m_m_specBits_0_dummy2_0_read__02_AND_m_m_sp_ETC___d305[specUpdate_incorrectSpeculation_kill_tag]) ;
 
   // inlined wires
   assign m_m_valid_0_lat_0$whas =
 	     MUX_m_m_valid_0_dummy2_0$write_1__SEL_1 || EN_deq ;
   assign m_m_specBits_0_lat_1$wget =
-	     sb__h10570 & specUpdate_correctSpeculation_mask ;
+	     sb__h10657 & specUpdate_correctSpeculation_mask ;
 
   // register m_m_row_0
   assign m_m_row_0$D_IN =
@@ -285,7 +286,8 @@ module mkAluDispToRegFifo(CLK,
 
   // register m_m_valid_0_rl
   assign m_m_valid_0_rl$D_IN =
-	     EN_enq || (m_m_valid_0_lat_0$whas ? 1'd0 : m_m_valid_0_rl) ;
+	     EN_enq ||
+	     IF_m_m_valid_0_lat_0_whas_THEN_m_m_valid_0_lat_ETC___d6 ;
   assign m_m_valid_0_rl$EN = 1'd1 ;
 
   // submodule m_m_deqP_ehr_dummy2_0
@@ -314,14 +316,16 @@ module mkAluDispToRegFifo(CLK,
   assign m_m_valid_0_dummy2_1$EN = EN_enq ;
 
   // remaining internal signals
-  assign IF_m_m_specBits_0_dummy2_0_read__01_AND_m_m_sp_ETC___d304 =
+  assign IF_m_m_specBits_0_dummy2_0_read__02_AND_m_m_sp_ETC___d305 =
 	     (m_m_specBits_0_dummy2_0$Q_OUT &&
 	      m_m_specBits_0_dummy2_1$Q_OUT) ?
 	       m_m_specBits_0_rl :
 	       12'd0 ;
   assign IF_m_m_specBits_0_lat_0_whas__0_THEN_m_m_specB_ETC___d13 =
 	     EN_enq ? enq_x[11:0] : m_m_specBits_0_rl ;
-  assign sb__h10570 =
+  assign IF_m_m_valid_0_lat_0_whas_THEN_m_m_valid_0_lat_ETC___d6 =
+	     m_m_valid_0_lat_0$whas ? 1'd0 : m_m_valid_0_rl ;
+  assign sb__h10657 =
 	     m_m_specBits_0_dummy2_1$Q_OUT ?
 	       IF_m_m_specBits_0_lat_0_whas__0_THEN_m_m_specB_ETC___d13 :
 	       12'd0 ;
@@ -506,6 +510,19 @@ module mkAluDispToRegFifo(CLK,
     m_m_valid_0_rl = 1'h0;
   end
   `endif // BSV_NO_INITIAL_BLOCKS
+  // synopsys translate_on
+
+  // handling of system tasks
+
+  // synopsys translate_off
+  always@(negedge CLK)
+  begin
+    #0;
+    if (RST_N != `BSV_RESET_VALUE)
+      if (EN_enq && m_m_valid_0_dummy2_1$Q_OUT &&
+	  IF_m_m_valid_0_lat_0_whas_THEN_m_m_valid_0_lat_ETC___d6)
+	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
+  end
   // synopsys translate_on
 endmodule  // mkAluDispToRegFifo
 

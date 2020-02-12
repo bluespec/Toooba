@@ -162,10 +162,11 @@ module mkMemDispToRegFifo(CLK,
   wire MUX_m_m_valid_0_dummy2_0$write_1__SEL_1;
 
   // remaining internal signals
-  wire [11 : 0] IF_m_m_specBits_0_dummy2_0_read__2_AND_m_m_spe_ETC___d65,
+  wire [11 : 0] IF_m_m_specBits_0_dummy2_0_read__3_AND_m_m_spe_ETC___d66,
 		IF_m_m_specBits_0_lat_0_whas__0_THEN_m_m_specB_ETC___d13,
-		sb__h6864,
+		sb__h6951,
 		upd__h2322;
+  wire IF_m_m_valid_0_lat_0_whas_THEN_m_m_valid_0_lat_ETC___d6;
 
   // action method enq
   assign RDY_enq =
@@ -186,7 +187,7 @@ module mkMemDispToRegFifo(CLK,
   // value method first
   assign first =
 	     { m_m_row_0,
-	       IF_m_m_specBits_0_dummy2_0_read__2_AND_m_m_spe_ETC___d65 } ;
+	       IF_m_m_specBits_0_dummy2_0_read__3_AND_m_m_spe_ETC___d66 } ;
   assign RDY_first = RDY_deq ;
 
   // action method specUpdate_incorrectSpeculation
@@ -249,13 +250,13 @@ module mkMemDispToRegFifo(CLK,
   assign MUX_m_m_valid_0_dummy2_0$write_1__SEL_1 =
 	     EN_specUpdate_incorrectSpeculation &&
 	     (specUpdate_incorrectSpeculation_kill_all ||
-	      IF_m_m_specBits_0_dummy2_0_read__2_AND_m_m_spe_ETC___d65[specUpdate_incorrectSpeculation_kill_tag]) ;
+	      IF_m_m_specBits_0_dummy2_0_read__3_AND_m_m_spe_ETC___d66[specUpdate_incorrectSpeculation_kill_tag]) ;
 
   // inlined wires
   assign m_m_valid_0_lat_0$whas =
 	     MUX_m_m_valid_0_dummy2_0$write_1__SEL_1 || EN_deq ;
   assign m_m_specBits_0_lat_1$wget =
-	     sb__h6864 & specUpdate_correctSpeculation_mask ;
+	     sb__h6951 & specUpdate_correctSpeculation_mask ;
 
   // register m_m_row_0
   assign m_m_row_0$D_IN = enq_x[97:12] ;
@@ -270,7 +271,8 @@ module mkMemDispToRegFifo(CLK,
 
   // register m_m_valid_0_rl
   assign m_m_valid_0_rl$D_IN =
-	     EN_enq || (m_m_valid_0_lat_0$whas ? 1'd0 : m_m_valid_0_rl) ;
+	     EN_enq ||
+	     IF_m_m_valid_0_lat_0_whas_THEN_m_m_valid_0_lat_ETC___d6 ;
   assign m_m_valid_0_rl$EN = 1'd1 ;
 
   // submodule m_m_deqP_ehr_dummy2_0
@@ -299,14 +301,16 @@ module mkMemDispToRegFifo(CLK,
   assign m_m_valid_0_dummy2_1$EN = EN_enq ;
 
   // remaining internal signals
-  assign IF_m_m_specBits_0_dummy2_0_read__2_AND_m_m_spe_ETC___d65 =
+  assign IF_m_m_specBits_0_dummy2_0_read__3_AND_m_m_spe_ETC___d66 =
 	     (m_m_specBits_0_dummy2_0$Q_OUT &&
 	      m_m_specBits_0_dummy2_1$Q_OUT) ?
 	       m_m_specBits_0_rl :
 	       12'd0 ;
   assign IF_m_m_specBits_0_lat_0_whas__0_THEN_m_m_specB_ETC___d13 =
 	     EN_enq ? enq_x[11:0] : m_m_specBits_0_rl ;
-  assign sb__h6864 =
+  assign IF_m_m_valid_0_lat_0_whas_THEN_m_m_valid_0_lat_ETC___d6 =
+	     m_m_valid_0_lat_0$whas ? 1'd0 : m_m_valid_0_rl ;
+  assign sb__h6951 =
 	     m_m_specBits_0_dummy2_1$Q_OUT ?
 	       IF_m_m_specBits_0_lat_0_whas__0_THEN_m_m_specB_ETC___d13 :
 	       12'd0 ;
@@ -341,6 +345,19 @@ module mkMemDispToRegFifo(CLK,
     m_m_valid_0_rl = 1'h0;
   end
   `endif // BSV_NO_INITIAL_BLOCKS
+  // synopsys translate_on
+
+  // handling of system tasks
+
+  // synopsys translate_off
+  always@(negedge CLK)
+  begin
+    #0;
+    if (RST_N != `BSV_RESET_VALUE)
+      if (EN_enq && m_m_valid_0_dummy2_1$Q_OUT &&
+	  IF_m_m_valid_0_lat_0_whas_THEN_m_m_valid_0_lat_ETC___d6)
+	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
+  end
   // synopsys translate_on
 endmodule  // mkMemDispToRegFifo
 

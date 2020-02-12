@@ -97,6 +97,7 @@ module mkSimpleRespQ(CLK,
        RDY_specUpdate_incorrectSpeculation;
 
   // inlined wires
+  reg m_m_valid_for_enq_wire$wget;
   wire m_m_deqP_ehr_lat_0$whas,
        m_m_empty_for_enq_wire$wget,
        m_m_valid_0_lat_0$whas,
@@ -222,7 +223,7 @@ module mkSimpleRespQ(CLK,
 
   // remaining internal signals
   reg [63 : 0] CASE_p538_0_m_m_row_0_BITS_89_TO_26_1_m_m_row__ETC__q7;
-  reg [11 : 0] CASE_p538_0_sb541_1_sb719_DONTCARE__q9;
+  reg [11 : 0] CASE_p538_0_sb605_1_sb783_DONTCARE__q9;
   reg [6 : 0] CASE_p538_0_m_m_row_0_BITS_19_TO_13_1_m_m_row__ETC__q2;
   reg [5 : 0] CASE_p538_0_m_m_row_0_BITS_5_TO_0_1_m_m_row_1__ETC__q6;
   reg [4 : 0] CASE_p538_0_m_m_row_0_BITS_10_TO_6_1_m_m_row_1_ETC__q5,
@@ -231,13 +232,13 @@ module mkSimpleRespQ(CLK,
       CASE_p538_0_m_m_row_0_BIT_11_1_m_m_row_1_BIT_1_ETC__q4,
       CASE_p538_0_m_m_row_0_BIT_12_1_m_m_row_1_BIT_1_ETC__q3,
       SEL_ARR_NOT_m_m_valid_0_dummy2_0_read__6_7_OR__ETC___d55;
-  wire [20 : 0] NOT_SEL_ARR_NOT_m_m_row_0_4_BIT_20_05_06_NOT_m_ETC___d135;
+  wire [20 : 0] NOT_SEL_ARR_NOT_m_m_row_0_5_BIT_20_06_07_NOT_m_ETC___d136;
   wire [11 : 0] IF_m_m_specBits_0_lat_0_whas__7_THEN_m_m_specB_ETC___d20,
 		IF_m_m_specBits_1_lat_0_whas__4_THEN_m_m_specB_ETC___d27,
-		sb__h10109,
-		sb__h10536,
-		sb__h9541,
-		sb__h9719,
+		sb__h10173,
+		sb__h10600,
+		sb__h9605,
+		sb__h9783,
 		upd__h3373,
 		upd__h4302;
   wire m_m_valid_0_dummy2_0_read__6_AND_m_m_valid_0_d_ETC___d63,
@@ -278,8 +279,8 @@ module mkSimpleRespQ(CLK,
   assign first =
 	     { CASE_p538_0_m_m_row_0_BITS_89_TO_26_1_m_m_row__ETC__q7,
 	       CASE_p538_0_m_m_row_0_BITS_25_TO_21_1_m_m_row__ETC__q8,
-	       NOT_SEL_ARR_NOT_m_m_row_0_4_BIT_20_05_06_NOT_m_ETC___d135,
-	       CASE_p538_0_sb541_1_sb719_DONTCARE__q9 } ;
+	       NOT_SEL_ARR_NOT_m_m_row_0_5_BIT_20_06_07_NOT_m_ETC___d136,
+	       CASE_p538_0_sb605_1_sb783_DONTCARE__q9 } ;
   assign RDY_first = RDY_deq ;
 
   // action method specUpdate_incorrectSpeculation
@@ -391,7 +392,7 @@ module mkSimpleRespQ(CLK,
   assign MUX_m_m_valid_0_dummy2_0$write_1__SEL_1 =
 	     EN_specUpdate_incorrectSpeculation &&
 	     (specUpdate_incorrectSpeculation_kill_all ||
-	      sb__h9541[specUpdate_incorrectSpeculation_kill_tag]) ;
+	      sb__h9605[specUpdate_incorrectSpeculation_kill_tag]) ;
   assign MUX_m_m_valid_0_dummy2_0$write_1__SEL_2 =
 	     EN_deq && p__h6538 == 1'd0 ;
   assign MUX_m_m_valid_1_dummy2_0$write_1__SEL_1 =
@@ -399,7 +400,7 @@ module mkSimpleRespQ(CLK,
   assign MUX_m_m_valid_1_dummy2_0$write_1__SEL_2 =
 	     EN_specUpdate_incorrectSpeculation &&
 	     (specUpdate_incorrectSpeculation_kill_all ||
-	      sb__h9719[specUpdate_incorrectSpeculation_kill_tag]) ;
+	      sb__h9783[specUpdate_incorrectSpeculation_kill_tag]) ;
 
   // inlined wires
   assign m_m_valid_0_lat_0$whas =
@@ -416,6 +417,24 @@ module mkSimpleRespQ(CLK,
 	      !m_m_valid_0_rl) &&
 	     (!m_m_valid_1_dummy2_0$Q_OUT || !m_m_valid_1_dummy2_1$Q_OUT ||
 	      !m_m_valid_1_rl) ;
+  always@(m_m_enqP or
+	  m_m_valid_0_dummy2_0$Q_OUT or
+	  m_m_valid_0_dummy2_1$Q_OUT or
+	  m_m_valid_0_rl or
+	  m_m_valid_1_dummy2_0$Q_OUT or
+	  m_m_valid_1_dummy2_1$Q_OUT or m_m_valid_1_rl)
+  begin
+    case (m_m_enqP)
+      1'd0:
+	  m_m_valid_for_enq_wire$wget =
+	      m_m_valid_0_dummy2_0$Q_OUT && m_m_valid_0_dummy2_1$Q_OUT &&
+	      m_m_valid_0_rl;
+      1'd1:
+	  m_m_valid_for_enq_wire$wget =
+	      m_m_valid_1_dummy2_0$Q_OUT && m_m_valid_1_dummy2_1$Q_OUT &&
+	      m_m_valid_1_rl;
+    endcase
+  end
 
   // register m_m_deqP_ehr_rl
   assign m_m_deqP_ehr_rl$D_IN =
@@ -509,7 +528,7 @@ module mkSimpleRespQ(CLK,
 	     m_m_valid_0_lat_1$whas ? enq_x[11:0] : m_m_specBits_0_rl ;
   assign IF_m_m_specBits_1_lat_0_whas__4_THEN_m_m_specB_ETC___d27 =
 	     m_m_valid_1_lat_1$whas ? enq_x[11:0] : m_m_specBits_1_rl ;
-  assign NOT_SEL_ARR_NOT_m_m_row_0_4_BIT_20_05_06_NOT_m_ETC___d135 =
+  assign NOT_SEL_ARR_NOT_m_m_row_0_5_BIT_20_06_07_NOT_m_ETC___d136 =
 	     { !CASE_p538_0_NOT_m_m_row_0_BIT_20_1_NOT_m_m_row_ETC__q1,
 	       CASE_p538_0_m_m_row_0_BITS_19_TO_13_1_m_m_row__ETC__q2,
 	       CASE_p538_0_m_m_row_0_BIT_12_1_m_m_row_1_BIT_1_ETC__q3,
@@ -524,26 +543,26 @@ module mkSimpleRespQ(CLK,
   assign p__h6538 =
 	     m_m_deqP_ehr_dummy2_0$Q_OUT && m_m_deqP_ehr_dummy2_1$Q_OUT &&
 	     m_m_deqP_ehr_rl ;
-  assign sb__h10109 =
+  assign sb__h10173 =
 	     m_m_specBits_0_dummy2_1$Q_OUT ?
 	       IF_m_m_specBits_0_lat_0_whas__7_THEN_m_m_specB_ETC___d20 :
 	       12'd0 ;
-  assign sb__h10536 =
+  assign sb__h10600 =
 	     m_m_specBits_1_dummy2_1$Q_OUT ?
 	       IF_m_m_specBits_1_lat_0_whas__4_THEN_m_m_specB_ETC___d27 :
 	       12'd0 ;
-  assign sb__h9541 =
+  assign sb__h9605 =
 	     (m_m_specBits_0_dummy2_0$Q_OUT &&
 	      m_m_specBits_0_dummy2_1$Q_OUT) ?
 	       m_m_specBits_0_rl :
 	       12'd0 ;
-  assign sb__h9719 =
+  assign sb__h9783 =
 	     (m_m_specBits_1_dummy2_0$Q_OUT &&
 	      m_m_specBits_1_dummy2_1$Q_OUT) ?
 	       m_m_specBits_1_rl :
 	       12'd0 ;
-  assign upd__h3373 = sb__h10109 & specUpdate_correctSpeculation_mask ;
-  assign upd__h4302 = sb__h10536 & specUpdate_correctSpeculation_mask ;
+  assign upd__h3373 = sb__h10173 & specUpdate_correctSpeculation_mask ;
+  assign upd__h4302 = sb__h10600 & specUpdate_correctSpeculation_mask ;
   assign upd__h5417 =
 	     !m_m_deqP_ehr_dummy2_0$Q_OUT || !m_m_deqP_ehr_dummy2_1$Q_OUT ||
 	     !m_m_deqP_ehr_rl ;
@@ -654,11 +673,11 @@ module mkSimpleRespQ(CLK,
 	      m_m_row_1[25:21];
     endcase
   end
-  always@(p__h6538 or sb__h9541 or sb__h9719)
+  always@(p__h6538 or sb__h9605 or sb__h9783)
   begin
     case (p__h6538)
-      1'd0: CASE_p538_0_sb541_1_sb719_DONTCARE__q9 = sb__h9541;
-      1'd1: CASE_p538_0_sb541_1_sb719_DONTCARE__q9 = sb__h9719;
+      1'd0: CASE_p538_0_sb605_1_sb783_DONTCARE__q9 = sb__h9605;
+      1'd1: CASE_p538_0_sb605_1_sb783_DONTCARE__q9 = sb__h9783;
     endcase
   end
 
@@ -708,6 +727,18 @@ module mkSimpleRespQ(CLK,
     m_m_valid_1_rl = 1'h0;
   end
   `endif // BSV_NO_INITIAL_BLOCKS
+  // synopsys translate_on
+
+  // handling of system tasks
+
+  // synopsys translate_off
+  always@(negedge CLK)
+  begin
+    #0;
+    if (RST_N != `BSV_RESET_VALUE)
+      if (EN_enq && m_m_valid_for_enq_wire$wget)
+	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
+  end
   // synopsys translate_on
 endmodule  // mkSimpleRespQ
 

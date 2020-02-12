@@ -208,5 +208,17 @@ module mkDummyStoreBuffer(CLK,
   // value method noMatchStQ
   assign noMatchStQ = 1'd1 ;
   assign RDY_noMatchStQ = 1'd1 ;
+
+  // handling of system tasks
+
+  // synopsys translate_off
+  always@(negedge CLK)
+  begin
+    #0;
+    if (EN_enq) $fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
+    if (EN_deq) $fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
+    if (EN_issue) $fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
+  end
+  // synopsys translate_on
 endmodule  // mkDummyStoreBuffer
 

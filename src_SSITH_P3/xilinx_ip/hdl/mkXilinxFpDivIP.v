@@ -68,6 +68,10 @@ module mkXilinxFpDivIP(CLK,
   reg init_init;
   wire init_init$D_IN, init_init$EN;
 
+  // register init_rg_ready
+  reg init_rg_ready;
+  wire init_rg_ready$D_IN, init_rg_ready$EN;
+
   // ports of submodule fpDiv
   wire [63 : 0] fpDiv$m_axis_result_tdata,
 		fpDiv$s_axis_a_tdata,
@@ -80,24 +84,23 @@ module mkXilinxFpDivIP(CLK,
        fpDiv$s_axis_b_tready,
        fpDiv$s_axis_b_tvalid;
 
-  // ports of submodule init_rg
-  wire init_rg$IS_READY;
-
   // rule scheduling signals
   wire CAN_FIRE_RL_init_doInit,
+       CAN_FIRE_RL_init_rg_rl_ready,
        CAN_FIRE_request_put,
        CAN_FIRE_response_get,
        WILL_FIRE_RL_init_doInit,
+       WILL_FIRE_RL_init_rg_rl_ready,
        WILL_FIRE_request_put,
        WILL_FIRE_response_get;
 
   // action method request_put
   assign RDY_request_put =
 	     fpDiv$s_axis_a_tready && fpDiv$s_axis_b_tready && init_init &&
-	     init_rg$IS_READY ;
+	     init_rg_ready ;
   assign CAN_FIRE_request_put =
 	     fpDiv$s_axis_a_tready && fpDiv$s_axis_b_tready && init_init &&
-	     init_rg$IS_READY ;
+	     init_rg_ready ;
   assign WILL_FIRE_request_put = EN_request_put ;
 
   // actionvalue method response_get
@@ -108,9 +111,9 @@ module mkXilinxFpDivIP(CLK,
 	       fpDiv$m_axis_result_tuser[1:0],
 	       1'd0 } ;
   assign RDY_response_get =
-	     fpDiv$m_axis_result_tvalid && init_init && init_rg$IS_READY ;
+	     fpDiv$m_axis_result_tvalid && init_init && init_rg_ready ;
   assign CAN_FIRE_response_get =
-	     fpDiv$m_axis_result_tvalid && init_init && init_rg$IS_READY ;
+	     fpDiv$m_axis_result_tvalid && init_init && init_rg_ready ;
   assign WILL_FIRE_response_get = EN_response_get ;
 
   // submodule fpDiv
@@ -126,12 +129,13 @@ module mkXilinxFpDivIP(CLK,
 	       .m_axis_result_tdata(fpDiv$m_axis_result_tdata),
 	       .m_axis_result_tuser(fpDiv$m_axis_result_tuser));
 
-  // submodule init_rg
-  reset_guard init_rg(.CLK(CLK), .RST(RST_N), .IS_READY(init_rg$IS_READY));
-
   // rule RL_init_doInit
   assign CAN_FIRE_RL_init_doInit = !init_init ;
   assign WILL_FIRE_RL_init_doInit = CAN_FIRE_RL_init_doInit ;
+
+  // rule RL_init_rg_rl_ready
+  assign CAN_FIRE_RL_init_rg_rl_ready = 1'd1 ;
+  assign WILL_FIRE_RL_init_rg_rl_ready = 1'd1 ;
 
   // register init_cnt
   assign init_cnt$D_IN = init_cnt + 8'd1 ;
@@ -140,6 +144,10 @@ module mkXilinxFpDivIP(CLK,
   // register init_init
   assign init_init$D_IN = 1'd1 ;
   assign init_init$EN = WILL_FIRE_RL_init_doInit && init_cnt == 8'd255 ;
+
+  // register init_rg_ready
+  assign init_rg_ready$D_IN = 1'd1 ;
+  assign init_rg_ready$EN = 1'd1 ;
 
   // submodule fpDiv
   assign fpDiv$s_axis_a_tdata = request_put[130:67] ;
@@ -156,11 +164,14 @@ module mkXilinxFpDivIP(CLK,
       begin
         init_cnt <= `BSV_ASSIGNMENT_DELAY 8'd0;
 	init_init <= `BSV_ASSIGNMENT_DELAY 1'd0;
+	init_rg_ready <= `BSV_ASSIGNMENT_DELAY 1'd0;
       end
     else
       begin
         if (init_cnt$EN) init_cnt <= `BSV_ASSIGNMENT_DELAY init_cnt$D_IN;
 	if (init_init$EN) init_init <= `BSV_ASSIGNMENT_DELAY init_init$D_IN;
+	if (init_rg_ready$EN)
+	  init_rg_ready <= `BSV_ASSIGNMENT_DELAY init_rg_ready$D_IN;
       end
   end
 
@@ -171,6 +182,7 @@ module mkXilinxFpDivIP(CLK,
   begin
     init_cnt = 8'hAA;
     init_init = 1'h0;
+    init_rg_ready = 1'h0;
   end
   `endif // BSV_NO_INITIAL_BLOCKS
   // synopsys translate_on

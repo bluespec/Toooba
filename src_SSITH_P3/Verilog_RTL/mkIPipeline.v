@@ -808,26 +808,26 @@ module mkIPipeline(CLK,
        MUX_m_infoRam_7_bram$a_put_1__SEL_1;
 
   // remaining internal signals
-  reg [471 : 0] IF_send_r_BITS_583_TO_582_749_EQ_0_750_THEN_m__ETC___d1890;
+  reg [471 : 0] IF_send_r_BITS_583_TO_582_758_EQ_0_759_THEN_m__ETC___d1899;
   reg [68 : 0] CASE_m_pipe_enq2Mat_rl_BITS_1058_TO_1057_0_0_C_ETC__q3,
 	       CASE_send_r_BITS_583_TO_582_0_0_CONCAT_send_r__ETC__q4;
-  reg [51 : 0] y_avValue_info_tag__h96135;
+  reg [51 : 0] y_avValue_info_tag__h96402;
   reg [3 : 0] CASE_send_r_BITS_583_TO_582_0_2_1_2_2_CONCAT_s_ETC__q5;
-  reg [2 : 0] SEL_ARR_IF_IF_m_pipe_enq2Mat_lat_0_whas__17_TH_ETC___d1723;
+  reg [2 : 0] SEL_ARR_IF_IF_m_pipe_enq2Mat_lat_0_whas__17_TH_ETC___d1732;
   reg [1 : 0] CASE_m_pipe_enq2Mat_rl_BITS_3_TO_2_0_m_pipe_en_ETC__q2,
-	      SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1694;
+	      SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1683;
   reg CASE_m_randRep_randWay_07_0_NOT_m_pipe_enq2Mat_ETC___d1508,
-      IF_send_r_BITS_583_TO_582_749_EQ_0_750_THEN_m__ETC___d1892,
+      IF_send_r_BITS_583_TO_582_758_EQ_0_759_THEN_m__ETC___d1901,
       SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1484,
-      SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1696;
+      SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1705;
   wire [989 : 0] IF_IF_m_pipe_bypass_whas__65_THEN_m_pipe_bypas_ETC___d1112;
-  wire [570 : 0] SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1745;
+  wire [570 : 0] SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1754;
   wire [517 : 0] IF_m_pipe_enq2Mat_lat_2_whas__11_THEN_m_pipe_e_ETC___d759;
   wire [511 : 0] IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pipe_e_ETC___d725,
 		 IF_m_pipe_enq2Mat_lat_2_whas__11_THEN_m_pipe_e_ETC___d727,
-		 IF_m_pipe_mat2Out_dummy2_0_read__999_AND_m_pip_ETC___d2039,
+		 IF_m_pipe_mat2Out_dummy2_0_read__008_AND_m_pip_ETC___d2048,
 		 IF_m_pipe_mat2Out_lat_1_whas__63_THEN_m_pipe_m_ETC___d858;
-  wire [68 : 0] IF_IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pip_ETC___d1680,
+  wire [68 : 0] IF_IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pip_ETC___d1699,
 		IF_IF_m_pipe_enq2Mat_lat_2_whas__11_THEN_m_pip_ETC___d268,
 		IF_IF_m_pipe_mat2Out_lat_1_whas__63_THEN_m_pip_ETC___d805;
   wire [66 : 0] IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pipe_e_ETC___d247,
@@ -839,7 +839,7 @@ module mkIPipeline(CLK,
   wire [63 : 0] IF_NOT_m_pipe_enq2Mat_dummy2_1_read__67_75_OR__ETC___d1238,
 		IF_m_pipe_enq2Mat_dummy2_0_read__66_AND_m_pipe_ETC__q1,
 		IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1245,
-		addr__h134631,
+		addr__h134848,
 		addr__h81493;
   wire [51 : 0] IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pipe_e_ETC___d287,
 		IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pipe_e_ETC___d340,
@@ -874,7 +874,8 @@ module mkIPipeline(CLK,
 		x__h68061,
 		x__h68401,
 		x__h68741;
-  wire [4 : 0] IF_m_pipe_mat2Out_dummy2_0_read__999_AND_m_pip_ETC___d2026;
+  wire [5 : 0] IF_IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_NOT_m_ETC___d1734;
+  wire [4 : 0] IF_m_pipe_mat2Out_dummy2_0_read__008_AND_m_pip_ETC___d2035;
   wire [3 : 0] IF_IF_m_pipe_enq2Mat_lat_2_whas__11_THEN_m_pip_ETC___d758;
   wire [2 : 0] IF_IF_IF_m_pipe_enq2Mat_dummy2_1_read__67_AND__ETC___d1606,
 	       IF_IF_m_pipe_bypass_whas__65_THEN_m_pipe_bypas_ETC___d1003,
@@ -921,8 +922,6 @@ module mkIPipeline(CLK,
 	       IF_IF_m_pipe_bypass_whas__65_THEN_m_pipe_bypas_ETC___d948,
 	       IF_IF_m_pipe_bypass_whas__65_THEN_m_pipe_bypas_ETC___d972,
 	       IF_IF_m_pipe_bypass_whas__65_THEN_m_pipe_bypas_ETC___d996,
-	       IF_IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_NOT_m_ETC___d1695,
-	       IF_IF_m_pipe_enq2Mat_lat_2_whas__11_THEN_m_pip_ETC___d749,
 	       IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1230,
 	       IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1255,
 	       IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1271,
@@ -1040,6 +1039,7 @@ module mkIPipeline(CLK,
        IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_NOT_m_pi_ETC___d1216,
        IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_NOT_m_pi_ETC___d1555,
        IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_NOT_m_pi_ETC___d1610,
+       IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_NOT_m_pi_ETC___d1680,
        IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_NOT_m_pi_ETC___d229,
        IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_NOT_m_pi_ETC___d280,
        IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_NOT_m_pi_ETC___d333,
@@ -1051,6 +1051,7 @@ module mkIPipeline(CLK,
        IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_NOT_m_pi_ETC___d657,
        IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pipe_e_ETC___d1404,
        IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pipe_e_ETC___d1629,
+       IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pipe_e_ETC___d1692,
        IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pipe_e_ETC___d222,
        IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pipe_e_ETC___d240,
        IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pipe_e_ETC___d255,
@@ -1071,9 +1072,9 @@ module mkIPipeline(CLK,
        IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pipe_e_ETC___d650,
        IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pipe_e_ETC___d678,
        IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pipe_e_ETC___d711,
+       IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pipe_e_ETC___d746,
        IF_m_pipe_enq2Mat_lat_1_whas__14_THEN_m_pipe_e_ETC___d705,
        IF_m_pipe_enq2Mat_lat_1_whas__14_THEN_m_pipe_e_ETC___d739,
-       IF_m_pipe_enq2Mat_lat_1_whas__14_THEN_m_pipe_e_ETC___d747,
        IF_m_pipe_enq2Mat_lat_2_whas__11_THEN_m_pipe_e_ETC___d224,
        IF_m_pipe_enq2Mat_lat_2_whas__11_THEN_m_pipe_e_ETC___d242,
        IF_m_pipe_enq2Mat_lat_2_whas__11_THEN_m_pipe_e_ETC___d257,
@@ -1094,6 +1095,7 @@ module mkIPipeline(CLK,
        IF_m_pipe_enq2Mat_lat_2_whas__11_THEN_m_pipe_e_ETC___d652,
        IF_m_pipe_enq2Mat_lat_2_whas__11_THEN_m_pipe_e_ETC___d680,
        IF_m_pipe_enq2Mat_lat_2_whas__11_THEN_m_pipe_e_ETC___d713,
+       IF_m_pipe_enq2Mat_lat_2_whas__11_THEN_m_pipe_e_ETC___d748,
        IF_m_pipe_mat2Out_lat_1_whas__63_THEN_m_pipe_m_ETC___d772,
        IF_m_pipe_mat2Out_lat_1_whas__63_THEN_m_pipe_m_ETC___d785,
        IF_m_pipe_mat2Out_lat_1_whas__63_THEN_m_pipe_m_ETC___d796,
@@ -1102,20 +1104,20 @@ module mkIPipeline(CLK,
        IF_m_pipe_mat2Out_lat_1_whas__63_THEN_m_pipe_m_ETC___d848,
        NOT_IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m__ETC___d1361,
        NOT_SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__6_ETC___d1542,
-       NOT_m_dataRam_rdReqQ_empty_dummy2_0_read__042__ETC___d2051,
+       NOT_m_dataRam_rdReqQ_empty_dummy2_0_read__051__ETC___d2060,
        NOT_m_infoRam_0_rdReqQ_empty_dummy2_0_read__11_ETC___d1123,
        NOT_m_infoRam_1_rdReqQ_empty_dummy2_0_read__12_ETC___d1133,
        NOT_m_infoRam_1_rdReqQ_empty_dummy2_0_read__12_ETC___d1619,
-       NOT_m_infoRam_1_rdReqQ_full_dummy2_1_read__917_ETC___d1998,
+       NOT_m_infoRam_1_rdReqQ_full_dummy2_1_read__926_ETC___d2007,
        NOT_m_infoRam_2_rdReqQ_empty_dummy2_0_read__13_ETC___d1143,
        NOT_m_infoRam_3_rdReqQ_empty_dummy2_0_read__14_ETC___d1153,
        NOT_m_infoRam_4_rdReqQ_empty_dummy2_0_read__15_ETC___d1163,
-       NOT_m_infoRam_4_rdReqQ_full_dummy2_1_read__944_ETC___d1995,
+       NOT_m_infoRam_4_rdReqQ_full_dummy2_1_read__953_ETC___d2004,
        NOT_m_infoRam_5_rdReqQ_empty_dummy2_0_read__16_ETC___d1173,
        NOT_m_infoRam_6_rdReqQ_empty_dummy2_0_read__17_ETC___d1183,
        NOT_m_infoRam_7_rdReqQ_empty_dummy2_0_read__18_ETC___d1193,
        NOT_m_infoRam_7_rdReqQ_empty_dummy2_0_read__18_ETC___d1613,
-       NOT_m_infoRam_7_rdReqQ_full_dummy2_1_read__971_ETC___d1992,
+       NOT_m_infoRam_7_rdReqQ_full_dummy2_1_read__980_ETC___d2001,
        NOT_m_pipe_enq2Mat_dummy2_1_read__67_75_OR_NOT_ETC___d1219,
        NOT_m_pipe_enq2Mat_dummy2_1_read__67_75_OR_NOT_ETC___d1221,
        NOT_m_pipe_enq2Mat_dummy2_1_read__67_75_OR_NOT_ETC___d1264,
@@ -1141,8 +1143,8 @@ module mkIPipeline(CLK,
        _0_OR_IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_p_ETC___d1362,
        _0_OR_IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_p_ETC___d1422,
        _0_OR_IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_p_ETC___d1459,
-       m_pipe_bypass_wget__86_BITS_572_TO_570_03_EQ_I_ETC___d1728,
-       m_pipe_bypass_whas__65_AND_m_pipe_bypass_wget__ETC___d1730,
+       m_pipe_bypass_wget__86_BITS_572_TO_570_03_EQ_I_ETC___d1737,
+       m_pipe_bypass_whas__65_AND_m_pipe_bypass_wget__ETC___d1739,
        m_pipe_enq2Mat_dummy2_0_read__66_AND_m_pipe_en_ETC___d871,
        m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_en_ETC___d1226,
        m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_en_ETC___d1239,
@@ -1161,7 +1163,7 @@ module mkIPipeline(CLK,
        m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_en_ETC___d1465,
        m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_en_ETC___d1470,
        m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_en_ETC___d1477,
-       m_pipe_mat2Out_dummy2_0_read__999_AND_m_pipe_m_ETC___d2041;
+       m_pipe_mat2Out_dummy2_0_read__008_AND_m_pipe_m_ETC___d2050;
 
   // action method send
   assign RDY_send =
@@ -1169,32 +1171,32 @@ module mkIPipeline(CLK,
 	      !m_infoRam_0_rdReqQ_full_dummy2_2$Q_OUT ||
 	      CAN_FIRE_RL_m_pipe_doTagMatch ||
 	      !m_infoRam_0_rdReqQ_full_rl) &&
-	     NOT_m_infoRam_1_rdReqQ_full_dummy2_1_read__917_ETC___d1998 ;
+	     NOT_m_infoRam_1_rdReqQ_full_dummy2_1_read__926_ETC___d2007 ;
   assign CAN_FIRE_send = RDY_send ;
   assign WILL_FIRE_send = EN_send ;
 
   // value method first
   assign first =
-	     { IF_m_pipe_mat2Out_dummy2_0_read__999_AND_m_pip_ETC___d2026,
+	     { IF_m_pipe_mat2Out_dummy2_0_read__008_AND_m_pip_ETC___d2035,
 	       m_pipe_mat2Out_rl[574:517],
 	       !m_pipe_mat2Out_dummy2_0$Q_OUT ||
 	       !m_pipe_mat2Out_dummy2_1$Q_OUT ||
 	       !m_pipe_mat2Out_rl[644] ||
 	       m_pipe_mat2Out_rl[516],
 	       m_pipe_mat2Out_rl[515:513],
-	       IF_m_pipe_mat2Out_dummy2_0_read__999_AND_m_pip_ETC___d2039 } ;
+	       IF_m_pipe_mat2Out_dummy2_0_read__008_AND_m_pip_ETC___d2048 } ;
   assign RDY_first =
-	     m_pipe_mat2Out_dummy2_0_read__999_AND_m_pipe_m_ETC___d2041 &&
+	     m_pipe_mat2Out_dummy2_0_read__008_AND_m_pipe_m_ETC___d2050 &&
 	     (m_pipe_mat2Out_rl[512] ||
-	      NOT_m_dataRam_rdReqQ_empty_dummy2_0_read__042__ETC___d2051) ;
+	      NOT_m_dataRam_rdReqQ_empty_dummy2_0_read__051__ETC___d2060) ;
 
   // action method deqWrite
   assign RDY_deqWrite =
-	     m_pipe_mat2Out_dummy2_0_read__999_AND_m_pipe_m_ETC___d2041 &&
-	     NOT_m_dataRam_rdReqQ_empty_dummy2_0_read__042__ETC___d2051 ;
+	     m_pipe_mat2Out_dummy2_0_read__008_AND_m_pipe_m_ETC___d2050 &&
+	     NOT_m_dataRam_rdReqQ_empty_dummy2_0_read__051__ETC___d2060 ;
   assign CAN_FIRE_deqWrite =
-	     m_pipe_mat2Out_dummy2_0_read__999_AND_m_pipe_m_ETC___d2041 &&
-	     NOT_m_dataRam_rdReqQ_empty_dummy2_0_read__042__ETC___d2051 ;
+	     m_pipe_mat2Out_dummy2_0_read__008_AND_m_pipe_m_ETC___d2050 &&
+	     NOT_m_dataRam_rdReqQ_empty_dummy2_0_read__051__ETC___d2060 ;
   assign WILL_FIRE_deqWrite = EN_deqWrite ;
 
   // submodule m_dataRam_bram
@@ -2221,8 +2223,8 @@ module mkIPipeline(CLK,
   assign m_pipe_enq2Mat_lat_2$wget =
 	     { 1'd1,
 	       CASE_send_r_BITS_583_TO_582_0_0_CONCAT_send_r__ETC__q4,
-	       IF_send_r_BITS_583_TO_582_749_EQ_0_750_THEN_m__ETC___d1890,
-	       IF_send_r_BITS_583_TO_582_749_EQ_0_750_THEN_m__ETC___d1892,
+	       IF_send_r_BITS_583_TO_582_758_EQ_0_759_THEN_m__ETC___d1899,
+	       IF_send_r_BITS_583_TO_582_758_EQ_0_759_THEN_m__ETC___d1901,
 	       send_r[583:582] != 2'd0 && send_r[583:582] != 2'd1 &&
 	       send_r[515],
 	       send_r[514:3],
@@ -2230,7 +2232,7 @@ module mkIPipeline(CLK,
   assign m_pipe_mat2Out_lat_0$wget =
 	     { deqWrite_swapRq[3],
 	       2'd0,
-	       addr__h134631,
+	       addr__h134848,
 	       deqWrite_swapRq[2:0],
 	       m_pipe_mat2Out_rl[574:572],
 	       1'd0,
@@ -2239,15 +2241,15 @@ module mkIPipeline(CLK,
 	       deqWrite_wrRam[511:0] } ;
   assign m_pipe_mat2Out_lat_1$wget =
 	     { 1'd1,
-	       IF_IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pip_ETC___d1680,
+	       IF_IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pip_ETC___d1699,
 	       way__h92005,
 	       IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pipe_e_ETC___d1629 &&
 	       IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1308 &&
 	       IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1633 &&
 	       IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pipe_e_ETC___d255,
-	       SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1745 } ;
+	       SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1754 } ;
   assign m_pipe_bypass$wget =
-	     { addr__h134631[11:6],
+	     { addr__h134848[11:6],
 	       m_pipe_mat2Out_rl[574:572],
 	       deqWrite_wrRam } ;
   assign m_dataRam_rdReqQ_deqP_lat_0$whas =
@@ -2449,7 +2451,7 @@ module mkIPipeline(CLK,
 
   // submodule m_dataRam_bram
   assign m_dataRam_bram$ADDRA =
-	     { m_pipe_mat2Out_rl[574:572], addr__h134631[11:6] } ;
+	     { m_pipe_mat2Out_rl[574:572], addr__h134848[11:6] } ;
   assign m_dataRam_bram$ADDRB = { way__h92005, addr__h81493[11:6] } ;
   assign m_dataRam_bram$DIA = deqWrite_wrRam[511:0] ;
   assign m_dataRam_bram$DIB =
@@ -2505,7 +2507,7 @@ module mkIPipeline(CLK,
   // submodule m_infoRam_0_bram
   assign m_infoRam_0_bram$ADDRA =
 	     MUX_m_infoRam_0_bram$a_put_1__SEL_1 ?
-	       addr__h134631[11:6] :
+	       addr__h134848[11:6] :
 	       m_initIndex ;
   always@(send_r)
   begin
@@ -2571,7 +2573,7 @@ module mkIPipeline(CLK,
   // submodule m_infoRam_1_bram
   assign m_infoRam_1_bram$ADDRA =
 	     MUX_m_infoRam_1_bram$a_put_1__SEL_1 ?
-	       addr__h134631[11:6] :
+	       addr__h134848[11:6] :
 	       m_initIndex ;
   assign m_infoRam_1_bram$ADDRB = m_infoRam_0_bram$ADDRB ;
   assign m_infoRam_1_bram$DIA =
@@ -2630,7 +2632,7 @@ module mkIPipeline(CLK,
   // submodule m_infoRam_2_bram
   assign m_infoRam_2_bram$ADDRA =
 	     MUX_m_infoRam_2_bram$a_put_1__SEL_1 ?
-	       addr__h134631[11:6] :
+	       addr__h134848[11:6] :
 	       m_initIndex ;
   assign m_infoRam_2_bram$ADDRB = m_infoRam_0_bram$ADDRB ;
   assign m_infoRam_2_bram$DIA =
@@ -2689,7 +2691,7 @@ module mkIPipeline(CLK,
   // submodule m_infoRam_3_bram
   assign m_infoRam_3_bram$ADDRA =
 	     MUX_m_infoRam_3_bram$a_put_1__SEL_1 ?
-	       addr__h134631[11:6] :
+	       addr__h134848[11:6] :
 	       m_initIndex ;
   assign m_infoRam_3_bram$ADDRB = m_infoRam_0_bram$ADDRB ;
   assign m_infoRam_3_bram$DIA =
@@ -2748,7 +2750,7 @@ module mkIPipeline(CLK,
   // submodule m_infoRam_4_bram
   assign m_infoRam_4_bram$ADDRA =
 	     MUX_m_infoRam_4_bram$a_put_1__SEL_1 ?
-	       addr__h134631[11:6] :
+	       addr__h134848[11:6] :
 	       m_initIndex ;
   assign m_infoRam_4_bram$ADDRB = m_infoRam_0_bram$ADDRB ;
   assign m_infoRam_4_bram$DIA =
@@ -2807,7 +2809,7 @@ module mkIPipeline(CLK,
   // submodule m_infoRam_5_bram
   assign m_infoRam_5_bram$ADDRA =
 	     MUX_m_infoRam_5_bram$a_put_1__SEL_1 ?
-	       addr__h134631[11:6] :
+	       addr__h134848[11:6] :
 	       m_initIndex ;
   assign m_infoRam_5_bram$ADDRB = m_infoRam_0_bram$ADDRB ;
   assign m_infoRam_5_bram$DIA =
@@ -2866,7 +2868,7 @@ module mkIPipeline(CLK,
   // submodule m_infoRam_6_bram
   assign m_infoRam_6_bram$ADDRA =
 	     MUX_m_infoRam_6_bram$a_put_1__SEL_1 ?
-	       addr__h134631[11:6] :
+	       addr__h134848[11:6] :
 	       m_initIndex ;
   assign m_infoRam_6_bram$ADDRB = m_infoRam_0_bram$ADDRB ;
   assign m_infoRam_6_bram$DIA =
@@ -2925,7 +2927,7 @@ module mkIPipeline(CLK,
   // submodule m_infoRam_7_bram
   assign m_infoRam_7_bram$ADDRA =
 	     MUX_m_infoRam_7_bram$a_put_1__SEL_1 ?
-	       addr__h134631[11:6] :
+	       addr__h134848[11:6] :
 	       m_initIndex ;
   assign m_infoRam_7_bram$ADDRB = m_infoRam_0_bram$ADDRB ;
   assign m_infoRam_7_bram$DIA =
@@ -3557,15 +3559,13 @@ module mkIPipeline(CLK,
 	     IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_NOT_m_pi_ETC___d657 ?
 	       m_infoRam_0_bram$DOB[3] :
 	       IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pipe_e_ETC___d678 ;
-  assign IF_IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_NOT_m_ETC___d1695 =
-	     (CAN_FIRE_RL_m_pipe_doMatch_bypass ?
-		m_pipe_enq2Mat_lat_0$wget[3:2] != 2'd0 &&
-		m_pipe_enq2Mat_lat_0$wget[3:2] != 2'd1 :
-		m_pipe_enq2Mat_rl[3:2] != 2'd0 &&
-		m_pipe_enq2Mat_rl[3:2] != 2'd1) ?
-	       IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pipe_e_ETC___d754 :
-	       SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1694 ;
-  assign IF_IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pip_ETC___d1680 =
+  assign IF_IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_NOT_m_ETC___d1734 =
+	     { IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_NOT_m_pi_ETC___d1680 ?
+		 IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pipe_e_ETC___d754 :
+		 SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1683,
+	       !SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1705,
+	       SEL_ARR_IF_IF_m_pipe_enq2Mat_lat_0_whas__17_TH_ETC___d1732 } ;
+  assign IF_IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pip_ETC___d1699 =
 	     IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pipe_e_ETC___d240 ?
 	       { 2'd0,
 		 IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pipe_e_ETC___d247 } :
@@ -3583,18 +3583,14 @@ module mkIPipeline(CLK,
 		    IF_m_pipe_enq2Mat_lat_2_whas__11_THEN_m_pipe_e_ETC___d264 } :
 		  { 2'd2,
 		    IF_m_pipe_enq2Mat_lat_2_whas__11_THEN_m_pipe_e_ETC___d249 }) ;
-  assign IF_IF_m_pipe_enq2Mat_lat_2_whas__11_THEN_m_pip_ETC___d749 =
-	     (EN_send ?
-		m_pipe_enq2Mat_lat_2$wget[3:2] == 2'd1 :
-		IF_m_pipe_enq2Mat_lat_1_whas__14_THEN_m_pipe_e_ETC___d747) ?
-	       2'd1 :
-	       2'd2 ;
   assign IF_IF_m_pipe_enq2Mat_lat_2_whas__11_THEN_m_pip_ETC___d758 =
 	     (EN_send ?
 		m_pipe_enq2Mat_lat_2$wget[3:2] == 2'd0 :
 		IF_m_pipe_enq2Mat_lat_1_whas__14_THEN_m_pipe_e_ETC___d739) ?
 	       4'd2 :
-	       { IF_IF_m_pipe_enq2Mat_lat_2_whas__11_THEN_m_pip_ETC___d749,
+	       { IF_m_pipe_enq2Mat_lat_2_whas__11_THEN_m_pipe_e_ETC___d748 ?
+		   2'd1 :
+		   2'd2,
 		 IF_m_pipe_enq2Mat_lat_2_whas__11_THEN_m_pipe_e_ETC___d756 } ;
   assign IF_IF_m_pipe_mat2Out_lat_1_whas__63_THEN_m_pip_ETC___d805 =
 	     IF_m_pipe_mat2Out_lat_1_whas__63_THEN_m_pipe_m_ETC___d785 ?
@@ -4009,6 +4005,12 @@ module mkIPipeline(CLK,
 	      IF_NOT_m_pipe_enq2Mat_dummy2_1_read__67_75_OR__ETC___d1425 &&
 	      IF_NOT_m_pipe_enq2Mat_dummy2_1_read__67_75_OR__ETC___d1463 &&
 	      IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1565) ;
+  assign IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_NOT_m_pi_ETC___d1680 =
+	     CAN_FIRE_RL_m_pipe_doMatch_bypass ?
+	       m_pipe_enq2Mat_lat_0$wget[3:2] != 2'd0 &&
+	       m_pipe_enq2Mat_lat_0$wget[3:2] != 2'd1 :
+	       m_pipe_enq2Mat_rl[3:2] != 2'd0 &&
+	       m_pipe_enq2Mat_rl[3:2] != 2'd1 ;
   assign IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_NOT_m_pi_ETC___d229 =
 	     CAN_FIRE_RL_m_pipe_doMatch_bypass ?
 	       !m_pipe_enq2Mat_lat_0$wget[1059] :
@@ -4059,6 +4061,13 @@ module mkIPipeline(CLK,
 	       m_pipe_enq2Mat_lat_0$wget[1058:1057] == 2'd1 :
 	       m_pipe_enq2Mat_rl[1058:1057] == 2'd0 ||
 	       m_pipe_enq2Mat_rl[1058:1057] == 2'd1 ;
+  assign IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pipe_e_ETC___d1692 =
+	     (CAN_FIRE_RL_m_pipe_doMatch_bypass ?
+		m_pipe_enq2Mat_lat_0$wget[3:2] == 2'd0 ||
+		m_pipe_enq2Mat_lat_0$wget[3:2] == 2'd1 :
+		m_pipe_enq2Mat_rl[3:2] == 2'd0 ||
+		m_pipe_enq2Mat_rl[3:2] == 2'd1) &&
+	     IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pipe_e_ETC___d746 ;
   assign IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pipe_e_ETC___d222 =
 	     CAN_FIRE_RL_m_pipe_doMatch_bypass ?
 	       m_pipe_enq2Mat_lat_0$wget[1059] :
@@ -4247,6 +4256,10 @@ module mkIPipeline(CLK,
 	     CAN_FIRE_RL_m_pipe_doMatch_bypass ?
 	       m_pipe_enq2Mat_lat_0$wget[515:4] :
 	       m_pipe_enq2Mat_rl[515:4] ;
+  assign IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pipe_e_ETC___d746 =
+	     CAN_FIRE_RL_m_pipe_doMatch_bypass ?
+	       m_pipe_enq2Mat_lat_0$wget[3:2] == 2'd1 :
+	       m_pipe_enq2Mat_rl[3:2] == 2'd1 ;
   assign IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pipe_e_ETC___d754 =
 	     CAN_FIRE_RL_m_pipe_doMatch_bypass ?
 	       m_pipe_enq2Mat_lat_0$wget[1:0] :
@@ -4261,11 +4274,6 @@ module mkIPipeline(CLK,
 	     (CAN_FIRE_RL_m_pipe_doMatch_bypass ?
 		m_pipe_enq2Mat_lat_0$wget[3:2] == 2'd0 :
 		m_pipe_enq2Mat_rl[3:2] == 2'd0) ;
-  assign IF_m_pipe_enq2Mat_lat_1_whas__14_THEN_m_pipe_e_ETC___d747 =
-	     !CAN_FIRE_RL_m_pipe_doTagMatch &&
-	     (CAN_FIRE_RL_m_pipe_doMatch_bypass ?
-		m_pipe_enq2Mat_lat_0$wget[3:2] == 2'd1 :
-		m_pipe_enq2Mat_rl[3:2] == 2'd1) ;
   assign IF_m_pipe_enq2Mat_lat_2_whas__11_THEN_m_pipe_e_ETC___d224 =
 	     EN_send ?
 	       m_pipe_enq2Mat_lat_2$wget[1059] :
@@ -4480,6 +4488,11 @@ module mkIPipeline(CLK,
 	       (CAN_FIRE_RL_m_pipe_doTagMatch ?
 		  512'hAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA :
 		  IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pipe_e_ETC___d725) ;
+  assign IF_m_pipe_enq2Mat_lat_2_whas__11_THEN_m_pipe_e_ETC___d748 =
+	     EN_send ?
+	       m_pipe_enq2Mat_lat_2$wget[3:2] == 2'd1 :
+	       !CAN_FIRE_RL_m_pipe_doTagMatch &&
+	       IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pipe_e_ETC___d746 ;
   assign IF_m_pipe_enq2Mat_lat_2_whas__11_THEN_m_pipe_e_ETC___d756 =
 	     EN_send ?
 	       m_pipe_enq2Mat_lat_2$wget[1:0] :
@@ -4493,7 +4506,7 @@ module mkIPipeline(CLK,
 	       IF_m_pipe_enq2Mat_lat_2_whas__11_THEN_m_pipe_e_ETC___d713,
 	       IF_m_pipe_enq2Mat_lat_2_whas__11_THEN_m_pipe_e_ETC___d727,
 	       IF_IF_m_pipe_enq2Mat_lat_2_whas__11_THEN_m_pip_ETC___d758 } ;
-  assign IF_m_pipe_mat2Out_dummy2_0_read__999_AND_m_pip_ETC___d2026 =
+  assign IF_m_pipe_mat2Out_dummy2_0_read__008_AND_m_pip_ETC___d2035 =
 	     (m_pipe_mat2Out_dummy2_0$Q_OUT &&
 	      m_pipe_mat2Out_dummy2_1$Q_OUT &&
 	      m_pipe_mat2Out_rl[644] &&
@@ -4505,7 +4518,7 @@ module mkIPipeline(CLK,
 		 m_pipe_mat2Out_rl[643:642] == 2'd1) ?
 		  { 3'd2, m_pipe_mat2Out_rl[576:575] } :
 		  5'd18) ;
-  assign IF_m_pipe_mat2Out_dummy2_0_read__999_AND_m_pip_ETC___d2039 =
+  assign IF_m_pipe_mat2Out_dummy2_0_read__008_AND_m_pip_ETC___d2048 =
 	     (m_pipe_mat2Out_dummy2_0$Q_OUT &&
 	      m_pipe_mat2Out_dummy2_1$Q_OUT &&
 	      m_pipe_mat2Out_rl[644] &&
@@ -4596,7 +4609,7 @@ module mkIPipeline(CLK,
 	      IF_NOT_m_pipe_enq2Mat_dummy2_1_read__67_75_OR__ETC___d1493 &&
 	      IF_NOT_m_pipe_enq2Mat_dummy2_1_read__67_75_OR__ETC___d1536) &&
 	     CASE_m_randRep_randWay_07_0_NOT_m_pipe_enq2Mat_ETC___d1508 ;
-  assign NOT_m_dataRam_rdReqQ_empty_dummy2_0_read__042__ETC___d2051 =
+  assign NOT_m_dataRam_rdReqQ_empty_dummy2_0_read__051__ETC___d2060 =
 	     !m_dataRam_rdReqQ_empty_dummy2_0$Q_OUT ||
 	     !m_dataRam_rdReqQ_empty_dummy2_1$Q_OUT ||
 	     !m_dataRam_rdReqQ_empty_dummy2_2$Q_OUT ||
@@ -4619,7 +4632,7 @@ module mkIPipeline(CLK,
 	     NOT_m_infoRam_5_rdReqQ_empty_dummy2_0_read__16_ETC___d1173 &&
 	     NOT_m_infoRam_6_rdReqQ_empty_dummy2_0_read__17_ETC___d1183 &&
 	     NOT_m_infoRam_7_rdReqQ_empty_dummy2_0_read__18_ETC___d1613 ;
-  assign NOT_m_infoRam_1_rdReqQ_full_dummy2_1_read__917_ETC___d1998 =
+  assign NOT_m_infoRam_1_rdReqQ_full_dummy2_1_read__926_ETC___d2007 =
 	     (!m_infoRam_1_rdReqQ_full_dummy2_1$Q_OUT ||
 	      !m_infoRam_1_rdReqQ_full_dummy2_2$Q_OUT ||
 	      CAN_FIRE_RL_m_pipe_doTagMatch ||
@@ -4632,7 +4645,7 @@ module mkIPipeline(CLK,
 	      !m_infoRam_3_rdReqQ_full_dummy2_2$Q_OUT ||
 	      CAN_FIRE_RL_m_pipe_doTagMatch ||
 	      !m_infoRam_3_rdReqQ_full_rl) &&
-	     NOT_m_infoRam_4_rdReqQ_full_dummy2_1_read__944_ETC___d1995 ;
+	     NOT_m_infoRam_4_rdReqQ_full_dummy2_1_read__953_ETC___d2004 ;
   assign NOT_m_infoRam_2_rdReqQ_empty_dummy2_0_read__13_ETC___d1143 =
 	     !m_infoRam_2_rdReqQ_empty_dummy2_0$Q_OUT ||
 	     !m_infoRam_2_rdReqQ_empty_dummy2_1$Q_OUT ||
@@ -4648,7 +4661,7 @@ module mkIPipeline(CLK,
 	     !m_infoRam_4_rdReqQ_empty_dummy2_1$Q_OUT ||
 	     !m_infoRam_4_rdReqQ_empty_dummy2_2$Q_OUT ||
 	     !m_infoRam_4_rdReqQ_empty_rl ;
-  assign NOT_m_infoRam_4_rdReqQ_full_dummy2_1_read__944_ETC___d1995 =
+  assign NOT_m_infoRam_4_rdReqQ_full_dummy2_1_read__953_ETC___d2004 =
 	     (!m_infoRam_4_rdReqQ_full_dummy2_1$Q_OUT ||
 	      !m_infoRam_4_rdReqQ_full_dummy2_2$Q_OUT ||
 	      CAN_FIRE_RL_m_pipe_doTagMatch ||
@@ -4661,7 +4674,7 @@ module mkIPipeline(CLK,
 	      !m_infoRam_6_rdReqQ_full_dummy2_2$Q_OUT ||
 	      CAN_FIRE_RL_m_pipe_doTagMatch ||
 	      !m_infoRam_6_rdReqQ_full_rl) &&
-	     NOT_m_infoRam_7_rdReqQ_full_dummy2_1_read__971_ETC___d1992 ;
+	     NOT_m_infoRam_7_rdReqQ_full_dummy2_1_read__980_ETC___d2001 ;
   assign NOT_m_infoRam_5_rdReqQ_empty_dummy2_0_read__16_ETC___d1173 =
 	     !m_infoRam_5_rdReqQ_empty_dummy2_0$Q_OUT ||
 	     !m_infoRam_5_rdReqQ_empty_dummy2_1$Q_OUT ||
@@ -4688,7 +4701,7 @@ module mkIPipeline(CLK,
 	      m_dataRam_rdReqQ_deqP_lat_0$whas ||
 	      !m_dataRam_rdReqQ_full_rl) &&
 	     IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_NOT_m_pi_ETC___d1610 ;
-  assign NOT_m_infoRam_7_rdReqQ_full_dummy2_1_read__971_ETC___d1992 =
+  assign NOT_m_infoRam_7_rdReqQ_full_dummy2_1_read__980_ETC___d2001 =
 	     (!m_infoRam_7_rdReqQ_full_dummy2_1$Q_OUT ||
 	      !m_infoRam_7_rdReqQ_full_dummy2_2$Q_OUT ||
 	      CAN_FIRE_RL_m_pipe_doTagMatch ||
@@ -4838,14 +4851,12 @@ module mkIPipeline(CLK,
 	     (EN_deqWrite ?
 		!m_pipe_mat2Out_lat_0$wget[644] :
 		!m_pipe_mat2Out_rl[644]) ;
-  assign SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1745 =
-	     { y_avValue_info_tag__h96135,
-	       IF_IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_NOT_m_ETC___d1695,
-	       !SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1696,
-	       SEL_ARR_IF_IF_m_pipe_enq2Mat_lat_0_whas__17_TH_ETC___d1723,
-	       m_pipe_bypass_whas__65_AND_m_pipe_bypass_wget__ETC___d1730 ||
+  assign SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1754 =
+	     { y_avValue_info_tag__h96402,
+	       IF_IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_NOT_m_ETC___d1734,
+	       m_pipe_bypass_whas__65_AND_m_pipe_bypass_wget__ETC___d1739 ||
 	       IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pipe_e_ETC___d711,
-	       m_pipe_bypass_whas__65_AND_m_pipe_bypass_wget__ETC___d1730 ?
+	       m_pipe_bypass_whas__65_AND_m_pipe_bypass_wget__ETC___d1739 ?
 		 m_pipe_bypass$wget[511:0] :
 		 IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pipe_e_ETC___d725 } ;
   assign _0_OR_IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_p_ETC___d1287 =
@@ -4878,7 +4889,7 @@ module mkIPipeline(CLK,
 	      NOT_m_pipe_enq2Mat_dummy2_1_read__67_75_OR_NOT_ETC___d1327 ||
 	      NOT_m_infoRam_5_rdReqQ_empty_dummy2_0_read__16_ETC___d1173) &&
 	     IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1458 ;
-  assign addr__h134631 =
+  assign addr__h134848 =
 	     (m_pipe_mat2Out_dummy2_0$Q_OUT &&
 	      m_pipe_mat2Out_dummy2_1$Q_OUT &&
 	      m_pipe_mat2Out_rl[644] &&
@@ -4929,15 +4940,15 @@ module mkIPipeline(CLK,
 	     m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_en_ETC___d1374 ?
 	       m_infoRam_7_bram$DOB[57:6] :
 	       IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pipe_e_ETC___d287 ;
-  assign m_pipe_bypass_wget__86_BITS_572_TO_570_03_EQ_I_ETC___d1728 =
+  assign m_pipe_bypass_wget__86_BITS_572_TO_570_03_EQ_I_ETC___d1737 =
 	     m_pipe_bypass$wget[572:570] == way__h92005 &&
 	     (CAN_FIRE_RL_m_pipe_doMatch_bypass ?
 		!m_pipe_enq2Mat_lat_0$wget[516] :
 		!m_pipe_enq2Mat_rl[516]) ;
-  assign m_pipe_bypass_whas__65_AND_m_pipe_bypass_wget__ETC___d1730 =
+  assign m_pipe_bypass_whas__65_AND_m_pipe_bypass_wget__ETC___d1739 =
 	     EN_deqWrite &&
 	     m_pipe_bypass$wget[578:573] == addr__h81493[11:6] &&
-	     m_pipe_bypass_wget__86_BITS_572_TO_570_03_EQ_I_ETC___d1728 ;
+	     m_pipe_bypass_wget__86_BITS_572_TO_570_03_EQ_I_ETC___d1737 ;
   assign m_pipe_enq2Mat_dummy2_0_read__66_AND_m_pipe_en_ETC___d871 =
 	     m_pipe_enq2Mat_dummy2_0$Q_OUT && m_pipe_enq2Mat_dummy2_1$Q_OUT &&
 	     m_pipe_enq2Mat_dummy2_2$Q_OUT &&
@@ -5026,7 +5037,7 @@ module mkIPipeline(CLK,
 	     (CAN_FIRE_RL_m_pipe_doMatch_bypass ?
 		!m_pipe_enq2Mat_lat_0$wget[934] :
 		!m_pipe_enq2Mat_rl[934]) ;
-  assign m_pipe_mat2Out_dummy2_0_read__999_AND_m_pipe_m_ETC___d2041 =
+  assign m_pipe_mat2Out_dummy2_0_read__008_AND_m_pipe_m_ETC___d2050 =
 	     m_pipe_mat2Out_dummy2_0$Q_OUT && m_pipe_mat2Out_dummy2_1$Q_OUT &&
 	     m_pipe_mat2Out_rl[644] &&
 	     m_initDone ;
@@ -5162,7 +5173,7 @@ module mkIPipeline(CLK,
   begin
     case (send_r[583:582])
       2'd0:
-	  IF_send_r_BITS_583_TO_582_749_EQ_0_750_THEN_m__ETC___d1890 =
+	  IF_send_r_BITS_583_TO_582_758_EQ_0_759_THEN_m__ETC___d1899 =
 	      { EN_deqWrite && m_pipe_bypass$wget[578:573] == send_r[14:9] &&
 		m_pipe_bypass$wget[572:570] == 3'd7,
 		m_pipe_bypass$wget[569:512],
@@ -5188,7 +5199,7 @@ module mkIPipeline(CLK,
 		m_pipe_bypass$wget[572:570] == 3'd0,
 		m_pipe_bypass$wget[569:512] };
       2'd1:
-	  IF_send_r_BITS_583_TO_582_749_EQ_0_750_THEN_m__ETC___d1890 =
+	  IF_send_r_BITS_583_TO_582_758_EQ_0_759_THEN_m__ETC___d1899 =
 	      { EN_deqWrite && m_pipe_bypass$wget[578:573] == send_r[13:8] &&
 		m_pipe_bypass$wget[572:570] == 3'd7,
 		m_pipe_bypass$wget[569:512],
@@ -5213,7 +5224,7 @@ module mkIPipeline(CLK,
 		EN_deqWrite && m_pipe_bypass$wget[578:573] == send_r[13:8] &&
 		m_pipe_bypass$wget[572:570] == 3'd0,
 		m_pipe_bypass$wget[569:512] };
-      default: IF_send_r_BITS_583_TO_582_749_EQ_0_750_THEN_m__ETC___d1890 =
+      default: IF_send_r_BITS_583_TO_582_758_EQ_0_759_THEN_m__ETC___d1899 =
 		   { EN_deqWrite &&
 		     m_pipe_bypass$wget[578:573] == send_r[529:524] &&
 		     m_pipe_bypass$wget[572:570] == 3'd7,
@@ -5252,12 +5263,12 @@ module mkIPipeline(CLK,
   begin
     case (send_r[583:582])
       2'd0:
-	  IF_send_r_BITS_583_TO_582_749_EQ_0_750_THEN_m__ETC___d1892 =
+	  IF_send_r_BITS_583_TO_582_758_EQ_0_759_THEN_m__ETC___d1901 =
 	      EN_deqWrite && m_pipe_bypass$wget[578:573] == send_r[14:9];
       2'd1:
-	  IF_send_r_BITS_583_TO_582_749_EQ_0_750_THEN_m__ETC___d1892 =
+	  IF_send_r_BITS_583_TO_582_758_EQ_0_759_THEN_m__ETC___d1901 =
 	      EN_deqWrite && m_pipe_bypass$wget[578:573] == send_r[13:8];
-      default: IF_send_r_BITS_583_TO_582_749_EQ_0_750_THEN_m__ETC___d1892 =
+      default: IF_send_r_BITS_583_TO_582_758_EQ_0_759_THEN_m__ETC___d1901 =
 		   EN_deqWrite &&
 		   m_pipe_bypass$wget[578:573] == send_r[529:524];
     endcase
@@ -5381,51 +5392,14 @@ module mkIPipeline(CLK,
 	  b__h85047 or b__h85367 or b__h85665 or b__h85974 or b__h86272)
   begin
     case (way__h92005)
-      3'd0: y_avValue_info_tag__h96135 = b__h82759;
-      3'd1: y_avValue_info_tag__h96135 = b__h84440;
-      3'd2: y_avValue_info_tag__h96135 = b__h84749;
-      3'd3: y_avValue_info_tag__h96135 = b__h85047;
-      3'd4: y_avValue_info_tag__h96135 = b__h85367;
-      3'd5: y_avValue_info_tag__h96135 = b__h85665;
-      3'd6: y_avValue_info_tag__h96135 = b__h85974;
-      3'd7: y_avValue_info_tag__h96135 = b__h86272;
-    endcase
-  end
-  always@(way__h92005 or
-	  IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1401 or
-	  IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1466 or
-	  IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1418 or
-	  IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1471 or
-	  IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1441 or
-	  IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1448 or
-	  IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1454 or
-	  IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1478)
-  begin
-    case (way__h92005)
-      3'd0:
-	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1696 =
-	      IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1401;
-      3'd1:
-	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1696 =
-	      IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1466;
-      3'd2:
-	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1696 =
-	      IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1418;
-      3'd3:
-	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1696 =
-	      IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1471;
-      3'd4:
-	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1696 =
-	      IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1441;
-      3'd5:
-	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1696 =
-	      IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1448;
-      3'd6:
-	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1696 =
-	      IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1454;
-      3'd7:
-	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1696 =
-	      IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1478;
+      3'd0: y_avValue_info_tag__h96402 = b__h82759;
+      3'd1: y_avValue_info_tag__h96402 = b__h84440;
+      3'd2: y_avValue_info_tag__h96402 = b__h84749;
+      3'd3: y_avValue_info_tag__h96402 = b__h85047;
+      3'd4: y_avValue_info_tag__h96402 = b__h85367;
+      3'd5: y_avValue_info_tag__h96402 = b__h85665;
+      3'd6: y_avValue_info_tag__h96402 = b__h85974;
+      3'd7: y_avValue_info_tag__h96402 = b__h86272;
     endcase
   end
   always@(way__h92005 or
@@ -5440,29 +5414,66 @@ module mkIPipeline(CLK,
   begin
     case (way__h92005)
       3'd0:
-	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1694 =
+	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1683 =
 	      IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1230;
       3'd1:
-	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1694 =
+	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1683 =
 	      IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1255;
       3'd2:
-	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1694 =
+	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1683 =
 	      IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1271;
       3'd3:
-	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1694 =
+	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1683 =
 	      IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1299;
       3'd4:
-	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1694 =
+	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1683 =
 	      IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1318;
       3'd5:
-	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1694 =
+	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1683 =
 	      IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1334;
       3'd6:
-	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1694 =
+	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1683 =
 	      IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1349;
       3'd7:
-	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1694 =
+	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1683 =
 	      IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1378;
+    endcase
+  end
+  always@(way__h92005 or
+	  IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1401 or
+	  IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1466 or
+	  IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1418 or
+	  IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1471 or
+	  IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1441 or
+	  IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1448 or
+	  IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1454 or
+	  IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1478)
+  begin
+    case (way__h92005)
+      3'd0:
+	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1705 =
+	      IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1401;
+      3'd1:
+	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1705 =
+	      IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1466;
+      3'd2:
+	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1705 =
+	      IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1418;
+      3'd3:
+	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1705 =
+	      IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1471;
+      3'd4:
+	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1705 =
+	      IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1441;
+      3'd5:
+	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1705 =
+	      IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1448;
+      3'd6:
+	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1705 =
+	      IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1454;
+      3'd7:
+	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1705 =
+	      IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1478;
     endcase
   end
   always@(way__h92005 or
@@ -5493,42 +5504,42 @@ module mkIPipeline(CLK,
   begin
     case (way__h92005)
       3'd0:
-	  SEL_ARR_IF_IF_m_pipe_enq2Mat_lat_0_whas__17_TH_ETC___d1723 =
+	  SEL_ARR_IF_IF_m_pipe_enq2Mat_lat_0_whas__17_TH_ETC___d1732 =
 	      IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_NOT_m_pi_ETC___d657 ?
 		m_infoRam_0_bram$DOB[2:0] :
 		IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pipe_e_ETC___d692;
       3'd1:
-	  SEL_ARR_IF_IF_m_pipe_enq2Mat_lat_0_whas__17_TH_ETC___d1723 =
+	  SEL_ARR_IF_IF_m_pipe_enq2Mat_lat_0_whas__17_TH_ETC___d1732 =
 	      IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_NOT_m_pi_ETC___d603 ?
 		m_infoRam_1_bram$DOB[2:0] :
 		IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pipe_e_ETC___d638;
       3'd2:
-	  SEL_ARR_IF_IF_m_pipe_enq2Mat_lat_0_whas__17_TH_ETC___d1723 =
+	  SEL_ARR_IF_IF_m_pipe_enq2Mat_lat_0_whas__17_TH_ETC___d1732 =
 	      IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_NOT_m_pi_ETC___d549 ?
 		m_infoRam_2_bram$DOB[2:0] :
 		IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pipe_e_ETC___d584;
       3'd3:
-	  SEL_ARR_IF_IF_m_pipe_enq2Mat_lat_0_whas__17_TH_ETC___d1723 =
+	  SEL_ARR_IF_IF_m_pipe_enq2Mat_lat_0_whas__17_TH_ETC___d1732 =
 	      IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_NOT_m_pi_ETC___d495 ?
 		m_infoRam_3_bram$DOB[2:0] :
 		IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pipe_e_ETC___d530;
       3'd4:
-	  SEL_ARR_IF_IF_m_pipe_enq2Mat_lat_0_whas__17_TH_ETC___d1723 =
+	  SEL_ARR_IF_IF_m_pipe_enq2Mat_lat_0_whas__17_TH_ETC___d1732 =
 	      IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_NOT_m_pi_ETC___d441 ?
 		m_infoRam_4_bram$DOB[2:0] :
 		IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pipe_e_ETC___d476;
       3'd5:
-	  SEL_ARR_IF_IF_m_pipe_enq2Mat_lat_0_whas__17_TH_ETC___d1723 =
+	  SEL_ARR_IF_IF_m_pipe_enq2Mat_lat_0_whas__17_TH_ETC___d1732 =
 	      IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_NOT_m_pi_ETC___d387 ?
 		m_infoRam_5_bram$DOB[2:0] :
 		IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pipe_e_ETC___d422;
       3'd6:
-	  SEL_ARR_IF_IF_m_pipe_enq2Mat_lat_0_whas__17_TH_ETC___d1723 =
+	  SEL_ARR_IF_IF_m_pipe_enq2Mat_lat_0_whas__17_TH_ETC___d1732 =
 	      IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_NOT_m_pi_ETC___d333 ?
 		m_infoRam_6_bram$DOB[2:0] :
 		IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pipe_e_ETC___d368;
       3'd7:
-	  SEL_ARR_IF_IF_m_pipe_enq2Mat_lat_0_whas__17_TH_ETC___d1723 =
+	  SEL_ARR_IF_IF_m_pipe_enq2Mat_lat_0_whas__17_TH_ETC___d1732 =
 	      IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_NOT_m_pi_ETC___d280 ?
 		m_infoRam_7_bram$DOB[2:0] :
 		IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pipe_e_ETC___d315;
@@ -5899,6 +5910,23 @@ module mkIPipeline(CLK,
 	  IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_pipe_ETC___d1636 &&
 	  IF_IF_m_pipe_enq2Mat_dummy2_1_read__67_AND_m_p_ETC___d1665)
 	$finish(32'd1);
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_m_pipe_doTagMatch &&
+	  IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_NOT_m_pi_ETC___d1680 &&
+	  IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pipe_e_ETC___d754 <=
+	  SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1683)
+	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_m_pipe_doTagMatch &&
+	  IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_NOT_m_pi_ETC___d1680 &&
+	  (SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_read__67_AN_ETC___d1683 ==
+	   2'd0) !=
+	  IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pipe_e_ETC___d711)
+	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_m_pipe_doTagMatch &&
+	  IF_m_pipe_enq2Mat_lat_0_whas__17_THEN_m_pipe_e_ETC___d1692)
+	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
   end
   // synopsys translate_on
 endmodule  // mkIPipeline

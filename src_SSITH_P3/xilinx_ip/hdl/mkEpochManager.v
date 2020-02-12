@@ -188,6 +188,7 @@ module mkEpochManager(CLK,
   // remaining internal signals
   wire [3 : 0] next_epoch__h81;
   wire IF_NOT_updatePrevEn_1_dummy2_1_read__5_6_OR_IF_ETC___d50,
+       NOT_updatePrevEn_0_dummy2_1_read__8_1_OR_IF_up_ETC___d52,
        NOT_updatePrevEn_1_dummy2_1_read__5_6_OR_IF_up_ETC___d47;
 
   // value method checkEpoch_0_check
@@ -315,6 +316,11 @@ module mkEpochManager(CLK,
 	       (EN_updatePrevEpoch_1_update ?
 		  updatePrevEn_1_lat_0$wget[4] :
 		  updatePrevEn_1_rl[4]) ;
+  assign NOT_updatePrevEn_0_dummy2_1_read__8_1_OR_IF_up_ETC___d52 =
+	     !updatePrevEn_0_dummy2_1$Q_OUT ||
+	     (EN_updatePrevEpoch_0_update ?
+		!updatePrevEn_0_lat_0$wget[4] :
+		!updatePrevEn_0_rl[4]) ;
   assign NOT_updatePrevEn_1_dummy2_1_read__5_6_OR_IF_up_ETC___d47 =
 	     !updatePrevEn_1_dummy2_1$Q_OUT ||
 	     (EN_updatePrevEpoch_1_update ?
@@ -357,6 +363,20 @@ module mkEpochManager(CLK,
     updatePrevEn_1_rl = 5'h0A;
   end
   `endif // BSV_NO_INITIAL_BLOCKS
+  // synopsys translate_on
+
+  // handling of system tasks
+
+  // synopsys translate_off
+  always@(negedge CLK)
+  begin
+    #0;
+    if (RST_N != `BSV_RESET_VALUE)
+      if (IF_NOT_updatePrevEn_1_dummy2_1_read__5_6_OR_IF_ETC___d50 &&
+	  NOT_updatePrevEn_1_dummy2_1_read__5_6_OR_IF_up_ETC___d47 &&
+	  NOT_updatePrevEn_0_dummy2_1_read__8_1_OR_IF_up_ETC___d52)
+	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
+  end
   // synopsys translate_on
 endmodule  // mkEpochManager
 

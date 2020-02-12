@@ -97,6 +97,7 @@ module mkLSQIssueLdQ(CLK,
        RDY_specUpdate_incorrectSpeculation;
 
   // inlined wires
+  reg m_m_valid_for_enq_wire$wget;
   wire m_m_deqP_ehr_lat_0$whas,
        m_m_empty_for_enq_wire$wget,
        m_m_valid_0_lat_0$whas,
@@ -222,7 +223,7 @@ module mkLSQIssueLdQ(CLK,
 
   // remaining internal signals
   reg [63 : 0] CASE_p538_0_m_m_row_0_BITS_71_TO_8_1_m_m_row_1_ETC__q8;
-  reg [11 : 0] CASE_p538_0_sb2305_1_sb2483_DONTCARE__q11;
+  reg [11 : 0] CASE_p538_0_sb2369_1_sb2547_DONTCARE__q11;
   reg [4 : 0] CASE_p538_0_m_m_row_0_BITS_76_TO_72_1_m_m_row__ETC__q10;
   reg CASE_p538_0_m_m_row_0_BIT_0_1_m_m_row_1_BIT_0__ETC__q9,
       CASE_p538_0_m_m_row_0_BIT_1_1_m_m_row_1_BIT_1__ETC__q7,
@@ -233,18 +234,18 @@ module mkLSQIssueLdQ(CLK,
       CASE_p538_0_m_m_row_0_BIT_6_1_m_m_row_1_BIT_6__ETC__q2,
       CASE_p538_0_m_m_row_0_BIT_7_1_m_m_row_1_BIT_7__ETC__q1,
       SEL_ARR_NOT_m_m_valid_0_dummy2_0_read__6_7_OR__ETC___d55;
-  wire [71 : 0] SEL_ARR_m_m_row_0_8_BITS_71_TO_8_4_m_m_row_1_0_ETC___d133;
+  wire [71 : 0] SEL_ARR_m_m_row_0_9_BITS_71_TO_8_5_m_m_row_1_1_ETC___d134;
   wire [11 : 0] IF_m_m_specBits_0_lat_0_whas__7_THEN_m_m_specB_ETC___d20,
 		IF_m_m_specBits_1_lat_0_whas__4_THEN_m_m_specB_ETC___d27,
-		sb__h12305,
-		sb__h12483,
-		sb__h12873,
-		sb__h13300,
+		sb__h12369,
+		sb__h12547,
+		sb__h12937,
+		sb__h13364,
 		upd__h3373,
 		upd__h4302;
-  wire [6 : 0] SEL_ARR_m_m_row_0_8_BIT_7_8_m_m_row_1_0_BIT_7__ETC___d128;
-  wire [4 : 0] SEL_ARR_m_m_row_0_8_BIT_7_8_m_m_row_1_0_BIT_7__ETC___d119;
-  wire [2 : 0] SEL_ARR_m_m_row_0_8_BIT_7_8_m_m_row_1_0_BIT_7__ETC___d110;
+  wire [6 : 0] SEL_ARR_m_m_row_0_9_BIT_7_9_m_m_row_1_1_BIT_7__ETC___d129;
+  wire [4 : 0] SEL_ARR_m_m_row_0_9_BIT_7_9_m_m_row_1_1_BIT_7__ETC___d120;
+  wire [2 : 0] SEL_ARR_m_m_row_0_9_BIT_7_9_m_m_row_1_1_BIT_7__ETC___d111;
   wire m_m_valid_0_dummy2_0_read__6_AND_m_m_valid_0_d_ETC___d63,
        p__h6538,
        upd__h5417,
@@ -282,8 +283,8 @@ module mkLSQIssueLdQ(CLK,
   // value method first
   assign first =
 	     { CASE_p538_0_m_m_row_0_BITS_76_TO_72_1_m_m_row__ETC__q10,
-	       SEL_ARR_m_m_row_0_8_BITS_71_TO_8_4_m_m_row_1_0_ETC___d133,
-	       CASE_p538_0_sb2305_1_sb2483_DONTCARE__q11 } ;
+	       SEL_ARR_m_m_row_0_9_BITS_71_TO_8_5_m_m_row_1_1_ETC___d134,
+	       CASE_p538_0_sb2369_1_sb2547_DONTCARE__q11 } ;
   assign RDY_first = RDY_deq ;
 
   // action method specUpdate_incorrectSpeculation
@@ -397,13 +398,13 @@ module mkLSQIssueLdQ(CLK,
   assign MUX_m_m_valid_0_dummy2_0$write_1__SEL_2 =
 	     EN_specUpdate_incorrectSpeculation &&
 	     (specUpdate_incorrectSpeculation_kill_all ||
-	      sb__h12305[specUpdate_incorrectSpeculation_kill_tag]) ;
+	      sb__h12369[specUpdate_incorrectSpeculation_kill_tag]) ;
   assign MUX_m_m_valid_1_dummy2_0$write_1__SEL_1 =
 	     EN_deq && p__h6538 == 1'd1 ;
   assign MUX_m_m_valid_1_dummy2_0$write_1__SEL_2 =
 	     EN_specUpdate_incorrectSpeculation &&
 	     (specUpdate_incorrectSpeculation_kill_all ||
-	      sb__h12483[specUpdate_incorrectSpeculation_kill_tag]) ;
+	      sb__h12547[specUpdate_incorrectSpeculation_kill_tag]) ;
 
   // inlined wires
   assign m_m_valid_0_lat_0$whas =
@@ -420,6 +421,24 @@ module mkLSQIssueLdQ(CLK,
 	      !m_m_valid_0_rl) &&
 	     (!m_m_valid_1_dummy2_0$Q_OUT || !m_m_valid_1_dummy2_1$Q_OUT ||
 	      !m_m_valid_1_rl) ;
+  always@(m_m_enqP or
+	  m_m_valid_0_dummy2_0$Q_OUT or
+	  m_m_valid_0_dummy2_1$Q_OUT or
+	  m_m_valid_0_rl or
+	  m_m_valid_1_dummy2_0$Q_OUT or
+	  m_m_valid_1_dummy2_1$Q_OUT or m_m_valid_1_rl)
+  begin
+    case (m_m_enqP)
+      1'd0:
+	  m_m_valid_for_enq_wire$wget =
+	      m_m_valid_0_dummy2_0$Q_OUT && m_m_valid_0_dummy2_1$Q_OUT &&
+	      m_m_valid_0_rl;
+      1'd1:
+	  m_m_valid_for_enq_wire$wget =
+	      m_m_valid_1_dummy2_0$Q_OUT && m_m_valid_1_dummy2_1$Q_OUT &&
+	      m_m_valid_1_rl;
+    endcase
+  end
 
   // register m_m_deqP_ehr_rl
   assign m_m_deqP_ehr_rl$D_IN =
@@ -513,20 +532,20 @@ module mkLSQIssueLdQ(CLK,
 	     m_m_valid_0_lat_1$whas ? enq_x[11:0] : m_m_specBits_0_rl ;
   assign IF_m_m_specBits_1_lat_0_whas__4_THEN_m_m_specB_ETC___d27 =
 	     m_m_valid_1_lat_1$whas ? enq_x[11:0] : m_m_specBits_1_rl ;
-  assign SEL_ARR_m_m_row_0_8_BITS_71_TO_8_4_m_m_row_1_0_ETC___d133 =
+  assign SEL_ARR_m_m_row_0_9_BITS_71_TO_8_5_m_m_row_1_1_ETC___d134 =
 	     { CASE_p538_0_m_m_row_0_BITS_71_TO_8_1_m_m_row_1_ETC__q8,
-	       SEL_ARR_m_m_row_0_8_BIT_7_8_m_m_row_1_0_BIT_7__ETC___d128,
+	       SEL_ARR_m_m_row_0_9_BIT_7_9_m_m_row_1_1_BIT_7__ETC___d129,
 	       CASE_p538_0_m_m_row_0_BIT_0_1_m_m_row_1_BIT_0__ETC__q9 } ;
-  assign SEL_ARR_m_m_row_0_8_BIT_7_8_m_m_row_1_0_BIT_7__ETC___d110 =
+  assign SEL_ARR_m_m_row_0_9_BIT_7_9_m_m_row_1_1_BIT_7__ETC___d111 =
 	     { CASE_p538_0_m_m_row_0_BIT_7_1_m_m_row_1_BIT_7__ETC__q1,
 	       CASE_p538_0_m_m_row_0_BIT_6_1_m_m_row_1_BIT_6__ETC__q2,
 	       CASE_p538_0_m_m_row_0_BIT_5_1_m_m_row_1_BIT_5__ETC__q3 } ;
-  assign SEL_ARR_m_m_row_0_8_BIT_7_8_m_m_row_1_0_BIT_7__ETC___d119 =
-	     { SEL_ARR_m_m_row_0_8_BIT_7_8_m_m_row_1_0_BIT_7__ETC___d110,
+  assign SEL_ARR_m_m_row_0_9_BIT_7_9_m_m_row_1_1_BIT_7__ETC___d120 =
+	     { SEL_ARR_m_m_row_0_9_BIT_7_9_m_m_row_1_1_BIT_7__ETC___d111,
 	       CASE_p538_0_m_m_row_0_BIT_4_1_m_m_row_1_BIT_4__ETC__q4,
 	       CASE_p538_0_m_m_row_0_BIT_3_1_m_m_row_1_BIT_3__ETC__q5 } ;
-  assign SEL_ARR_m_m_row_0_8_BIT_7_8_m_m_row_1_0_BIT_7__ETC___d128 =
-	     { SEL_ARR_m_m_row_0_8_BIT_7_8_m_m_row_1_0_BIT_7__ETC___d119,
+  assign SEL_ARR_m_m_row_0_9_BIT_7_9_m_m_row_1_1_BIT_7__ETC___d129 =
+	     { SEL_ARR_m_m_row_0_9_BIT_7_9_m_m_row_1_1_BIT_7__ETC___d120,
 	       CASE_p538_0_m_m_row_0_BIT_2_1_m_m_row_1_BIT_2__ETC__q6,
 	       CASE_p538_0_m_m_row_0_BIT_1_1_m_m_row_1_BIT_1__ETC__q7 } ;
   assign m_m_valid_0_dummy2_0_read__6_AND_m_m_valid_0_d_ETC___d63 =
@@ -537,26 +556,26 @@ module mkLSQIssueLdQ(CLK,
   assign p__h6538 =
 	     m_m_deqP_ehr_dummy2_0$Q_OUT && m_m_deqP_ehr_dummy2_1$Q_OUT &&
 	     m_m_deqP_ehr_rl ;
-  assign sb__h12305 =
+  assign sb__h12369 =
 	     (m_m_specBits_0_dummy2_0$Q_OUT &&
 	      m_m_specBits_0_dummy2_1$Q_OUT) ?
 	       m_m_specBits_0_rl :
 	       12'd0 ;
-  assign sb__h12483 =
+  assign sb__h12547 =
 	     (m_m_specBits_1_dummy2_0$Q_OUT &&
 	      m_m_specBits_1_dummy2_1$Q_OUT) ?
 	       m_m_specBits_1_rl :
 	       12'd0 ;
-  assign sb__h12873 =
+  assign sb__h12937 =
 	     m_m_specBits_0_dummy2_1$Q_OUT ?
 	       IF_m_m_specBits_0_lat_0_whas__7_THEN_m_m_specB_ETC___d20 :
 	       12'd0 ;
-  assign sb__h13300 =
+  assign sb__h13364 =
 	     m_m_specBits_1_dummy2_1$Q_OUT ?
 	       IF_m_m_specBits_1_lat_0_whas__4_THEN_m_m_specB_ETC___d27 :
 	       12'd0 ;
-  assign upd__h3373 = sb__h12873 & specUpdate_correctSpeculation_mask ;
-  assign upd__h4302 = sb__h13300 & specUpdate_correctSpeculation_mask ;
+  assign upd__h3373 = sb__h12937 & specUpdate_correctSpeculation_mask ;
+  assign upd__h4302 = sb__h13364 & specUpdate_correctSpeculation_mask ;
   assign upd__h5417 =
 	     !m_m_deqP_ehr_dummy2_0$Q_OUT || !m_m_deqP_ehr_dummy2_1$Q_OUT ||
 	     !m_m_deqP_ehr_rl ;
@@ -689,11 +708,11 @@ module mkLSQIssueLdQ(CLK,
 	      m_m_row_1[76:72];
     endcase
   end
-  always@(p__h6538 or sb__h12305 or sb__h12483)
+  always@(p__h6538 or sb__h12369 or sb__h12547)
   begin
     case (p__h6538)
-      1'd0: CASE_p538_0_sb2305_1_sb2483_DONTCARE__q11 = sb__h12305;
-      1'd1: CASE_p538_0_sb2305_1_sb2483_DONTCARE__q11 = sb__h12483;
+      1'd0: CASE_p538_0_sb2369_1_sb2547_DONTCARE__q11 = sb__h12369;
+      1'd1: CASE_p538_0_sb2369_1_sb2547_DONTCARE__q11 = sb__h12547;
     endcase
   end
 
@@ -743,6 +762,18 @@ module mkLSQIssueLdQ(CLK,
     m_m_valid_1_rl = 1'h0;
   end
   `endif // BSV_NO_INITIAL_BLOCKS
+  // synopsys translate_on
+
+  // handling of system tasks
+
+  // synopsys translate_off
+  always@(negedge CLK)
+  begin
+    #0;
+    if (RST_N != `BSV_RESET_VALUE)
+      if (EN_enq && m_m_valid_for_enq_wire$wget)
+	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
+  end
   // synopsys translate_on
 endmodule  // mkLSQIssueLdQ
 
