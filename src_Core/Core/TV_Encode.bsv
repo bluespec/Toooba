@@ -70,13 +70,17 @@ module mkTV_Encode (TV_Encode_IFC);
    // TODO: currently always sending full PC
    Reg #(WordXL) rg_last_pc <- mkReg (0);
 
+   // Superscalar-wide inputs from CPU
    Vector #(SupSize, FIFOF #(Tuple2 #(Bit #(64), Trace_Data))) v_f_cpu_ins <- replicateM (mkFIFOF);
    Reg #(Bit #(64)) rg_serialnum <- mkReg (0);
 
+   // Input from Debug Module
    FIFOF #(Trace_Data)                         f_dm_in  <- mkFIFOF;
 
+   // Merges CPU and Debug Module inputs
    FIFOF #(Trace_Data)                         f_merged  <- mkFIFOF;
 
+   // Encoded output
    FIFOF #(Tuple2 #(Bit #(32), TV_Vec_Bytes))  f_out  <- mkFIFOF;
 
    // ----------------------------------------------------------------
@@ -98,7 +102,8 @@ module mkTV_Encode (TV_Encode_IFC);
 
    // f_dm_ins is merged in at any time
    rule rl_merge_dm_in;
-      let td <- pop (f_dm_in.first);
+      // let td <- pop (f_dm_in.first);    // Surprise: this gives no type-check error?
+      let td = f_dm_in.first;  f_dm_in.deq;
       f_merged.enq (td);
 
       if (verbosity != 0) begin
