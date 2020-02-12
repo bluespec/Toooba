@@ -42,8 +42,6 @@ import TV_Info    :: *;
 // ================================================================
 
 interface TV_Encode_IFC;
-   method Action reset;
-
    // Superscalar trace data from the CPU.
    // Each item in the stream is (serialnum, td).
    interface Vector #(SupSize, Put #(Tuple2 #(Bit #(64), Trace_Data))) v_cpu_in;
@@ -63,8 +61,6 @@ endinterface
 module mkTV_Encode (TV_Encode_IFC);
 
    Integer verbosity = 0;    // For debugging
-
-   Reg #(Bool) rg_reset_done <- mkReg (False);
 
    // Keep track of last PC for more efficient encoding of incremented PCs
    // TODO: currently always sending full PC
@@ -114,7 +110,7 @@ module mkTV_Encode (TV_Encode_IFC);
    // ----------------------------------------------------------------
    // BEHAVIOR: ENCODING
 
-   rule rl_log_trace_RESET (rg_reset_done && (f_merged.first.op == TRACE_RESET));
+   rule rl_log_trace_RESET (f_merged.first.op == TRACE_RESET);
       let td <- pop (f_merged);
 
       // Encode components of td into byte vecs
@@ -130,7 +126,7 @@ module mkTV_Encode (TV_Encode_IFC);
       f_out.enq (tuple2 (nnN, xN));
    endrule
 
-   rule rl_log_trace_GPR_WRITE (rg_reset_done && (f_merged.first.op == TRACE_GPR_WRITE));
+   rule rl_log_trace_GPR_WRITE (f_merged.first.op == TRACE_GPR_WRITE);
       let td <- pop (f_merged);
 
       // Encode components of td into byte vecs
@@ -148,7 +144,7 @@ module mkTV_Encode (TV_Encode_IFC);
       f_out.enq (tuple2 (nnN, xN));
    endrule
 
-   rule rl_log_trace_FPR_WRITE (rg_reset_done && (f_merged.first.op == TRACE_FPR_WRITE));
+   rule rl_log_trace_FPR_WRITE (f_merged.first.op == TRACE_FPR_WRITE);
       let td <- pop (f_merged);
 
       // Encode components of td into byte vecs
@@ -166,7 +162,7 @@ module mkTV_Encode (TV_Encode_IFC);
       f_out.enq (tuple2 (nnN, xN));
    endrule
 
-   rule rl_log_trace_CSR_WRITE (rg_reset_done && (f_merged.first.op == TRACE_CSR_WRITE));
+   rule rl_log_trace_CSR_WRITE (f_merged.first.op == TRACE_CSR_WRITE);
       let td <- pop (f_merged);
 
       // Encode components of td into byte vecs
@@ -184,7 +180,7 @@ module mkTV_Encode (TV_Encode_IFC);
       f_out.enq (tuple2 (nnN, xN));
    endrule
 
-   rule rl_log_trace_MEM_WRITE (rg_reset_done && (f_merged.first.op == TRACE_MEM_WRITE));
+   rule rl_log_trace_MEM_WRITE (f_merged.first.op == TRACE_MEM_WRITE);
       let td <- pop (f_merged);
 
       Bit #(2)  mem_req_size        = td.word1 [1:0];
@@ -217,7 +213,7 @@ module mkTV_Encode (TV_Encode_IFC);
       f_out.enq (tuple2 (nnN, xN));
    endrule
 
-   rule rl_log_trace_OTHER (rg_reset_done && (f_merged.first.op == TRACE_OTHER));
+   rule rl_log_trace_OTHER (f_merged.first.op == TRACE_OTHER);
       let td <- pop (f_merged);
 
       // Encode components of td into byte vecs
@@ -238,7 +234,7 @@ module mkTV_Encode (TV_Encode_IFC);
 	 $display ("%0d: %m.rl_log_trace_OTHER, pc = %0h", cur_cycle, td.pc);
    endrule
 
-   rule rl_log_trace_I_RD (rg_reset_done && (f_merged.first.op == TRACE_I_RD));
+   rule rl_log_trace_I_RD (f_merged.first.op == TRACE_I_RD);
       let td <- pop (f_merged);
 
       // Encode components of td into byte vecs
@@ -264,7 +260,7 @@ module mkTV_Encode (TV_Encode_IFC);
 `ifdef ISA_F
    // New opcode to track GPR updates due to F/D instructions. Also updates
    // the CSR FFLAGS
-   rule rl_log_trace_F_GRD (rg_reset_done && (f_merged.first.op == TRACE_F_GRD));
+   rule rl_log_trace_F_GRD (f_merged.first.op == TRACE_F_GRD);
       let td <- pop (f_merged);
 
       // Encode components of td into byte vecs
@@ -290,7 +286,7 @@ module mkTV_Encode (TV_Encode_IFC);
 
    // New opcode to track FPR updates due to F/D instructions. Also updates
    // the CSRs FFLAGS and MSTATUS
-   rule rl_log_trace_F_FRD (rg_reset_done && (f_merged.first.op == TRACE_F_FRD));
+   rule rl_log_trace_F_FRD (f_merged.first.op == TRACE_F_FRD);
       let td <- pop (f_merged);
 
       // Encode components of td into byte vecs
@@ -315,7 +311,7 @@ module mkTV_Encode (TV_Encode_IFC);
    endrule
 `endif
 
-   rule rl_log_trace_I_LOAD (rg_reset_done && (f_merged.first.op == TRACE_I_LOAD));
+   rule rl_log_trace_I_LOAD (f_merged.first.op == TRACE_I_LOAD);
       let td <- pop (f_merged);
 
       // Encode components of td into byte vecs
@@ -338,7 +334,7 @@ module mkTV_Encode (TV_Encode_IFC);
    endrule
 
 `ifdef ISA_F
-   rule rl_log_trace_F_LOAD (rg_reset_done && (f_merged.first.op == TRACE_F_LOAD));
+   rule rl_log_trace_F_LOAD (f_merged.first.op == TRACE_F_LOAD);
       let td <- pop (f_merged);
 
       // Encode components of td into byte vecs
@@ -363,7 +359,7 @@ module mkTV_Encode (TV_Encode_IFC);
    endrule
 `endif
 
-   rule rl_log_trace_I_STORE (rg_reset_done && (f_merged.first.op == TRACE_I_STORE));
+   rule rl_log_trace_I_STORE (f_merged.first.op == TRACE_I_STORE);
       let td <- pop (f_merged);
 
       let mem_req_size = td.word1 [1:0];    // funct3
@@ -388,7 +384,7 @@ module mkTV_Encode (TV_Encode_IFC);
    endrule
 
 `ifdef ISA_F
-   rule rl_log_trace_F_STORE (rg_reset_done && (f_merged.first.op == TRACE_F_STORE));
+   rule rl_log_trace_F_STORE (f_merged.first.op == TRACE_F_STORE);
       let td <- pop (f_merged);
 
       let mem_req_size = td.word1 [1:0];    // funct3
@@ -413,7 +409,7 @@ module mkTV_Encode (TV_Encode_IFC);
    endrule
 `endif
 
-   rule rl_log_trace_AMO (rg_reset_done && (f_merged.first.op == TRACE_AMO));
+   rule rl_log_trace_AMO (f_merged.first.op == TRACE_AMO);
       let td <- pop (f_merged);
 
       let mem_req_size = td.word4 [1:0];    // funct3
@@ -442,7 +438,7 @@ module mkTV_Encode (TV_Encode_IFC);
 	 $display ("%0d: %m.rl_log_trace_AMO, pc = %0h", cur_cycle, td.pc);
    endrule
 
-   rule rl_log_trace_CSRRX (rg_reset_done && (f_merged.first.op == TRACE_CSRRX));
+   rule rl_log_trace_CSRRX (f_merged.first.op == TRACE_CSRRX);
       let td <- pop (f_merged);
 
       // Encode components of td into byte vecs
@@ -466,7 +462,7 @@ module mkTV_Encode (TV_Encode_IFC);
       f_out.enq (tuple2 (nnN, xN));
    endrule
 
-   rule rl_log_trace_TRAP (rg_reset_done && (f_merged.first.op == TRACE_TRAP));
+   rule rl_log_trace_TRAP (f_merged.first.op == TRACE_TRAP);
       let td <- pop (f_merged);
 
       // Use new priv mode to decide which trap regs are updated (M, S or U priv)
@@ -519,7 +515,7 @@ module mkTV_Encode (TV_Encode_IFC);
       f_out.enq (tuple2 (nnN, xN));
    endrule
 
-   rule rl_log_trace_INTR (rg_reset_done && (f_merged.first.op == TRACE_INTR));
+   rule rl_log_trace_INTR (f_merged.first.op == TRACE_INTR);
       let td <- pop (f_merged);
 
       // Use new priv mode to decide which trap regs are updated (M, S or U priv)
@@ -564,7 +560,7 @@ module mkTV_Encode (TV_Encode_IFC);
       f_out.enq (tuple2 (nnN, xN));
    endrule
 
-   rule rl_log_trace_RET (rg_reset_done && (f_merged.first.op == TRACE_RET));
+   rule rl_log_trace_RET (f_merged.first.op == TRACE_RET);
       let td <- pop (f_merged);
 
       // Encode components of td into byte vecs
@@ -588,15 +584,6 @@ module mkTV_Encode (TV_Encode_IFC);
 
    // ----------------------------------------------------------------
    // INTERFACE
-
-   method Action reset () if (! rg_reset_done);
-      for (Integer j = 0; j < valueOf (SupSize); j = j + 1)
-	 v_f_cpu_ins [j].clear;
-      f_dm_in.clear;
-      f_out.clear;
-      rg_serialnum  <= 0;
-      rg_reset_done <= True;
-   endmethod
 
    interface v_cpu_in = map (toPut, v_f_cpu_ins);
    interface dm_in    = toPut (f_dm_in);
