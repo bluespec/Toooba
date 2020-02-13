@@ -38,6 +38,8 @@
 // setExecuted_doFinishFpuMulDiv_0_set_dst_data  I    64
 // setExecuted_doFinishFpuMulDiv_0_set_fflags  I     5
 // setExecuted_doFinishMem_vaddr  I    64
+// setExecuted_doFinishMem_store_data  I    64 unused
+// setExecuted_doFinishMem_store_data_BE  I     8 unused
 // setExecuted_doFinishMem_access_at_commit  I     1
 // setExecuted_doFinishMem_non_mmio_st_done  I     1
 // dependsOn_wrongSpec_tag        I     4
@@ -105,6 +107,8 @@ module mkRobRowSynth(CLK,
 		     RDY_setExecuted_doFinishFpuMulDiv_0_set,
 
 		     setExecuted_doFinishMem_vaddr,
+		     setExecuted_doFinishMem_store_data,
+		     setExecuted_doFinishMem_store_data_BE,
 		     setExecuted_doFinishMem_access_at_commit,
 		     setExecuted_doFinishMem_non_mmio_st_done,
 		     EN_setExecuted_doFinishMem,
@@ -170,6 +174,8 @@ module mkRobRowSynth(CLK,
 
   // action method setExecuted_doFinishMem
   input  [63 : 0] setExecuted_doFinishMem_vaddr;
+  input  [63 : 0] setExecuted_doFinishMem_store_data;
+  input  [7 : 0] setExecuted_doFinishMem_store_data_BE;
   input  setExecuted_doFinishMem_access_at_commit;
   input  setExecuted_doFinishMem_non_mmio_st_done;
   input  EN_setExecuted_doFinishMem;
@@ -508,8 +514,8 @@ module mkRobRowSynth(CLK,
 		IF_m_ppc_vaddr_csrData_lat_3_whas__66_THEN_m_p_ETC___d208,
 		x__h26961;
   wire [11 : 0] IF_m_spec_bits_lat_1_whas__84_THEN_m_spec_bits_ETC___d290,
-		bs__h33169,
-		sb__h33204,
+		bs__h33177,
+		sb__h33212,
 		upd__h17993;
   wire [4 : 0] IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d153,
 	       x_read_deq_fflags__h26056;
@@ -611,7 +617,7 @@ module mkRobRowSynth(CLK,
   assign RDY_getOrig_Inst = 1'd1 ;
 
   // value method dependsOn_wrongSpec
-  assign dependsOn_wrongSpec = bs__h33169[dependsOn_wrongSpec_tag] ;
+  assign dependsOn_wrongSpec = bs__h33177[dependsOn_wrongSpec_tag] ;
   assign RDY_dependsOn_wrongSpec = 1'd1 ;
 
   // action method correctSpeculation
@@ -1362,7 +1368,7 @@ module mkRobRowSynth(CLK,
 	     !m_ppc_vaddr_csrData_dummy2_1$Q_OUT ||
 	     !m_ppc_vaddr_csrData_dummy2_2$Q_OUT ||
 	     !m_ppc_vaddr_csrData_dummy2_3$Q_OUT ;
-  assign bs__h33169 =
+  assign bs__h33177 =
 	     (m_spec_bits_dummy2_0$Q_OUT && m_spec_bits_dummy2_1$Q_OUT &&
 	      m_spec_bits_dummy2_2$Q_OUT) ?
 	       m_spec_bits_rl :
@@ -1394,7 +1400,7 @@ module mkRobRowSynth(CLK,
 	       m_nonMMIOStDone_dummy2_1$Q_OUT &&
 	       m_nonMMIOStDone_rl,
 	       m_epochIncremented,
-	       bs__h33169 } ;
+	       bs__h33177 } ;
   assign m_rg_dst_data_62_CONCAT_m_csr_63_BIT_12_64_CON_ETC___d643 =
 	     { m_rg_dst_data,
 	       m_csr[12],
@@ -1412,11 +1418,11 @@ module mkRobRowSynth(CLK,
 	     m_trap_dummy2_0$Q_OUT && m_trap_dummy2_1$Q_OUT &&
 	     m_trap_dummy2_2$Q_OUT &&
 	     m_trap_rl[5] ;
-  assign sb__h33204 =
+  assign sb__h33212 =
 	     m_spec_bits_dummy2_2$Q_OUT ?
 	       IF_m_spec_bits_lat_1_whas__84_THEN_m_spec_bits_ETC___d290 :
 	       12'd0 ;
-  assign upd__h17993 = sb__h33204 & correctSpeculation_mask ;
+  assign upd__h17993 = sb__h33212 & correctSpeculation_mask ;
   assign x__h26961 =
 	     (m_tval_dummy2_0$Q_OUT && m_tval_dummy2_1$Q_OUT &&
 	      m_tval_dummy2_2$Q_OUT) ?
@@ -1709,7 +1715,7 @@ module mkRobRowSynth(CLK,
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_setExecuted_doFinishAlu_0_set &&
 	  NOT_m_csr_63_BIT_12_64_EQ_setExecuted_doFinish_ETC___d685)
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/lib/ReorderBuffer.bsv\", line 225, column 60\ncsr valid should match");
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/lib/ReorderBuffer.bsv\", line 236, column 60\ncsr valid should match");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_setExecuted_doFinishAlu_0_set &&
 	  NOT_m_csr_63_BIT_12_64_EQ_setExecuted_doFinish_ETC___d685)
@@ -1721,7 +1727,7 @@ module mkRobRowSynth(CLK,
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_setExecuted_doFinishAlu_1_set &&
 	  NOT_m_csr_63_BIT_12_64_EQ_setExecuted_doFinish_ETC___d693)
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/lib/ReorderBuffer.bsv\", line 225, column 60\ncsr valid should match");
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/lib/ReorderBuffer.bsv\", line 236, column 60\ncsr valid should match");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_setExecuted_doFinishAlu_1_set &&
 	  NOT_m_csr_63_BIT_12_64_EQ_setExecuted_doFinish_ETC___d693)
@@ -1733,7 +1739,7 @@ module mkRobRowSynth(CLK,
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_setExecuted_deqLSQ &&
 	  m_trap_dummy2_0_read__41_AND_m_trap_dummy2_1_r_ETC___d546)
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/lib/ReorderBuffer.bsv\", line 349, column 52\ncannot have trap");
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/lib/ReorderBuffer.bsv\", line 373, column 52\ncannot have trap");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_setExecuted_deqLSQ &&
 	  m_trap_dummy2_0_read__41_AND_m_trap_dummy2_1_r_ETC___d546)
@@ -1747,7 +1753,7 @@ module mkRobRowSynth(CLK,
       if (EN_setExecuted_doFinishMem &&
 	  setExecuted_doFinishMem_access_at_commit &&
 	  setExecuted_doFinishMem_non_mmio_st_done)
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/lib/ReorderBuffer.bsv\", line 253, column 18\ncannot both be true");
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/lib/ReorderBuffer.bsv\", line 266, column 18\ncannot both be true");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_setExecuted_doFinishMem &&
 	  setExecuted_doFinishMem_access_at_commit &&
@@ -1762,7 +1768,7 @@ module mkRobRowSynth(CLK,
       if (EN_setExecuted_doFinishMem &&
 	  setExecuted_doFinishMem_non_mmio_st_done &&
 	  m_iType != 5'd5)
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/lib/ReorderBuffer.bsv\", line 257, column 35\nmust be St");
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/lib/ReorderBuffer.bsv\", line 270, column 35\nmust be St");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_setExecuted_doFinishMem &&
 	  setExecuted_doFinishMem_non_mmio_st_done &&
@@ -1773,7 +1779,7 @@ module mkRobRowSynth(CLK,
 	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_write_enq && write_enq_x[18])
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/lib/ReorderBuffer.bsv\", line 310, column 40\nld killed must be false");
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/lib/ReorderBuffer.bsv\", line 330, column 40\nld killed must be false");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_write_enq && write_enq_x[18]) $finish(32'd0);
     if (RST_N != `BSV_RESET_VALUE)
@@ -1781,7 +1787,7 @@ module mkRobRowSynth(CLK,
 	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_write_enq && write_enq_x[15])
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/lib/ReorderBuffer.bsv\", line 311, column 48\nmem access at commit must be false");
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/lib/ReorderBuffer.bsv\", line 331, column 48\nmem access at commit must be false");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_write_enq && write_enq_x[15]) $finish(32'd0);
     if (RST_N != `BSV_RESET_VALUE)
@@ -1789,7 +1795,7 @@ module mkRobRowSynth(CLK,
 	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_write_enq && write_enq_x[14])
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/lib/ReorderBuffer.bsv\", line 312, column 42\nlsq notified must be false");
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/lib/ReorderBuffer.bsv\", line 332, column 42\nlsq notified must be false");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_write_enq && write_enq_x[14]) $finish(32'd0);
     if (RST_N != `BSV_RESET_VALUE)
@@ -1797,7 +1803,7 @@ module mkRobRowSynth(CLK,
 	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_write_enq && write_enq_x[13])
-	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/lib/ReorderBuffer.bsv\", line 313, column 36\nnon mmio st must be false");
+	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/lib/ReorderBuffer.bsv\", line 333, column 36\nnon mmio st must be false");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_write_enq && write_enq_x[13]) $finish(32'd0);
   end

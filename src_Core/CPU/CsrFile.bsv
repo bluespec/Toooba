@@ -58,6 +58,7 @@ typedef struct {
    Data      status;
    Data      cause;
    Data      epc;
+   Data      tval;
 `endif
    } Trap_Updates
 deriving (Bits, FShow);
@@ -498,7 +499,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
 				  Bit #(1) ie_vec_prvS_val,
 				  Bit #(1) ie_vec_prvU_val);
        return {fn_sd_val (xs_val, fs_val),
-	       29'b0, uxl_val, 12'b0,
+	       27'b0, 2'b0, uxl_val, 12'b0,
 	       mxr_val, sum_val, 1'b0, xs_val, fs_val,
 	       4'b0, spp_val,
 	       2'b0,
@@ -782,7 +783,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
 					  x [1],        // ie_vec[prvS]
 					  x [0]);       // ie_vec[prvU]
 	    CSRmtvec:      { x[63:2], 1'b0, x[0]};
-	    CSRmedeleg:    { 52'b0, x[11], 1'b0, x[9:8], x[7], 1'b0, x[5:4], x[3], 1'b0, x[1:0]};
+	    CSRmedeleg:    { 48'b0, x[15], 1'b0, x[13:12], x[11], 1'b0, x[9:0]};
 	    CSRmideleg:    { 52'b0, x[11], 1'b0, x[9:8], x[7], 1'b0, x[5:4], x[3], 1'b0, x[1:0]};
 	    CSRmip:        { 52'b0, x[11], 1'b0, x[9:8], x[7], 1'b0, x[5:4], x[3], 1'b0, x[1:0]};
 	    CSRmie:        { 52'b0, x[11], 1'b0, x[9:8], x[7], 1'b0, x[5:4], x[3], 1'b0, x[1:0]};
@@ -954,7 +955,8 @@ module mkCsrFile #(Data hartid)(CsrFile);
 				 , prv:    prvS,
 				 status: sstatus_val,
 				 cause:  scause_val,
-				 epc:    pc
+				 epc:    pc,
+				 tval:   trap_val
 `endif
 				 };
         end
@@ -988,7 +990,8 @@ module mkCsrFile #(Data hartid)(CsrFile);
 				 , prv:    prvM,
 				 status: mstatus_val,
 				 cause:  mcause_val,
-				 epc:    pc
+				 epc:    pc,
+				 tval:   trap_val
 `endif
 				 };
         end
@@ -1027,18 +1030,25 @@ module mkCsrFile #(Data hartid)(CsrFile);
         ie_vec[prvS] <= prev_ie_vec[prvS];
         prev_ie_vec[prvS] <= 1;
 
-        Data sstatus_val = fn_sstatus_val (uxl_reg,
-					   mxr_reg, sum_reg,
-					   xs_reg,  fs_reg,
-					   /* spp_reg */ prvU [0],
-					   /* prev_ie_vec_[prvS] */ 1,
-					   prev_ie_vec [prvU],
-					   /* ie_vec [prvS] */ prev_ie_vec[prvS],
-					   ie_vec [prvU]);
+        // For Tandem Verification, we return the full underlying MSTATUS register
+        Data mstatus_val = fn_mstatus_val(sxl_reg, uxl_reg,
+					  tsr_reg, tw_reg,  tvm_reg,
+					  mxr_reg, sum_reg, mprv_reg,
+					  xs_reg,  fs_reg,
+					  mpp_reg,
+					  /* spp_reg */ prvU [0],
+
+					  prev_ie_vec [prvM],
+					  /* prev_ie_vec_[prvS] */ 1,
+					  prev_ie_vec [prvU],
+
+					  ie_vec [prvM],
+					  /* ie_vec [prvS] */ prev_ie_vec[prvS],
+					  ie_vec [prvU]);
         return RET_Updates {new_pc: sepc_csr
 `ifdef INCLUDE_TANDEM_VERIF
 			    , prv:    prev_prv_vec[prvS],
-			    status: sstatus_val
+			    status: mstatus_val
 `endif
 			    };
     endmethod

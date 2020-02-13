@@ -52,6 +52,11 @@ typedef struct {
     IType              iType;
     Maybe#(ArchRIndx)  dst;          // Invalid, GPR or FPR destination ("Rd")
     Data               dst_data;     // Output of instruction into destination register
+`ifdef INCLUDE_TANDEM_VERIF
+    // Store-data, for those mem instrs that store data
+    Data               store_data;
+    ByteEn             store_data_BE;
+`endif
     Maybe#(CSR)        csr;
     Bool               claimed_phy_reg; // whether we need to commmit renaming
     Maybe#(Trap)       trap;
@@ -108,7 +113,9 @@ interface ReorderBufferRowEhr#(numeric type aluExeNum, numeric type fpuMulDivExe
     // faulting inst cannot have this set, since there is no access to
     // perform), and non-MMIO St can become Executed (NOTE faulting
     // instructions are not Executed, they are set at deqLSQ time)
-    method Action setExecuted_doFinishMem(Addr vaddr, Bool access_at_commit, Bool non_mmio_st_done);
+    method Action setExecuted_doFinishMem(Addr   vaddr,
+					  Data   store_data, ByteEn store_data_BE,
+					  Bool access_at_commit, Bool non_mmio_st_done);
 
 `ifdef INCLUDE_TANDEM_VERIF
     // Used after a Ld, Lr, Sc, Amo to record reg data
@@ -183,6 +190,10 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     Reg#(IType)                                                     iType                <- mkRegU;
     Reg #(Maybe #(ArchRIndx))                                       rg_dst_reg           <- mkRegU;
     Reg #(Data)                                                     rg_dst_data          <- mkRegU;
+`ifdef INCLUDE_TANDEM_VERIF
+    Reg #(Data)                                                     rg_store_data        <- mkRegU;
+    Reg #(ByteEn)                                                   rg_store_data_BE     <- mkRegU;
+`endif
     Reg#(Maybe#(CSR))                                               csr                  <- mkRegU;
     Reg#(Bool)                                                      claimed_phy_reg      <- mkRegU;
     Ehr#(3, Maybe#(Trap))                                           trap                 <- mkEhr(?);
@@ -248,7 +259,9 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
 
     interface setExecuted_doFinishFpuMulDiv = fpuMulDivExe;
 
-    method Action setExecuted_doFinishMem(Addr vaddr, Bool access_at_commit, Bool non_mmio_st_done);
+    method Action setExecuted_doFinishMem(Addr   vaddr,
+					  Data   store_data, ByteEn store_data_BE,
+					  Bool   access_at_commit, Bool non_mmio_st_done);
         doAssert(!(access_at_commit && non_mmio_st_done),
                  "cannot both be true");
         // update ROB state
@@ -258,6 +271,11 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         end
         // update VAddr
         ppc_vaddr_csrData[pvc_finishMem_port] <= VAddr (vaddr);
+`ifdef INCLUDE_TANDEM_VERIF
+        // Store-data (for mem instrs that store data)
+        rg_store_data    <= store_data;
+        rg_store_data_BE <= store_data_BE;
+`endif
         // update access at commit
         memAccessAtCommit[accessCom_finishMem_port] <= access_at_commit;
         // udpate non mmio st
@@ -285,6 +303,8 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         iType <= x.iType;
         rg_dst_reg <= x.dst;
         // rg_dst_data will be written after inst execution
+        // rg_store_data will be written in Mem pipeline
+        // rg_store_data_BE will be written in Mem pipeline
         csr <= x.csr;
         claimed_phy_reg <= x.claimed_phy_reg;
         trap[trap_enq_port] <= x.trap;
@@ -320,6 +340,10 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
             iType: iType,
 	    dst: rg_dst_reg,
 	    dst_data: rg_dst_data,
+`ifdef INCLUDE_TANDEM_VERIF
+	    store_data: rg_store_data,
+	    store_data_BE: rg_store_data_BE,
+`endif
             csr: csr,
             claimed_phy_reg: claimed_phy_reg,
             trap: trap[trap_deq_port],
@@ -439,7 +463,10 @@ interface SupReorderBuffer#(numeric type aluExeNum, numeric type fpuMulDivExeNum
     interface Vector#(aluExeNum, ROB_setExecuted_doFinishAlu) setExecuted_doFinishAlu;
     interface Vector#(fpuMulDivExeNum, ROB_setExecuted_doFinishFpuMulDiv) setExecuted_doFinishFpuMulDiv;
     // doFinishMem, after addr translation
-    method Action setExecuted_doFinishMem(InstTag x, Addr vaddr, Bool access_at_commit, Bool non_mmio_st_done);
+    method Action setExecuted_doFinishMem(InstTag x,
+					  Addr vaddr,
+					  Data store_data, ByteEn store_data_BE,
+					  Bool access_at_commit, Bool non_mmio_st_done);
 
 `ifdef INCLUDE_TANDEM_VERIF
     // Used after a Ld, Lr, Sc, Amo to record reg data
@@ -1009,11 +1036,13 @@ module mkSupReorderBuffer#(
     interface setExecuted_doFinishFpuMulDiv = fpuMulDivSetExeIfc;
 
     method Action setExecuted_doFinishMem(
-        InstTag x, Addr vaddr, Bool access_at_commit, Bool non_mmio_st_done
+        InstTag x, Addr vaddr, Data store_data, ByteEn store_data_BE, Bool access_at_commit, Bool non_mmio_st_done
     ) if(
         all(id, readVReg(setExeMem_SB_enq)) // ordering: < enq
     );
-        row[x.way][x.ptr].setExecuted_doFinishMem(vaddr, access_at_commit, non_mmio_st_done);
+        row[x.way][x.ptr].setExecuted_doFinishMem(vaddr,
+						  store_data, store_data_BE,
+						  access_at_commit, non_mmio_st_done);
     endmethod
 
 `ifdef INCLUDE_TANDEM_VERIF

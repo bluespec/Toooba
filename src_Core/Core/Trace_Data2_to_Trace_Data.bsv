@@ -65,6 +65,11 @@ module mkTrace_Data2_to_Trace_Data (Trace_Data2_to_Trace_Data_IFC);
 	 ISize isize        = ((td2.orig_inst [1:0] == 2'b11) ? ISIZE32BIT : ISIZE16BIT);
 	 Addr  fall_thru_PC = td2.pc + ((td2.orig_inst [1:0] == 2'b11) ? 4 : 2);
 
+	 Bit #(3) st_funct3 = (td2.store_data_BE [7] ? 3'b_011               // Doubleword
+			       : (td2.store_data_BE [3] ? 3'b_010            // Word
+				  : (td2.store_data_BE [1] ? 3'b_001         // HalfWord
+				     :                         3'b000)));    // Byte
+
 	 Bit #(5) gpr_rd = 0;
 	 if (td2.dst matches tagged Valid (tagged Gpr .r)) gpr_rd = r;
 
@@ -133,10 +138,10 @@ module mkTrace_Data2_to_Trace_Data (Trace_Data2_to_Trace_Data_IFC);
 	 else if (td2.ppc_vaddr_csrData matches tagged VAddr .eaddr
 		  &&& (td2.iType == St))
 	    td = mkTrace_I_STORE (fall_thru_PC,
-				  ?,    // TODO: funct3,
+				  st_funct3,
 				  isize,
 				  td2.orig_inst,
-				  ?,    // store-value
+				  td2.store_data,    // rs2_val
 				  eaddr);
 
 	 else if (td2.ppc_vaddr_csrData matches tagged CSRData .csr_data
@@ -165,7 +170,7 @@ module mkTrace_Data2_to_Trace_Data (Trace_Data2_to_Trace_Data_IFC);
 
 	 else if (   (td2.iType == Mret)
 		  || (td2.iType == Sret))
-	    td = mkTrace_RET (fall_thru_PC, isize, td2.orig_inst, td2.prv, td2.status);
+	    td = mkTrace_RET (td2.pc, isize, td2.orig_inst, td2.prv, td2.status);
 
 	 else if (   (td2.iType == Fence)
 		  || (td2.iType == FenceI)
@@ -179,12 +184,12 @@ module mkTrace_Data2_to_Trace_Data (Trace_Data2_to_Trace_Data_IFC);
 		       || (td2.iType == Lr)
 		       || (td2.iType == Sc)))
 	    td = mkTrace_AMO (fall_thru_PC,
-			      0,                // TODO: funct3
+			      st_funct3,
 			      isize,
 			      td2.orig_inst,
 			      gpr_rd,
-			      td2.dst_data,     // rd_val
-			      0,                // TODO: rs2_val
+			      td2.dst_data,      // rd_val
+			      td2.store_data,    // rs2_val
 			      eaddr);
 
 	 else if (   (td2.iType == Unsupported)

@@ -79,7 +79,12 @@ typedef struct {
     LdStQTag ldstq_tag;
     // result
     ByteEn shiftedBE;
-    Addr vaddr; // virtual addr
+    Addr vaddr;         // virtual addr
+`ifdef INCLUDE_TANDEM_VERIF
+    // for those mem instrs that store data
+    Data    store_data;
+    ByteEn  store_data_BE;
+`endif
     Bool misaligned;
 } MemExeToFinish deriving(Bits, Eq, FShow);
 
@@ -146,7 +151,10 @@ interface MemExeInput;
     method Data csrf_rd(CSR csr);
     // ROB
     method Addr rob_getPC(InstTag t);
-    method Action rob_setExecuted_doFinishMem(InstTag t, Addr vaddr, Bool access_at_commit, Bool non_mmio_st_done);
+    method Action rob_setExecuted_doFinishMem(InstTag t,
+					      Addr vaddr,
+					      Data store_data, ByteEn store_data_BE,
+					      Bool access_at_commit, Bool non_mmio_st_done);
 `ifdef INCLUDE_TANDEM_VERIF
     method Action rob_setExecuted_doFinishMem_RegData (InstTag t, Data dst_data);
 `endif
@@ -454,6 +462,10 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
                 ldstq_tag: x.ldstq_tag,
                 shiftedBE: shiftBE,
                 vaddr: vaddr,
+`ifdef INCLUDE_TANDEM_VERIF
+	        store_data: data,
+	        store_data_BE: origBE,
+`endif
                 misaligned: memAddrMisaligned(vaddr, origBE)
             },
             specBits: regToExe.spec_bits
@@ -468,6 +480,13 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
 
         if(verbose) $display("[doFinishMem] ", fshow(dTlbResp));
         if(isValid(cause) && verbose) $display("  [doFinishMem - dTlb response] PAGEFAULT!");
+
+        Data store_data = ?;
+        ByteEn store_data_BE = ?;
+`ifdef INCLUDE_TANDEM_VERIF
+        store_data    = x.store_data;
+        store_data_BE = x.store_data_BE;
+`endif
 
         // check misalignment
         if(!isValid(cause) && x.misaligned) begin
@@ -503,7 +522,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         endcase);
         Bool access_at_commit = !isValid(cause) && (isMMIO || isLrScAmo);
         Bool non_mmio_st_done = !isValid(cause) && !isMMIO && x.mem_func == St;
-        inIfc.rob_setExecuted_doFinishMem(x.tag, x.vaddr,
+        inIfc.rob_setExecuted_doFinishMem(x.tag, x.vaddr, store_data, store_data_BE,
                                           access_at_commit, non_mmio_st_done);
 
         // update LSQ
@@ -511,7 +530,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             x.ldstq_tag, cause, paddr, isMMIO, x.shiftedBE
         );
 
-        // issue non-MMIO Ld which has no excpetion and is not waiting for
+        // issue non-MMIO Ld which has no exception and is not waiting for
         // wrong path resp
         if (x.mem_func == Ld && !isMMIO &&
             !isValid(cause) && !updRes.waitWPResp) begin

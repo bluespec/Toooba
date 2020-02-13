@@ -183,17 +183,21 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 			     Maybe #(Trap_Updates)  m_trap_updates,
 			     Maybe #(RET_Updates)   m_ret_updates);
       action
-	 CsrFile csrf  = inIfc.csrfIfc;
-         let mstatus   = csrf.rd (CSRmstatus);
+	 CsrFile csrf = inIfc.csrfIfc;
+         let mstatus  = csrf.rd (CSRmstatus);
+	 let tval     = (m_trap_updates matches tagged Valid .tu ? tu.tval : deq_data.tval);
+	 let upd_pc   = (m_ret_updates matches tagged Valid .ru ? ru.new_pc : deq_data.pc);
 	 let x = Trace_Data2 {serial_num:           serial_num,
-			      pc:                   deq_data.pc,
+			      pc:                   upd_pc,
 			      orig_inst:            deq_data.orig_inst,
 			      iType:                deq_data.iType,
 			      dst:                  deq_data.dst,
 			      dst_data:             deq_data.dst_data,
+			      store_data:           deq_data.store_data,
+			      store_data_BE:        deq_data.store_data_BE,
 			      csr:                  deq_data.csr,
 			      trap:                 deq_data.trap,
-			      tval:                 deq_data.tval,
+			      tval:                 tval,
 			      ppc_vaddr_csrData:    deq_data.ppc_vaddr_csrData,
 			      fflags:               deq_data.fflags,
 			      will_dirty_fpu_state: deq_data.will_dirty_fpu_state,
@@ -570,7 +574,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         end
 `ifdef INCLUDE_GDB_CONTROL
 	else if (trap.trap == tagged Exception Breakpoint) begin
-            inIfc.commitCsrInstOrInterrupt;
+            inIfc.commitCsrInstOrInterrupt;    // TODO: Why?
 	end
 `endif
 
@@ -611,8 +615,6 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
        if (! debugger_halt) begin
           // trap handling & redirect
-          // let new_pc <- csrf.trap(trap.trap, trap.pc, trap.addr);    // OLD: WITHOUT TV INFO
-          // inIfc.redirectPc(new_pc);                                  // OLD: WITHOUT TV INFO
 	  let trap_updates <- csrf.trap(trap.trap, trap.pc, trap.addr);
           inIfc.redirectPc(trap_updates.new_pc);
 

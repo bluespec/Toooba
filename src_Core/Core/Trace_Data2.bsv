@@ -30,6 +30,8 @@ typedef struct {
    IType              iType;
    Maybe#(ArchRIndx)  dst;          // Invalid, GPR or FPR destination ("Rd")
    Data               dst_data;
+   Data               store_data;    // For mem instrs that store data
+   ByteEn             store_data_BE;
    Maybe #(CSR)       csr;
    Maybe #(Trap)      trap;
    Addr               tval;    // in case of trap
