@@ -350,6 +350,10 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                 iType: dInst.iType,
 				dst: arch_regs.dst,
 				dst_data: ?,    // Available only after execution
+`ifdef INCLUDE_TANDEM_VERIF
+				store_data: ?,
+				store_data_BE: ?,
+`endif
                                 csr: dInst.csr,
                                 claimed_phy_reg: False, // no renaming is done
                                 trap: firstTrap,
@@ -526,6 +530,10 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                 iType: dInst.iType,
 				dst: arch_regs.dst,
 				dst_data: ?,    // Available only after execution
+`ifdef INCLUDE_TANDEM_VERIF
+				store_data: ?,
+				store_data_BE: ?,
+`endif
                                 csr: dInst.csr,
                                 claimed_phy_reg: True, // XXX we always claim a free reg in rename
                                 trap: Invalid, // no trap
@@ -693,6 +701,10 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                 iType: dInst.iType,
 				dst: arch_regs.dst,
 				dst_data: ?,    // Available only after execution
+`ifdef INCLUDE_TANDEM_VERIF
+				store_data: ?,
+				store_data_BE: ?,
+`endif
                                 csr: dInst.csr,
                                 claimed_phy_reg: True, // XXX we always claim a free reg in rename
                                 trap: Invalid, // no trap
@@ -1047,6 +1059,10 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                                 iType: dInst.iType,
 						dst: arch_regs.dst,
 						dst_data: ?,    // Available only after execution
+`ifdef INCLUDE_TANDEM_VERIF
+						store_data: ?,
+						store_data_BE: ?,
+`endif
                                                 csr: dInst.csr,
                                                 claimed_phy_reg: True, // XXX we always claim a free reg in rename
                                                 trap: Invalid, // no trap

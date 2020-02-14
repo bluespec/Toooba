@@ -127,6 +127,17 @@ module mkTrace_Data2_to_Trace_Data (Trace_Data2_to_Trace_Data_IFC);
 				td2.mstatus);    // [FX] updated
 
 	 else if (td2.ppc_vaddr_csrData matches tagged VAddr .eaddr
+		  &&& td2.dst matches tagged Valid (tagged Fpu .fpr_rd)
+		  &&& (td2.iType == Ld))
+	    td = mkTrace_F_LOAD (fall_thru_PC,
+				 isize,
+				 td2.orig_inst,
+				 fpr_rd,
+				 td2.dst_data,    // rd_val
+				 eaddr,
+				 td2.mstatus);
+
+	 else if (td2.ppc_vaddr_csrData matches tagged VAddr .eaddr
 		  &&& (td2.iType == Ld))
 	    td = mkTrace_I_LOAD (fall_thru_PC,
 				 isize,

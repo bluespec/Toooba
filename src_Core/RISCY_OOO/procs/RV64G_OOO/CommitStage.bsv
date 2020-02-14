@@ -141,6 +141,7 @@ typedef struct {
     Addr pc;
     Addr addr;
     Trap trap;
+    Bit #(32) orig_inst;
 } CommitTrap deriving(Bits, Eq, FShow);
 
 `ifdef INCLUDE_GDB_CONTROL
@@ -174,17 +175,20 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 `ifdef INCLUDE_TANDEM_VERIF
    Integer way0 = 0;
 
+   ToReorderBuffer       no_deq_data = ?;
+   Bit #(5)              no_fflags   = ?;
+   Data                  no_mstatus  = ?;
    Maybe #(Trap_Updates) no_trap_updates = tagged Invalid;
    Maybe #(RET_Updates)  no_ret_updates  = tagged Invalid;
 
    function Action fa_to_TV (Integer                way,
 			     Bit #(64)              serial_num,
 			     ToReorderBuffer        deq_data,
+			     Bit #(5)               fflags,
+			     Data                   mstatus,
 			     Maybe #(Trap_Updates)  m_trap_updates,
 			     Maybe #(RET_Updates)   m_ret_updates);
       action
-	 CsrFile csrf = inIfc.csrfIfc;
-         let mstatus  = csrf.rd (CSRmstatus);
 	 let tval     = (m_trap_updates matches tagged Valid .tu ? tu.tval : deq_data.tval);
 	 let upd_pc   = (m_ret_updates matches tagged Valid .ru ? ru.new_pc : deq_data.pc);
 	 let x = Trace_Data2 {serial_num:           serial_num,
@@ -199,7 +203,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 			      trap:                 deq_data.trap,
 			      tval:                 tval,
 			      ppc_vaddr_csrData:    deq_data.ppc_vaddr_csrData,
-			      fflags:               deq_data.fflags,
+			      fflags:               fflags,    // deq_data.fflags only has incremental flags
 			      will_dirty_fpu_state: deq_data.will_dirty_fpu_state,
 			      mstatus:              mstatus,    // For Fpu ops, since [FX] bit changed
 
@@ -226,7 +230,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
    rule rl_send_tv_reset (rg_just_after_reset);
       Bit #(64) serial_num = 0;
-      fa_to_TV (way0, serial_num, ?, no_trap_updates, no_ret_updates);
+      fa_to_TV (way0, serial_num, no_deq_data, no_fflags, no_mstatus, no_trap_updates, no_ret_updates);
       rg_just_after_reset <= False;
       rg_serial_num       <= 1;
    endrule
@@ -510,7 +514,8 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         let commitTrap_val = Valid (CommitTrap {
             trap: trap,
             pc: x.pc,
-            addr: vaddr
+            addr: vaddr,
+	    orig_inst: x.orig_inst
 	});
         commitTrap <= commitTrap_val;
 `ifdef INCLUDE_TANDEM_VERIF
@@ -615,11 +620,11 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
        if (! debugger_halt) begin
           // trap handling & redirect
-	  let trap_updates <- csrf.trap(trap.trap, trap.pc, trap.addr);
+	  let trap_updates <- csrf.trap(trap.trap, trap.pc, trap.addr, trap.orig_inst);
           inIfc.redirectPc(trap_updates.new_pc);
 
 `ifdef INCLUDE_TANDEM_VERIF
-          fa_to_TV (way0, rg_serial_num, x, tagged Valid trap_updates, no_ret_updates);
+          fa_to_TV (way0, rg_serial_num, x, no_fflags, no_mstatus, tagged Valid trap_updates, no_ret_updates);
 `endif
           rg_serial_num <= rg_serial_num + 1;
 
@@ -743,7 +748,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         inIfc.redirectPc(next_pc);
 
 `ifdef INCLUDE_TANDEM_VERIF
-        fa_to_TV (way0, rg_serial_num, x, no_trap_updates, m_ret_updates);
+        fa_to_TV (way0, rg_serial_num, x, no_fflags, no_mstatus, no_trap_updates, m_ret_updates);
 `endif
         rg_serial_num <= rg_serial_num + 1;
 
@@ -856,6 +861,12 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
         Bit #(64) instret = 0;
 
+`ifdef INCLUDE_TANDEM_VERIF
+       // These variables accumulate fflags and mstatus in sequential Program Order ('po')
+       // (whereas the 'fflags' variable does just one update after superscalar retirement).
+       Bit #(5) po_fflags  = ?;
+       Data     po_mstatus = ?;
+`endif
         // compute what actions to take
         for(Integer i = 0; i < valueof(SupSize); i = i+1) begin
             if(!stop && rob.deqPort[i].canDeq) begin
@@ -874,8 +885,22 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 		       $display("instret:%0d  PC:0x%0h  instr:0x%08h", rg_serial_num + instret, x.pc, x.orig_inst,
 				"   iType:", fshow (x.iType), "    [doCommitNormalInst [%0d]]", i);
 		    end
+
 `ifdef INCLUDE_TANDEM_VERIF
-		    fa_to_TV (i, rg_serial_num + instret, x, no_trap_updates, no_ret_updates);
+		   Bool init_for_way0 = (i == 0);
+		   match {. new_fflags, .new_mstatus} = csrf.fpuInst_csr_updates (x.fflags,
+										  init_for_way0,
+										  po_fflags,
+										  po_mstatus);
+		   po_fflags  = new_fflags;
+		   po_mstatus = new_mstatus;
+
+		   Bool is_fmv_x_dw = ((x.orig_inst & 32'b_1111110_11111_00000_111_00000_1111111)
+				       ==             32'b_1110000_00000_00000_000_00000_1010011);
+		   fa_to_TV (i, rg_serial_num + instret, x,
+			     (is_fmv_x_dw ? 5'b0 : po_fflags),
+			     po_mstatus,
+			     no_trap_updates, no_ret_updates);
 `endif
 		    instret = instret + 1;
 

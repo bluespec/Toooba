@@ -506,19 +506,19 @@ module mkRobRowSynth(CLK,
 	      CASE_write_enq_x_BITS_165_TO_162_0_write_enq_x_ETC__q5,
 	      CASE_write_enq_x_BITS_165_TO_162_0_write_enq_x_ETC__q6;
   reg [1 : 0] CASE_write_enq_x_BITS_97_TO_96_0_write_enq_x_B_ETC__q7;
-  wire [245 : 0] m_rg_dst_data_62_CONCAT_m_csr_63_BIT_12_64_CON_ETC___d643;
-  wire [168 : 0] m_claimed_phy_reg_40_CONCAT_m_trap_dummy2_0_re_ETC___d642;
-  wire [65 : 0] IF_NOT_m_ppc_vaddr_csrData_dummy2_0_read__92_9_ETC___d587;
+  wire [245 : 0] m_rg_dst_data_70_CONCAT_m_csr_71_BIT_12_72_CON_ETC___d659;
+  wire [168 : 0] m_claimed_phy_reg_56_CONCAT_m_trap_dummy2_0_re_ETC___d658;
+  wire [65 : 0] IF_NOT_m_ppc_vaddr_csrData_dummy2_0_read__92_9_ETC___d603;
   wire [63 : 0] IF_m_ppc_vaddr_csrData_dummy2_0_read__92_AND_m_ETC___d307,
 		IF_m_ppc_vaddr_csrData_lat_1_whas__74_THEN_m_p_ETC___d206,
 		IF_m_ppc_vaddr_csrData_lat_3_whas__66_THEN_m_p_ETC___d208,
-		x__h26961;
+		x__h27025;
   wire [11 : 0] IF_m_spec_bits_lat_1_whas__84_THEN_m_spec_bits_ETC___d290,
-		bs__h33177,
-		sb__h33212,
+		bs__h33241,
+		sb__h33276,
 		upd__h17993;
   wire [4 : 0] IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d153,
-	       x_read_deq_fflags__h26056;
+	       x_read_deq_fflags__h26088;
   wire [3 : 0] IF_IF_m_trap_lat_2_whas_THEN_NOT_m_trap_lat_2__ETC___d152,
 	       IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d131,
 	       IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d132,
@@ -547,11 +547,11 @@ module mkRobRowSynth(CLK,
        IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d74,
        IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d81,
        IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d95,
-       NOT_m_csr_63_BIT_12_64_EQ_setExecuted_doFinish_ETC___d685,
-       NOT_m_csr_63_BIT_12_64_EQ_setExecuted_doFinish_ETC___d693,
+       NOT_m_csr_71_BIT_12_72_EQ_setExecuted_doFinish_ETC___d701,
+       NOT_m_csr_71_BIT_12_72_EQ_setExecuted_doFinish_ETC___d709,
        NOT_m_ppc_vaddr_csrData_dummy2_0_read__92_93_O_ETC___d302,
-       m_rob_inst_state_dummy2_0_read__93_AND_m_rob_i_ETC___d604,
-       m_trap_dummy2_0_read__41_AND_m_trap_dummy2_1_r_ETC___d546;
+       m_rob_inst_state_dummy2_0_read__09_AND_m_rob_i_ETC___d620,
+       m_trap_dummy2_0_read__57_AND_m_trap_dummy2_1_r_ETC___d562;
 
   // action method write_enq
   assign RDY_write_enq = 1'd1 ;
@@ -564,7 +564,7 @@ module mkRobRowSynth(CLK,
 	       m_orig_inst,
 	       m_iType,
 	       m_rg_dst_reg,
-	       m_rg_dst_data_62_CONCAT_m_csr_63_BIT_12_64_CON_ETC___d643 } ;
+	       m_rg_dst_data_70_CONCAT_m_csr_71_BIT_12_72_CON_ETC___d659 } ;
   assign RDY_read_deq = 1'd1 ;
 
   // action method setLSQAtCommitNotified
@@ -617,7 +617,7 @@ module mkRobRowSynth(CLK,
   assign RDY_getOrig_Inst = 1'd1 ;
 
   // value method dependsOn_wrongSpec
-  assign dependsOn_wrongSpec = bs__h33177[dependsOn_wrongSpec_tag] ;
+  assign dependsOn_wrongSpec = bs__h33241[dependsOn_wrongSpec_tag] ;
   assign RDY_dependsOn_wrongSpec = 1'd1 ;
 
   // action method correctSpeculation
@@ -1229,7 +1229,7 @@ module mkRobRowSynth(CLK,
 	       (IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_BI_ETC___d67 ?
 		  4'd3 :
 		  IF_IF_m_trap_lat_2_whas_THEN_m_trap_lat_2_wget_ETC___d148) ;
-  assign IF_NOT_m_ppc_vaddr_csrData_dummy2_0_read__92_9_ETC___d587 =
+  assign IF_NOT_m_ppc_vaddr_csrData_dummy2_0_read__92_9_ETC___d603 =
 	     (NOT_m_ppc_vaddr_csrData_dummy2_0_read__92_93_O_ETC___d302 ||
 	      m_ppc_vaddr_csrData_rl[65:64] == 2'd0) ?
 	       { 2'd0,
@@ -1359,32 +1359,32 @@ module mkRobRowSynth(CLK,
 	       (m_trap_lat_0$whas ?
 		  m_trap_lat_0$wget[3:0] == 4'd7 :
 		  m_trap_rl[3:0] == 4'd7) ;
-  assign NOT_m_csr_63_BIT_12_64_EQ_setExecuted_doFinish_ETC___d685 =
+  assign NOT_m_csr_71_BIT_12_72_EQ_setExecuted_doFinish_ETC___d701 =
 	     m_csr[12] != setExecuted_doFinishAlu_0_set_csrData[64] ;
-  assign NOT_m_csr_63_BIT_12_64_EQ_setExecuted_doFinish_ETC___d693 =
+  assign NOT_m_csr_71_BIT_12_72_EQ_setExecuted_doFinish_ETC___d709 =
 	     m_csr[12] != setExecuted_doFinishAlu_1_set_csrData[64] ;
   assign NOT_m_ppc_vaddr_csrData_dummy2_0_read__92_93_O_ETC___d302 =
 	     !m_ppc_vaddr_csrData_dummy2_0$Q_OUT ||
 	     !m_ppc_vaddr_csrData_dummy2_1$Q_OUT ||
 	     !m_ppc_vaddr_csrData_dummy2_2$Q_OUT ||
 	     !m_ppc_vaddr_csrData_dummy2_3$Q_OUT ;
-  assign bs__h33177 =
+  assign bs__h33241 =
 	     (m_spec_bits_dummy2_0$Q_OUT && m_spec_bits_dummy2_1$Q_OUT &&
 	      m_spec_bits_dummy2_2$Q_OUT) ?
 	       m_spec_bits_rl :
 	       12'd0 ;
-  assign m_claimed_phy_reg_40_CONCAT_m_trap_dummy2_0_re_ETC___d642 =
+  assign m_claimed_phy_reg_56_CONCAT_m_trap_dummy2_0_re_ETC___d658 =
 	     { m_claimed_phy_reg,
-	       m_trap_dummy2_0_read__41_AND_m_trap_dummy2_1_r_ETC___d546,
+	       m_trap_dummy2_0_read__57_AND_m_trap_dummy2_1_r_ETC___d562,
 	       m_trap_rl[4],
 	       m_trap_rl[4] ?
 		 CASE_m_trap_rl_BITS_3_TO_0_0_m_trap_rl_BITS_3__ETC__q1 :
 		 CASE_m_trap_rl_BITS_3_TO_0_0_m_trap_rl_BITS_3__ETC__q2,
-	       x__h26961,
-	       IF_NOT_m_ppc_vaddr_csrData_dummy2_0_read__92_9_ETC___d587,
-	       x_read_deq_fflags__h26056,
+	       x__h27025,
+	       IF_NOT_m_ppc_vaddr_csrData_dummy2_0_read__92_9_ETC___d603,
+	       x_read_deq_fflags__h26088,
 	       m_will_dirty_fpu_state,
-	       m_rob_inst_state_dummy2_0_read__93_AND_m_rob_i_ETC___d604,
+	       m_rob_inst_state_dummy2_0_read__09_AND_m_rob_i_ETC___d620,
 	       m_lsqTag,
 	       m_ldKilled_dummy2_0$Q_OUT && m_ldKilled_dummy2_1$Q_OUT &&
 	       m_ldKilled_rl[2],
@@ -1400,13 +1400,13 @@ module mkRobRowSynth(CLK,
 	       m_nonMMIOStDone_dummy2_1$Q_OUT &&
 	       m_nonMMIOStDone_rl,
 	       m_epochIncremented,
-	       bs__h33177 } ;
-  assign m_rg_dst_data_62_CONCAT_m_csr_63_BIT_12_64_CON_ETC___d643 =
+	       bs__h33241 } ;
+  assign m_rg_dst_data_70_CONCAT_m_csr_71_BIT_12_72_CON_ETC___d659 =
 	     { m_rg_dst_data,
 	       m_csr[12],
 	       CASE_m_csr_BITS_11_TO_0_1_m_csr_BITS_11_TO_0_2_ETC__q3,
-	       m_claimed_phy_reg_40_CONCAT_m_trap_dummy2_0_re_ETC___d642 } ;
-  assign m_rob_inst_state_dummy2_0_read__93_AND_m_rob_i_ETC___d604 =
+	       m_claimed_phy_reg_56_CONCAT_m_trap_dummy2_0_re_ETC___d658 } ;
+  assign m_rob_inst_state_dummy2_0_read__09_AND_m_rob_i_ETC___d620 =
 	     m_rob_inst_state_dummy2_0$Q_OUT &&
 	     m_rob_inst_state_dummy2_1$Q_OUT &&
 	     m_rob_inst_state_dummy2_2$Q_OUT &&
@@ -1414,21 +1414,21 @@ module mkRobRowSynth(CLK,
 	     m_rob_inst_state_dummy2_4$Q_OUT &&
 	     m_rob_inst_state_dummy2_5$Q_OUT &&
 	     m_rob_inst_state_rl ;
-  assign m_trap_dummy2_0_read__41_AND_m_trap_dummy2_1_r_ETC___d546 =
+  assign m_trap_dummy2_0_read__57_AND_m_trap_dummy2_1_r_ETC___d562 =
 	     m_trap_dummy2_0$Q_OUT && m_trap_dummy2_1$Q_OUT &&
 	     m_trap_dummy2_2$Q_OUT &&
 	     m_trap_rl[5] ;
-  assign sb__h33212 =
+  assign sb__h33276 =
 	     m_spec_bits_dummy2_2$Q_OUT ?
 	       IF_m_spec_bits_lat_1_whas__84_THEN_m_spec_bits_ETC___d290 :
 	       12'd0 ;
-  assign upd__h17993 = sb__h33212 & correctSpeculation_mask ;
-  assign x__h26961 =
+  assign upd__h17993 = sb__h33276 & correctSpeculation_mask ;
+  assign x__h27025 =
 	     (m_tval_dummy2_0$Q_OUT && m_tval_dummy2_1$Q_OUT &&
 	      m_tval_dummy2_2$Q_OUT) ?
 	       m_tval_rl :
 	       64'd0 ;
-  assign x_read_deq_fflags__h26056 =
+  assign x_read_deq_fflags__h26088 =
 	     (m_fflags_dummy2_0$Q_OUT && m_fflags_dummy2_1$Q_OUT) ?
 	       m_fflags_rl :
 	       5'd0 ;
@@ -1490,6 +1490,10 @@ module mkRobRowSynth(CLK,
       12'd834,
       12'd835,
       12'd836,
+      12'd1952,
+      12'd1953,
+      12'd1954,
+      12'd1955,
       12'd2048,
       12'd2049,
       12'd2816,
@@ -1595,6 +1599,10 @@ module mkRobRowSynth(CLK,
       12'd834,
       12'd835,
       12'd836,
+      12'd1952,
+      12'd1953,
+      12'd1954,
+      12'd1955,
       12'd2048,
       12'd2049,
       12'd2816,
@@ -1710,39 +1718,39 @@ module mkRobRowSynth(CLK,
     #0;
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_setExecuted_doFinishAlu_0_set &&
-	  NOT_m_csr_63_BIT_12_64_EQ_setExecuted_doFinish_ETC___d685)
+	  NOT_m_csr_71_BIT_12_72_EQ_setExecuted_doFinish_ETC___d701)
 	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_setExecuted_doFinishAlu_0_set &&
-	  NOT_m_csr_63_BIT_12_64_EQ_setExecuted_doFinish_ETC___d685)
+	  NOT_m_csr_71_BIT_12_72_EQ_setExecuted_doFinish_ETC___d701)
 	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/lib/ReorderBuffer.bsv\", line 236, column 60\ncsr valid should match");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_setExecuted_doFinishAlu_0_set &&
-	  NOT_m_csr_63_BIT_12_64_EQ_setExecuted_doFinish_ETC___d685)
+	  NOT_m_csr_71_BIT_12_72_EQ_setExecuted_doFinish_ETC___d701)
 	$finish(32'd0);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_setExecuted_doFinishAlu_1_set &&
-	  NOT_m_csr_63_BIT_12_64_EQ_setExecuted_doFinish_ETC___d693)
+	  NOT_m_csr_71_BIT_12_72_EQ_setExecuted_doFinish_ETC___d709)
 	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_setExecuted_doFinishAlu_1_set &&
-	  NOT_m_csr_63_BIT_12_64_EQ_setExecuted_doFinish_ETC___d693)
+	  NOT_m_csr_71_BIT_12_72_EQ_setExecuted_doFinish_ETC___d709)
 	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/lib/ReorderBuffer.bsv\", line 236, column 60\ncsr valid should match");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_setExecuted_doFinishAlu_1_set &&
-	  NOT_m_csr_63_BIT_12_64_EQ_setExecuted_doFinish_ETC___d693)
+	  NOT_m_csr_71_BIT_12_72_EQ_setExecuted_doFinish_ETC___d709)
 	$finish(32'd0);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_setExecuted_deqLSQ &&
-	  m_trap_dummy2_0_read__41_AND_m_trap_dummy2_1_r_ETC___d546)
+	  m_trap_dummy2_0_read__57_AND_m_trap_dummy2_1_r_ETC___d562)
 	$fdisplay(32'h80000002, "\n%m: ASSERT FAIL!!");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_setExecuted_deqLSQ &&
-	  m_trap_dummy2_0_read__41_AND_m_trap_dummy2_1_r_ETC___d546)
+	  m_trap_dummy2_0_read__57_AND_m_trap_dummy2_1_r_ETC___d562)
 	$display("Dynamic assertion failed: \"../../src_Core/RISCY_OOO/procs/lib/ReorderBuffer.bsv\", line 373, column 52\ncannot have trap");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_setExecuted_deqLSQ &&
-	  m_trap_dummy2_0_read__41_AND_m_trap_dummy2_1_r_ETC___d546)
+	  m_trap_dummy2_0_read__57_AND_m_trap_dummy2_1_r_ETC___d562)
 	$finish(32'd0);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_setExecuted_doFinishMem &&

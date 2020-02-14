@@ -84,13 +84,20 @@ interface CsrFile;
     // normal write by FPU inst to FPU CSR
     method Bool fpuInstNeedWr(Bit#(5) fflags, Bool fpu_dirty);
     method Action fpuInstWr(Bit#(5) fflags); // FPU must become dirty
+`ifdef INCLUDE_TANDEM_VERIF
+    // Returns new fcsr and mstatus (pure function)
+    method Tuple2 #(Bit #(5), Data) fpuInst_csr_updates (Bit #(5)  fflags,
+							 Bool      init_for_way0,
+							 Bit #(5)  old_fflags,
+							 Data      old_mstatus);
+`endif
 
     // The WARL transform performed during CSRRx writes to a CSR
     method Data warl_xform (CSR csr, Data x);
 
     // Methods for handling traps
     method Maybe#(Interrupt) pending_interrupt;
-    method ActionValue#(Trap_Updates) trap(Trap t, Addr pc, Addr faultAddr);
+    method ActionValue#(Trap_Updates) trap(Trap t, Addr pc, Addr faultAddr, Bit #(32) orig_inst);
     method ActionValue#(RET_Updates) sret;
     method ActionValue#(RET_Updates) mret;
 
@@ -602,6 +609,18 @@ module mkCsrFile #(Data hartid)(CsrFile);
     StatsCsr stats_module <- mkStatsCsr;
     Reg#(Data) stats_csr = stats_module.reg_ifc;
 
+   Reg #(Data) rg_tselect <- mkConfigReg (0);
+   // Note: ISA test rv64mi-p-breakpoint assumes tdata1's reset value == 0
+   // Until we implement trigger functionality,
+   // force 'tdata1.type' field ([xlen-1:xlen-4]) to zero
+   // meaning: 'There is no trigger at this tselect'
+   Reg #(Bit #(4))  rg_tdata1_type  <- mkReadOnlyReg (0);
+   Reg #(Bit #(1))  rg_tdata1_dmode <- mkCsrReg (0);
+   Reg #(Bit #(59)) rg_tdata1_data  <- mkCsrReg (0);
+   Reg #(Data) rg_tdata1  = concatReg3 (rg_tdata1_type, rg_tdata1_dmode, rg_tdata1_data);
+   Reg #(Data) rg_tdata2  <- mkConfigRegU;
+   Reg #(Data) rg_tdata3  <- mkConfigRegU;
+
 `ifdef INCLUDE_GDB_CONTROL
    // DCSR is 32b even in RV64
    Bit #(32) dcsr_reset_value =  {4'h4,    // [31:28]  xdebugver
@@ -734,6 +753,11 @@ module mkCsrFile #(Data hartid)(CsrFile);
             CSRtrng:       trng_csr;
 `endif
 
+	   CSRtselect:    rg_tselect;
+	   CSRtdata1:     rg_tdata1;
+	   CSRtdata2:     rg_tdata2;
+	   CSRtdata3:     rg_tdata3;
+
 `ifdef INCLUDE_GDB_CONTROL
 	   CSRdcsr:       rg_dcsr;    // TODO: take NMI into account (cf. Piccolo/Flute)
 	   CSRdpc:        rg_dpc;
@@ -789,6 +813,8 @@ module mkCsrFile #(Data hartid)(CsrFile);
 	    CSRmie:        { 52'b0, x[11], 1'b0, x[9:8], x[7], 1'b0, x[5:4], x[3], 1'b0, x[1:0]};
 	    CSRmcounteren: { 61'b0, x[2:0]};
 	    CSRmcause:     { x[63], 59'b0, x[3:0] };
+
+	    CSRtdata1:     { 4'b0, x [59:0] };    // Force tdata.type == 0 ("no trigger at this tselect")
 
 	    // Supervisor level CSRs
 	    CSRsstatus:   fn_sstatus_val (getXLBits,    // uxl
@@ -853,6 +879,27 @@ module mkCsrFile #(Data hartid)(CsrFile);
         fflags_reg <= fflags_reg | fflags;
     endmethod
 
+`ifdef INCLUDE_TANDEM_VERIF
+    method Tuple2 #(Bit #(5), Data) fpuInst_csr_updates (Bit #(5)  fflags,
+							 Bool      init_for_way0,
+							 Bit #(5)  old_fflags,
+							 Data      old_mstatus);
+
+       // Note: old_fflags and old_mstatus are accumulated in
+       // sequential program order, and so may differ from fflags_reg
+       // and mstatus_csr, which only change after superscalar-wide
+       // retirement.
+
+       old_fflags  = (init_for_way0 ? fflags_reg  : old_fflags);
+       old_mstatus = (init_for_way0 ? mstatus_csr : old_mstatus);
+
+       Bit #(5) new_fflags  = (old_fflags | fflags);
+       Data     new_mstatus = { old_mstatus [63:15], 2'b11, old_mstatus [12:0] };
+
+       return tuple2 (new_fflags, new_mstatus);
+    endmethod
+`endif
+
     method Data warl_xform (CSR csr, Data x);
        return fv_warl_xform (csr, x);
     endmethod
@@ -886,7 +933,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
         end
     endmethod
 
-    method ActionValue#(Trap_Updates) trap(Trap t, Addr pc, Addr addr);
+    method ActionValue#(Trap_Updates) trap(Trap t, Addr pc, Addr addr, Bit #(32) orig_inst);
         // figure out trap cause & trap val
         Bit#(1) cause_interrupt = 0;
         Bit#(4) cause_code = 0;
@@ -895,6 +942,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
             tagged Exception .e: begin
                 cause_code = pack(e);
                 trap_val = (case(e)
+		    IllegalInst: zeroExtend (orig_inst);
                     InstAddrMisaligned, Breakpoint: return pc;
 
 		    InstAccessFault, InstPageFault,

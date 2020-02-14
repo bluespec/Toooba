@@ -270,6 +270,11 @@ typedef enum {
     CSRtrng       = 12'hcc0, // random number for secure boot
 `endif
 
+   CSRtselect     = 12'h7A0,    // Debug/trace tselect
+   CSRtdata1      = 12'h7A1,    // Debug/trace tdata1
+   CSRtdata2      = 12'h7A2,    // Debug/trace tdata2
+   CSRtdata3      = 12'h7A3,    // Debug/trace tdata3
+
 `ifdef INCLUDE_GDB_CONTROL
    CSRdcsr        = 12'h7B0,    // Debug control and status
    CSRdpc         = 12'h7B1,    // Debug PC
@@ -334,6 +339,19 @@ function CSR unpackCSR(Bit#(12) x);
         pack(CSR'(CSRmspec     )): (CSRmspec     );
         pack(CSR'(CSRtrng      )): (CSRtrng      );
 `endif
+
+        pack(CSR'(CSRtselect   )): (CSRtselect   );
+        pack(CSR'(CSRtdata1    )): (CSRtdata1    );
+        pack(CSR'(CSRtdata2    )): (CSRtdata2    );
+        pack(CSR'(CSRtdata3    )): (CSRtdata3    );
+
+`ifdef INCLUDE_GDB_CONTROL
+        pack(CSR'(CSRdcsr      )): (CSRdcsr      );
+        pack(CSR'(CSRdpc       )): (CSRdpc       );
+        pack(CSR'(CSRdscratch0 )): (CSRdscratch0 );
+        pack(CSR'(CSRdscratch1 )): (CSRdscratch1 );
+`endif
+
         default                  : (CSRnone      );
     endcase);
 endfunction

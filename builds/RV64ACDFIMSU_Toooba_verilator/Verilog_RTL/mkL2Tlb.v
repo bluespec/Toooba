@@ -1749,6 +1749,7 @@ module mkL2Tlb(CLK,
        SEL_ARR_respLdQ_data_0_692_BITS_64_TO_1_701_re_ETC___d2086,
        _dfoo101,
        _dfoo103,
+       _dfoo11,
        _dfoo13,
        _dfoo41,
        _dfoo45,
@@ -1757,7 +1758,6 @@ module mkL2Tlb(CLK,
        _dfoo69,
        _dfoo71,
        _dfoo89,
-       _dfoo9,
        _dfoo91,
        _dfoo93,
        _dfoo95,
@@ -3198,7 +3198,7 @@ module mkL2Tlb(CLK,
   assign MUX_pendValid_0_lat_0$wset_1__SEL_2 =
 	     WILL_FIRE_RL_doPageWalk && _dfoo103 ;
   assign MUX_pendValid_1_lat_0$wset_1__SEL_1 =
-	     WILL_FIRE_RL_doTlbResp && _dfoo9 ;
+	     WILL_FIRE_RL_doTlbResp && _dfoo11 ;
   assign MUX_pendValid_1_lat_0$wset_1__SEL_2 =
 	     WILL_FIRE_RL_doPageWalk && _dfoo99 ;
   assign MUX_pendWait_0_dummy2_0$write_1__SEL_1 =
@@ -4133,7 +4133,7 @@ module mkL2Tlb(CLK,
   // submodule pendValid_1_dummy2_0
   assign pendValid_1_dummy2_0$D_IN = 1'd1 ;
   assign pendValid_1_dummy2_0$EN =
-	     WILL_FIRE_RL_doTlbResp && _dfoo9 ||
+	     WILL_FIRE_RL_doTlbResp && _dfoo11 ||
 	     WILL_FIRE_RL_doPageWalk && _dfoo97 ;
 
   // submodule pendValid_1_dummy2_1
@@ -5819,6 +5819,13 @@ module mkL2Tlb(CLK,
 	     idx__h135545 == 1'd0 &&
 	     IF_SEL_ARR_NOT_pendReq_0_081_BIT_29_082_083_NO_ETC___d1860 ||
 	     _dfoo45 ;
+  assign _dfoo11 =
+	     tlbReqQ_data_0 == 1'd1 &&
+	     IF_SEL_ARR_NOT_pendReq_0_081_BIT_29_082_083_NO_ETC___d1096 ||
+	     tlbReqQ_data_0 == 1'd1 &&
+	     IF_SEL_ARR_NOT_pendReq_0_081_BIT_29_082_083_NO_ETC___d1380 &&
+	     (IF_NOT_tlbMG_m_validVec_0_107_108_OR_NOT_IF_tl_ETC___d1312 ||
+	      NOT_tlbMG_m_validVec_0_107_108_OR_NOT_IF_tlbMG_ETC___d1561) ;
   assign _dfoo13 =
 	     tlbReqQ_data_0 == 1'd0 &&
 	     IF_SEL_ARR_NOT_pendReq_0_081_BIT_29_082_083_NO_ETC___d1096 ||
@@ -5902,13 +5909,6 @@ module mkL2Tlb(CLK,
 	     idx__h135545 == 1'd1 &&
 	     IF_SEL_ARR_NOT_pendReq_0_081_BIT_29_082_083_NO_ETC___d1860 ||
 	     _dfoo65 ;
-  assign _dfoo9 =
-	     tlbReqQ_data_0 == 1'd1 &&
-	     IF_SEL_ARR_NOT_pendReq_0_081_BIT_29_082_083_NO_ETC___d1096 ||
-	     tlbReqQ_data_0 == 1'd1 &&
-	     IF_SEL_ARR_NOT_pendReq_0_081_BIT_29_082_083_NO_ETC___d1380 &&
-	     (IF_NOT_tlbMG_m_validVec_0_107_108_OR_NOT_IF_tl_ETC___d1312 ||
-	      NOT_tlbMG_m_validVec_0_107_108_OR_NOT_IF_tlbMG_ETC___d1561) ;
   assign _dfoo91 =
 	     idx__h135545 == 1'd1 &&
 	     IF_SEL_ARR_NOT_pendReq_0_081_BIT_29_082_083_NO_ETC___d1700 ||

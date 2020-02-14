@@ -553,13 +553,21 @@ module mkFetchStage(FetchStage);
                 default: begin
                     // Access fault
                     cause = Valid (InstAccessFault);
+		    // Without 'C' extension:
+		    //     Addr align32b_mask = 'h3;
+		    //     tval = (in.pc & (~ align32b_mask));
+		    Addr align16b_mask = 'h1;
+		    tval = (in.pc & (~ align16b_mask));
                 end
             endcase
         end
         else begin
 	   // TLB exception: record the request address
-           Addr align32b_mask = 'h3;
-           tval = (in.pc & (~ align32b_mask));
+           // Without 'C' extension:
+           //     Addr align32b_mask = 'h3;
+           //     tval = (in.pc & (~ align32b_mask));
+           Addr align16b_mask = 'h1;
+           tval = (in.pc & (~ align16b_mask));
 	end
 
         let out = Fetch2ToFetch3 {
