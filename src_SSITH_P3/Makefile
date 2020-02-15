@@ -100,7 +100,7 @@ Verilog_RTL_sim:
 .PHONY: compile_synth
 compile_synth:  build_dir_synth Verilog_RTL
 	@echo  "INFO: Generating RTL into Verilog_RTL for synthesis ..."
-	bsc -u -elab -verilog  -vdir Verilog_RTL $(BUILD_DIRS)  $(BSC_COMPILATION_FLAGS)  $(BSC_PATH)  $(TOPFILE)
+	bsc -u -elab -verilog  -vdir Verilog_RTL $(BUILD_DIRS_SYNTH)  $(BSC_COMPILATION_FLAGS)  $(BSC_PATH)  $(TOPFILE)
 	@echo  "INFO: Generated Synth RTL into Verilog_RTL"
 	cp  Verilog_RTL/*  xilinx_ip/hdl/
 	@echo  "INFO: Copied RTL from  Verilog_RTL/  to  xilinx_ip/hdl/"
@@ -108,7 +108,7 @@ compile_synth:  build_dir_synth Verilog_RTL
 .PHONY: compile_sim
 compile_sim:  build_dir_sim Verilog_RTL_sim
 	@echo  "INFO: Generating RTL into Verilog_RTL_sim for simulation ..."
-	bsc -u -elab -verilog  -vdir Verilog_RTL_sim $(BUILD_DIRS)  $(BSC_COMPILATION_FLAGS)  -D BSIM $(BSC_PATH)  $(TOPFILE)
+	bsc -u -elab -verilog  -vdir Verilog_RTL_sim $(BUILD_DIRS_SIM)  $(BSC_COMPILATION_FLAGS)  -D BSIM $(BSC_PATH)  $(TOPFILE)
 
 # ================================================================
 
