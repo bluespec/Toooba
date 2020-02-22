@@ -37,7 +37,7 @@ module module_decode(decode_inst,
   wire [99 : 0] decode;
 
   // remaining internal signals
-  reg [31 : 0] IF_decode_inst_BITS_6_TO_0_EQ_19_OR_decode_ins_ETC___d550;
+  reg [31 : 0] IF_decode_inst_BITS_6_TO_0_EQ_19_OR_decode_ins_ETC___d566;
   reg [11 : 0] CASE_immI2_BITS_11_TO_0_0x1_immI2_BITS_11_TO_0_ETC__q30;
   reg [7 : 0] CASE_decode_inst_BITS_6_TO_0_3_decode_inst_BIT_ETC__q12;
   reg [4 : 0] CASE_decode_inst_BITS_14_TO_12_0b0_0_0b1_9_0b1_ETC__q5,
@@ -85,10 +85,10 @@ module module_decode(decode_inst,
   wire [31 : 0] immB__h34, immI__h32, immJ__h36, immS__h33, immU__h35;
   wire [20 : 0] IF_NOT_decode_inst_BITS_6_TO_0_EQ_51_39_AND_NO_ETC___d406,
 		IF_decode_inst_BITS_6_TO_0_EQ_19_OR_decode_ins_ETC___d408,
-		x__h10152;
+		x__h10216;
   wire [14 : 0] IF_decode_inst_BITS_6_TO_0_EQ_3_5_OR_decode_in_ETC___d328;
-  wire [12 : 0] x__h10240;
-  wire [11 : 0] decode_inst_BITS_31_TO_20__q1, x__h10327;
+  wire [12 : 0] x__h10304;
+  wire [11 : 0] decode_inst_BITS_31_TO_20__q1, x__h10391;
   wire [4 : 0] IF_NOT_decode_inst_BITS_26_TO_25_4_EQ_0b0_5_6__ETC___d30,
 	       IF_SEXT_decode_inst_BITS_31_TO_20_7_8_BIT_10_0_ETC___d103;
   wire decode_inst_BIT_23_4_OR_decode_inst_BIT_21_5___d46,
@@ -112,7 +112,7 @@ module module_decode(decode_inst,
 	       decode_inst[6:0] == 7'd7 ||
 	       decode_inst[6:0] == 7'd39 ||
 	       decode_inst[6:0] == 7'd115 && decode_inst[14],
-	       IF_decode_inst_BITS_6_TO_0_EQ_19_OR_decode_ins_ETC___d550,
+	       IF_decode_inst_BITS_6_TO_0_EQ_19_OR_decode_ins_ETC___d566,
 	       decode_inst[6:0] == 7'd19 || decode_inst[6:0] == 7'd27 ||
 	       decode_inst[6:0] == 7'd51 ||
 	       decode_inst[6:0] == 7'd59 ||
@@ -293,26 +293,26 @@ module module_decode(decode_inst,
 	     decode_inst[23] | decode_inst[21] ;
   assign decode_inst_BIT_26_7_OR_decode_inst_BIT_24_8___d49 =
 	     decode_inst[26] | decode_inst[24] ;
-  assign immB__h34 = { {19{x__h10240[12]}}, x__h10240 } ;
+  assign immB__h34 = { {19{x__h10304[12]}}, x__h10304 } ;
   assign immI__h32 =
 	     { {20{decode_inst_BITS_31_TO_20__q1[11]}},
 	       decode_inst_BITS_31_TO_20__q1 } ;
-  assign immJ__h36 = { {11{x__h10152[20]}}, x__h10152 } ;
-  assign immS__h33 = { {20{x__h10327[11]}}, x__h10327 } ;
+  assign immJ__h36 = { {11{x__h10216[20]}}, x__h10216 } ;
+  assign immS__h33 = { {20{x__h10391[11]}}, x__h10391 } ;
   assign immU__h35 = { decode_inst[31:12], 12'b0 } ;
-  assign x__h10152 =
+  assign x__h10216 =
 	     { decode_inst[31],
 	       decode_inst[19:12],
 	       decode_inst[20],
 	       decode_inst[30:21],
 	       1'b0 } ;
-  assign x__h10240 =
+  assign x__h10304 =
 	     { decode_inst[31],
 	       decode_inst[7],
 	       decode_inst[30:25],
 	       decode_inst[11:8],
 	       1'b0 } ;
-  assign x__h10327 = { decode_inst[31:25], decode_inst[11:7] } ;
+  assign x__h10391 = { decode_inst[31:25], decode_inst[11:7] } ;
   always@(decode_inst or
 	  decode_inst_BIT_23_4_OR_decode_inst_BIT_21_5___d46 or
 	  decode_inst_BIT_26_7_OR_decode_inst_BIT_24_8___d49)
@@ -592,23 +592,23 @@ module module_decode(decode_inst,
   begin
     case (decode_inst[6:0])
       7'd3, 7'd7, 7'd19, 7'd27, 7'd103:
-	  IF_decode_inst_BITS_6_TO_0_EQ_19_OR_decode_ins_ETC___d550 =
+	  IF_decode_inst_BITS_6_TO_0_EQ_19_OR_decode_ins_ETC___d566 =
 	      immI__h32;
       7'd23, 7'd55:
-	  IF_decode_inst_BITS_6_TO_0_EQ_19_OR_decode_ins_ETC___d550 =
+	  IF_decode_inst_BITS_6_TO_0_EQ_19_OR_decode_ins_ETC___d566 =
 	      immU__h35;
       7'd35, 7'd39:
-	  IF_decode_inst_BITS_6_TO_0_EQ_19_OR_decode_ins_ETC___d550 =
+	  IF_decode_inst_BITS_6_TO_0_EQ_19_OR_decode_ins_ETC___d566 =
 	      immS__h33;
       7'd47:
-	  IF_decode_inst_BITS_6_TO_0_EQ_19_OR_decode_ins_ETC___d550 = 32'd0;
+	  IF_decode_inst_BITS_6_TO_0_EQ_19_OR_decode_ins_ETC___d566 = 32'd0;
       7'd99:
-	  IF_decode_inst_BITS_6_TO_0_EQ_19_OR_decode_ins_ETC___d550 =
+	  IF_decode_inst_BITS_6_TO_0_EQ_19_OR_decode_ins_ETC___d566 =
 	      immB__h34;
       7'd111:
-	  IF_decode_inst_BITS_6_TO_0_EQ_19_OR_decode_ins_ETC___d550 =
+	  IF_decode_inst_BITS_6_TO_0_EQ_19_OR_decode_ins_ETC___d566 =
 	      immJ__h36;
-      default: IF_decode_inst_BITS_6_TO_0_EQ_19_OR_decode_ins_ETC___d550 =
+      default: IF_decode_inst_BITS_6_TO_0_EQ_19_OR_decode_ins_ETC___d566 =
 		   { 27'd0, decode_inst[19:15] };
     endcase
   end
@@ -923,6 +923,14 @@ module module_decode(decode_inst,
       12'd834,
       12'd835,
       12'd836,
+      12'd1952,
+      12'd1953,
+      12'd1954,
+      12'd1955,
+      12'd1968,
+      12'd1969,
+      12'd1970,
+      12'd1971,
       12'd2048,
       12'd2049,
       12'd2816,

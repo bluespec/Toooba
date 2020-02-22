@@ -44,16 +44,16 @@ module module_checkForException(checkForException_dInst,
 
   // remaining internal signals
   reg [11 : 0] CASE_IF_checkForException_dInst_BIT_45_8_THEN__ETC__q2;
-  reg [5 : 0] IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100;
+  reg [5 : 0] IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108;
   reg [2 : 0] CASE_checkForException_csrState_BITS_14_TO_12__ETC__q1;
-  reg IF_checkForException_dInst_BITS_71_TO_67_EQ_20_ETC___d235;
-  wire [2 : 0] IF_NOT_checkForException_dInst_BITS_49_TO_47_8_ETC___d215;
+  reg IF_checkForException_dInst_BITS_71_TO_67_EQ_20_ETC___d251;
+  wire [2 : 0] IF_NOT_checkForException_dInst_BITS_49_TO_47_0_ETC___d231;
 
   // value method checkForException
   assign checkForException =
 	     { checkForException_dInst[71:67] == 5'd17 ||
 	       checkForException_dInst[71:67] == 5'd18 ||
-	       IF_checkForException_dInst_BITS_71_TO_67_EQ_20_ETC___d235,
+	       IF_checkForException_dInst_BITS_71_TO_67_EQ_20_ETC___d251,
 	       ((checkForException_dInst[71:67] == 5'd17) ?
 		  checkForException_csrState[10:9] != 2'd0 &&
 		  checkForException_csrState[10:9] != 2'd1 &&
@@ -74,7 +74,7 @@ module module_checkForException(checkForException_dInst,
 			     4'd15)))) } ;
 
   // remaining internal signals
-  assign IF_NOT_checkForException_dInst_BITS_49_TO_47_8_ETC___d215 =
+  assign IF_NOT_checkForException_dInst_BITS_49_TO_47_0_ETC___d231 =
 	     (checkForException_dInst[49:47] != 3'd0 &&
 	      checkForException_dInst[49:47] != 3'd1 &&
 	      checkForException_dInst[49:47] != 3'd2 &&
@@ -85,85 +85,93 @@ module module_checkForException(checkForException_dInst,
   always@(checkForException_dInst)
   begin
     case (checkForException_dInst[44:33])
-      12'd1: IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100 = 6'd0;
-      12'd2: IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100 = 6'd1;
-      12'd3: IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100 = 6'd2;
+      12'd1: IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd0;
+      12'd2: IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd1;
+      12'd3: IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd2;
       12'd256:
-	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100 = 6'd8;
+	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd8;
       12'd260:
-	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100 = 6'd9;
+	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd9;
       12'd261:
-	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100 = 6'd10;
+	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd10;
       12'd262:
-	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100 = 6'd11;
+	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd11;
       12'd320:
-	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100 = 6'd12;
+	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd12;
       12'd321:
-	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100 = 6'd13;
+	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd13;
       12'd322:
-	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100 = 6'd14;
+	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd14;
       12'd323:
-	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100 = 6'd15;
+	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd15;
       12'd324:
-	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100 = 6'd16;
+	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd16;
       12'd384:
-	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100 = 6'd17;
+	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd17;
       12'd768:
-	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100 = 6'd18;
+	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd18;
       12'd769:
-	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100 = 6'd19;
+	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd19;
       12'd770:
-	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100 = 6'd20;
+	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd20;
       12'd771:
-	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100 = 6'd21;
+	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd21;
       12'd772:
-	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100 = 6'd22;
+	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd22;
       12'd773:
-	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100 = 6'd23;
+	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd23;
       12'd774:
-	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100 = 6'd24;
+	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd24;
       12'd832:
-	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100 = 6'd25;
+	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd25;
       12'd833:
-	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100 = 6'd26;
+	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd26;
       12'd834:
-	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100 = 6'd27;
+	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd27;
       12'd835:
-	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100 = 6'd28;
+	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd28;
       12'd836:
-	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100 = 6'd29;
+	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd29;
+      12'd1952:
+	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd36;
+      12'd1953:
+	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd37;
+      12'd1954:
+	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd38;
+      12'd1955:
+	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd39;
       12'd1968:
-	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100 = 6'd36;
+	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd40;
       12'd1969:
-	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100 = 6'd37;
+	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd41;
       12'd1970:
-	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100 = 6'd38;
+	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd42;
       12'd1971:
-	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100 = 6'd39;
+	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd43;
       12'd2048:
-	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100 = 6'd6;
+	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd6;
       12'd2049:
-	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100 = 6'd7;
+	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd7;
       12'd2816:
-	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100 = 6'd30;
+	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd30;
       12'd2818:
-	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100 = 6'd31;
+	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd31;
       12'd3072:
-	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100 = 6'd3;
+	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd3;
       12'd3073:
-	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100 = 6'd4;
+	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd4;
       12'd3074:
-	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100 = 6'd5;
+	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd5;
       12'd3857:
-	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100 = 6'd32;
+	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd32;
       12'd3858:
-	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100 = 6'd33;
+	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd33;
       12'd3859:
-	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100 = 6'd34;
+	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd34;
       12'd3860:
-	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100 = 6'd35;
-      default: IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100 =
-		   6'd40;
+	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 = 6'd35;
+      default: IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 =
+		   6'd44;
     endcase
   end
   always@(checkForException_csrState)
@@ -175,9 +183,9 @@ module module_checkForException(checkForException_dInst,
       default: CASE_checkForException_csrState_BITS_14_TO_12__ETC__q1 = 3'd5;
     endcase
   end
-  always@(IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100)
+  always@(IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108)
   begin
-    case (IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100)
+    case (IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108)
       6'd0: CASE_IF_checkForException_dInst_BIT_45_8_THEN__ETC__q2 = 12'd1;
       6'd1: CASE_IF_checkForException_dInst_BIT_45_8_THEN__ETC__q2 = 12'd2;
       6'd2: CASE_IF_checkForException_dInst_BIT_45_8_THEN__ETC__q2 = 12'd3;
@@ -221,56 +229,64 @@ module module_checkForException(checkForException_dInst,
       6'd35:
 	  CASE_IF_checkForException_dInst_BIT_45_8_THEN__ETC__q2 = 12'd3860;
       6'd36:
-	  CASE_IF_checkForException_dInst_BIT_45_8_THEN__ETC__q2 = 12'd1968;
+	  CASE_IF_checkForException_dInst_BIT_45_8_THEN__ETC__q2 = 12'd1952;
       6'd37:
-	  CASE_IF_checkForException_dInst_BIT_45_8_THEN__ETC__q2 = 12'd1969;
+	  CASE_IF_checkForException_dInst_BIT_45_8_THEN__ETC__q2 = 12'd1953;
       6'd38:
-	  CASE_IF_checkForException_dInst_BIT_45_8_THEN__ETC__q2 = 12'd1970;
+	  CASE_IF_checkForException_dInst_BIT_45_8_THEN__ETC__q2 = 12'd1954;
       6'd39:
+	  CASE_IF_checkForException_dInst_BIT_45_8_THEN__ETC__q2 = 12'd1955;
+      6'd40:
+	  CASE_IF_checkForException_dInst_BIT_45_8_THEN__ETC__q2 = 12'd1968;
+      6'd41:
+	  CASE_IF_checkForException_dInst_BIT_45_8_THEN__ETC__q2 = 12'd1969;
+      6'd42:
+	  CASE_IF_checkForException_dInst_BIT_45_8_THEN__ETC__q2 = 12'd1970;
+      6'd43:
 	  CASE_IF_checkForException_dInst_BIT_45_8_THEN__ETC__q2 = 12'd1971;
       default: CASE_IF_checkForException_dInst_BIT_45_8_THEN__ETC__q2 =
 		   12'd2303;
     endcase
   end
   always@(checkForException_dInst or
-	  IF_NOT_checkForException_dInst_BITS_49_TO_47_8_ETC___d215 or
+	  IF_NOT_checkForException_dInst_BITS_49_TO_47_0_ETC___d231 or
 	  checkForException_csrState or
 	  CASE_IF_checkForException_dInst_BIT_45_8_THEN__ETC__q2 or
-	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100)
+	  IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108)
   begin
     case (checkForException_dInst[71:67])
       5'd13:
-	  IF_checkForException_dInst_BITS_71_TO_67_EQ_20_ETC___d235 =
+	  IF_checkForException_dInst_BITS_71_TO_67_EQ_20_ETC___d251 =
 	      checkForException_csrState[10:9] <
 	      CASE_IF_checkForException_dInst_BIT_45_8_THEN__ETC__q2[9:8] ||
 	      checkForException_csrState[10:9] == 2'd1 &&
 	      checkForException_csrState[8] &&
-	      IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d100 ==
+	      IF_checkForException_dInst_BIT_45_8_THEN_IF_ch_ETC___d108 ==
 	      6'd17;
       5'd16:
-	  IF_checkForException_dInst_BITS_71_TO_67_EQ_20_ETC___d235 =
+	  IF_checkForException_dInst_BITS_71_TO_67_EQ_20_ETC___d251 =
 	      checkForException_csrState[10:9] == 2'd1 &&
 	      checkForException_csrState[8];
       5'd19:
-	  IF_checkForException_dInst_BITS_71_TO_67_EQ_20_ETC___d235 =
+	  IF_checkForException_dInst_BITS_71_TO_67_EQ_20_ETC___d251 =
 	      checkForException_csrState[10:9] == 2'd0 ||
 	      checkForException_csrState[10:9] == 2'd1 &&
 	      checkForException_csrState[6];
       5'd20:
-	  IF_checkForException_dInst_BITS_71_TO_67_EQ_20_ETC___d235 =
+	  IF_checkForException_dInst_BITS_71_TO_67_EQ_20_ETC___d251 =
 	      checkForException_csrState[10:9] != 2'd3;
-      default: IF_checkForException_dInst_BITS_71_TO_67_EQ_20_ETC___d235 =
+      default: IF_checkForException_dInst_BITS_71_TO_67_EQ_20_ETC___d251 =
 		   checkForException_dInst[71:67] == 5'd12 &&
 		   (checkForException_dInst[66:64] != 3'd4 ||
-		    IF_NOT_checkForException_dInst_BITS_49_TO_47_8_ETC___d215 !=
+		    IF_NOT_checkForException_dInst_BITS_49_TO_47_0_ETC___d231 !=
 		    3'd0 &&
-		    IF_NOT_checkForException_dInst_BITS_49_TO_47_8_ETC___d215 !=
+		    IF_NOT_checkForException_dInst_BITS_49_TO_47_0_ETC___d231 !=
 		    3'd1 &&
-		    IF_NOT_checkForException_dInst_BITS_49_TO_47_8_ETC___d215 !=
+		    IF_NOT_checkForException_dInst_BITS_49_TO_47_0_ETC___d231 !=
 		    3'd2 &&
-		    IF_NOT_checkForException_dInst_BITS_49_TO_47_8_ETC___d215 !=
+		    IF_NOT_checkForException_dInst_BITS_49_TO_47_0_ETC___d231 !=
 		    3'd3 &&
-		    IF_NOT_checkForException_dInst_BITS_49_TO_47_8_ETC___d215 !=
+		    IF_NOT_checkForException_dInst_BITS_49_TO_47_0_ETC___d231 !=
 		    3'd4);
     endcase
   end

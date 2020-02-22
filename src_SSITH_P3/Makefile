@@ -33,8 +33,13 @@ BSC_COMPILATION_FLAGS += \
 	-D INCLUDE_GDB_CONTROL \
 	-D INCLUDE_TANDEM_VERIF \
 	-D BRVF_TRACE \
-	-D XILINX_BSCAN  -D XILINX_XCVU9P  -D JTAG_TAP \
+	-D JTAG_TAP \
 
+# Synth only BSC_COMPILATION_FLAGS
+SYNTH_BSC_OPTIONS = -D XILINX_BSCAN -D XILINX_XCVU9P  
+
+# Sim only BSC_COMPILATION_FLAGS 
+SIM_BSC_OPTIONS = -D BSIM
 
 # Only used if we don't have INCLUDE_GDB_CONTROL
 #	-D EXTERNAL_DEBUG_MODULE
@@ -69,13 +74,10 @@ TOPFILE   = src_BSV/P3_Core.bsv
 TOPMODULE = mkP3_Core
 
 # ================================================================
-# bsc compilation flags
-# Parameter settings for MIT RISCY
-# We include 'BSC_COMPILATION_FLAGS += D BSIM' to use simulation
-# models for the integer divier. Omit this for synthesis.
-
+# More bsc compilation flags
 BSC_COMPILATION_FLAGS += \
-	-keep-fires -aggressive-conditions -no-warn-action-shadowing -no-show-timestamps \
+	-keep-fires -aggressive-conditions \
+	-no-warn-action-shadowing -no-show-timestamps \
 	-suppress-warnings G0020    \
 	+RTS -K128M -RTS  -show-range-conflict
 
@@ -100,7 +102,7 @@ Verilog_RTL_sim:
 .PHONY: compile_synth
 compile_synth:  build_dir_synth Verilog_RTL
 	@echo  "INFO: Generating RTL into Verilog_RTL for synthesis ..."
-	bsc -u -elab -verilog  -vdir Verilog_RTL $(BUILD_DIRS_SYNTH)  $(BSC_COMPILATION_FLAGS)  $(BSC_PATH)  $(TOPFILE)
+	bsc -u -elab -verilog  -vdir Verilog_RTL $(BUILD_DIRS_SYNTH)  $(BSC_COMPILATION_FLAGS)  $(SYNTH_BSC_OPTIONS) $(BSC_PATH)  $(TOPFILE)
 	@echo  "INFO: Generated Synth RTL into Verilog_RTL"
 	cp  Verilog_RTL/*  xilinx_ip/hdl/
 	@echo  "INFO: Copied RTL from  Verilog_RTL/  to  xilinx_ip/hdl/"
@@ -108,7 +110,7 @@ compile_synth:  build_dir_synth Verilog_RTL
 .PHONY: compile_sim
 compile_sim:  build_dir_sim Verilog_RTL_sim
 	@echo  "INFO: Generating RTL into Verilog_RTL_sim for simulation ..."
-	bsc -u -elab -verilog  -vdir Verilog_RTL_sim $(BUILD_DIRS_SIM)  $(BSC_COMPILATION_FLAGS)  -D BSIM $(BSC_PATH)  $(TOPFILE)
+	bsc -u -elab -verilog  -vdir Verilog_RTL_sim $(BUILD_DIRS_SIM)  $(BSC_COMPILATION_FLAGS) $(SIM_BSC_OPTIONS) $(BSC_PATH)  $(TOPFILE)
 
 # ================================================================
 

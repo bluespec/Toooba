@@ -88,9 +88,9 @@
 // hart0_csr_mem_server_response_get  O    65 reg
 // RDY_hart0_csr_mem_server_response_get  O     1 reg
 // RDY_hart0_put_other_req_put    O     1 const
-// v_to_TV_0_get                  O   713
+// v_to_TV_0_get                  O   785
 // RDY_v_to_TV_0_get              O     1 reg
-// v_to_TV_1_get                  O   713
+// v_to_TV_1_get                  O   785
 // RDY_v_to_TV_1_get              O     1 reg
 // CLK                            I     1 clock
 // RST_N                          I     1 reset
@@ -818,16 +818,16 @@ module mkProc(CLK,
 
   // actionvalue method v_to_TV_0_get
   input  EN_v_to_TV_0_get;
-  output [712 : 0] v_to_TV_0_get;
+  output [784 : 0] v_to_TV_0_get;
   output RDY_v_to_TV_0_get;
 
   // actionvalue method v_to_TV_1_get
   input  EN_v_to_TV_1_get;
-  output [712 : 0] v_to_TV_1_get;
+  output [784 : 0] v_to_TV_1_get;
   output RDY_v_to_TV_1_get;
 
   // signals for module outputs
-  wire [712 : 0] v_to_TV_0_get, v_to_TV_1_get;
+  wire [784 : 0] v_to_TV_0_get, v_to_TV_1_get;
   wire [64 : 0] hart0_csr_mem_server_response_get,
 		hart0_fpr_mem_server_response_get,
 		hart0_gpr_mem_server_response_get;
@@ -1353,7 +1353,7 @@ module mkProc(CLK,
   // ports of submodule core_0
   reg [66 : 0] core_0$mmioToPlatform_pRs_enq_x;
   reg [38 : 0] core_0$mmioToPlatform_pRq_enq_x;
-  wire [712 : 0] core_0$v_to_TV_0_get, core_0$v_to_TV_1_get;
+  wire [784 : 0] core_0$v_to_TV_0_get, core_0$v_to_TV_1_get;
   wire [582 : 0] core_0$dCacheToParent_fromP_enq_x,
 		 core_0$iCacheToParent_fromP_enq_x;
   wire [578 : 0] core_0$dCacheToParent_rsToP_first,
@@ -2766,11 +2766,11 @@ module mkProc(CLK,
 
   // actionvalue method v_to_TV_0_get
   assign v_to_TV_0_get =
-	     { core_0$v_to_TV_0_get[712:547],
-	       core_0$v_to_TV_0_get[547] ?
-		 core_0$v_to_TV_0_get[546:541] :
+	     { core_0$v_to_TV_0_get[784:619],
+	       core_0$v_to_TV_0_get[619] ?
+		 core_0$v_to_TV_0_get[618:613] :
 		 6'h2A,
-	       core_0$v_to_TV_0_get[540:476],
+	       core_0$v_to_TV_0_get[612:476],
 	       core_0$v_to_TV_0_get[476] ?
 		 CASE_core_0v_to_TV_0_get_BITS_475_TO_464_1_co_ETC__q5 :
 		 12'hAAA,
@@ -2790,11 +2790,11 @@ module mkProc(CLK,
 
   // actionvalue method v_to_TV_1_get
   assign v_to_TV_1_get =
-	     { core_0$v_to_TV_1_get[712:547],
-	       core_0$v_to_TV_1_get[547] ?
-		 core_0$v_to_TV_1_get[546:541] :
+	     { core_0$v_to_TV_1_get[784:619],
+	       core_0$v_to_TV_1_get[619] ?
+		 core_0$v_to_TV_1_get[618:613] :
 		 6'h2A,
-	       core_0$v_to_TV_1_get[540:476],
+	       core_0$v_to_TV_1_get[612:476],
 	       core_0$v_to_TV_1_get[476] ?
 		 CASE_core_0v_to_TV_1_get_BITS_475_TO_464_1_co_ETC__q1 :
 		 12'hAAA,
@@ -6699,6 +6699,10 @@ module mkProc(CLK,
       12'd834,
       12'd835,
       12'd836,
+      12'd1952,
+      12'd1953,
+      12'd1954,
+      12'd1955,
       12'd1968,
       12'd1969,
       12'd1970,
@@ -6787,6 +6791,10 @@ module mkProc(CLK,
       12'd834,
       12'd835,
       12'd836,
+      12'd1952,
+      12'd1953,
+      12'd1954,
+      12'd1955,
       12'd1968,
       12'd1969,
       12'd1970,
