@@ -412,11 +412,11 @@ module mkCsrFile #(Data hartid)(CsrFile);
     Reg#(Data) mie_csr = concatReg13(
         readOnlyReg(52'b0),
         external_int_en_vec[prvM], readOnlyReg(1'b0),
-        external_int_en_vec[prvS], external_int_en_vec[prvU],
+        external_int_en_vec[prvS], readOnlyReg(1'b0),    // only if misa.N: external_int_en_vec[prvU],
         timer_int_en_vec[prvM],    readOnlyReg(1'b0),
-        timer_int_en_vec[prvS],    timer_int_en_vec[prvU],
+        timer_int_en_vec[prvS],    readOnlyReg(1'b0),    // only if misa.N: timer_int_en_vec[prvU],
         software_int_en_vec[prvM], readOnlyReg(1'b0),
-        software_int_en_vec[prvS], software_int_en_vec[prvU]
+        software_int_en_vec[prvS], readOnlyReg(1'b0)     // only if misa.N: software_int_en_vec[prvU]
     );
     // mtvec
     Reg#(Bit#(62)) mtvec_base_hi_reg <- mkCsrReg(0); // this is BASE[63:2]
@@ -466,12 +466,12 @@ module mkCsrFile #(Data hartid)(CsrFile);
     Reg#(Data) mip_csr = concatReg13(
         readOnlyReg(52'b0),
         external_int_pend_vec[prvM], readOnlyReg(1'b0),
-        external_int_pend_vec[prvS], external_int_pend_vec[prvU],
+        external_int_pend_vec[prvS], readOnlyReg(1'b0),    // only if misa.N: external_int_pend_vec[prvU],
         readOnlyReg(timer_int_pend_vec[prvM]), // MTIP is read-only to software
         readOnlyReg(1'b0),
-        timer_int_pend_vec[prvS],    timer_int_pend_vec[prvU],
+        timer_int_pend_vec[prvS],    readOnlyReg(1'b0),    // only if misa.N: timer_int_pend_vec[prvU],
         software_int_pend_vec[prvM], readOnlyReg(1'b0),
-        software_int_pend_vec[prvS], software_int_pend_vec[prvU]
+        software_int_pend_vec[prvS], readOnlyReg(1'b0)     // only if misa.N: software_int_pend_vec[prvU]
     );
     // minstret
     Ehr#(2, Data) minstret_ehr <- mkCsrEhr(0);
@@ -518,11 +518,11 @@ module mkCsrFile #(Data hartid)(CsrFile);
     // sie: restricted view of mie
     Reg#(Data) sie_csr = concatReg9(
         readOnlyReg(54'b0),
-        external_int_en_vec[prvS], external_int_en_vec[prvU],
+        external_int_en_vec[prvS], readOnlyReg(1'b0),    // only if misa.N: external_int_en_vec[prvU],
         readOnlyReg(2'b0),
-        timer_int_en_vec[prvS], timer_int_en_vec[prvU],
+        timer_int_en_vec[prvS], readOnlyReg(1'b0),    // only if misa.N: timer_int_en_vec[prvU],
         readOnlyReg(2'b0),
-        software_int_en_vec[prvS], software_int_en_vec[prvU]
+        software_int_en_vec[prvS], readOnlyReg(1'b0)    // only if misa.N: software_int_en_vec[prvU]
     );
     // stvec
     Reg#(Bit#(62)) stvec_base_hi_reg <- mkCsrReg(0); // BASE[63:2]
@@ -559,11 +559,11 @@ module mkCsrFile #(Data hartid)(CsrFile);
     // sip: restricted view of mip
     Reg#(Data) sip_csr = concatReg9(
         readOnlyReg(54'b0),
-        external_int_pend_vec[prvS], external_int_pend_vec[prvU],
+        external_int_pend_vec[prvS], readOnlyReg(1'b0),    // only if misa.N: external_int_pend_vec[prvU],
         readOnlyReg(2'b0),
-        timer_int_pend_vec[prvS], timer_int_pend_vec[prvU],
+        timer_int_pend_vec[prvS], readOnlyReg(1'b0),    // only if misa.N: timer_int_pend_vec[prvU],
         readOnlyReg(2'b0),
-        software_int_pend_vec[prvS], software_int_pend_vec[prvU]
+        software_int_pend_vec[prvS], readOnlyReg(1'b0)    // only if misa.N: software_int_pend_vec[prvU]
     );
     // satp (sptbr in spike): FIXME we only support Bare and Sv39, so we hack
     // the encoding of mode[3:0] field. Only mode[3] is relevant, other bits
