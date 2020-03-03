@@ -1247,7 +1247,7 @@ module mkCoreW(RST_N_dm_power_on_reset,
        plic$v_targets_1_m_eip;
 
   // ports of submodule proc
-  wire [784 : 0] proc$v_to_TV_0_get, proc$v_to_TV_1_get;
+  wire [861 : 0] proc$v_to_TV_0_get, proc$v_to_TV_1_get;
   wire [76 : 0] proc$hart0_csr_mem_server_request_put;
   wire [69 : 0] proc$hart0_fpr_mem_server_request_put,
 		proc$hart0_gpr_mem_server_request_put;
@@ -1424,7 +1424,7 @@ module mkCoreW(RST_N_dm_power_on_reset,
        tv_encode$RDY_v_cpu_in_1_put;
 
   // ports of submodule v_td2_to_td_0
-  wire [784 : 0] v_td2_to_td_0$in_put;
+  wire [861 : 0] v_td2_to_td_0$in_put;
   wire [490 : 0] v_td2_to_td_0$out_get;
   wire v_td2_to_td_0$EN_in_put,
        v_td2_to_td_0$EN_out_get,
@@ -1432,7 +1432,7 @@ module mkCoreW(RST_N_dm_power_on_reset,
        v_td2_to_td_0$RDY_out_get;
 
   // ports of submodule v_td2_to_td_1
-  wire [784 : 0] v_td2_to_td_1$in_put;
+  wire [861 : 0] v_td2_to_td_1$in_put;
   wire [490 : 0] v_td2_to_td_1$out_get;
   wire v_td2_to_td_1$EN_in_put,
        v_td2_to_td_1$EN_out_get,
@@ -1611,10 +1611,10 @@ module mkCoreW(RST_N_dm_power_on_reset,
   // synopsys translate_off
   reg [31 : 0] v__h5047;
   reg [31 : 0] v__h5190;
-  reg [31 : 0] v__h15736;
+  reg [31 : 0] v__h15930;
   reg [31 : 0] v__h5041;
   reg [31 : 0] v__h5184;
-  reg [31 : 0] v__h15730;
+  reg [31 : 0] v__h15924;
   // synopsys translate_on
 
   // remaining internal signals
@@ -3422,7 +3422,11 @@ module mkCoreW(RST_N_dm_power_on_reset,
 
   // submodule v_td2_to_td_0
   assign v_td2_to_td_0$in_put =
-	     { proc$v_to_TV_0_get[784:619],
+	     { proc$v_to_TV_0_get[861:797],
+	       proc$v_to_TV_0_get[797] ?
+		 proc$v_to_TV_0_get[796:721] :
+		 76'hAAAAAAAAAAAAAAAAAAA,
+	       proc$v_to_TV_0_get[720:619],
 	       proc$v_to_TV_0_get[619] ? proc$v_to_TV_0_get[618:613] : 6'h2A,
 	       proc$v_to_TV_0_get[612:476],
 	       proc$v_to_TV_0_get[476] ?
@@ -3443,7 +3447,11 @@ module mkCoreW(RST_N_dm_power_on_reset,
 
   // submodule v_td2_to_td_1
   assign v_td2_to_td_1$in_put =
-	     { proc$v_to_TV_1_get[784:619],
+	     { proc$v_to_TV_1_get[861:797],
+	       proc$v_to_TV_1_get[797] ?
+		 proc$v_to_TV_1_get[796:721] :
+		 76'hAAAAAAAAAAAAAAAAAAA,
+	       proc$v_to_TV_1_get[720:619],
 	       proc$v_to_TV_1_get[619] ? proc$v_to_TV_1_get[618:613] : 6'h2A,
 	       proc$v_to_TV_1_get[612:476],
 	       proc$v_to_TV_1_get[476] ?
@@ -3726,15 +3734,15 @@ module mkCoreW(RST_N_dm_power_on_reset,
       if (hart0_reset$RST_OUT != `BSV_RESET_VALUE)
 	if (EN_start)
 	  begin
-	    v__h15736 = $stime;
+	    v__h15930 = $stime;
 	    #0;
 	  end
-    v__h15730 = v__h15736 / 32'd10;
+    v__h15924 = v__h15930 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (hart0_reset$RST_OUT != `BSV_RESET_VALUE)
 	if (EN_start)
 	  $display("%0d: %m.method start: proc.start (pc %0h, tohostAddr %0h, fromhostAddr %0h)",
-		   v__h15730,
+		   v__h15924,
 		   64'h0000000070000000,
 		   start_tohost_addr,
 		   start_fromhost_addr);

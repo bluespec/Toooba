@@ -90,6 +90,7 @@ interface CsrFile;
 							 Bool      init_for_way0,
 							 Bit #(5)  old_fflags,
 							 Data      old_mstatus);
+    method Data getMIP;
 `endif
 
     // The WARL transform performed during CSRRx writes to a CSR
@@ -897,6 +898,10 @@ module mkCsrFile #(Data hartid)(CsrFile);
        Data     new_mstatus = { old_mstatus [63:15], 2'b11, old_mstatus [12:0] };
 
        return tuple2 (new_fflags, new_mstatus);
+    endmethod
+
+    method Data getMIP;
+       return mip_csr;
     endmethod
 `endif
 

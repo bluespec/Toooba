@@ -24,7 +24,13 @@ import ReorderBuffer :: *;
 // add to the critical path or scheduling requirements of CommitStage.
 
 typedef struct {
-   Bit #(64)          serial_num;   // TV message serial number
+   // TV message serial number
+   Bit #(64)          serial_num;
+
+   // For asynchronous CSR updates (e.g., MIP change on external interrupt)
+   Maybe #(Tuple2 #(Bit #(12), Data))  maybe_csr_upd;
+
+   // Remaining fields relevant only if maybe_csr_upd is Invalid
    Addr               pc;
    Bit #(32)          orig_inst;    // original 16b or 32b instruction ([1:0] will distinguish 16b or 32b)
    IType              iType;

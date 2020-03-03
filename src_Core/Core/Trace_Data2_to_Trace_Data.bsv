@@ -76,6 +76,9 @@ module mkTrace_Data2_to_Trace_Data (Trace_Data2_to_Trace_Data_IFC);
 	 if (serial_num == 0)
 	    td = mkTrace_RESET;
 
+	 else if (td2.maybe_csr_upd matches tagged Valid { .csr_addr, .csr_value })
+	    td = mkTrace_CSR_WRITE (csr_addr, csr_value);
+
 	 else if (isValid (td2.trap))
 	    td = mkTrace_TRAP (td2.tvec,
 			       isize,

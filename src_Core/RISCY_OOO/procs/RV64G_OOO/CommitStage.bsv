@@ -183,6 +183,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
    function Action fa_to_TV (Integer                way,
 			     Bit #(64)              serial_num,
+			     Maybe #(Tuple2 #(Bit #(12), Data)) maybe_csr_upd,
 			     ToReorderBuffer        deq_data,
 			     Bit #(5)               fflags,
 			     Data                   mstatus,
@@ -192,6 +193,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 	 let tval     = (m_trap_updates matches tagged Valid .tu ? tu.tval : deq_data.tval);
 	 let upd_pc   = (m_ret_updates matches tagged Valid .ru ? ru.new_pc : deq_data.pc);
 	 let x = Trace_Data2 {serial_num:           serial_num,
+			      maybe_csr_upd:        maybe_csr_upd,
 			      pc:                   upd_pc,
 			      orig_inst:            deq_data.orig_inst,
 			      iType:                deq_data.iType,
@@ -230,10 +232,28 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
    rule rl_send_tv_reset (rg_just_after_reset);
       Bit #(64) serial_num = 0;
-      fa_to_TV (way0, serial_num, no_deq_data, no_fflags, no_mstatus, no_trap_updates, no_ret_updates);
+      fa_to_TV (way0, serial_num,
+		tagged Invalid,
+		no_deq_data, no_fflags, no_mstatus, no_trap_updates, no_ret_updates);
       rg_just_after_reset <= False;
       rg_serial_num       <= 1;
    endrule
+
+   Reg #(Data) rg_old_mip_csr_val <- mkReg (0);
+
+   Data new_mip_csr_val = inIfc.csrfIfc.getMIP;
+
+   Bool send_mip_csr_change_to_tv = (new_mip_csr_val != rg_old_mip_csr_val);
+
+   rule rl_send_mip_csr_change_to_tv ((! rg_just_after_reset) && send_mip_csr_change_to_tv);
+      fa_to_TV (way0, rg_serial_num,
+		tagged Valid (tuple2 (pack (CSRmip), new_mip_csr_val)),
+		no_deq_data, no_fflags, no_mstatus, no_trap_updates, no_ret_updates);
+      rg_old_mip_csr_val <= new_mip_csr_val;
+      rg_serial_num <= rg_serial_num + 1;
+   endrule
+`else
+   Bool send_mip_csr_change_to_tv = False;
 `endif
 
     // func units
@@ -560,10 +580,11 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
     endrule
 
     rule doCommitTrap_handle(
+       commitTrap matches tagged Valid .trap
 `ifdef INCLUDE_GDB_CONTROL
-       (rg_run_state == RUN_STATE_RUNNING) &&&
+       &&& (rg_run_state == RUN_STATE_RUNNING)
 `endif
-       commitTrap matches tagged Valid .trap);
+       &&& (! send_mip_csr_change_to_tv));
 
         // reset commitTrap
         commitTrap <= Invalid;
@@ -624,7 +645,9 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
           inIfc.redirectPc(trap_updates.new_pc);
 
 `ifdef INCLUDE_TANDEM_VERIF
-          fa_to_TV (way0, rg_serial_num, x, no_fflags, no_mstatus, tagged Valid trap_updates, no_ret_updates);
+          fa_to_TV (way0, rg_serial_num,
+		    tagged Invalid,
+		    x, no_fflags, no_mstatus, tagged Valid trap_updates, no_ret_updates);
 `endif
           rg_serial_num <= rg_serial_num + 1;
 
@@ -683,7 +706,8 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         !isValid(rob.deqPort[0].deq_data.trap) &&
         !isValid(rob.deqPort[0].deq_data.ldKilled) &&
         rob.deqPort[0].deq_data.rob_inst_state == Executed &&
-        isSystem(rob.deqPort[0].deq_data.iType)
+        isSystem(rob.deqPort[0].deq_data.iType) &&
+        (! send_mip_csr_change_to_tv)
     );
         rob.deqPort[0].deq;
         let x = rob.deqPort[0].deq_data;
@@ -748,7 +772,9 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         inIfc.redirectPc(next_pc);
 
 `ifdef INCLUDE_TANDEM_VERIF
-        fa_to_TV (way0, rg_serial_num, x, no_fflags, no_mstatus, no_trap_updates, m_ret_updates);
+        fa_to_TV (way0, rg_serial_num,
+		  tagged Invalid,
+		  x, no_fflags, no_mstatus, no_trap_updates, m_ret_updates);
 `endif
         rg_serial_num <= rg_serial_num + 1;
 
@@ -832,7 +858,8 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         !isValid(rob.deqPort[0].deq_data.trap) &&
         !isValid(rob.deqPort[0].deq_data.ldKilled) &&
         rob.deqPort[0].deq_data.rob_inst_state == Executed &&
-        !isSystem(rob.deqPort[0].deq_data.iType)
+        !isSystem(rob.deqPort[0].deq_data.iType) &&
+        (! send_mip_csr_change_to_tv)
     );
         // stop superscalar commit after we
         // 1. see a trap or system inst or killed Ld
@@ -897,7 +924,9 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
 		   Bool is_fmv_x_dw = ((x.orig_inst & 32'b_1111110_11111_00000_111_00000_1111111)
 				       ==             32'b_1110000_00000_00000_000_00000_1010011);
-		   fa_to_TV (i, rg_serial_num + instret, x,
+		   fa_to_TV (i, rg_serial_num + instret,
+			     tagged Invalid,
+			     x,
 			     (is_fmv_x_dw ? 5'b0 : po_fflags),
 			     po_mstatus,
 			     no_trap_updates, no_ret_updates);

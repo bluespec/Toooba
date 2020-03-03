@@ -11,7 +11,7 @@
 // RDY_out_get                    O     1 reg
 // CLK                            I     1 clock
 // RST_N                          I     1 reset
-// in_put                         I   785
+// in_put                         I   862
 // EN_in_put                      I     1
 // EN_out_get                     I     1
 //
@@ -46,7 +46,7 @@ module mkTrace_Data2_to_Trace_Data(CLK,
   input  RST_N;
 
   // action method in_put
-  input  [784 : 0] in_put;
+  input  [861 : 0] in_put;
   input  EN_in_put;
   output RDY_in_put;
 
@@ -60,7 +60,7 @@ module mkTrace_Data2_to_Trace_Data(CLK,
   wire RDY_in_put, RDY_out_get;
 
   // ports of submodule f_in
-  wire [784 : 0] f_in$D_IN, f_in$D_OUT;
+  wire [861 : 0] f_in$D_IN, f_in$D_OUT;
   wire f_in$CLR, f_in$DEQ, f_in$EMPTY_N, f_in$ENQ, f_in$FULL_N;
 
   // ports of submodule f_out
@@ -76,51 +76,54 @@ module mkTrace_Data2_to_Trace_Data(CLK,
        WILL_FIRE_out_get;
 
   // remaining internal signals
-  reg [63 : 0] x1_avValue_pc__h3456, x1_avValue_word1__h3460;
-  reg [11 : 0] CASE_in_put_BITS_475_TO_464_1_in_put_BITS_475__ETC__q2,
-	       csr_addr__h5126;
-  reg [4 : 0] CASE_f_inD_OUT_BITS_624_TO_620_14_5_15_5_16_5_ETC__q1,
-	      x1_avValue_rd__h3459;
-  reg [3 : 0] CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q3,
-	      CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q4;
-  reg [1 : 0] CASE_in_put_BITS_393_TO_392_0_in_put_BITS_393__ETC__q5;
-  wire [63 : 0] td_word2__h3496,
-		td_word2__h3647,
-		td_word3__h3497,
-		td_word4__h3384,
-		x1_avValue_pc__h3420,
-		x1_avValue_pc__h3726,
-		x1_avValue_pc__h3793,
-		x1_avValue_word1__h3506,
-		x1_avValue_word1__h3543,
-		x1_avValue_word1__h3619,
-		x1_avValue_word1__h3696,
-		x1_avValue_word1__h3797,
-		x1_avValue_word2__h3507,
-		x1_avValue_word2__h3620,
-		x1_avValue_word2__h3798,
-		x1_avValue_word3__h3508,
-		x1_avValue_word3__h3799,
-		x1_avValue_word4__h3463,
-		x1_avValue_word4__h3583,
-		x1_avValue_word4__h3800,
-		x__h4701,
-		x__h4967,
-		x__h5065,
-		x__h5274,
-		x__h5697;
-  wire [11 : 0] csraddr__h3479;
-  wire [4 : 0] td_rd__h3380,
-	       td_rd__h3448,
-	       x1_avValue_rd__h3423,
-	       x1_avValue_rd__h3542,
-	       x1_avValue_rd__h3579,
-	       x1_avValue_rd__h3618,
-	       x1_avValue_rd__h3656,
-	       x1_avValue_rd__h3695,
-	       x1_avValue_rd__h3796,
-	       x1_avValue_rd__h3866;
-  wire [2 : 0] st_funct3__h346;
+  reg [63 : 0] x1_avValue_pc__h3546, x1_avValue_word1__h3550;
+  reg [11 : 0] CASE_in_put_BITS_475_TO_464_1_in_put_BITS_475__ETC__q1,
+	       csr_addr__h5294;
+  reg [4 : 0] CASE_f_inD_OUT_BITS_624_TO_620_14_5_15_5_16_5_ETC__q5,
+	      x1_avValue_rd__h3549;
+  reg [3 : 0] CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q2,
+	      CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q3;
+  reg [1 : 0] CASE_in_put_BITS_393_TO_392_0_in_put_BITS_393__ETC__q4;
+  wire [63 : 0] td_word2__h3586,
+		td_word2__h3737,
+		td_word3__h3587,
+		td_word3__h3951,
+		td_word4__h3474,
+		x1_avValue_pc__h3510,
+		x1_avValue_pc__h3816,
+		x1_avValue_pc__h3883,
+		x1_avValue_word1__h3596,
+		x1_avValue_word1__h3633,
+		x1_avValue_word1__h3709,
+		x1_avValue_word1__h3786,
+		x1_avValue_word1__h3887,
+		x1_avValue_word2__h3597,
+		x1_avValue_word2__h3710,
+		x1_avValue_word2__h3888,
+		x1_avValue_word3__h3598,
+		x1_avValue_word3__h3889,
+		x1_avValue_word3__h3931,
+		x1_avValue_word4__h3553,
+		x1_avValue_word4__h3673,
+		x1_avValue_word4__h3890,
+		x1_avValue_word4__h3932,
+		x__h4843,
+		x__h5134,
+		x__h5233,
+		x__h5443,
+		x__h5875;
+  wire [11 : 0] csraddr__h3569;
+  wire [4 : 0] td_rd__h3470,
+	       td_rd__h3538,
+	       x1_avValue_rd__h3513,
+	       x1_avValue_rd__h3632,
+	       x1_avValue_rd__h3669,
+	       x1_avValue_rd__h3708,
+	       x1_avValue_rd__h3746,
+	       x1_avValue_rd__h3785,
+	       x1_avValue_rd__h3886,
+	       x1_avValue_rd__h3987;
+  wire [2 : 0] st_funct3__h348;
 
   // action method in_put
   assign RDY_in_put = f_in$FULL_N ;
@@ -134,7 +137,7 @@ module mkTrace_Data2_to_Trace_Data(CLK,
   assign WILL_FIRE_out_get = EN_out_get ;
 
   // submodule f_in
-  FIFO2 #(.width(32'd785), .guarded(32'd1)) f_in(.RST(RST_N),
+  FIFO2 #(.width(32'd862), .guarded(32'd1)) f_in(.RST(RST_N),
 						 .CLK(CLK),
 						 .D_IN(f_in$D_IN),
 						 .ENQ(f_in$ENQ),
@@ -161,14 +164,14 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 
   // submodule f_in
   assign f_in$D_IN =
-	     { in_put[784:476],
-	       CASE_in_put_BITS_475_TO_464_1_in_put_BITS_475__ETC__q2,
+	     { in_put[861:476],
+	       CASE_in_put_BITS_475_TO_464_1_in_put_BITS_475__ETC__q1,
 	       in_put[463:462],
 	       in_put[462] ?
-		 CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q3 :
-		 CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q4,
+		 CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q2 :
+		 CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q3,
 	       in_put[457:394],
-	       CASE_in_put_BITS_393_TO_392_0_in_put_BITS_393__ETC__q5,
+	       CASE_in_put_BITS_393_TO_392_0_in_put_BITS_393__ETC__q4,
 	       in_put[391:0] } ;
   assign f_in$ENQ = EN_in_put ;
   assign f_in$DEQ = CAN_FIRE_RL_rl_td2_to_td ;
@@ -176,68 +179,70 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 
   // submodule f_out
   assign f_out$D_IN =
-	     { f_in$D_OUT[784:721],
-	       (f_in$D_OUT[784:721] == 64'd0) ?
+	     { f_in$D_OUT[861:798],
+	       (f_in$D_OUT[861:798] == 64'd0) ?
 		 5'd0 :
-		 (f_in$D_OUT[463] ?
-		    5'd14 :
-		    ((f_in$D_OUT[393:392] == 2'd0 &&
-		      f_in$D_OUT[624:620] == 5'd10) ?
-		       5'd5 :
+		 (f_in$D_OUT[797] ?
+		    5'd3 :
+		    (f_in$D_OUT[463] ?
+		       5'd14 :
 		       ((f_in$D_OUT[393:392] == 2'd0 &&
-			 (f_in$D_OUT[624:620] == 5'd8 ||
-			  f_in$D_OUT[624:620] == 5'd9) ||
-			 f_in$D_OUT[624:620] == 5'd3 ||
-			 f_in$D_OUT[624:620] == 5'd11) ?
-			  5'd6 :
-			  ((f_in$D_OUT[619] && f_in$D_OUT[618] &&
-			    f_in$D_OUT[624:620] == 5'd12) ?
-			     5'd8 :
-			     ((f_in$D_OUT[624:620] == 5'd12) ?
-				5'd7 :
-				((f_in$D_OUT[393:392] == 2'd1 &&
-				  f_in$D_OUT[619] &&
-				  f_in$D_OUT[618] &&
-				  f_in$D_OUT[624:620] == 5'd4) ?
-				   5'd10 :
+			 f_in$D_OUT[624:620] == 5'd10) ?
+			  5'd5 :
+			  ((f_in$D_OUT[393:392] == 2'd0 &&
+			    (f_in$D_OUT[624:620] == 5'd8 ||
+			     f_in$D_OUT[624:620] == 5'd9) ||
+			    f_in$D_OUT[624:620] == 5'd3 ||
+			    f_in$D_OUT[624:620] == 5'd11) ?
+			     5'd6 :
+			     ((f_in$D_OUT[619] && f_in$D_OUT[618] &&
+			       f_in$D_OUT[624:620] == 5'd12) ?
+				5'd8 :
+				((f_in$D_OUT[624:620] == 5'd12) ?
+				   5'd7 :
 				   ((f_in$D_OUT[393:392] == 2'd1 &&
+				     f_in$D_OUT[619] &&
+				     f_in$D_OUT[618] &&
 				     f_in$D_OUT[624:620] == 5'd4) ?
-				      5'd9 :
+				      5'd10 :
 				      ((f_in$D_OUT[393:392] == 2'd1 &&
-					f_in$D_OUT[624:620] == 5'd5) ?
-					 5'd11 :
-					 ((f_in$D_OUT[393:392] != 2'd0 &&
-					   f_in$D_OUT[393:392] != 2'd1 &&
-					   f_in$D_OUT[624:620] == 5'd13) ?
-					    5'd16 :
-					    CASE_f_inD_OUT_BITS_624_TO_620_14_5_15_5_16_5_ETC__q1))))))))),
-	       x__h4701,
+					f_in$D_OUT[624:620] == 5'd4) ?
+					 5'd9 :
+					 ((f_in$D_OUT[393:392] == 2'd1 &&
+					   f_in$D_OUT[624:620] == 5'd5) ?
+					    5'd11 :
+					    ((f_in$D_OUT[393:392] != 2'd0 &&
+					      f_in$D_OUT[393:392] != 2'd1 &&
+					      f_in$D_OUT[624:620] == 5'd13) ?
+					       5'd16 :
+					       CASE_f_inD_OUT_BITS_624_TO_620_14_5_15_5_16_5_ETC__q5)))))))))),
+	       x__h4843,
 	       f_in$D_OUT[626:625] == 2'b11,
 	       f_in$D_OUT[656:625],
-	       x1_avValue_rd__h3866,
-	       x__h4967,
-	       x__h5065,
-	       x__h5274,
-	       x__h5697,
+	       x1_avValue_rd__h3987,
+	       x__h5134,
+	       x__h5233,
+	       x__h5443,
+	       x__h5875,
 	       f_in$D_OUT[612:549] } ;
-  assign f_out$ENQ = f_in$EMPTY_N && f_out$FULL_N ;
+  assign f_out$ENQ = CAN_FIRE_RL_rl_td2_to_td ;
   assign f_out$DEQ = EN_out_get ;
   assign f_out$CLR = 1'b0 ;
 
   // remaining internal signals
-  assign csraddr__h3479 = f_in$D_OUT[476] ? csr_addr__h5126 : 12'd0 ;
-  assign st_funct3__h346 =
+  assign csraddr__h3569 = f_in$D_OUT[476] ? csr_addr__h5294 : 12'd0 ;
+  assign st_funct3__h348 =
 	     f_in$D_OUT[484] ?
 	       3'b011 :
 	       (f_in$D_OUT[480] ?
 		  3'b010 :
 		  (f_in$D_OUT[478] ? 3'b001 : 3'b0)) ;
-  assign td_rd__h3380 =
+  assign td_rd__h3470 =
 	     (f_in$D_OUT[619] && !f_in$D_OUT[618]) ?
 	       f_in$D_OUT[617:613] :
 	       5'd0 ;
-  assign td_rd__h3448 = { 3'd0, f_in$D_OUT[257:256] } ;
-  assign td_word2__h3496 =
+  assign td_rd__h3538 = { 3'd0, f_in$D_OUT[257:256] } ;
+  assign td_word2__h3586 =
 	     (f_in$D_OUT[476] &&
 	      (f_in$D_OUT[638:637] == 2'b01 ||
 	       (f_in$D_OUT[638:637] == 2'b10 ||
@@ -245,150 +250,155 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	       f_in$D_OUT[644:640] != 5'd0)) ?
 	       64'd1 :
 	       64'd0 ;
-  assign td_word2__h3647 = { 59'd0, f_in$D_OUT[327:323] } ;
-  assign td_word3__h3497 = { 52'd0, csraddr__h3479 } ;
-  assign td_word4__h3384 = { 61'd0, st_funct3__h346 } ;
-  assign x1_avValue_pc__h3420 =
+  assign td_word2__h3737 = { 59'd0, f_in$D_OUT[327:323] } ;
+  assign td_word3__h3587 = { 52'd0, csraddr__h3569 } ;
+  assign td_word3__h3951 = { 52'd0, f_in$D_OUT[796:785] } ;
+  assign td_word4__h3474 = { 61'd0, st_funct3__h348 } ;
+  assign x1_avValue_pc__h3510 =
 	     f_in$D_OUT[720:657] +
 	     ((f_in$D_OUT[626:625] == 2'b11) ? 64'd4 : 64'd2) ;
-  assign x1_avValue_pc__h3726 =
+  assign x1_avValue_pc__h3816 =
 	     (f_in$D_OUT[624:620] == 5'd3 || f_in$D_OUT[624:620] == 5'd11 ||
 	      f_in$D_OUT[624:620] == 5'd12 ||
 	      f_in$D_OUT[393:392] == 2'd1 && f_in$D_OUT[624:620] == 5'd4 ||
 	      f_in$D_OUT[393:392] == 2'd1 && f_in$D_OUT[624:620] == 5'd5 ||
 	      f_in$D_OUT[393:392] != 2'd0 && f_in$D_OUT[393:392] != 2'd1 &&
 	      f_in$D_OUT[624:620] == 5'd13) ?
-	       x1_avValue_pc__h3420 :
-	       x1_avValue_pc__h3456 ;
-  assign x1_avValue_pc__h3793 =
+	       x1_avValue_pc__h3510 :
+	       x1_avValue_pc__h3546 ;
+  assign x1_avValue_pc__h3883 =
 	     (f_in$D_OUT[393:392] == 2'd0 &&
 	      (f_in$D_OUT[624:620] == 5'd10 || f_in$D_OUT[624:620] == 5'd8 ||
 	       f_in$D_OUT[624:620] == 5'd9)) ?
 	       f_in$D_OUT[391:328] :
-	       x1_avValue_pc__h3726 ;
-  assign x1_avValue_rd__h3423 = td_rd__h3380 ;
-  assign x1_avValue_rd__h3542 =
+	       x1_avValue_pc__h3816 ;
+  assign x1_avValue_rd__h3513 = td_rd__h3470 ;
+  assign x1_avValue_rd__h3632 =
 	     (f_in$D_OUT[393:392] != 2'd0 && f_in$D_OUT[393:392] != 2'd1 &&
 	      f_in$D_OUT[624:620] == 5'd13) ?
-	       td_rd__h3380 :
-	       x1_avValue_rd__h3459 ;
-  assign x1_avValue_rd__h3579 =
+	       td_rd__h3470 :
+	       x1_avValue_rd__h3549 ;
+  assign x1_avValue_rd__h3669 =
 	     (f_in$D_OUT[393:392] == 2'd1 && f_in$D_OUT[624:620] == 5'd4) ?
-	       td_rd__h3380 :
-	       x1_avValue_rd__h3542 ;
-  assign x1_avValue_rd__h3618 =
+	       td_rd__h3470 :
+	       x1_avValue_rd__h3632 ;
+  assign x1_avValue_rd__h3708 =
 	     (f_in$D_OUT[393:392] == 2'd1 && f_in$D_OUT[619] &&
 	      f_in$D_OUT[618] &&
 	      f_in$D_OUT[624:620] == 5'd4) ?
 	       f_in$D_OUT[617:613] :
-	       x1_avValue_rd__h3579 ;
-  assign x1_avValue_rd__h3656 =
+	       x1_avValue_rd__h3669 ;
+  assign x1_avValue_rd__h3746 =
 	     (f_in$D_OUT[624:620] == 5'd12) ?
-	       td_rd__h3380 :
-	       x1_avValue_rd__h3618 ;
-  assign x1_avValue_rd__h3695 =
+	       td_rd__h3470 :
+	       x1_avValue_rd__h3708 ;
+  assign x1_avValue_rd__h3785 =
 	     (f_in$D_OUT[619] && f_in$D_OUT[618] &&
 	      f_in$D_OUT[624:620] == 5'd12) ?
 	       f_in$D_OUT[617:613] :
-	       x1_avValue_rd__h3656 ;
-  assign x1_avValue_rd__h3796 =
+	       x1_avValue_rd__h3746 ;
+  assign x1_avValue_rd__h3886 =
 	     (f_in$D_OUT[393:392] == 2'd0 &&
 	      (f_in$D_OUT[624:620] == 5'd8 || f_in$D_OUT[624:620] == 5'd9) ||
 	      f_in$D_OUT[624:620] == 5'd3 ||
 	      f_in$D_OUT[624:620] == 5'd11) ?
-	       td_rd__h3380 :
-	       x1_avValue_rd__h3695 ;
-  assign x1_avValue_rd__h3866 =
-	     f_in$D_OUT[463] ? td_rd__h3448 : x1_avValue_rd__h3796 ;
-  assign x1_avValue_word1__h3506 =
+	       td_rd__h3470 :
+	       x1_avValue_rd__h3785 ;
+  assign x1_avValue_rd__h3987 =
+	     f_in$D_OUT[463] ? td_rd__h3538 : x1_avValue_rd__h3886 ;
+  assign x1_avValue_word1__h3596 =
 	     (f_in$D_OUT[393:392] != 2'd0 && f_in$D_OUT[393:392] != 2'd1 &&
 	      f_in$D_OUT[624:620] == 5'd13) ?
 	       f_in$D_OUT[612:549] :
-	       x1_avValue_word1__h3460 ;
-  assign x1_avValue_word1__h3543 =
+	       x1_avValue_word1__h3550 ;
+  assign x1_avValue_word1__h3633 =
 	     (f_in$D_OUT[393:392] == 2'd1 && f_in$D_OUT[624:620] == 5'd5) ?
-	       td_word4__h3384 :
-	       x1_avValue_word1__h3506 ;
-  assign x1_avValue_word1__h3619 =
+	       td_word4__h3474 :
+	       x1_avValue_word1__h3596 ;
+  assign x1_avValue_word1__h3709 =
 	     (f_in$D_OUT[393:392] == 2'd1 && f_in$D_OUT[624:620] == 5'd4) ?
 	       f_in$D_OUT[612:549] :
-	       x1_avValue_word1__h3543 ;
-  assign x1_avValue_word1__h3696 =
+	       x1_avValue_word1__h3633 ;
+  assign x1_avValue_word1__h3786 =
 	     (f_in$D_OUT[624:620] == 5'd12) ?
 	       f_in$D_OUT[612:549] :
-	       x1_avValue_word1__h3619 ;
-  assign x1_avValue_word1__h3797 =
+	       x1_avValue_word1__h3709 ;
+  assign x1_avValue_word1__h3887 =
 	     (f_in$D_OUT[393:392] == 2'd0 &&
 	      (f_in$D_OUT[624:620] == 5'd8 || f_in$D_OUT[624:620] == 5'd9) ||
 	      f_in$D_OUT[624:620] == 5'd3 ||
 	      f_in$D_OUT[624:620] == 5'd11) ?
 	       f_in$D_OUT[612:549] :
-	       x1_avValue_word1__h3696 ;
-  assign x1_avValue_word2__h3507 =
+	       x1_avValue_word1__h3786 ;
+  assign x1_avValue_word2__h3597 =
 	     (f_in$D_OUT[393:392] != 2'd0 && f_in$D_OUT[393:392] != 2'd1 &&
 	      f_in$D_OUT[624:620] == 5'd13) ?
-	       td_word2__h3496 :
+	       td_word2__h3586 :
 	       f_in$D_OUT[548:485] ;
-  assign x1_avValue_word2__h3620 =
+  assign x1_avValue_word2__h3710 =
 	     (f_in$D_OUT[393:392] == 2'd1 && f_in$D_OUT[624:620] == 5'd5) ?
 	       f_in$D_OUT[548:485] :
-	       x1_avValue_word2__h3507 ;
-  assign x1_avValue_word2__h3798 =
+	       x1_avValue_word2__h3597 ;
+  assign x1_avValue_word2__h3888 =
 	     (f_in$D_OUT[624:620] == 5'd12) ?
-	       td_word2__h3647 :
-	       x1_avValue_word2__h3620 ;
-  assign x1_avValue_word3__h3508 =
+	       td_word2__h3737 :
+	       x1_avValue_word2__h3710 ;
+  assign x1_avValue_word3__h3598 =
 	     (f_in$D_OUT[393:392] != 2'd0 && f_in$D_OUT[393:392] != 2'd1 &&
 	      f_in$D_OUT[624:620] == 5'd13) ?
-	       td_word3__h3497 :
+	       td_word3__h3587 :
 	       f_in$D_OUT[391:328] ;
-  assign x1_avValue_word3__h3799 =
+  assign x1_avValue_word3__h3889 =
 	     (f_in$D_OUT[393:392] == 2'd1 &&
 	      (f_in$D_OUT[624:620] == 5'd4 || f_in$D_OUT[624:620] == 5'd5)) ?
 	       f_in$D_OUT[391:328] :
-	       x1_avValue_word3__h3508 ;
-  assign x1_avValue_word4__h3463 = td_word4__h3384 ;
-  assign x1_avValue_word4__h3583 =
+	       x1_avValue_word3__h3598 ;
+  assign x1_avValue_word3__h3931 =
+	     f_in$D_OUT[463] ? f_in$D_OUT[63:0] : x1_avValue_word3__h3889 ;
+  assign x1_avValue_word4__h3553 = td_word4__h3474 ;
+  assign x1_avValue_word4__h3673 =
 	     (f_in$D_OUT[393:392] != 2'd0 && f_in$D_OUT[393:392] != 2'd1 &&
 	      f_in$D_OUT[624:620] == 5'd13) ?
 	       f_in$D_OUT[391:328] :
-	       x1_avValue_word4__h3463 ;
-  assign x1_avValue_word4__h3800 =
+	       x1_avValue_word4__h3553 ;
+  assign x1_avValue_word4__h3890 =
 	     (f_in$D_OUT[624:620] == 5'd12 ||
 	      f_in$D_OUT[393:392] == 2'd1 && f_in$D_OUT[619] &&
 	      f_in$D_OUT[618] &&
 	      f_in$D_OUT[624:620] == 5'd4) ?
 	       f_in$D_OUT[321:258] :
-	       x1_avValue_word4__h3583 ;
-  assign x__h4701 =
-	     f_in$D_OUT[463] ? f_in$D_OUT[255:192] : x1_avValue_pc__h3793 ;
-  assign x__h4967 =
-	     f_in$D_OUT[463] ? f_in$D_OUT[191:128] : x1_avValue_word1__h3797 ;
-  assign x__h5065 =
-	     f_in$D_OUT[463] ? f_in$D_OUT[127:64] : x1_avValue_word2__h3798 ;
-  assign x__h5274 =
-	     f_in$D_OUT[463] ? f_in$D_OUT[63:0] : x1_avValue_word3__h3799 ;
-  assign x__h5697 =
-	     f_in$D_OUT[463] ? f_in$D_OUT[457:394] : x1_avValue_word4__h3800 ;
+	       x1_avValue_word4__h3673 ;
+  assign x1_avValue_word4__h3932 =
+	     f_in$D_OUT[463] ? f_in$D_OUT[457:394] : x1_avValue_word4__h3890 ;
+  assign x__h4843 =
+	     f_in$D_OUT[463] ? f_in$D_OUT[255:192] : x1_avValue_pc__h3883 ;
+  assign x__h5134 =
+	     f_in$D_OUT[463] ? f_in$D_OUT[191:128] : x1_avValue_word1__h3887 ;
+  assign x__h5233 =
+	     f_in$D_OUT[463] ? f_in$D_OUT[127:64] : x1_avValue_word2__h3888 ;
+  assign x__h5443 =
+	     f_in$D_OUT[797] ? td_word3__h3951 : x1_avValue_word3__h3931 ;
+  assign x__h5875 =
+	     f_in$D_OUT[797] ? f_in$D_OUT[784:721] : x1_avValue_word4__h3932 ;
   always@(f_in$D_OUT)
   begin
     case (f_in$D_OUT[624:620])
-      5'd19, 5'd20: x1_avValue_word1__h3460 = f_in$D_OUT[191:128];
-      default: x1_avValue_word1__h3460 = f_in$D_OUT[612:549];
+      5'd19, 5'd20: x1_avValue_word1__h3550 = f_in$D_OUT[191:128];
+      default: x1_avValue_word1__h3550 = f_in$D_OUT[612:549];
     endcase
   end
-  always@(f_in$D_OUT or x1_avValue_pc__h3420)
+  always@(f_in$D_OUT or x1_avValue_pc__h3510)
   begin
     case (f_in$D_OUT[624:620])
-      5'd19, 5'd20: x1_avValue_pc__h3456 = f_in$D_OUT[720:657];
-      default: x1_avValue_pc__h3456 = x1_avValue_pc__h3420;
+      5'd19, 5'd20: x1_avValue_pc__h3546 = f_in$D_OUT[720:657];
+      default: x1_avValue_pc__h3546 = x1_avValue_pc__h3510;
     endcase
   end
-  always@(f_in$D_OUT or x1_avValue_rd__h3423 or td_rd__h3448)
+  always@(f_in$D_OUT or x1_avValue_rd__h3513 or td_rd__h3538)
   begin
     case (f_in$D_OUT[624:620])
-      5'd19, 5'd20: x1_avValue_rd__h3459 = td_rd__h3448;
-      default: x1_avValue_rd__h3459 = x1_avValue_rd__h3423;
+      5'd19, 5'd20: x1_avValue_rd__h3549 = td_rd__h3538;
+      default: x1_avValue_rd__h3549 = x1_avValue_rd__h3513;
     endcase
   end
   always@(f_in$D_OUT)
@@ -438,24 +448,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
       12'd3858,
       12'd3859,
       12'd3860:
-	  csr_addr__h5126 = f_in$D_OUT[475:464];
-      default: csr_addr__h5126 = 12'd2303;
-    endcase
-  end
-  always@(f_in$D_OUT)
-  begin
-    case (f_in$D_OUT[624:620])
-      5'd14, 5'd15, 5'd16, 5'd17, 5'd18:
-	  CASE_f_inD_OUT_BITS_624_TO_620_14_5_15_5_16_5_ETC__q1 = 5'd5;
-      5'd19, 5'd20:
-	  CASE_f_inD_OUT_BITS_624_TO_620_14_5_15_5_16_5_ETC__q1 = 5'd15;
-      default: CASE_f_inD_OUT_BITS_624_TO_620_14_5_15_5_16_5_ETC__q1 =
-		   (f_in$D_OUT[393:392] == 2'd1 &&
-		    (f_in$D_OUT[624:620] == 5'd2 ||
-		     f_in$D_OUT[624:620] == 5'd6 ||
-		     f_in$D_OUT[624:620] == 5'd7)) ?
-		     5'd13 :
-		     5'd5;
+	  csr_addr__h5294 = f_in$D_OUT[475:464];
+      default: csr_addr__h5294 = 12'd2303;
     endcase
   end
   always@(in_put)
@@ -505,9 +499,9 @@ module mkTrace_Data2_to_Trace_Data(CLK,
       12'd3858,
       12'd3859,
       12'd3860:
-	  CASE_in_put_BITS_475_TO_464_1_in_put_BITS_475__ETC__q2 =
+	  CASE_in_put_BITS_475_TO_464_1_in_put_BITS_475__ETC__q1 =
 	      in_put[475:464];
-      default: CASE_in_put_BITS_475_TO_464_1_in_put_BITS_475__ETC__q2 =
+      default: CASE_in_put_BITS_475_TO_464_1_in_put_BITS_475__ETC__q1 =
 		   12'd2303;
     endcase
   end
@@ -515,9 +509,9 @@ module mkTrace_Data2_to_Trace_Data(CLK,
   begin
     case (in_put[461:458])
       4'd0, 4'd1, 4'd3, 4'd4, 4'd5, 4'd7, 4'd8, 4'd9, 4'd11, 4'd14:
-	  CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q3 =
+	  CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q2 =
 	      in_put[461:458];
-      default: CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q3 = 4'd15;
+      default: CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q2 = 4'd15;
     endcase
   end
   always@(in_put)
@@ -536,18 +530,34 @@ module mkTrace_Data2_to_Trace_Data(CLK,
       4'd11,
       4'd12,
       4'd13:
-	  CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q4 =
+	  CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q3 =
 	      in_put[461:458];
-      default: CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q4 = 4'd15;
+      default: CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q3 = 4'd15;
     endcase
   end
   always@(in_put)
   begin
     case (in_put[393:392])
       2'd0, 2'd1:
-	  CASE_in_put_BITS_393_TO_392_0_in_put_BITS_393__ETC__q5 =
+	  CASE_in_put_BITS_393_TO_392_0_in_put_BITS_393__ETC__q4 =
 	      in_put[393:392];
-      default: CASE_in_put_BITS_393_TO_392_0_in_put_BITS_393__ETC__q5 = 2'd2;
+      default: CASE_in_put_BITS_393_TO_392_0_in_put_BITS_393__ETC__q4 = 2'd2;
+    endcase
+  end
+  always@(f_in$D_OUT)
+  begin
+    case (f_in$D_OUT[624:620])
+      5'd14, 5'd15, 5'd16, 5'd17, 5'd18:
+	  CASE_f_inD_OUT_BITS_624_TO_620_14_5_15_5_16_5_ETC__q5 = 5'd5;
+      5'd19, 5'd20:
+	  CASE_f_inD_OUT_BITS_624_TO_620_14_5_15_5_16_5_ETC__q5 = 5'd15;
+      default: CASE_f_inD_OUT_BITS_624_TO_620_14_5_15_5_16_5_ETC__q5 =
+		   (f_in$D_OUT[393:392] == 2'd1 &&
+		    (f_in$D_OUT[624:620] == 5'd2 ||
+		     f_in$D_OUT[624:620] == 5'd6 ||
+		     f_in$D_OUT[624:620] == 5'd7)) ?
+		     5'd13 :
+		     5'd5;
     endcase
   end
 
@@ -558,7 +568,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
   begin
     #0;
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -588,7 +599,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$display("    fav_td2_to_td: TBD: Unknown iType: Using mkTrace_OTHER for now");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -618,7 +630,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write("      ");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -648,7 +661,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write("Trace_Data2 { ", "serial_num: ");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -676,9 +690,196 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd0 &&
 	  f_in$D_OUT[624:620] != 5'd1 &&
 	  f_in$D_OUT[624:620] != 5'd21)
-	$write("'h%h", f_in$D_OUT[784:721]);
+	$write("'h%h", f_in$D_OUT[861:798]);
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
+	  !f_in$D_OUT[463] &&
+	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
+	  (f_in$D_OUT[393:392] != 2'd0 ||
+	   f_in$D_OUT[624:620] != 5'd8 && f_in$D_OUT[624:620] != 5'd9) &&
+	  f_in$D_OUT[624:620] != 5'd3 &&
+	  f_in$D_OUT[624:620] != 5'd11 &&
+	  f_in$D_OUT[624:620] != 5'd12 &&
+	  (f_in$D_OUT[393:392] != 2'd1 || !f_in$D_OUT[619] ||
+	   !f_in$D_OUT[618] ||
+	   f_in$D_OUT[624:620] != 5'd4) &&
+	  (f_in$D_OUT[393:392] != 2'd1 || f_in$D_OUT[624:620] != 5'd4) &&
+	  (f_in$D_OUT[393:392] != 2'd1 || f_in$D_OUT[624:620] != 5'd5) &&
+	  (f_in$D_OUT[393:392] == 2'd0 || f_in$D_OUT[393:392] == 2'd1 ||
+	   f_in$D_OUT[624:620] != 5'd13) &&
+	  f_in$D_OUT[624:620] != 5'd20 &&
+	  f_in$D_OUT[624:620] != 5'd19 &&
+	  f_in$D_OUT[624:620] != 5'd14 &&
+	  f_in$D_OUT[624:620] != 5'd15 &&
+	  f_in$D_OUT[624:620] != 5'd16 &&
+	  f_in$D_OUT[624:620] != 5'd17 &&
+	  f_in$D_OUT[624:620] != 5'd18 &&
+	  (f_in$D_OUT[393:392] != 2'd1 ||
+	   f_in$D_OUT[624:620] != 5'd2 && f_in$D_OUT[624:620] != 5'd6 &&
+	   f_in$D_OUT[624:620] != 5'd7) &&
+	  f_in$D_OUT[624:620] != 5'd0 &&
+	  f_in$D_OUT[624:620] != 5'd1 &&
+	  f_in$D_OUT[624:620] != 5'd21)
+	$write(", ", "maybe_csr_upd: ");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
+	  !f_in$D_OUT[463] &&
+	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
+	  (f_in$D_OUT[393:392] != 2'd0 ||
+	   f_in$D_OUT[624:620] != 5'd8 && f_in$D_OUT[624:620] != 5'd9) &&
+	  f_in$D_OUT[624:620] != 5'd3 &&
+	  f_in$D_OUT[624:620] != 5'd11 &&
+	  f_in$D_OUT[624:620] != 5'd12 &&
+	  (f_in$D_OUT[393:392] != 2'd1 || !f_in$D_OUT[619] ||
+	   !f_in$D_OUT[618] ||
+	   f_in$D_OUT[624:620] != 5'd4) &&
+	  (f_in$D_OUT[393:392] != 2'd1 || f_in$D_OUT[624:620] != 5'd4) &&
+	  (f_in$D_OUT[393:392] != 2'd1 || f_in$D_OUT[624:620] != 5'd5) &&
+	  (f_in$D_OUT[393:392] == 2'd0 || f_in$D_OUT[393:392] == 2'd1 ||
+	   f_in$D_OUT[624:620] != 5'd13) &&
+	  f_in$D_OUT[624:620] != 5'd20 &&
+	  f_in$D_OUT[624:620] != 5'd19 &&
+	  f_in$D_OUT[624:620] != 5'd14 &&
+	  f_in$D_OUT[624:620] != 5'd15 &&
+	  f_in$D_OUT[624:620] != 5'd16 &&
+	  f_in$D_OUT[624:620] != 5'd17 &&
+	  f_in$D_OUT[624:620] != 5'd18 &&
+	  (f_in$D_OUT[393:392] != 2'd1 ||
+	   f_in$D_OUT[624:620] != 5'd2 && f_in$D_OUT[624:620] != 5'd6 &&
+	   f_in$D_OUT[624:620] != 5'd7) &&
+	  f_in$D_OUT[624:620] != 5'd0 &&
+	  f_in$D_OUT[624:620] != 5'd1 &&
+	  f_in$D_OUT[624:620] != 5'd21)
+	$write("tagged Invalid ", "");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
+	  !f_in$D_OUT[463] &&
+	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
+	  (f_in$D_OUT[393:392] != 2'd0 ||
+	   f_in$D_OUT[624:620] != 5'd8 && f_in$D_OUT[624:620] != 5'd9) &&
+	  f_in$D_OUT[624:620] != 5'd3 &&
+	  f_in$D_OUT[624:620] != 5'd11 &&
+	  f_in$D_OUT[624:620] != 5'd12 &&
+	  (f_in$D_OUT[393:392] != 2'd1 || !f_in$D_OUT[619] ||
+	   !f_in$D_OUT[618] ||
+	   f_in$D_OUT[624:620] != 5'd4) &&
+	  (f_in$D_OUT[393:392] != 2'd1 || f_in$D_OUT[624:620] != 5'd4) &&
+	  (f_in$D_OUT[393:392] != 2'd1 || f_in$D_OUT[624:620] != 5'd5) &&
+	  (f_in$D_OUT[393:392] == 2'd0 || f_in$D_OUT[393:392] == 2'd1 ||
+	   f_in$D_OUT[624:620] != 5'd13) &&
+	  f_in$D_OUT[624:620] != 5'd20 &&
+	  f_in$D_OUT[624:620] != 5'd19 &&
+	  f_in$D_OUT[624:620] != 5'd14 &&
+	  f_in$D_OUT[624:620] != 5'd15 &&
+	  f_in$D_OUT[624:620] != 5'd16 &&
+	  f_in$D_OUT[624:620] != 5'd17 &&
+	  f_in$D_OUT[624:620] != 5'd18 &&
+	  (f_in$D_OUT[393:392] != 2'd1 ||
+	   f_in$D_OUT[624:620] != 5'd2 && f_in$D_OUT[624:620] != 5'd6 &&
+	   f_in$D_OUT[624:620] != 5'd7) &&
+	  f_in$D_OUT[624:620] != 5'd0 &&
+	  f_in$D_OUT[624:620] != 5'd1 &&
+	  f_in$D_OUT[624:620] != 5'd21)
+	$write("");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
+	  !f_in$D_OUT[463] &&
+	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
+	  (f_in$D_OUT[393:392] != 2'd0 ||
+	   f_in$D_OUT[624:620] != 5'd8 && f_in$D_OUT[624:620] != 5'd9) &&
+	  f_in$D_OUT[624:620] != 5'd3 &&
+	  f_in$D_OUT[624:620] != 5'd11 &&
+	  f_in$D_OUT[624:620] != 5'd12 &&
+	  (f_in$D_OUT[393:392] != 2'd1 || !f_in$D_OUT[619] ||
+	   !f_in$D_OUT[618] ||
+	   f_in$D_OUT[624:620] != 5'd4) &&
+	  (f_in$D_OUT[393:392] != 2'd1 || f_in$D_OUT[624:620] != 5'd4) &&
+	  (f_in$D_OUT[393:392] != 2'd1 || f_in$D_OUT[624:620] != 5'd5) &&
+	  (f_in$D_OUT[393:392] == 2'd0 || f_in$D_OUT[393:392] == 2'd1 ||
+	   f_in$D_OUT[624:620] != 5'd13) &&
+	  f_in$D_OUT[624:620] != 5'd20 &&
+	  f_in$D_OUT[624:620] != 5'd19 &&
+	  f_in$D_OUT[624:620] != 5'd14 &&
+	  f_in$D_OUT[624:620] != 5'd15 &&
+	  f_in$D_OUT[624:620] != 5'd16 &&
+	  f_in$D_OUT[624:620] != 5'd17 &&
+	  f_in$D_OUT[624:620] != 5'd18 &&
+	  (f_in$D_OUT[393:392] != 2'd1 ||
+	   f_in$D_OUT[624:620] != 5'd2 && f_in$D_OUT[624:620] != 5'd6 &&
+	   f_in$D_OUT[624:620] != 5'd7) &&
+	  f_in$D_OUT[624:620] != 5'd0 &&
+	  f_in$D_OUT[624:620] != 5'd1 &&
+	  f_in$D_OUT[624:620] != 5'd21)
+	$write("");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
+	  !f_in$D_OUT[463] &&
+	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
+	  (f_in$D_OUT[393:392] != 2'd0 ||
+	   f_in$D_OUT[624:620] != 5'd8 && f_in$D_OUT[624:620] != 5'd9) &&
+	  f_in$D_OUT[624:620] != 5'd3 &&
+	  f_in$D_OUT[624:620] != 5'd11 &&
+	  f_in$D_OUT[624:620] != 5'd12 &&
+	  (f_in$D_OUT[393:392] != 2'd1 || !f_in$D_OUT[619] ||
+	   !f_in$D_OUT[618] ||
+	   f_in$D_OUT[624:620] != 5'd4) &&
+	  (f_in$D_OUT[393:392] != 2'd1 || f_in$D_OUT[624:620] != 5'd4) &&
+	  (f_in$D_OUT[393:392] != 2'd1 || f_in$D_OUT[624:620] != 5'd5) &&
+	  (f_in$D_OUT[393:392] == 2'd0 || f_in$D_OUT[393:392] == 2'd1 ||
+	   f_in$D_OUT[624:620] != 5'd13) &&
+	  f_in$D_OUT[624:620] != 5'd20 &&
+	  f_in$D_OUT[624:620] != 5'd19 &&
+	  f_in$D_OUT[624:620] != 5'd14 &&
+	  f_in$D_OUT[624:620] != 5'd15 &&
+	  f_in$D_OUT[624:620] != 5'd16 &&
+	  f_in$D_OUT[624:620] != 5'd17 &&
+	  f_in$D_OUT[624:620] != 5'd18 &&
+	  (f_in$D_OUT[393:392] != 2'd1 ||
+	   f_in$D_OUT[624:620] != 5'd2 && f_in$D_OUT[624:620] != 5'd6 &&
+	   f_in$D_OUT[624:620] != 5'd7) &&
+	  f_in$D_OUT[624:620] != 5'd0 &&
+	  f_in$D_OUT[624:620] != 5'd1 &&
+	  f_in$D_OUT[624:620] != 5'd21)
+	$write("");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
+	  !f_in$D_OUT[463] &&
+	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
+	  (f_in$D_OUT[393:392] != 2'd0 ||
+	   f_in$D_OUT[624:620] != 5'd8 && f_in$D_OUT[624:620] != 5'd9) &&
+	  f_in$D_OUT[624:620] != 5'd3 &&
+	  f_in$D_OUT[624:620] != 5'd11 &&
+	  f_in$D_OUT[624:620] != 5'd12 &&
+	  (f_in$D_OUT[393:392] != 2'd1 || !f_in$D_OUT[619] ||
+	   !f_in$D_OUT[618] ||
+	   f_in$D_OUT[624:620] != 5'd4) &&
+	  (f_in$D_OUT[393:392] != 2'd1 || f_in$D_OUT[624:620] != 5'd4) &&
+	  (f_in$D_OUT[393:392] != 2'd1 || f_in$D_OUT[624:620] != 5'd5) &&
+	  (f_in$D_OUT[393:392] == 2'd0 || f_in$D_OUT[393:392] == 2'd1 ||
+	   f_in$D_OUT[624:620] != 5'd13) &&
+	  f_in$D_OUT[624:620] != 5'd20 &&
+	  f_in$D_OUT[624:620] != 5'd19 &&
+	  f_in$D_OUT[624:620] != 5'd14 &&
+	  f_in$D_OUT[624:620] != 5'd15 &&
+	  f_in$D_OUT[624:620] != 5'd16 &&
+	  f_in$D_OUT[624:620] != 5'd17 &&
+	  f_in$D_OUT[624:620] != 5'd18 &&
+	  (f_in$D_OUT[393:392] != 2'd1 ||
+	   f_in$D_OUT[624:620] != 5'd2 && f_in$D_OUT[624:620] != 5'd6 &&
+	   f_in$D_OUT[624:620] != 5'd7) &&
+	  f_in$D_OUT[624:620] != 5'd0 &&
+	  f_in$D_OUT[624:620] != 5'd1 &&
+	  f_in$D_OUT[624:620] != 5'd21)
+	$write("");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -708,7 +909,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write(", ", "pc: ");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -738,7 +940,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write("'h%h", f_in$D_OUT[720:657]);
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -768,7 +971,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write(", ", "orig_inst: ");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -798,7 +1002,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write("'h%h", f_in$D_OUT[656:625]);
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -828,13 +1033,15 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write(", ", "iType: ");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  f_in$D_OUT[393:392] != 2'd1 &&
 	  f_in$D_OUT[624:620] == 5'd2)
 	$write("Amo");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd1 || !f_in$D_OUT[619] ||
 	   !f_in$D_OUT[618]) &&
@@ -842,49 +1049,57 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] == 5'd4)
 	$write("Ld");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  f_in$D_OUT[393:392] != 2'd1 &&
 	  f_in$D_OUT[624:620] == 5'd5)
 	$write("St");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  f_in$D_OUT[393:392] != 2'd1 &&
 	  f_in$D_OUT[624:620] == 5'd6)
 	$write("Lr");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  f_in$D_OUT[393:392] != 2'd1 &&
 	  f_in$D_OUT[624:620] == 5'd7)
 	$write("Sc");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  f_in$D_OUT[393:392] != 2'd0 &&
 	  f_in$D_OUT[624:620] == 5'd8)
 	$write("J");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  f_in$D_OUT[393:392] != 2'd0 &&
 	  f_in$D_OUT[624:620] == 5'd9)
 	$write("Jr");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  f_in$D_OUT[393:392] != 2'd0 &&
 	  f_in$D_OUT[624:620] == 5'd10)
 	$write("Br");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] == 2'd0 || f_in$D_OUT[393:392] == 2'd1) &&
 	  f_in$D_OUT[624:620] == 5'd13)
 	$write("Csr");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  f_in$D_OUT[624:620] != 5'd3 &&
 	  f_in$D_OUT[624:620] != 5'd11 &&
@@ -910,7 +1125,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd13)
 	$write("Interrupt");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -940,7 +1156,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write(", ", "dst: ");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -970,7 +1187,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[619])
 	$write("tagged Valid ");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -998,7 +1216,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  !f_in$D_OUT[619])
 	$write("tagged Invalid ", "");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -1027,7 +1246,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[618])
 	$write("tagged Fpu ", "'h%h", f_in$D_OUT[617:613]);
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -1056,7 +1276,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  !f_in$D_OUT[618])
 	$write("tagged Gpr ", "'h%h", f_in$D_OUT[617:613]);
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -1084,7 +1305,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  !f_in$D_OUT[619])
 	$write("");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -1114,7 +1336,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write(", ", "dst_data: ");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -1144,7 +1367,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write("'h%h", f_in$D_OUT[612:549]);
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -1174,7 +1398,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write(", ", "store_data: ");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -1204,7 +1429,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write("'h%h", f_in$D_OUT[548:485]);
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -1234,7 +1460,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write(", ", "store_data_BE: ");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -1264,7 +1491,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write("<V ");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -1295,7 +1523,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[477])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -1326,7 +1555,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  !f_in$D_OUT[477])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -1356,7 +1586,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write(" ");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -1387,7 +1618,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[478])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -1418,7 +1650,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  !f_in$D_OUT[478])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -1448,7 +1681,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write(" ");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -1479,7 +1713,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[479])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -1510,7 +1745,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  !f_in$D_OUT[479])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -1540,7 +1776,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write(" ");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -1571,7 +1808,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[480])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -1602,7 +1840,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  !f_in$D_OUT[480])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -1632,7 +1871,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write(" ");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -1663,7 +1903,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[481])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -1694,7 +1935,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  !f_in$D_OUT[481])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -1724,7 +1966,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write(" ");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -1755,7 +1998,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[482])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -1786,7 +2030,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  !f_in$D_OUT[482])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -1816,7 +2061,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write(" ");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -1847,7 +2093,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[483])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -1878,7 +2125,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  !f_in$D_OUT[483])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -1908,7 +2156,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write(" ");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -1939,7 +2188,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[484])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -1970,7 +2220,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  !f_in$D_OUT[484])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -2000,7 +2251,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write(" ");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -2030,7 +2282,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write("");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -2060,7 +2313,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write(" >");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -2090,7 +2344,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write(", ", "csr: ");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -2121,7 +2376,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[476])
 	$write("tagged Valid ");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -2152,7 +2408,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  !f_in$D_OUT[476])
 	$write("tagged Invalid ", "");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -2184,7 +2441,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd1)
 	$write("CSRfflags");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -2216,7 +2474,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd2)
 	$write("CSRfrm");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -2248,7 +2507,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd3)
 	$write("CSRfcsr");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -2280,7 +2540,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd3072)
 	$write("CSRcycle");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -2312,7 +2573,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd3073)
 	$write("CSRtime");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -2344,7 +2606,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd3074)
 	$write("CSRinstret");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -2376,7 +2639,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd2048)
 	$write("CSRterminate");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -2408,7 +2672,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd2049)
 	$write("CSRstats");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -2440,7 +2705,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd256)
 	$write("CSRsstatus");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -2472,7 +2738,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd260)
 	$write("CSRsie");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -2504,7 +2771,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd261)
 	$write("CSRstvec");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -2536,7 +2804,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd262)
 	$write("CSRscounteren");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -2568,7 +2837,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd320)
 	$write("CSRsscratch");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -2600,7 +2870,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd321)
 	$write("CSRsepc");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -2632,7 +2903,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd322)
 	$write("CSRscause");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -2664,7 +2936,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd323)
 	$write("CSRstval");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -2696,7 +2969,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd324)
 	$write("CSRsip");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -2728,7 +3002,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd384)
 	$write("CSRsatp");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -2760,7 +3035,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd768)
 	$write("CSRmstatus");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -2792,7 +3068,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd769)
 	$write("CSRmisa");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -2824,7 +3101,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd770)
 	$write("CSRmedeleg");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -2856,7 +3134,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd771)
 	$write("CSRmideleg");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -2888,7 +3167,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd772)
 	$write("CSRmie");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -2920,7 +3200,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd773)
 	$write("CSRmtvec");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -2952,7 +3233,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd774)
 	$write("CSRmcounteren");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -2984,7 +3266,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd832)
 	$write("CSRmscratch");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -3016,7 +3299,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd833)
 	$write("CSRmepc");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -3048,7 +3332,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd834)
 	$write("CSRmcause");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -3080,7 +3365,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd835)
 	$write("CSRmtval");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -3112,7 +3398,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd836)
 	$write("CSRmip");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -3144,7 +3431,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd2816)
 	$write("CSRmcycle");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -3176,7 +3464,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd2818)
 	$write("CSRminstret");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -3208,7 +3497,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd3857)
 	$write("CSRmvendorid");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -3240,7 +3530,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd3858)
 	$write("CSRmarchid");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -3272,7 +3563,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd3859)
 	$write("CSRmimpid");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -3304,7 +3596,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd3860)
 	$write("CSRmhartid");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -3336,7 +3629,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd1952)
 	$write("CSRtselect");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -3368,7 +3662,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd1953)
 	$write("CSRtdata1");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -3400,7 +3695,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd1954)
 	$write("CSRtdata2");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -3432,7 +3728,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd1955)
 	$write("CSRtdata3");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -3464,7 +3761,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd1968)
 	$write("CSRdcsr");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -3496,7 +3794,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd1969)
 	$write("CSRdpc");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -3528,7 +3827,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd1970)
 	$write("CSRdscratch0");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -3560,7 +3860,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] == 12'd1971)
 	$write("CSRdscratch1");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -3635,7 +3936,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[475:464] != 12'd1971)
 	$write("CSRnone");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -3666,7 +3968,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  !f_in$D_OUT[476])
 	$write("");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -3696,7 +3999,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write(", ", "trap: ");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -3726,7 +4030,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write("tagged Invalid ", "");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -3756,7 +4061,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write("");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -3786,7 +4092,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write("");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -3816,7 +4123,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write("");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -3846,7 +4154,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write(", ", "tval: ");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -3876,7 +4185,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write("'h%h", f_in$D_OUT[457:394]);
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -3906,7 +4216,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write(", ", "ppc_vaddr_csrData: ");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  f_in$D_OUT[624:620] != 5'd10 &&
 	  f_in$D_OUT[624:620] != 5'd8 &&
@@ -3927,7 +4238,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[393:392] == 2'd0)
 	$write("tagged PPC ", "'h%h", f_in$D_OUT[391:328]);
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  f_in$D_OUT[624:620] != 5'd3 &&
 	  f_in$D_OUT[624:620] != 5'd11 &&
@@ -3952,7 +4264,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[393:392] == 2'd1)
 	$write("tagged VAddr ", "'h%h", f_in$D_OUT[391:328]);
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  f_in$D_OUT[624:620] != 5'd3 &&
 	  f_in$D_OUT[624:620] != 5'd11 &&
@@ -3972,7 +4285,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[393:392] != 2'd1)
 	$write("tagged CSRData ", "'h%h", f_in$D_OUT[391:328]);
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -4002,7 +4316,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write(", ", "fflags: ");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -4032,7 +4347,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write("'h%h", f_in$D_OUT[327:323]);
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -4062,7 +4378,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write(", ", "will_dirty_fpu_state: ");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -4093,7 +4410,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[322])
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -4124,7 +4442,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  !f_in$D_OUT[322])
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -4154,7 +4473,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write(", ", "mstatus: ");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -4184,7 +4504,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write("'h%h", f_in$D_OUT[321:258]);
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -4214,7 +4535,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write(", ", "prv: ");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -4244,7 +4566,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write("'h%h", f_in$D_OUT[257:256]);
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -4274,7 +4597,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write(", ", "tvec: ");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -4304,7 +4628,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write("'h%h", f_in$D_OUT[255:192]);
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -4334,7 +4659,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write(", ", "status: ");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -4364,7 +4690,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write("'h%h", f_in$D_OUT[191:128]);
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -4394,7 +4721,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write(", ", "cause: ");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -4424,7 +4752,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write("'h%h", f_in$D_OUT[127:64]);
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -4454,7 +4783,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write(", ", "epc: ");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
@@ -4484,7 +4814,8 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	  f_in$D_OUT[624:620] != 5'd21)
 	$write("'h%h", f_in$D_OUT[63:0], " }");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[784:721] != 64'd0 &&
+      if (WILL_FIRE_RL_rl_td2_to_td && f_in$D_OUT[861:798] != 64'd0 &&
+	  !f_in$D_OUT[797] &&
 	  !f_in$D_OUT[463] &&
 	  (f_in$D_OUT[393:392] != 2'd0 || f_in$D_OUT[624:620] != 5'd10) &&
 	  (f_in$D_OUT[393:392] != 2'd0 ||
