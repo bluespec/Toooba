@@ -254,7 +254,8 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
 	   Bool read_only  = (csr_addr [11:10] == 2'b11);
            Bool write_deny = (writes_csr && read_only);
 	   Bool priv_deny  = (csrf.decodeInfo.prv < csr_addr [9:8]);
-	   csr_access_trap = (write_deny || priv_deny);
+	   Bool unimplemented = (csr_addr == 12'h8ff);    // Added by Bluespec
+	   csr_access_trap = (write_deny || priv_deny || unimplemented);
 	end
 
         // Check WFI trap (using a time-out of 0)

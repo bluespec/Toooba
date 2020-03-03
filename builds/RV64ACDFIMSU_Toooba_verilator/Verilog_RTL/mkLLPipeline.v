@@ -1376,12 +1376,12 @@ module mkLLPipeline(CLK,
 
   // remaining internal signals
   reg [975 : 0] IF_send_r_BITS_583_TO_582_645_EQ_0_646_THEN_m__ETC___d3902;
-  reg [69 : 0] CASE_m_pipe_enq2Mat_rl_BITS_1563_TO_1562_0_0_C_ETC__q4,
-	       CASE_send_r_BITS_583_TO_582_0_0_CONCAT_send_r__ETC__q21;
+  reg [69 : 0] CASE_m_pipe_enq2Mat_rl_BITS_1563_TO_1562_0_0_C_ETC__q5,
+	       CASE_send_r_BITS_583_TO_582_0_0_CONCAT_send_r__ETC__q3;
   reg [47 : 0] y_avValue_info_tag__h196519;
   reg [3 : 0] CASE_send_r_BITS_583_TO_582_0_send_r_BITS_583__ETC__q2,
 	      SEL_ARR_IF_IF_m_pipe_enq2Mat_lat_0_whas__77_TH_ETC___d3536;
-  reg [1 : 0] CASE_m_pipe_enq2Mat_rl_BITS_3_TO_2_0_m_pipe_en_ETC__q3,
+  reg [1 : 0] CASE_m_pipe_enq2Mat_rl_BITS_3_TO_2_0_m_pipe_en_ETC__q4,
 	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q10,
 	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q11,
 	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q12,
@@ -1393,7 +1393,7 @@ module mkLLPipeline(CLK,
 	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q18,
 	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q19,
 	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q20,
-	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q5,
+	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q21,
 	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q6,
 	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q7,
 	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q8,
@@ -3984,11 +3984,11 @@ module mkLLPipeline(CLK,
   // inlined wires
   assign m_pipe_enq2Mat_lat_0$wget =
 	     { 1'd1,
-	       CASE_m_pipe_enq2Mat_rl_BITS_1563_TO_1562_0_0_C_ETC__q4,
+	       CASE_m_pipe_enq2Mat_rl_BITS_1563_TO_1562_0_0_C_ETC__q5,
 	       IF_IF_m_pipe_bypass_whas__574_THEN_m_pipe_bypa_ETC___d2113 } ;
   assign m_pipe_enq2Mat_lat_2$wget =
 	     { 1'd1,
-	       CASE_send_r_BITS_583_TO_582_0_0_CONCAT_send_r__ETC__q21,
+	       CASE_send_r_BITS_583_TO_582_0_0_CONCAT_send_r__ETC__q3,
 	       IF_send_r_BITS_583_TO_582_645_EQ_0_646_THEN_m__ETC___d3923 } ;
   assign m_pipe_mat2Out_lat_0$wget =
 	     { deqWrite_swapRq[4],
@@ -5957,7 +5957,7 @@ module mkLLPipeline(CLK,
 	       IF_m_pipe_bypass_whas__574_THEN_m_pipe_bypass__ETC___d1611 ||
 	       m_pipe_enq2Mat_rl[517],
 	       m_pipe_enq2Mat_rl[516:4],
-	       CASE_m_pipe_enq2Mat_rl_BITS_3_TO_2_0_m_pipe_en_ETC__q3,
+	       CASE_m_pipe_enq2Mat_rl_BITS_3_TO_2_0_m_pipe_en_ETC__q4,
 	       m_pipe_enq2Mat_rl[1:0] } ;
   assign IF_IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m__ETC___d2634 =
 	     (IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d2587 ==
@@ -10177,25 +10177,38 @@ module mkLLPipeline(CLK,
 		   { 2'd2, send_r[517:516] };
     endcase
   end
+  always@(send_r)
+  begin
+    case (send_r[583:582])
+      2'd0:
+	  CASE_send_r_BITS_583_TO_582_0_0_CONCAT_send_r__ETC__q3 =
+	      { 2'd0, send_r[67:0] };
+      2'd1:
+	  CASE_send_r_BITS_583_TO_582_0_0_CONCAT_send_r__ETC__q3 =
+	      { send_r[583:582], 3'h2, send_r[579:516], send_r[0] };
+      default: CASE_send_r_BITS_583_TO_582_0_0_CONCAT_send_r__ETC__q3 =
+		   { 2'd2, send_r[581:518], send_r[3:0] };
+    endcase
+  end
   always@(m_pipe_enq2Mat_rl)
   begin
     case (m_pipe_enq2Mat_rl[3:2])
       2'd0, 2'd1:
-	  CASE_m_pipe_enq2Mat_rl_BITS_3_TO_2_0_m_pipe_en_ETC__q3 =
+	  CASE_m_pipe_enq2Mat_rl_BITS_3_TO_2_0_m_pipe_en_ETC__q4 =
 	      m_pipe_enq2Mat_rl[3:2];
-      default: CASE_m_pipe_enq2Mat_rl_BITS_3_TO_2_0_m_pipe_en_ETC__q3 = 2'd2;
+      default: CASE_m_pipe_enq2Mat_rl_BITS_3_TO_2_0_m_pipe_en_ETC__q4 = 2'd2;
     endcase
   end
   always@(m_pipe_enq2Mat_rl)
   begin
     case (m_pipe_enq2Mat_rl[1563:1562])
       2'd0:
-	  CASE_m_pipe_enq2Mat_rl_BITS_1563_TO_1562_0_0_C_ETC__q4 =
+	  CASE_m_pipe_enq2Mat_rl_BITS_1563_TO_1562_0_0_C_ETC__q5 =
 	      { 2'd0, m_pipe_enq2Mat_rl[1561:1494] };
       2'd1:
-	  CASE_m_pipe_enq2Mat_rl_BITS_1563_TO_1562_0_0_C_ETC__q4 =
+	  CASE_m_pipe_enq2Mat_rl_BITS_1563_TO_1562_0_0_C_ETC__q5 =
 	      m_pipe_enq2Mat_rl[1563:1494];
-      default: CASE_m_pipe_enq2Mat_rl_BITS_1563_TO_1562_0_0_C_ETC__q4 =
+      default: CASE_m_pipe_enq2Mat_rl_BITS_1563_TO_1562_0_0_C_ETC__q5 =
 		   { 2'd2, m_pipe_enq2Mat_rl[1561:1494] };
     endcase
   end
@@ -10578,10 +10591,10 @@ module mkLLPipeline(CLK,
   begin
     case (x__h187917)
       1'd0:
-	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q5 =
+	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q6 =
 	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3189;
       1'd1:
-	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q5 =
+	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q6 =
 	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3195;
     endcase
   end
@@ -10591,10 +10604,10 @@ module mkLLPipeline(CLK,
   begin
     case (x__h187917)
       1'd0:
-	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q6 =
+	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q7 =
 	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3203;
       1'd1:
-	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q6 =
+	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q7 =
 	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3209;
     endcase
   end
@@ -10604,10 +10617,10 @@ module mkLLPipeline(CLK,
   begin
     case (x__h187917)
       1'd0:
-	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q7 =
+	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q8 =
 	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3217;
       1'd1:
-	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q7 =
+	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q8 =
 	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3223;
     endcase
   end
@@ -10617,10 +10630,10 @@ module mkLLPipeline(CLK,
   begin
     case (x__h187917)
       1'd0:
-	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q8 =
+	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q9 =
 	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3231;
       1'd1:
-	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q8 =
+	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q9 =
 	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3237;
     endcase
   end
@@ -10630,10 +10643,10 @@ module mkLLPipeline(CLK,
   begin
     case (x__h187917)
       1'd0:
-	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q9 =
+	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q10 =
 	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3245;
       1'd1:
-	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q9 =
+	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q10 =
 	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3251;
     endcase
   end
@@ -10643,10 +10656,10 @@ module mkLLPipeline(CLK,
   begin
     case (x__h187917)
       1'd0:
-	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q10 =
+	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q11 =
 	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3259;
       1'd1:
-	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q10 =
+	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q11 =
 	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3265;
     endcase
   end
@@ -10656,10 +10669,10 @@ module mkLLPipeline(CLK,
   begin
     case (x__h187917)
       1'd0:
-	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q11 =
+	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q12 =
 	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3273;
       1'd1:
-	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q11 =
+	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q12 =
 	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3279;
     endcase
   end
@@ -10669,10 +10682,10 @@ module mkLLPipeline(CLK,
   begin
     case (x__h187917)
       1'd0:
-	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q12 =
+	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q13 =
 	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3287;
       1'd1:
-	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q12 =
+	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q13 =
 	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3293;
     endcase
   end
@@ -10682,10 +10695,10 @@ module mkLLPipeline(CLK,
   begin
     case (x__h187917)
       1'd0:
-	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q13 =
+	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q14 =
 	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3301;
       1'd1:
-	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q13 =
+	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q14 =
 	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3307;
     endcase
   end
@@ -10695,10 +10708,10 @@ module mkLLPipeline(CLK,
   begin
     case (x__h187917)
       1'd0:
-	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q14 =
+	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q15 =
 	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3315;
       1'd1:
-	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q14 =
+	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q15 =
 	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3321;
     endcase
   end
@@ -10708,10 +10721,10 @@ module mkLLPipeline(CLK,
   begin
     case (x__h187917)
       1'd0:
-	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q15 =
+	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q16 =
 	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3329;
       1'd1:
-	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q15 =
+	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q16 =
 	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3335;
     endcase
   end
@@ -10721,10 +10734,10 @@ module mkLLPipeline(CLK,
   begin
     case (x__h187917)
       1'd0:
-	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q16 =
+	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q17 =
 	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3343;
       1'd1:
-	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q16 =
+	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q17 =
 	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3349;
     endcase
   end
@@ -10734,10 +10747,10 @@ module mkLLPipeline(CLK,
   begin
     case (x__h187917)
       1'd0:
-	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q17 =
+	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q18 =
 	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3357;
       1'd1:
-	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q17 =
+	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q18 =
 	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3363;
     endcase
   end
@@ -10747,10 +10760,10 @@ module mkLLPipeline(CLK,
   begin
     case (x__h187917)
       1'd0:
-	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q18 =
+	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q19 =
 	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3371;
       1'd1:
-	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q18 =
+	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q19 =
 	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3377;
     endcase
   end
@@ -10760,10 +10773,10 @@ module mkLLPipeline(CLK,
   begin
     case (x__h187917)
       1'd0:
-	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q19 =
+	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q20 =
 	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3385;
       1'd1:
-	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q19 =
+	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q20 =
 	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3391;
     endcase
   end
@@ -10773,15 +10786,14 @@ module mkLLPipeline(CLK,
   begin
     case (x__h187917)
       1'd0:
-	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q20 =
+	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q21 =
 	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3399;
       1'd1:
-	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q20 =
+	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q21 =
 	      IF_m_pipe_enq2Mat_dummy2_1_read__576_AND_m_pip_ETC___d3405;
     endcase
   end
   always@(way__h182888 or
-	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q5 or
 	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q6 or
 	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q7 or
 	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q8 or
@@ -10796,57 +10808,58 @@ module mkLLPipeline(CLK,
 	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q17 or
 	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q18 or
 	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q19 or
-	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q20)
+	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q20 or
+	  CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q21)
   begin
     case (way__h182888)
       4'd0:
 	  SEL_ARR_SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_rea_ETC___d3409 =
-	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q5;
+	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q6;
       4'd1:
 	  SEL_ARR_SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_rea_ETC___d3409 =
-	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q6;
+	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q7;
       4'd2:
 	  SEL_ARR_SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_rea_ETC___d3409 =
-	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q7;
+	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q8;
       4'd3:
 	  SEL_ARR_SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_rea_ETC___d3409 =
-	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q8;
+	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q9;
       4'd4:
 	  SEL_ARR_SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_rea_ETC___d3409 =
-	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q9;
+	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q10;
       4'd5:
 	  SEL_ARR_SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_rea_ETC___d3409 =
-	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q10;
+	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q11;
       4'd6:
 	  SEL_ARR_SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_rea_ETC___d3409 =
-	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q11;
+	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q12;
       4'd7:
 	  SEL_ARR_SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_rea_ETC___d3409 =
-	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q12;
+	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q13;
       4'd8:
 	  SEL_ARR_SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_rea_ETC___d3409 =
-	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q13;
+	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q14;
       4'd9:
 	  SEL_ARR_SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_rea_ETC___d3409 =
-	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q14;
+	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q15;
       4'd10:
 	  SEL_ARR_SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_rea_ETC___d3409 =
-	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q15;
+	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q16;
       4'd11:
 	  SEL_ARR_SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_rea_ETC___d3409 =
-	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q16;
+	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q17;
       4'd12:
 	  SEL_ARR_SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_rea_ETC___d3409 =
-	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q17;
+	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q18;
       4'd13:
 	  SEL_ARR_SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_rea_ETC___d3409 =
-	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q18;
+	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q19;
       4'd14:
 	  SEL_ARR_SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_rea_ETC___d3409 =
-	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q19;
+	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q20;
       4'd15:
 	  SEL_ARR_SEL_ARR_IF_m_pipe_enq2Mat_dummy2_1_rea_ETC___d3409 =
-	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q20;
+	      CASE_x87917_0_IF_m_pipe_enq2Mat_dummy2_1_read__ETC__q21;
     endcase
   end
   always@(way__h182888 or
@@ -11192,19 +11205,6 @@ module mkLLPipeline(CLK,
       4'd15:
 	  SEL_ARR_IF_IF_m_pipe_enq2Mat_lat_0_whas__77_TH_ETC___d3618 =
 	      IF_IF_m_pipe_enq2Mat_lat_0_whas__77_THEN_NOT_m_ETC___d3616;
-    endcase
-  end
-  always@(send_r)
-  begin
-    case (send_r[583:582])
-      2'd0:
-	  CASE_send_r_BITS_583_TO_582_0_0_CONCAT_send_r__ETC__q21 =
-	      { 2'd0, send_r[67:0] };
-      2'd1:
-	  CASE_send_r_BITS_583_TO_582_0_0_CONCAT_send_r__ETC__q21 =
-	      { send_r[583:582], 3'h2, send_r[579:516], send_r[0] };
-      default: CASE_send_r_BITS_583_TO_582_0_0_CONCAT_send_r__ETC__q21 =
-		   { 2'd2, send_r[581:518], send_r[3:0] };
     endcase
   end
 

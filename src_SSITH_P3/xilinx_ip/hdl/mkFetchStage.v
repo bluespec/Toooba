@@ -22230,6 +22230,201 @@ module mkFetchStage(CLK,
 	      out_fifo_internalFifos_1$D_OUT[182:178];
     endcase
   end
+  always@(f32d_deqP or
+	  IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 or
+	  IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386)
+  begin
+    case (f32d_deqP)
+      1'd0:
+	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q41 =
+	      IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 ==
+	      4'd11;
+      1'd1:
+	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q41 =
+	      IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386 ==
+	      4'd11;
+    endcase
+  end
+  always@(f32d_deqP or
+	  IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 or
+	  IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386)
+  begin
+    case (f32d_deqP)
+      1'd0:
+	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q42 =
+	      IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 ==
+	      4'd12;
+      1'd1:
+	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q42 =
+	      IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386 ==
+	      4'd12;
+    endcase
+  end
+  always@(f32d_deqP or
+	  IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 or
+	  IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386)
+  begin
+    case (f32d_deqP)
+      1'd0:
+	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q43 =
+	      IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 ==
+	      4'd10;
+      1'd1:
+	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q43 =
+	      IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386 ==
+	      4'd10;
+    endcase
+  end
+  always@(f32d_deqP or
+	  IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 or
+	  IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386)
+  begin
+    case (f32d_deqP)
+      1'd0:
+	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q44 =
+	      IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 ==
+	      4'd9;
+      1'd1:
+	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q44 =
+	      IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386 ==
+	      4'd9;
+    endcase
+  end
+  always@(f32d_deqP or
+	  IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 or
+	  IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386)
+  begin
+    case (f32d_deqP)
+      1'd0:
+	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q45 =
+	      IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 ==
+	      4'd8;
+      1'd1:
+	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q45 =
+	      IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386 ==
+	      4'd8;
+    endcase
+  end
+  always@(f32d_deqP or
+	  IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 or
+	  IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386)
+  begin
+    case (f32d_deqP)
+      1'd0:
+	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q46 =
+	      IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 ==
+	      4'd7;
+      1'd1:
+	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q46 =
+	      IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386 ==
+	      4'd7;
+    endcase
+  end
+  always@(f32d_deqP or
+	  IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 or
+	  IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386)
+  begin
+    case (f32d_deqP)
+      1'd0:
+	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q47 =
+	      IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 ==
+	      4'd6;
+      1'd1:
+	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q47 =
+	      IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386 ==
+	      4'd6;
+    endcase
+  end
+  always@(f32d_deqP or
+	  IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 or
+	  IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386)
+  begin
+    case (f32d_deqP)
+      1'd0:
+	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q48 =
+	      IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 ==
+	      4'd5;
+      1'd1:
+	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q48 =
+	      IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386 ==
+	      4'd5;
+    endcase
+  end
+  always@(f32d_deqP or
+	  IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 or
+	  IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386)
+  begin
+    case (f32d_deqP)
+      1'd0:
+	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q49 =
+	      IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 ==
+	      4'd4;
+      1'd1:
+	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q49 =
+	      IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386 ==
+	      4'd4;
+    endcase
+  end
+  always@(f32d_deqP or
+	  IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 or
+	  IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386)
+  begin
+    case (f32d_deqP)
+      1'd0:
+	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q50 =
+	      IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 ==
+	      4'd3;
+      1'd1:
+	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q50 =
+	      IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386 ==
+	      4'd3;
+    endcase
+  end
+  always@(f32d_deqP or
+	  IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 or
+	  IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386)
+  begin
+    case (f32d_deqP)
+      1'd0:
+	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q51 =
+	      IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 ==
+	      4'd2;
+      1'd1:
+	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q51 =
+	      IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386 ==
+	      4'd2;
+    endcase
+  end
+  always@(f32d_deqP or
+	  IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 or
+	  IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386)
+  begin
+    case (f32d_deqP)
+      1'd0:
+	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q52 =
+	      IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 ==
+	      4'd1;
+      1'd1:
+	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q52 =
+	      IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386 ==
+	      4'd1;
+    endcase
+  end
+  always@(f32d_deqP or
+	  IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 or
+	  IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386)
+  begin
+    case (f32d_deqP)
+      1'd0:
+	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q53 =
+	      IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 ==
+	      4'd0;
+      1'd1:
+	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q53 =
+	      IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386 ==
+	      4'd0;
+    endcase
+  end
   always@(f12f2_deqP or f12f2_data_0 or f12f2_data_1)
   begin
     case (f12f2_deqP)
@@ -22239,201 +22434,6 @@ module mkFetchStage(CLK,
       1'd1:
 	  SEL_ARR_f12f2_data_0_662_BITS_136_TO_135_663_f_ETC___d3667 =
 	      f12f2_data_1[136:135];
-    endcase
-  end
-  always@(f32d_deqP or
-	  IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 or
-	  IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386)
-  begin
-    case (f32d_deqP)
-      1'd0:
-	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q41 =
-	      IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 ==
-	      4'd11;
-      1'd1:
-	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q41 =
-	      IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386 ==
-	      4'd11;
-    endcase
-  end
-  always@(f32d_deqP or
-	  IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 or
-	  IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386)
-  begin
-    case (f32d_deqP)
-      1'd0:
-	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q42 =
-	      IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 ==
-	      4'd12;
-      1'd1:
-	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q42 =
-	      IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386 ==
-	      4'd12;
-    endcase
-  end
-  always@(f32d_deqP or
-	  IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 or
-	  IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386)
-  begin
-    case (f32d_deqP)
-      1'd0:
-	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q43 =
-	      IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 ==
-	      4'd10;
-      1'd1:
-	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q43 =
-	      IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386 ==
-	      4'd10;
-    endcase
-  end
-  always@(f32d_deqP or
-	  IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 or
-	  IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386)
-  begin
-    case (f32d_deqP)
-      1'd0:
-	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q44 =
-	      IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 ==
-	      4'd9;
-      1'd1:
-	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q44 =
-	      IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386 ==
-	      4'd9;
-    endcase
-  end
-  always@(f32d_deqP or
-	  IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 or
-	  IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386)
-  begin
-    case (f32d_deqP)
-      1'd0:
-	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q45 =
-	      IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 ==
-	      4'd8;
-      1'd1:
-	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q45 =
-	      IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386 ==
-	      4'd8;
-    endcase
-  end
-  always@(f32d_deqP or
-	  IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 or
-	  IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386)
-  begin
-    case (f32d_deqP)
-      1'd0:
-	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q46 =
-	      IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 ==
-	      4'd7;
-      1'd1:
-	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q46 =
-	      IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386 ==
-	      4'd7;
-    endcase
-  end
-  always@(f32d_deqP or
-	  IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 or
-	  IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386)
-  begin
-    case (f32d_deqP)
-      1'd0:
-	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q47 =
-	      IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 ==
-	      4'd6;
-      1'd1:
-	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q47 =
-	      IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386 ==
-	      4'd6;
-    endcase
-  end
-  always@(f32d_deqP or
-	  IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 or
-	  IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386)
-  begin
-    case (f32d_deqP)
-      1'd0:
-	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q48 =
-	      IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 ==
-	      4'd5;
-      1'd1:
-	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q48 =
-	      IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386 ==
-	      4'd5;
-    endcase
-  end
-  always@(f32d_deqP or
-	  IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 or
-	  IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386)
-  begin
-    case (f32d_deqP)
-      1'd0:
-	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q49 =
-	      IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 ==
-	      4'd4;
-      1'd1:
-	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q49 =
-	      IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386 ==
-	      4'd4;
-    endcase
-  end
-  always@(f32d_deqP or
-	  IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 or
-	  IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386)
-  begin
-    case (f32d_deqP)
-      1'd0:
-	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q50 =
-	      IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 ==
-	      4'd3;
-      1'd1:
-	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q50 =
-	      IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386 ==
-	      4'd3;
-    endcase
-  end
-  always@(f32d_deqP or
-	  IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 or
-	  IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386)
-  begin
-    case (f32d_deqP)
-      1'd0:
-	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q51 =
-	      IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 ==
-	      4'd2;
-      1'd1:
-	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q51 =
-	      IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386 ==
-	      4'd2;
-    endcase
-  end
-  always@(f32d_deqP or
-	  IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 or
-	  IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386)
-  begin
-    case (f32d_deqP)
-      1'd0:
-	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q52 =
-	      IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 ==
-	      4'd1;
-      1'd1:
-	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q52 =
-	      IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386 ==
-	      4'd1;
-    endcase
-  end
-  always@(f32d_deqP or
-	  IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 or
-	  IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386)
-  begin
-    case (f32d_deqP)
-      1'd0:
-	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q53 =
-	      IF_f32d_data_0_981_BITS_72_TO_69_332_EQ_0_333__ETC___d6358 ==
-	      4'd0;
-      1'd1:
-	  CASE_f32d_deqP_0_IF_f32d_data_0_981_BITS_72_TO_ETC__q53 =
-	      IF_f32d_data_1_983_BITS_72_TO_69_360_EQ_0_361__ETC___d6386 ==
-	      4'd0;
     endcase
   end
   always@(x__h78119 or

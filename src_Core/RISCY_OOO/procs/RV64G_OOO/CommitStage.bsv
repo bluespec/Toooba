@@ -64,7 +64,7 @@ typedef struct {
     Bool stbEmpty;
     Bool stqEmpty;
     Bool tlbNoPendingReq;
-    // CSR info: previlige mode
+    // CSR info: privilege mode
     Bit#(2) prv;
     // inst count
     Data instCount;

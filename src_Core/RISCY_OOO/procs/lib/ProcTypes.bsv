@@ -1,5 +1,6 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
+// Portions (c) 2020 Bluespec, Inc.
 // 
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
@@ -284,6 +285,7 @@ typedef enum {
 
     // CSR that catches all the unimplemented CSRs. To avoid exception on this,
     // make it a user non-standard read/write CSR.
+    // Bluespec: in RenameStage.getTrap(), we force this to be a csr_access_trap
     CSRnone       = 12'h8ff
 } CSR deriving(Bits, Eq, FShow);
 
