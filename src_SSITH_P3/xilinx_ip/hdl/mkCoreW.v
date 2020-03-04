@@ -2716,22 +2716,22 @@ module mkCoreW(RST_N_dm_power_on_reset,
   // rule RL_rl_dm_hart0_reset_wait
   assign CAN_FIRE_RL_rl_dm_hart0_reset_wait =
 	     (rg_hart0_reset_delay != 8'd1 ||
-	      debug_module$RDY_hart0_reset_client_response_put &&
-	      proc$RDY_start) &&
+	      proc$RDY_start &&
+	      debug_module$RDY_hart0_reset_client_response_put) &&
 	     rg_hart0_reset_delay != 8'd0 ;
   assign WILL_FIRE_RL_rl_dm_hart0_reset_wait =
 	     CAN_FIRE_RL_rl_dm_hart0_reset_wait && !EN_start ;
 
   // rule RL_ClientServerRequest
   assign CAN_FIRE_RL_ClientServerRequest =
-	     debug_module$RDY_hart0_client_run_halt_request_get &&
-	     proc$RDY_hart0_run_halt_server_request_put ;
+	     proc$RDY_hart0_run_halt_server_request_put &&
+	     debug_module$RDY_hart0_client_run_halt_request_get ;
   assign WILL_FIRE_RL_ClientServerRequest = CAN_FIRE_RL_ClientServerRequest ;
 
   // rule RL_ClientServerResponse
   assign CAN_FIRE_RL_ClientServerResponse =
-	     debug_module$RDY_hart0_client_run_halt_response_put &&
-	     proc$RDY_hart0_run_halt_server_response_get ;
+	     proc$RDY_hart0_run_halt_server_response_get &&
+	     debug_module$RDY_hart0_client_run_halt_response_put ;
   assign WILL_FIRE_RL_ClientServerResponse =
 	     CAN_FIRE_RL_ClientServerResponse ;
 
@@ -2743,25 +2743,25 @@ module mkCoreW(RST_N_dm_power_on_reset,
 
   // rule RL_mkConnectionGetPut_1
   assign CAN_FIRE_RL_mkConnectionGetPut_1 =
-	     v_td2_to_td_0$RDY_in_put && proc$RDY_v_to_TV_0_get ;
+	     proc$RDY_v_to_TV_0_get && v_td2_to_td_0$RDY_in_put ;
   assign WILL_FIRE_RL_mkConnectionGetPut_1 =
 	     CAN_FIRE_RL_mkConnectionGetPut_1 ;
 
   // rule RL_mkConnectionGetPut_2
   assign CAN_FIRE_RL_mkConnectionGetPut_2 =
-	     v_td2_to_td_0$RDY_out_get && tv_encode$RDY_v_cpu_in_0_put ;
+	     tv_encode$RDY_v_cpu_in_0_put && v_td2_to_td_0$RDY_out_get ;
   assign WILL_FIRE_RL_mkConnectionGetPut_2 =
 	     CAN_FIRE_RL_mkConnectionGetPut_2 ;
 
   // rule RL_mkConnectionGetPut_3
   assign CAN_FIRE_RL_mkConnectionGetPut_3 =
-	     v_td2_to_td_1$RDY_in_put && proc$RDY_v_to_TV_1_get ;
+	     proc$RDY_v_to_TV_1_get && v_td2_to_td_1$RDY_in_put ;
   assign WILL_FIRE_RL_mkConnectionGetPut_3 =
 	     CAN_FIRE_RL_mkConnectionGetPut_3 ;
 
   // rule RL_mkConnectionGetPut_4
   assign CAN_FIRE_RL_mkConnectionGetPut_4 =
-	     v_td2_to_td_1$RDY_out_get && tv_encode$RDY_v_cpu_in_1_put ;
+	     tv_encode$RDY_v_cpu_in_1_put && v_td2_to_td_1$RDY_out_get ;
   assign WILL_FIRE_RL_mkConnectionGetPut_4 =
 	     CAN_FIRE_RL_mkConnectionGetPut_4 ;
 

@@ -474,6 +474,11 @@ module mkCsrFile #(Data hartid)(CsrFile);
         software_int_pend_vec[prvM], readOnlyReg(1'b0),
         software_int_pend_vec[prvS], readOnlyReg(1'b0)     // only if misa.N: software_int_pend_vec[prvU]
     );
+    // MIP and MIE fields are WARL (Write Any Read Legal)
+    // We support M-privilege and S-privilege bits only;
+    // this mask allows only those bits through.
+    Data mip_mie_warl_mask = zeroExtend (12'h_aaa);
+
     // minstret
     Ehr#(2, Data) minstret_ehr <- mkCsrEhr(0);
     Reg#(Data) minstret_csr = minstret_ehr[0];
@@ -810,8 +815,8 @@ module mkCsrFile #(Data hartid)(CsrFile);
 	    CSRmtvec:      { x[63:2], 1'b0, x[0]};
 	    CSRmedeleg:    { 48'b0, x[15], 1'b0, x[13:12], x[11], 1'b0, x[9:0]};
 	    CSRmideleg:    { 52'b0, x[11], 1'b0, x[9:8], x[7], 1'b0, x[5:4], x[3], 1'b0, x[1:0]};
-	    CSRmip:        { 52'b0, x[11], 1'b0, x[9:8], x[7], 1'b0, x[5:4], x[3], 1'b0, x[1:0]};
-	    CSRmie:        { 52'b0, x[11], 1'b0, x[9:8], x[7], 1'b0, x[5:4], x[3], 1'b0, x[1:0]};
+	    CSRmip:        (x & mip_mie_warl_mask);
+	    CSRmie:        (x & mip_mie_warl_mask);
 	    CSRmcounteren: { 61'b0, x[2:0]};
 	    CSRmcause:     { x[63], 59'b0, x[3:0] };
 
