@@ -571,6 +571,12 @@ module mkCsrFile #(Data hartid)(CsrFile);
         readOnlyReg(2'b0),
         software_int_pend_vec[prvS], readOnlyReg(1'b0)    // only if misa.N: software_int_pend_vec[prvU]
     );
+
+    // SIP and SIE fields are WARL (Write Any Read Legal)
+    // We support S-privilege bits only;
+    // this mask allows only those bits through.
+    Data sip_sie_warl_mask = zeroExtend (12'h_222);
+
     // satp (sptbr in spike): FIXME we only support Bare and Sv39, so we hack
     // the encoding of mode[3:0] field. Only mode[3] is relevant, other bits
     // are always 0
@@ -834,8 +840,8 @@ module mkCsrFile #(Data hartid)(CsrFile);
 					  x [1],        // ie_vec[prvS]
 					  x [0]);       // ie_vec[prvU]
 	    CSRstvec:      { x[63:2], 1'b0, x[0]};
-	    CSRsip:        { 52'b0, 2'b0, x[9:8], 2'b0, x[5:4], 2'b0, x[1:0]};
-	    CSRsie:        { 52'b0, 2'b0, x[9:8], 2'b0, x[5:4], 2'b0, x[1:0]};
+	    CSRsip:        (x & sip_sie_warl_mask);
+	    CSRsie:        (x & sip_sie_warl_mask);
 	    CSRscounteren: { 61'b0, x[2:0]};
 	    CSRscause:     { x[63], 59'b0, x[3:0] };
 	    CSRsatp:       { x[63], 3'b0, asid,  x [43:0] };
