@@ -125,6 +125,21 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
 					     wlast:  True,
 					     wuser:  fabric_default_user};
 
+`ifdef FABRIC64
+	 // Work-around for a misbehavior on Xilinx UART and its
+	 // Xilinx AXI4 adapter. On 64-bit fabrics, for a write where
+	 // axsize says '8 bytes' but wstrb is for <= 4 bytes, the
+	 // adapter converts it two 32-bit writes, one of which has
+	 // wstrb=4'b0000. The Xilinx UART, in turn ignores wstrb and
+	 // therefore performs a spurious write.  This workaround
+	 // changes axsize for such writes to '4 bytes', avoiding this
+	 // problem.
+
+	 if (strb [7:4] == 0 || strb [3:0] == 0) begin
+	    mem_req_wr_addr.awsize = axsize_4;
+	 end
+`endif
+
 	 master_xactor.i_wr_addr.enq (mem_req_wr_addr);
 	 master_xactor.i_wr_data.enq (mem_req_wr_data);
 

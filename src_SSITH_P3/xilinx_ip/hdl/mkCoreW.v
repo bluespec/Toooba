@@ -2716,22 +2716,22 @@ module mkCoreW(RST_N_dm_power_on_reset,
   // rule RL_rl_dm_hart0_reset_wait
   assign CAN_FIRE_RL_rl_dm_hart0_reset_wait =
 	     (rg_hart0_reset_delay != 8'd1 ||
-	      proc$RDY_start &&
-	      debug_module$RDY_hart0_reset_client_response_put) &&
+	      debug_module$RDY_hart0_reset_client_response_put &&
+	      proc$RDY_start) &&
 	     rg_hart0_reset_delay != 8'd0 ;
   assign WILL_FIRE_RL_rl_dm_hart0_reset_wait =
 	     CAN_FIRE_RL_rl_dm_hart0_reset_wait && !EN_start ;
 
   // rule RL_ClientServerRequest
   assign CAN_FIRE_RL_ClientServerRequest =
-	     proc$RDY_hart0_run_halt_server_request_put &&
-	     debug_module$RDY_hart0_client_run_halt_request_get ;
+	     debug_module$RDY_hart0_client_run_halt_request_get &&
+	     proc$RDY_hart0_run_halt_server_request_put ;
   assign WILL_FIRE_RL_ClientServerRequest = CAN_FIRE_RL_ClientServerRequest ;
 
   // rule RL_ClientServerResponse
   assign CAN_FIRE_RL_ClientServerResponse =
-	     proc$RDY_hart0_run_halt_server_response_get &&
-	     debug_module$RDY_hart0_client_run_halt_response_put ;
+	     debug_module$RDY_hart0_client_run_halt_response_put &&
+	     proc$RDY_hart0_run_halt_server_response_get ;
   assign WILL_FIRE_RL_ClientServerResponse =
 	     CAN_FIRE_RL_ClientServerResponse ;
 

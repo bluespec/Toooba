@@ -1216,7 +1216,8 @@ module mkCore#(CoreId coreId)(Core);
 					  && (f_run_halt_reqs.first == False));
       f_run_halt_reqs.deq;
 
-      // Ignore this.
+      // Notify debugger that we're halted, but otherwise ignore the request
+      f_run_halt_rsps.enq (False);
 
       if (show_DM_interactions)
 	 $display ("%0d: %m.rl_debug_halt_req_already_halted", cur_cycle);
