@@ -4590,7 +4590,7 @@ module mkProc(CLK,
 	     EN_hart0_put_other_req_put ?
 	       hart0_put_other_req_put :
 	       set_verbosity_verbosity ;
-  assign cfg_verbosity$EN = EN_set_verbosity || EN_hart0_put_other_req_put ;
+  assign cfg_verbosity$EN = EN_hart0_put_other_req_put || EN_set_verbosity ;
 
   // register enqDst_0_rl
   assign enqDst_0_rl$D_IN =
@@ -7011,19 +7011,6 @@ module mkProc(CLK,
       3'd7: dword__h93782 = llc_mem_server_rg_cacheline_cache_data[511:448];
     endcase
   end
-  always@(llc$dma_respLd_first)
-  begin
-    case (llc$dma_respLd_first[2:0])
-      3'd0: ld_data__h131939 = llc$dma_respLd_first[68:5];
-      3'd1: ld_data__h131939 = llc$dma_respLd_first[132:69];
-      3'd2: ld_data__h131939 = llc$dma_respLd_first[196:133];
-      3'd3: ld_data__h131939 = llc$dma_respLd_first[260:197];
-      3'd4: ld_data__h131939 = llc$dma_respLd_first[324:261];
-      3'd5: ld_data__h131939 = llc$dma_respLd_first[388:325];
-      3'd6: ld_data__h131939 = llc$dma_respLd_first[452:389];
-      3'd7: ld_data__h131939 = llc$dma_respLd_first[516:453];
-    endcase
-  end
   always@(llc_axi4_adapter_rg_wr_req_beat or llc$to_mem_toM_first)
   begin
     case (llc_axi4_adapter_rg_wr_req_beat)
@@ -7035,6 +7022,19 @@ module mkProc(CLK,
       3'd5: data64__h147777 = llc$to_mem_toM_first[383:320];
       3'd6: data64__h147777 = llc$to_mem_toM_first[447:384];
       3'd7: data64__h147777 = llc$to_mem_toM_first[511:448];
+    endcase
+  end
+  always@(llc$dma_respLd_first)
+  begin
+    case (llc$dma_respLd_first[2:0])
+      3'd0: ld_data__h131939 = llc$dma_respLd_first[68:5];
+      3'd1: ld_data__h131939 = llc$dma_respLd_first[132:69];
+      3'd2: ld_data__h131939 = llc$dma_respLd_first[196:133];
+      3'd3: ld_data__h131939 = llc$dma_respLd_first[260:197];
+      3'd4: ld_data__h131939 = llc$dma_respLd_first[324:261];
+      3'd5: ld_data__h131939 = llc$dma_respLd_first[388:325];
+      3'd6: ld_data__h131939 = llc$dma_respLd_first[452:389];
+      3'd7: ld_data__h131939 = llc$dma_respLd_first[516:453];
     endcase
   end
   always@(llc_axi4_adapter_rg_wr_req_beat or llc$to_mem_toM_first)
@@ -7181,27 +7181,6 @@ module mkProc(CLK,
     endcase
   end
   always@(mmioPlatform_curReq or
-	  result__h48789 or
-	  result__h48816 or result__h48843 or result__h48870)
-  begin
-    case (mmioPlatform_curReq[2:0])
-      3'h0:
-	  IF_mmioPlatform_curReq_31_BITS_2_TO_0_73_EQ_0x_ETC___d865 =
-	      result__h48789;
-      3'h2:
-	  IF_mmioPlatform_curReq_31_BITS_2_TO_0_73_EQ_0x_ETC___d865 =
-	      result__h48816;
-      3'h4:
-	  IF_mmioPlatform_curReq_31_BITS_2_TO_0_73_EQ_0x_ETC___d865 =
-	      result__h48843;
-      3'h6:
-	  IF_mmioPlatform_curReq_31_BITS_2_TO_0_73_EQ_0x_ETC___d865 =
-	      result__h48870;
-      default: IF_mmioPlatform_curReq_31_BITS_2_TO_0_73_EQ_0x_ETC___d865 =
-		   64'd0;
-    endcase
-  end
-  always@(mmioPlatform_curReq or
 	  result__h48556 or
 	  result__h48583 or
 	  result__h48610 or
@@ -7234,6 +7213,27 @@ module mkProc(CLK,
       3'h7:
 	  IF_mmioPlatform_curReq_31_BITS_2_TO_0_73_EQ_0x_ETC___d853 =
 	      result__h48745;
+    endcase
+  end
+  always@(mmioPlatform_curReq or
+	  result__h48789 or
+	  result__h48816 or result__h48843 or result__h48870)
+  begin
+    case (mmioPlatform_curReq[2:0])
+      3'h0:
+	  IF_mmioPlatform_curReq_31_BITS_2_TO_0_73_EQ_0x_ETC___d865 =
+	      result__h48789;
+      3'h2:
+	  IF_mmioPlatform_curReq_31_BITS_2_TO_0_73_EQ_0x_ETC___d865 =
+	      result__h48816;
+      3'h4:
+	  IF_mmioPlatform_curReq_31_BITS_2_TO_0_73_EQ_0x_ETC___d865 =
+	      result__h48843;
+      3'h6:
+	  IF_mmioPlatform_curReq_31_BITS_2_TO_0_73_EQ_0x_ETC___d865 =
+	      result__h48870;
+      default: IF_mmioPlatform_curReq_31_BITS_2_TO_0_73_EQ_0x_ETC___d865 =
+		   64'd0;
     endcase
   end
   always@(mmioPlatform_curReq or result__h48910 or result__h48937)
@@ -7604,13 +7604,6 @@ module mkProc(CLK,
 	      n__read_addr__h61528;
     endcase
   end
-  always@(x__h79884 or n__read_child__h80065 or n__read_child__h80144)
-  begin
-    case (x__h79884)
-      1'd0: x__h82300 = n__read_child__h80065;
-      1'd1: x__h82300 = n__read_child__h80144;
-    endcase
-  end
   always@(x__h79884 or
 	  CAN_FIRE_RL_srcPropose_2 or
 	  propDstData_1_0_lat_0$wget or
@@ -7649,6 +7642,13 @@ module mkProc(CLK,
 	      CAN_FIRE_RL_srcPropose_3 ?
 		propDstData_1_1_lat_0$wget[448:385] :
 		propDstData_1_1_rl[448:385];
+    endcase
+  end
+  always@(x__h79884 or n__read_child__h80065 or n__read_child__h80144)
+  begin
+    case (x__h79884)
+      1'd0: x__h82300 = n__read_child__h80065;
+      1'd1: x__h82300 = n__read_child__h80144;
     endcase
   end
   always@(x__h79884 or

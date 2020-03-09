@@ -98,10 +98,11 @@ module mkSimpleRespQ(CLK,
 
   // inlined wires
   reg m_m_valid_for_enq_wire$wget;
+  wire [11 : 0] m_m_specBits_0_lat_1$wget, m_m_specBits_1_lat_1$wget;
   wire m_m_deqP_ehr_lat_0$whas,
        m_m_empty_for_enq_wire$wget,
+       m_m_valid_0_dummy_1_0$whas,
        m_m_valid_0_lat_0$whas,
-       m_m_valid_0_lat_1$whas,
        m_m_valid_1_lat_0$whas,
        m_m_valid_1_lat_1$whas;
 
@@ -216,9 +217,7 @@ module mkSimpleRespQ(CLK,
        WILL_FIRE_specUpdate_incorrectSpeculation;
 
   // inputs to muxes for submodule ports
-  wire MUX_m_m_valid_0_dummy2_0$write_1__SEL_1,
-       MUX_m_m_valid_0_dummy2_0$write_1__SEL_2,
-       MUX_m_m_valid_1_dummy2_0$write_1__SEL_1,
+  wire MUX_m_m_valid_0_dummy2_0$write_1__SEL_2,
        MUX_m_m_valid_1_dummy2_0$write_1__SEL_2;
 
   // remaining internal signals
@@ -389,14 +388,10 @@ module mkSimpleRespQ(CLK,
   assign WILL_FIRE_RL_m_m_deqP_ehr_canon = 1'd1 ;
 
   // inputs to muxes for submodule ports
-  assign MUX_m_m_valid_0_dummy2_0$write_1__SEL_1 =
+  assign MUX_m_m_valid_0_dummy2_0$write_1__SEL_2 =
 	     EN_specUpdate_incorrectSpeculation &&
 	     (specUpdate_incorrectSpeculation_kill_all ||
 	      sb__h9605[specUpdate_incorrectSpeculation_kill_tag]) ;
-  assign MUX_m_m_valid_0_dummy2_0$write_1__SEL_2 =
-	     EN_deq && p__h6538 == 1'd0 ;
-  assign MUX_m_m_valid_1_dummy2_0$write_1__SEL_1 =
-	     EN_deq && p__h6538 == 1'd1 ;
   assign MUX_m_m_valid_1_dummy2_0$write_1__SEL_2 =
 	     EN_specUpdate_incorrectSpeculation &&
 	     (specUpdate_incorrectSpeculation_kill_all ||
@@ -404,13 +399,17 @@ module mkSimpleRespQ(CLK,
 
   // inlined wires
   assign m_m_valid_0_lat_0$whas =
-	     MUX_m_m_valid_0_dummy2_0$write_1__SEL_1 ||
+	     EN_deq && p__h6538 == 1'd0 ||
 	     MUX_m_m_valid_0_dummy2_0$write_1__SEL_2 ;
-  assign m_m_valid_0_lat_1$whas = EN_enq && m_m_enqP == 1'd0 ;
+  assign m_m_valid_0_dummy_1_0$whas = EN_enq && m_m_enqP == 1'd0 ;
   assign m_m_valid_1_lat_0$whas =
-	     MUX_m_m_valid_1_dummy2_0$write_1__SEL_1 ||
+	     EN_deq && p__h6538 == 1'd1 ||
 	     MUX_m_m_valid_1_dummy2_0$write_1__SEL_2 ;
   assign m_m_valid_1_lat_1$whas = EN_enq && m_m_enqP == 1'd1 ;
+  assign m_m_specBits_0_lat_1$wget =
+	     sb__h10173 & specUpdate_correctSpeculation_mask ;
+  assign m_m_specBits_1_lat_1$wget =
+	     sb__h10600 & specUpdate_correctSpeculation_mask ;
   assign m_m_deqP_ehr_lat_0$whas = WILL_FIRE_RL_m_m_canon_deqP || EN_deq ;
   assign m_m_empty_for_enq_wire$wget =
 	     (!m_m_valid_0_dummy2_0$Q_OUT || !m_m_valid_0_dummy2_1$Q_OUT ||
@@ -447,7 +446,7 @@ module mkSimpleRespQ(CLK,
 
   // register m_m_row_0
   assign m_m_row_0$D_IN = enq_x[101:12] ;
-  assign m_m_row_0$EN = m_m_valid_0_lat_1$whas ;
+  assign m_m_row_0$EN = m_m_valid_0_dummy_1_0$whas ;
 
   // register m_m_row_1
   assign m_m_row_1$D_IN = enq_x[101:12] ;
@@ -469,7 +468,7 @@ module mkSimpleRespQ(CLK,
 
   // register m_m_valid_0_rl
   assign m_m_valid_0_rl$D_IN =
-	     m_m_valid_0_lat_1$whas ||
+	     m_m_valid_0_dummy_1_0$whas ||
 	     (m_m_valid_0_lat_0$whas ? 1'd0 : m_m_valid_0_rl) ;
   assign m_m_valid_0_rl$EN = 1'd1 ;
 
@@ -489,7 +488,7 @@ module mkSimpleRespQ(CLK,
 
   // submodule m_m_specBits_0_dummy2_0
   assign m_m_specBits_0_dummy2_0$D_IN = 1'd1 ;
-  assign m_m_specBits_0_dummy2_0$EN = m_m_valid_0_lat_1$whas ;
+  assign m_m_specBits_0_dummy2_0$EN = m_m_valid_0_dummy_1_0$whas ;
 
   // submodule m_m_specBits_0_dummy2_1
   assign m_m_specBits_0_dummy2_1$D_IN = 1'd1 ;
@@ -506,12 +505,12 @@ module mkSimpleRespQ(CLK,
   // submodule m_m_valid_0_dummy2_0
   assign m_m_valid_0_dummy2_0$D_IN = 1'd1 ;
   assign m_m_valid_0_dummy2_0$EN =
-	     MUX_m_m_valid_0_dummy2_0$write_1__SEL_1 ||
-	     EN_deq && p__h6538 == 1'd0 ;
+	     EN_deq && p__h6538 == 1'd0 ||
+	     MUX_m_m_valid_0_dummy2_0$write_1__SEL_2 ;
 
   // submodule m_m_valid_0_dummy2_1
   assign m_m_valid_0_dummy2_1$D_IN = 1'd1 ;
-  assign m_m_valid_0_dummy2_1$EN = m_m_valid_0_lat_1$whas ;
+  assign m_m_valid_0_dummy2_1$EN = m_m_valid_0_dummy_1_0$whas ;
 
   // submodule m_m_valid_1_dummy2_0
   assign m_m_valid_1_dummy2_0$D_IN = 1'd1 ;
@@ -525,7 +524,7 @@ module mkSimpleRespQ(CLK,
 
   // remaining internal signals
   assign IF_m_m_specBits_0_lat_0_whas__7_THEN_m_m_specB_ETC___d20 =
-	     m_m_valid_0_lat_1$whas ? enq_x[11:0] : m_m_specBits_0_rl ;
+	     m_m_valid_0_dummy_1_0$whas ? enq_x[11:0] : m_m_specBits_0_rl ;
   assign IF_m_m_specBits_1_lat_0_whas__4_THEN_m_m_specB_ETC___d27 =
 	     m_m_valid_1_lat_1$whas ? enq_x[11:0] : m_m_specBits_1_rl ;
   assign NOT_SEL_ARR_NOT_m_m_row_0_5_BIT_20_06_07_NOT_m_ETC___d136 =
@@ -561,8 +560,8 @@ module mkSimpleRespQ(CLK,
 	      m_m_specBits_1_dummy2_1$Q_OUT) ?
 	       m_m_specBits_1_rl :
 	       12'd0 ;
-  assign upd__h3373 = sb__h10173 & specUpdate_correctSpeculation_mask ;
-  assign upd__h4302 = sb__h10600 & specUpdate_correctSpeculation_mask ;
+  assign upd__h3373 = m_m_specBits_0_lat_1$wget ;
+  assign upd__h4302 = m_m_specBits_1_lat_1$wget ;
   assign upd__h5417 =
 	     !m_m_deqP_ehr_dummy2_0$Q_OUT || !m_m_deqP_ehr_dummy2_1$Q_OUT ||
 	     !m_m_deqP_ehr_rl ;

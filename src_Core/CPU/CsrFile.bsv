@@ -902,11 +902,11 @@ module mkCsrFile #(Data hartid)(CsrFile);
        // and mstatus_csr, which only change after superscalar-wide
        // retirement.
 
-       old_fflags  = (init_for_way0 ? fflags_reg  : old_fflags);
-       old_mstatus = (init_for_way0 ? mstatus_csr : old_mstatus);
+       Bit #(5) old_fflags1  = (init_for_way0 ? fflags_reg  : old_fflags);
+       Data     old_mstatus1 = (init_for_way0 ? mstatus_csr : old_mstatus);
 
-       Bit #(5) new_fflags  = (old_fflags | fflags);
-       Data     new_mstatus = { old_mstatus [63:15], 2'b11, old_mstatus [12:0] };
+       Bit #(5) new_fflags  = (old_fflags1 | fflags);
+       Data     new_mstatus = { 1'b1, old_mstatus1 [62:15], 2'b11, old_mstatus1 [12:0] };
 
        return tuple2 (new_fflags, new_mstatus);
     endmethod

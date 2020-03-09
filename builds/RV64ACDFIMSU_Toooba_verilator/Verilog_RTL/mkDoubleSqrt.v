@@ -743,18 +743,18 @@ module mkDoubleSqrt(CLK,
        WILL_FIRE_response_get;
 
   // remaining internal signals
-  reg [63 : 0] CASE_fpu_fState_S4D_OUT_BITS_68_TO_66_0_CASE__ETC__q15;
-  reg [62 : 0] CASE_fpu_fState_S4D_OUT_BITS_1_TO_0_0_0_0b1_I_ETC__q14,
-	       CASE_fpu_fState_S4D_OUT_BITS_1_TO_0_0b0_fpu_f_ETC__q13,
-	       CASE_fpu_fState_S4D_OUT_BITS_68_TO_66_2_IF_fp_ETC__q11;
+  reg [63 : 0] CASE_fpu_fState_S4D_OUT_BITS_68_TO_66_0_CASE__ETC__q13;
+  reg [62 : 0] CASE_fpu_fState_S4D_OUT_BITS_1_TO_0_0_0_0b1_I_ETC__q12,
+	       CASE_fpu_fState_S4D_OUT_BITS_1_TO_0_0b0_fpu_f_ETC__q11,
+	       CASE_fpu_fState_S4D_OUT_BITS_68_TO_66_2_IF_fp_ETC__q9;
   reg [51 : 0] CASE_fpu_fState_S4D_OUT_BITS_1_TO_0_0b0_fpu_f_ETC__q1,
 	       CASE_fpu_fState_S4D_OUT_BITS_1_TO_0_0b0_fpu_f_ETC__q2,
 	       _theResult___fst_sfd__h76507;
   reg [10 : 0] CASE_fpu_fState_S4D_OUT_BITS_1_TO_0_0b0_fpu_f_ETC__q3,
 	       CASE_fpu_fState_S4D_OUT_BITS_1_TO_0_0b0_fpu_f_ETC__q4,
 	       _theResult___fst_exp__h76506;
-  reg CASE_fpu_fState_S4D_OUT_BITS_1_TO_0_0b0_fpu_f_ETC__q12,
-      CASE_fpu_fState_S4D_OUT_BITS_68_TO_66_2_fpu_f_ETC__q10;
+  reg CASE_fpu_fState_S4D_OUT_BITS_1_TO_0_0b0_fpu_f_ETC__q10,
+      CASE_fpu_fState_S4D_OUT_BITS_68_TO_66_2_fpu_f_ETC__q8;
   wire [194 : 0] IF_fpu_fOperand_S0_first__324_BITS_65_TO_55_32_ETC___d2477;
   wire [115 : 0] _theResult___snd_fst__h25299,
 		 _theResult___snd_fst__h25701,
@@ -1194,7 +1194,7 @@ module mkDoubleSqrt(CLK,
   wire [12 : 0] IF_fpu_fOperand_S0_first__324_BITS_65_TO_55_32_ETC___d2460,
 		x__h57541,
 		x__h57559;
-  wire [11 : 0] IF_fpu_fOperand_S0_first__324_BITS_65_TO_55_32_ETC__q9,
+  wire [11 : 0] IF_fpu_fOperand_S0_first__324_BITS_65_TO_55_32_ETC__q15,
 		IF_fpu_fState_S3_first__517_BITS_121_TO_111_52_ETC___d2531,
 		IF_fpu_fState_S3_first__517_BITS_121_TO_111_52_ETC___d2774;
   wire [10 : 0] IF_fpu_fState_S4_first__829_BITS_64_TO_54_832__ETC___d2863,
@@ -1208,7 +1208,7 @@ module mkDoubleSqrt(CLK,
 		_theResult___fst_exp__h75353,
 		_theResult___fst_exp__h76509,
 		din_inc___2_exp__h76519,
-		fpu_fOperand_S0D_OUT_BITS_65_TO_55_MINUS_1023__q8,
+		fpu_fOperand_S0D_OUT_BITS_65_TO_55_MINUS_1023__q14,
 		fpu_fState_S3D_OUT_BITS_121_TO_111_MINUS_1023__q5,
 		out_exp__h76431;
   wire [6 : 0] IF_int_sqrt_fRequest_first_BIT_115_THEN_0_ELSE_ETC___d237,
@@ -2386,7 +2386,7 @@ module mkDoubleSqrt(CLK,
 	       fpu_fState_S4$D_OUT[137:69] :
 	       { (fpu_fState_S4$D_OUT[64:54] == 11'd2047) ?
 		   fpu_fState_S4$D_OUT[65:2] :
-		   CASE_fpu_fState_S4D_OUT_BITS_68_TO_66_0_CASE__ETC__q15,
+		   CASE_fpu_fState_S4D_OUT_BITS_68_TO_66_0_CASE__ETC__q13,
 		 fpu_fState_S4$D_OUT[73:69] |
 		 { 2'd0,
 		   _theResult___fst_exp__h76509 == 11'd2047 &&
@@ -3708,8 +3708,8 @@ module mkDoubleSqrt(CLK,
   assign IF_fpu_fOperand_S0_first__324_BITS_65_TO_55_32_ETC___d2460 =
 	     ((fpu_fOperand_S0$D_OUT[65:55] == 11'd0) ?
 		13'd7170 :
-		{ {2{fpu_fOperand_S0D_OUT_BITS_65_TO_55_MINUS_1023__q8[10]}},
-		  fpu_fOperand_S0D_OUT_BITS_65_TO_55_MINUS_1023__q8 }) -
+		{ {2{fpu_fOperand_S0D_OUT_BITS_65_TO_55_MINUS_1023__q14[10]}},
+		  fpu_fOperand_S0D_OUT_BITS_65_TO_55_MINUS_1023__q14 }) -
 	     { 7'd0,
 	       IF_fpu_fOperand_S0_first__324_BITS_65_TO_55_32_ETC___d2458 } ;
   assign IF_fpu_fOperand_S0_first__324_BITS_65_TO_55_32_ETC___d2477 =
@@ -3731,7 +3731,7 @@ module mkDoubleSqrt(CLK,
 		    x__h57541[10:0],
 		    fpu_fOperand_S0$D_OUT[54:3],
 		    x__h65683 }) ;
-  assign IF_fpu_fOperand_S0_first__324_BITS_65_TO_55_32_ETC__q9 =
+  assign IF_fpu_fOperand_S0_first__324_BITS_65_TO_55_32_ETC__q15 =
 	     IF_fpu_fOperand_S0_first__324_BITS_65_TO_55_32_ETC___d2460[12:1] ;
   assign IF_fpu_fState_S3_first__517_BITS_121_TO_111_52_ETC___d2531 =
 	     (fpu_fState_S3$D_OUT[121:111] == 11'd0) ?
@@ -4910,7 +4910,7 @@ module mkDoubleSqrt(CLK,
 	       int_sqrt_fNext_58$D_OUT[463:348] :
 	       116'd0 ;
   assign din_inc___2_exp__h76519 = fpu_fState_S4$D_OUT[64:54] + 11'd1 ;
-  assign fpu_fOperand_S0D_OUT_BITS_65_TO_55_MINUS_1023__q8 =
+  assign fpu_fOperand_S0D_OUT_BITS_65_TO_55_MINUS_1023__q14 =
 	     fpu_fOperand_S0$D_OUT[65:55] - 11'd1023 ;
   assign fpu_fState_S3D_OUT_BITS_121_TO_111_MINUS_1023__q5 =
 	     fpu_fState_S3$D_OUT[121:111] - 11'd1023 ;
@@ -5412,8 +5412,8 @@ module mkDoubleSqrt(CLK,
 	       b___1__h16687 ;
   assign x__h57541 = x__h57559 + 13'd1024 ;
   assign x__h57559 =
-	     { IF_fpu_fOperand_S0_first__324_BITS_65_TO_55_32_ETC__q9[11],
-	       IF_fpu_fOperand_S0_first__324_BITS_65_TO_55_32_ETC__q9 } ;
+	     { IF_fpu_fOperand_S0_first__324_BITS_65_TO_55_32_ETC__q15[11],
+	       IF_fpu_fOperand_S0_first__324_BITS_65_TO_55_32_ETC__q15 } ;
   assign x__h65683 =
 	     IF_fpu_fOperand_S0_first__324_BITS_65_TO_55_32_ETC___d2460[0] ?
 	       sfd__h49938 :
@@ -5541,9 +5541,9 @@ module mkDoubleSqrt(CLK,
   begin
     case (fpu_fState_S4$D_OUT[68:66])
       3'd2, 3'd3:
-	  CASE_fpu_fState_S4D_OUT_BITS_68_TO_66_2_fpu_f_ETC__q10 =
+	  CASE_fpu_fState_S4D_OUT_BITS_68_TO_66_2_fpu_f_ETC__q8 =
 	      fpu_fState_S4$D_OUT[65];
-      default: CASE_fpu_fState_S4D_OUT_BITS_68_TO_66_2_fpu_f_ETC__q10 =
+      default: CASE_fpu_fState_S4D_OUT_BITS_68_TO_66_2_fpu_f_ETC__q8 =
 		   fpu_fState_S4$D_OUT[68:66] == 3'd4 &&
 		   fpu_fState_S4$D_OUT[65];
     endcase
@@ -5553,31 +5553,31 @@ module mkDoubleSqrt(CLK,
   begin
     case (fpu_fState_S4$D_OUT[68:66])
       3'd2:
-	  CASE_fpu_fState_S4D_OUT_BITS_68_TO_66_2_IF_fp_ETC__q11 =
+	  CASE_fpu_fState_S4D_OUT_BITS_68_TO_66_2_IF_fp_ETC__q9 =
 	      (fpu_fState_S4$D_OUT[1:0] == 2'b0 || fpu_fState_S4$D_OUT[65]) ?
 		fpu_fState_S4$D_OUT[64:2] :
 		IF_0b0_CONCAT_NOT_fpu_fState_S4_first__829_BIT_ETC___d2866;
       3'd3:
-	  CASE_fpu_fState_S4D_OUT_BITS_68_TO_66_2_IF_fp_ETC__q11 =
+	  CASE_fpu_fState_S4D_OUT_BITS_68_TO_66_2_IF_fp_ETC__q9 =
 	      (fpu_fState_S4$D_OUT[1:0] == 2'b0) ?
 		fpu_fState_S4$D_OUT[64:2] :
 		(fpu_fState_S4$D_OUT[65] ?
 		   IF_0b0_CONCAT_NOT_fpu_fState_S4_first__829_BIT_ETC___d2866 :
 		   fpu_fState_S4$D_OUT[64:2]);
       3'd4:
-	  CASE_fpu_fState_S4D_OUT_BITS_68_TO_66_2_IF_fp_ETC__q11 =
+	  CASE_fpu_fState_S4D_OUT_BITS_68_TO_66_2_IF_fp_ETC__q9 =
 	      fpu_fState_S4$D_OUT[64:2];
-      default: CASE_fpu_fState_S4D_OUT_BITS_68_TO_66_2_IF_fp_ETC__q11 = 63'd0;
+      default: CASE_fpu_fState_S4D_OUT_BITS_68_TO_66_2_IF_fp_ETC__q9 = 63'd0;
     endcase
   end
   always@(fpu_fState_S4$D_OUT)
   begin
     case (fpu_fState_S4$D_OUT[1:0])
       2'b0, 2'b01, 2'b10:
-	  CASE_fpu_fState_S4D_OUT_BITS_1_TO_0_0b0_fpu_f_ETC__q12 =
+	  CASE_fpu_fState_S4D_OUT_BITS_1_TO_0_0b0_fpu_f_ETC__q10 =
 	      fpu_fState_S4$D_OUT[65];
       2'd3:
-	  CASE_fpu_fState_S4D_OUT_BITS_1_TO_0_0b0_fpu_f_ETC__q12 =
+	  CASE_fpu_fState_S4D_OUT_BITS_1_TO_0_0b0_fpu_f_ETC__q10 =
 	      fpu_fState_S4$D_OUT[1:0] == 2'b11 && fpu_fState_S4$D_OUT[65];
     endcase
   end
@@ -5586,15 +5586,15 @@ module mkDoubleSqrt(CLK,
   begin
     case (fpu_fState_S4$D_OUT[1:0])
       2'b0, 2'b01:
-	  CASE_fpu_fState_S4D_OUT_BITS_1_TO_0_0b0_fpu_f_ETC__q13 =
+	  CASE_fpu_fState_S4D_OUT_BITS_1_TO_0_0b0_fpu_f_ETC__q11 =
 	      fpu_fState_S4$D_OUT[64:2];
       2'b10:
-	  CASE_fpu_fState_S4D_OUT_BITS_1_TO_0_0b0_fpu_f_ETC__q13 =
+	  CASE_fpu_fState_S4D_OUT_BITS_1_TO_0_0b0_fpu_f_ETC__q11 =
 	      fpu_fState_S4$D_OUT[2] ?
 		IF_0b0_CONCAT_NOT_fpu_fState_S4_first__829_BIT_ETC___d2866 :
 		fpu_fState_S4$D_OUT[64:2];
       2'b11:
-	  CASE_fpu_fState_S4D_OUT_BITS_1_TO_0_0b0_fpu_f_ETC__q13 =
+	  CASE_fpu_fState_S4D_OUT_BITS_1_TO_0_0b0_fpu_f_ETC__q11 =
 	      IF_0b0_CONCAT_NOT_fpu_fState_S4_first__829_BIT_ETC___d2866;
     endcase
   end
@@ -5602,36 +5602,36 @@ module mkDoubleSqrt(CLK,
 	  IF_0b0_CONCAT_NOT_fpu_fState_S4_first__829_BIT_ETC___d2866)
   begin
     case (fpu_fState_S4$D_OUT[1:0])
-      2'd0: CASE_fpu_fState_S4D_OUT_BITS_1_TO_0_0_0_0b1_I_ETC__q14 = 63'd0;
+      2'd0: CASE_fpu_fState_S4D_OUT_BITS_1_TO_0_0_0_0b1_I_ETC__q12 = 63'd0;
       2'b01, 2'b10, 2'b11:
-	  CASE_fpu_fState_S4D_OUT_BITS_1_TO_0_0_0_0b1_I_ETC__q14 =
+	  CASE_fpu_fState_S4D_OUT_BITS_1_TO_0_0_0_0b1_I_ETC__q12 =
 	      IF_0b0_CONCAT_NOT_fpu_fState_S4_first__829_BIT_ETC___d2866;
     endcase
   end
   always@(fpu_fState_S4$D_OUT or
-	  CASE_fpu_fState_S4D_OUT_BITS_68_TO_66_2_fpu_f_ETC__q10 or
-	  CASE_fpu_fState_S4D_OUT_BITS_68_TO_66_2_IF_fp_ETC__q11 or
-	  CASE_fpu_fState_S4D_OUT_BITS_1_TO_0_0b0_fpu_f_ETC__q12 or
-	  CASE_fpu_fState_S4D_OUT_BITS_1_TO_0_0b0_fpu_f_ETC__q13 or
-	  CASE_fpu_fState_S4D_OUT_BITS_1_TO_0_0_0_0b1_I_ETC__q14)
+	  CASE_fpu_fState_S4D_OUT_BITS_68_TO_66_2_fpu_f_ETC__q8 or
+	  CASE_fpu_fState_S4D_OUT_BITS_68_TO_66_2_IF_fp_ETC__q9 or
+	  CASE_fpu_fState_S4D_OUT_BITS_1_TO_0_0b0_fpu_f_ETC__q10 or
+	  CASE_fpu_fState_S4D_OUT_BITS_1_TO_0_0b0_fpu_f_ETC__q11 or
+	  CASE_fpu_fState_S4D_OUT_BITS_1_TO_0_0_0_0b1_I_ETC__q12)
   begin
     case (fpu_fState_S4$D_OUT[68:66])
       3'd0:
-	  CASE_fpu_fState_S4D_OUT_BITS_68_TO_66_0_CASE__ETC__q15 =
-	      { CASE_fpu_fState_S4D_OUT_BITS_1_TO_0_0b0_fpu_f_ETC__q12,
-		CASE_fpu_fState_S4D_OUT_BITS_1_TO_0_0b0_fpu_f_ETC__q13 };
+	  CASE_fpu_fState_S4D_OUT_BITS_68_TO_66_0_CASE__ETC__q13 =
+	      { CASE_fpu_fState_S4D_OUT_BITS_1_TO_0_0b0_fpu_f_ETC__q10,
+		CASE_fpu_fState_S4D_OUT_BITS_1_TO_0_0b0_fpu_f_ETC__q11 };
       3'd1:
-	  CASE_fpu_fState_S4D_OUT_BITS_68_TO_66_0_CASE__ETC__q15 =
+	  CASE_fpu_fState_S4D_OUT_BITS_68_TO_66_0_CASE__ETC__q13 =
 	      (fpu_fState_S4$D_OUT[1:0] == 2'b0) ?
 		fpu_fState_S4$D_OUT[65:2] :
 		{ (fpu_fState_S4$D_OUT[1:0] == 2'b01 ||
 		   fpu_fState_S4$D_OUT[1:0] == 2'b10 ||
 		   fpu_fState_S4$D_OUT[1:0] == 2'b11) &&
 		  fpu_fState_S4$D_OUT[65],
-		  CASE_fpu_fState_S4D_OUT_BITS_1_TO_0_0_0_0b1_I_ETC__q14 };
-      default: CASE_fpu_fState_S4D_OUT_BITS_68_TO_66_0_CASE__ETC__q15 =
-		   { CASE_fpu_fState_S4D_OUT_BITS_68_TO_66_2_fpu_f_ETC__q10,
-		     CASE_fpu_fState_S4D_OUT_BITS_68_TO_66_2_IF_fp_ETC__q11 };
+		  CASE_fpu_fState_S4D_OUT_BITS_1_TO_0_0_0_0b1_I_ETC__q12 };
+      default: CASE_fpu_fState_S4D_OUT_BITS_68_TO_66_0_CASE__ETC__q13 =
+		   { CASE_fpu_fState_S4D_OUT_BITS_68_TO_66_2_fpu_f_ETC__q8,
+		     CASE_fpu_fState_S4D_OUT_BITS_68_TO_66_2_IF_fp_ETC__q9 };
     endcase
   end
 endmodule  // mkDoubleSqrt

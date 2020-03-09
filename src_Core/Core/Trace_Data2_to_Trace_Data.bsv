@@ -179,7 +179,10 @@ module mkTrace_Data2_to_Trace_Data (Trace_Data2_to_Trace_Data_IFC);
 				   td2.dst_data,    // rdval
 				   csr_valid,
 				   csr_addr,
-				   csr_data);
+				   csr_data,
+				   // For CSR writes to FFLAGS/FRM/FCSR, also changes MSTATUS
+				   td2.will_dirty_fpu_state,
+				   td2.mstatus);
 	    end
 
 	 else if (   (td2.iType == Mret)

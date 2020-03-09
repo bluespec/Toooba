@@ -207,7 +207,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 			      ppc_vaddr_csrData:    deq_data.ppc_vaddr_csrData,
 			      fflags:               fflags,    // deq_data.fflags only has incremental flags
 			      will_dirty_fpu_state: deq_data.will_dirty_fpu_state,
-			      mstatus:              mstatus,    // For Fpu ops, since [FX] bit changed
+			      mstatus:              mstatus,    // when SD/XS/FS have changed
 
 			      // Trap and RET updates
 			      prv:                  (  m_trap_updates matches tagged Valid .tu
@@ -721,7 +721,11 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         // we claim a phy reg for every inst, so commit its renaming
         regRenamingTable.commit[0].commit;
 
-        Bool write_satp = False; // flush tlb when satp csr is modified
+`ifdef INCLUDE_TANDEM_VERIF
+        Data new_mstatus = no_mstatus;
+`endif
+
+        Bool write_satp     = False; // flush tlb when satp csr is modified
         Bool flush_security = False; // flush for security when the flush csr is written
         if(x.iType == Csr) begin
             // notify commit of CSR (so MMIO pRq may be handled)
@@ -740,6 +744,11 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 `ifdef INCLUDE_TANDEM_VERIF
             Data data_warl_xformed = csrf.warl_xform (csr_idx, csr_data);
 	    x.ppc_vaddr_csrData = tagged CSRData data_warl_xformed;
+
+	    if (x.will_dirty_fpu_state) begin
+	       Data old_mstatus = csrf.rd (CSRmstatus);
+	       new_mstatus = { 1'b1, old_mstatus [62:15], 2'b11, old_mstatus [12:0] };
+	    end
 `endif
 
             // check if satp is modified or not
@@ -774,7 +783,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 `ifdef INCLUDE_TANDEM_VERIF
         fa_to_TV (way0, rg_serial_num,
 		  tagged Invalid,
-		  x, no_fflags, no_mstatus, no_trap_updates, m_ret_updates);
+		  x, no_fflags, new_mstatus, no_trap_updates, m_ret_updates);
 `endif
         rg_serial_num <= rg_serial_num + 1;
 
@@ -814,7 +823,9 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         // checks
         doAssert(x.epochIncremented, "must have already incremented epoch");
         doAssert((x.iType == Csr) == isValid(x.csr), "only CSR has valid csr idx");
-        doAssert(x.fflags == 0 && !x.will_dirty_fpu_state, "cannot dirty FPU");
+        // RSN 2020-03-08: Removed this assertion. Csr instrs that write to
+        // fflags/frm/fcsr do indeed 'dirty' the fpu state
+        // doAssert(x.fflags == 0 && !x.will_dirty_fpu_state, "cannot dirty FPU");
         doAssert(x.spec_bits == 0, "cannot have spec bits");
         doAssert(x.claimed_phy_reg, "must have claimed phy reg");
 `ifdef RENAME_DEBUG

@@ -268,8 +268,8 @@ module mkTV_Encode (TV_Encode_IFC);
       match { .n1, .vb1 } = encode_pc (td.pc);
       match { .n2, .vb2 } = encode_instr (td.instr_sz, td.instr);
       match { .n3, .vb3 } = encode_reg (fv_gpr_regnum (td.rd), td.word1);
-      match { .n4, .vb4 } = encode_reg (fv_csr_regnum (extend (csr_addr_fflags)), td.word2);
-      match { .n5, .vb5 } = encode_reg (fv_csr_regnum (extend (csr_addr_mstatus)), td.word4);
+      match { .n4, .vb4 } = encode_reg (fv_csr_regnum (csr_addr_fflags), td.word2);
+      match { .n5, .vb5 } = encode_reg (fv_csr_regnum (csr_addr_mstatus), td.word4);
       match { .nN, .vbN } = encode_byte (te_op_end_group);
 
       // Concatenate components into a single byte vec
@@ -294,8 +294,8 @@ module mkTV_Encode (TV_Encode_IFC);
       match { .n1, .vb1 } = encode_pc (td.pc);
       match { .n2, .vb2 } = encode_instr (td.instr_sz, td.instr);
       match { .n3, .vb3 } = encode_fpr (fv_fpr_regnum (td.rd), td.word5);
-      match { .n4, .vb4 } = encode_reg (fv_csr_regnum (extend (csr_addr_fflags)), td.word2);
-      match { .n5, .vb5 } = encode_reg (fv_csr_regnum (extend (csr_addr_mstatus)), td.word4);
+      match { .n4, .vb4 } = encode_reg (fv_csr_regnum (csr_addr_fflags), td.word2);
+      match { .n5, .vb5 } = encode_reg (fv_csr_regnum (csr_addr_mstatus), td.word4);
       match { .nN, .vbN } = encode_byte (te_op_end_group);
 
       // Concatenate components into a single byte vec
@@ -343,7 +343,7 @@ module mkTV_Encode (TV_Encode_IFC);
       match { .n2, .vb2 } = encode_instr (td.instr_sz, td.instr);
       match { .n3, .vb3 } = encode_fpr (fv_fpr_regnum (td.rd), td.word5);
       match { .n4, .vb4 } = encode_eaddr (truncate (td.word3));
-      match { .n5, .vb5 } = encode_reg (fv_csr_regnum (extend (csr_addr_mstatus)), td.word4);
+      match { .n5, .vb5 } = encode_reg (fv_csr_regnum (csr_addr_mstatus), td.word4);
       match { .nN, .vbN } = encode_byte (te_op_end_group);
 
       // Concatenate components into a single byte vec
@@ -446,9 +446,17 @@ module mkTV_Encode (TV_Encode_IFC);
       match { .n1, .vb1 } = encode_pc (td.pc);
       match { .n2, .vb2 } = encode_instr (td.instr_sz, td.instr);
       match { .n3, .vb3 } = encode_reg (fv_gpr_regnum (td.rd), td.word1);
-      match { .n4, .vb4 } = ((td.word2 == 0)
-			     ? tuple2 (0, ?)    // CSR was not written
-			     : encode_reg (fv_csr_regnum (truncate (td.word3)), td.word4));
+      Bool csr_written = (td.word2 [0] == 1'b1);
+      match { .n4, .vb4 } = (csr_written
+			     ? encode_reg (fv_csr_regnum (truncate (td.word3)), td.word4)
+			     : tuple2 (0, ?));
+`ifdef ISA_F
+      // MSTATUS.FS and .SD also updated if CSR instr wrote FFLAGS, FRM or FCSR
+      Bool mstatus_written = (td.word2 [1] == 1'b1);
+      match { .n5, .vb5 } = (mstatus_written
+			     ? encode_reg (fv_csr_regnum (csr_addr_mstatus), td.word5)
+			     : tuple2 (0, ?));
+`endif
       match { .nN, .vbN } = encode_byte (te_op_end_group);
 
       // Concatenate components into a single byte vec
@@ -457,7 +465,12 @@ module mkTV_Encode (TV_Encode_IFC);
       match { .nn2, .x2 } = vsubst (nn1, x1,  n2, vb2);
       match { .nn3, .x3 } = vsubst (nn2, x2,  n3, vb3);
       match { .nn4, .x4 } = vsubst (nn3, x3,  n4, vb4);
+`ifdef ISA_F
+      match { .nn5, .x5 } = vsubst (nn4, x4,  n5, vb5);
+      match { .nnN, .xN } = vsubst (nn5, x5,  nN, vbN);
+`else
       match { .nnN, .xN } = vsubst (nn4, x4,  nN, vbN);
+`endif
 
       f_out.enq (tuple2 (nnN, xN));
    endrule

@@ -77,52 +77,54 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 
   // remaining internal signals
   reg [63 : 0] x1_avValue_pc__h3546, x1_avValue_word1__h3550;
-  reg [11 : 0] CASE_in_put_BITS_475_TO_464_1_in_put_BITS_475__ETC__q1,
-	       csr_addr__h5294;
-  reg [4 : 0] CASE_f_inD_OUT_BITS_624_TO_620_14_5_15_5_16_5_ETC__q5,
+  reg [11 : 0] CASE_in_put_BITS_475_TO_464_1_in_put_BITS_475__ETC__q2,
+	       csr_addr__h5310;
+  reg [4 : 0] CASE_f_inD_OUT_BITS_624_TO_620_14_5_15_5_16_5_ETC__q1,
 	      x1_avValue_rd__h3549;
-  reg [3 : 0] CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q2,
-	      CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q3;
-  reg [1 : 0] CASE_in_put_BITS_393_TO_392_0_in_put_BITS_393__ETC__q4;
-  wire [63 : 0] td_word2__h3586,
-		td_word2__h3737,
-		td_word3__h3587,
-		td_word3__h3951,
+  reg [3 : 0] CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q3,
+	      CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q4;
+  reg [1 : 0] CASE_in_put_BITS_393_TO_392_0_in_put_BITS_393__ETC__q5;
+  wire [63 : 0] td_word2__h3589,
+		td_word2__h3740,
+		td_word3__h3590,
+		td_word3__h3954,
 		td_word4__h3474,
 		x1_avValue_pc__h3510,
-		x1_avValue_pc__h3816,
-		x1_avValue_pc__h3883,
-		x1_avValue_word1__h3596,
-		x1_avValue_word1__h3633,
-		x1_avValue_word1__h3709,
-		x1_avValue_word1__h3786,
-		x1_avValue_word1__h3887,
-		x1_avValue_word2__h3597,
-		x1_avValue_word2__h3710,
-		x1_avValue_word2__h3888,
-		x1_avValue_word3__h3598,
-		x1_avValue_word3__h3889,
-		x1_avValue_word3__h3931,
+		x1_avValue_pc__h3819,
+		x1_avValue_pc__h3886,
+		x1_avValue_word1__h3599,
+		x1_avValue_word1__h3636,
+		x1_avValue_word1__h3712,
+		x1_avValue_word1__h3789,
+		x1_avValue_word1__h3890,
+		x1_avValue_word2__h3600,
+		x1_avValue_word2__h3713,
+		x1_avValue_word2__h3891,
+		x1_avValue_word3__h3601,
+		x1_avValue_word3__h3892,
+		x1_avValue_word3__h3934,
 		x1_avValue_word4__h3553,
-		x1_avValue_word4__h3673,
-		x1_avValue_word4__h3890,
-		x1_avValue_word4__h3932,
-		x__h4843,
-		x__h5134,
-		x__h5233,
-		x__h5443,
-		x__h5875;
+		x1_avValue_word4__h3676,
+		x1_avValue_word4__h3893,
+		x1_avValue_word4__h3935,
+		x1_avValue_word5__h3754,
+		x__h4855,
+		x__h5146,
+		x__h5245,
+		x__h5458,
+		x__h5890,
+		x__h5906;
   wire [11 : 0] csraddr__h3569;
   wire [4 : 0] td_rd__h3470,
 	       td_rd__h3538,
 	       x1_avValue_rd__h3513,
-	       x1_avValue_rd__h3632,
-	       x1_avValue_rd__h3669,
-	       x1_avValue_rd__h3708,
-	       x1_avValue_rd__h3746,
-	       x1_avValue_rd__h3785,
-	       x1_avValue_rd__h3886,
-	       x1_avValue_rd__h3987;
+	       x1_avValue_rd__h3635,
+	       x1_avValue_rd__h3672,
+	       x1_avValue_rd__h3711,
+	       x1_avValue_rd__h3749,
+	       x1_avValue_rd__h3788,
+	       x1_avValue_rd__h3889,
+	       x1_avValue_rd__h3990;
   wire [2 : 0] st_funct3__h348;
 
   // action method in_put
@@ -165,13 +167,13 @@ module mkTrace_Data2_to_Trace_Data(CLK,
   // submodule f_in
   assign f_in$D_IN =
 	     { in_put[861:476],
-	       CASE_in_put_BITS_475_TO_464_1_in_put_BITS_475__ETC__q1,
+	       CASE_in_put_BITS_475_TO_464_1_in_put_BITS_475__ETC__q2,
 	       in_put[463:462],
 	       in_put[462] ?
-		 CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q2 :
-		 CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q3,
+		 CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q3 :
+		 CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q4,
 	       in_put[457:394],
-	       CASE_in_put_BITS_393_TO_392_0_in_put_BITS_393__ETC__q4,
+	       CASE_in_put_BITS_393_TO_392_0_in_put_BITS_393__ETC__q5,
 	       in_put[391:0] } ;
   assign f_in$ENQ = EN_in_put ;
   assign f_in$DEQ = CAN_FIRE_RL_rl_td2_to_td ;
@@ -215,22 +217,22 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 					      f_in$D_OUT[393:392] != 2'd1 &&
 					      f_in$D_OUT[624:620] == 5'd13) ?
 					       5'd16 :
-					       CASE_f_inD_OUT_BITS_624_TO_620_14_5_15_5_16_5_ETC__q5)))))))))),
-	       x__h4843,
+					       CASE_f_inD_OUT_BITS_624_TO_620_14_5_15_5_16_5_ETC__q1)))))))))),
+	       x__h4855,
 	       f_in$D_OUT[626:625] == 2'b11,
 	       f_in$D_OUT[656:625],
-	       x1_avValue_rd__h3987,
-	       x__h5134,
-	       x__h5233,
-	       x__h5443,
-	       x__h5875,
-	       f_in$D_OUT[612:549] } ;
-  assign f_out$ENQ = CAN_FIRE_RL_rl_td2_to_td ;
+	       x1_avValue_rd__h3990,
+	       x__h5146,
+	       x__h5245,
+	       x__h5458,
+	       x__h5890,
+	       x__h5906 } ;
+  assign f_out$ENQ = f_in$EMPTY_N && f_out$FULL_N ;
   assign f_out$DEQ = EN_out_get ;
   assign f_out$CLR = 1'b0 ;
 
   // remaining internal signals
-  assign csraddr__h3569 = f_in$D_OUT[476] ? csr_addr__h5294 : 12'd0 ;
+  assign csraddr__h3569 = f_in$D_OUT[476] ? csr_addr__h5310 : 12'd0 ;
   assign st_funct3__h348 =
 	     f_in$D_OUT[484] ?
 	       3'b011 :
@@ -242,22 +244,23 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	       f_in$D_OUT[617:613] :
 	       5'd0 ;
   assign td_rd__h3538 = { 3'd0, f_in$D_OUT[257:256] } ;
-  assign td_word2__h3586 =
-	     (f_in$D_OUT[476] &&
-	      (f_in$D_OUT[638:637] == 2'b01 ||
-	       (f_in$D_OUT[638:637] == 2'b10 ||
-		f_in$D_OUT[638:637] == 2'b11) &&
-	       f_in$D_OUT[644:640] != 5'd0)) ?
-	       64'd1 :
-	       64'd0 ;
-  assign td_word2__h3737 = { 59'd0, f_in$D_OUT[327:323] } ;
-  assign td_word3__h3587 = { 52'd0, csraddr__h3569 } ;
-  assign td_word3__h3951 = { 52'd0, f_in$D_OUT[796:785] } ;
+  assign td_word2__h3589 =
+	     (f_in$D_OUT[322] ? 64'd2 : 64'd0) |
+	     ((f_in$D_OUT[476] &&
+	       (f_in$D_OUT[638:637] == 2'b01 ||
+		(f_in$D_OUT[638:637] == 2'b10 ||
+		 f_in$D_OUT[638:637] == 2'b11) &&
+		f_in$D_OUT[644:640] != 5'd0)) ?
+		64'd1 :
+		64'd0) ;
+  assign td_word2__h3740 = { 59'd0, f_in$D_OUT[327:323] } ;
+  assign td_word3__h3590 = { 52'd0, csraddr__h3569 } ;
+  assign td_word3__h3954 = { 52'd0, f_in$D_OUT[796:785] } ;
   assign td_word4__h3474 = { 61'd0, st_funct3__h348 } ;
   assign x1_avValue_pc__h3510 =
 	     f_in$D_OUT[720:657] +
 	     ((f_in$D_OUT[626:625] == 2'b11) ? 64'd4 : 64'd2) ;
-  assign x1_avValue_pc__h3816 =
+  assign x1_avValue_pc__h3819 =
 	     (f_in$D_OUT[624:620] == 5'd3 || f_in$D_OUT[624:620] == 5'd11 ||
 	      f_in$D_OUT[624:620] == 5'd12 ||
 	      f_in$D_OUT[393:392] == 2'd1 && f_in$D_OUT[624:620] == 5'd4 ||
@@ -266,120 +269,131 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	      f_in$D_OUT[624:620] == 5'd13) ?
 	       x1_avValue_pc__h3510 :
 	       x1_avValue_pc__h3546 ;
-  assign x1_avValue_pc__h3883 =
+  assign x1_avValue_pc__h3886 =
 	     (f_in$D_OUT[393:392] == 2'd0 &&
 	      (f_in$D_OUT[624:620] == 5'd10 || f_in$D_OUT[624:620] == 5'd8 ||
 	       f_in$D_OUT[624:620] == 5'd9)) ?
 	       f_in$D_OUT[391:328] :
-	       x1_avValue_pc__h3816 ;
+	       x1_avValue_pc__h3819 ;
   assign x1_avValue_rd__h3513 = td_rd__h3470 ;
-  assign x1_avValue_rd__h3632 =
+  assign x1_avValue_rd__h3635 =
 	     (f_in$D_OUT[393:392] != 2'd0 && f_in$D_OUT[393:392] != 2'd1 &&
 	      f_in$D_OUT[624:620] == 5'd13) ?
 	       td_rd__h3470 :
 	       x1_avValue_rd__h3549 ;
-  assign x1_avValue_rd__h3669 =
+  assign x1_avValue_rd__h3672 =
 	     (f_in$D_OUT[393:392] == 2'd1 && f_in$D_OUT[624:620] == 5'd4) ?
 	       td_rd__h3470 :
-	       x1_avValue_rd__h3632 ;
-  assign x1_avValue_rd__h3708 =
+	       x1_avValue_rd__h3635 ;
+  assign x1_avValue_rd__h3711 =
 	     (f_in$D_OUT[393:392] == 2'd1 && f_in$D_OUT[619] &&
 	      f_in$D_OUT[618] &&
 	      f_in$D_OUT[624:620] == 5'd4) ?
 	       f_in$D_OUT[617:613] :
-	       x1_avValue_rd__h3669 ;
-  assign x1_avValue_rd__h3746 =
+	       x1_avValue_rd__h3672 ;
+  assign x1_avValue_rd__h3749 =
 	     (f_in$D_OUT[624:620] == 5'd12) ?
 	       td_rd__h3470 :
-	       x1_avValue_rd__h3708 ;
-  assign x1_avValue_rd__h3785 =
+	       x1_avValue_rd__h3711 ;
+  assign x1_avValue_rd__h3788 =
 	     (f_in$D_OUT[619] && f_in$D_OUT[618] &&
 	      f_in$D_OUT[624:620] == 5'd12) ?
 	       f_in$D_OUT[617:613] :
-	       x1_avValue_rd__h3746 ;
-  assign x1_avValue_rd__h3886 =
+	       x1_avValue_rd__h3749 ;
+  assign x1_avValue_rd__h3889 =
 	     (f_in$D_OUT[393:392] == 2'd0 &&
 	      (f_in$D_OUT[624:620] == 5'd8 || f_in$D_OUT[624:620] == 5'd9) ||
 	      f_in$D_OUT[624:620] == 5'd3 ||
 	      f_in$D_OUT[624:620] == 5'd11) ?
 	       td_rd__h3470 :
-	       x1_avValue_rd__h3785 ;
-  assign x1_avValue_rd__h3987 =
-	     f_in$D_OUT[463] ? td_rd__h3538 : x1_avValue_rd__h3886 ;
-  assign x1_avValue_word1__h3596 =
+	       x1_avValue_rd__h3788 ;
+  assign x1_avValue_rd__h3990 =
+	     f_in$D_OUT[463] ? td_rd__h3538 : x1_avValue_rd__h3889 ;
+  assign x1_avValue_word1__h3599 =
 	     (f_in$D_OUT[393:392] != 2'd0 && f_in$D_OUT[393:392] != 2'd1 &&
 	      f_in$D_OUT[624:620] == 5'd13) ?
 	       f_in$D_OUT[612:549] :
 	       x1_avValue_word1__h3550 ;
-  assign x1_avValue_word1__h3633 =
+  assign x1_avValue_word1__h3636 =
 	     (f_in$D_OUT[393:392] == 2'd1 && f_in$D_OUT[624:620] == 5'd5) ?
 	       td_word4__h3474 :
-	       x1_avValue_word1__h3596 ;
-  assign x1_avValue_word1__h3709 =
+	       x1_avValue_word1__h3599 ;
+  assign x1_avValue_word1__h3712 =
 	     (f_in$D_OUT[393:392] == 2'd1 && f_in$D_OUT[624:620] == 5'd4) ?
 	       f_in$D_OUT[612:549] :
-	       x1_avValue_word1__h3633 ;
-  assign x1_avValue_word1__h3786 =
+	       x1_avValue_word1__h3636 ;
+  assign x1_avValue_word1__h3789 =
 	     (f_in$D_OUT[624:620] == 5'd12) ?
 	       f_in$D_OUT[612:549] :
-	       x1_avValue_word1__h3709 ;
-  assign x1_avValue_word1__h3887 =
+	       x1_avValue_word1__h3712 ;
+  assign x1_avValue_word1__h3890 =
 	     (f_in$D_OUT[393:392] == 2'd0 &&
 	      (f_in$D_OUT[624:620] == 5'd8 || f_in$D_OUT[624:620] == 5'd9) ||
 	      f_in$D_OUT[624:620] == 5'd3 ||
 	      f_in$D_OUT[624:620] == 5'd11) ?
 	       f_in$D_OUT[612:549] :
-	       x1_avValue_word1__h3786 ;
-  assign x1_avValue_word2__h3597 =
+	       x1_avValue_word1__h3789 ;
+  assign x1_avValue_word2__h3600 =
 	     (f_in$D_OUT[393:392] != 2'd0 && f_in$D_OUT[393:392] != 2'd1 &&
 	      f_in$D_OUT[624:620] == 5'd13) ?
-	       td_word2__h3586 :
+	       td_word2__h3589 :
 	       f_in$D_OUT[548:485] ;
-  assign x1_avValue_word2__h3710 =
+  assign x1_avValue_word2__h3713 =
 	     (f_in$D_OUT[393:392] == 2'd1 && f_in$D_OUT[624:620] == 5'd5) ?
 	       f_in$D_OUT[548:485] :
-	       x1_avValue_word2__h3597 ;
-  assign x1_avValue_word2__h3888 =
+	       x1_avValue_word2__h3600 ;
+  assign x1_avValue_word2__h3891 =
 	     (f_in$D_OUT[624:620] == 5'd12) ?
-	       td_word2__h3737 :
-	       x1_avValue_word2__h3710 ;
-  assign x1_avValue_word3__h3598 =
+	       td_word2__h3740 :
+	       x1_avValue_word2__h3713 ;
+  assign x1_avValue_word3__h3601 =
 	     (f_in$D_OUT[393:392] != 2'd0 && f_in$D_OUT[393:392] != 2'd1 &&
 	      f_in$D_OUT[624:620] == 5'd13) ?
-	       td_word3__h3587 :
+	       td_word3__h3590 :
 	       f_in$D_OUT[391:328] ;
-  assign x1_avValue_word3__h3889 =
+  assign x1_avValue_word3__h3892 =
 	     (f_in$D_OUT[393:392] == 2'd1 &&
 	      (f_in$D_OUT[624:620] == 5'd4 || f_in$D_OUT[624:620] == 5'd5)) ?
 	       f_in$D_OUT[391:328] :
-	       x1_avValue_word3__h3598 ;
-  assign x1_avValue_word3__h3931 =
-	     f_in$D_OUT[463] ? f_in$D_OUT[63:0] : x1_avValue_word3__h3889 ;
+	       x1_avValue_word3__h3601 ;
+  assign x1_avValue_word3__h3934 =
+	     f_in$D_OUT[463] ? f_in$D_OUT[63:0] : x1_avValue_word3__h3892 ;
   assign x1_avValue_word4__h3553 = td_word4__h3474 ;
-  assign x1_avValue_word4__h3673 =
+  assign x1_avValue_word4__h3676 =
 	     (f_in$D_OUT[393:392] != 2'd0 && f_in$D_OUT[393:392] != 2'd1 &&
 	      f_in$D_OUT[624:620] == 5'd13) ?
 	       f_in$D_OUT[391:328] :
 	       x1_avValue_word4__h3553 ;
-  assign x1_avValue_word4__h3890 =
+  assign x1_avValue_word4__h3893 =
 	     (f_in$D_OUT[624:620] == 5'd12 ||
 	      f_in$D_OUT[393:392] == 2'd1 && f_in$D_OUT[619] &&
 	      f_in$D_OUT[618] &&
 	      f_in$D_OUT[624:620] == 5'd4) ?
 	       f_in$D_OUT[321:258] :
-	       x1_avValue_word4__h3673 ;
-  assign x1_avValue_word4__h3932 =
-	     f_in$D_OUT[463] ? f_in$D_OUT[457:394] : x1_avValue_word4__h3890 ;
-  assign x__h4843 =
-	     f_in$D_OUT[463] ? f_in$D_OUT[255:192] : x1_avValue_pc__h3883 ;
-  assign x__h5134 =
-	     f_in$D_OUT[463] ? f_in$D_OUT[191:128] : x1_avValue_word1__h3887 ;
-  assign x__h5233 =
-	     f_in$D_OUT[463] ? f_in$D_OUT[127:64] : x1_avValue_word2__h3888 ;
-  assign x__h5443 =
-	     f_in$D_OUT[797] ? td_word3__h3951 : x1_avValue_word3__h3931 ;
-  assign x__h5875 =
-	     f_in$D_OUT[797] ? f_in$D_OUT[784:721] : x1_avValue_word4__h3932 ;
+	       x1_avValue_word4__h3676 ;
+  assign x1_avValue_word4__h3935 =
+	     f_in$D_OUT[463] ? f_in$D_OUT[457:394] : x1_avValue_word4__h3893 ;
+  assign x1_avValue_word5__h3754 =
+	     (f_in$D_OUT[393:392] == 2'd1 && f_in$D_OUT[619] &&
+	      f_in$D_OUT[618] &&
+	      f_in$D_OUT[624:620] == 5'd4) ?
+	       f_in$D_OUT[612:549] :
+	       f_in$D_OUT[321:258] ;
+  assign x__h4855 =
+	     f_in$D_OUT[463] ? f_in$D_OUT[255:192] : x1_avValue_pc__h3886 ;
+  assign x__h5146 =
+	     f_in$D_OUT[463] ? f_in$D_OUT[191:128] : x1_avValue_word1__h3890 ;
+  assign x__h5245 =
+	     f_in$D_OUT[463] ? f_in$D_OUT[127:64] : x1_avValue_word2__h3891 ;
+  assign x__h5458 =
+	     f_in$D_OUT[797] ? td_word3__h3954 : x1_avValue_word3__h3934 ;
+  assign x__h5890 =
+	     f_in$D_OUT[797] ? f_in$D_OUT[784:721] : x1_avValue_word4__h3935 ;
+  assign x__h5906 =
+	     (f_in$D_OUT[619] && f_in$D_OUT[618] &&
+	      f_in$D_OUT[624:620] == 5'd12) ?
+	       f_in$D_OUT[612:549] :
+	       x1_avValue_word5__h3754 ;
   always@(f_in$D_OUT)
   begin
     case (f_in$D_OUT[624:620])
@@ -448,8 +462,24 @@ module mkTrace_Data2_to_Trace_Data(CLK,
       12'd3858,
       12'd3859,
       12'd3860:
-	  csr_addr__h5294 = f_in$D_OUT[475:464];
-      default: csr_addr__h5294 = 12'd2303;
+	  csr_addr__h5310 = f_in$D_OUT[475:464];
+      default: csr_addr__h5310 = 12'd2303;
+    endcase
+  end
+  always@(f_in$D_OUT)
+  begin
+    case (f_in$D_OUT[624:620])
+      5'd14, 5'd15, 5'd16, 5'd17, 5'd18:
+	  CASE_f_inD_OUT_BITS_624_TO_620_14_5_15_5_16_5_ETC__q1 = 5'd5;
+      5'd19, 5'd20:
+	  CASE_f_inD_OUT_BITS_624_TO_620_14_5_15_5_16_5_ETC__q1 = 5'd15;
+      default: CASE_f_inD_OUT_BITS_624_TO_620_14_5_15_5_16_5_ETC__q1 =
+		   (f_in$D_OUT[393:392] == 2'd1 &&
+		    (f_in$D_OUT[624:620] == 5'd2 ||
+		     f_in$D_OUT[624:620] == 5'd6 ||
+		     f_in$D_OUT[624:620] == 5'd7)) ?
+		     5'd13 :
+		     5'd5;
     endcase
   end
   always@(in_put)
@@ -499,9 +529,9 @@ module mkTrace_Data2_to_Trace_Data(CLK,
       12'd3858,
       12'd3859,
       12'd3860:
-	  CASE_in_put_BITS_475_TO_464_1_in_put_BITS_475__ETC__q1 =
+	  CASE_in_put_BITS_475_TO_464_1_in_put_BITS_475__ETC__q2 =
 	      in_put[475:464];
-      default: CASE_in_put_BITS_475_TO_464_1_in_put_BITS_475__ETC__q1 =
+      default: CASE_in_put_BITS_475_TO_464_1_in_put_BITS_475__ETC__q2 =
 		   12'd2303;
     endcase
   end
@@ -509,9 +539,9 @@ module mkTrace_Data2_to_Trace_Data(CLK,
   begin
     case (in_put[461:458])
       4'd0, 4'd1, 4'd3, 4'd4, 4'd5, 4'd7, 4'd8, 4'd9, 4'd11, 4'd14:
-	  CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q2 =
+	  CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q3 =
 	      in_put[461:458];
-      default: CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q2 = 4'd15;
+      default: CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q3 = 4'd15;
     endcase
   end
   always@(in_put)
@@ -530,34 +560,18 @@ module mkTrace_Data2_to_Trace_Data(CLK,
       4'd11,
       4'd12,
       4'd13:
-	  CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q3 =
+	  CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q4 =
 	      in_put[461:458];
-      default: CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q3 = 4'd15;
+      default: CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q4 = 4'd15;
     endcase
   end
   always@(in_put)
   begin
     case (in_put[393:392])
       2'd0, 2'd1:
-	  CASE_in_put_BITS_393_TO_392_0_in_put_BITS_393__ETC__q4 =
+	  CASE_in_put_BITS_393_TO_392_0_in_put_BITS_393__ETC__q5 =
 	      in_put[393:392];
-      default: CASE_in_put_BITS_393_TO_392_0_in_put_BITS_393__ETC__q4 = 2'd2;
-    endcase
-  end
-  always@(f_in$D_OUT)
-  begin
-    case (f_in$D_OUT[624:620])
-      5'd14, 5'd15, 5'd16, 5'd17, 5'd18:
-	  CASE_f_inD_OUT_BITS_624_TO_620_14_5_15_5_16_5_ETC__q5 = 5'd5;
-      5'd19, 5'd20:
-	  CASE_f_inD_OUT_BITS_624_TO_620_14_5_15_5_16_5_ETC__q5 = 5'd15;
-      default: CASE_f_inD_OUT_BITS_624_TO_620_14_5_15_5_16_5_ETC__q5 =
-		   (f_in$D_OUT[393:392] == 2'd1 &&
-		    (f_in$D_OUT[624:620] == 5'd2 ||
-		     f_in$D_OUT[624:620] == 5'd6 ||
-		     f_in$D_OUT[624:620] == 5'd7)) ?
-		     5'd13 :
-		     5'd5;
+      default: CASE_in_put_BITS_393_TO_392_0_in_put_BITS_393__ETC__q5 = 2'd2;
     endcase
   end
 

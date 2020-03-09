@@ -525,6 +525,15 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
             will_dirty_fpu_state = True;
             doAssert(False, "system inst never touches FP regs");
         end
+
+        // CSR instrs that touch certain FP CSRs will dirty FP state.
+        if (dInst.csr matches tagged Valid .csr
+	    &&& ((dInst.iType == Csr)
+		 && ((csr == CSRfflags) || (csr == CSRfrm) || (csr == CSRfcsr))))
+	   begin
+	      will_dirty_fpu_state = True;
+	   end
+
         RobInstState rob_inst_state = to_exec ? NotDone : Executed;
         let y = ToReorderBuffer{pc: pc,
 				orig_inst: orig_inst,
