@@ -933,12 +933,10 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 		   po_fflags  = new_fflags;
 		   po_mstatus = new_mstatus;
 
-		   Bool is_fmv_x_dw = ((x.orig_inst & 32'b_1111110_11111_00000_111_00000_1111111)
-				       ==             32'b_1110000_00000_00000_000_00000_1010011);
 		   fa_to_TV (i, rg_serial_num + instret,
 			     tagged Invalid,
 			     x,
-			     (is_fmv_x_dw ? 5'b0 : po_fflags),
+			     po_fflags,
 			     po_mstatus,
 			     no_trap_updates, no_ret_updates);
 `endif

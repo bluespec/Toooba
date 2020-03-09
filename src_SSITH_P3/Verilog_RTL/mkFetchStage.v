@@ -796,7 +796,7 @@ module mkFetchStage(CLK,
        f32d_enqReq_lat_0$whas,
        instdata_empty_lat_0$whas,
        instdata_full_lat_1$whas,
-       napTrainByDecQ_empty_lat_1$whas,
+       napTrainByDecQ_enqP_lat_0$whas,
        napTrainByExe$whas,
        out_fifo_dequeueFifo_lat_0$whas,
        out_fifo_dequeueFifo_lat_1$whas,
@@ -2801,10 +2801,10 @@ module mkFetchStage(CLK,
 	       SEL_ARR_IF_NOT_f22f3_empty_33_793_AND_NOT_SEL__ETC___d4154;
   reg [11 : 0] CASE_decode_055_BITS_72_TO_61_1_decode_055_BIT_ETC__q10,
 	       CASE_decode_481_BITS_72_TO_61_1_decode_481_BIT_ETC__q7,
-	       CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q224,
-	       CASE_x8212_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q228;
-  reg [9 : 0] CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q225,
-	      CASE_x8212_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q229;
+	       CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q228,
+	       CASE_x8212_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q224;
+  reg [9 : 0] CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q229,
+	      CASE_x8212_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q225;
   reg [4 : 0] CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q202,
 	      CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q217,
 	      CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q220,
@@ -2980,9 +2980,9 @@ module mkFetchStage(CLK,
       CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q201,
       CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q21,
       CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q22,
-      CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q226,
-      CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q227,
       CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q23,
+      CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q230,
+      CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q231,
       CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q24,
       CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q27,
       CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q28,
@@ -3038,8 +3038,8 @@ module mkFetchStage(CLK,
       CASE_x8212_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q186,
       CASE_x8212_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q188,
       CASE_x8212_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q190,
-      CASE_x8212_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q230,
-      CASE_x8212_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q231,
+      CASE_x8212_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q226,
+      CASE_x8212_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q227,
       CASE_x8212_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q25,
       CASE_x8212_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q26,
       CASE_x8212_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q29,
@@ -5601,11 +5601,11 @@ module mkFetchStage(CLK,
   assign napTrainByExe$wget = { x__h222212, train_predictors_next_pc } ;
   assign napTrainByExe$whas =
 	     EN_train_predictors && train_predictors_mispred ;
-  assign napTrainByDecQ_empty_lat_1$whas =
+  assign perfReqQ_enqReq_lat_0$wget = { 1'd1, perf_req_r } ;
+  assign napTrainByDecQ_enqP_lat_0$whas =
 	     WILL_FIRE_RL_doDecode &&
 	     SEL_ARR_f32d_data_0_981_BITS_3_TO_0_982_f32d_d_ETC___d5987 &&
 	     IF_NOT_SEL_ARR_instdata_data_0_989_BITS_195_TO_ETC___d6795 ;
-  assign perfReqQ_enqReq_lat_0$wget = { 1'd1, perf_req_r } ;
 
   // register decode_epoch_rl
   assign decode_epoch_rl$D_IN =
@@ -5690,15 +5690,7 @@ module mkFetchStage(CLK,
   assign f22f3_clearReq_rl$EN = 1'd1 ;
 
   // register f22f3_data_0
-  assign f22f3_data_0$D_IN = f22f3_data_1$D_IN ;
-  assign f22f3_data_0$EN =
-	     f22f3_enqP == 2'd0 &&
-	     NOT_f22f3_clearReq_dummy2_1_read__95_13_OR_IF__ETC___d417 &&
-	     f22f3_enqReq_dummy2_2$Q_OUT &&
-	     IF_f22f3_enqReq_lat_1_whas__89_THEN_f22f3_enqR_ETC___d198 ;
-
-  // register f22f3_data_1
-  assign f22f3_data_1$D_IN =
+  assign f22f3_data_0$D_IN =
 	     { x__h20431,
 	       x__h20488,
 	       !f22f3_enqReq_dummy2_2$Q_OUT ||
@@ -5713,6 +5705,14 @@ module mkFetchStage(CLK,
 	       WILL_FIRE_RL_doFetch2 ?
 		 f22f3_enqReq_lat_0$wget[70:0] :
 		 f22f3_enqReq_rl[70:0] } ;
+  assign f22f3_data_0$EN =
+	     f22f3_enqP == 2'd0 &&
+	     NOT_f22f3_clearReq_dummy2_1_read__95_13_OR_IF__ETC___d417 &&
+	     f22f3_enqReq_dummy2_2$Q_OUT &&
+	     IF_f22f3_enqReq_lat_1_whas__89_THEN_f22f3_enqR_ETC___d198 ;
+
+  // register f22f3_data_1
+  assign f22f3_data_1$D_IN = f22f3_data_0$D_IN ;
   assign f22f3_data_1$EN =
 	     f22f3_enqP == 2'd1 &&
 	     NOT_f22f3_clearReq_dummy2_1_read__95_13_OR_IF__ETC___d417 &&
@@ -5720,7 +5720,7 @@ module mkFetchStage(CLK,
 	     IF_f22f3_enqReq_lat_1_whas__89_THEN_f22f3_enqR_ETC___d198 ;
 
   // register f22f3_data_2
-  assign f22f3_data_2$D_IN = f22f3_data_1$D_IN ;
+  assign f22f3_data_2$D_IN = f22f3_data_0$D_IN ;
   assign f22f3_data_2$EN =
 	     f22f3_enqP == 2'd2 &&
 	     NOT_f22f3_clearReq_dummy2_1_read__95_13_OR_IF__ETC___d417 &&
@@ -5728,7 +5728,7 @@ module mkFetchStage(CLK,
 	     IF_f22f3_enqReq_lat_1_whas__89_THEN_f22f3_enqR_ETC___d198 ;
 
   // register f22f3_data_3
-  assign f22f3_data_3$D_IN = f22f3_data_1$D_IN ;
+  assign f22f3_data_3$D_IN = f22f3_data_0$D_IN ;
   assign f22f3_data_3$EN =
 	     f22f3_enqP == 2'd3 &&
 	     NOT_f22f3_clearReq_dummy2_1_read__95_13_OR_IF__ETC___d417 &&
@@ -5894,17 +5894,17 @@ module mkFetchStage(CLK,
 		  IF_SEL_ARR_NOT_f32d_data_0_981_BIT_73_045_046__ETC___d6809 :
 		  IF_IF_decode_055_BITS_99_TO_95_059_EQ_8_069_AN_ETC___d6807) :
 	       IF_IF_decode_055_BITS_99_TO_95_059_EQ_8_069_AN_ETC___d6807 ;
-  assign napTrainByDecQ_data_0$EN = napTrainByDecQ_empty_lat_1$whas ;
+  assign napTrainByDecQ_data_0$EN = napTrainByDecQ_enqP_lat_0$whas ;
 
   // register napTrainByDecQ_empty_rl
   assign napTrainByDecQ_empty_rl$D_IN =
-	     !napTrainByDecQ_empty_lat_1$whas &&
+	     !napTrainByDecQ_enqP_lat_0$whas &&
 	     (CAN_FIRE_RL_setTrainNAPByDec || napTrainByDecQ_empty_rl) ;
   assign napTrainByDecQ_empty_rl$EN = 1'd1 ;
 
   // register napTrainByDecQ_full_rl
   assign napTrainByDecQ_full_rl$D_IN =
-	     napTrainByDecQ_empty_lat_1$whas ||
+	     napTrainByDecQ_enqP_lat_0$whas ||
 	     !CAN_FIRE_RL_setTrainNAPByDec && napTrainByDecQ_full_rl ;
   assign napTrainByDecQ_full_rl$EN = 1'd1 ;
 
@@ -9627,7 +9627,7 @@ module mkFetchStage(CLK,
 
   // submodule napTrainByDecQ_empty_dummy2_1
   assign napTrainByDecQ_empty_dummy2_1$D_IN = 1'd1 ;
-  assign napTrainByDecQ_empty_dummy2_1$EN = napTrainByDecQ_empty_lat_1$whas ;
+  assign napTrainByDecQ_empty_dummy2_1$EN = napTrainByDecQ_enqP_lat_0$whas ;
 
   // submodule napTrainByDecQ_empty_dummy2_2
   assign napTrainByDecQ_empty_dummy2_2$D_IN = 1'b0 ;
@@ -9635,7 +9635,7 @@ module mkFetchStage(CLK,
 
   // submodule napTrainByDecQ_enqP_dummy2_0
   assign napTrainByDecQ_enqP_dummy2_0$D_IN = 1'd1 ;
-  assign napTrainByDecQ_enqP_dummy2_0$EN = napTrainByDecQ_empty_lat_1$whas ;
+  assign napTrainByDecQ_enqP_dummy2_0$EN = napTrainByDecQ_enqP_lat_0$whas ;
 
   // submodule napTrainByDecQ_enqP_dummy2_1
   assign napTrainByDecQ_enqP_dummy2_1$D_IN = 1'b0 ;
@@ -9647,7 +9647,7 @@ module mkFetchStage(CLK,
 
   // submodule napTrainByDecQ_full_dummy2_1
   assign napTrainByDecQ_full_dummy2_1$D_IN = 1'd1 ;
-  assign napTrainByDecQ_full_dummy2_1$EN = napTrainByDecQ_empty_lat_1$whas ;
+  assign napTrainByDecQ_full_dummy2_1$EN = napTrainByDecQ_enqP_lat_0$whas ;
 
   // submodule napTrainByDecQ_full_dummy2_2
   assign napTrainByDecQ_full_dummy2_2$D_IN = 1'b0 ;
@@ -14301,10 +14301,10 @@ module mkFetchStage(CLK,
 	     !SEL_ARR_f32d_data_0_981_BIT_4_999_f32d_data_1__ETC___d6003 ||
 	     CASE_x9724_0_out_fifo_internalFifos_0FULL_N_1_ETC__q4 ;
   assign SEL_ARR_out_fifo_internalFifos_0_first__844_BI_ETC___d6875 =
-	     { CASE_x8212_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q228,
-	       CASE_x8212_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q229,
-	       CASE_x8212_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q230,
-	       CASE_x8212_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q231 } ;
+	     { CASE_x8212_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q224,
+	       CASE_x8212_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q225,
+	       CASE_x8212_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q226,
+	       CASE_x8212_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q227 } ;
   assign SEL_ARR_out_fifo_internalFifos_0_first__844_BI_ETC___d6932 =
 	     { CASE_x8212_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q11,
 	       CASE_x8212_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q12,
@@ -14347,10 +14347,10 @@ module mkFetchStage(CLK,
 	       NOT_SEL_ARR_NOT_out_fifo_internalFifos_0_first_ETC___d7364,
 	       NOT_SEL_ARR_NOT_out_fifo_internalFifos_0_first_ETC___d7496 } ;
   assign SEL_ARR_out_fifo_internalFifos_0_first__844_BI_ETC___d7509 =
-	     { CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q224,
-	       CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q225,
-	       CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q226,
-	       CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q227 } ;
+	     { CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q228,
+	       CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q229,
+	       CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q230,
+	       CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q231 } ;
   assign SEL_ARR_out_fifo_internalFifos_0_first__844_BI_ETC___d7525 =
 	     { CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q20,
 	       CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q21,
@@ -21272,21 +21272,21 @@ module mkFetchStage(CLK,
   begin
     case (f22f3_deqP)
       2'd0:
-	  SEL_ARR_IF_f22f3_data_0_794_BITS_74_TO_71_664__ETC___d5857 =
+	  SEL_ARR_IF_f22f3_data_0_794_BITS_74_TO_71_664__ETC___d5847 =
 	      IF_f22f3_data_0_794_BITS_74_TO_71_664_EQ_0_665_ETC___d5690 ==
-	      4'd8;
+	      4'd7;
       2'd1:
-	  SEL_ARR_IF_f22f3_data_0_794_BITS_74_TO_71_664__ETC___d5857 =
+	  SEL_ARR_IF_f22f3_data_0_794_BITS_74_TO_71_664__ETC___d5847 =
 	      IF_f22f3_data_1_796_BITS_74_TO_71_692_EQ_0_693_ETC___d5718 ==
-	      4'd8;
+	      4'd7;
       2'd2:
-	  SEL_ARR_IF_f22f3_data_0_794_BITS_74_TO_71_664__ETC___d5857 =
+	  SEL_ARR_IF_f22f3_data_0_794_BITS_74_TO_71_664__ETC___d5847 =
 	      IF_f22f3_data_2_798_BITS_74_TO_71_720_EQ_0_721_ETC___d5746 ==
-	      4'd8;
+	      4'd7;
       2'd3:
-	  SEL_ARR_IF_f22f3_data_0_794_BITS_74_TO_71_664__ETC___d5857 =
+	  SEL_ARR_IF_f22f3_data_0_794_BITS_74_TO_71_664__ETC___d5847 =
 	      IF_f22f3_data_3_800_BITS_74_TO_71_748_EQ_0_749_ETC___d5774 ==
-	      4'd8;
+	      4'd7;
     endcase
   end
   always@(f22f3_deqP or
@@ -21297,21 +21297,21 @@ module mkFetchStage(CLK,
   begin
     case (f22f3_deqP)
       2'd0:
-	  SEL_ARR_IF_f22f3_data_0_794_BITS_74_TO_71_664__ETC___d5847 =
+	  SEL_ARR_IF_f22f3_data_0_794_BITS_74_TO_71_664__ETC___d5857 =
 	      IF_f22f3_data_0_794_BITS_74_TO_71_664_EQ_0_665_ETC___d5690 ==
-	      4'd7;
+	      4'd8;
       2'd1:
-	  SEL_ARR_IF_f22f3_data_0_794_BITS_74_TO_71_664__ETC___d5847 =
+	  SEL_ARR_IF_f22f3_data_0_794_BITS_74_TO_71_664__ETC___d5857 =
 	      IF_f22f3_data_1_796_BITS_74_TO_71_692_EQ_0_693_ETC___d5718 ==
-	      4'd7;
+	      4'd8;
       2'd2:
-	  SEL_ARR_IF_f22f3_data_0_794_BITS_74_TO_71_664__ETC___d5847 =
+	  SEL_ARR_IF_f22f3_data_0_794_BITS_74_TO_71_664__ETC___d5857 =
 	      IF_f22f3_data_2_798_BITS_74_TO_71_720_EQ_0_721_ETC___d5746 ==
-	      4'd7;
+	      4'd8;
       2'd3:
-	  SEL_ARR_IF_f22f3_data_0_794_BITS_74_TO_71_664__ETC___d5847 =
+	  SEL_ARR_IF_f22f3_data_0_794_BITS_74_TO_71_664__ETC___d5857 =
 	      IF_f22f3_data_3_800_BITS_74_TO_71_748_EQ_0_749_ETC___d5774 ==
-	      4'd7;
+	      4'd8;
     endcase
   end
   always@(f22f3_deqP or
@@ -21347,21 +21347,21 @@ module mkFetchStage(CLK,
   begin
     case (f22f3_deqP)
       2'd0:
-	  SEL_ARR_IF_f22f3_data_0_794_BITS_74_TO_71_664__ETC___d5877 =
+	  SEL_ARR_IF_f22f3_data_0_794_BITS_74_TO_71_664__ETC___d5887 =
 	      IF_f22f3_data_0_794_BITS_74_TO_71_664_EQ_0_665_ETC___d5690 ==
-	      4'd10;
+	      4'd11;
       2'd1:
-	  SEL_ARR_IF_f22f3_data_0_794_BITS_74_TO_71_664__ETC___d5877 =
+	  SEL_ARR_IF_f22f3_data_0_794_BITS_74_TO_71_664__ETC___d5887 =
 	      IF_f22f3_data_1_796_BITS_74_TO_71_692_EQ_0_693_ETC___d5718 ==
-	      4'd10;
+	      4'd11;
       2'd2:
-	  SEL_ARR_IF_f22f3_data_0_794_BITS_74_TO_71_664__ETC___d5877 =
+	  SEL_ARR_IF_f22f3_data_0_794_BITS_74_TO_71_664__ETC___d5887 =
 	      IF_f22f3_data_2_798_BITS_74_TO_71_720_EQ_0_721_ETC___d5746 ==
-	      4'd10;
+	      4'd11;
       2'd3:
-	  SEL_ARR_IF_f22f3_data_0_794_BITS_74_TO_71_664__ETC___d5877 =
+	  SEL_ARR_IF_f22f3_data_0_794_BITS_74_TO_71_664__ETC___d5887 =
 	      IF_f22f3_data_3_800_BITS_74_TO_71_748_EQ_0_749_ETC___d5774 ==
-	      4'd10;
+	      4'd11;
     endcase
   end
   always@(f22f3_deqP or
@@ -21372,21 +21372,21 @@ module mkFetchStage(CLK,
   begin
     case (f22f3_deqP)
       2'd0:
-	  SEL_ARR_IF_f22f3_data_0_794_BITS_74_TO_71_664__ETC___d5887 =
+	  SEL_ARR_IF_f22f3_data_0_794_BITS_74_TO_71_664__ETC___d5877 =
 	      IF_f22f3_data_0_794_BITS_74_TO_71_664_EQ_0_665_ETC___d5690 ==
-	      4'd11;
+	      4'd10;
       2'd1:
-	  SEL_ARR_IF_f22f3_data_0_794_BITS_74_TO_71_664__ETC___d5887 =
+	  SEL_ARR_IF_f22f3_data_0_794_BITS_74_TO_71_664__ETC___d5877 =
 	      IF_f22f3_data_1_796_BITS_74_TO_71_692_EQ_0_693_ETC___d5718 ==
-	      4'd11;
+	      4'd10;
       2'd2:
-	  SEL_ARR_IF_f22f3_data_0_794_BITS_74_TO_71_664__ETC___d5887 =
+	  SEL_ARR_IF_f22f3_data_0_794_BITS_74_TO_71_664__ETC___d5877 =
 	      IF_f22f3_data_2_798_BITS_74_TO_71_720_EQ_0_721_ETC___d5746 ==
-	      4'd11;
+	      4'd10;
       2'd3:
-	  SEL_ARR_IF_f22f3_data_0_794_BITS_74_TO_71_664__ETC___d5887 =
+	  SEL_ARR_IF_f22f3_data_0_794_BITS_74_TO_71_664__ETC___d5877 =
 	      IF_f22f3_data_3_800_BITS_74_TO_71_748_EQ_0_749_ETC___d5774 ==
-	      4'd11;
+	      4'd10;
     endcase
   end
   always@(f22f3_deqP or
@@ -24552,99 +24552,99 @@ module mkFetchStage(CLK,
 	      out_fifo_internalFifos_1$D_OUT[199:195];
     endcase
   end
-  always@(x__h78119 or
+  always@(x__h68212 or
 	  out_fifo_internalFifos_0$D_OUT or out_fifo_internalFifos_1$D_OUT)
   begin
-    case (x__h78119)
+    case (x__h68212)
       1'd0:
-	  CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q224 =
+	  CASE_x8212_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q224 =
 	      out_fifo_internalFifos_0$D_OUT[255:244];
       1'd1:
-	  CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q224 =
+	  CASE_x8212_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q224 =
 	      out_fifo_internalFifos_1$D_OUT[255:244];
     endcase
   end
-  always@(x__h78119 or
+  always@(x__h68212 or
 	  out_fifo_internalFifos_0$D_OUT or out_fifo_internalFifos_1$D_OUT)
   begin
-    case (x__h78119)
+    case (x__h68212)
       1'd0:
-	  CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q225 =
+	  CASE_x8212_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q225 =
 	      out_fifo_internalFifos_0$D_OUT[243:234];
       1'd1:
-	  CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q225 =
+	  CASE_x8212_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q225 =
 	      out_fifo_internalFifos_1$D_OUT[243:234];
     endcase
   end
-  always@(x__h78119 or
+  always@(x__h68212 or
 	  out_fifo_internalFifos_0$D_OUT or out_fifo_internalFifos_1$D_OUT)
   begin
-    case (x__h78119)
+    case (x__h68212)
       1'd0:
-	  CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q226 =
+	  CASE_x8212_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q226 =
 	      out_fifo_internalFifos_0$D_OUT[233];
       1'd1:
-	  CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q226 =
+	  CASE_x8212_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q226 =
 	      out_fifo_internalFifos_1$D_OUT[233];
     endcase
   end
-  always@(x__h78119 or
+  always@(x__h68212 or
 	  out_fifo_internalFifos_0$D_OUT or out_fifo_internalFifos_1$D_OUT)
   begin
-    case (x__h78119)
+    case (x__h68212)
       1'd0:
-	  CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q227 =
+	  CASE_x8212_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q227 =
 	      out_fifo_internalFifos_0$D_OUT[232];
       1'd1:
-	  CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q227 =
+	  CASE_x8212_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q227 =
 	      out_fifo_internalFifos_1$D_OUT[232];
     endcase
   end
-  always@(x__h68212 or
+  always@(x__h78119 or
 	  out_fifo_internalFifos_0$D_OUT or out_fifo_internalFifos_1$D_OUT)
   begin
-    case (x__h68212)
+    case (x__h78119)
       1'd0:
-	  CASE_x8212_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q228 =
+	  CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q228 =
 	      out_fifo_internalFifos_0$D_OUT[255:244];
       1'd1:
-	  CASE_x8212_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q228 =
+	  CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q228 =
 	      out_fifo_internalFifos_1$D_OUT[255:244];
     endcase
   end
-  always@(x__h68212 or
+  always@(x__h78119 or
 	  out_fifo_internalFifos_0$D_OUT or out_fifo_internalFifos_1$D_OUT)
   begin
-    case (x__h68212)
+    case (x__h78119)
       1'd0:
-	  CASE_x8212_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q229 =
+	  CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q229 =
 	      out_fifo_internalFifos_0$D_OUT[243:234];
       1'd1:
-	  CASE_x8212_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q229 =
+	  CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q229 =
 	      out_fifo_internalFifos_1$D_OUT[243:234];
     endcase
   end
-  always@(x__h68212 or
+  always@(x__h78119 or
 	  out_fifo_internalFifos_0$D_OUT or out_fifo_internalFifos_1$D_OUT)
   begin
-    case (x__h68212)
+    case (x__h78119)
       1'd0:
-	  CASE_x8212_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q230 =
+	  CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q230 =
 	      out_fifo_internalFifos_0$D_OUT[233];
       1'd1:
-	  CASE_x8212_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q230 =
+	  CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q230 =
 	      out_fifo_internalFifos_1$D_OUT[233];
     endcase
   end
-  always@(x__h68212 or
+  always@(x__h78119 or
 	  out_fifo_internalFifos_0$D_OUT or out_fifo_internalFifos_1$D_OUT)
   begin
-    case (x__h68212)
+    case (x__h78119)
       1'd0:
-	  CASE_x8212_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q231 =
+	  CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q231 =
 	      out_fifo_internalFifos_0$D_OUT[232];
       1'd1:
-	  CASE_x8212_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q231 =
+	  CASE_x8119_0_out_fifo_internalFifos_0D_OUT_BI_ETC__q231 =
 	      out_fifo_internalFifos_1$D_OUT[232];
     endcase
   end
@@ -25160,6 +25160,24 @@ module mkFetchStage(CLK,
 	      pc_start__h125474;
     endcase
   end
+  always@(pending_spaces_ext__h156184 or
+	  pc__h160015 or pc__h160357 or pc__h160703 or pc_start__h125474)
+  begin
+    case (pending_spaces_ext__h156184)
+      3'd0:
+	  SEL_ARR_IF_NOT_f22f3_empty_33_793_AND_NOT_SEL__ETC___d4270 =
+	      pc__h160015;
+      3'd1:
+	  SEL_ARR_IF_NOT_f22f3_empty_33_793_AND_NOT_SEL__ETC___d4270 =
+	      pc__h160357;
+      3'd2:
+	  SEL_ARR_IF_NOT_f22f3_empty_33_793_AND_NOT_SEL__ETC___d4270 =
+	      pc__h160703;
+      3'd3, 3'd4, 3'd5, 3'd6, 3'd7:
+	  SEL_ARR_IF_NOT_f22f3_empty_33_793_AND_NOT_SEL__ETC___d4270 =
+	      pc_start__h125474;
+    endcase
+  end
   always@(pending_spaces__h156182 or rg_pending_decode or pc_start__h125474)
   begin
     case (pending_spaces__h156182)
@@ -25194,24 +25212,6 @@ module mkFetchStage(CLK,
 	  y_avValue_fst_pred_next_pc__h176760 = pc_start__h125474;
     endcase
   end
-  always@(pending_spaces_ext__h156184 or
-	  pc__h160015 or pc__h160357 or pc__h160703 or pc_start__h125474)
-  begin
-    case (pending_spaces_ext__h156184)
-      3'd0:
-	  SEL_ARR_IF_NOT_f22f3_empty_33_793_AND_NOT_SEL__ETC___d4270 =
-	      pc__h160015;
-      3'd1:
-	  SEL_ARR_IF_NOT_f22f3_empty_33_793_AND_NOT_SEL__ETC___d4270 =
-	      pc__h160357;
-      3'd2:
-	  SEL_ARR_IF_NOT_f22f3_empty_33_793_AND_NOT_SEL__ETC___d4270 =
-	      pc__h160703;
-      3'd3, 3'd4, 3'd5, 3'd6, 3'd7:
-	  SEL_ARR_IF_NOT_f22f3_empty_33_793_AND_NOT_SEL__ETC___d4270 =
-	      pc_start__h125474;
-    endcase
-  end
   always@(pending_spaces__h156182 or rg_pending_decode)
   begin
     case (pending_spaces__h156182)
@@ -25225,37 +25225,6 @@ module mkFetchStage(CLK,
 	  SEL_ARR_rg_pending_decode_498_BITS_325_TO_324__ETC___d5510 =
 	      rg_pending_decode[65:64];
       2'd3: SEL_ARR_rg_pending_decode_498_BITS_325_TO_324__ETC___d5510 = 2'd0;
-    endcase
-  end
-  always@(pending_spaces__h156182 or rg_pending_decode)
-  begin
-    case (pending_spaces__h156182)
-      2'd0:
-	  SEL_ARR_rg_pending_decode_498_BITS_291_TO_260__ETC___d5524 =
-	      rg_pending_decode[291:260];
-      2'd1:
-	  SEL_ARR_rg_pending_decode_498_BITS_291_TO_260__ETC___d5524 =
-	      rg_pending_decode[161:130];
-      2'd2:
-	  SEL_ARR_rg_pending_decode_498_BITS_291_TO_260__ETC___d5524 =
-	      rg_pending_decode[31:0];
-      2'd3:
-	  SEL_ARR_rg_pending_decode_498_BITS_291_TO_260__ETC___d5524 = 32'd0;
-    endcase
-  end
-  always@(pending_spaces_ext__h156184 or
-	  SEL_ARR_rg_pending_decode_498_BITS_291_TO_260__ETC___d5524 or
-	  inst__h169937 or inst__h160018 or inst__h160360 or inst__h160706)
-  begin
-    case (pending_spaces_ext__h156184)
-      3'd0:
-	  x__h171199 =
-	      SEL_ARR_rg_pending_decode_498_BITS_291_TO_260__ETC___d5524;
-      3'd1: x__h171199 = inst__h169937;
-      3'd2: x__h171199 = inst__h160018;
-      3'd3: x__h171199 = inst__h160360;
-      3'd4: x__h171199 = inst__h160706;
-      3'd5, 3'd6, 3'd7: x__h171199 = 32'd0;
     endcase
   end
   always@(pending_spaces__h156182 or rg_pending_decode)
@@ -25294,13 +25263,31 @@ module mkFetchStage(CLK,
   begin
     case (pending_spaces__h156182)
       2'd0:
-	  SEL_ARR_rg_pending_decode_498_BITS_195_TO_194__ETC___d5582 =
-	      rg_pending_decode[195:194];
+	  SEL_ARR_rg_pending_decode_498_BITS_291_TO_260__ETC___d5524 =
+	      rg_pending_decode[291:260];
       2'd1:
-	  SEL_ARR_rg_pending_decode_498_BITS_195_TO_194__ETC___d5582 =
-	      rg_pending_decode[65:64];
-      2'd2, 2'd3:
-	  SEL_ARR_rg_pending_decode_498_BITS_195_TO_194__ETC___d5582 = 2'd0;
+	  SEL_ARR_rg_pending_decode_498_BITS_291_TO_260__ETC___d5524 =
+	      rg_pending_decode[161:130];
+      2'd2:
+	  SEL_ARR_rg_pending_decode_498_BITS_291_TO_260__ETC___d5524 =
+	      rg_pending_decode[31:0];
+      2'd3:
+	  SEL_ARR_rg_pending_decode_498_BITS_291_TO_260__ETC___d5524 = 32'd0;
+    endcase
+  end
+  always@(pending_spaces_ext__h156184 or
+	  SEL_ARR_rg_pending_decode_498_BITS_291_TO_260__ETC___d5524 or
+	  inst__h169937 or inst__h160018 or inst__h160360 or inst__h160706)
+  begin
+    case (pending_spaces_ext__h156184)
+      3'd0:
+	  x__h171199 =
+	      SEL_ARR_rg_pending_decode_498_BITS_291_TO_260__ETC___d5524;
+      3'd1: x__h171199 = inst__h169937;
+      3'd2: x__h171199 = inst__h160018;
+      3'd3: x__h171199 = inst__h160360;
+      3'd4: x__h171199 = inst__h160706;
+      3'd5, 3'd6, 3'd7: x__h171199 = 32'd0;
     endcase
   end
   always@(pending_spaces__h156182 or rg_pending_decode or pc_start__h125474)
@@ -25315,6 +25302,19 @@ module mkFetchStage(CLK,
       2'd2, 2'd3:
 	  SEL_ARR_rg_pending_decode_498_BITS_259_TO_196__ETC___d5578 =
 	      pc_start__h125474;
+    endcase
+  end
+  always@(pending_spaces__h156182 or rg_pending_decode)
+  begin
+    case (pending_spaces__h156182)
+      2'd0:
+	  SEL_ARR_rg_pending_decode_498_BITS_195_TO_194__ETC___d5582 =
+	      rg_pending_decode[195:194];
+      2'd1:
+	  SEL_ARR_rg_pending_decode_498_BITS_195_TO_194__ETC___d5582 =
+	      rg_pending_decode[65:64];
+      2'd2, 2'd3:
+	  SEL_ARR_rg_pending_decode_498_BITS_195_TO_194__ETC___d5582 = 2'd0;
     endcase
   end
   always@(pending_spaces__h156182 or rg_pending_decode)

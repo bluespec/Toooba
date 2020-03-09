@@ -301,9 +301,9 @@ function Trace_Data mkTrace_RET (WordXL pc, ISize isize, Bit #(32) instr, Priv_M
 endfunction
 
 // CSRRX
-// op    pc    instr_sz    instr    rd    word1    word2          word3    word4   word5
-// x     x     x           x        x     rdval    mstatus_valid  csraddr  csrval  mstatus
-//                                                 csrvalid
+// op    pc    instr_sz    instr    rd    word1    word2              word3    word4   word5
+// x     x     x           x        x     rdval    [1] mstatus_valid  csraddr  csrval  mstatus
+//                                                 [0] csrvalid
 function Trace_Data mkTrace_CSRRX (WordXL pc, ISize isize, Bit #(32) instr,
 				   RegName rd, WordXL rdval,
 				   Bool csrvalid, CSR_Addr csraddr, WordXL csrval,

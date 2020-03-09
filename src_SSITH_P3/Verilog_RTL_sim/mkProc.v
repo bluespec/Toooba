@@ -7011,19 +7011,6 @@ module mkProc(CLK,
       3'd7: dword__h94382 = llc_mem_server_rg_cacheline_cache_data[511:448];
     endcase
   end
-  always@(llc_axi4_adapter_rg_wr_req_beat or llc$to_mem_toM_first)
-  begin
-    case (llc_axi4_adapter_rg_wr_req_beat)
-      3'd0: data64__h148515 = llc$to_mem_toM_first[63:0];
-      3'd1: data64__h148515 = llc$to_mem_toM_first[127:64];
-      3'd2: data64__h148515 = llc$to_mem_toM_first[191:128];
-      3'd3: data64__h148515 = llc$to_mem_toM_first[255:192];
-      3'd4: data64__h148515 = llc$to_mem_toM_first[319:256];
-      3'd5: data64__h148515 = llc$to_mem_toM_first[383:320];
-      3'd6: data64__h148515 = llc$to_mem_toM_first[447:384];
-      3'd7: data64__h148515 = llc$to_mem_toM_first[511:448];
-    endcase
-  end
   always@(llc$dma_respLd_first)
   begin
     case (llc$dma_respLd_first[2:0])
@@ -7035,6 +7022,19 @@ module mkProc(CLK,
       3'd5: ld_data__h132631 = llc$dma_respLd_first[388:325];
       3'd6: ld_data__h132631 = llc$dma_respLd_first[452:389];
       3'd7: ld_data__h132631 = llc$dma_respLd_first[516:453];
+    endcase
+  end
+  always@(llc_axi4_adapter_rg_wr_req_beat or llc$to_mem_toM_first)
+  begin
+    case (llc_axi4_adapter_rg_wr_req_beat)
+      3'd0: data64__h148515 = llc$to_mem_toM_first[63:0];
+      3'd1: data64__h148515 = llc$to_mem_toM_first[127:64];
+      3'd2: data64__h148515 = llc$to_mem_toM_first[191:128];
+      3'd3: data64__h148515 = llc$to_mem_toM_first[255:192];
+      3'd4: data64__h148515 = llc$to_mem_toM_first[319:256];
+      3'd5: data64__h148515 = llc$to_mem_toM_first[383:320];
+      3'd6: data64__h148515 = llc$to_mem_toM_first[447:384];
+      3'd7: data64__h148515 = llc$to_mem_toM_first[511:448];
     endcase
   end
   always@(llc_axi4_adapter_rg_wr_req_beat or llc$to_mem_toM_first)
@@ -7181,6 +7181,27 @@ module mkProc(CLK,
     endcase
   end
   always@(mmioPlatform_curReq or
+	  result__h49021 or
+	  result__h49048 or result__h49075 or result__h49102)
+  begin
+    case (mmioPlatform_curReq[2:0])
+      3'h0:
+	  IF_mmioPlatform_curReq_31_BITS_2_TO_0_81_EQ_0x_ETC___d873 =
+	      result__h49021;
+      3'h2:
+	  IF_mmioPlatform_curReq_31_BITS_2_TO_0_81_EQ_0x_ETC___d873 =
+	      result__h49048;
+      3'h4:
+	  IF_mmioPlatform_curReq_31_BITS_2_TO_0_81_EQ_0x_ETC___d873 =
+	      result__h49075;
+      3'h6:
+	  IF_mmioPlatform_curReq_31_BITS_2_TO_0_81_EQ_0x_ETC___d873 =
+	      result__h49102;
+      default: IF_mmioPlatform_curReq_31_BITS_2_TO_0_81_EQ_0x_ETC___d873 =
+		   64'd0;
+    endcase
+  end
+  always@(mmioPlatform_curReq or
 	  result__h48788 or
 	  result__h48815 or
 	  result__h48842 or
@@ -7213,27 +7234,6 @@ module mkProc(CLK,
       3'h7:
 	  IF_mmioPlatform_curReq_31_BITS_2_TO_0_81_EQ_0x_ETC___d861 =
 	      result__h48977;
-    endcase
-  end
-  always@(mmioPlatform_curReq or
-	  result__h49021 or
-	  result__h49048 or result__h49075 or result__h49102)
-  begin
-    case (mmioPlatform_curReq[2:0])
-      3'h0:
-	  IF_mmioPlatform_curReq_31_BITS_2_TO_0_81_EQ_0x_ETC___d873 =
-	      result__h49021;
-      3'h2:
-	  IF_mmioPlatform_curReq_31_BITS_2_TO_0_81_EQ_0x_ETC___d873 =
-	      result__h49048;
-      3'h4:
-	  IF_mmioPlatform_curReq_31_BITS_2_TO_0_81_EQ_0x_ETC___d873 =
-	      result__h49075;
-      3'h6:
-	  IF_mmioPlatform_curReq_31_BITS_2_TO_0_81_EQ_0x_ETC___d873 =
-	      result__h49102;
-      default: IF_mmioPlatform_curReq_31_BITS_2_TO_0_81_EQ_0x_ETC___d873 =
-		   64'd0;
     endcase
   end
   always@(mmioPlatform_curReq or result__h49142 or result__h49169)
@@ -7604,6 +7604,13 @@ module mkProc(CLK,
 	      n__read_addr__h61760;
     endcase
   end
+  always@(x__h80300 or n__read_child__h80481 or n__read_child__h80560)
+  begin
+    case (x__h80300)
+      1'd0: x__h82716 = n__read_child__h80481;
+      1'd1: x__h82716 = n__read_child__h80560;
+    endcase
+  end
   always@(x__h80300 or
 	  CAN_FIRE_RL_srcPropose_2 or
 	  propDstData_1_0_lat_0$wget or
@@ -7642,13 +7649,6 @@ module mkProc(CLK,
 	      CAN_FIRE_RL_srcPropose_3 ?
 		propDstData_1_1_lat_0$wget[448:385] :
 		propDstData_1_1_rl[448:385];
-    endcase
-  end
-  always@(x__h80300 or n__read_child__h80481 or n__read_child__h80560)
-  begin
-    case (x__h80300)
-      1'd0: x__h82716 = n__read_child__h80481;
-      1'd1: x__h82716 = n__read_child__h80560;
     endcase
   end
   always@(x__h80300 or
