@@ -4465,7 +4465,7 @@ module mkCore(CLK,
        MUX_epochManager$updatePrevEpoch_0_update_1__SEL_2,
        MUX_epochManager$updatePrevEpoch_1_update_1__SEL_2,
        MUX_f_run_halt_rsps$enq_1__SEL_1,
-       MUX_flush_reservation$write_1__SEL_2,
+       MUX_flush_reservation$write_1__SEL_1,
        MUX_flush_tlbs$write_1__SEL_1,
        MUX_regRenamingTable$rename_0_getRename_1__SEL_1,
        MUX_regRenamingTable$rename_0_getRename_1__SEL_2,
@@ -4489,7 +4489,6 @@ module mkCore(CLK,
        MUX_sbCons$setReady_3_put_1__SEL_1,
        MUX_sbCons$setReady_3_put_1__SEL_2,
        MUX_sbCons$setReady_3_put_1__SEL_3,
-       MUX_started$write_1__SEL_1,
        MUX_v_f_to_TV_0$enq_1__SEL_2;
 
   // remaining internal signals
@@ -4525,7 +4524,7 @@ module mkCore(CLK,
 	       trap_val__h711388,
 	       x__h197129,
 	       x__h723943;
-  reg [51 : 0] CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q16,
+  reg [51 : 0] CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q15,
 	       CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q17,
 	       CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q19,
 	       CASE_guard02883_0b0_sfdin11103_BITS_56_TO_5_0b_ETC__q217,
@@ -4561,8 +4560,8 @@ module mkCore(CLK,
 	       CASE_guard00505_0b0_theResult___snd08504_BITS__ETC__q83,
 	       CASE_guard09435_0b0_sfdin17657_BITS_56_TO_34_0_ETC__q86,
 	       CASE_guard09435_0b0_sfdin17657_BITS_56_TO_34_0_ETC__q87,
+	       CASE_guard18271_0b0_theResult___snd26294_BITS__ETC__q88,
 	       CASE_guard18271_0b0_theResult___snd26294_BITS__ETC__q89,
-	       CASE_guard18271_0b0_theResult___snd26294_BITS__ETC__q90,
 	       CASE_guard37493_0b0_sfdin45586_BITS_56_TO_34_0_ETC__q119,
 	       CASE_guard37493_0b0_sfdin45586_BITS_56_TO_34_0_ETC__q120,
 	       CASE_guard46099_0b0_sfdin54194_BITS_56_TO_34_0_ETC__q49,
@@ -4577,8 +4576,8 @@ module mkCore(CLK,
 	       CASE_guard63738_0b0_sfdin71960_BITS_56_TO_34_0_ETC__q52,
 	       CASE_guard63966_0b0_theResult___snd71989_BITS__ETC__q123,
 	       CASE_guard63966_0b0_theResult___snd71989_BITS__ETC__q124,
+	       CASE_guard72574_0b0_theResult___snd80597_BITS__ETC__q53,
 	       CASE_guard72574_0b0_theResult___snd80597_BITS__ETC__q54,
-	       CASE_guard72574_0b0_theResult___snd80597_BITS__ETC__q55,
 	       CASE_guard91798_0b0_sfdin99891_BITS_56_TO_34_0_ETC__q84,
 	       CASE_guard91798_0b0_sfdin99891_BITS_56_TO_34_0_ETC__q85,
 	       _theResult___fst_sfd__h346072,
@@ -4621,8 +4620,8 @@ module mkCore(CLK,
 	       CASE_v_f_to_TV_0D_OUT_BITS_475_TO_464_1_v_f_t_ETC__q5,
 	       CASE_v_f_to_TV_1D_OUT_BITS_475_TO_464_1_v_f_t_ETC__q1,
 	       IF_fetchStage_pipelines_0_first__2757_BITS_172_ETC___d12973;
-  reg [10 : 0] CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q13,
-	       CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q15,
+  reg [10 : 0] CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q14,
+	       CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q16,
 	       CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q18,
 	       CASE_guard02883_0b0_theResult___fst_exp11109_0_ETC__q211,
 	       CASE_guard02883_0b0_theResult___fst_exp11109_0_ETC__q212,
@@ -4632,12 +4631,12 @@ module mkCore(CLK,
 	       CASE_guard32424_0b0_theResult___fst_exp40385_0_ETC__q184,
 	       CASE_guard41736_0b0_theResult___fst_exp49962_0_ETC__q185,
 	       CASE_guard41736_0b0_theResult___fst_exp49962_0_ETC__q186,
-	       CASE_guard50805_0b0_theResult___fst_exp58795_0_ETC__q189,
-	       CASE_guard50805_0b0_theResult___fst_exp58795_0_ETC__q190,
+	       CASE_guard50805_0b0_theResult___fst_exp58795_0_ETC__q187,
+	       CASE_guard50805_0b0_theResult___fst_exp58795_0_ETC__q188,
 	       CASE_guard71728_0b0_theResult___fst_exp79689_0_ETC__q160,
 	       CASE_guard71728_0b0_theResult___fst_exp79689_0_ETC__q161,
-	       CASE_guard81040_0b0_theResult___fst_exp89266_0_ETC__q187,
-	       CASE_guard81040_0b0_theResult___fst_exp89266_0_ETC__q188,
+	       CASE_guard81040_0b0_theResult___fst_exp89266_0_ETC__q189,
+	       CASE_guard81040_0b0_theResult___fst_exp89266_0_ETC__q190,
 	       CASE_guard90109_0b0_theResult___fst_exp98099_0_ETC__q191,
 	       CASE_guard90109_0b0_theResult___fst_exp98099_0_ETC__q192,
 	       CASE_guard93571_0b0_theResult___fst_exp01532_0_ETC__q143,
@@ -4770,22 +4769,22 @@ module mkCore(CLK,
       CASE_fetchStagepipelines_1_first_BITS_191_TO__ETC__q242,
       CASE_guard00505_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q93,
       CASE_guard00505_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q92,
-      CASE_guard02883_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q147,
+      CASE_guard02883_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q149,
       CASE_guard09435_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q95,
       CASE_guard09435_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q94,
-      CASE_guard11952_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q149,
+      CASE_guard11952_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q147,
       CASE_guard18271_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q97,
       CASE_guard18271_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q96,
       CASE_guard32424_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q203,
       CASE_guard32424_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q193,
-      CASE_guard37493_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q126,
+      CASE_guard37493_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q127,
       CASE_guard37493_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q125,
       CASE_guard41736_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q199,
       CASE_guard41736_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q195,
       CASE_guard46099_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q56,
-      CASE_guard46099_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q53,
+      CASE_guard46099_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q55,
       CASE_guard46200_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q128,
-      CASE_guard46200_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q127,
+      CASE_guard46200_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q126,
       CASE_guard50805_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q201,
       CASE_guard50805_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q197,
       CASE_guard54808_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q58,
@@ -4796,16 +4795,16 @@ module mkCore(CLK,
       CASE_guard63738_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q59,
       CASE_guard63966_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q132,
       CASE_guard63966_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q131,
-      CASE_guard71728_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q170,
+      CASE_guard71728_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q172,
       CASE_guard71728_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q162,
       CASE_guard72574_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q62,
       CASE_guard72574_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q61,
       CASE_guard81040_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q168,
       CASE_guard81040_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q164,
-      CASE_guard90109_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q172,
+      CASE_guard90109_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q170,
       CASE_guard90109_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q166,
       CASE_guard91798_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q91,
-      CASE_guard91798_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q88,
+      CASE_guard91798_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q90,
       CASE_guard93571_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q145,
       CASE_k70531_0_coreFix_aluExe_0_rsAluRDY_enq_1_ETC__q239,
       IF_coreFix_fpuMulDivExe_0_fpuExec_divQ_first_d_ETC___d6446,
@@ -5393,7 +5392,7 @@ module mkCore(CLK,
 		coreFix_fpuMulDivExe_0_regToExeQfirst_BITS_10_ETC__q12,
 		coreFix_fpuMulDivExe_0_regToExeQfirst_BITS_17_ETC__q11,
 		coreFix_memExe_regToExeQfirst_BITS_189_TO_158__q10,
-		data75286_BITS_31_TO_0__q14,
+		data75286_BITS_31_TO_0__q13,
 		imm__h655334,
 		r1__read__h613079,
 		r1__read__h614262,
@@ -6326,7 +6325,7 @@ module mkCore(CLK,
        NOT_renameStage_rg_m_halt_req_2784_BIT_4_2785__ETC___d13741,
        NOT_renameStage_rg_m_halt_req_2784_BIT_4_2785__ETC___d13883,
        NOT_renameStage_rg_m_halt_req_2784_BIT_4_2785__ETC___d13901,
-       NOT_rob_deqPort_0_canDeq__5338_5339_OR_rob_RDY_ETC___d15380,
+       NOT_rob_deqPort_0_canDeq__5338_5339_OR_regRena_ETC___d15380,
        NOT_rob_deqPort_0_canDeq__5338_5339_OR_rob_deq_ETC___d15659,
        NOT_rob_deqPort_0_deq_data__4344_BITS_329_TO_3_ETC___d14998,
        NOT_rob_deqPort_1_deq_data__5346_BIT_25_5347_5_ETC___d15377,
@@ -6396,7 +6395,7 @@ module mkCore(CLK,
        _dfoo16,
        _dfoo18,
        _dfoo2,
-       _dfoo20,
+       _dfoo22,
        _dfoo24,
        _dfoo26,
        _dfoo32,
@@ -6541,7 +6540,7 @@ module mkCore(CLK,
        epochManager_checkEpoch_1_check_fetchStage_pip_ETC___d13881,
        epochManager_checkEpoch_1_check_fetchStage_pip_ETC___d13899,
        f_csr_rsps_i_notFull__5791_AND_f_csr_reqs_firs_ETC___d15894,
-       fetchStage_RDY_pipelines_1_deq__2769_AND_NOT_f_ETC___d14083,
+       fetchStage_RDY_pipelines_0_first__2754_AND_epo_ETC___d13309,
        fetchStage_pipelines_0_canDeq__2755_AND_NOT_fe_ETC___d14023,
        fetchStage_pipelines_0_canDeq__2755_AND_NOT_fe_ETC___d14105,
        fetchStage_pipelines_0_canDeq__2755_AND_NOT_fe_ETC___d14181,
@@ -6592,7 +6591,7 @@ module mkCore(CLK,
        next_deqP___1__h328991,
        next_deqP___1__h332216,
        r1__read_BIT_20___h655898,
-       regRenamingTable_RDY_rename_0_getRename__3300__ETC___d13309,
+       regRenamingTable_RDY_commit_0_commit__4943_AND_ETC___d15003,
        regRenamingTable_RDY_rename_0_getRename__3300__ETC___d13946,
        regRenamingTable_RDY_rename_1_getRename__4009__ETC___d14027,
        regRenamingTable_rename_0_canRename__3408_AND__ETC___d13434,
@@ -6617,7 +6616,7 @@ module mkCore(CLK,
        renameStage_rg_m_halt_req_2784_BIT_4_2785_OR_f_ETC___d13845,
        renameStage_rg_m_halt_req_2784_BIT_4_2785_OR_f_ETC___d13925,
        rg_core_run_state_read__3058_EQ_2_3059_AND_NOT_ETC___d15730,
-       rob_RDY_deqPort_0_deq__4341_AND_rob_RDY_deqPor_ETC___d15003,
+       rob_RDY_enqPort_1_enq__4075_AND_NOT_fetchStage_ETC___d14083,
        sbCons_lazyLookup_2_get_coreFix_fpuMulDivExe_0_ETC___d8294,
        sbCons_lazyLookup_2_get_coreFix_fpuMulDivExe_0_ETC___d8295,
        sbCons_lazyLookup_3_get_coreFix_memExe_dispToR_ETC___d1632,
@@ -9835,8 +9834,8 @@ module mkCore(CLK,
 
   // rule RL_sendITlbReq
   assign CAN_FIRE_RL_sendITlbReq =
-	     fetchStage$RDY_iTlbIfc_toParent_rqToP_first &&
 	     fetchStage$RDY_iTlbIfc_toParent_rqToP_deq &&
+	     fetchStage$RDY_iTlbIfc_toParent_rqToP_first &&
 	     l2Tlb$RDY_toChildren_rqFromC_put ;
   assign WILL_FIRE_RL_sendITlbReq =
 	     CAN_FIRE_RL_sendITlbReq && !WILL_FIRE_RL_sendDTlbReq ;
@@ -9872,8 +9871,8 @@ module mkCore(CLK,
 
   // rule RL_sendFlushDone
   assign CAN_FIRE_RL_sendFlushDone =
-	     coreFix_memExe_dTlb$RDY_toParent_flush_response_put &&
 	     fetchStage$RDY_iTlbIfc_toParent_flush_response_put &&
+	     coreFix_memExe_dTlb$RDY_toParent_flush_response_put &&
 	     l2Tlb$RDY_toChildren_flushDone_get ;
   assign WILL_FIRE_RL_sendFlushDone = CAN_FIRE_RL_sendFlushDone ;
 
@@ -10015,9 +10014,9 @@ module mkCore(CLK,
 
   // rule RL_mmio_sendInstReq
   assign CAN_FIRE_RL_mmio_sendInstReq =
-	     !mmio_cRqQ_full && fetchStage$RDY_mmioIfc_instReq_first_snd &&
+	     !mmio_cRqQ_full && fetchStage$RDY_mmioIfc_instReq_deq &&
 	     fetchStage$RDY_mmioIfc_instReq_first_fst &&
-	     fetchStage$RDY_mmioIfc_instReq_deq ;
+	     fetchStage$RDY_mmioIfc_instReq_first_snd ;
   assign WILL_FIRE_RL_mmio_sendInstReq =
 	     CAN_FIRE_RL_mmio_sendInstReq && !WILL_FIRE_RL_mmio_sendDataReq ;
 
@@ -10377,8 +10376,8 @@ module mkCore(CLK,
 
   // rule RL_commitStage_doCommitKilledLd
   assign CAN_FIRE_RL_commitStage_doCommitKilledLd =
-	     rob$RDY_deqPort_0_deq && rob$RDY_deqPort_0_deq_data &&
-	     epochManager$RDY_incrementEpoch &&
+	     epochManager$RDY_incrementEpoch && rob$RDY_deqPort_0_deq &&
+	     rob$RDY_deqPort_0_deq_data &&
 	     !commitStage_rg_run_state &&
 	     !commitStage_commitTrap[165] &&
 	     !rob$deqPort_0_deq_data[167] &&
@@ -10414,7 +10413,7 @@ module mkCore(CLK,
   // rule RL_commitStage_doCommitSystemInst
   assign CAN_FIRE_RL_commitStage_doCommitSystemInst =
 	     coreFix_memExe_stb$isEmpty && coreFix_memExe_lsq$stqEmpty &&
-	     rob_RDY_deqPort_0_deq__4341_AND_rob_RDY_deqPor_ETC___d15003 &&
+	     regRenamingTable_RDY_commit_0_commit__4943_AND_ETC___d15003 &&
 	     NOT_commitStage_rg_run_state_4350_4351_AND_NOT_ETC___d15021 ;
   assign WILL_FIRE_RL_commitStage_doCommitSystemInst =
 	     CAN_FIRE_RL_commitStage_doCommitSystemInst &&
@@ -10449,7 +10448,7 @@ module mkCore(CLK,
   // rule RL_commitStage_doCommitNormalInst
   assign CAN_FIRE_RL_commitStage_doCommitNormalInst =
 	     rob$RDY_deqPort_0_deq_data &&
-	     NOT_rob_deqPort_0_canDeq__5338_5339_OR_rob_RDY_ETC___d15380 &&
+	     NOT_rob_deqPort_0_canDeq__5338_5339_OR_regRena_ETC___d15380 &&
 	     NOT_commitStage_rg_run_state_4350_4351_AND_NOT_ETC___d15392 ;
   assign WILL_FIRE_RL_commitStage_doCommitNormalInst =
 	     CAN_FIRE_RL_commitStage_doCommitNormalInst &&
@@ -11127,16 +11126,16 @@ module mkCore(CLK,
   // rule RL_prepareCachesAndTlbs
   assign CAN_FIRE_RL_prepareCachesAndTlbs =
 	     (!flush_tlbs ||
-	      coreFix_memExe_dTlb$RDY_flush &&
-	      fetchStage$RDY_iTlbIfc_flush) &&
+	      fetchStage$RDY_iTlbIfc_flush &&
+	      coreFix_memExe_dTlb$RDY_flush) &&
 	     (flush_reservation || flush_tlbs || update_vm_info) ;
   assign WILL_FIRE_RL_prepareCachesAndTlbs =
 	     CAN_FIRE_RL_prepareCachesAndTlbs ;
 
   // rule RL_rl_debug_resume
   assign CAN_FIRE_RL_rl_debug_resume =
-	     commitStage_rg_run_state && coreFix_memExe_dTlb$RDY_flush &&
-	     fetchStage$RDY_iTlbIfc_flush &&
+	     commitStage_rg_run_state && fetchStage$RDY_iTlbIfc_flush &&
+	     coreFix_memExe_dTlb$RDY_flush &&
 	     f_run_halt_reqs$EMPTY_N &&
 	     f_run_halt_rsps$FULL_N &&
 	     rg_core_run_state == 2'd1 &&
@@ -11144,7 +11143,9 @@ module mkCore(CLK,
 	     !f_gpr_reqs$EMPTY_N &&
 	     !f_fpr_reqs$EMPTY_N &&
 	     !f_csr_reqs$EMPTY_N ;
-  assign WILL_FIRE_RL_rl_debug_resume = MUX_started$write_1__SEL_1 ;
+  assign WILL_FIRE_RL_rl_debug_resume =
+	     CAN_FIRE_RL_rl_debug_resume &&
+	     !WILL_FIRE_RL_prepareCachesAndTlbs ;
 
   // rule RL_coreFix_memExe_doRegReadMem
   assign CAN_FIRE_RL_coreFix_memExe_doRegReadMem =
@@ -11416,9 +11417,10 @@ module mkCore(CLK,
 
   // rule RL_renameStage_doRenaming_Trap
   assign CAN_FIRE_RL_renameStage_doRenaming_Trap =
-	     rob$RDY_enqPort_0_enq && epochManager$RDY_incrementEpoch &&
-	     fetchStage$RDY_pipelines_0_first &&
 	     fetchStage$RDY_pipelines_0_deq &&
+	     fetchStage$RDY_pipelines_0_first &&
+	     epochManager$RDY_incrementEpoch &&
+	     rob$RDY_enqPort_0_enq &&
 	     mmio_pRqQ_empty_53_AND_epochManager_checkEpoch_ETC___d13055 &&
 	     rob$isEmpty &&
 	     rg_core_run_state == 2'd2 ;
@@ -11430,8 +11432,8 @@ module mkCore(CLK,
 
   // rule RL_renameStage_doRenaming_SystemInst
   assign CAN_FIRE_RL_renameStage_doRenaming_SystemInst =
-	     rob$RDY_enqPort_0_enq &&
-	     regRenamingTable_RDY_rename_0_getRename__3300__ETC___d13309 &&
+	     fetchStage$RDY_pipelines_0_deq &&
+	     fetchStage_RDY_pipelines_0_first__2754_AND_epo_ETC___d13309 &&
 	     mmio_pRqQ_empty_53_AND_epochManager_checkEpoch_ETC___d13365 &&
 	     rg_core_run_state == 2'd2 ;
   assign WILL_FIRE_RL_renameStage_doRenaming_SystemInst =
@@ -11532,7 +11534,8 @@ module mkCore(CLK,
 	     WILL_FIRE_RL_commitStage_doCommitKilledLd ||
 	     WILL_FIRE_RL_commitStage_doCommitTrap_flush ;
   assign MUX_coreFix_aluExe_0_rsAlu$enq_1__SEL_1 =
-	     WILL_FIRE_RL_renameStage_doRenaming && _dfoo18 ;
+	     WILL_FIRE_RL_renameStage_doRenaming_SystemInst &&
+	     fetchStage$pipelines_0_first[194:192] == 3'd0 ;
   assign MUX_coreFix_aluExe_0_rsAlu$setRegReady_2_put_1__SEL_1 =
 	     WILL_FIRE_RL_coreFix_fpuMulDivExe_0_doFinishFpSimple &&
 	     coreFix_fpuMulDivExe_0_fpuExec_simpleQ$first[32] ;
@@ -11963,7 +11966,7 @@ module mkCore(CLK,
   assign MUX_f_run_halt_rsps$enq_1__SEL_1 =
 	     WILL_FIRE_RL_rl_debug_halted ||
 	     WILL_FIRE_RL_rl_debug_halt_req_already_halted ;
-  assign MUX_flush_reservation$write_1__SEL_2 =
+  assign MUX_flush_reservation$write_1__SEL_1 =
 	     WILL_FIRE_RL_prepareCachesAndTlbs && flush_reservation ;
   assign MUX_flush_tlbs$write_1__SEL_1 =
 	     WILL_FIRE_RL_prepareCachesAndTlbs && flush_tlbs ;
@@ -12020,9 +12023,6 @@ module mkCore(CLK,
 	     coreFix_memExe_lsq$firstLd[89] ;
   assign MUX_sbCons$setReady_3_put_1__SEL_3 =
 	     MUX_rf$write_3_wr_1__PSEL_5 && coreFix_memExe_lsq$respLd[84] ;
-  assign MUX_started$write_1__SEL_1 =
-	     CAN_FIRE_RL_rl_debug_resume &&
-	     !WILL_FIRE_RL_prepareCachesAndTlbs ;
   assign MUX_v_f_to_TV_0$enq_1__SEL_2 =
 	     WILL_FIRE_RL_commitStage_doCommitNormalInst &&
 	     rob$deqPort_0_canDeq ;
@@ -12041,6 +12041,18 @@ module mkCore(CLK,
   assign MUX_commitStage_rg_serial_num$write_1__VAL_3 =
 	     commitStage_rg_serial_num + y__h734147 ;
   assign MUX_coreFix_aluExe_0_rsAlu$enq_1__VAL_1 =
+	     { fetchStage$pipelines_0_first[199:195],
+	       IF_fetchStage_pipelines_0_first__2757_BITS_194_ETC___d12883,
+	       fetchStage$pipelines_0_first[173],
+	       IF_fetchStage_pipelines_0_first__2757_BITS_172_ETC___d12973,
+	       fetchStage$pipelines_0_first[160:128],
+	       fetchStage$pipelines_0_first[255:232],
+	       regRenamingTable$rename_0_getRename,
+	       rob$enqPort_0_getEnqInstTag,
+	       specTagManager$currentSpecBits,
+	       5'd10,
+	       sbAggr$eagerLookup_0_get } ;
+  assign MUX_coreFix_aluExe_0_rsAlu$enq_1__VAL_2 =
 	     (k__h670531 == 1'd0 &&
 	      fetchStage_pipelines_0_canDeq__2755_AND_NOT_fe_ETC___d14105) ?
 	       { fetchStage$pipelines_0_first[199:195],
@@ -12066,18 +12078,6 @@ module mkCore(CLK,
 		 fetchStage$pipelines_1_first[194:192] == 3'd1,
 		 specTagManager$nextSpecTag,
 		 sbAggr$eagerLookup_1_get } ;
-  assign MUX_coreFix_aluExe_0_rsAlu$enq_1__VAL_2 =
-	     { fetchStage$pipelines_0_first[199:195],
-	       IF_fetchStage_pipelines_0_first__2757_BITS_194_ETC___d12883,
-	       fetchStage$pipelines_0_first[173],
-	       IF_fetchStage_pipelines_0_first__2757_BITS_172_ETC___d12973,
-	       fetchStage$pipelines_0_first[160:128],
-	       fetchStage$pipelines_0_first[255:232],
-	       regRenamingTable$rename_0_getRename,
-	       rob$enqPort_0_getEnqInstTag,
-	       specTagManager$currentSpecBits,
-	       5'd10,
-	       sbAggr$eagerLookup_0_get } ;
   assign MUX_coreFix_aluExe_0_rsAlu$setRegReady_2_put_1__VAL_1 =
 	     { 1'd1, coreFix_fpuMulDivExe_0_fpuExec_simpleQ$first[31:25] } ;
   assign MUX_coreFix_aluExe_0_rsAlu$setRegReady_2_put_1__VAL_2 =
@@ -13877,13 +13877,13 @@ module mkCore(CLK,
     default: csrf_ie_vec_1$D_IN = 1'b0 /* unspecified value */ ;
   endcase
   assign csrf_ie_vec_1$EN =
-	     WILL_FIRE_RL_commitStage_doCommitSystemInst && _dfoo32 ||
 	     WILL_FIRE_RL_commitStage_doCommitTrap_handle &&
 	     NOT_commitStage_commitTrap_4352_BIT_36_4594_45_ETC___d14700 &&
 	     csrf_prv_reg_read__2787_ULE_1_4701_AND_IF_comm_ETC___d14723 ||
 	     WILL_FIRE_RL_rl_debug_csr_write &&
 	     (f_csr_reqs$D_OUT[75:64] == 12'd256 ||
-	      f_csr_reqs$D_OUT[75:64] == 12'd768) ;
+	      f_csr_reqs$D_OUT[75:64] == 12'd768) ||
+	     WILL_FIRE_RL_commitStage_doCommitSystemInst && _dfoo32 ;
 
   // register csrf_ie_vec_3
   always@(MUX_csrf_ie_vec_3$write_1__SEL_1 or
@@ -13899,12 +13899,12 @@ module mkCore(CLK,
     default: csrf_ie_vec_3$D_IN = 1'b0 /* unspecified value */ ;
   endcase
   assign csrf_ie_vec_3$EN =
-	     WILL_FIRE_RL_commitStage_doCommitSystemInst && _dfoo26 ||
 	     WILL_FIRE_RL_rl_debug_csr_write &&
 	     f_csr_reqs$D_OUT[75:64] == 12'd768 ||
 	     WILL_FIRE_RL_commitStage_doCommitTrap_handle &&
 	     NOT_commitStage_commitTrap_4352_BIT_36_4594_45_ETC___d14700 &&
-	     NOT_csrf_prv_reg_read__2787_ULE_1_4701_4743_OR_ETC___d14747 ;
+	     NOT_csrf_prv_reg_read__2787_ULE_1_4701_4743_OR_ETC___d14747 ||
+	     WILL_FIRE_RL_commitStage_doCommitSystemInst && _dfoo26 ;
 
   // register csrf_mcause_code_reg
   always@(MUX_csrf_mcause_code_reg$write_1__SEL_1 or
@@ -14142,12 +14142,12 @@ module mkCore(CLK,
     default: csrf_mpp_reg$D_IN = 2'b10 /* unspecified value */ ;
   endcase
   assign csrf_mpp_reg$EN =
-	     WILL_FIRE_RL_commitStage_doCommitSystemInst && _dfoo26 ||
 	     WILL_FIRE_RL_rl_debug_csr_write &&
 	     f_csr_reqs$D_OUT[75:64] == 12'd768 ||
 	     WILL_FIRE_RL_commitStage_doCommitTrap_handle &&
 	     NOT_commitStage_commitTrap_4352_BIT_36_4594_45_ETC___d14700 &&
-	     NOT_csrf_prv_reg_read__2787_ULE_1_4701_4743_OR_ETC___d14747 ;
+	     NOT_csrf_prv_reg_read__2787_ULE_1_4701_4743_OR_ETC___d14747 ||
+	     WILL_FIRE_RL_commitStage_doCommitSystemInst && _dfoo26 ;
 
   // register csrf_mprv_reg
   assign csrf_mprv_reg$D_IN =
@@ -14277,13 +14277,13 @@ module mkCore(CLK,
     default: csrf_prev_ie_vec_1$D_IN = 1'b0 /* unspecified value */ ;
   endcase
   assign csrf_prev_ie_vec_1$EN =
-	     WILL_FIRE_RL_commitStage_doCommitSystemInst && _dfoo32 ||
 	     WILL_FIRE_RL_commitStage_doCommitTrap_handle &&
 	     NOT_commitStage_commitTrap_4352_BIT_36_4594_45_ETC___d14700 &&
 	     csrf_prv_reg_read__2787_ULE_1_4701_AND_IF_comm_ETC___d14723 ||
 	     WILL_FIRE_RL_rl_debug_csr_write &&
 	     (f_csr_reqs$D_OUT[75:64] == 12'd256 ||
-	      f_csr_reqs$D_OUT[75:64] == 12'd768) ;
+	      f_csr_reqs$D_OUT[75:64] == 12'd768) ||
+	     WILL_FIRE_RL_commitStage_doCommitSystemInst && _dfoo32 ;
 
   // register csrf_prev_ie_vec_3
   always@(MUX_csrf_prev_ie_vec_3$write_1__SEL_1 or
@@ -14300,12 +14300,12 @@ module mkCore(CLK,
     default: csrf_prev_ie_vec_3$D_IN = 1'b0 /* unspecified value */ ;
   endcase
   assign csrf_prev_ie_vec_3$EN =
-	     WILL_FIRE_RL_commitStage_doCommitSystemInst && _dfoo26 ||
 	     WILL_FIRE_RL_rl_debug_csr_write &&
 	     f_csr_reqs$D_OUT[75:64] == 12'd768 ||
 	     WILL_FIRE_RL_commitStage_doCommitTrap_handle &&
 	     NOT_commitStage_commitTrap_4352_BIT_36_4594_45_ETC___d14700 &&
-	     NOT_csrf_prv_reg_read__2787_ULE_1_4701_4743_OR_ETC___d14747 ;
+	     NOT_csrf_prv_reg_read__2787_ULE_1_4701_4743_OR_ETC___d14747 ||
+	     WILL_FIRE_RL_commitStage_doCommitSystemInst && _dfoo26 ;
 
   // register csrf_prv_reg
   always@(MUX_csrf_prv_reg$write_1__SEL_1 or
@@ -14323,11 +14323,11 @@ module mkCore(CLK,
     default: csrf_prv_reg$D_IN = 2'b10 /* unspecified value */ ;
   endcase
   assign csrf_prv_reg$EN =
-	     WILL_FIRE_RL_commitStage_doCommitSystemInst && _dfoo24 ||
 	     WILL_FIRE_RL_commitStage_doCommitTrap_handle &&
 	     NOT_commitStage_commitTrap_4352_BIT_36_4594_45_ETC___d14700 ||
 	     WILL_FIRE_RL_rl_debug_csr_write &&
-	     f_csr_reqs$D_OUT[75:64] == 12'd1968 ;
+	     f_csr_reqs$D_OUT[75:64] == 12'd1968 ||
+	     WILL_FIRE_RL_commitStage_doCommitSystemInst && _dfoo24 ;
 
   // register csrf_rg_dcsr
   always@(MUX_csrf_rg_dcsr$write_1__SEL_1 or
@@ -14675,13 +14675,13 @@ module mkCore(CLK,
     default: csrf_spp_reg$D_IN = 1'b0 /* unspecified value */ ;
   endcase
   assign csrf_spp_reg$EN =
-	     WILL_FIRE_RL_commitStage_doCommitSystemInst && _dfoo32 ||
 	     WILL_FIRE_RL_commitStage_doCommitTrap_handle &&
 	     NOT_commitStage_commitTrap_4352_BIT_36_4594_45_ETC___d14700 &&
 	     csrf_prv_reg_read__2787_ULE_1_4701_AND_IF_comm_ETC___d14723 ||
 	     WILL_FIRE_RL_rl_debug_csr_write &&
 	     (f_csr_reqs$D_OUT[75:64] == 12'd256 ||
-	      f_csr_reqs$D_OUT[75:64] == 12'd768) ;
+	      f_csr_reqs$D_OUT[75:64] == 12'd768) ||
+	     WILL_FIRE_RL_commitStage_doCommitSystemInst && _dfoo32 ;
 
   // register csrf_sscratch_csr
   assign csrf_sscratch_csr$D_IN =
@@ -14883,10 +14883,10 @@ module mkCore(CLK,
 	     WILL_FIRE_RL_flushCaches ;
 
   // register flush_reservation
-  assign flush_reservation$D_IN = !MUX_flush_reservation$write_1__SEL_2 ;
+  assign flush_reservation$D_IN = !MUX_flush_reservation$write_1__SEL_1 ;
   assign flush_reservation$EN =
-	     WILL_FIRE_RL_commitStage_doCommitTrap_handle && _dfoo20 ||
 	     WILL_FIRE_RL_prepareCachesAndTlbs && flush_reservation ||
+	     WILL_FIRE_RL_commitStage_doCommitTrap_handle && _dfoo22 ||
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst ;
 
   // register flush_tlbs
@@ -15231,8 +15231,8 @@ module mkCore(CLK,
   assign update_vm_info$D_IN =
 	     !MUX_coreFix_memExe_dTlb$updateVMInfo_1__SEL_1 ;
   assign update_vm_info$EN =
-	     WILL_FIRE_RL_commitStage_doCommitTrap_handle && _dfoo20 ||
 	     WILL_FIRE_RL_prepareCachesAndTlbs && update_vm_info ||
+	     WILL_FIRE_RL_commitStage_doCommitTrap_handle && _dfoo22 ||
 	     WILL_FIRE_RL_commitStage_doCommitSystemInst ;
 
   // submodule commitStage_f_rob_data
@@ -15490,9 +15490,9 @@ module mkCore(CLK,
     endcase
   end
   assign coreFix_aluExe_0_rsAlu$EN_enq =
-	     WILL_FIRE_RL_renameStage_doRenaming && _dfoo18 ||
 	     WILL_FIRE_RL_renameStage_doRenaming_SystemInst &&
-	     fetchStage$pipelines_0_first[194:192] == 3'd0 ;
+	     fetchStage$pipelines_0_first[194:192] == 3'd0 ||
+	     WILL_FIRE_RL_renameStage_doRenaming && _dfoo18 ;
   assign coreFix_aluExe_0_rsAlu$EN_setRobEnqTime = 1'd1 ;
   assign coreFix_aluExe_0_rsAlu$EN_doDispatch =
 	     WILL_FIRE_RL_coreFix_aluExe_0_doDispatchAlu ;
@@ -16749,7 +16749,7 @@ module mkCore(CLK,
   assign coreFix_memExe_dMem_cache_m_banks_0_linkAddrEhr_dummy2_1$D_IN =
 	     1'd1 ;
   assign coreFix_memExe_dMem_cache_m_banks_0_linkAddrEhr_dummy2_1$EN =
-	     MUX_flush_reservation$write_1__SEL_2 ;
+	     MUX_flush_reservation$write_1__SEL_1 ;
 
   // submodule coreFix_memExe_dMem_cache_m_banks_0_pRqMshr
   assign coreFix_memExe_dMem_cache_m_banks_0_pRqMshr$getEmptyEntryInit_r =
@@ -20942,8 +20942,8 @@ module mkCore(CLK,
 		 coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd2 &&
 		 coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd3 &&
 		 coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd4) ?
-		  CASE_guard02883_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q147 :
-		  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q148) ;
+		  CASE_guard02883_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q149 :
+		  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q150) ;
   assign IF_IF_IF_3074_MINUS_SEXT_IF_coreFix_fpuMulDivE_ETC___d9654 =
 	     (_theResult___fst_exp__h589266 == 11'd2047) ?
 	       coreFix_fpuMulDivExe_0_regToExeQ$first[75:44] ==
@@ -21536,8 +21536,8 @@ module mkCore(CLK,
 		 coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd2 &&
 		 coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd3 &&
 		 coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd4) ?
-		  CASE_guard11952_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q149 :
-		  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q150) ;
+		  CASE_guard11952_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q147 :
+		  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q148) ;
   assign IF_IF_IF_coreFix_fpuMulDivExe_0_regToExeQ_firs_ETC___d9700 =
 	     (_theResult___fst_exp__h598099 == 11'd2047) ?
 	       coreFix_fpuMulDivExe_0_regToExeQ$first[75:44] ==
@@ -21558,8 +21558,8 @@ module mkCore(CLK,
 		 coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd2 &&
 		 coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd3 &&
 		 coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd4) ?
-		  CASE_guard71728_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q170 :
-		  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q171) ;
+		  CASE_guard71728_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q172 :
+		  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q173) ;
   assign IF_IF_IF_coreFix_fpuMulDivExe_0_regToExeQ_firs_ETC___d9934 =
 	     (_theResult___fst_exp__h598099 == 11'd2047) ?
 	       coreFix_fpuMulDivExe_0_regToExeQ$first[75:44] !=
@@ -21569,8 +21569,8 @@ module mkCore(CLK,
 		 coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd2 &&
 		 coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd3 &&
 		 coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd4) ?
-		  CASE_guard90109_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q172 :
-		  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q173) ;
+		  CASE_guard90109_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q170 :
+		  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q171) ;
   assign IF_IF_NOT_csrf_prv_reg_read__2787_EQ_3_2788_27_ETC___d12824 =
 	     (_theResult____h651123 == 16'd0 &&
 	      (csrf_prv_reg == 2'd0 ||
@@ -23780,12 +23780,12 @@ module mkCore(CLK,
 		   coreFix_memExe_dMem_cache_m_banks_0_fromPQ_enqReq_rl[514:3],
 		 x__h302154 } ;
   assign IF_coreFix_memExe_dMem_cache_m_banks_0_linkAdd_ETC___d3004 =
-	     !MUX_flush_reservation$write_1__SEL_2 &&
+	     !MUX_flush_reservation$write_1__SEL_1 &&
 	     (coreFix_memExe_dMem_cache_m_banks_0_linkAddrEhr_lat_0$whas ?
 		coreFix_memExe_dMem_cache_m_banks_0_linkAddrEhr_lat_0$wget[58] :
 		coreFix_memExe_dMem_cache_m_banks_0_linkAddrEhr_rl[58]) ;
   assign IF_coreFix_memExe_dMem_cache_m_banks_0_linkAdd_ETC___d3012 =
-	     MUX_flush_reservation$write_1__SEL_2 ?
+	     MUX_flush_reservation$write_1__SEL_1 ?
 	       58'h2AAAAAAAAAAAAAA :
 	       (coreFix_memExe_dMem_cache_m_banks_0_linkAddrEhr_lat_0$whas ?
 		  coreFix_memExe_dMem_cache_m_banks_0_linkAddrEhr_lat_0$wget[57:0] :
@@ -24241,10 +24241,10 @@ module mkCore(CLK,
 	       fetchStage$RDY_pipelines_0_first ;
   assign IF_fetchStage_pipelines_0_first__2757_BITS_194_ETC___d13959 =
 	     IF_fetchStage_pipelines_0_first__2757_BITS_194_ETC___d13952 ||
-	     rob$RDY_enqPort_0_enq &&
+	     fetchStage$RDY_pipelines_0_deq &&
 	     regRenamingTable$RDY_rename_0_getRename &&
 	     regRenamingTable$RDY_rename_0_claimRename &&
-	     fetchStage$RDY_pipelines_0_deq &&
+	     rob$RDY_enqPort_0_enq &&
 	     (fetchStage$pipelines_0_first[194:192] != 3'd1 ||
 	      specTagManager$RDY_claimSpecTag) ;
   assign IF_fetchStage_pipelines_0_first__2757_BIT_160__ETC___d14139 =
@@ -24258,10 +24258,10 @@ module mkCore(CLK,
 	     IF_fetchStage_pipelines_1_first__2766_BITS_194_ETC___d14046 &&
 	     IF_fetchStage_RDY_pipelines_1_first__2765_AND__ETC___d13838 &&
 	     (IF_fetchStage_pipelines_1_first__2766_BITS_194_ETC___d14073 ||
-	      rob$RDY_enqPort_1_enq &&
+	      fetchStage$RDY_pipelines_1_deq &&
 	      regRenamingTable$RDY_rename_1_getRename &&
 	      regRenamingTable$RDY_rename_1_claimRename &&
-	      fetchStage_RDY_pipelines_1_deq__2769_AND_NOT_f_ETC___d14083) ;
+	      rob_RDY_enqPort_1_enq__4075_AND_NOT_fetchStage_ETC___d14083) ;
   assign IF_fetchStage_pipelines_1_first__2766_BITS_194_ETC___d14311 =
 	     (fetchStage$pipelines_1_first[194:192] == 3'd2 &&
 	      NOT_fetchStage_pipelines_0_canDeq__2755_2756_O_ETC___d14258 &&
@@ -25549,9 +25549,9 @@ module mkCore(CLK,
 	     NOT_IF_IF_NOT_csrf_prv_reg_read__2787_EQ_3_278_ETC___d13730 &&
 	     rob$enqPort_1_canEnq &&
 	     epochManager_checkEpoch_1_check_fetchStage_pip_ETC___d13899 ;
-  assign NOT_rob_deqPort_0_canDeq__5338_5339_OR_rob_RDY_ETC___d15380 =
+  assign NOT_rob_deqPort_0_canDeq__5338_5339_OR_regRena_ETC___d15380 =
 	     (!rob$deqPort_0_canDeq ||
-	      rob$RDY_deqPort_0_deq && regRenamingTable$RDY_commit_0_commit &&
+	      regRenamingTable$RDY_commit_0_commit && rob$RDY_deqPort_0_deq &&
 	      v_f_to_TV_0$FULL_N) &&
 	     (!rob$deqPort_1_canDeq ||
 	      rob$RDY_deqPort_1_deq_data &&
@@ -25590,7 +25590,7 @@ module mkCore(CLK,
 	     rob$deqPort_1_deq_data[329:325] == 5'd15 ||
 	     rob$deqPort_1_deq_data[329:325] == 5'd19 ||
 	     rob$deqPort_1_deq_data[329:325] == 5'd20 ||
-	     rob$RDY_deqPort_1_deq && regRenamingTable$RDY_commit_1_commit &&
+	     regRenamingTable$RDY_commit_1_commit && rob$RDY_deqPort_1_deq &&
 	     v_f_to_TV_1$FULL_N ;
   assign NOT_specTagManager_canClaim__3406_3497_OR_NOT__ETC___d14012 =
 	     !specTagManager$canClaim ||
@@ -26691,7 +26691,7 @@ module mkCore(CLK,
 	     NOT_fetchStage_pipelines_0_canDeq__2755_2756_O_ETC___d14258 &&
 	     fetchStage$pipelines_1_first[191:189] != 3'd0 &&
 	     fetchStage$pipelines_1_first[191:189] != 3'd2 ;
-  assign _dfoo20 =
+  assign _dfoo22 =
 	     commitStage_commitTrap_4352_BIT_36_4594_AND_co_ETC___d14659 ||
 	     NOT_commitStage_commitTrap_4352_BIT_36_4594_45_ETC___d14700 ;
   assign _dfoo24 =
@@ -27719,7 +27719,7 @@ module mkCore(CLK,
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd2 &&
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd3) ?
 	       11'd2047 :
-	       CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q15 ;
+	       CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q14 ;
   assign _theResult___fst_exp__h501523 =
 	     11'd897 -
 	     { 5'd0,
@@ -27875,7 +27875,7 @@ module mkCore(CLK,
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd2 &&
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd3) ?
 	       11'd2047 :
-	       CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q13 ;
+	       CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q16 ;
   assign _theResult___fst_exp__h540376 =
 	     11'd897 -
 	     { 5'd0,
@@ -28008,7 +28008,7 @@ module mkCore(CLK,
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd2 &&
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd3 &&
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd4) ?
-	       CASE_guard50805_0b0_theResult___fst_exp58795_0_ETC__q190 :
+	       CASE_guard50805_0b0_theResult___fst_exp58795_0_ETC__q188 :
 	       IF_coreFix_fpuMulDivExe_0_regToExeQ_first__371_ETC___d10573 ;
   assign _theResult___fst_exp__h559578 =
 	     (_theResult___fst_exp__h558795 == 11'd2047) ?
@@ -28134,7 +28134,7 @@ module mkCore(CLK,
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd2 &&
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd3 &&
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd4) ?
-	       CASE_guard81040_0b0_theResult___fst_exp89266_0_ETC__q188 :
+	       CASE_guard81040_0b0_theResult___fst_exp89266_0_ETC__q190 :
 	       IF_coreFix_fpuMulDivExe_0_regToExeQ_first__371_ETC___d9772 ;
   assign _theResult___fst_exp__h590098 =
 	     (_theResult___fst_exp__h589266 == 11'd2047) ?
@@ -28289,7 +28289,7 @@ module mkCore(CLK,
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd2 &&
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd3) ?
 	       52'd0 :
-	       CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q16 ;
+	       CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q15 ;
   assign _theResult___fst_sfd__h502288 =
 	     (coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd1 &&
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] != 3'd2 &&
@@ -30193,13 +30193,13 @@ module mkCore(CLK,
 	     csrf_rg_dcsr[2] || !fetchStage$pipelines_0_canDeq ||
 	     fetchStage$RDY_pipelines_0_first &&
 	     IF_fetchStage_RDY_pipelines_0_first__2754_AND__ETC___d13440 ;
-  assign data75286_BITS_31_TO_0__q14 = data__h475286[31:0] ;
+  assign data75286_BITS_31_TO_0__q13 = data__h475286[31:0] ;
   assign data___1__h475012 =
 	     { {32{IF_coreFix_fpuMulDivExe_0_mulDivExec_mulQ_firs_ETC__q133[31]}},
 	       IF_coreFix_fpuMulDivExe_0_mulDivExec_mulQ_firs_ETC__q133 } ;
   assign data___1__h475820 =
-	     { {32{data75286_BITS_31_TO_0__q14[31]}},
-	       data75286_BITS_31_TO_0__q14 } ;
+	     { {32{data75286_BITS_31_TO_0__q13[31]}},
+	       data75286_BITS_31_TO_0__q13 } ;
   assign data__h475286 =
 	     (coreFix_fpuMulDivExe_0_mulDivExec_divQ$first_data[35:34] ==
 	      2'd2) ?
@@ -30306,12 +30306,14 @@ module mkCore(CLK,
 	     (f_csr_reqs$D_OUT[75:64] != 12'd2048 ||
 	      csrf_terminate_module_terminateQ$FULL_N) ;
   assign fcsr_csr__read__h609380 = { 56'd0, x__h613038 } ;
-  assign fetchStage_RDY_pipelines_1_deq__2769_AND_NOT_f_ETC___d14083 =
-	     fetchStage$RDY_pipelines_1_deq &&
-	     (!fetchStage$pipelines_0_canDeq ||
-	      NOT_specTagManager_canClaim__3406_3497_OR_NOT__ETC___d14079) &&
-	     (fetchStage$pipelines_1_first[194:192] != 3'd1 ||
-	      specTagManager$RDY_claimSpecTag) ;
+  assign fetchStage_RDY_pipelines_0_first__2754_AND_epo_ETC___d13309 =
+	     fetchStage$RDY_pipelines_0_first &&
+	     epochManager$RDY_incrementEpoch &&
+	     regRenamingTable$RDY_rename_0_getRename &&
+	     regRenamingTable$RDY_rename_0_claimRename &&
+	     rob$RDY_enqPort_0_enq &&
+	     (fetchStage$pipelines_0_first[194:192] != 3'd0 ||
+	      coreFix_aluExe_0_rsAlu$RDY_enq) ;
   assign fetchStage_pipelines_0_canDeq__2755_AND_NOT_fe_ETC___d14023 =
 	     fetchStage$pipelines_0_canDeq &&
 	     (fetchStage$pipelines_0_first[194:192] != 3'd1 ||
@@ -31100,14 +31102,13 @@ module mkCore(CLK,
   assign r___1__h475911 =
 	     64'd0 -
 	     coreFix_fpuMulDivExe_0_mulDivExec_divUnit_divIfc$m_axis_dout_tdata[63:0] ;
-  assign regRenamingTable_RDY_rename_0_getRename__3300__ETC___d13309 =
-	     regRenamingTable$RDY_rename_0_getRename &&
-	     regRenamingTable$RDY_rename_0_claimRename &&
-	     epochManager$RDY_incrementEpoch &&
-	     fetchStage$RDY_pipelines_0_first &&
-	     fetchStage$RDY_pipelines_0_deq &&
-	     (fetchStage$pipelines_0_first[194:192] != 3'd0 ||
-	      coreFix_aluExe_0_rsAlu$RDY_enq) ;
+  assign regRenamingTable_RDY_commit_0_commit__4943_AND_ETC___d15003 =
+	     regRenamingTable$RDY_commit_0_commit && rob$RDY_deqPort_0_deq &&
+	     rob$RDY_deqPort_0_deq_data &&
+	     v_f_to_TV_0$FULL_N &&
+	     fetchStage$iTlbIfc_noPendingReq &&
+	     coreFix_memExe_dTlb$noPendingReq &&
+	     NOT_rob_deqPort_0_deq_data__4344_BITS_329_TO_3_ETC___d14998 ;
   assign regRenamingTable_RDY_rename_0_getRename__3300__ETC___d13946 =
 	     regRenamingTable$RDY_rename_0_getRename &&
 	     CASE_fetchStagepipelines_0_first_BITS_191_TO__ETC__q240 &&
@@ -31605,13 +31606,12 @@ module mkCore(CLK,
 	     !flush_caches ;
   assign rg_tdata1__read__h612210 =
 	     { r1__read__h614604, csrf_rg_tdata1_data } ;
-  assign rob_RDY_deqPort_0_deq__4341_AND_rob_RDY_deqPor_ETC___d15003 =
-	     rob$RDY_deqPort_0_deq && rob$RDY_deqPort_0_deq_data &&
-	     regRenamingTable$RDY_commit_0_commit &&
-	     v_f_to_TV_0$FULL_N &&
-	     fetchStage$iTlbIfc_noPendingReq &&
-	     coreFix_memExe_dTlb$noPendingReq &&
-	     NOT_rob_deqPort_0_deq_data__4344_BITS_329_TO_3_ETC___d14998 ;
+  assign rob_RDY_enqPort_1_enq__4075_AND_NOT_fetchStage_ETC___d14083 =
+	     rob$RDY_enqPort_1_enq &&
+	     (!fetchStage$pipelines_0_canDeq ||
+	      NOT_specTagManager_canClaim__3406_3497_OR_NOT__ETC___d14079) &&
+	     (fetchStage$pipelines_1_first[194:192] != 3'd1 ||
+	      specTagManager$RDY_claimSpecTag) ;
   assign rob_deqPort_0_deq_data__4344_BITS_161_TO_98_43_ETC___d15316 =
 	     { rob$deqPort_0_deq_data[161:98],
 	       (rob$deqPort_0_deq_data[329:325] != 5'd13 &&
@@ -32900,27 +32900,6 @@ module mkCore(CLK,
       default: rVal1__h633783 = 64'b0;
     endcase
   end
-  always@(coreFix_fpuMulDivExe_0_regToExeQ$first)
-  begin
-    case (coreFix_fpuMulDivExe_0_regToExeQ$first[228:226])
-      3'd1: CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q13 = 11'd2046;
-      3'd2:
-	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q13 =
-	      (coreFix_fpuMulDivExe_0_regToExeQ$first[139:108] ==
-	       32'hFFFFFFFF &&
-	       coreFix_fpuMulDivExe_0_regToExeQ$first[107]) ?
-		11'd2047 :
-		11'd2046;
-      3'd3:
-	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q13 =
-	      (coreFix_fpuMulDivExe_0_regToExeQ$first[139:108] ==
-	       32'hFFFFFFFF &&
-	       coreFix_fpuMulDivExe_0_regToExeQ$first[107]) ?
-		11'd2046 :
-		11'd2047;
-      default: CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q13 = 11'd0;
-    endcase
-  end
   always@(coreFix_fpuMulDivExe_0_fpuExec_fmaQ$first_data or
 	  coreFix_fpuMulDivExe_0_fpuExec_double_fma$response_get)
   begin
@@ -33038,45 +33017,66 @@ module mkCore(CLK,
   always@(coreFix_fpuMulDivExe_0_regToExeQ$first)
   begin
     case (coreFix_fpuMulDivExe_0_regToExeQ$first[228:226])
-      3'd1: CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q15 = 11'd2046;
+      3'd1: CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q14 = 11'd2046;
       3'd2:
-	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q15 =
+	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q14 =
 	      (coreFix_fpuMulDivExe_0_regToExeQ$first[203:172] ==
 	       32'hFFFFFFFF &&
 	       coreFix_fpuMulDivExe_0_regToExeQ$first[171]) ?
 		11'd2047 :
 		11'd2046;
       3'd3:
-	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q15 =
+	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q14 =
 	      (coreFix_fpuMulDivExe_0_regToExeQ$first[203:172] ==
 	       32'hFFFFFFFF &&
 	       coreFix_fpuMulDivExe_0_regToExeQ$first[171]) ?
 		11'd2046 :
 		11'd2047;
-      default: CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q15 = 11'd0;
+      default: CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q14 = 11'd0;
     endcase
   end
   always@(coreFix_fpuMulDivExe_0_regToExeQ$first)
   begin
     case (coreFix_fpuMulDivExe_0_regToExeQ$first[228:226])
       3'd1:
-	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q16 =
+	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q15 =
 	      52'hFFFFFFFFFFFFF;
       3'd2:
-	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q16 =
+	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q15 =
 	      (coreFix_fpuMulDivExe_0_regToExeQ$first[203:172] ==
 	       32'hFFFFFFFF &&
 	       coreFix_fpuMulDivExe_0_regToExeQ$first[171]) ?
 		52'd0 :
 		52'hFFFFFFFFFFFFF;
       3'd3:
-	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q16 =
+	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q15 =
 	      (coreFix_fpuMulDivExe_0_regToExeQ$first[203:172] ==
 	       32'hFFFFFFFF &&
 	       coreFix_fpuMulDivExe_0_regToExeQ$first[171]) ?
 		52'hFFFFFFFFFFFFF :
 		52'd0;
-      default: CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q16 = 52'd0;
+      default: CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q15 = 52'd0;
+    endcase
+  end
+  always@(coreFix_fpuMulDivExe_0_regToExeQ$first)
+  begin
+    case (coreFix_fpuMulDivExe_0_regToExeQ$first[228:226])
+      3'd1: CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q16 = 11'd2046;
+      3'd2:
+	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q16 =
+	      (coreFix_fpuMulDivExe_0_regToExeQ$first[139:108] ==
+	       32'hFFFFFFFF &&
+	       coreFix_fpuMulDivExe_0_regToExeQ$first[107]) ?
+		11'd2047 :
+		11'd2046;
+      3'd3:
+	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q16 =
+	      (coreFix_fpuMulDivExe_0_regToExeQ$first[139:108] ==
+	       32'hFFFFFFFF &&
+	       coreFix_fpuMulDivExe_0_regToExeQ$first[107]) ?
+		11'd2046 :
+		11'd2047;
+      default: CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q16 = 11'd0;
     endcase
   end
   always@(coreFix_fpuMulDivExe_0_regToExeQ$first)
@@ -33233,17 +33233,6 @@ module mkCore(CLK,
   end
   always@(coreFix_memExe_lsq$firstLd or mmio_dataRespQ_data_0)
   begin
-    case (coreFix_memExe_lsq$firstLd[19])
-      1'd0:
-	  SEL_ARR_mmio_dataRespQ_data_0_101_BITS_31_TO_0_ETC___d1398 =
-	      mmio_dataRespQ_data_0[31:0];
-      1'd1:
-	  SEL_ARR_mmio_dataRespQ_data_0_101_BITS_31_TO_0_ETC___d1398 =
-	      mmio_dataRespQ_data_0[63:32];
-    endcase
-  end
-  always@(coreFix_memExe_lsq$firstLd or mmio_dataRespQ_data_0)
-  begin
     case (coreFix_memExe_lsq$firstLd[19:18])
       2'd0:
 	  SEL_ARR_mmio_dataRespQ_data_0_101_BITS_15_TO_0_ETC___d1407 =
@@ -33257,6 +33246,17 @@ module mkCore(CLK,
       2'd3:
 	  SEL_ARR_mmio_dataRespQ_data_0_101_BITS_15_TO_0_ETC___d1407 =
 	      mmio_dataRespQ_data_0[63:48];
+    endcase
+  end
+  always@(coreFix_memExe_lsq$firstLd or mmio_dataRespQ_data_0)
+  begin
+    case (coreFix_memExe_lsq$firstLd[19])
+      1'd0:
+	  SEL_ARR_mmio_dataRespQ_data_0_101_BITS_31_TO_0_ETC___d1398 =
+	      mmio_dataRespQ_data_0[31:0];
+      1'd1:
+	  SEL_ARR_mmio_dataRespQ_data_0_101_BITS_31_TO_0_ETC___d1398 =
+	      mmio_dataRespQ_data_0[63:32];
     endcase
   end
   always@(coreFix_memExe_lsq$firstLd or mmio_dataRespQ_data_0)
@@ -33759,28 +33759,80 @@ module mkCore(CLK,
       default: _theResult___fst_sfd__h372561 = 23'd0;
     endcase
   end
+  always@(guard__h372574 or
+	  _theResult___snd__h380597 or
+	  out_sfd__h381122 or _theResult___sfd__h381119)
+  begin
+    case (guard__h372574)
+      2'b0, 2'b01:
+	  CASE_guard72574_0b0_theResult___snd80597_BITS__ETC__q53 =
+	      _theResult___snd__h380597[56:34];
+      2'b10:
+	  CASE_guard72574_0b0_theResult___snd80597_BITS__ETC__q53 =
+	      out_sfd__h381122;
+      2'b11:
+	  CASE_guard72574_0b0_theResult___snd80597_BITS__ETC__q53 =
+	      _theResult___sfd__h381119;
+    endcase
+  end
+  always@(guard__h372574 or
+	  _theResult___snd__h380597 or _theResult___sfd__h381119)
+  begin
+    case (guard__h372574)
+      2'b0:
+	  CASE_guard72574_0b0_theResult___snd80597_BITS__ETC__q54 =
+	      _theResult___snd__h380597[56:34];
+      2'b01, 2'b10, 2'b11:
+	  CASE_guard72574_0b0_theResult___snd80597_BITS__ETC__q54 =
+	      _theResult___sfd__h381119;
+    endcase
+  end
+  always@(coreFix_fpuMulDivExe_0_fpuExec_fmaQ$first_data or
+	  CASE_guard72574_0b0_theResult___snd80597_BITS__ETC__q53 or
+	  CASE_guard72574_0b0_theResult___snd80597_BITS__ETC__q54 or
+	  IF_IF_IF_coreFix_fpuMulDivExe_0_fpuExec_double_ETC___d5022 or
+	  IF_IF_IF_coreFix_fpuMulDivExe_0_fpuExec_double_ETC___d5024 or
+	  _theResult___snd__h380597)
+  begin
+    case (coreFix_fpuMulDivExe_0_fpuExec_fmaQ$first_data[42:40])
+      3'd0:
+	  _theResult___fst_sfd__h381197 =
+	      CASE_guard72574_0b0_theResult___snd80597_BITS__ETC__q53;
+      3'd1:
+	  _theResult___fst_sfd__h381197 =
+	      CASE_guard72574_0b0_theResult___snd80597_BITS__ETC__q54;
+      3'd2:
+	  _theResult___fst_sfd__h381197 =
+	      IF_IF_IF_coreFix_fpuMulDivExe_0_fpuExec_double_ETC___d5022;
+      3'd3:
+	  _theResult___fst_sfd__h381197 =
+	      IF_IF_IF_coreFix_fpuMulDivExe_0_fpuExec_double_ETC___d5024;
+      3'd4: _theResult___fst_sfd__h381197 = _theResult___snd__h380597[56:34];
+      default: _theResult___fst_sfd__h381197 = 23'd0;
+    endcase
+  end
   always@(guard__h346099 or
 	  coreFix_fpuMulDivExe_0_fpuExec_double_fma$response_get)
   begin
     case (guard__h346099)
       2'b0, 2'b01, 2'b10:
-	  CASE_guard46099_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q53 =
+	  CASE_guard46099_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q55 =
 	      coreFix_fpuMulDivExe_0_fpuExec_double_fma$response_get[68];
       2'd3:
-	  CASE_guard46099_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q53 =
+	  CASE_guard46099_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q55 =
 	      guard__h346099 == 2'b11 &&
 	      coreFix_fpuMulDivExe_0_fpuExec_double_fma$response_get[68];
     endcase
   end
   always@(coreFix_fpuMulDivExe_0_fpuExec_fmaQ$first_data or
 	  coreFix_fpuMulDivExe_0_fpuExec_double_fma$response_get or
-	  CASE_guard46099_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q53 or
+	  CASE_guard46099_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q55 or
 	  guard__h346099)
   begin
     case (coreFix_fpuMulDivExe_0_fpuExec_fmaQ$first_data[42:40])
       3'd0:
 	  IF_coreFix_fpuMulDivExe_0_fpuExec_fmaQ_first_d_ETC___d5110 =
-	      CASE_guard46099_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q53;
+	      CASE_guard46099_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q55;
       3'd1:
 	  IF_coreFix_fpuMulDivExe_0_fpuExec_fmaQ_first_d_ETC___d5110 =
 	      (guard__h346099 == 2'b0) ?
@@ -33795,58 +33847,6 @@ module mkCore(CLK,
 		   coreFix_fpuMulDivExe_0_fpuExec_fmaQ$first_data[42:40] ==
 		   3'd4 &&
 		   coreFix_fpuMulDivExe_0_fpuExec_double_fma$response_get[68];
-    endcase
-  end
-  always@(guard__h372574 or
-	  _theResult___snd__h380597 or
-	  out_sfd__h381122 or _theResult___sfd__h381119)
-  begin
-    case (guard__h372574)
-      2'b0, 2'b01:
-	  CASE_guard72574_0b0_theResult___snd80597_BITS__ETC__q54 =
-	      _theResult___snd__h380597[56:34];
-      2'b10:
-	  CASE_guard72574_0b0_theResult___snd80597_BITS__ETC__q54 =
-	      out_sfd__h381122;
-      2'b11:
-	  CASE_guard72574_0b0_theResult___snd80597_BITS__ETC__q54 =
-	      _theResult___sfd__h381119;
-    endcase
-  end
-  always@(guard__h372574 or
-	  _theResult___snd__h380597 or _theResult___sfd__h381119)
-  begin
-    case (guard__h372574)
-      2'b0:
-	  CASE_guard72574_0b0_theResult___snd80597_BITS__ETC__q55 =
-	      _theResult___snd__h380597[56:34];
-      2'b01, 2'b10, 2'b11:
-	  CASE_guard72574_0b0_theResult___snd80597_BITS__ETC__q55 =
-	      _theResult___sfd__h381119;
-    endcase
-  end
-  always@(coreFix_fpuMulDivExe_0_fpuExec_fmaQ$first_data or
-	  CASE_guard72574_0b0_theResult___snd80597_BITS__ETC__q54 or
-	  CASE_guard72574_0b0_theResult___snd80597_BITS__ETC__q55 or
-	  IF_IF_IF_coreFix_fpuMulDivExe_0_fpuExec_double_ETC___d5022 or
-	  IF_IF_IF_coreFix_fpuMulDivExe_0_fpuExec_double_ETC___d5024 or
-	  _theResult___snd__h380597)
-  begin
-    case (coreFix_fpuMulDivExe_0_fpuExec_fmaQ$first_data[42:40])
-      3'd0:
-	  _theResult___fst_sfd__h381197 =
-	      CASE_guard72574_0b0_theResult___snd80597_BITS__ETC__q54;
-      3'd1:
-	  _theResult___fst_sfd__h381197 =
-	      CASE_guard72574_0b0_theResult___snd80597_BITS__ETC__q55;
-      3'd2:
-	  _theResult___fst_sfd__h381197 =
-	      IF_IF_IF_coreFix_fpuMulDivExe_0_fpuExec_double_ETC___d5022;
-      3'd3:
-	  _theResult___fst_sfd__h381197 =
-	      IF_IF_IF_coreFix_fpuMulDivExe_0_fpuExec_double_ETC___d5024;
-      3'd4: _theResult___fst_sfd__h381197 = _theResult___snd__h380597[56:34];
-      default: _theResult___fst_sfd__h381197 = 23'd0;
     endcase
   end
   always@(guard__h346099 or
@@ -34501,28 +34501,80 @@ module mkCore(CLK,
       default: _theResult___fst_sfd__h418258 = 23'd0;
     endcase
   end
+  always@(guard__h418271 or
+	  _theResult___snd__h426294 or
+	  out_sfd__h426819 or _theResult___sfd__h426816)
+  begin
+    case (guard__h418271)
+      2'b0, 2'b01:
+	  CASE_guard18271_0b0_theResult___snd26294_BITS__ETC__q88 =
+	      _theResult___snd__h426294[56:34];
+      2'b10:
+	  CASE_guard18271_0b0_theResult___snd26294_BITS__ETC__q88 =
+	      out_sfd__h426819;
+      2'b11:
+	  CASE_guard18271_0b0_theResult___snd26294_BITS__ETC__q88 =
+	      _theResult___sfd__h426816;
+    endcase
+  end
+  always@(guard__h418271 or
+	  _theResult___snd__h426294 or _theResult___sfd__h426816)
+  begin
+    case (guard__h418271)
+      2'b0:
+	  CASE_guard18271_0b0_theResult___snd26294_BITS__ETC__q89 =
+	      _theResult___snd__h426294[56:34];
+      2'b01, 2'b10, 2'b11:
+	  CASE_guard18271_0b0_theResult___snd26294_BITS__ETC__q89 =
+	      _theResult___sfd__h426816;
+    endcase
+  end
+  always@(coreFix_fpuMulDivExe_0_fpuExec_divQ$first_data or
+	  CASE_guard18271_0b0_theResult___snd26294_BITS__ETC__q88 or
+	  CASE_guard18271_0b0_theResult___snd26294_BITS__ETC__q89 or
+	  IF_IF_IF_coreFix_fpuMulDivExe_0_fpuExec_double_ETC___d6414 or
+	  IF_IF_IF_coreFix_fpuMulDivExe_0_fpuExec_double_ETC___d6416 or
+	  _theResult___snd__h426294)
+  begin
+    case (coreFix_fpuMulDivExe_0_fpuExec_divQ$first_data[42:40])
+      3'd0:
+	  _theResult___fst_sfd__h426894 =
+	      CASE_guard18271_0b0_theResult___snd26294_BITS__ETC__q88;
+      3'd1:
+	  _theResult___fst_sfd__h426894 =
+	      CASE_guard18271_0b0_theResult___snd26294_BITS__ETC__q89;
+      3'd2:
+	  _theResult___fst_sfd__h426894 =
+	      IF_IF_IF_coreFix_fpuMulDivExe_0_fpuExec_double_ETC___d6414;
+      3'd3:
+	  _theResult___fst_sfd__h426894 =
+	      IF_IF_IF_coreFix_fpuMulDivExe_0_fpuExec_double_ETC___d6416;
+      3'd4: _theResult___fst_sfd__h426894 = _theResult___snd__h426294[56:34];
+      default: _theResult___fst_sfd__h426894 = 23'd0;
+    endcase
+  end
   always@(guard__h391798 or
 	  coreFix_fpuMulDivExe_0_fpuExec_double_div$response_get)
   begin
     case (guard__h391798)
       2'b0, 2'b01, 2'b10:
-	  CASE_guard91798_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q88 =
+	  CASE_guard91798_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q90 =
 	      coreFix_fpuMulDivExe_0_fpuExec_double_div$response_get[68];
       2'd3:
-	  CASE_guard91798_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q88 =
+	  CASE_guard91798_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q90 =
 	      guard__h391798 == 2'b11 &&
 	      coreFix_fpuMulDivExe_0_fpuExec_double_div$response_get[68];
     endcase
   end
   always@(coreFix_fpuMulDivExe_0_fpuExec_divQ$first_data or
 	  coreFix_fpuMulDivExe_0_fpuExec_double_div$response_get or
-	  CASE_guard91798_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q88 or
+	  CASE_guard91798_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q90 or
 	  guard__h391798)
   begin
     case (coreFix_fpuMulDivExe_0_fpuExec_divQ$first_data[42:40])
       3'd0:
 	  IF_coreFix_fpuMulDivExe_0_fpuExec_divQ_first_d_ETC___d6502 =
-	      CASE_guard91798_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q88;
+	      CASE_guard91798_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q90;
       3'd1:
 	  IF_coreFix_fpuMulDivExe_0_fpuExec_divQ_first_d_ETC___d6502 =
 	      (guard__h391798 == 2'b0) ?
@@ -34537,58 +34589,6 @@ module mkCore(CLK,
 		   coreFix_fpuMulDivExe_0_fpuExec_divQ$first_data[42:40] ==
 		   3'd4 &&
 		   coreFix_fpuMulDivExe_0_fpuExec_double_div$response_get[68];
-    endcase
-  end
-  always@(guard__h418271 or
-	  _theResult___snd__h426294 or
-	  out_sfd__h426819 or _theResult___sfd__h426816)
-  begin
-    case (guard__h418271)
-      2'b0, 2'b01:
-	  CASE_guard18271_0b0_theResult___snd26294_BITS__ETC__q89 =
-	      _theResult___snd__h426294[56:34];
-      2'b10:
-	  CASE_guard18271_0b0_theResult___snd26294_BITS__ETC__q89 =
-	      out_sfd__h426819;
-      2'b11:
-	  CASE_guard18271_0b0_theResult___snd26294_BITS__ETC__q89 =
-	      _theResult___sfd__h426816;
-    endcase
-  end
-  always@(guard__h418271 or
-	  _theResult___snd__h426294 or _theResult___sfd__h426816)
-  begin
-    case (guard__h418271)
-      2'b0:
-	  CASE_guard18271_0b0_theResult___snd26294_BITS__ETC__q90 =
-	      _theResult___snd__h426294[56:34];
-      2'b01, 2'b10, 2'b11:
-	  CASE_guard18271_0b0_theResult___snd26294_BITS__ETC__q90 =
-	      _theResult___sfd__h426816;
-    endcase
-  end
-  always@(coreFix_fpuMulDivExe_0_fpuExec_divQ$first_data or
-	  CASE_guard18271_0b0_theResult___snd26294_BITS__ETC__q89 or
-	  CASE_guard18271_0b0_theResult___snd26294_BITS__ETC__q90 or
-	  IF_IF_IF_coreFix_fpuMulDivExe_0_fpuExec_double_ETC___d6414 or
-	  IF_IF_IF_coreFix_fpuMulDivExe_0_fpuExec_double_ETC___d6416 or
-	  _theResult___snd__h426294)
-  begin
-    case (coreFix_fpuMulDivExe_0_fpuExec_divQ$first_data[42:40])
-      3'd0:
-	  _theResult___fst_sfd__h426894 =
-	      CASE_guard18271_0b0_theResult___snd26294_BITS__ETC__q89;
-      3'd1:
-	  _theResult___fst_sfd__h426894 =
-	      CASE_guard18271_0b0_theResult___snd26294_BITS__ETC__q90;
-      3'd2:
-	  _theResult___fst_sfd__h426894 =
-	      IF_IF_IF_coreFix_fpuMulDivExe_0_fpuExec_double_ETC___d6414;
-      3'd3:
-	  _theResult___fst_sfd__h426894 =
-	      IF_IF_IF_coreFix_fpuMulDivExe_0_fpuExec_double_ETC___d6416;
-      3'd4: _theResult___fst_sfd__h426894 = _theResult___snd__h426294[56:34];
-      default: _theResult___fst_sfd__h426894 = 23'd0;
     endcase
   end
   always@(guard__h391798 or
@@ -35333,66 +35333,28 @@ module mkCore(CLK,
 		   coreFix_fpuMulDivExe_0_fpuExec_double_sqrt$response_get[68];
     endcase
   end
-  always@(guard__h437493 or
-	  coreFix_fpuMulDivExe_0_fpuExec_double_sqrt$response_get)
-  begin
-    case (guard__h437493)
-      2'b0, 2'b01, 2'b10:
-	  CASE_guard37493_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q126 =
-	      !coreFix_fpuMulDivExe_0_fpuExec_double_sqrt$response_get[68];
-      2'd3:
-	  CASE_guard37493_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q126 =
-	      guard__h437493 != 2'b11 ||
-	      !coreFix_fpuMulDivExe_0_fpuExec_double_sqrt$response_get[68];
-    endcase
-  end
-  always@(coreFix_fpuMulDivExe_0_fpuExec_sqrtQ$first_data or
-	  coreFix_fpuMulDivExe_0_fpuExec_double_sqrt$response_get or
-	  CASE_guard37493_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q126 or
-	  guard__h437493)
-  begin
-    case (coreFix_fpuMulDivExe_0_fpuExec_sqrtQ$first_data[42:40])
-      3'd0:
-	  IF_coreFix_fpuMulDivExe_0_fpuExec_sqrtQ_first__ETC___d7838 =
-	      CASE_guard37493_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q126;
-      3'd1:
-	  IF_coreFix_fpuMulDivExe_0_fpuExec_sqrtQ_first__ETC___d7838 =
-	      (guard__h437493 == 2'b0) ?
-		!coreFix_fpuMulDivExe_0_fpuExec_double_sqrt$response_get[68] :
-		guard__h437493 != 2'b01 && guard__h437493 != 2'b10 &&
-		guard__h437493 != 2'b11 ||
-		!coreFix_fpuMulDivExe_0_fpuExec_double_sqrt$response_get[68];
-      3'd2, 3'd3:
-	  IF_coreFix_fpuMulDivExe_0_fpuExec_sqrtQ_first__ETC___d7838 =
-	      !coreFix_fpuMulDivExe_0_fpuExec_double_sqrt$response_get[68];
-      default: IF_coreFix_fpuMulDivExe_0_fpuExec_sqrtQ_first__ETC___d7838 =
-		   coreFix_fpuMulDivExe_0_fpuExec_sqrtQ$first_data[42:40] !=
-		   3'd4 ||
-		   !coreFix_fpuMulDivExe_0_fpuExec_double_sqrt$response_get[68];
-    endcase
-  end
   always@(guard__h446200 or
 	  coreFix_fpuMulDivExe_0_fpuExec_double_sqrt$response_get)
   begin
     case (guard__h446200)
       2'b0, 2'b01, 2'b10:
-	  CASE_guard46200_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q127 =
+	  CASE_guard46200_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q126 =
 	      coreFix_fpuMulDivExe_0_fpuExec_double_sqrt$response_get[68];
       2'd3:
-	  CASE_guard46200_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q127 =
+	  CASE_guard46200_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q126 =
 	      guard__h446200 == 2'b11 &&
 	      coreFix_fpuMulDivExe_0_fpuExec_double_sqrt$response_get[68];
     endcase
   end
   always@(coreFix_fpuMulDivExe_0_fpuExec_sqrtQ$first_data or
 	  coreFix_fpuMulDivExe_0_fpuExec_double_sqrt$response_get or
-	  CASE_guard46200_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q127 or
+	  CASE_guard46200_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q126 or
 	  guard__h446200)
   begin
     case (coreFix_fpuMulDivExe_0_fpuExec_sqrtQ$first_data[42:40])
       3'd0:
 	  IF_coreFix_fpuMulDivExe_0_fpuExec_sqrtQ_first__ETC___d7901 =
-	      CASE_guard46200_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q127;
+	      CASE_guard46200_0b0_coreFix_fpuMulDivExe_0_fpu_ETC__q126;
       3'd1:
 	  IF_coreFix_fpuMulDivExe_0_fpuExec_sqrtQ_first__ETC___d7901 =
 	      (guard__h446200 == 2'b0) ?
@@ -35407,6 +35369,44 @@ module mkCore(CLK,
 		   coreFix_fpuMulDivExe_0_fpuExec_sqrtQ$first_data[42:40] ==
 		   3'd4 &&
 		   coreFix_fpuMulDivExe_0_fpuExec_double_sqrt$response_get[68];
+    endcase
+  end
+  always@(guard__h437493 or
+	  coreFix_fpuMulDivExe_0_fpuExec_double_sqrt$response_get)
+  begin
+    case (guard__h437493)
+      2'b0, 2'b01, 2'b10:
+	  CASE_guard37493_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q127 =
+	      !coreFix_fpuMulDivExe_0_fpuExec_double_sqrt$response_get[68];
+      2'd3:
+	  CASE_guard37493_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q127 =
+	      guard__h437493 != 2'b11 ||
+	      !coreFix_fpuMulDivExe_0_fpuExec_double_sqrt$response_get[68];
+    endcase
+  end
+  always@(coreFix_fpuMulDivExe_0_fpuExec_sqrtQ$first_data or
+	  coreFix_fpuMulDivExe_0_fpuExec_double_sqrt$response_get or
+	  CASE_guard37493_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q127 or
+	  guard__h437493)
+  begin
+    case (coreFix_fpuMulDivExe_0_fpuExec_sqrtQ$first_data[42:40])
+      3'd0:
+	  IF_coreFix_fpuMulDivExe_0_fpuExec_sqrtQ_first__ETC___d7838 =
+	      CASE_guard37493_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q127;
+      3'd1:
+	  IF_coreFix_fpuMulDivExe_0_fpuExec_sqrtQ_first__ETC___d7838 =
+	      (guard__h437493 == 2'b0) ?
+		!coreFix_fpuMulDivExe_0_fpuExec_double_sqrt$response_get[68] :
+		guard__h437493 != 2'b01 && guard__h437493 != 2'b10 &&
+		guard__h437493 != 2'b11 ||
+		!coreFix_fpuMulDivExe_0_fpuExec_double_sqrt$response_get[68];
+      3'd2, 3'd3:
+	  IF_coreFix_fpuMulDivExe_0_fpuExec_sqrtQ_first__ETC___d7838 =
+	      !coreFix_fpuMulDivExe_0_fpuExec_double_sqrt$response_get[68];
+      default: IF_coreFix_fpuMulDivExe_0_fpuExec_sqrtQ_first__ETC___d7838 =
+		   coreFix_fpuMulDivExe_0_fpuExec_sqrtQ$first_data[42:40] !=
+		   3'd4 ||
+		   !coreFix_fpuMulDivExe_0_fpuExec_double_sqrt$response_get[68];
     endcase
   end
   always@(guard__h446200 or
@@ -35738,58 +35738,16 @@ module mkCore(CLK,
 		   coreFix_fpuMulDivExe_0_regToExeQ$first[171];
     endcase
   end
-  always@(guard__h502883 or coreFix_fpuMulDivExe_0_regToExeQ$first)
-  begin
-    case (guard__h502883)
-      2'b0, 2'b01, 2'b10:
-	  CASE_guard02883_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q147 =
-	      coreFix_fpuMulDivExe_0_regToExeQ$first[203:172] ==
-	      32'hFFFFFFFF &&
-	      coreFix_fpuMulDivExe_0_regToExeQ$first[171];
-      2'd3:
-	  CASE_guard02883_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q147 =
-	      guard__h502883 == 2'b11 &&
-	      coreFix_fpuMulDivExe_0_regToExeQ$first[203:172] ==
-	      32'hFFFFFFFF &&
-	      coreFix_fpuMulDivExe_0_regToExeQ$first[171];
-    endcase
-  end
-  always@(coreFix_fpuMulDivExe_0_regToExeQ$first or guard__h502883)
-  begin
-    case (coreFix_fpuMulDivExe_0_regToExeQ$first[228:226])
-      3'd2, 3'd3:
-	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q148 =
-	      coreFix_fpuMulDivExe_0_regToExeQ$first[203:172] ==
-	      32'hFFFFFFFF &&
-	      coreFix_fpuMulDivExe_0_regToExeQ$first[171];
-      3'd4:
-	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q148 =
-	      (guard__h502883 == 2'b0) ?
-		coreFix_fpuMulDivExe_0_regToExeQ$first[203:172] ==
-		32'hFFFFFFFF &&
-		coreFix_fpuMulDivExe_0_regToExeQ$first[171] :
-		(guard__h502883 == 2'b01 || guard__h502883 == 2'b10 ||
-		 guard__h502883 == 2'b11) &&
-		coreFix_fpuMulDivExe_0_regToExeQ$first[203:172] ==
-		32'hFFFFFFFF &&
-		coreFix_fpuMulDivExe_0_regToExeQ$first[171];
-      default: CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q148 =
-		   coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] == 3'd1 &&
-		   coreFix_fpuMulDivExe_0_regToExeQ$first[203:172] ==
-		   32'hFFFFFFFF &&
-		   coreFix_fpuMulDivExe_0_regToExeQ$first[171];
-    endcase
-  end
   always@(guard__h511952 or coreFix_fpuMulDivExe_0_regToExeQ$first)
   begin
     case (guard__h511952)
       2'b0, 2'b01, 2'b10:
-	  CASE_guard11952_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q149 =
+	  CASE_guard11952_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q147 =
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[203:172] ==
 	      32'hFFFFFFFF &&
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[171];
       2'd3:
-	  CASE_guard11952_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q149 =
+	  CASE_guard11952_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q147 =
 	      guard__h511952 == 2'b11 &&
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[203:172] ==
 	      32'hFFFFFFFF &&
@@ -35800,18 +35758,60 @@ module mkCore(CLK,
   begin
     case (coreFix_fpuMulDivExe_0_regToExeQ$first[228:226])
       3'd2, 3'd3:
-	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q150 =
+	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q148 =
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[203:172] ==
 	      32'hFFFFFFFF &&
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[171];
       3'd4:
-	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q150 =
+	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q148 =
 	      (guard__h511952 == 2'b0) ?
 		coreFix_fpuMulDivExe_0_regToExeQ$first[203:172] ==
 		32'hFFFFFFFF &&
 		coreFix_fpuMulDivExe_0_regToExeQ$first[171] :
 		(guard__h511952 == 2'b01 || guard__h511952 == 2'b10 ||
 		 guard__h511952 == 2'b11) &&
+		coreFix_fpuMulDivExe_0_regToExeQ$first[203:172] ==
+		32'hFFFFFFFF &&
+		coreFix_fpuMulDivExe_0_regToExeQ$first[171];
+      default: CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q148 =
+		   coreFix_fpuMulDivExe_0_regToExeQ$first[228:226] == 3'd1 &&
+		   coreFix_fpuMulDivExe_0_regToExeQ$first[203:172] ==
+		   32'hFFFFFFFF &&
+		   coreFix_fpuMulDivExe_0_regToExeQ$first[171];
+    endcase
+  end
+  always@(guard__h502883 or coreFix_fpuMulDivExe_0_regToExeQ$first)
+  begin
+    case (guard__h502883)
+      2'b0, 2'b01, 2'b10:
+	  CASE_guard02883_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q149 =
+	      coreFix_fpuMulDivExe_0_regToExeQ$first[203:172] ==
+	      32'hFFFFFFFF &&
+	      coreFix_fpuMulDivExe_0_regToExeQ$first[171];
+      2'd3:
+	  CASE_guard02883_0b0_coreFix_fpuMulDivExe_0_reg_ETC__q149 =
+	      guard__h502883 == 2'b11 &&
+	      coreFix_fpuMulDivExe_0_regToExeQ$first[203:172] ==
+	      32'hFFFFFFFF &&
+	      coreFix_fpuMulDivExe_0_regToExeQ$first[171];
+    endcase
+  end
+  always@(coreFix_fpuMulDivExe_0_regToExeQ$first or guard__h502883)
+  begin
+    case (coreFix_fpuMulDivExe_0_regToExeQ$first[228:226])
+      3'd2, 3'd3:
+	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q150 =
+	      coreFix_fpuMulDivExe_0_regToExeQ$first[203:172] ==
+	      32'hFFFFFFFF &&
+	      coreFix_fpuMulDivExe_0_regToExeQ$first[171];
+      3'd4:
+	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q150 =
+	      (guard__h502883 == 2'b0) ?
+		coreFix_fpuMulDivExe_0_regToExeQ$first[203:172] ==
+		32'hFFFFFFFF &&
+		coreFix_fpuMulDivExe_0_regToExeQ$first[171] :
+		(guard__h502883 == 2'b01 || guard__h502883 == 2'b10 ||
+		 guard__h502883 == 2'b11) &&
 		coreFix_fpuMulDivExe_0_regToExeQ$first[203:172] ==
 		32'hFFFFFFFF &&
 		coreFix_fpuMulDivExe_0_regToExeQ$first[171];
@@ -36029,21 +36029,21 @@ module mkCore(CLK,
 		   !coreFix_fpuMulDivExe_0_regToExeQ$first[43];
     endcase
   end
-  always@(guard__h571728 or coreFix_fpuMulDivExe_0_regToExeQ$first)
+  always@(guard__h590109 or coreFix_fpuMulDivExe_0_regToExeQ$first)
   begin
-    case (guard__h571728)
+    case (guard__h590109)
       2'b0, 2'b01, 2'b10:
-	  CASE_guard71728_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q170 =
+	  CASE_guard90109_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q170 =
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[75:44] != 32'hFFFFFFFF ||
 	      !coreFix_fpuMulDivExe_0_regToExeQ$first[43];
       2'd3:
-	  CASE_guard71728_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q170 =
-	      guard__h571728 != 2'b11 ||
+	  CASE_guard90109_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q170 =
+	      guard__h590109 != 2'b11 ||
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[75:44] != 32'hFFFFFFFF ||
 	      !coreFix_fpuMulDivExe_0_regToExeQ$first[43];
     endcase
   end
-  always@(coreFix_fpuMulDivExe_0_regToExeQ$first or guard__h571728)
+  always@(coreFix_fpuMulDivExe_0_regToExeQ$first or guard__h590109)
   begin
     case (coreFix_fpuMulDivExe_0_regToExeQ$first[228:226])
       3'd2, 3'd3:
@@ -36052,12 +36052,12 @@ module mkCore(CLK,
 	      !coreFix_fpuMulDivExe_0_regToExeQ$first[43];
       3'd4:
 	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q171 =
-	      (guard__h571728 == 2'b0) ?
+	      (guard__h590109 == 2'b0) ?
 		coreFix_fpuMulDivExe_0_regToExeQ$first[75:44] !=
 		32'hFFFFFFFF ||
 		!coreFix_fpuMulDivExe_0_regToExeQ$first[43] :
-		guard__h571728 != 2'b01 && guard__h571728 != 2'b10 &&
-		guard__h571728 != 2'b11 ||
+		guard__h590109 != 2'b01 && guard__h590109 != 2'b10 &&
+		guard__h590109 != 2'b11 ||
 		coreFix_fpuMulDivExe_0_regToExeQ$first[75:44] !=
 		32'hFFFFFFFF ||
 		!coreFix_fpuMulDivExe_0_regToExeQ$first[43];
@@ -36068,21 +36068,21 @@ module mkCore(CLK,
 		   !coreFix_fpuMulDivExe_0_regToExeQ$first[43];
     endcase
   end
-  always@(guard__h590109 or coreFix_fpuMulDivExe_0_regToExeQ$first)
+  always@(guard__h571728 or coreFix_fpuMulDivExe_0_regToExeQ$first)
   begin
-    case (guard__h590109)
+    case (guard__h571728)
       2'b0, 2'b01, 2'b10:
-	  CASE_guard90109_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q172 =
+	  CASE_guard71728_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q172 =
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[75:44] != 32'hFFFFFFFF ||
 	      !coreFix_fpuMulDivExe_0_regToExeQ$first[43];
       2'd3:
-	  CASE_guard90109_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q172 =
-	      guard__h590109 != 2'b11 ||
+	  CASE_guard71728_0b0_NOT_coreFix_fpuMulDivExe_0_ETC__q172 =
+	      guard__h571728 != 2'b11 ||
 	      coreFix_fpuMulDivExe_0_regToExeQ$first[75:44] != 32'hFFFFFFFF ||
 	      !coreFix_fpuMulDivExe_0_regToExeQ$first[43];
     endcase
   end
-  always@(coreFix_fpuMulDivExe_0_regToExeQ$first or guard__h590109)
+  always@(coreFix_fpuMulDivExe_0_regToExeQ$first or guard__h571728)
   begin
     case (coreFix_fpuMulDivExe_0_regToExeQ$first[228:226])
       3'd2, 3'd3:
@@ -36091,12 +36091,12 @@ module mkCore(CLK,
 	      !coreFix_fpuMulDivExe_0_regToExeQ$first[43];
       3'd4:
 	  CASE_coreFix_fpuMulDivExe_0_regToExeQfirst_BI_ETC__q173 =
-	      (guard__h590109 == 2'b0) ?
+	      (guard__h571728 == 2'b0) ?
 		coreFix_fpuMulDivExe_0_regToExeQ$first[75:44] !=
 		32'hFFFFFFFF ||
 		!coreFix_fpuMulDivExe_0_regToExeQ$first[43] :
-		guard__h590109 != 2'b01 && guard__h590109 != 2'b10 &&
-		guard__h590109 != 2'b11 ||
+		guard__h571728 != 2'b01 && guard__h571728 != 2'b10 &&
+		guard__h571728 != 2'b11 ||
 		coreFix_fpuMulDivExe_0_regToExeQ$first[75:44] !=
 		32'hFFFFFFFF ||
 		!coreFix_fpuMulDivExe_0_regToExeQ$first[43];
@@ -36209,66 +36209,15 @@ module mkCore(CLK,
 	      _theResult___exp__h550691;
     endcase
   end
-  always@(guard__h581040 or
-	  _theResult___fst_exp__h589266 or _theResult___exp__h589995)
-  begin
-    case (guard__h581040)
-      2'b0:
-	  CASE_guard81040_0b0_theResult___fst_exp89266_0_ETC__q187 =
-	      _theResult___fst_exp__h589266;
-      2'b01, 2'b10, 2'b11:
-	  CASE_guard81040_0b0_theResult___fst_exp89266_0_ETC__q187 =
-	      _theResult___exp__h589995;
-    endcase
-  end
-  always@(coreFix_fpuMulDivExe_0_regToExeQ$first or
-	  _theResult___fst_exp__h589266 or
-	  IF_IF_IF_IF_3074_MINUS_SEXT_IF_coreFix_fpuMulD_ETC___d9768 or
-	  IF_IF_IF_IF_3074_MINUS_SEXT_IF_coreFix_fpuMulD_ETC___d9766 or
-	  CASE_guard81040_0b0_theResult___fst_exp89266_0_ETC__q187)
-  begin
-    case (coreFix_fpuMulDivExe_0_regToExeQ$first[228:226])
-      3'd1:
-	  IF_coreFix_fpuMulDivExe_0_regToExeQ_first__371_ETC___d9772 =
-	      _theResult___fst_exp__h589266;
-      3'd2:
-	  IF_coreFix_fpuMulDivExe_0_regToExeQ_first__371_ETC___d9772 =
-	      IF_IF_IF_IF_3074_MINUS_SEXT_IF_coreFix_fpuMulD_ETC___d9768;
-      3'd3:
-	  IF_coreFix_fpuMulDivExe_0_regToExeQ_first__371_ETC___d9772 =
-	      IF_IF_IF_IF_3074_MINUS_SEXT_IF_coreFix_fpuMulD_ETC___d9766;
-      3'd4:
-	  IF_coreFix_fpuMulDivExe_0_regToExeQ_first__371_ETC___d9772 =
-	      CASE_guard81040_0b0_theResult___fst_exp89266_0_ETC__q187;
-      default: IF_coreFix_fpuMulDivExe_0_regToExeQ_first__371_ETC___d9772 =
-		   11'd0;
-    endcase
-  end
-  always@(guard__h581040 or
-	  _theResult___fst_exp__h589266 or
-	  out_exp__h589998 or _theResult___exp__h589995)
-  begin
-    case (guard__h581040)
-      2'b0, 2'b01:
-	  CASE_guard81040_0b0_theResult___fst_exp89266_0_ETC__q188 =
-	      _theResult___fst_exp__h589266;
-      2'b10:
-	  CASE_guard81040_0b0_theResult___fst_exp89266_0_ETC__q188 =
-	      out_exp__h589998;
-      2'b11:
-	  CASE_guard81040_0b0_theResult___fst_exp89266_0_ETC__q188 =
-	      _theResult___exp__h589995;
-    endcase
-  end
   always@(guard__h550805 or
 	  _theResult___fst_exp__h558795 or _theResult___exp__h559475)
   begin
     case (guard__h550805)
       2'b0:
-	  CASE_guard50805_0b0_theResult___fst_exp58795_0_ETC__q189 =
+	  CASE_guard50805_0b0_theResult___fst_exp58795_0_ETC__q187 =
 	      _theResult___fst_exp__h558795;
       2'b01, 2'b10, 2'b11:
-	  CASE_guard50805_0b0_theResult___fst_exp58795_0_ETC__q189 =
+	  CASE_guard50805_0b0_theResult___fst_exp58795_0_ETC__q187 =
 	      _theResult___exp__h559475;
     endcase
   end
@@ -36276,7 +36225,7 @@ module mkCore(CLK,
 	  _theResult___fst_exp__h558795 or
 	  IF_IF_IF_IF_coreFix_fpuMulDivExe_0_regToExeQ_f_ETC___d10569 or
 	  IF_IF_IF_IF_coreFix_fpuMulDivExe_0_regToExeQ_f_ETC___d10567 or
-	  CASE_guard50805_0b0_theResult___fst_exp58795_0_ETC__q189)
+	  CASE_guard50805_0b0_theResult___fst_exp58795_0_ETC__q187)
   begin
     case (coreFix_fpuMulDivExe_0_regToExeQ$first[228:226])
       3'd1:
@@ -36290,7 +36239,7 @@ module mkCore(CLK,
 	      IF_IF_IF_IF_coreFix_fpuMulDivExe_0_regToExeQ_f_ETC___d10567;
       3'd4:
 	  IF_coreFix_fpuMulDivExe_0_regToExeQ_first__371_ETC___d10573 =
-	      CASE_guard50805_0b0_theResult___fst_exp58795_0_ETC__q189;
+	      CASE_guard50805_0b0_theResult___fst_exp58795_0_ETC__q187;
       default: IF_coreFix_fpuMulDivExe_0_regToExeQ_first__371_ETC___d10573 =
 		   11'd0;
     endcase
@@ -36301,14 +36250,65 @@ module mkCore(CLK,
   begin
     case (guard__h550805)
       2'b0, 2'b01:
-	  CASE_guard50805_0b0_theResult___fst_exp58795_0_ETC__q190 =
+	  CASE_guard50805_0b0_theResult___fst_exp58795_0_ETC__q188 =
 	      _theResult___fst_exp__h558795;
       2'b10:
-	  CASE_guard50805_0b0_theResult___fst_exp58795_0_ETC__q190 =
+	  CASE_guard50805_0b0_theResult___fst_exp58795_0_ETC__q188 =
 	      out_exp__h559478;
       2'b11:
-	  CASE_guard50805_0b0_theResult___fst_exp58795_0_ETC__q190 =
+	  CASE_guard50805_0b0_theResult___fst_exp58795_0_ETC__q188 =
 	      _theResult___exp__h559475;
+    endcase
+  end
+  always@(guard__h581040 or
+	  _theResult___fst_exp__h589266 or _theResult___exp__h589995)
+  begin
+    case (guard__h581040)
+      2'b0:
+	  CASE_guard81040_0b0_theResult___fst_exp89266_0_ETC__q189 =
+	      _theResult___fst_exp__h589266;
+      2'b01, 2'b10, 2'b11:
+	  CASE_guard81040_0b0_theResult___fst_exp89266_0_ETC__q189 =
+	      _theResult___exp__h589995;
+    endcase
+  end
+  always@(coreFix_fpuMulDivExe_0_regToExeQ$first or
+	  _theResult___fst_exp__h589266 or
+	  IF_IF_IF_IF_3074_MINUS_SEXT_IF_coreFix_fpuMulD_ETC___d9768 or
+	  IF_IF_IF_IF_3074_MINUS_SEXT_IF_coreFix_fpuMulD_ETC___d9766 or
+	  CASE_guard81040_0b0_theResult___fst_exp89266_0_ETC__q189)
+  begin
+    case (coreFix_fpuMulDivExe_0_regToExeQ$first[228:226])
+      3'd1:
+	  IF_coreFix_fpuMulDivExe_0_regToExeQ_first__371_ETC___d9772 =
+	      _theResult___fst_exp__h589266;
+      3'd2:
+	  IF_coreFix_fpuMulDivExe_0_regToExeQ_first__371_ETC___d9772 =
+	      IF_IF_IF_IF_3074_MINUS_SEXT_IF_coreFix_fpuMulD_ETC___d9768;
+      3'd3:
+	  IF_coreFix_fpuMulDivExe_0_regToExeQ_first__371_ETC___d9772 =
+	      IF_IF_IF_IF_3074_MINUS_SEXT_IF_coreFix_fpuMulD_ETC___d9766;
+      3'd4:
+	  IF_coreFix_fpuMulDivExe_0_regToExeQ_first__371_ETC___d9772 =
+	      CASE_guard81040_0b0_theResult___fst_exp89266_0_ETC__q189;
+      default: IF_coreFix_fpuMulDivExe_0_regToExeQ_first__371_ETC___d9772 =
+		   11'd0;
+    endcase
+  end
+  always@(guard__h581040 or
+	  _theResult___fst_exp__h589266 or
+	  out_exp__h589998 or _theResult___exp__h589995)
+  begin
+    case (guard__h581040)
+      2'b0, 2'b01:
+	  CASE_guard81040_0b0_theResult___fst_exp89266_0_ETC__q190 =
+	      _theResult___fst_exp__h589266;
+      2'b10:
+	  CASE_guard81040_0b0_theResult___fst_exp89266_0_ETC__q190 =
+	      out_exp__h589998;
+      2'b11:
+	  CASE_guard81040_0b0_theResult___fst_exp89266_0_ETC__q190 =
+	      _theResult___exp__h589995;
     endcase
   end
   always@(guard__h590109 or
@@ -37850,17 +37850,6 @@ module mkCore(CLK,
     endcase
   end
   always@(fetchStage$pipelines_0_first or
-	  coreFix_memExe_lsq$RDY_enqSt or coreFix_memExe_lsq$RDY_enqLd)
-  begin
-    case (fetchStage$pipelines_0_first[191:189])
-      3'd0, 3'd2:
-	  CASE_fetchStagepipelines_0_first_BITS_191_TO__ETC__q240 =
-	      coreFix_memExe_lsq$RDY_enqLd;
-      default: CASE_fetchStagepipelines_0_first_BITS_191_TO__ETC__q240 =
-		   coreFix_memExe_lsq$RDY_enqSt;
-    endcase
-  end
-  always@(fetchStage$pipelines_0_first or
 	  coreFix_memExe_rsMem$canEnq or
 	  IF_fetchStage_pipelines_0_first__2757_BITS_191_ETC___d13524 or
 	  SEL_ARR_NOT_coreFix_aluExe_0_rsAlu_canEnq__344_ETC___d13487 or
@@ -37877,6 +37866,17 @@ module mkCore(CLK,
 		   fetchStage$pipelines_0_first[194:192] == 3'd2 &&
 		   (!coreFix_memExe_rsMem$canEnq ||
 		    IF_fetchStage_pipelines_0_first__2757_BITS_191_ETC___d13524);
+    endcase
+  end
+  always@(fetchStage$pipelines_0_first or
+	  coreFix_memExe_lsq$RDY_enqSt or coreFix_memExe_lsq$RDY_enqLd)
+  begin
+    case (fetchStage$pipelines_0_first[191:189])
+      3'd0, 3'd2:
+	  CASE_fetchStagepipelines_0_first_BITS_191_TO__ETC__q240 =
+	      coreFix_memExe_lsq$RDY_enqLd;
+      default: CASE_fetchStagepipelines_0_first_BITS_191_TO__ETC__q240 =
+		   coreFix_memExe_lsq$RDY_enqSt;
     endcase
   end
   always@(fetchStage$pipelines_0_first or
@@ -38083,10 +38083,10 @@ module mkCore(CLK,
   begin
     case (fetchStage$pipelines_0_first[191:189])
       3'd0, 3'd2:
-	  IF_fetchStage_pipelines_0_first__2757_BITS_191_ETC___d14136 =
-	      coreFix_memExe_lsq$enqLdTag[3:0];
-      default: IF_fetchStage_pipelines_0_first__2757_BITS_191_ETC___d14136 =
-		   coreFix_memExe_lsq$enqStTag[3:0];
+	  IF_fetchStage_pipelines_0_first__2757_BITS_191_ETC___d14127 =
+	      coreFix_memExe_lsq$enqLdTag[5];
+      default: IF_fetchStage_pipelines_0_first__2757_BITS_191_ETC___d14127 =
+		   coreFix_memExe_lsq$enqStTag[5];
     endcase
   end
   always@(fetchStage$pipelines_0_first or
@@ -38094,10 +38094,10 @@ module mkCore(CLK,
   begin
     case (fetchStage$pipelines_0_first[191:189])
       3'd0, 3'd2:
-	  IF_fetchStage_pipelines_0_first__2757_BITS_191_ETC___d14127 =
-	      coreFix_memExe_lsq$enqLdTag[5];
-      default: IF_fetchStage_pipelines_0_first__2757_BITS_191_ETC___d14127 =
-		   coreFix_memExe_lsq$enqStTag[5];
+	  IF_fetchStage_pipelines_0_first__2757_BITS_191_ETC___d14136 =
+	      coreFix_memExe_lsq$enqLdTag[3:0];
+      default: IF_fetchStage_pipelines_0_first__2757_BITS_191_ETC___d14136 =
+		   coreFix_memExe_lsq$enqStTag[3:0];
     endcase
   end
   always@(fetchStage$pipelines_0_first or
@@ -38390,16 +38390,6 @@ module mkCore(CLK,
       default: data_warl_xformed__h723335 = rob$deqPort_0_deq_data[95:32];
     endcase
   end
-  always@(rob$deqPort_0_deq_data or
-	  IF_rob_deqPort_0_deq_data__4344_BITS_329_TO_32_ETC___d15196)
-  begin
-    case (rob$deqPort_0_deq_data[329:325])
-      5'd19, 5'd20:
-	  x__h723943 =
-	      IF_rob_deqPort_0_deq_data__4344_BITS_329_TO_32_ETC___d15196;
-      default: x__h723943 = rob$deqPort_0_deq_data[425:362];
-    endcase
-  end
   always@(rob$deqPort_0_deq_data)
   begin
     case (rob$deqPort_0_deq_data[180:169])
@@ -38451,6 +38441,16 @@ module mkCore(CLK,
 	      rob$deqPort_0_deq_data[180:169];
       default: CASE_robdeqPort_0_deq_data_BITS_180_TO_169_1__ETC__q246 =
 		   12'd2303;
+    endcase
+  end
+  always@(rob$deqPort_0_deq_data or
+	  IF_rob_deqPort_0_deq_data__4344_BITS_329_TO_32_ETC___d15196)
+  begin
+    case (rob$deqPort_0_deq_data[329:325])
+      5'd19, 5'd20:
+	  x__h723943 =
+	      IF_rob_deqPort_0_deq_data__4344_BITS_329_TO_32_ETC___d15196;
+      default: x__h723943 = rob$deqPort_0_deq_data[425:362];
     endcase
   end
   always@(rob$deqPort_0_deq_data)

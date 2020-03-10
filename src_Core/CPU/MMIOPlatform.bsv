@@ -321,15 +321,18 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
       // check for timer interrupt
       Vector#(CoreNum, Bool) needTimerInt = replicate(False);
       for(Integer i = 0; i < valueof(CoreNum); i = i+1) begin
-         if(!mtip[i] && mtimecmp[i] <= mtime) begin
-	    cores[i].pRq.enq(MMIOPRq {
-	       target: MTIP,
-	       func: St,
-	       data: 1
-               });
-	    mtip[i] <= True;
-	    needTimerInt[i] = True;
-         end
+         if(!mtip[i]
+	    && (mtimecmp[i] <= mtime)
+	    && (mtimecmp [i] != 0))    // Avoid interrupt until mtimecmp has actually been written
+	    begin
+	       cores[i].pRq.enq(MMIOPRq {
+		  target: MTIP,
+		  func: St,
+		  data: 1
+		  });
+	       mtip[i] <= True;
+	       needTimerInt[i] = True;
+            end
       end
       if(needTimerInt != replicate(False)) begin
          state <= WaitResp;
