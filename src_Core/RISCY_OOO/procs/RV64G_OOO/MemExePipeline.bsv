@@ -480,8 +480,8 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         let {paddr, cause} = dTlbResp.resp;
 
 `ifdef RVFI_DII
-        // TestRIG expects us throw an access fault for any memory access outside of a 64-KiB memory at 0x8000000.
-        if (!isValid(cause) && (paddr < 'h80000000 || paddr >= 'h80010000)) begin
+        // TestRIG expects us throw an access fault for any memory access outside of a 8 MiB memory at 0x8000000.
+        if (!isValid(cause) && (paddr < 'h80000000 || paddr >= 'h80800000)) begin
             case(x.mem_func)
                 Ld, Lr: begin
                     cause = Valid (LoadAccessFault);
