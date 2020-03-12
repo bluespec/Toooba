@@ -133,21 +133,30 @@ typedef struct {
     Addr addr;
     Trap trap;
 `ifdef RVFI_DII
-    Dii_Id diid;
+    ToReorderBuffer x;
 `endif
 } CommitTrap deriving(Bits, Eq, FShow);
 
 `ifdef RVFI
-function Maybe#(RVFI_DII_Execution#(DataSz,DataSz)) genRVFI(ToReorderBuffer rot, Dii_Id traceCnt);
+function Bool is_16b_inst (Bit #(n) inst);
+   return (inst [1:0] != 2'b11);
+endfunction
+
+typedef struct {
+    Data sepc;
+    Data mepc;
+    Data stvec;
+    Data mtvec;
+} TraceStateBundle deriving(Bits, Eq, FShow);
+
+function Maybe#(RVFI_DII_Execution#(DataSz,DataSz)) genRVFI(ToReorderBuffer rot, Dii_Id traceCnt, TraceStateBundle tsb, Data next_pc);
     Addr addr = 0;
-    Addr next_pc = 0;
     Data data = 0;
     Data wdata = 0;
     ByteEn rmask = replicate(False);
     ByteEn wmask = replicate(False);
     Bit#(5) rd = 0;
     if (!isValid(rot.trap)) begin
-        next_pc = rot.pc + 4;
         case (rot.iType)
             Amo, Alu, Ld, Lr, Sc, J, Jr, Auipc, Fpu, Csr: begin // Defaults for register-to-register operations.
                 data = rot.traceBundle.regWriteData;
@@ -165,7 +174,7 @@ function Maybe#(RVFI_DII_Execution#(DataSz,DataSz)) genRVFI(ToReorderBuffer rot,
                     end
                 endcase
             end
-            tagged PPC .ppc: next_pc = ppc;
+            //tagged PPC .ppc: next_pc = ppc;
             tagged CSRData .csrdata: data = csrdata;
         endcase
     end
@@ -254,6 +263,15 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
     // RVFI trace report. Not an input?
     FIFO#(Rvfi_Traces) rvfiQ <- mkFIFO;
     Reg#(Dii_Id) traceCnt <- mkReg(0);
+    
+    function TraceStateBundle getTSB();
+        return TraceStateBundle{
+            sepc:  csrf.rd(CSRsepc),
+            mepc:  csrf.rd(CSRmepc),
+            stvec: csrf.rd(CSRstvec),
+            mtvec: csrf.rd(CSRmtvec)
+        };
+    endfunction
 `endif
 
     // deadlock check
@@ -441,7 +459,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
             pc: x.pc,
             addr: vaddr
 `ifdef RVFI_DII
-            , diid: x.diid
+            , x: x
 `endif
 	});
         commitTrap <= commitTrap_val;
@@ -454,12 +472,6 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 	   $display ("CommitStage.doCommitTrap_flush: deq_data:   ", fshow (x));
 	   $display ("CommitStage.doCommitTrap_flush: commitTrap: ", fshow (commitTrap_val));
 	end
-`ifdef RVFI
-        Rvfi_Traces rvfis = replicate(tagged Invalid);
-        rvfis[0] = genRVFI(x, traceCnt);
-        rvfiQ.enq(rvfis);
-        traceCnt <= traceCnt + 1;
-`endif
 
         // flush everything. Only increment epoch and stall fetch when we haven
         // not done it yet (we may have already done them at rename stage)
@@ -503,9 +515,16 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         let new_pc <- csrf.trap(trap.trap, trap.pc, trap.addr);
         inIfc.redirectPc(new_pc
 `ifdef RVFI_DII
-            , trap.diid + 1
+            , trap.x.diid + 1
 `endif
         );
+        
+`ifdef RVFI
+        Rvfi_Traces rvfis = replicate(tagged Invalid);
+        rvfis[0] = genRVFI(trap.x, traceCnt, getTSB(), new_pc);
+        rvfiQ.enq(rvfis);
+        traceCnt <= traceCnt + 1;
+`endif
 
         // system consistency
         // TODO spike flushes TLB here, but perhaps it is because spike's TLB
@@ -569,12 +588,6 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 		    "   iType:", fshow (x.iType), "    [doCommitSystemInst]");
 	   rg_instret <= rg_instret + 1;
 	end
-`ifdef RVFI
-        Rvfi_Traces rvfis = replicate(tagged Invalid);
-        rvfis[0] = genRVFI(x, traceCnt);
-        rvfiQ.enq(rvfis);
-        traceCnt <= traceCnt + 1;
-`endif
 
         // we claim a phy reg for every inst, so commit its renaming
         regRenamingTable.commit[0].commit;
@@ -615,6 +628,13 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
             , x.diid + 1
 `endif
         );
+
+`ifdef RVFI
+        Rvfi_Traces rvfis = replicate(tagged Invalid);
+        rvfis[0] = genRVFI(x, traceCnt, getTSB(), next_pc);
+        rvfiQ.enq(rvfis);
+        traceCnt <= traceCnt + 1;
+`endif
 
         // rename stage only sends out system inst when ROB is empty, so no
         // need to flush ROB again
@@ -741,7 +761,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                 else begin
                     if (verbose) $display("[doCommitNormalInst - %d] ", i, fshow(inst_tag), " ; ", fshow(x));
 `ifdef RVFI
-                    rvfis[i] = genRVFI(x, traceCnt + zeroExtend(whichTrace));
+                    rvfis[i] = genRVFI(x, traceCnt + zeroExtend(whichTrace), getTSB(), x.pc + (is_16b_inst(x.orig_inst) ? 2:4));
                     whichTrace = whichTrace + 1;
 `endif
 
