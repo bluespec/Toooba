@@ -288,7 +288,8 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
    // To avoid posting timer interrupt repeatedly, we keep a copy of MTIP
    // here. Since each core cannot write MTIP by CSRXXX inst, the only way to
    // change MTIP is through here.
-   Vector#(CoreNum, Reg#(Bool)) mtip <- replicateM(mkReg(False));
+   // We initialize to True to avoid an timer interrupt at start of time.
+   Vector#(CoreNum, Reg#(Bool)) mtip <- replicateM(mkReg(True));
 
    // pass mtime to each core
    rule propagateTime(state != Init);
@@ -321,18 +322,15 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
       // check for timer interrupt
       Vector#(CoreNum, Bool) needTimerInt = replicate(False);
       for(Integer i = 0; i < valueof(CoreNum); i = i+1) begin
-         if(!mtip[i]
-	    && (mtimecmp[i] <= mtime)
-	    && (mtimecmp [i] != 0))    // Avoid interrupt until mtimecmp has actually been written
-	    begin
-	       cores[i].pRq.enq(MMIOPRq {
-		  target: MTIP,
-		  func: St,
-		  data: 1
-		  });
-	       mtip[i] <= True;
-	       needTimerInt[i] = True;
-            end
+         if(!mtip[i] && mtimecmp[i] <= mtime) begin
+	    cores[i].pRq.enq(MMIOPRq {
+	       target: MTIP,
+	       func: St,
+	       data: 1
+               });
+	    mtip[i] <= True;
+	    needTimerInt[i] = True;
+         end
       end
       if(needTimerInt != replicate(False)) begin
          state <= WaitResp;

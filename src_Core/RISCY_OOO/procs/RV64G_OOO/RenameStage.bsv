@@ -531,7 +531,10 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
 	    &&& ((dInst.iType == Csr)
 		 && ((csr == CSRfflags) || (csr == CSRfrm) || (csr == CSRfcsr))))
 	   begin
-	      will_dirty_fpu_state = True;
+	      Bool is_CSRR_W = (dInst.execFunc == tagged Alu Csrw);
+	      Bool rs1_is_0 = ((arch_regs.src2 == tagged Valid (tagged Gpr 0))
+			       || (dInst.imm == tagged Valid 0));
+	      will_dirty_fpu_state = (is_CSRR_W || (! rs1_is_0));
 	   end
 
         RobInstState rob_inst_state = to_exec ? NotDone : Executed;

@@ -77,13 +77,13 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 
   // remaining internal signals
   reg [63 : 0] x1_avValue_pc__h3546, x1_avValue_word1__h3550;
-  reg [11 : 0] CASE_in_put_BITS_475_TO_464_1_in_put_BITS_475__ETC__q2,
+  reg [11 : 0] CASE_in_put_BITS_475_TO_464_1_in_put_BITS_475__ETC__q1,
 	       csr_addr__h5310;
-  reg [4 : 0] CASE_f_inD_OUT_BITS_624_TO_620_14_5_15_5_16_5_ETC__q1,
+  reg [4 : 0] CASE_f_inD_OUT_BITS_624_TO_620_14_5_15_5_16_5_ETC__q5,
 	      x1_avValue_rd__h3549;
-  reg [3 : 0] CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q3,
-	      CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q4;
-  reg [1 : 0] CASE_in_put_BITS_393_TO_392_0_in_put_BITS_393__ETC__q5;
+  reg [3 : 0] CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q2,
+	      CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q3;
+  reg [1 : 0] CASE_in_put_BITS_393_TO_392_0_in_put_BITS_393__ETC__q4;
   wire [63 : 0] td_word2__h3589,
 		td_word2__h3740,
 		td_word3__h3590,
@@ -167,13 +167,13 @@ module mkTrace_Data2_to_Trace_Data(CLK,
   // submodule f_in
   assign f_in$D_IN =
 	     { in_put[861:476],
-	       CASE_in_put_BITS_475_TO_464_1_in_put_BITS_475__ETC__q2,
+	       CASE_in_put_BITS_475_TO_464_1_in_put_BITS_475__ETC__q1,
 	       in_put[463:462],
 	       in_put[462] ?
-		 CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q3 :
-		 CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q4,
+		 CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q2 :
+		 CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q3,
 	       in_put[457:394],
-	       CASE_in_put_BITS_393_TO_392_0_in_put_BITS_393__ETC__q5,
+	       CASE_in_put_BITS_393_TO_392_0_in_put_BITS_393__ETC__q4,
 	       in_put[391:0] } ;
   assign f_in$ENQ = EN_in_put ;
   assign f_in$DEQ = CAN_FIRE_RL_rl_td2_to_td ;
@@ -217,7 +217,7 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 					      f_in$D_OUT[393:392] != 2'd1 &&
 					      f_in$D_OUT[624:620] == 5'd13) ?
 					       5'd16 :
-					       CASE_f_inD_OUT_BITS_624_TO_620_14_5_15_5_16_5_ETC__q1)))))))))),
+					       CASE_f_inD_OUT_BITS_624_TO_620_14_5_15_5_16_5_ETC__q5)))))))))),
 	       x__h4855,
 	       f_in$D_OUT[626:625] == 2'b11,
 	       f_in$D_OUT[656:625],
@@ -227,7 +227,7 @@ module mkTrace_Data2_to_Trace_Data(CLK,
 	       x__h5458,
 	       x__h5890,
 	       x__h5906 } ;
-  assign f_out$ENQ = f_in$EMPTY_N && f_out$FULL_N ;
+  assign f_out$ENQ = CAN_FIRE_RL_rl_td2_to_td ;
   assign f_out$DEQ = EN_out_get ;
   assign f_out$CLR = 1'b0 ;
 
@@ -466,22 +466,6 @@ module mkTrace_Data2_to_Trace_Data(CLK,
       default: csr_addr__h5310 = 12'd2303;
     endcase
   end
-  always@(f_in$D_OUT)
-  begin
-    case (f_in$D_OUT[624:620])
-      5'd14, 5'd15, 5'd16, 5'd17, 5'd18:
-	  CASE_f_inD_OUT_BITS_624_TO_620_14_5_15_5_16_5_ETC__q1 = 5'd5;
-      5'd19, 5'd20:
-	  CASE_f_inD_OUT_BITS_624_TO_620_14_5_15_5_16_5_ETC__q1 = 5'd15;
-      default: CASE_f_inD_OUT_BITS_624_TO_620_14_5_15_5_16_5_ETC__q1 =
-		   (f_in$D_OUT[393:392] == 2'd1 &&
-		    (f_in$D_OUT[624:620] == 5'd2 ||
-		     f_in$D_OUT[624:620] == 5'd6 ||
-		     f_in$D_OUT[624:620] == 5'd7)) ?
-		     5'd13 :
-		     5'd5;
-    endcase
-  end
   always@(in_put)
   begin
     case (in_put[475:464])
@@ -529,9 +513,9 @@ module mkTrace_Data2_to_Trace_Data(CLK,
       12'd3858,
       12'd3859,
       12'd3860:
-	  CASE_in_put_BITS_475_TO_464_1_in_put_BITS_475__ETC__q2 =
+	  CASE_in_put_BITS_475_TO_464_1_in_put_BITS_475__ETC__q1 =
 	      in_put[475:464];
-      default: CASE_in_put_BITS_475_TO_464_1_in_put_BITS_475__ETC__q2 =
+      default: CASE_in_put_BITS_475_TO_464_1_in_put_BITS_475__ETC__q1 =
 		   12'd2303;
     endcase
   end
@@ -539,9 +523,9 @@ module mkTrace_Data2_to_Trace_Data(CLK,
   begin
     case (in_put[461:458])
       4'd0, 4'd1, 4'd3, 4'd4, 4'd5, 4'd7, 4'd8, 4'd9, 4'd11, 4'd14:
-	  CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q3 =
+	  CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q2 =
 	      in_put[461:458];
-      default: CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q3 = 4'd15;
+      default: CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q2 = 4'd15;
     endcase
   end
   always@(in_put)
@@ -560,18 +544,34 @@ module mkTrace_Data2_to_Trace_Data(CLK,
       4'd11,
       4'd12,
       4'd13:
-	  CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q4 =
+	  CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q3 =
 	      in_put[461:458];
-      default: CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q4 = 4'd15;
+      default: CASE_in_put_BITS_461_TO_458_0_in_put_BITS_461__ETC__q3 = 4'd15;
     endcase
   end
   always@(in_put)
   begin
     case (in_put[393:392])
       2'd0, 2'd1:
-	  CASE_in_put_BITS_393_TO_392_0_in_put_BITS_393__ETC__q5 =
+	  CASE_in_put_BITS_393_TO_392_0_in_put_BITS_393__ETC__q4 =
 	      in_put[393:392];
-      default: CASE_in_put_BITS_393_TO_392_0_in_put_BITS_393__ETC__q5 = 2'd2;
+      default: CASE_in_put_BITS_393_TO_392_0_in_put_BITS_393__ETC__q4 = 2'd2;
+    endcase
+  end
+  always@(f_in$D_OUT)
+  begin
+    case (f_in$D_OUT[624:620])
+      5'd14, 5'd15, 5'd16, 5'd17, 5'd18:
+	  CASE_f_inD_OUT_BITS_624_TO_620_14_5_15_5_16_5_ETC__q5 = 5'd5;
+      5'd19, 5'd20:
+	  CASE_f_inD_OUT_BITS_624_TO_620_14_5_15_5_16_5_ETC__q5 = 5'd15;
+      default: CASE_f_inD_OUT_BITS_624_TO_620_14_5_15_5_16_5_ETC__q5 =
+		   (f_in$D_OUT[393:392] == 2'd1 &&
+		    (f_in$D_OUT[624:620] == 5'd2 ||
+		     f_in$D_OUT[624:620] == 5'd6 ||
+		     f_in$D_OUT[624:620] == 5'd7)) ?
+		     5'd13 :
+		     5'd5;
     endcase
   end
 
