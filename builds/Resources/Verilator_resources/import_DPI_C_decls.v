@@ -74,6 +74,9 @@ import "DPI-C"
 function  int unsigned serv_socket_put8(longint unsigned ptr, byte unsigned data);
 
 import "DPI-C"
+function  int unsigned serv_socket_put8_blocking(longint unsigned ptr, byte unsigned data);
+
+import "DPI-C"
 function  longint unsigned serv_socket_create_nameless(int unsigned dflt_port);
 
 import "DPI-C"
