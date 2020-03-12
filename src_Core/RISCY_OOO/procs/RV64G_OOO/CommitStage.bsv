@@ -145,12 +145,15 @@ function Maybe#(RVFI_DII_Execution#(DataSz,DataSz)) genRVFI(ToReorderBuffer rot,
     Data wdata = 0;
     ByteEn rmask = replicate(False);
     ByteEn wmask = replicate(False);
+    Bit#(5) rd = 0;
     if (!isValid(rot.trap)) begin
         next_pc = rot.pc + 4;
-        data =  case (rot.iType)
-                    St, Br: return 0;
-                    default: return rot.traceBundle.regWriteData; // Default for register-to-register operations.
-                endcase;
+        case (rot.iType)
+            Amo, Alu, Ld, Lr, Sc, J, Jr, Auipc, Fpu, Csr: begin // Defaults for register-to-register operations.
+                data = rot.traceBundle.regWriteData;
+                rd = rot.orig_inst[11:7];
+            end
+        endcase
         case (rot.ppc_vaddr_csrData) matches
             tagged VAddr .vaddr: begin
                 addr = vaddr;
@@ -179,8 +182,8 @@ function Maybe#(RVFI_DII_Execution#(DataSz,DataSz)) genRVFI(ToReorderBuffer rot,
         rvfi_pc_rdata: rot.pc,
         rvfi_pc_wdata: next_pc,
         rvfi_mem_wdata: wdata,
-        rvfi_rd_addr: rot.orig_inst[11:7],
-        rvfi_rd_wdata: ((rot.orig_inst[11:7]==0) ? 0:data),
+        rvfi_rd_addr: rd,
+        rvfi_rd_wdata: ((rd==0) ? 0:data),
         rvfi_mem_addr: addr,
         rvfi_mem_rmask: pack(rmask),
         rvfi_mem_wmask: pack(wmask),
@@ -193,7 +196,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
     Bool verbose = True;
 
     // Bluespec: for lightweight verbosity trace
-    Integer verbosity = 1;
+    Integer verbosity = 0;
     Reg #(Bit #(64)) rg_instret <- mkReg (0);
 
     // func units
