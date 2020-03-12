@@ -69,7 +69,7 @@ module mkTooobaRVFIDIIBridge(Toooba_RVFI_DII_Bridge_IFC);
     FIFO#(Dii_Ids) seq_req <- mkFIFO;
     Reg#(Dii_Id) last_id <- mkReg(0);
     
-    Bool verbose = True;
+    Bool verbose = False;
     
     function Bool validReport(RVFI_DII_Execution#(DataSz,DataSz) trace);
         return (trace.rvfi_insn != dii_nop);

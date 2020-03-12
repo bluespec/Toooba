@@ -251,7 +251,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
                     ppc_vaddr_csrData[pvc_finishAlu_port(i)] <= PPC (cf.nextPc);
                 end
 `ifdef RVFI
-                $display("%t : traceBundle = ", $time(), fshow(tb), " in Row_setExecuted_doFinishAlu for %x", pc);
+                //$display("%t : traceBundle = ", $time(), fshow(tb), " in Row_setExecuted_doFinishAlu for %x", pc);
                 traceBundle[pvc_finishAlu_port(i)] <= tb;
 `endif
                 doAssert(isValid(csr) == isValid(csrData), "csr valid should match");
@@ -294,7 +294,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         // update VAddr
         ppc_vaddr_csrData[pvc_finishMem_port] <= VAddr (vaddr);
 `ifdef RVFI
-        $display("%t : traceBundle = ", $time(), fshow(tb), " in setExecuted_doFinishMem for %x", pc);
+        //$display("%t : traceBundle = ", $time(), fshow(tb), " in setExecuted_doFinishMem for %x", pc);
         traceBundle[pvc_finishMem_port] <= tb;
 `endif
         // update access at commit
@@ -340,7 +340,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         diid <= x.diid;
 `endif
 `ifdef RVFI
-        $display("%t : traceBundle = ", $time(), fshow(x.traceBundle), " in write_enq for %x", pc);
+        //$display("%t : traceBundle = ", $time(), fshow(x.traceBundle), " in write_enq for %x", pc);
         traceBundle[pvc_enq_port] <= x.traceBundle;
 `endif
         // check
@@ -402,7 +402,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         rob_inst_state[state_deqLSQ_port] <= Executed;
 `ifdef RVFI
         traceBundleMem <= tb;
-        $display("%t: Wrote tb for deqLSQ ", $time(), fshow(tb));
+        //$display("%t: Wrote tb for deqLSQ ", $time(), fshow(tb));
 `endif
         // record trap
         doAssert(!isValid(trap[trap_deqLSQ_port]), "cannot have trap");
