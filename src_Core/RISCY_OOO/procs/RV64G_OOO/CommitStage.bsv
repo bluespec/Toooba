@@ -174,7 +174,7 @@ function Maybe#(RVFI_DII_Execution#(DataSz,DataSz)) genRVFI(ToReorderBuffer rot,
                     end
                 endcase
             end
-            //tagged PPC .ppc: next_pc = ppc;
+            tagged PPC .ppc: next_pc = ppc;
             tagged CSRData .csrdata: data = csrdata;
         endcase
     end
