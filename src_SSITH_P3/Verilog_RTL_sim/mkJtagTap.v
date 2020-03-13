@@ -130,16 +130,12 @@ module mkJtagTap(CLK,
 
   // inlined wires
   wire [40 : 0] w_dmi_req$wget;
-  wire r_dmistat_busy$port1__read,
+  wire r_dmistat_busy$EN_port1__write,
+       r_dmistat_busy$port1__read,
        r_dmistat_busy$port2__read,
        r_tdo$EN_port0__write,
        r_tdo$port0__write_1,
        r_tdo$port1__read;
-
-  // register r_dmi
-  reg [39 : 0] r_dmi;
-  wire [39 : 0] r_dmi$D_IN;
-  wire r_dmi$EN;
 
   // register r_dmistat_busy
   reg r_dmistat_busy;
@@ -160,11 +156,6 @@ module mkJtagTap(CLK,
   wire [4 : 0] r_ir$D_IN;
   wire r_ir$EN;
 
-  // register r_state
-  reg [3 : 0] r_state;
-  wire [3 : 0] r_state$D_IN;
-  wire r_state$EN;
-
   // register r_tdo
   reg r_tdo;
   wire r_tdo$D_IN, r_tdo$EN;
@@ -179,6 +170,7 @@ module mkJtagTap(CLK,
   // ports of submodule f_dmi_req
   wire [40 : 0] f_dmi_req$dD_OUT, f_dmi_req$sD_IN;
   wire f_dmi_req$dCLR,
+       f_dmi_req$dCLR_RDY,
        f_dmi_req$dDEQ,
        f_dmi_req$dEMPTY_N,
        f_dmi_req$sCLR,
@@ -193,18 +185,32 @@ module mkJtagTap(CLK,
        f_dmi_rsp$dDEQ,
        f_dmi_rsp$dEMPTY_N,
        f_dmi_rsp$sCLR,
+       f_dmi_rsp$sCLR_RDY,
        f_dmi_rsp$sENQ,
        f_dmi_rsp$sFULL_N;
+
+  // ports of submodule r_dmi
+  wire [39 : 0] r_dmi$D_IN, r_dmi$Q_OUT;
+  wire r_dmi$EN;
+
+  // ports of submodule r_initialize
+  wire r_initialize$D_IN, r_initialize$EN, r_initialize$Q_OUT;
+
+  // ports of submodule r_initialize2
+  wire r_initialize2$D_IN, r_initialize2$EN, r_initialize2$Q_OUT;
+
+  // ports of submodule r_state
+  wire [3 : 0] r_state$D_IN, r_state$Q_OUT;
+  wire r_state$EN;
 
   // ports of submodule rst_tck
   wire rst_tck$OUT_RST;
 
   // ports of submodule tck_clock
-  wire tck_clock$CLK_IN,
-       tck_clock$CLK_IN_EN,
-       tck_clock$CLK_OUT,
-       tck_clock$COND_IN,
-       tck_clock$COND_IN_EN;
+  wire tck_clock$IN, tck_clock$OUT;
+
+  // ports of submodule w_tck_crossed
+  wire w_tck_crossed$DOUT;
 
   // rule scheduling signals
   wire CAN_FIRE_RL_dmi_request,
@@ -215,7 +221,9 @@ module mkJtagTap(CLK,
        CAN_FIRE_RL_dmi_response_ready,
        CAN_FIRE_RL_dmi_response_tck,
        CAN_FIRE_RL_dmi_start,
-       CAN_FIRE_RL_rl_tck,
+       CAN_FIRE_RL_mkConnectionVtoAf,
+       CAN_FIRE_RL_rl_initialize,
+       CAN_FIRE_RL_rl_initialize2,
        CAN_FIRE_RL_tick,
        CAN_FIRE_dmi_req_ready,
        CAN_FIRE_dmi_rsp_data,
@@ -232,7 +240,9 @@ module mkJtagTap(CLK,
        WILL_FIRE_RL_dmi_response_ready,
        WILL_FIRE_RL_dmi_response_tck,
        WILL_FIRE_RL_dmi_start,
-       WILL_FIRE_RL_rl_tck,
+       WILL_FIRE_RL_mkConnectionVtoAf,
+       WILL_FIRE_RL_rl_initialize,
+       WILL_FIRE_RL_rl_initialize2,
        WILL_FIRE_RL_tick,
        WILL_FIRE_dmi_req_ready,
        WILL_FIRE_dmi_rsp_data,
@@ -243,24 +253,24 @@ module mkJtagTap(CLK,
        WILL_FIRE_jtag_tms;
 
   // remaining internal signals
-  reg [39 : 0] CASE_newir435_0_1_1_2147483648_0x10_2147483648_ETC__q1,
-	       v__h2135;
-  reg [4 : 0] newir__h3435;
-  reg [3 : 0] CASE_r_state_0_1_1_1_2_3_3_4_4_4_5_6_6_6_7_4_8_ETC__q3,
-	      CASE_r_state_0_r_state_1_2_2_9_3_5_4_5_5_8_6_7_ETC__q2;
-  wire [39 : 0] IF_r_dmistat_busy_port0__read__37_OR_NOT_r_dmi_ETC___d140,
-		v__h2233,
-		v__h2601,
-		x__h2449,
-		x__h2658,
-		y__h2659;
-  wire [4 : 0] v__h3299, x__h3350, y__h3351;
-  wire r_state_EQ_8_2_AND_r_ir_EQ_0x10_2_AND_r_dr_8_B_ETC___d57,
-       r_state_EQ_8_2_AND_r_ir_EQ_0x11_4_AND_NOT_r_dm_ETC___d68,
-       r_state_EQ_8_2_AND_r_ir_EQ_0x11_4_AND_NOT_r_dm_ETC___d72;
+  reg [39 : 0] CASE_newir774_0_1_1_2147483648_0x10_2147483648_ETC__q1,
+	       v__h2479;
+  reg [4 : 0] newir__h3774;
+  reg [3 : 0] CASE_r_stateQ_OUT_0_1_1_1_2_3_3_4_4_4_5_6_6_6_ETC__q3,
+	      CASE_r_stateQ_OUT_0_r_stateQ_OUT_1_2_2_9_3_5_ETC__q2;
+  wire [39 : 0] IF_r_dmistat_busy_port0__read__43_OR_NOT_r_dmi_ETC___d146,
+		v__h2576,
+		v__h2941,
+		x__h2789,
+		x__h2996,
+		y__h2997;
+  wire [4 : 0] v__h3636, x__h3687, y__h3688;
+  wire r_state__read_EQ_8_8_AND_r_ir_3_EQ_0x10_9_AND__ETC___d63,
+       r_state__read_EQ_8_8_AND_r_ir_3_EQ_0x11_1_AND__ETC___d74,
+       r_state__read_EQ_8_8_AND_r_ir_3_EQ_0x11_1_AND__ETC___d78;
 
   // oscillator and gates for output clock CLK_jtag_tclk_out
-  assign CLK_jtag_tclk_out = tck_clock$CLK_OUT ;
+  assign CLK_jtag_tclk_out = tck_clock$OUT ;
   assign CLK_GATE_jtag_tclk_out = 1'b1 ;
 
   // action method jtag_tdi
@@ -311,7 +321,7 @@ module mkJtagTap(CLK,
 
   // submodule f_dmi_busy
   FIFO20 #(.guarded(32'd1)) f_dmi_busy(.RST(rst_tck$OUT_RST),
-				       .CLK(tck_clock$CLK_OUT),
+				       .CLK(tck_clock$OUT),
 				       .ENQ(f_dmi_busy$ENQ),
 				       .DEQ(f_dmi_busy$DEQ),
 				       .CLR(f_dmi_busy$CLR),
@@ -321,7 +331,7 @@ module mkJtagTap(CLK,
   // submodule f_dmi_req
   SyncFIFOLevel #(.dataWidth(32'd41),
 		  .depth(32'd2),
-		  .indxWidth(32'd1)) f_dmi_req(.sCLK(tck_clock$CLK_OUT),
+		  .indxWidth(32'd1)) f_dmi_req(.sCLK(tck_clock$OUT),
 					       .dCLK(CLK),
 					       .sRST(rst_tck$OUT_RST),
 					       .sD_IN(f_dmi_req$sD_IN),
@@ -335,13 +345,13 @@ module mkJtagTap(CLK,
 					       .dCOUNT(),
 					       .sCOUNT(),
 					       .sCLR_RDY(f_dmi_req$sCLR_RDY),
-					       .dCLR_RDY());
+					       .dCLR_RDY(f_dmi_req$dCLR_RDY));
 
   // submodule f_dmi_rsp
   SyncFIFOLevel #(.dataWidth(32'd40),
 		  .depth(32'd2),
 		  .indxWidth(32'd1)) f_dmi_rsp(.sCLK(CLK),
-					       .dCLK(tck_clock$CLK_OUT),
+					       .dCLK(tck_clock$OUT),
 					       .sRST(RST_N),
 					       .sD_IN(f_dmi_rsp$sD_IN),
 					       .sENQ(f_dmi_rsp$sENQ),
@@ -353,29 +363,46 @@ module mkJtagTap(CLK,
 					       .dEMPTY_N(f_dmi_rsp$dEMPTY_N),
 					       .dCOUNT(),
 					       .sCOUNT(),
-					       .sCLR_RDY(),
+					       .sCLR_RDY(f_dmi_rsp$sCLR_RDY),
 					       .dCLR_RDY(f_dmi_rsp$dCLR_RDY));
 
+  // submodule r_dmi
+  RegUNInit #(.width(32'd40), .init(40'd0)) r_dmi(.CLK(tck_clock$OUT),
+						  .D_IN(r_dmi$D_IN),
+						  .EN(r_dmi$EN),
+						  .Q_OUT(r_dmi$Q_OUT));
+
+  // submodule r_initialize
+  RegUNInit #(.width(32'd1), .init(1'd1)) r_initialize(.CLK(tck_clock$OUT),
+						       .D_IN(r_initialize$D_IN),
+						       .EN(r_initialize$EN),
+						       .Q_OUT(r_initialize$Q_OUT));
+
+  // submodule r_initialize2
+  RegUNInit #(.width(32'd1), .init(1'd1)) r_initialize2(.CLK(CLK),
+							.D_IN(r_initialize2$D_IN),
+							.EN(r_initialize2$EN),
+							.Q_OUT(r_initialize2$Q_OUT));
+
+  // submodule r_state
+  RegUNInit #(.width(32'd4), .init(4'd0)) r_state(.CLK(tck_clock$OUT),
+						  .D_IN(r_state$D_IN),
+						  .EN(r_state$EN),
+						  .Q_OUT(r_state$Q_OUT));
+
   // submodule rst_tck
-  SyncResetA #(.RSTDELAY(32'd3)) rst_tck(.CLK(tck_clock$CLK_OUT),
-					 .IN_RST(RST_N),
-					 .OUT_RST(rst_tck$OUT_RST));
+  SyncReset0 rst_tck(.IN_RST(RST_N), .OUT_RST(rst_tck$OUT_RST));
 
   // submodule tck_clock
-  MakeClock #(.initVal(1'h0), .initGate(1'd1)) tck_clock(.CLK(CLK),
-							 .RST(RST_N),
-							 .CLK_IN(tck_clock$CLK_IN),
-							 .COND_IN(tck_clock$COND_IN),
-							 .CLK_IN_EN(tck_clock$CLK_IN_EN),
-							 .COND_IN_EN(tck_clock$COND_IN_EN),
-							 .CLK_VAL_OUT(),
-							 .COND_OUT(),
-							 .CLK_GATE_OUT(),
-							 .CLK_OUT(tck_clock$CLK_OUT));
+  ASSIGN1 tck_clock(.IN(tck_clock$IN), .OUT(tck_clock$OUT));
 
-  // rule RL_rl_tck
-  assign CAN_FIRE_RL_rl_tck = 1'd1 ;
-  assign WILL_FIRE_RL_rl_tck = 1'd1 ;
+  // submodule w_tck_crossed
+  SyncWire #(.width(32'd1)) w_tck_crossed(.DIN(jtag_tclk),
+					  .DOUT(w_tck_crossed$DOUT));
+
+  // rule RL_mkConnectionVtoAf
+  assign CAN_FIRE_RL_mkConnectionVtoAf = 1'd1 ;
+  assign WILL_FIRE_RL_mkConnectionVtoAf = 1'd1 ;
 
   // rule RL_tick
   assign CAN_FIRE_RL_tick = 1'd1 ;
@@ -383,7 +410,7 @@ module mkJtagTap(CLK,
 
   // rule RL_dmi_start
   assign CAN_FIRE_RL_dmi_start =
-	     r_state_EQ_8_2_AND_r_ir_EQ_0x11_4_AND_NOT_r_dm_ETC___d72 &&
+	     r_state__read_EQ_8_8_AND_r_ir_3_EQ_0x11_1_AND__ETC___d78 &&
 	     f_dmi_req$sFULL_N &&
 	     f_dmi_busy$FULL_N &&
 	     w_dmi_req$wget[1:0] != 2'd0 ;
@@ -406,9 +433,14 @@ module mkJtagTap(CLK,
 	     f_dmi_rsp$dEMPTY_N && f_dmi_busy$EMPTY_N ;
   assign WILL_FIRE_RL_dmi_response_tck = CAN_FIRE_RL_dmi_response_tck ;
 
+  // rule RL_rl_initialize
+  assign CAN_FIRE_RL_rl_initialize =
+	     r_state$Q_OUT == 4'd0 && r_initialize$Q_OUT ;
+  assign WILL_FIRE_RL_rl_initialize = CAN_FIRE_RL_rl_initialize ;
+
   // rule RL_dmi_reset
   assign CAN_FIRE_RL_dmi_reset =
-	     r_state_EQ_8_2_AND_r_ir_EQ_0x10_2_AND_r_dr_8_B_ETC___d57 &&
+	     r_state__read_EQ_8_8_AND_r_ir_3_EQ_0x10_9_AND__ETC___d63 &&
 	     (!r_dr[17] || f_dmi_req$sCLR_RDY && f_dmi_rsp$dCLR_RDY) ;
   assign WILL_FIRE_RL_dmi_reset = CAN_FIRE_RL_dmi_reset ;
 
@@ -420,35 +452,37 @@ module mkJtagTap(CLK,
   assign CAN_FIRE_RL_dmi_response = f_dmi_rsp$sFULL_N && dmi_rsp_valid ;
   assign WILL_FIRE_RL_dmi_response = CAN_FIRE_RL_dmi_response ;
 
+  // rule RL_rl_initialize2
+  assign CAN_FIRE_RL_rl_initialize2 =
+	     f_dmi_rsp$sCLR_RDY && f_dmi_req$dCLR_RDY && r_initialize2$Q_OUT ;
+  assign WILL_FIRE_RL_rl_initialize2 = CAN_FIRE_RL_rl_initialize2 ;
+
   // inlined wires
   assign w_dmi_req$wget = { 1'd0, r_dr } ;
-  assign r_tdo$EN_port0__write = r_state == 4'd4 || r_state == 4'd11 ;
-  assign r_tdo$port0__write_1 = (r_state == 4'd4) ? r_dr[0] : r_ir[0] ;
+  assign r_tdo$EN_port0__write =
+	     r_state$Q_OUT == 4'd4 || r_state$Q_OUT == 4'd11 ;
+  assign r_tdo$port0__write_1 = (r_state$Q_OUT == 4'd4) ? r_dr[0] : r_ir[0] ;
   assign r_tdo$port1__read =
 	     r_tdo$EN_port0__write ? r_tdo$port0__write_1 : r_tdo ;
   assign r_dmistat_busy$port1__read =
-	     r_state_EQ_8_2_AND_r_ir_EQ_0x11_4_AND_NOT_r_dm_ETC___d68 ||
+	     r_state__read_EQ_8_8_AND_r_ir_3_EQ_0x11_1_AND__ETC___d74 ||
 	     r_dmistat_busy ;
+  assign r_dmistat_busy$EN_port1__write =
+	     WILL_FIRE_RL_dmi_reset || WILL_FIRE_RL_rl_initialize ;
   assign r_dmistat_busy$port2__read =
-	     !CAN_FIRE_RL_dmi_reset && r_dmistat_busy$port1__read ;
-
-  // register r_dmi
-  assign r_dmi$D_IN = f_dmi_rsp$dD_OUT ;
-  assign r_dmi$EN =
-	     WILL_FIRE_RL_dmi_response_tck && r_dmi[1:0] != 2'd2 &&
-	     r_dmi[1:0] != 2'd3 ;
+	     !r_dmistat_busy$EN_port1__write && r_dmistat_busy$port1__read ;
 
   // register r_dmistat_busy
   assign r_dmistat_busy$D_IN = r_dmistat_busy$port2__read ;
   assign r_dmistat_busy$EN = 1'b1 ;
 
   // register r_dr
-  always@(r_state or r_dr or v__h2135 or v__h2601)
+  always@(r_state$Q_OUT or r_dr or v__h2479 or v__h2941)
   begin
-    case (r_state)
+    case (r_state$Q_OUT)
       4'd0: r_dr$D_IN = r_dr;
-      4'd3: r_dr$D_IN = v__h2135;
-      4'd4: r_dr$D_IN = v__h2601;
+      4'd3: r_dr$D_IN = v__h2479;
+      4'd4: r_dr$D_IN = v__h2941;
       default: r_dr$D_IN = r_dr;
     endcase
   end
@@ -456,21 +490,14 @@ module mkJtagTap(CLK,
 
   // register r_drmask
   assign r_drmask$D_IN =
-	     (r_state == 4'd3) ?
-	       CASE_newir435_0_1_1_2147483648_0x10_2147483648_ETC__q1 :
+	     (r_state$Q_OUT == 4'd3) ?
+	       CASE_newir774_0_1_1_2147483648_0x10_2147483648_ETC__q1 :
 	       r_drmask ;
   assign r_drmask$EN = 1'd1 ;
 
   // register r_ir
-  assign r_ir$D_IN = newir__h3435 ;
+  assign r_ir$D_IN = newir__h3774 ;
   assign r_ir$EN = 1'd1 ;
-
-  // register r_state
-  assign r_state$D_IN =
-	     jtag_tms ?
-	       CASE_r_state_0_r_state_1_2_2_9_3_5_4_5_5_8_6_7_ETC__q2 :
-	       CASE_r_state_0_1_1_1_2_3_3_4_4_4_5_6_6_6_7_4_8_ETC__q3 ;
-  assign r_state$EN = 1'd1 ;
 
   // register r_tdo
   assign r_tdo$D_IN = r_tdo$port1__read ;
@@ -479,146 +506,165 @@ module mkJtagTap(CLK,
   // submodule f_dmi_busy
   assign f_dmi_busy$ENQ = CAN_FIRE_RL_dmi_start ;
   assign f_dmi_busy$DEQ = CAN_FIRE_RL_dmi_response_tck ;
-  assign f_dmi_busy$CLR = WILL_FIRE_RL_dmi_reset && r_dr[17] ;
+  assign f_dmi_busy$CLR =
+	     WILL_FIRE_RL_dmi_reset && r_dr[17] ||
+	     WILL_FIRE_RL_rl_initialize ;
 
   // submodule f_dmi_req
   assign f_dmi_req$sD_IN = w_dmi_req$wget ;
   assign f_dmi_req$sENQ = CAN_FIRE_RL_dmi_start ;
   assign f_dmi_req$dDEQ = CAN_FIRE_RL_dmi_request_deq ;
   assign f_dmi_req$sCLR = WILL_FIRE_RL_dmi_reset && r_dr[17] ;
-  assign f_dmi_req$dCLR = 1'b0 ;
+  assign f_dmi_req$dCLR = CAN_FIRE_RL_rl_initialize2 ;
 
   // submodule f_dmi_rsp
   assign f_dmi_rsp$sD_IN = { 6'h2A, dmi_rsp_data, dmi_rsp_response } ;
   assign f_dmi_rsp$sENQ = CAN_FIRE_RL_dmi_response ;
   assign f_dmi_rsp$dDEQ = CAN_FIRE_RL_dmi_response_tck ;
-  assign f_dmi_rsp$sCLR = 1'b0 ;
+  assign f_dmi_rsp$sCLR = CAN_FIRE_RL_rl_initialize2 ;
   assign f_dmi_rsp$dCLR = WILL_FIRE_RL_dmi_reset && r_dr[17] ;
 
+  // submodule r_dmi
+  assign r_dmi$D_IN = f_dmi_rsp$dD_OUT ;
+  assign r_dmi$EN =
+	     WILL_FIRE_RL_dmi_response_tck && r_dmi$Q_OUT[1:0] != 2'd2 &&
+	     r_dmi$Q_OUT[1:0] != 2'd3 ;
+
+  // submodule r_initialize
+  assign r_initialize$D_IN = 1'd0 ;
+  assign r_initialize$EN = CAN_FIRE_RL_rl_initialize ;
+
+  // submodule r_initialize2
+  assign r_initialize2$D_IN = 1'd0 ;
+  assign r_initialize2$EN = CAN_FIRE_RL_rl_initialize2 ;
+
+  // submodule r_state
+  assign r_state$D_IN =
+	     jtag_tms ?
+	       CASE_r_stateQ_OUT_0_r_stateQ_OUT_1_2_2_9_3_5_ETC__q2 :
+	       CASE_r_stateQ_OUT_0_1_1_1_2_3_3_4_4_4_5_6_6_6_ETC__q3 ;
+  assign r_state$EN = 1'd1 ;
+
   // submodule tck_clock
-  assign tck_clock$CLK_IN = jtag_tclk ;
-  assign tck_clock$COND_IN = 1'b0 ;
-  assign tck_clock$CLK_IN_EN = 1'd1 ;
-  assign tck_clock$COND_IN_EN = 1'b0 ;
+  assign tck_clock$IN = w_tck_crossed$DOUT ;
 
   // remaining internal signals
-  assign IF_r_dmistat_busy_port0__read__37_OR_NOT_r_dmi_ETC___d140 =
+  assign IF_r_dmistat_busy_port0__read__43_OR_NOT_r_dmi_ETC___d146 =
 	     (r_dmistat_busy ||
-	      r_dmi[1:0] != 2'd2 && r_dmi[1:0] != 2'd3 &&
+	      r_dmi$Q_OUT[1:0] != 2'd2 && r_dmi$Q_OUT[1:0] != 2'd3 &&
 	      f_dmi_busy$EMPTY_N) ?
 	       40'hAAAAAAAAAB :
-	       r_dmi ;
-  assign r_state_EQ_8_2_AND_r_ir_EQ_0x10_2_AND_r_dr_8_B_ETC___d57 =
-	     r_state == 4'd8 && r_ir == 5'h10 && (r_dr[17] || r_dr[16]) ;
-  assign r_state_EQ_8_2_AND_r_ir_EQ_0x11_4_AND_NOT_r_dm_ETC___d68 =
-	     r_state == 4'd8 && r_ir == 5'h11 && r_dmi[1:0] != 2'd2 &&
-	     r_dmi[1:0] != 2'd3 &&
+	       r_dmi$Q_OUT ;
+  assign r_state__read_EQ_8_8_AND_r_ir_3_EQ_0x10_9_AND__ETC___d63 =
+	     r_state$Q_OUT == 4'd8 && r_ir == 5'h10 &&
+	     (r_dr[17] || r_dr[16]) ;
+  assign r_state__read_EQ_8_8_AND_r_ir_3_EQ_0x11_1_AND__ETC___d74 =
+	     r_state$Q_OUT == 4'd8 && r_ir == 5'h11 &&
+	     r_dmi$Q_OUT[1:0] != 2'd2 &&
+	     r_dmi$Q_OUT[1:0] != 2'd3 &&
 	     f_dmi_busy$EMPTY_N ;
-  assign r_state_EQ_8_2_AND_r_ir_EQ_0x11_4_AND_NOT_r_dm_ETC___d72 =
-	     r_state == 4'd8 && r_ir == 5'h11 && r_dmi[1:0] != 2'd2 &&
-	     r_dmi[1:0] != 2'd3 &&
+  assign r_state__read_EQ_8_8_AND_r_ir_3_EQ_0x11_1_AND__ETC___d78 =
+	     r_state$Q_OUT == 4'd8 && r_ir == 5'h11 &&
+	     r_dmi$Q_OUT[1:0] != 2'd2 &&
+	     r_dmi$Q_OUT[1:0] != 2'd3 &&
 	     !f_dmi_busy$EMPTY_N ;
-  assign v__h2233 = { 35'd7864320, r_ir } ;
-  assign v__h2601 = x__h2658 | y__h2659 ;
-  assign v__h3299 = x__h3350 | y__h3351 ;
-  assign x__h2449 = { 28'd0, r_dmi[1:0], 10'd97 } ;
-  assign x__h2658 = { 1'd0, r_dr[39:1] } ;
-  assign x__h3350 = { 1'd0, r_ir[4:1] } ;
-  assign y__h2659 = jtag_tdi ? r_drmask : 40'd0 ;
-  assign y__h3351 = jtag_tdi ? 5'd16 : 5'd0 ;
-  always@(r_state or r_ir or v__h3299)
+  assign v__h2576 = { 35'd7864320, r_ir } ;
+  assign v__h2941 = x__h2996 | y__h2997 ;
+  assign v__h3636 = x__h3687 | y__h3688 ;
+  assign x__h2789 = { 28'd0, r_dmi$Q_OUT[1:0], 10'd97 } ;
+  assign x__h2996 = { 1'd0, r_dr[39:1] } ;
+  assign x__h3687 = { 1'd0, r_ir[4:1] } ;
+  assign y__h2997 = jtag_tdi ? r_drmask : 40'd0 ;
+  assign y__h3688 = jtag_tdi ? 5'd16 : 5'd0 ;
+  always@(r_state$Q_OUT or r_ir or v__h3636)
   begin
-    case (r_state)
-      4'd0: newir__h3435 = 5'd1;
-      4'd3, 4'd4, 4'd8: newir__h3435 = r_ir;
-      4'd11: newir__h3435 = v__h3299;
-      default: newir__h3435 = r_ir;
+    case (r_state$Q_OUT)
+      4'd0: newir__h3774 = 5'd1;
+      4'd3, 4'd4, 4'd8: newir__h3774 = r_ir;
+      4'd11: newir__h3774 = v__h3636;
+      default: newir__h3774 = r_ir;
     endcase
   end
   always@(r_ir or
-	  v__h2233 or
-	  x__h2449 or
-	  IF_r_dmistat_busy_port0__read__37_OR_NOT_r_dmi_ETC___d140)
+	  v__h2576 or
+	  x__h2789 or
+	  IF_r_dmistat_busy_port0__read__43_OR_NOT_r_dmi_ETC___d146)
   begin
     case (r_ir)
-      5'd0, 5'h12, 5'h13, 5'h14, 5'h15, 5'h16, 5'h17, 5'd31: v__h2135 = 40'd0;
-      5'd1: v__h2135 = 40'd4093;
-      5'h10: v__h2135 = x__h2449;
+      5'd0, 5'h12, 5'h13, 5'h14, 5'h15, 5'h16, 5'h17, 5'd31: v__h2479 = 40'd0;
+      5'd1: v__h2479 = 40'd4093;
+      5'h10: v__h2479 = x__h2789;
       5'h11:
-	  v__h2135 =
-	      IF_r_dmistat_busy_port0__read__37_OR_NOT_r_dmi_ETC___d140;
-      default: v__h2135 = v__h2233;
+	  v__h2479 =
+	      IF_r_dmistat_busy_port0__read__43_OR_NOT_r_dmi_ETC___d146;
+      default: v__h2479 = v__h2576;
     endcase
   end
-  always@(newir__h3435)
+  always@(newir__h3774)
   begin
-    case (newir__h3435)
+    case (newir__h3774)
       5'd0, 5'h12, 5'h13, 5'h14, 5'h15, 5'h16, 5'h17, 5'd31:
-	  CASE_newir435_0_1_1_2147483648_0x10_2147483648_ETC__q1 = 40'd1;
+	  CASE_newir774_0_1_1_2147483648_0x10_2147483648_ETC__q1 = 40'd1;
       5'd1, 5'h10:
-	  CASE_newir435_0_1_1_2147483648_0x10_2147483648_ETC__q1 =
+	  CASE_newir774_0_1_1_2147483648_0x10_2147483648_ETC__q1 =
 	      40'h0080000000;
       5'h11:
-	  CASE_newir435_0_1_1_2147483648_0x10_2147483648_ETC__q1 =
+	  CASE_newir774_0_1_1_2147483648_0x10_2147483648_ETC__q1 =
 	      40'h8000000000;
-      default: CASE_newir435_0_1_1_2147483648_0x10_2147483648_ETC__q1 =
+      default: CASE_newir774_0_1_1_2147483648_0x10_2147483648_ETC__q1 =
 		   40'h0100000000;
     endcase
   end
-  always@(r_state)
+  always@(r_state$Q_OUT)
   begin
-    case (r_state)
-      4'd0: CASE_r_state_0_r_state_1_2_2_9_3_5_4_5_5_8_6_7_ETC__q2 = r_state;
+    case (r_state$Q_OUT)
+      4'd0:
+	  CASE_r_stateQ_OUT_0_r_stateQ_OUT_1_2_2_9_3_5_ETC__q2 =
+	      r_state$Q_OUT;
       4'd1, 4'd8, 4'd15:
-	  CASE_r_state_0_r_state_1_2_2_9_3_5_4_5_5_8_6_7_ETC__q2 = 4'd2;
-      4'd2: CASE_r_state_0_r_state_1_2_2_9_3_5_4_5_5_8_6_7_ETC__q2 = 4'd9;
-      4'd3, 4'd4:
-	  CASE_r_state_0_r_state_1_2_2_9_3_5_4_5_5_8_6_7_ETC__q2 = 4'd5;
-      4'd5, 4'd7:
-	  CASE_r_state_0_r_state_1_2_2_9_3_5_4_5_5_8_6_7_ETC__q2 = 4'd8;
-      4'd6: CASE_r_state_0_r_state_1_2_2_9_3_5_4_5_5_8_6_7_ETC__q2 = 4'd7;
-      4'd9: CASE_r_state_0_r_state_1_2_2_9_3_5_4_5_5_8_6_7_ETC__q2 = 4'd0;
+	  CASE_r_stateQ_OUT_0_r_stateQ_OUT_1_2_2_9_3_5_ETC__q2 = 4'd2;
+      4'd2: CASE_r_stateQ_OUT_0_r_stateQ_OUT_1_2_2_9_3_5_ETC__q2 = 4'd9;
+      4'd3, 4'd4: CASE_r_stateQ_OUT_0_r_stateQ_OUT_1_2_2_9_3_5_ETC__q2 = 4'd5;
+      4'd5, 4'd7: CASE_r_stateQ_OUT_0_r_stateQ_OUT_1_2_2_9_3_5_ETC__q2 = 4'd8;
+      4'd6: CASE_r_stateQ_OUT_0_r_stateQ_OUT_1_2_2_9_3_5_ETC__q2 = 4'd7;
+      4'd9: CASE_r_stateQ_OUT_0_r_stateQ_OUT_1_2_2_9_3_5_ETC__q2 = 4'd0;
       4'd10, 4'd11:
-	  CASE_r_state_0_r_state_1_2_2_9_3_5_4_5_5_8_6_7_ETC__q2 = 4'd12;
+	  CASE_r_stateQ_OUT_0_r_stateQ_OUT_1_2_2_9_3_5_ETC__q2 = 4'd12;
       4'd12, 4'd14:
-	  CASE_r_state_0_r_state_1_2_2_9_3_5_4_5_5_8_6_7_ETC__q2 = 4'd15;
-      4'd13: CASE_r_state_0_r_state_1_2_2_9_3_5_4_5_5_8_6_7_ETC__q2 = 4'd14;
+	  CASE_r_stateQ_OUT_0_r_stateQ_OUT_1_2_2_9_3_5_ETC__q2 = 4'd15;
+      4'd13: CASE_r_stateQ_OUT_0_r_stateQ_OUT_1_2_2_9_3_5_ETC__q2 = 4'd14;
     endcase
   end
-  always@(r_state)
+  always@(r_state$Q_OUT)
   begin
-    case (r_state)
+    case (r_state$Q_OUT)
       4'd0, 4'd1, 4'd8, 4'd15:
-	  CASE_r_state_0_1_1_1_2_3_3_4_4_4_5_6_6_6_7_4_8_ETC__q3 = 4'd1;
-      4'd2: CASE_r_state_0_1_1_1_2_3_3_4_4_4_5_6_6_6_7_4_8_ETC__q3 = 4'd3;
+	  CASE_r_stateQ_OUT_0_1_1_1_2_3_3_4_4_4_5_6_6_6_ETC__q3 = 4'd1;
+      4'd2: CASE_r_stateQ_OUT_0_1_1_1_2_3_3_4_4_4_5_6_6_6_ETC__q3 = 4'd3;
       4'd3, 4'd4, 4'd7:
-	  CASE_r_state_0_1_1_1_2_3_3_4_4_4_5_6_6_6_7_4_8_ETC__q3 = 4'd4;
+	  CASE_r_stateQ_OUT_0_1_1_1_2_3_3_4_4_4_5_6_6_6_ETC__q3 = 4'd4;
       4'd5, 4'd6:
-	  CASE_r_state_0_1_1_1_2_3_3_4_4_4_5_6_6_6_7_4_8_ETC__q3 = 4'd6;
-      4'd9: CASE_r_state_0_1_1_1_2_3_3_4_4_4_5_6_6_6_7_4_8_ETC__q3 = 4'd10;
+	  CASE_r_stateQ_OUT_0_1_1_1_2_3_3_4_4_4_5_6_6_6_ETC__q3 = 4'd6;
+      4'd9: CASE_r_stateQ_OUT_0_1_1_1_2_3_3_4_4_4_5_6_6_6_ETC__q3 = 4'd10;
       4'd10, 4'd11, 4'd14:
-	  CASE_r_state_0_1_1_1_2_3_3_4_4_4_5_6_6_6_7_4_8_ETC__q3 = 4'd11;
+	  CASE_r_stateQ_OUT_0_1_1_1_2_3_3_4_4_4_5_6_6_6_ETC__q3 = 4'd11;
       4'd12, 4'd13:
-	  CASE_r_state_0_1_1_1_2_3_3_4_4_4_5_6_6_6_7_4_8_ETC__q3 = 4'd13;
+	  CASE_r_stateQ_OUT_0_1_1_1_2_3_3_4_4_4_5_6_6_6_ETC__q3 = 4'd13;
     endcase
   end
 
   // handling of inlined registers
 
-  always@(posedge tck_clock$CLK_OUT)
+  always@(posedge tck_clock$OUT)
   begin
     if (rst_tck$OUT_RST == `BSV_RESET_VALUE)
       begin
-        r_dmi <= `BSV_ASSIGNMENT_DELAY 40'd0;
-	r_dmistat_busy <= `BSV_ASSIGNMENT_DELAY 1'd0;
-	r_state <= `BSV_ASSIGNMENT_DELAY 4'd0;
+        r_dmistat_busy <= `BSV_ASSIGNMENT_DELAY 1'd0;
       end
     else
       begin
-        if (r_dmi$EN) r_dmi <= `BSV_ASSIGNMENT_DELAY r_dmi$D_IN;
-	if (r_dmistat_busy$EN)
+        if (r_dmistat_busy$EN)
 	  r_dmistat_busy <= `BSV_ASSIGNMENT_DELAY r_dmistat_busy$D_IN;
-	if (r_state$EN) r_state <= `BSV_ASSIGNMENT_DELAY r_state$D_IN;
       end
     if (r_dr$EN) r_dr <= `BSV_ASSIGNMENT_DELAY r_dr$D_IN;
     if (r_drmask$EN) r_drmask <= `BSV_ASSIGNMENT_DELAY r_drmask$D_IN;
@@ -631,12 +677,10 @@ module mkJtagTap(CLK,
   `else // not BSV_NO_INITIAL_BLOCKS
   initial
   begin
-    r_dmi = 40'hAAAAAAAAAA;
     r_dmistat_busy = 1'h0;
     r_dr = 40'hAAAAAAAAAA;
     r_drmask = 40'hAAAAAAAAAA;
     r_ir = 5'h0A;
-    r_state = 4'hA;
     r_tdo = 1'h0;
   end
   `endif // BSV_NO_INITIAL_BLOCKS
@@ -645,11 +689,12 @@ module mkJtagTap(CLK,
   // handling of system tasks
 
   // synopsys translate_off
-  always@(negedge tck_clock$CLK_OUT)
+  always@(negedge tck_clock$OUT)
   begin
     #0;
     if (rst_tck$OUT_RST != `BSV_RESET_VALUE)
-      if (r_state == 4'd3 && r_ir != 5'd0 && r_ir != 5'h12 && r_ir != 5'h13 &&
+      if (r_state$Q_OUT == 4'd3 && r_ir != 5'd0 && r_ir != 5'h12 &&
+	  r_ir != 5'h13 &&
 	  r_ir != 5'h14 &&
 	  r_ir != 5'h15 &&
 	  r_ir != 5'h16 &&

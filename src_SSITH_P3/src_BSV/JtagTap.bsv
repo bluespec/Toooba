@@ -3,11 +3,14 @@ package JtagTap;
 
 import BUtils ::*;
 import Clocks ::*;
+import Connectable ::*;
 import DefaultValue ::*;
 import FIFOF ::*;
 import FIFOLevel ::*;
 import Reserved ::*;
 
+import PowerOnReset ::*;
+import ClockHacks ::*;
 import Giraffe_IFC ::*;
 
 typedef 6 ABITS;
@@ -16,6 +19,10 @@ typedef 6 ABITS;
 typedef 6 IR_LENGTH;
 `elsif XILINX_XCVU9P
 typedef 18 IR_LENGTH;
+`elsif XILINX_XC7K325T
+typedef 6 IR_LENGTH;
+`else
+typedef 5 IR_LENGTH;
 `endif
 `else
 typedef 5 IR_LENGTH;
@@ -34,6 +41,12 @@ Bit#(IR_LENGTH) ir_dtmcs = 'b100010100100100100;    // USER3
                         // 'b000010100100100100;    USER1
 
 Bit#(IR_LENGTH) ir_dmi = 'b000011100100100100;
+`elsif XILINX_XC7K325T
+Bit#(IR_LENGTH) ir_dtmcs = 'h22;
+Bit#(IR_LENGTH) ir_dmi = 'h03;
+`else
+Bit#(IR_LENGTH) ir_dtmcs = 'h10;
+Bit#(IR_LENGTH) ir_dmi = 'h11;
 `endif
 `else
 Bit#(IR_LENGTH) ir_dtmcs = 'h10;
@@ -176,15 +189,12 @@ module mkJtagTap(JtagTap_IFC);
 
    Wire#(Bit#(1)) w_tck <- mkDWire(?);
 
-   let tck_clock <- mkUngatedClock(?);
-   let tck = tck_clock.new_clk;
+   let tck_clock <- unpackClock;
+   let tck = tck_clock.clk;
+   let w_tck_crossed <- mkNullCrossing(tck, w_tck);
+   mkConnection(w_tck_crossed, tck_clock.in);
 
-   (* no_implicit_conditions, fire_when_enabled *)
-   rule rl_tck;
-      tck_clock.setClockValue(w_tck);
-   endrule
-
-   let rst_tck <- mkAsyncResetFromCR(4, tck);
+   let rst_tck <- mkAsyncResetFromCR(0, tck); // value independent of tck
 
    Wire#(Bit#(1)) w_tms <- mkDWire(?, clocked_by tck, reset_by rst_tck);
    Wire#(Bit#(1)) w_tdi <- mkDWire(?, clocked_by tck, reset_by rst_tck);
@@ -201,13 +211,16 @@ module mkJtagTap(JtagTap_IFC);
 
    Array#(Reg#(Bit#(1))) r_tdo <- mkCRegU(2, clocked_by tck, reset_by rst_tck);
 
-   Reg#(JtagState) r_state <- mkReg(TEST_LOGIC_RESET, clocked_by tck, reset_by rst_tck);
+   Reg#(JtagState) r_state <- mkRegUNInit(TEST_LOGIC_RESET, clocked_by tck, reset_by rst_tck);
+   Reg#(Bool) r_initialize <- mkRegUNInit(True,             clocked_by tck, reset_by rst_tck);
+   Reg#(Bool) r_initialize2 <- mkRegUNInit(True);
+   PulseWire  w_initialize <- mkPulseWire(             clocked_by tck, reset_by rst_tck);
 
    Reg#(Bit#(IR_LENGTH)) r_ir <- mkRegU(clocked_by tck, reset_by rst_tck);
    Reg#(Bit#(DR_LENGTH)) r_dr <- mkRegU(clocked_by tck, reset_by rst_tck);
    Reg#(Bit#(DR_LENGTH)) r_drmask <- mkRegU(clocked_by tck, reset_by rst_tck);
 
-   Reg#(DMI) r_dmi <- mkReg(defaultValue, clocked_by tck, reset_by rst_tck);
+   Reg#(DMI) r_dmi <- mkRegUNInit(defaultValue, clocked_by tck, reset_by rst_tck);
 
    Wire#(Tuple3#(Bit#(7),Bit#(32),Bit#(2))) w_dmi_req <- mkWire(clocked_by tck, reset_by rst_tck);
    SyncFIFOLevelIfc#(Tuple3#(Bit#(7),Bit#(32),Bit#(2)), 2) f_dmi_req <- mkSyncFIFOLevel(tck, rst_tck, clk);
@@ -215,6 +228,19 @@ module mkJtagTap(JtagTap_IFC);
    Wire#(Bool) w_dmi_reset <- mkWire(clocked_by tck, reset_by rst_tck);
    Array#(Reg#(Bool)) r_dmistat_busy <- mkCReg(2, False, clocked_by tck, reset_by rst_tck);
    SyncFIFOLevelIfc#(DMI, 2) f_dmi_rsp <- mkSyncFIFOLevel(clk, rst, tck);
+
+   rule rl_initialize2(r_initialize2);
+      r_initialize2 <= False;
+
+      f_dmi_req.dClear;
+      f_dmi_rsp.sClear;
+   endrule
+
+   (* no_implicit_conditions, fire_when_enabled *)
+   rule rl_initialize(w_initialize);
+      f_dmi_busy.clear;
+      r_dmistat_busy[1] <= False;
+   endrule
 
    (* no_implicit_conditions, fire_when_enabled *)
    rule tick;
@@ -224,6 +250,10 @@ module mkJtagTap(JtagTap_IFC);
 
       if (r_state == TEST_LOGIC_RESET) begin
 	 newir = ir_idcode;
+	 if (r_initialize) begin
+	    r_initialize <= False;
+	    w_initialize.send();
+	 end
       end
       else if (r_state == CAPTURE_DR) begin
 	 if (newir == ir_bypass0 ||

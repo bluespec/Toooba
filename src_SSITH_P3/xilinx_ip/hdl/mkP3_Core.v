@@ -648,13 +648,18 @@ module mkP3_Core(CLK,
   wire bus_dmi_rsp_fifof_q_1$EN;
 
   // register rg_corew_start_after_por
-  reg rg_corew_start_after_por;
-  wire rg_corew_start_after_por$D_IN, rg_corew_start_after_por$EN;
+  reg [7 : 0] rg_corew_start_after_por;
+  wire [7 : 0] rg_corew_start_after_por$D_IN;
+  wire rg_corew_start_after_por$EN;
 
   // register rg_ndm_reset_delay
   reg [7 : 0] rg_ndm_reset_delay;
   wire [7 : 0] rg_ndm_reset_delay$D_IN;
   wire rg_ndm_reset_delay$EN;
+
+  // register rg_running
+  reg rg_running;
+  wire rg_running$D_IN, rg_running$EN;
 
   // ports of submodule bus_dmi_req_fifof
   wire [40 : 0] bus_dmi_req_fifof$D_IN, bus_dmi_req_fifof$D_OUT;
@@ -781,8 +786,10 @@ module mkP3_Core(CLK,
        corew$cpu_imem_master_wlast,
        corew$cpu_imem_master_wready,
        corew$cpu_imem_master_wvalid,
+       corew$ndm_reset_client_request_get,
        corew$ndm_reset_client_response_put,
-       corew$nmi_req_set_not_clear;
+       corew$nmi_req_set_not_clear,
+       corew$start_is_running;
 
   // ports of submodule jtagtap
   wire [31 : 0] jtagtap$dmi_req_data, jtagtap$dmi_rsp_data;
@@ -803,6 +810,9 @@ module mkP3_Core(CLK,
 
   // ports of submodule ndm_reset_controller
   wire ndm_reset_controller$ASSERT_IN, ndm_reset_controller$OUT_RST;
+
+  // ports of submodule por_ifc
+  wire por_ifc$RST_N_gen_rst;
 
   // ports of submodule tv_xactor
   wire [607 : 0] tv_xactor$axi_out_tdata, tv_xactor$tv_in_put;
@@ -910,15 +920,15 @@ module mkP3_Core(CLK,
 
   // declarations used by system tasks
   // synopsys translate_off
-  reg [31 : 0] v__h1279;
-  reg [31 : 0] v__h1424;
-  reg [31 : 0] v__h1273;
-  reg [31 : 0] v__h1418;
+  reg [31 : 0] v__h1362;
+  reg [31 : 0] v__h1510;
+  reg [31 : 0] v__h1356;
+  reg [31 : 0] v__h1504;
   // synopsys translate_on
 
   // remaining internal signals
-  wire [1 : 0] bus_dmi_rsp_fifof_cntr_r_4_MINUS_1___d42;
-  wire IF_bus_dmi_req_fifof_first__1_BITS_1_TO_0_2_EQ_ETC___d92,
+  wire [1 : 0] bus_dmi_rsp_fifof_cntr_r_1_MINUS_1___d49;
+  wire IF_bus_dmi_req_fifof_first__8_BITS_1_TO_0_9_EQ_ETC___d99,
        _dfoo1,
        _dfoo3;
 
@@ -1188,7 +1198,7 @@ module mkP3_Core(CLK,
 							     .EMPTY_N(bus_dmi_req_fifof$EMPTY_N));
 
   // submodule corew
-  mkCoreW corew(.RST_N_dm_power_on_reset(RST_N),
+  mkCoreW corew(.RST_N_dm_power_on_reset(por_ifc$RST_N_gen_rst),
 		.CLK(CLK),
 		.RST_N(ndm_reset$RST_OUT),
 		.core_external_interrupt_sources_0_m_interrupt_req_set_not_clear(corew$core_external_interrupt_sources_0_m_interrupt_req_set_not_clear),
@@ -1237,6 +1247,7 @@ module mkP3_Core(CLK,
 		.set_verbosity_logdelay(corew$set_verbosity_logdelay),
 		.set_verbosity_verbosity(corew$set_verbosity_verbosity),
 		.start_fromhost_addr(corew$start_fromhost_addr),
+		.start_is_running(corew$start_is_running),
 		.start_tohost_addr(corew$start_tohost_addr),
 		.EN_set_verbosity(corew$EN_set_verbosity),
 		.EN_start(corew$EN_start),
@@ -1308,7 +1319,7 @@ module mkP3_Core(CLK,
 		.dmi_read_data(corew$dmi_read_data),
 		.RDY_dmi_read_data(corew$RDY_dmi_read_data),
 		.RDY_dmi_write(corew$RDY_dmi_write),
-		.ndm_reset_client_request_get(),
+		.ndm_reset_client_request_get(corew$ndm_reset_client_request_get),
 		.RDY_ndm_reset_client_request_get(corew$RDY_ndm_reset_client_request_get),
 		.RDY_ndm_reset_client_response_put(corew$RDY_ndm_reset_client_response_put),
 		.tv_verifier_info_get_get(corew$tv_verifier_info_get_get),
@@ -1316,7 +1327,7 @@ module mkP3_Core(CLK,
 
   // submodule jtagtap
   mkJtagTap jtagtap(.CLK(CLK),
-		    .RST_N(RST_N),
+		    .RST_N(por_ifc$RST_N_gen_rst),
 		    .dmi_req_ready(jtagtap$dmi_req_ready),
 		    .dmi_rsp_data(jtagtap$dmi_rsp_data),
 		    .dmi_rsp_response(jtagtap$dmi_rsp_response),
@@ -1334,7 +1345,7 @@ module mkP3_Core(CLK,
 		    .CLK_GATE_jtag_tclk_out());
 
   // submodule ndm_reset
-  ResetEither ndm_reset(.A_RST(RST_N),
+  ResetEither ndm_reset(.A_RST(por_ifc$RST_N_gen_rst),
 			.B_RST(ndm_reset_controller$OUT_RST),
 			.RST_OUT(ndm_reset$RST_OUT));
 
@@ -1345,6 +1356,11 @@ module mkP3_Core(CLK,
 								    .ASSERT_IN(ndm_reset_controller$ASSERT_IN),
 								    .ASSERT_OUT(),
 								    .OUT_RST(ndm_reset_controller$OUT_RST));
+
+  // submodule por_ifc
+  mkPowerOnReset por_ifc(.CLK(CLK),
+			 .RST_N(RST_N),
+			 .RST_N_gen_rst(por_ifc$RST_N_gen_rst));
 
   // submodule tv_xactor
   mkTV_Xactor tv_xactor(.CLK(CLK),
@@ -1371,7 +1387,8 @@ module mkP3_Core(CLK,
 
   // rule RL_rl_step_0
   assign CAN_FIRE_RL_rl_step_0 =
-	     corew$RDY_start && !rg_corew_start_after_por ;
+	     (rg_corew_start_after_por != 8'd1 || corew$RDY_start) &&
+	     rg_corew_start_after_por != 8'd0 ;
   assign WILL_FIRE_RL_rl_step_0 =
 	     CAN_FIRE_RL_rl_step_0 && !WILL_FIRE_RL_rl_ndm_reset_wait ;
 
@@ -1422,7 +1439,7 @@ module mkP3_Core(CLK,
   // rule RL_rl_dmi_req_cpu
   assign CAN_FIRE_RL_rl_dmi_req_cpu =
 	     bus_dmi_req_fifof$EMPTY_N &&
-	     IF_bus_dmi_req_fifof_first__1_BITS_1_TO_0_2_EQ_ETC___d92 ;
+	     IF_bus_dmi_req_fifof_first__8_BITS_1_TO_0_9_EQ_ETC___d99 ;
   assign WILL_FIRE_RL_rl_dmi_req_cpu = CAN_FIRE_RL_rl_dmi_req_cpu ;
 
   // rule RL_rl_dmi_rsp_cpu
@@ -1434,7 +1451,7 @@ module mkP3_Core(CLK,
   // rule RL_rl_ndm_reset_wait
   assign CAN_FIRE_RL_rl_ndm_reset_wait =
 	     (rg_ndm_reset_delay != 8'd1 ||
-	      corew$RDY_start && corew$RDY_ndm_reset_client_response_put) &&
+	      corew$RDY_ndm_reset_client_response_put && corew$RDY_start) &&
 	     rg_ndm_reset_delay != 8'd0 ;
   assign WILL_FIRE_RL_rl_ndm_reset_wait = CAN_FIRE_RL_rl_ndm_reset_wait ;
 
@@ -1526,7 +1543,7 @@ module mkP3_Core(CLK,
   // register bus_dmi_rsp_fifof_cntr_r
   assign bus_dmi_rsp_fifof_cntr_r$D_IN =
 	     WILL_FIRE_RL_bus_dmi_rsp_fifof_decCtr ?
-	       bus_dmi_rsp_fifof_cntr_r_4_MINUS_1___d42 :
+	       bus_dmi_rsp_fifof_cntr_r_1_MINUS_1___d49 :
 	       MUX_bus_dmi_rsp_fifof_cntr_r$write_1__VAL_2 ;
   assign bus_dmi_rsp_fifof_cntr_r$EN =
 	     WILL_FIRE_RL_bus_dmi_rsp_fifof_decCtr ||
@@ -1585,7 +1602,7 @@ module mkP3_Core(CLK,
 	     WILL_FIRE_RL_bus_dmi_rsp_fifof_decCtr ;
 
   // register rg_corew_start_after_por
-  assign rg_corew_start_after_por$D_IN = 1'd1 ;
+  assign rg_corew_start_after_por$D_IN = rg_corew_start_after_por - 8'd1 ;
   assign rg_corew_start_after_por$EN = WILL_FIRE_RL_rl_step_0 ;
 
   // register rg_ndm_reset_delay
@@ -1595,6 +1612,10 @@ module mkP3_Core(CLK,
 	       8'd110 ;
   assign rg_ndm_reset_delay$EN =
 	     WILL_FIRE_RL_rl_ndm_reset_wait || WILL_FIRE_RL_rl_ndm_reset ;
+
+  // register rg_running
+  assign rg_running$D_IN = corew$ndm_reset_client_request_get ;
+  assign rg_running$EN = CAN_FIRE_RL_rl_ndm_reset ;
 
   // submodule bus_dmi_req_fifof
   assign bus_dmi_req_fifof$D_IN = bus_dmi_req_data_wire$wget ;
@@ -1660,16 +1681,17 @@ module mkP3_Core(CLK,
   assign corew$dmi_read_addr_dm_addr = bus_dmi_req_fifof$D_OUT[40:34] ;
   assign corew$dmi_write_dm_addr = bus_dmi_req_fifof$D_OUT[40:34] ;
   assign corew$dmi_write_dm_word = bus_dmi_req_fifof$D_OUT[33:2] ;
-  assign corew$ndm_reset_client_response_put = 1'd1 ;
+  assign corew$ndm_reset_client_response_put = rg_running ;
   assign corew$nmi_req_set_not_clear = 1'd0 ;
   assign corew$set_verbosity_logdelay = 64'h0 ;
   assign corew$set_verbosity_verbosity = 4'h0 ;
   assign corew$start_fromhost_addr = 64'd0 ;
+  assign corew$start_is_running = !MUX_corew$start_1__SEL_1 || rg_running ;
   assign corew$start_tohost_addr = 64'd0 ;
   assign corew$EN_set_verbosity = 1'b0 ;
   assign corew$EN_start =
 	     WILL_FIRE_RL_rl_ndm_reset_wait && rg_ndm_reset_delay == 8'd1 ||
-	     WILL_FIRE_RL_rl_step_0 ;
+	     WILL_FIRE_RL_rl_step_0 && rg_corew_start_after_por == 8'd1 ;
   assign corew$EN_dmi_read_addr =
 	     WILL_FIRE_RL_rl_dmi_req_cpu &&
 	     bus_dmi_req_fifof$D_OUT[1:0] == 2'd1 ;
@@ -1699,7 +1721,7 @@ module mkP3_Core(CLK,
   assign tv_xactor$EN_tv_in_put = CAN_FIRE_RL_mkConnectionGetPut ;
 
   // remaining internal signals
-  assign IF_bus_dmi_req_fifof_first__1_BITS_1_TO_0_2_EQ_ETC___d92 =
+  assign IF_bus_dmi_req_fifof_first__8_BITS_1_TO_0_9_EQ_ETC___d99 =
 	     (bus_dmi_req_fifof$D_OUT[1:0] == 2'd1) ?
 	       corew$RDY_dmi_read_addr :
 	       (bus_dmi_req_fifof$D_OUT[1:0] == 2'd2 ||
@@ -1708,11 +1730,11 @@ module mkP3_Core(CLK,
 		bus_dmi_rsp_fifof_cntr_r != 2'd2 && corew$RDY_dmi_write) ;
   assign _dfoo1 =
 	     bus_dmi_rsp_fifof_cntr_r != 2'd2 ||
-	     bus_dmi_rsp_fifof_cntr_r_4_MINUS_1___d42 == 2'd1 ;
+	     bus_dmi_rsp_fifof_cntr_r_1_MINUS_1___d49 == 2'd1 ;
   assign _dfoo3 =
 	     bus_dmi_rsp_fifof_cntr_r != 2'd1 ||
-	     bus_dmi_rsp_fifof_cntr_r_4_MINUS_1___d42 == 2'd0 ;
-  assign bus_dmi_rsp_fifof_cntr_r_4_MINUS_1___d42 =
+	     bus_dmi_rsp_fifof_cntr_r_1_MINUS_1___d49 == 2'd0 ;
+  assign bus_dmi_rsp_fifof_cntr_r_1_MINUS_1___d49 =
 	     bus_dmi_rsp_fifof_cntr_r - 2'd1 ;
 
   // handling of inlined registers
@@ -1724,7 +1746,7 @@ module mkP3_Core(CLK,
         bus_dmi_rsp_fifof_cntr_r <= `BSV_ASSIGNMENT_DELAY 2'd0;
 	bus_dmi_rsp_fifof_q_0 <= `BSV_ASSIGNMENT_DELAY 34'd0;
 	bus_dmi_rsp_fifof_q_1 <= `BSV_ASSIGNMENT_DELAY 34'd0;
-	rg_corew_start_after_por <= `BSV_ASSIGNMENT_DELAY 1'd0;
+	rg_corew_start_after_por <= `BSV_ASSIGNMENT_DELAY 8'd100;
 	rg_ndm_reset_delay <= `BSV_ASSIGNMENT_DELAY 8'd0;
       end
     else
@@ -1744,6 +1766,7 @@ module mkP3_Core(CLK,
 	if (rg_ndm_reset_delay$EN)
 	  rg_ndm_reset_delay <= `BSV_ASSIGNMENT_DELAY rg_ndm_reset_delay$D_IN;
       end
+    if (rg_running$EN) rg_running <= `BSV_ASSIGNMENT_DELAY rg_running$D_IN;
   end
 
   // synopsys translate_off
@@ -1754,8 +1777,9 @@ module mkP3_Core(CLK,
     bus_dmi_rsp_fifof_cntr_r = 2'h2;
     bus_dmi_rsp_fifof_q_0 = 34'h2AAAAAAAA;
     bus_dmi_rsp_fifof_q_1 = 34'h2AAAAAAAA;
-    rg_corew_start_after_por = 1'h0;
+    rg_corew_start_after_por = 8'hAA;
     rg_ndm_reset_delay = 8'hAA;
+    rg_running = 1'h0;
   end
   `endif // BSV_NO_INITIAL_BLOCKS
   // synopsys translate_on
@@ -1767,30 +1791,34 @@ module mkP3_Core(CLK,
   begin
     #0;
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_ndm_reset)
-	begin
-	  v__h1279 = $stime;
-	  #0;
-	end
-    v__h1273 = v__h1279 / 32'd10;
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_ndm_reset)
-	$display("%0d: %m.rl_ndm_reset: asserting NDM reset (for non-DebugModule) for %0d cycles",
-		 v__h1273,
-		 $signed(32'd10));
-    if (RST_N != `BSV_RESET_VALUE)
-      if (ndm_reset$RST_OUT != `BSV_RESET_VALUE)
-	if (WILL_FIRE_RL_rl_ndm_reset_wait && rg_ndm_reset_delay == 8'd1)
+      if (por_ifc$RST_N_gen_rst != `BSV_RESET_VALUE)
+	if (WILL_FIRE_RL_rl_ndm_reset)
 	  begin
-	    v__h1424 = $stime;
+	    v__h1362 = $stime;
 	    #0;
 	  end
-    v__h1418 = v__h1424 / 32'd10;
+    v__h1356 = v__h1362 / 32'd10;
+    if (RST_N != `BSV_RESET_VALUE)
+      if (por_ifc$RST_N_gen_rst != `BSV_RESET_VALUE)
+	if (WILL_FIRE_RL_rl_ndm_reset)
+	  $display("%0d: %m.rl_ndm_reset: asserting NDM reset (for non-DebugModule) for %0d cycles",
+		   v__h1356,
+		   $signed(32'd10));
     if (RST_N != `BSV_RESET_VALUE)
       if (ndm_reset$RST_OUT != `BSV_RESET_VALUE)
-	if (WILL_FIRE_RL_rl_ndm_reset_wait && rg_ndm_reset_delay == 8'd1)
-	  $display("%0d: %m.rl_ndm_reset_wait: sent NDM reset ack (for non-DebugModule) to Debug Module",
-		   v__h1418);
+	if (por_ifc$RST_N_gen_rst != `BSV_RESET_VALUE)
+	  if (WILL_FIRE_RL_rl_ndm_reset_wait && rg_ndm_reset_delay == 8'd1)
+	    begin
+	      v__h1510 = $stime;
+	      #0;
+	    end
+    v__h1504 = v__h1510 / 32'd10;
+    if (RST_N != `BSV_RESET_VALUE)
+      if (ndm_reset$RST_OUT != `BSV_RESET_VALUE)
+	if (por_ifc$RST_N_gen_rst != `BSV_RESET_VALUE)
+	  if (WILL_FIRE_RL_rl_ndm_reset_wait && rg_ndm_reset_delay == 8'd1)
+	    $display("%0d: %m.rl_ndm_reset_wait: sent NDM reset ack (for non-DebugModule) to Debug Module",
+		     v__h1504);
   end
   // synopsys translate_on
 endmodule  // mkP3_Core

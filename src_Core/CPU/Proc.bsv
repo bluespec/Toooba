@@ -233,10 +233,10 @@ module mkProc (Proc_IFC);
    // ----------------
    // Start the cores running
    // Use toHostAddr = 0 if not monitoring tohost
-   method Action start (Addr startpc, Addr tohostAddr, Addr fromhostAddr);
+   method Action start (Bool running, Addr startpc, Addr tohostAddr, Addr fromhostAddr);
       action
 	 for(Integer i = 0; i < valueof(CoreNum); i = i+1)
-	    core[i].coreReq.start (startpc, tohostAddr, fromhostAddr);
+	    core[i].coreReq.start (running, startpc, tohostAddr, fromhostAddr);
       endaction
 
       mmioPlatform.start (tohostAddr, fromhostAddr);
