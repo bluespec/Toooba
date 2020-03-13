@@ -158,6 +158,9 @@ module mkFpuMulDivRegToExeFifo(CLK,
        WILL_FIRE_specUpdate_correctSpeculation,
        WILL_FIRE_specUpdate_incorrectSpeculation;
 
+  // inputs to muxes for submodule ports
+  wire MUX_m_m_valid_0_dummy2_0$write_1__SEL_1;
+
   // remaining internal signals
   reg [20 : 0] CASE_enq_x_BITS_245_TO_243_0_enq_x_BITS_245_TO_ETC__q2,
 	       CASE_m_m_row_0_BITS_233_TO_231_0_m_m_row_0_BIT_ETC__q4;
@@ -167,9 +170,7 @@ module mkFpuMulDivRegToExeFifo(CLK,
 		IF_m_m_specBits_0_lat_0_whas__0_THEN_m_m_specB_ETC___d13,
 		sb__h9109,
 		upd__h2327;
-  wire IF_m_m_valid_0_lat_0_whas_THEN_m_m_valid_0_lat_ETC___d6,
-       _dand1m_m_valid_0_dummy2_0$EN_write,
-       _dand1m_m_valid_0_lat_0$EN_wset;
+  wire IF_m_m_valid_0_lat_0_whas_THEN_m_m_valid_0_lat_ETC___d6;
 
   // action method enq
   assign RDY_enq =
@@ -250,8 +251,15 @@ module mkFpuMulDivRegToExeFifo(CLK,
   assign CAN_FIRE_RL_m_m_specBits_0_canon = 1'd1 ;
   assign WILL_FIRE_RL_m_m_specBits_0_canon = 1'd1 ;
 
+  // inputs to muxes for submodule ports
+  assign MUX_m_m_valid_0_dummy2_0$write_1__SEL_1 =
+	     EN_specUpdate_incorrectSpeculation &&
+	     (specUpdate_incorrectSpeculation_kill_all ||
+	      IF_m_m_specBits_0_dummy2_0_read__2_AND_m_m_spe_ETC___d95[specUpdate_incorrectSpeculation_kill_tag]) ;
+
   // inlined wires
-  assign m_m_valid_0_lat_0$whas = _dand1m_m_valid_0_lat_0$EN_wset || EN_deq ;
+  assign m_m_valid_0_lat_0$whas =
+	     MUX_m_m_valid_0_dummy2_0$write_1__SEL_1 || EN_deq ;
   assign m_m_specBits_0_lat_1$wget =
 	     sb__h9109 & specUpdate_correctSpeculation_mask ;
 
@@ -293,7 +301,7 @@ module mkFpuMulDivRegToExeFifo(CLK,
   // submodule m_m_valid_0_dummy2_0
   assign m_m_valid_0_dummy2_0$D_IN = 1'd1 ;
   assign m_m_valid_0_dummy2_0$EN =
-	     _dand1m_m_valid_0_dummy2_0$EN_write || EN_deq ;
+	     MUX_m_m_valid_0_dummy2_0$write_1__SEL_1 || EN_deq ;
 
   // submodule m_m_valid_0_dummy2_1
   assign m_m_valid_0_dummy2_1$D_IN = 1'd1 ;
@@ -309,14 +317,6 @@ module mkFpuMulDivRegToExeFifo(CLK,
 	     EN_enq ? enq_x[11:0] : m_m_specBits_0_rl ;
   assign IF_m_m_valid_0_lat_0_whas_THEN_m_m_valid_0_lat_ETC___d6 =
 	     m_m_valid_0_lat_0$whas ? 1'd0 : m_m_valid_0_rl ;
-  assign _dand1m_m_valid_0_dummy2_0$EN_write =
-	     EN_specUpdate_incorrectSpeculation &&
-	     (specUpdate_incorrectSpeculation_kill_all ||
-	      IF_m_m_specBits_0_dummy2_0_read__2_AND_m_m_spe_ETC___d95[specUpdate_incorrectSpeculation_kill_tag]) ;
-  assign _dand1m_m_valid_0_lat_0$EN_wset =
-	     EN_specUpdate_incorrectSpeculation &&
-	     (specUpdate_incorrectSpeculation_kill_all ||
-	      IF_m_m_specBits_0_dummy2_0_read__2_AND_m_m_spe_ETC___d95[specUpdate_incorrectSpeculation_kill_tag]) ;
   assign sb__h9109 =
 	     m_m_specBits_0_dummy2_1$Q_OUT ?
 	       IF_m_m_specBits_0_lat_0_whas__0_THEN_m_m_specB_ETC___d13 :

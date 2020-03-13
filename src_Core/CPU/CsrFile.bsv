@@ -466,18 +466,26 @@ module mkCsrFile #(Data hartid)(CsrFile);
     software_int_pend_vec[prvM] <- mkCsrReg(0);    // TODO: bug (writeable by CSRRx)?
     Reg#(Data) mip_csr = concatReg13(
         readOnlyReg(52'b0),
-        external_int_pend_vec[prvM], readOnlyReg(1'b0),
-        external_int_pend_vec[prvS], readOnlyReg(1'b0),    // only if misa.N: external_int_pend_vec[prvU],
-        readOnlyReg(timer_int_pend_vec[prvM]), // MTIP is read-only to software
+        // External interrupts
+        readOnlyReg(external_int_pend_vec[prvM]),    // MEIP is read-only to software
         readOnlyReg(1'b0),
-        timer_int_pend_vec[prvS],    readOnlyReg(1'b0),    // only if misa.N: timer_int_pend_vec[prvU],
-        software_int_pend_vec[prvM], readOnlyReg(1'b0),
-        software_int_pend_vec[prvS], readOnlyReg(1'b0)     // only if misa.N: software_int_pend_vec[prvU]
+        external_int_pend_vec[prvS],
+        readOnlyReg(1'b0),    // only if misa.N: external_int_pend_vec[prvU],
+        // Timer interrupts
+        readOnlyReg(timer_int_pend_vec[prvM]),       // MTIP is read-only to software
+        readOnlyReg(1'b0),
+        timer_int_pend_vec[prvS],
+        readOnlyReg(1'b0),    // only if misa.N: timer_int_pend_vec[prvU],
+        // Software interrupts
+        readOnlyReg(software_int_pend_vec[prvM]),    // MSIP is read-only to software
+        readOnlyReg(1'b0),
+        software_int_pend_vec[prvS],
+        readOnlyReg(1'b0)     // only if misa.N: software_int_pend_vec[prvU]
     );
     // MIP and MIE fields are WARL (Write Any Read Legal)
     // We support M-privilege and S-privilege bits only;
     // this mask allows only those bits through.
-    Data mip_mie_warl_mask = zeroExtend (12'h_aaa);
+    Data mip_mie_warl_mask = zeroExtend (12'h_222);
 
     // minstret
     Ehr#(2, Data) minstret_ehr <- mkCsrEhr(0);
@@ -821,7 +829,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
 	    CSRmtvec:      { x[63:2], 1'b0, x[0]};
 	    CSRmedeleg:    { 48'b0, x[15], 1'b0, x[13:12], x[11], 1'b0, x[9:0]};
 	    CSRmideleg:    { 52'b0, x[11], 1'b0, x[9:8], x[7], 1'b0, x[5:4], x[3], 1'b0, x[1:0]};
-	    CSRmip:        (x & mip_mie_warl_mask);
+	    CSRmip:        ((mip_csr & (~ mip_mie_warl_mask)) | (x & mip_mie_warl_mask));
 	    CSRmie:        (x & mip_mie_warl_mask);
 	    CSRmcounteren: { 61'b0, x[2:0]};
 	    CSRmcause:     { x[63], 59'b0, x[3:0] };
@@ -840,7 +848,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
 					  x [1],        // ie_vec[prvS]
 					  x [0]);       // ie_vec[prvU]
 	    CSRstvec:      { x[63:2], 1'b0, x[0]};
-	    CSRsip:        (x & sip_sie_warl_mask);
+	    CSRsip:        ((sip_csr & (~ sip_sie_warl_mask)) | (x & sip_sie_warl_mask));
 	    CSRsie:        (x & sip_sie_warl_mask);
 	    CSRscounteren: { 61'b0, x[2:0]};
 	    CSRscause:     { x[63], 59'b0, x[3:0] };

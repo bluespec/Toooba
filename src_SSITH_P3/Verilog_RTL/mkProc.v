@@ -119,7 +119,7 @@
 // master1_rdata                  I    64 reg
 // master1_rresp                  I     2 reg
 // master1_rlast                  I     1 reg
-// m_external_interrupt_req_set_not_clear  I     1
+// m_external_interrupt_req_set_not_clear  I     1 reg
 // s_external_interrupt_req_set_not_clear  I     1
 // non_maskable_interrupt_req_set_not_clear  I     1 unused
 // set_verbosity_verbosity        I     4

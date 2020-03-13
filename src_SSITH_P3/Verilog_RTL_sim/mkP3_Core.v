@@ -1434,7 +1434,7 @@ module mkP3_Core(CLK,
   // rule RL_rl_ndm_reset_wait
   assign CAN_FIRE_RL_rl_ndm_reset_wait =
 	     (rg_ndm_reset_delay != 8'd1 ||
-	      corew$RDY_ndm_reset_client_response_put && corew$RDY_start) &&
+	      corew$RDY_start && corew$RDY_ndm_reset_client_response_put) &&
 	     rg_ndm_reset_delay != 8'd0 ;
   assign WILL_FIRE_RL_rl_ndm_reset_wait = CAN_FIRE_RL_rl_ndm_reset_wait ;
 

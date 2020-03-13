@@ -108,6 +108,7 @@ module mkMinimumExecQ(CLK,
 
   // inlined wires
   reg m_m_valid_for_enq_wire$wget;
+  wire [11 : 0] m_m_specBits_0_lat_1$wget, m_m_specBits_1_lat_1$wget;
   wire m_m_poisoned_0_lat_0$whas,
        m_m_poisoned_1_lat_0$whas,
        m_m_valid_0_lat_0$whas,
@@ -456,6 +457,10 @@ module mkMinimumExecQ(CLK,
 	     EN_specUpdate_incorrectSpeculation &&
 	     (specUpdate_incorrectSpeculation_kill_all ||
 	      bs__h10719[specUpdate_incorrectSpeculation_kill_tag]) ;
+  assign m_m_specBits_0_lat_1$wget =
+	     n__read__h11009 & specUpdate_correctSpeculation_mask ;
+  assign m_m_specBits_1_lat_1$wget =
+	     n__read__h11450 & specUpdate_correctSpeculation_mask ;
   always@(m_m_enqP or
 	  m_m_valid_0_dummy2_0$Q_OUT or
 	  m_m_valid_0_dummy2_1$Q_OUT or
@@ -624,8 +629,8 @@ module mkMinimumExecQ(CLK,
 	     m_m_specBits_1_dummy2_1$Q_OUT ?
 	       IF_m_m_specBits_1_lat_0_whas__8_THEN_m_m_specB_ETC___d41 :
 	       12'd0 ;
-  assign upd__h5448 = n__read__h11009 & specUpdate_correctSpeculation_mask ;
-  assign upd__h6377 = n__read__h11450 & specUpdate_correctSpeculation_mask ;
+  assign upd__h5448 = m_m_specBits_0_lat_1$wget ;
+  assign upd__h6377 = m_m_specBits_1_lat_1$wget ;
   always@(m_m_deqP or m_m_row_0 or m_m_row_1)
   begin
     case (m_m_deqP)
