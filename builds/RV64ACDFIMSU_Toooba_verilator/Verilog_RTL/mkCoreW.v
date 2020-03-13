@@ -69,6 +69,7 @@
 // RST_N                          I     1 reset
 // set_verbosity_verbosity        I     4 reg
 // set_verbosity_logdelay         I    64 unused
+// start_is_running               I     1 unused
 // start_tohost_addr              I    64 reg
 // start_fromhost_addr            I    64 reg
 // cpu_imem_master_awready        I     1
@@ -140,6 +141,7 @@ module mkCoreW(RST_N_dm_power_on_reset,
 	       EN_set_verbosity,
 	       RDY_set_verbosity,
 
+	       start_is_running,
 	       start_tohost_addr,
 	       start_fromhost_addr,
 	       EN_start,
@@ -333,6 +335,7 @@ module mkCoreW(RST_N_dm_power_on_reset,
   output RDY_set_verbosity;
 
   // action method start
+  input  start_is_running;
   input  [63 : 0] start_tohost_addr;
   input  [63 : 0] start_fromhost_addr;
   input  EN_start;
@@ -1054,7 +1057,8 @@ module mkCoreW(RST_N_dm_power_on_reset,
        proc$master1_wready,
        proc$master1_wvalid,
        proc$non_maskable_interrupt_req_set_not_clear,
-       proc$s_external_interrupt_req_set_not_clear;
+       proc$s_external_interrupt_req_set_not_clear,
+       proc$start_running;
 
   // ports of submodule soc_map
   wire [63 : 0] soc_map$m_is_IO_addr_addr,
@@ -1167,8 +1171,8 @@ module mkCoreW(RST_N_dm_power_on_reset,
 
   // declarations used by system tasks
   // synopsys translate_off
-  reg [31 : 0] v__h6490;
-  reg [31 : 0] v__h6484;
+  reg [31 : 0] v__h6500;
+  reg [31 : 0] v__h6494;
   // synopsys translate_on
 
   // action method set_verbosity
@@ -1793,6 +1797,7 @@ module mkCoreW(RST_N_dm_power_on_reset,
 	      .s_external_interrupt_req_set_not_clear(proc$s_external_interrupt_req_set_not_clear),
 	      .set_verbosity_verbosity(proc$set_verbosity_verbosity),
 	      .start_fromhostAddr(proc$start_fromhostAddr),
+	      .start_running(proc$start_running),
 	      .start_startpc(proc$start_startpc),
 	      .start_tohostAddr(proc$start_tohostAddr),
 	      .EN_start(proc$EN_start),
@@ -2246,6 +2251,7 @@ module mkCoreW(RST_N_dm_power_on_reset,
 	     plic$v_targets_1_m_eip ;
   assign proc$set_verbosity_verbosity = set_verbosity_verbosity ;
   assign proc$start_fromhostAddr = start_fromhost_addr ;
+  assign proc$start_running = start_is_running ;
   assign proc$start_startpc = 64'h0000000000001000 ;
   assign proc$start_tohostAddr = start_tohost_addr ;
   assign proc$EN_start = EN_start ;
@@ -2265,14 +2271,14 @@ module mkCoreW(RST_N_dm_power_on_reset,
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_start)
 	begin
-	  v__h6490 = $stime;
+	  v__h6500 = $stime;
 	  #0;
 	end
-    v__h6484 = v__h6490 / 32'd10;
+    v__h6494 = v__h6500 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_start)
 	$display("%0d: %m.method start: proc.start (pc %0h, tohostAddr %0h, fromhostAddr %0h)",
-		 v__h6484,
+		 v__h6494,
 		 64'h0000000000001000,
 		 start_tohost_addr,
 		 start_fromhost_addr);

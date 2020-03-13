@@ -189,10 +189,9 @@ module mkCoreW #(Reset dm_power_on_reset)
 
    rule rl_dm_hart0_reset_wait (rg_hart0_reset_delay != 0);
       if (rg_hart0_reset_delay == 1) begin
-	 let pc = soc_map_struct.pc_reset_value;
-	 proc.start (pc, rg_tohost_addr, rg_fromhost_addr);
-
+	 let pc      = soc_map_struct.pc_reset_value;
 	 Bool is_running = True;
+	 proc.start (is_running, pc, rg_tohost_addr, rg_fromhost_addr);
 	 debug_module.hart0_reset_client.response.put (is_running);
 	 $display ("%0d: %m.rl_dm_hart0_reset_wait: proc.start (pc %0h, tohostAddr %0h, fromhostAddr %0h",
 		   cur_cycle, pc, rg_tohost_addr, rg_fromhost_addr);
@@ -362,12 +361,12 @@ module mkCoreW #(Reset dm_power_on_reset)
    // ----------------------------------------------------------------
    // Start
 
-   method Action start (Bit #(64) tohost_addr, Bit #(64) fromhost_addr);
+   method Action start (Bool is_running, Bit #(64) tohost_addr, Bit #(64) fromhost_addr);
       plic.set_addr_map (zeroExtend (soc_map.m_plic_addr_base),
 			 zeroExtend (soc_map.m_plic_addr_lim));
 
       let pc = soc_map_struct.pc_reset_value;
-      proc.start (pc, tohost_addr, fromhost_addr);
+      proc.start (is_running, pc, tohost_addr, fromhost_addr);
 
 `ifdef INCLUDE_GDB_CONTROL
       // Save for potential future use by rl_dm_hart0_reset

@@ -78,6 +78,7 @@
 // RST_N                          I     1 reset
 // set_verbosity_verbosity        I     4
 // set_verbosity_logdelay         I    64 unused
+// start_is_running               I     1
 // start_tohost_addr              I    64
 // start_fromhost_addr            I    64
 // cpu_imem_master_awready        I     1
@@ -161,6 +162,7 @@ module mkCoreW(RST_N_dm_power_on_reset,
 	       EN_set_verbosity,
 	       RDY_set_verbosity,
 
+	       start_is_running,
 	       start_tohost_addr,
 	       start_fromhost_addr,
 	       EN_start,
@@ -379,6 +381,7 @@ module mkCoreW(RST_N_dm_power_on_reset,
   output RDY_set_verbosity;
 
   // action method start
+  input  start_is_running;
   input  [63 : 0] start_tohost_addr;
   input  [63 : 0] start_fromhost_addr;
   input  EN_start;
@@ -1401,7 +1404,8 @@ module mkCoreW(RST_N_dm_power_on_reset,
        proc$master1_wready,
        proc$master1_wvalid,
        proc$non_maskable_interrupt_req_set_not_clear,
-       proc$s_external_interrupt_req_set_not_clear;
+       proc$s_external_interrupt_req_set_not_clear,
+       proc$start_running;
 
   // ports of submodule soc_map
   wire [63 : 0] soc_map$m_is_IO_addr_addr,
@@ -1609,12 +1613,12 @@ module mkCoreW(RST_N_dm_power_on_reset,
 
   // declarations used by system tasks
   // synopsys translate_off
-  reg [31 : 0] v__h5047;
-  reg [31 : 0] v__h5190;
-  reg [31 : 0] v__h15930;
-  reg [31 : 0] v__h5041;
-  reg [31 : 0] v__h5184;
-  reg [31 : 0] v__h15924;
+  reg [31 : 0] v__h5055;
+  reg [31 : 0] v__h5198;
+  reg [31 : 0] v__h15940;
+  reg [31 : 0] v__h5049;
+  reg [31 : 0] v__h5192;
+  reg [31 : 0] v__h15934;
   // synopsys translate_on
 
   // remaining internal signals
@@ -2523,6 +2527,7 @@ module mkCoreW(RST_N_dm_power_on_reset,
 	      .s_external_interrupt_req_set_not_clear(proc$s_external_interrupt_req_set_not_clear),
 	      .set_verbosity_verbosity(proc$set_verbosity_verbosity),
 	      .start_fromhostAddr(proc$start_fromhostAddr),
+	      .start_running(proc$start_running),
 	      .start_startpc(proc$start_startpc),
 	      .start_tohostAddr(proc$start_tohostAddr),
 	      .EN_start(proc$EN_start),
@@ -2716,22 +2721,22 @@ module mkCoreW(RST_N_dm_power_on_reset,
   // rule RL_rl_dm_hart0_reset_wait
   assign CAN_FIRE_RL_rl_dm_hart0_reset_wait =
 	     (rg_hart0_reset_delay != 8'd1 ||
-	      proc$RDY_start &&
-	      debug_module$RDY_hart0_reset_client_response_put) &&
+	      debug_module$RDY_hart0_reset_client_response_put &&
+	      proc$RDY_start) &&
 	     rg_hart0_reset_delay != 8'd0 ;
   assign WILL_FIRE_RL_rl_dm_hart0_reset_wait =
 	     CAN_FIRE_RL_rl_dm_hart0_reset_wait && !EN_start ;
 
   // rule RL_ClientServerRequest
   assign CAN_FIRE_RL_ClientServerRequest =
-	     proc$RDY_hart0_run_halt_server_request_put &&
-	     debug_module$RDY_hart0_client_run_halt_request_get ;
+	     debug_module$RDY_hart0_client_run_halt_request_get &&
+	     proc$RDY_hart0_run_halt_server_request_put ;
   assign WILL_FIRE_RL_ClientServerRequest = CAN_FIRE_RL_ClientServerRequest ;
 
   // rule RL_ClientServerResponse
   assign CAN_FIRE_RL_ClientServerResponse =
-	     proc$RDY_hart0_run_halt_server_response_get &&
-	     debug_module$RDY_hart0_client_run_halt_response_put ;
+	     debug_module$RDY_hart0_client_run_halt_response_put &&
+	     proc$RDY_hart0_run_halt_server_response_get ;
   assign WILL_FIRE_RL_ClientServerResponse =
 	     CAN_FIRE_RL_ClientServerResponse ;
 
@@ -3359,6 +3364,7 @@ module mkCoreW(RST_N_dm_power_on_reset,
 	     MUX_proc$start_1__SEL_1 ?
 	       rg_fromhost_addr :
 	       start_fromhost_addr ;
+  assign proc$start_running = MUX_proc$start_1__SEL_1 || start_is_running ;
   assign proc$start_startpc = 64'h0000000070000000 ;
   assign proc$start_tohostAddr =
 	     MUX_proc$start_1__SEL_1 ? rg_tohost_addr : start_tohost_addr ;
@@ -3700,15 +3706,15 @@ module mkCoreW(RST_N_dm_power_on_reset,
       if (RST_N_dm_power_on_reset != `BSV_RESET_VALUE)
 	if (WILL_FIRE_RL_rl_dm_hart0_reset)
 	  begin
-	    v__h5047 = $stime;
+	    v__h5055 = $stime;
 	    #0;
 	  end
-    v__h5041 = v__h5047 / 32'd10;
+    v__h5049 = v__h5055 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (RST_N_dm_power_on_reset != `BSV_RESET_VALUE)
 	if (WILL_FIRE_RL_rl_dm_hart0_reset)
 	  $display("%0d: %m.rl_dm_hart0_reset: asserting hart0 reset for %0d cycles",
-		   v__h5041,
+		   v__h5049,
 		   $signed(32'd10));
     if (RST_N != `BSV_RESET_VALUE)
       if (hart0_reset$RST_OUT != `BSV_RESET_VALUE)
@@ -3716,17 +3722,17 @@ module mkCoreW(RST_N_dm_power_on_reset,
 	  if (WILL_FIRE_RL_rl_dm_hart0_reset_wait &&
 	      rg_hart0_reset_delay == 8'd1)
 	    begin
-	      v__h5190 = $stime;
+	      v__h5198 = $stime;
 	      #0;
 	    end
-    v__h5184 = v__h5190 / 32'd10;
+    v__h5192 = v__h5198 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (hart0_reset$RST_OUT != `BSV_RESET_VALUE)
 	if (RST_N_dm_power_on_reset != `BSV_RESET_VALUE)
 	  if (WILL_FIRE_RL_rl_dm_hart0_reset_wait &&
 	      rg_hart0_reset_delay == 8'd1)
 	    $display("%0d: %m.rl_dm_hart0_reset_wait: proc.start (pc %0h, tohostAddr %0h, fromhostAddr %0h",
-		     v__h5184,
+		     v__h5192,
 		     64'h0000000070000000,
 		     rg_tohost_addr,
 		     rg_fromhost_addr);
@@ -3734,15 +3740,15 @@ module mkCoreW(RST_N_dm_power_on_reset,
       if (hart0_reset$RST_OUT != `BSV_RESET_VALUE)
 	if (EN_start)
 	  begin
-	    v__h15930 = $stime;
+	    v__h15940 = $stime;
 	    #0;
 	  end
-    v__h15924 = v__h15930 / 32'd10;
+    v__h15934 = v__h15940 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (hart0_reset$RST_OUT != `BSV_RESET_VALUE)
 	if (EN_start)
 	  $display("%0d: %m.method start: proc.start (pc %0h, tohostAddr %0h, fromhostAddr %0h)",
-		   v__h15924,
+		   v__h15934,
 		   64'h0000000070000000,
 		   start_tohost_addr,
 		   start_fromhost_addr);

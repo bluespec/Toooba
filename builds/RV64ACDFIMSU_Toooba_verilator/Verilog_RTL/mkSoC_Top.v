@@ -360,7 +360,8 @@ module mkSoC_Top(RST_N_dm_power_on_reset,
        corew$cpu_imem_master_wlast,
        corew$cpu_imem_master_wready,
        corew$cpu_imem_master_wvalid,
-       corew$nmi_req_set_not_clear;
+       corew$nmi_req_set_not_clear,
+       corew$start_is_running;
 
   // ports of submodule fabric
   wire [63 : 0] fabric$v_from_masters_0_araddr,
@@ -859,17 +860,14 @@ module mkSoC_Top(RST_N_dm_power_on_reset,
        WILL_FIRE_to_raw_mem_request_get,
        WILL_FIRE_to_raw_mem_response_put;
 
-  // inputs to muxes for submodule ports
-  wire MUX_rg_state$write_1__SEL_1, MUX_rg_state$write_1__SEL_2;
-
   // declarations used by system tasks
   // synopsys translate_off
-  reg [31 : 0] v__h11619;
-  reg [31 : 0] v__h11080;
-  reg [31 : 0] v__h11328;
-  reg [31 : 0] v__h11074;
-  reg [31 : 0] v__h11322;
-  reg [31 : 0] v__h11613;
+  reg [31 : 0] v__h11628;
+  reg [31 : 0] v__h11088;
+  reg [31 : 0] v__h11336;
+  reg [31 : 0] v__h11082;
+  reg [31 : 0] v__h11330;
+  reg [31 : 0] v__h11622;
   // synopsys translate_on
 
   // action method set_verbosity
@@ -1088,6 +1086,7 @@ module mkSoC_Top(RST_N_dm_power_on_reset,
 		.set_verbosity_logdelay(corew$set_verbosity_logdelay),
 		.set_verbosity_verbosity(corew$set_verbosity_verbosity),
 		.start_fromhost_addr(corew$start_fromhost_addr),
+		.start_is_running(corew$start_is_running),
 		.start_tohost_addr(corew$start_tohost_addr),
 		.EN_set_verbosity(corew$EN_set_verbosity),
 		.EN_start(corew$EN_start),
@@ -1734,25 +1733,22 @@ module mkSoC_Top(RST_N_dm_power_on_reset,
   assign WILL_FIRE_RL_rl_connect_external_interrupt_requests = 1'd1 ;
 
   // rule RL_rl_reset_start_initial
-  assign CAN_FIRE_RL_rl_reset_start_initial = MUX_rg_state$write_1__SEL_1 ;
-  assign WILL_FIRE_RL_rl_reset_start_initial = MUX_rg_state$write_1__SEL_1 ;
-
-  // rule RL_rl_reset_complete_initial
-  assign CAN_FIRE_RL_rl_reset_complete_initial = MUX_rg_state$write_1__SEL_2 ;
-  assign WILL_FIRE_RL_rl_reset_complete_initial =
-	     MUX_rg_state$write_1__SEL_2 ;
-
-  // inputs to muxes for submodule ports
-  assign MUX_rg_state$write_1__SEL_1 =
+  assign CAN_FIRE_RL_rl_reset_start_initial =
 	     mem0_controller$RDY_server_reset_request_put &&
 	     uart0$RDY_server_reset_request_put &&
 	     fabric$RDY_reset &&
 	     rg_state == 2'd0 ;
-  assign MUX_rg_state$write_1__SEL_2 =
-	     mem0_controller$RDY_set_addr_map &&
+  assign WILL_FIRE_RL_rl_reset_start_initial =
+	     CAN_FIRE_RL_rl_reset_start_initial ;
+
+  // rule RL_rl_reset_complete_initial
+  assign CAN_FIRE_RL_rl_reset_complete_initial =
 	     mem0_controller$RDY_server_reset_response_get &&
 	     uart0$RDY_server_reset_response_get &&
+	     mem0_controller$RDY_set_addr_map &&
 	     rg_state == 2'd1 ;
+  assign WILL_FIRE_RL_rl_reset_complete_initial =
+	     CAN_FIRE_RL_rl_reset_complete_initial ;
 
   // register rg_state
   assign rg_state$D_IN = WILL_FIRE_RL_rl_reset_start_initial ? 2'd1 : 2'd2 ;
@@ -1791,7 +1787,7 @@ module mkSoC_Top(RST_N_dm_power_on_reset,
   assign boot_rom$slave_wlast = boot_rom_axi4_deburster$to_slave_wlast ;
   assign boot_rom$slave_wstrb = boot_rom_axi4_deburster$to_slave_wstrb ;
   assign boot_rom$slave_wvalid = boot_rom_axi4_deburster$to_slave_wvalid ;
-  assign boot_rom$EN_set_addr_map = MUX_rg_state$write_1__SEL_2 ;
+  assign boot_rom$EN_set_addr_map = CAN_FIRE_RL_rl_reset_complete_initial ;
 
   // submodule boot_rom_axi4_deburster
   assign boot_rom_axi4_deburster$from_master_araddr =
@@ -1922,6 +1918,7 @@ module mkSoC_Top(RST_N_dm_power_on_reset,
   assign corew$set_verbosity_logdelay = set_verbosity_logdelay ;
   assign corew$set_verbosity_verbosity = set_verbosity_verbosity ;
   assign corew$start_fromhost_addr = start_fromhost_addr ;
+  assign corew$start_is_running = 1'd1 ;
   assign corew$start_tohost_addr = start_tohost_addr ;
   assign corew$EN_set_verbosity = EN_set_verbosity ;
   assign corew$EN_start = EN_start ;
@@ -2037,7 +2034,7 @@ module mkSoC_Top(RST_N_dm_power_on_reset,
   assign fabric$v_to_slaves_2_rresp = uart0$slave_rresp ;
   assign fabric$v_to_slaves_2_rvalid = uart0$slave_rvalid ;
   assign fabric$v_to_slaves_2_wready = uart0$slave_wready ;
-  assign fabric$EN_reset = MUX_rg_state$write_1__SEL_1 ;
+  assign fabric$EN_reset = CAN_FIRE_RL_rl_reset_start_initial ;
   assign fabric$EN_set_verbosity = 1'b0 ;
 
   // submodule mem0_controller
@@ -2106,10 +2103,11 @@ module mkSoC_Top(RST_N_dm_power_on_reset,
 	     mem0_controller_axi4_deburster$to_slave_wvalid ;
   assign mem0_controller$to_raw_mem_response_put = to_raw_mem_response_put ;
   assign mem0_controller$EN_server_reset_request_put =
-	     MUX_rg_state$write_1__SEL_1 ;
+	     CAN_FIRE_RL_rl_reset_start_initial ;
   assign mem0_controller$EN_server_reset_response_get =
-	     MUX_rg_state$write_1__SEL_2 ;
-  assign mem0_controller$EN_set_addr_map = MUX_rg_state$write_1__SEL_2 ;
+	     CAN_FIRE_RL_rl_reset_complete_initial ;
+  assign mem0_controller$EN_set_addr_map =
+	     CAN_FIRE_RL_rl_reset_complete_initial ;
   assign mem0_controller$EN_to_raw_mem_request_get =
 	     EN_to_raw_mem_request_get ;
   assign mem0_controller$EN_to_raw_mem_response_put =
@@ -2234,9 +2232,11 @@ module mkSoC_Top(RST_N_dm_power_on_reset,
   assign uart0$slave_wlast = fabric$v_to_slaves_2_wlast ;
   assign uart0$slave_wstrb = fabric$v_to_slaves_2_wstrb ;
   assign uart0$slave_wvalid = fabric$v_to_slaves_2_wvalid ;
-  assign uart0$EN_server_reset_request_put = MUX_rg_state$write_1__SEL_1 ;
-  assign uart0$EN_server_reset_response_get = MUX_rg_state$write_1__SEL_2 ;
-  assign uart0$EN_set_addr_map = MUX_rg_state$write_1__SEL_2 ;
+  assign uart0$EN_server_reset_request_put =
+	     CAN_FIRE_RL_rl_reset_start_initial ;
+  assign uart0$EN_server_reset_response_get =
+	     CAN_FIRE_RL_rl_reset_complete_initial ;
+  assign uart0$EN_set_addr_map = CAN_FIRE_RL_rl_reset_complete_initial ;
   assign uart0$EN_get_to_console_get = EN_get_to_console_get ;
   assign uart0$EN_put_from_console_put = EN_put_from_console_put ;
 
@@ -2273,36 +2273,36 @@ module mkSoC_Top(RST_N_dm_power_on_reset,
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_start)
 	begin
-	  v__h11619 = $stime;
+	  v__h11628 = $stime;
 	  #0;
 	end
-    v__h11613 = v__h11619 / 32'd10;
+    v__h11622 = v__h11628 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_start)
 	$display("%0d: %m.method start (tohost %0h, fromhost %0h)",
-		 v__h11613,
+		 v__h11622,
 		 start_tohost_addr,
 		 start_fromhost_addr);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_reset_start_initial)
 	begin
-	  v__h11080 = $stime;
+	  v__h11088 = $stime;
 	  #0;
 	end
-    v__h11074 = v__h11080 / 32'd10;
+    v__h11082 = v__h11088 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_reset_start_initial)
-	$display("%0d: %m.rl_reset_start_initial ...", v__h11074);
+	$display("%0d: %m.rl_reset_start_initial ...", v__h11082);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_reset_complete_initial)
 	begin
-	  v__h11328 = $stime;
+	  v__h11336 = $stime;
 	  #0;
 	end
-    v__h11322 = v__h11328 / 32'd10;
+    v__h11330 = v__h11336 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_reset_complete_initial)
-	$display("%0d: %m.rl_reset_complete_initial", v__h11322);
+	$display("%0d: %m.rl_reset_complete_initial", v__h11330);
   end
   // synopsys translate_on
 endmodule  // mkSoC_Top
