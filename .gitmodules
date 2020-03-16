@@ -1,3 +1,15 @@
 [submodule "src_Verifier/BSV-RVFI-DII"]
 	path = src_Verifier/BSV-RVFI-DII
 	url = https://github.com/CTSRD-CHERI/BSV-RVFI-DII.git
+[submodule "libs/BlueStuff"]
+	path = libs/BlueStuff
+	url = https://github.com/CTSRD-CHERI/BlueStuff.git
+[submodule "libs/TagController"]
+	path = libs/TagController
+	url = https://github.com/CTSRD-CHERI/TagController.git
+[submodule "libs/cheri-cap-lib"]
+	path = libs/cheri-cap-lib
+	url = https://github.com/CTSRD-CHERI/cheri-cap-lib.git
+[submodule "libs/BSV-RVFI-DII"]
+	path = libs/BSV-RVFI-DII
+	url = https://github.com/CTSRD-CHERI/BSV-RVFI-DII.git
