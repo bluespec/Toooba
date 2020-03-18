@@ -1,5 +1,6 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
+// Portions Copyright (c) 2019-2020 Bluespec, Inc.
 // 
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
@@ -21,8 +22,6 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// Portions Copyright (c) Bluespec, Inc.
-
 `include "ProcConfig.bsv"
 import Types::*;
 import ProcTypes::*;
@@ -37,6 +36,46 @@ import GetPut::*;
 import BuildVector::*;
 //import TRNG::*;
 
+// ================================================================
+// BSV additional libs
+
+import Cur_Cycle  :: *;
+
+// ================================================================
+// Project imports from Toooba
+
+import SoC_Map :: *;
+
+// ================================================================
+// Information returned on traps and mret/sret/uret
+
+typedef struct {
+   Addr      new_pc;
+
+`ifdef INCLUDE_TANDEM_VERIF
+   // The fields below are for tandem verification only
+   Bit #(2)  prv;
+   Data      status;
+   Data      cause;
+   Data      epc;
+   Data      tval;
+`endif
+   } Trap_Updates
+deriving (Bits, FShow);
+
+typedef struct {
+   Addr      new_pc;
+
+`ifdef INCLUDE_TANDEM_VERIF
+   // The fields below are for tandem verification only
+   Bit #(2)  prv;
+   Data      status;
+`endif
+   } RET_Updates
+deriving (Bits, FShow);
+
+// ================================================================
+
 interface CsrFile;
     // Read
     method Data rd(CSR csr);
@@ -45,12 +84,23 @@ interface CsrFile;
     // normal write by FPU inst to FPU CSR
     method Bool fpuInstNeedWr(Bit#(5) fflags, Bool fpu_dirty);
     method Action fpuInstWr(Bit#(5) fflags); // FPU must become dirty
+`ifdef INCLUDE_TANDEM_VERIF
+    // Returns new fcsr and mstatus (pure function)
+    method Tuple2 #(Bit #(5), Data) fpuInst_csr_updates (Bit #(5)  fflags,
+							 Bool      init_for_way0,
+							 Bit #(5)  old_fflags,
+							 Data      old_mstatus);
+    method Data getMIP;
+`endif
+
+    // The WARL transform performed during CSRRx writes to a CSR
+    method Data warl_xform (CSR csr, Data x);
 
     // Methods for handling traps
     method Maybe#(Interrupt) pending_interrupt;
-    method ActionValue#(Addr) trap(Trap t, Addr pc, Addr faultAddr);
-    method ActionValue#(Addr) sret;
-    method ActionValue#(Addr) mret;
+    method ActionValue#(Trap_Updates) trap(Trap t, Addr pc, Addr faultAddr, Bit #(32) orig_inst);
+    method ActionValue#(RET_Updates) sret;
+    method ActionValue#(RET_Updates) mret;
 
     // Outputs for CSRs that the rest of the processor needs to know about
     method VMInfo vmI;
@@ -79,9 +129,6 @@ interface CsrFile;
     method Action setMEIP (Bit #(1) v);
     method Action setSEIP (Bit #(1) v);
 
-   // Bluespec: external interrupt to enter debug mode
-    method Action setDEIP (Bit #(1) v);
-
     // performance stats is collected or not
     method Bool doPerfStats;
     // send/recv updates on stats CSR globally
@@ -90,6 +137,26 @@ interface CsrFile;
 
     // terminate
     method ActionValue#(void) terminate;
+
+`ifdef INCLUDE_GDB_CONTROL
+   // Read dpc
+   method Addr dpc_read ();
+
+   // Update dpc
+   method Action dpc_write (Addr pc);
+
+   // Check whether to enter Debug Mode based on dcsr.{ebreakm, ebreaks, ebreaku}
+   method Bit #(1) dcsr_break_bit;
+
+   // Read dcsr[2], the step bit
+   method Bit #(1) dcsr_step_bit;
+
+   // Update 'cause' in DCSR
+   // Is invoked by logic that stops a hart, to enter Debug Mode
+   (* always_ready *)
+   method Action dcsr_cause_write (Bit #(3)  dcsr_cause);
+
+`endif
 endinterface
 
 // Fancy Reg functions
@@ -244,10 +311,13 @@ module mkCsrFile #(Data hartid)(CsrFile);
     // Machine level CSRs
     // mstatus
     Reg#(Bit#(2)) xs_reg   <- mkReadOnlyReg(0); // XXX no extension
-    Reg#(Bit#(2)) fs_reg   <- (isa.f || isa.d) ? mkCsrReg(0) : mkReadOnlyReg(0);
+    Reg#(Bit#(2)) fs_reg   <- (isa.f || isa.d) ? mkCsrReg(2'b01) : mkReadOnlyReg(0);
     Reg#(Bit#(1)) sd_reg   =  readOnlyReg(
         ((xs_reg == 2'b11) || (fs_reg == 2'b11)) ? 1 : 0
     );
+    function Bit #(1) fn_sd_val (Bit #(2) xs_val, Bit #(2) fs_val);
+       return (((xs_val == 2'b11) || (fs_val == 2'b11)) ? 1 : 0);
+    endfunction
     Reg#(Bit#(2)) sxl_reg  =  readOnlyReg(getXLBits);
     Reg#(Bit#(2)) uxl_reg  =  readOnlyReg(getXLBits);
     Reg#(Bit#(1)) tsr_reg  <- mkCsrReg(0);
@@ -286,6 +356,25 @@ module mkCsrFile #(Data hartid)(CsrFile);
         ie_vec[prvM],      readOnlyReg(1'b0),
         ie_vec[prvS],      ie_vec[prvU]
     );
+    function Data fn_mstatus_val (Bit #(2) sxl_val, Bit #(2) uxl_val,
+				  Bit #(1) tsr_val, Bit #(1) tw_val,  Bit #(1) tvm_val,
+				  Bit #(1) mxr_val, Bit #(1) sum_val, Bit #(1) mprv_val,
+				  Bit #(2) xs_val,  Bit #(2) fs_val,
+				  Bit #(2) mpp_val, Bit #(1) spp_val,
+				  Bit #(1) prev_ie_vec_prvM_val,
+				  Bit #(1) prev_ie_vec_prvS_val, Bit #(1) prev_ie_vec_prvU_val,
+				  Bit #(1) ie_vec_prvM_val,
+				  Bit #(1) ie_vec_prvS_val,      Bit #(1) ie_vec_prvU_val);
+       return {fn_sd_val (xs_val, fs_val),
+	       27'b0, sxl_val, uxl_val, 9'b0,
+	       tsr_val, tw_val, tvm_val, mxr_val, sum_val, mprv_val, xs_val, fs_val,
+	       mpp_val, 2'b0, spp_val,
+	       prev_ie_vec_prvM_val, 1'b0,
+	       prev_ie_vec_prvS_val, prev_ie_vec_prvU_val,
+	       ie_vec_prvM_val,      1'b0,
+	       ie_vec_prvS_val,      ie_vec_prvU_val};
+    endfunction
+
     // misa
     Reg#(Data) misa_csr = readOnlyReg({getXLBits, 36'b0, getExtensionBits(isa)});
     // medeleg: some exceptions don't exist, fix corresponding bits to 0
@@ -309,7 +398,6 @@ module mkCsrFile #(Data hartid)(CsrFile);
         readOnlyReg(1'b0), mideleg_1_0_reg
     );
     // mie
-    Reg #(Bit #(1)) debug_int_en = readOnlyReg (1);
     Vector#(4, Reg#(Bit#(1))) external_int_en_vec = replicate(readOnlyReg(0));
     external_int_en_vec[prvU] <- mkCsrReg(0);
     external_int_en_vec[prvS] <- mkCsrReg(0);
@@ -322,16 +410,14 @@ module mkCsrFile #(Data hartid)(CsrFile);
     software_int_en_vec[prvU] <- mkCsrReg(0);
     software_int_en_vec[prvS] <- mkCsrReg(0);
     software_int_en_vec[prvM] <- mkCsrReg(0);
-    Reg#(Data) mie_csr = concatReg15(
-        readOnlyReg(49'b0),
-        debug_int_en,                // mie [14]
-        readOnlyReg(2'b0),
+    Reg#(Data) mie_csr = concatReg13(
+        readOnlyReg(52'b0),
         external_int_en_vec[prvM], readOnlyReg(1'b0),
-        external_int_en_vec[prvS], external_int_en_vec[prvU],
+        external_int_en_vec[prvS], readOnlyReg(1'b0),    // only if misa.N: external_int_en_vec[prvU],
         timer_int_en_vec[prvM],    readOnlyReg(1'b0),
-        timer_int_en_vec[prvS],    timer_int_en_vec[prvU],
+        timer_int_en_vec[prvS],    readOnlyReg(1'b0),    // only if misa.N: timer_int_en_vec[prvU],
         software_int_en_vec[prvM], readOnlyReg(1'b0),
-        software_int_en_vec[prvS], software_int_en_vec[prvU]
+        software_int_en_vec[prvS], readOnlyReg(1'b0)     // only if misa.N: software_int_en_vec[prvU]
     );
     // mtvec
     Reg#(Bit#(62)) mtvec_base_hi_reg <- mkCsrReg(0); // this is BASE[63:2]
@@ -359,34 +445,48 @@ module mkCsrFile #(Data hartid)(CsrFile);
     Reg#(Data) mcause_csr = concatReg3(
         mcause_interrupt_reg, readOnlyReg(59'b0), mcause_code_reg
     );
+    function Data fn_mcause_val (Bit #(1) mcause_interrupt_val, Bit #(4) mcause_code_val);
+       return { mcause_interrupt_val, 59'b0, mcause_code_val };
+    endfunction
+
     // mtval (mbadaddr in spike)
     Reg#(Data) mtval_csr <- mkCsrReg(0);
     // mip
-    Reg #(Bit #(1)) debug_int_pend <- mkCsrReg (0);
     Vector#(4, Reg#(Bit#(1))) external_int_pend_vec = replicate(readOnlyReg(0));
     external_int_pend_vec[prvU] <- mkCsrReg(0);
     external_int_pend_vec[prvS] <- mkCsrReg(0);
-    external_int_pend_vec[prvM] <- mkCsrReg(0);
+    external_int_pend_vec[prvM] <- mkCsrReg(0);    // TODO: bug (writeable by CSRRx)?
     Vector#(4, Reg#(Bit#(1))) timer_int_pend_vec = replicate(readOnlyReg(0));
     timer_int_pend_vec[prvU] <- mkCsrReg(0);
     timer_int_pend_vec[prvS] <- mkCsrReg(0);
-    timer_int_pend_vec[prvM] <- mkCsrReg(0);
+    timer_int_pend_vec[prvM] <- mkCsrReg(0);    // TODO: bug (writeable by CSRRx)?
     Vector#(4, Reg#(Bit#(1))) software_int_pend_vec = replicate(readOnlyReg(0));
     software_int_pend_vec[prvU] <- mkCsrReg(0);
     software_int_pend_vec[prvS] <- mkCsrReg(0);
-    software_int_pend_vec[prvM] <- mkCsrReg(0);
-    Reg#(Data) mip_csr = concatReg15(
-        readOnlyReg(49'b0),
-        debug_int_pend,
-        readOnlyReg(2'b0),
-        external_int_pend_vec[prvM], readOnlyReg(1'b0),
-        external_int_pend_vec[prvS], external_int_pend_vec[prvU],
-        readOnlyReg(timer_int_pend_vec[prvM]), // MTIP is read-only to software
+    software_int_pend_vec[prvM] <- mkCsrReg(0);    // TODO: bug (writeable by CSRRx)?
+    Reg#(Data) mip_csr = concatReg13(
+        readOnlyReg(52'b0),
+        // External interrupts
+        readOnlyReg(external_int_pend_vec[prvM]),    // MEIP is read-only to software
         readOnlyReg(1'b0),
-        timer_int_pend_vec[prvS],    timer_int_pend_vec[prvU],
-        software_int_pend_vec[prvM], readOnlyReg(1'b0),
-        software_int_pend_vec[prvS], software_int_pend_vec[prvU]
+        external_int_pend_vec[prvS],
+        readOnlyReg(1'b0),    // only if misa.N: external_int_pend_vec[prvU],
+        // Timer interrupts
+        readOnlyReg(timer_int_pend_vec[prvM]),       // MTIP is read-only to software
+        readOnlyReg(1'b0),
+        timer_int_pend_vec[prvS],
+        readOnlyReg(1'b0),    // only if misa.N: timer_int_pend_vec[prvU],
+        // Software interrupts
+        readOnlyReg(software_int_pend_vec[prvM]),    // MSIP is read-only to software
+        readOnlyReg(1'b0),
+        software_int_pend_vec[prvS],
+        readOnlyReg(1'b0)     // only if misa.N: software_int_pend_vec[prvU]
     );
+    // MIP and MIE fields are WARL (Write Any Read Legal)
+    // We support M-privilege and S-privilege bits only;
+    // this mask allows only those bits through.
+    Data mip_mie_warl_mask = zeroExtend (12'h_222);
+
     // minstret
     Ehr#(2, Data) minstret_ehr <- mkCsrEhr(0);
     Reg#(Data) minstret_csr = minstret_ehr[0];
@@ -411,14 +511,32 @@ module mkCsrFile #(Data hartid)(CsrFile);
         readOnlyReg(2'b0), prev_ie_vec[prvS], prev_ie_vec[prvU],
         readOnlyReg(2'b0), ie_vec[prvS], ie_vec[prvU]
     );
+    function Data fn_sstatus_val (Bit #(2) uxl_val,
+				  Bit #(1) mxr_val, Bit #(1) sum_val,
+				  Bit #(2) xs_val,  Bit #(2) fs_val,
+				  Bit #(1) spp_val,
+				  Bit #(1) prev_ie_vec_prvS_val,
+				  Bit #(1) prev_ie_vec_prvU_val,
+				  Bit #(1) ie_vec_prvS_val,
+				  Bit #(1) ie_vec_prvU_val);
+       return {fn_sd_val (xs_val, fs_val),
+	       27'b0, 2'b0, uxl_val, 12'b0,
+	       mxr_val, sum_val, 1'b0, xs_val, fs_val,
+	       4'b0, spp_val,
+	       2'b0,
+	       prev_ie_vec_prvS_val, prev_ie_vec_prvU_val,
+	       2'b0,
+	       ie_vec_prvS_val,      ie_vec_prvU_val};
+    endfunction
+
     // sie: restricted view of mie
     Reg#(Data) sie_csr = concatReg9(
         readOnlyReg(54'b0),
-        external_int_en_vec[prvS], external_int_en_vec[prvU],
+        external_int_en_vec[prvS], readOnlyReg(1'b0),    // only if misa.N: external_int_en_vec[prvU],
         readOnlyReg(2'b0),
-        timer_int_en_vec[prvS], timer_int_en_vec[prvU],
+        timer_int_en_vec[prvS], readOnlyReg(1'b0),    // only if misa.N: timer_int_en_vec[prvU],
         readOnlyReg(2'b0),
-        software_int_en_vec[prvS], software_int_en_vec[prvU]
+        software_int_en_vec[prvS], readOnlyReg(1'b0)    // only if misa.N: software_int_en_vec[prvU]
     );
     // stvec
     Reg#(Bit#(62)) stvec_base_hi_reg <- mkCsrReg(0); // BASE[63:2]
@@ -446,17 +564,27 @@ module mkCsrFile #(Data hartid)(CsrFile);
     Reg#(Data) scause_csr = concatReg3(
         scause_interrupt_reg, readOnlyReg(59'b0), scause_code_reg
     );
+    function Data fn_scause_val (Bit #(1) scause_interrupt_val, Bit #(4) scause_code_val);
+       return { scause_interrupt_val, 59'b0, scause_code_val };
+    endfunction
+
     // stval (sbadaddr in spike)
     Reg#(Data) stval_csr <- mkCsrReg(0);
     // sip: restricted view of mip
     Reg#(Data) sip_csr = concatReg9(
         readOnlyReg(54'b0),
-        external_int_pend_vec[prvS], external_int_pend_vec[prvU],
+        external_int_pend_vec[prvS], readOnlyReg(1'b0),    // only if misa.N: external_int_pend_vec[prvU],
         readOnlyReg(2'b0),
-        timer_int_pend_vec[prvS], timer_int_pend_vec[prvU],
+        timer_int_pend_vec[prvS], readOnlyReg(1'b0),    // only if misa.N: timer_int_pend_vec[prvU],
         readOnlyReg(2'b0),
-        software_int_pend_vec[prvS], software_int_pend_vec[prvU]
+        software_int_pend_vec[prvS], readOnlyReg(1'b0)    // only if misa.N: software_int_pend_vec[prvU]
     );
+
+    // SIP and SIE fields are WARL (Write Any Read Legal)
+    // We support S-privilege bits only;
+    // this mask allows only those bits through.
+    Data sip_sie_warl_mask = zeroExtend (12'h_222);
+
     // satp (sptbr in spike): FIXME we only support Bare and Sv39, so we hack
     // the encoding of mode[3:0] field. Only mode[3] is relevant, other bits
     // are always 0
@@ -500,6 +628,43 @@ module mkCsrFile #(Data hartid)(CsrFile);
     // whether performance stats is collected
     StatsCsr stats_module <- mkStatsCsr;
     Reg#(Data) stats_csr = stats_module.reg_ifc;
+
+   Reg #(Data) rg_tselect <- mkConfigReg (0);
+   // Note: ISA test rv64mi-p-breakpoint assumes tdata1's reset value == 0
+   // Until we implement trigger functionality,
+   // force 'tdata1.type' field ([xlen-1:xlen-4]) to zero
+   // meaning: 'There is no trigger at this tselect'
+   Reg #(Bit #(4))  rg_tdata1_type  <- mkReadOnlyReg (0);
+   Reg #(Bit #(1))  rg_tdata1_dmode <- mkCsrReg (0);
+   Reg #(Bit #(59)) rg_tdata1_data  <- mkCsrReg (0);
+   Reg #(Data) rg_tdata1  = concatReg3 (rg_tdata1_type, rg_tdata1_dmode, rg_tdata1_data);
+   Reg #(Data) rg_tdata2  <- mkConfigRegU;
+   Reg #(Data) rg_tdata3  <- mkConfigRegU;
+
+`ifdef INCLUDE_GDB_CONTROL
+   // DCSR is 32b even in RV64
+   Bit #(32) dcsr_reset_value =  {4'h4,    // [31:28]  xdebugver
+				  12'h0,   // [27:16]  reserved
+				  1'h0,    // [15]     ebreakm
+				  1'h0,    // [14]     reserved
+				  1'h0,    // [13]     ebreaks
+				  1'h0,    // [12]     ebreaku
+				  1'h0,    // [11]     stepie
+				  1'h0,    // [10]     stopcount
+				  1'h0,    // [9]      stoptime
+				  3'h0,    // [8:6]    cause    // WARNING: 0 is non-standard
+				  1'h0,    // [5]      reserved
+				  1'h1,    // [4]      mprven
+				  1'h0,    // [3]      nmip    // non-maskable interrupt pending
+				  1'h0,    // [2]      step
+				  2'h3};   // [1:0]    prv (machine mode)
+
+   // RV64: dcsr's upper 32b zeroExtended/ignored
+   Reg #(Data) rg_dcsr      <- mkConfigReg (zeroExtend (dcsr_reset_value));
+   Reg #(Data) rg_dpc       <- mkConfigReg (truncate (soc_map_struct.pc_reset_value));
+   Reg #(Data) rg_dscratch0 <- mkConfigRegU;
+   Reg #(Data) rg_dscratch1 <- mkConfigRegU;
+`endif
 
 `ifdef SECURITY
     // sanctum machine CSRs
@@ -607,9 +772,104 @@ module mkCsrFile #(Data hartid)(CsrFile);
             CSRmspec:      mspec_csr;
             CSRtrng:       trng_csr;
 `endif
+
+	   CSRtselect:    rg_tselect;
+	   CSRtdata1:     rg_tdata1;
+	   CSRtdata2:     rg_tdata2;
+	   CSRtdata3:     rg_tdata3;
+
+`ifdef INCLUDE_GDB_CONTROL
+	   CSRdcsr:       rg_dcsr;    // TODO: take NMI into account (cf. Piccolo/Flute)
+	   CSRdpc:        rg_dpc;
+	   CSRdscratch0:  rg_dscratch0;
+	   CSRdscratch1:  rg_dscratch1;
+`endif
+
             default:       readOnlyReg(64'b0);
         endcase);
     endfunction
+
+   // ================================================================
+   // This function is the WARL (Write Any Read Legal) transform
+   // performed during CSR writes.  Currently it duplicates the logic
+   // in the _write method of CSRs; ideally this function should be
+   // separate from the _write method, which should remain as an
+   // ordinary _write.  The WARL'd value is needed for Tandem
+   // Verification.
+
+   function Data fv_warl_xform (CSR csr, Data x);
+      Asid      x_asid = truncate (x [59:44]);
+      Bit #(16) asid   = zeroExtend (x_asid);
+      return (
+	 case (csr)
+	    // Machine CSRs
+	    CSRmisa:      {getXLBits, 36'b0, getExtensionBits(isa)};
+	    CSRmvendorid: 0;
+	    CSRmarchid:   0;
+	    CSRmimpid:    0;
+	    CSRmhartid:   hartid;
+	    CSRmstatus:   fn_mstatus_val (getXLBits,    // sxl
+					  getXLBits,    // uxl
+					  x [22],       // tsr
+					  x [21],       // tw
+					  x [20],       // tvm
+					  x [19],       // mxr
+					  x [18],       // sum
+					  x [17],       // mprv
+					  2'b0,         // xs
+					  ((isa.f || isa.d) ? x [14:13] : 2'b0),    // fs
+					  x [12:11],    // mpp
+					  x [8],        // spp
+					  x [7],        // prev_ie_vec[prvM]
+					  x [5],        // prev_ie_vec[prvS]
+					  x [4],        // prev_ie_vec[prvU]
+					  x [3],        // ie_vec[prvM]
+					  x [1],        // ie_vec[prvS]
+					  x [0]);       // ie_vec[prvU]
+	    CSRmtvec:      { x[63:2], 1'b0, x[0]};
+	    CSRmedeleg:    { 48'b0, x[15], 1'b0, x[13:12], x[11], 1'b0, x[9:0]};
+	    CSRmideleg:    { 52'b0, x[11], 1'b0, x[9:8], x[7], 1'b0, x[5:4], x[3], 1'b0, x[1:0]};
+	    CSRmip:        ((mip_csr & (~ mip_mie_warl_mask)) | (x & mip_mie_warl_mask));
+	    CSRmie:        (x & mip_mie_warl_mask);
+	    CSRmcounteren: { 61'b0, x[2:0]};
+	    CSRmcause:     { x[63], 59'b0, x[3:0] };
+
+	    CSRtdata1:     { 4'b0, x [59:0] };    // Force tdata.type == 0 ("no trigger at this tselect")
+
+	    // Supervisor level CSRs
+	    CSRsstatus:   fn_sstatus_val (getXLBits,    // uxl
+					  x [19],       // mxr
+					  x [18],       // sum
+					  2'b0,         // xs
+					  ((isa.f || isa.d) ? x [14:13] : 2'b0),    // fs
+					  x [8],        // spp
+					  x [5],        // prev_ie_vec[prvS]
+					  x [4],        // prev_ie_vec[prvU]
+					  x [1],        // ie_vec[prvS]
+					  x [0]);       // ie_vec[prvU]
+	    CSRstvec:      { x[63:2], 1'b0, x[0]};
+	    CSRsip:        ((sip_csr & (~ sip_sie_warl_mask)) | (x & sip_sie_warl_mask));
+	    CSRsie:        (x & sip_sie_warl_mask);
+	    CSRscounteren: { 61'b0, x[2:0]};
+	    CSRscause:     { x[63], 59'b0, x[3:0] };
+	    CSRsatp:       { x[63], 3'b0, asid,  x [43:0] };
+
+	    // User level CSRs
+	    CSRfflags:     { 59'b0, x [4:0] };
+	    CSRfrm:        { 61'b0, x [2:0] };
+	    CSRfcsr:       { 56'b0, x [7:0] };
+
+`ifdef INCLUDE_GDB_CONTROL
+	    // Debug Mode CSRs
+	    CSRdcsr:       { 32'b0, x[31:28], 12'b0, x[14], 1'b0, x[13:6], 1'b0, x[4:0] };
+`endif
+
+	    default:       x;
+         endcase);
+   endfunction
+
+   // ================================================================
+   // INTERFACE
 
     method Data rd(CSR csr);
         return get_csr(csr)._read;
@@ -617,6 +877,12 @@ module mkCsrFile #(Data hartid)(CsrFile);
 
     method Action csrInstWr(CSR csr, Data x);
         get_csr(csr)._write(x);
+`ifdef INCLUDE_GDB_CONTROL
+        if (csr == CSRdcsr) begin
+	   let prv = x [1:0];
+	   prv_reg <= prv;
+	end
+`endif
     endmethod
 
     method Bool fpuInstNeedWr(Bit#(5) fflags, Bool fpu_dirty);
@@ -631,6 +897,35 @@ module mkCsrFile #(Data hartid)(CsrFile);
     method Action fpuInstWr(Bit#(5) fflags);
         fs_reg <= 2'b11; // FPU must be dirty
         fflags_reg <= fflags_reg | fflags;
+    endmethod
+
+`ifdef INCLUDE_TANDEM_VERIF
+    method Tuple2 #(Bit #(5), Data) fpuInst_csr_updates (Bit #(5)  fflags,
+							 Bool      init_for_way0,
+							 Bit #(5)  old_fflags,
+							 Data      old_mstatus);
+
+       // Note: old_fflags and old_mstatus are accumulated in
+       // sequential program order, and so may differ from fflags_reg
+       // and mstatus_csr, which only change after superscalar-wide
+       // retirement.
+
+       Bit #(5) old_fflags1  = (init_for_way0 ? fflags_reg  : old_fflags);
+       Data     old_mstatus1 = (init_for_way0 ? mstatus_csr : old_mstatus);
+
+       Bit #(5) new_fflags  = (old_fflags1 | fflags);
+       Data     new_mstatus = { 1'b1, old_mstatus1 [62:15], 2'b11, old_mstatus1 [12:0] };
+
+       return tuple2 (new_fflags, new_mstatus);
+    endmethod
+
+    method Data getMIP;
+       return mip_csr;
+    endmethod
+`endif
+
+    method Data warl_xform (CSR csr, Data x);
+       return fv_warl_xform (csr, x);
     endmethod
 
     method Maybe#(Interrupt) pending_interrupt;
@@ -662,7 +957,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
         end
     endmethod
 
-    method ActionValue#(Addr) trap(Trap t, Addr pc, Addr addr);
+    method ActionValue#(Trap_Updates) trap(Trap t, Addr pc, Addr addr, Bit #(32) orig_inst);
         // figure out trap cause & trap val
         Bit#(1) cause_interrupt = 0;
         Bit#(4) cause_code = 0;
@@ -671,6 +966,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
             tagged Exception .e: begin
                 cause_code = pack(e);
                 trap_val = (case(e)
+		    IllegalInst: zeroExtend (orig_inst);
                     InstAddrMisaligned, Breakpoint: return pc;
 
 		    InstAccessFault, InstPageFault,
@@ -716,7 +1012,25 @@ module mkCsrFile #(Data hartid)(CsrFile);
             scause_code_reg <= cause_code;
             stval_csr <= trap_val;
             // return next pc
-            return getNextPc(stvec_mode_low_reg, stvec_base_hi_reg);
+            // return getNextPc(stvec_mode_low_reg, stvec_base_hi_reg);
+	    Data sstatus_val = fn_sstatus_val (uxl_reg,
+					       mxr_reg, sum_reg,
+					       xs_reg,  fs_reg,
+					       /* spp_reg */ prv_reg [0],
+					       /* prev_ie_vec_[prvS] */ ie_vec[prvS],
+					       prev_ie_vec [prvU],
+					       /* ie_vec [prvS] */ 0,
+					       ie_vec [prvU]);
+	    Data scause_val = fn_scause_val (cause_interrupt, cause_code);
+	    return Trap_Updates {new_pc: getNextPc(stvec_mode_low_reg, stvec_base_hi_reg)
+`ifdef INCLUDE_TANDEM_VERIF
+				 , prv:    prvS,
+				 status: sstatus_val,
+				 cause:  scause_val,
+				 epc:    pc,
+				 tval:   trap_val
+`endif
+				 };
         end
         else begin
             // ie/prv stack
@@ -730,25 +1044,85 @@ module mkCsrFile #(Data hartid)(CsrFile);
             mcause_code_reg <= cause_code;
             mtval_csr <= trap_val;
             // return next pc
-            return getNextPc(mtvec_mode_low_reg, mtvec_base_hi_reg);
+            // return getNextPc(mtvec_mode_low_reg, mtvec_base_hi_reg);
+	    Data mstatus_val = fn_mstatus_val (sxl_reg, uxl_reg,
+					       tsr_reg, tw_reg,  tvm_reg,
+					       mxr_reg, sum_reg, mprv_reg,
+					       xs_reg,  fs_reg,
+					       /* mpp */ prv_reg, spp_reg,
+					       /* prev_ie_vec [prvM] */ ie_vec [prvM],
+					       prev_ie_vec [prvS],
+					       prev_ie_vec [prvU],
+					       /* ie_vec [prvM] */ 0,
+					       ie_vec [prvS],
+					       ie_vec [prvU]);
+	    Data mcause_val = fn_mcause_val (cause_interrupt, cause_code);
+	    return Trap_Updates {new_pc: getNextPc(mtvec_mode_low_reg, mtvec_base_hi_reg)
+`ifdef INCLUDE_TANDEM_VERIF
+				 , prv:    prvM,
+				 status: mstatus_val,
+				 cause:  mcause_val,
+				 epc:    pc,
+				 tval:   trap_val
+`endif
+				 };
         end
         // XXX yield load reservation should be done outside this method
     endmethod
 
-    method ActionValue#(Addr) mret;
+    method ActionValue#(RET_Updates) mret;
         prv_reg <= prev_prv_vec[prvM];
         prev_prv_vec[prvM] <= prvU;
         ie_vec[prvM] <= prev_ie_vec[prvM];
         prev_ie_vec[prvM] <= 1;
-        return mepc_csr;
+
+        Data mstatus_val = fn_mstatus_val(sxl_reg, uxl_reg,
+					  tsr_reg, tw_reg,  tvm_reg,
+					  mxr_reg, sum_reg, mprv_reg,
+					  xs_reg,  fs_reg,
+					  /* mpp */ prvU,
+					  spp_reg,
+					  /* prev_ie_vec [prvM] */ 1,
+					  prev_ie_vec [prvS],
+					  prev_ie_vec [prvU],
+					  /* ie_vec [prvM] */ prev_ie_vec[prvM],
+					  ie_vec [prvS],
+					  ie_vec [prvU]);
+        return RET_Updates {new_pc: mepc_csr
+`ifdef INCLUDE_TANDEM_VERIF
+			    , prv:    prev_prv_vec[prvM],
+			    status: mstatus_val
+`endif
+			    };
     endmethod
 
-    method ActionValue#(Addr) sret;
+    method ActionValue#(RET_Updates) sret;
         prv_reg <= prev_prv_vec[prvS];
         prev_prv_vec[prvS] <= prvU;
         ie_vec[prvS] <= prev_ie_vec[prvS];
         prev_ie_vec[prvS] <= 1;
-        return sepc_csr;
+
+        // For Tandem Verification, we return the full underlying MSTATUS register
+        Data mstatus_val = fn_mstatus_val(sxl_reg, uxl_reg,
+					  tsr_reg, tw_reg,  tvm_reg,
+					  mxr_reg, sum_reg, mprv_reg,
+					  xs_reg,  fs_reg,
+					  mpp_reg,
+					  /* spp_reg */ prvU [0],
+
+					  prev_ie_vec [prvM],
+					  /* prev_ie_vec_[prvS] */ 1,
+					  prev_ie_vec [prvU],
+
+					  ie_vec [prvM],
+					  /* ie_vec [prvS] */ prev_ie_vec[prvS],
+					  ie_vec [prvU]);
+        return RET_Updates {new_pc: sepc_csr
+`ifdef INCLUDE_TANDEM_VERIF
+			    , prv:    prev_prv_vec[prvS],
+			    status: mstatus_val
+`endif
+			    };
     endmethod
 
     method VMInfo vmI;
@@ -845,15 +1219,53 @@ module mkCsrFile #(Data hartid)(CsrFile);
        external_int_pend_vec[prvS] <= v;
     endmethod
 
-   // Bluespec: external interrupt to enter debug mode
-    method Action setDEIP (Bit #(1) v);
-       debug_int_pend <= v;
-    endmethod
-
     method terminate = terminate_module.terminate;
 
     // performance stats
     method doPerfStats = stats_module.doPerfStats;
     method sendDoStats = stats_module.sendDoStats;
     method recvDoStats = stats_module.recvDoStats;
+
+   // ----------------
+   // Bluespec:
+   // Methods when Debug Module is present
+
+`ifdef INCLUDE_GDB_CONTROL
+   // Read dpc
+   method Addr dpc_read ();
+      return rg_dpc;
+   endmethod
+
+   // Update dpc
+   method Action dpc_write (Addr pc);
+      rg_dpc <= pc;
+   endmethod
+
+   // Check whether to enter Debug Mode based on dcsr.{ebreakm, ebreaks, ebreaku}
+   method Bit #(1) dcsr_break_bit;
+      return case (prv_reg)
+		prvM: rg_dcsr [15];
+		prvS: rg_dcsr [13];
+		prvU: rg_dcsr [12];
+	     endcase;
+   endmethod
+
+   // Check whether to enter Debug Mode based on dcsr.step
+   method Bit #(1) dcsr_step_bit;
+      return rg_dcsr [2];
+   endmethod
+
+   // Update 'cause' in DCSR
+   // Is invoked by logic that stops a hart, to enter Debug Mode
+   method Action dcsr_cause_write (Bit #(3) dcsr_cause);
+      rg_dcsr <= { 32'b0, rg_dcsr [31:9], dcsr_cause, rg_dcsr [5:2], prv_reg };
+
+      /*
+      $display ("%0d: %m mkCsrFile.method-dcsr_cause_write: cause %0d, prv %0d",
+		cur_cycle, dcsr_cause, prv_reg);
+      */
+   endmethod
+
+`endif
+
 endmodule

@@ -1,4 +1,4 @@
-// Copyright (c) 2013-2019 Bluespec, Inc. All Rights Reserved
+// Copyright (c) 2013-2020 Bluespec, Inc. All Rights Reserved
 
 // ================================================================
 // ISA defs for UC Berkeley RISC V
@@ -360,6 +360,20 @@ RegName reg_s6   = 22; RegName reg_s7  = 23; RegName reg_s8 = 24; RegName reg_s9
 RegName reg_s10  = 26; RegName reg_s11 = 27;
 
 RegName reg_t3   = 28; RegName reg_t4  = 29; RegName reg_t5 = 30; RegName reg_t6 = 31;
+
+// ----------------
+// Is 'r' a standard register for PC save/restore on call/return?
+// This function is used in branch-predictors for managing the return-address stack.
+
+function Bool fn_reg_is_link (RegName  r);
+   return ((r == x1) || (r == x5));
+endfunction
+
+// ================================================================
+// Kinds of memory access (excluding AMOs)
+
+typedef enum { Access_RWX_R, Access_RWX_W, Access_RWX_X } Access_RWX
+deriving (Eq, Bits, FShow);
 
 // ================================================================
 // Data sizes for LOAD/STORE

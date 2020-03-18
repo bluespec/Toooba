@@ -33,6 +33,7 @@ import HasSpecBits::*;
 import SpecFifo::*;
 import StoreBuffer::*;
 import Exec::*;
+import FP_Utils::*;
 
 // I don't want to export auxiliary functions, so manually export all types
 export LdQMemFunc(..);
@@ -279,6 +280,9 @@ typedef struct {
 typedef struct {
     Bool wrongPath;
     Maybe#(PhyDst) dst;
+`ifdef INCLUDE_TANDEM_VERIF
+    InstTag instTag;    // For recording Ld data in ROB
+`endif
     Data data;
 } LSQRespLdResult deriving(Bits, Eq, FShow);
 
@@ -1974,6 +1978,9 @@ module mkSplitLSQ(SplitLSQ);
         let res = LSQRespLdResult {
             wrongPath: False,
             dst: Invalid,
+`ifdef INCLUDE_TANDEM_VERIF
+	    instTag: ld_instTag [t],    // For recording Ld data in ROB
+`endif
             data: ?
         };
         if(ld_waitWPResp_resp[t]) begin
@@ -1993,9 +2000,20 @@ module mkSplitLSQ(SplitLSQ);
             // mark load as done, and shift resp
             ld_done_resp[t] <= True;
             res.wrongPath = False;
+
+            // nirajns: checking if this is a 32-bit load response to a FPR
+            // In that case, the data needs to be nanboxed before writing to
+            // the register files as the Toooba FPR is 64-bit
+            let bEn = ld_byteEn[t];
+            let dst = ld_dst[t];
+            let is32BitLd = (bEn[3] && !bEn[7]);
             res.dst = ld_dst[t];
-            res.data = gatherLoad(ld_paddr_resp[t], ld_byteEn[t],
-                                  ld_unsigned[t], alignedData);
+            if (dst.Valid.isFpuReg && is32BitLd)
+               res.data = fv_nanbox (gatherLoad(ld_paddr_resp[t], ld_byteEn[t],
+                                                ld_unsigned[t], alignedData));
+            else
+               res.data = gatherLoad(ld_paddr_resp[t], ld_byteEn[t],
+                                     ld_unsigned[t], alignedData);
         end
         if(verbose) begin
             $display("[LSQ - respLd] ", fshow(t), "; ", fshow(alignedData),

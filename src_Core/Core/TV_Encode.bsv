@@ -1,10 +1,14 @@
-// Copyright (c) 2013-2019 Bluespec, Inc. All Rights Reserved.
+// Copyright (c) 2013-2020 Bluespec, Inc. All Rights Reserved.
 
 package TV_Encode;
 
 // ================================================================
-// module mkTV_Encode is a transforming FIFO
-// converting Trace_Data into encoded byte vectors
+// module mkTV_Encode inputs:
+// - A superscalar-wide vector of (serial_num, Trace_Data) streams
+//        from a superscalar CPU
+// - A Trace_Data stream
+//        from the Debug Module
+// and produces an output stream of encoded byte vectors.
 
 // ================================================================
 // BSV lib imports
@@ -18,10 +22,19 @@ import Connectable  :: *;
 // ----------------
 // BSV additional libs
 
+import Cur_Cycle  :: *;
 import GetPut_Aux :: *;
 
 // ================================================================
 // Project imports
+
+// ----------------
+// From RISCY-OOO
+
+import ProcTypes :: *;
+
+// ----------------
+// From Toooba
 
 import ISA_Decls  :: *;
 import TV_Info    :: *;
@@ -29,15 +42,17 @@ import TV_Info    :: *;
 // ================================================================
 
 interface TV_Encode_IFC;
-   method Action reset;
+   // Superscalar trace data from the CPU.
+   // Each item in the stream is (serialnum, td).
+   interface Vector #(SupSize, Put #(Tuple2 #(Bit #(64), Trace_Data))) v_cpu_in;
 
-   // This module receives Trace_Data structs from the CPU and Debug Module
-   interface Put #(Trace_Data)  trace_data_in;
+   // Trace data from the Debug Module
+   interface Put #(Trace_Data)  dm_in;
 
    // This module produces tuples (n,vb),
    // where 'vb' is a vector of bytes
    // with relevant bytes in locations [0]..[n-1]
-   interface Get #(Tuple2 #(Bit #(32), TV_Vec_Bytes)) tv_vb_out;
+   interface Get #(Tuple2 #(Bit #(32), TV_Vec_Bytes)) out;
 endinterface
 
 // ================================================================
@@ -45,20 +60,58 @@ endinterface
 (* synthesize *)
 module mkTV_Encode (TV_Encode_IFC);
 
-   Reg #(Bool) rg_reset_done <- mkReg (True);
+   Integer verbosity = 0;    // For debugging
 
    // Keep track of last PC for more efficient encoding of incremented PCs
    // TODO: currently always sending full PC
    Reg #(WordXL) rg_last_pc <- mkReg (0);
 
-   FIFOF #(Trace_Data)                        f_trace_data <- mkFIFOF;
-   FIFOF #(Tuple2 #(Bit #(32), TV_Vec_Bytes)) f_vb         <- mkFIFOF;
+   // Superscalar-wide inputs from CPU
+   Vector #(SupSize, FIFOF #(Tuple2 #(Bit #(64), Trace_Data))) v_f_cpu_ins <- replicateM (mkFIFOF);
+   Reg #(Bit #(64)) rg_serialnum <- mkReg (0);
+
+   // Input from Debug Module
+   FIFOF #(Trace_Data)                         f_dm_in  <- mkFIFOF;
+
+   // Merges CPU and Debug Module inputs
+   FIFOF #(Trace_Data)                         f_merged  <- mkFIFOF;
+
+   // Encoded output
+   FIFOF #(Tuple2 #(Bit #(32), TV_Vec_Bytes))  f_out  <- mkFIFOF;
 
    // ----------------------------------------------------------------
-   // BEHAVIOR
+   // BEHAVIOR: MERGING
+   // v_f_cpu_ins and f_dm_in are merged into f_merged
 
-   rule rl_log_trace_RESET (rg_reset_done && (f_trace_data.first.op == TRACE_RESET));
-      let td <- pop (f_trace_data);
+   // v_f_cpu_ins are merged in program order (using serialnum)
+   for (Integer j = 0; j < valueOf (SupSize); j = j + 1)
+      rule rl_merge_cpu_ins (tpl_1 (v_f_cpu_ins [j].first) == rg_serialnum);
+	 let td = tpl_2 (v_f_cpu_ins [j].first);
+	 v_f_cpu_ins [j].deq;
+	 f_merged.enq (td);
+	 rg_serialnum <= rg_serialnum + 1;
+
+	 if (verbosity != 0) begin
+	    $display ("%0d: %m.rl_merge_cpu_in [%0d]: serialnum = %0d", cur_cycle, j, rg_serialnum);
+	 end
+      endrule
+
+   // f_dm_ins is merged in at any time
+   rule rl_merge_dm_in;
+      // let td <- pop (f_dm_in.first);    // Surprise: this gives no type-check error?
+      let td = f_dm_in.first;  f_dm_in.deq;
+      f_merged.enq (td);
+
+      if (verbosity != 0) begin
+	 $display ("%0d: %m.rl_merge_dm_in", cur_cycle);
+      end
+   endrule
+
+   // ----------------------------------------------------------------
+   // BEHAVIOR: ENCODING
+
+   rule rl_log_trace_RESET (f_merged.first.op == TRACE_RESET);
+      let td <- pop (f_merged);
 
       // Encode components of td into byte vecs
       match { .n0, .vb0 } = encode_byte (te_op_begin_group);
@@ -70,11 +123,11 @@ module mkTV_Encode (TV_Encode_IFC);
       match { .nn1, .x1 } = vsubst (nn0, x0,  n1, vb1);
       match { .nnN, .xN } = vsubst (nn1, x1,  nN, vbN);
 
-      f_vb.enq (tuple2 (nnN, xN));
+      f_out.enq (tuple2 (nnN, xN));
    endrule
 
-   rule rl_log_trace_GPR_WRITE (rg_reset_done && (f_trace_data.first.op == TRACE_GPR_WRITE));
-      let td <- pop (f_trace_data);
+   rule rl_log_trace_GPR_WRITE (f_merged.first.op == TRACE_GPR_WRITE);
+      let td <- pop (f_merged);
 
       // Encode components of td into byte vecs
       match { .n0, .vb0 } = encode_byte (te_op_begin_group);
@@ -88,11 +141,11 @@ module mkTV_Encode (TV_Encode_IFC);
       match { .nn2, .x2 } = vsubst (nn1, x1,  n2, vb2);
       match { .nnN, .xN } = vsubst (nn2, x2,  nN, vbN);
 
-      f_vb.enq (tuple2 (nnN, xN));
+      f_out.enq (tuple2 (nnN, xN));
    endrule
 
-   rule rl_log_trace_FPR_WRITE (rg_reset_done && (f_trace_data.first.op == TRACE_FPR_WRITE));
-      let td <- pop (f_trace_data);
+   rule rl_log_trace_FPR_WRITE (f_merged.first.op == TRACE_FPR_WRITE);
+      let td <- pop (f_merged);
 
       // Encode components of td into byte vecs
       match { .n0, .vb0 } = encode_byte (te_op_begin_group);
@@ -106,11 +159,11 @@ module mkTV_Encode (TV_Encode_IFC);
       match { .nn2, .x2 } = vsubst (nn1, x1,  n2, vb2);
       match { .nnN, .xN } = vsubst (nn2, x2,  nN, vbN);
 
-      f_vb.enq (tuple2 (nnN, xN));
+      f_out.enq (tuple2 (nnN, xN));
    endrule
 
-   rule rl_log_trace_CSR_WRITE (rg_reset_done && (f_trace_data.first.op == TRACE_CSR_WRITE));
-      let td <- pop (f_trace_data);
+   rule rl_log_trace_CSR_WRITE (f_merged.first.op == TRACE_CSR_WRITE);
+      let td <- pop (f_merged);
 
       // Encode components of td into byte vecs
       match { .n0, .vb0 } = encode_byte (te_op_begin_group);
@@ -124,11 +177,11 @@ module mkTV_Encode (TV_Encode_IFC);
       match { .nn2, .x2 } = vsubst (nn1, x1,  n2, vb2);
       match { .nnN, .xN } = vsubst (nn2, x2,  nN, vbN);
 
-      f_vb.enq (tuple2 (nnN, xN));
+      f_out.enq (tuple2 (nnN, xN));
    endrule
 
-   rule rl_log_trace_MEM_WRITE (rg_reset_done && (f_trace_data.first.op == TRACE_MEM_WRITE));
-      let td <- pop (f_trace_data);
+   rule rl_log_trace_MEM_WRITE (f_merged.first.op == TRACE_MEM_WRITE);
+      let td <- pop (f_merged);
 
       Bit #(2)  mem_req_size        = td.word1 [1:0];
       Byte      size_and_mem_req_op = { 2'b0, mem_req_size, te_mem_req_op_Store };
@@ -157,11 +210,11 @@ module mkTV_Encode (TV_Encode_IFC);
       //match { .nnN, .xN } = vsubst (nn7, x7,  nN, vbN);
       match { .nnN, .xN } = vsubst (nn5, x5,  nN, vbN);
 
-      f_vb.enq (tuple2 (nnN, xN));
+      f_out.enq (tuple2 (nnN, xN));
    endrule
 
-   rule rl_log_trace_OTHER (rg_reset_done && (f_trace_data.first.op == TRACE_OTHER));
-      let td <- pop (f_trace_data);
+   rule rl_log_trace_OTHER (f_merged.first.op == TRACE_OTHER);
+      let td <- pop (f_merged);
 
       // Encode components of td into byte vecs
       match { .n0, .vb0 } = encode_byte (te_op_begin_group);
@@ -175,11 +228,14 @@ module mkTV_Encode (TV_Encode_IFC);
       match { .nn2, .x2 } = vsubst (nn1, x1,  n2, vb2);
       match { .nnN, .xN } = vsubst (nn2, x2,  nN, vbN);
 
-      f_vb.enq (tuple2 (nnN, xN));
+      f_out.enq (tuple2 (nnN, xN));
+
+      if (verbosity != 0)
+	 $display ("%0d: %m.rl_log_trace_OTHER, pc = %0h", cur_cycle, td.pc);
    endrule
 
-   rule rl_log_trace_I_RD (rg_reset_done && (f_trace_data.first.op == TRACE_I_RD));
-      let td <- pop (f_trace_data);
+   rule rl_log_trace_I_RD (f_merged.first.op == TRACE_I_RD);
+      let td <- pop (f_merged);
 
       // Encode components of td into byte vecs
       match { .n0, .vb0 } = encode_byte (te_op_begin_group);
@@ -195,30 +251,68 @@ module mkTV_Encode (TV_Encode_IFC);
       match { .nn3, .x3 } = vsubst (nn2, x2,  n3, vb3);
       match { .nnN, .xN } = vsubst (nn3, x3,  nN, vbN);
 
-      f_vb.enq (tuple2 (nnN, xN));
+      f_out.enq (tuple2 (nnN, xN));
+
+      if (verbosity != 0)
+	 $display ("%0d: %m.rl_log_trace_I_RD, pc = %0h", cur_cycle, td.pc);
    endrule
 
-   rule rl_log_trace_F_RD (rg_reset_done && (f_trace_data.first.op == TRACE_F_RD));
-      let td <- pop (f_trace_data);
+`ifdef ISA_F
+   // New opcode to track GPR updates due to F/D instructions. Also updates
+   // the CSR FFLAGS
+   rule rl_log_trace_F_GRD (f_merged.first.op == TRACE_F_GRD);
+      let td <- pop (f_merged);
 
       // Encode components of td into byte vecs
       match { .n0, .vb0 } = encode_byte (te_op_begin_group);
       match { .n1, .vb1 } = encode_pc (td.pc);
       match { .n2, .vb2 } = encode_instr (td.instr_sz, td.instr);
-      match { .n3, .vb3 } = encode_reg (fv_fpr_regnum (td.rd), td.word1);
+      match { .n3, .vb3 } = encode_reg (fv_gpr_regnum (td.rd), td.word1);
+      match { .n4, .vb4 } = encode_reg (fv_csr_regnum (csr_addr_fflags), td.word2);
+      match { .n5, .vb5 } = encode_reg (fv_csr_regnum (csr_addr_mstatus), td.word4);
       match { .nN, .vbN } = encode_byte (te_op_end_group);
 
       // Concatenate components into a single byte vec
       match { .nn0, .x0 } = vsubst (  0,  ?,  n0, vb0);
       match { .nn1, .x1 } = vsubst (nn0, x0,  n1, vb1);
       match { .nn2, .x2 } = vsubst (nn1, x1,  n2, vb2);
-      match { .nnN, .xN } = vsubst (nn2, x2,  nN, vbN);
+      match { .nn3, .x3 } = vsubst (nn2, x2,  n3, vb3);
+      match { .nn4, .x4 } = vsubst (nn3, x3,  n4, vb4);
+      match { .nn5, .x5 } = vsubst (nn4, x4,  n5, vb5);
+      match { .nnN, .xN } = vsubst (nn5, x5,  nN, vbN);
 
-      f_vb.enq (tuple2 (nnN, xN));
+      f_out.enq (tuple2 (nnN, xN));
    endrule
 
-   rule rl_log_trace_I_LOAD (rg_reset_done && (f_trace_data.first.op == TRACE_I_LOAD));
-      let td <- pop (f_trace_data);
+   // New opcode to track FPR updates due to F/D instructions. Also updates
+   // the CSRs FFLAGS and MSTATUS
+   rule rl_log_trace_F_FRD (f_merged.first.op == TRACE_F_FRD);
+      let td <- pop (f_merged);
+
+      // Encode components of td into byte vecs
+      match { .n0, .vb0 } = encode_byte (te_op_begin_group);
+      match { .n1, .vb1 } = encode_pc (td.pc);
+      match { .n2, .vb2 } = encode_instr (td.instr_sz, td.instr);
+      match { .n3, .vb3 } = encode_fpr (fv_fpr_regnum (td.rd), td.word5);
+      match { .n4, .vb4 } = encode_reg (fv_csr_regnum (csr_addr_fflags), td.word2);
+      match { .n5, .vb5 } = encode_reg (fv_csr_regnum (csr_addr_mstatus), td.word4);
+      match { .nN, .vbN } = encode_byte (te_op_end_group);
+
+      // Concatenate components into a single byte vec
+      match { .nn0, .x0 } = vsubst (  0,  ?,  n0, vb0);
+      match { .nn1, .x1 } = vsubst (nn0, x0,  n1, vb1);
+      match { .nn2, .x2 } = vsubst (nn1, x1,  n2, vb2);
+      match { .nn3, .x3 } = vsubst (nn2, x2,  n3, vb3);
+      match { .nn4, .x4 } = vsubst (nn3, x3,  n4, vb4);
+      match { .nn5, .x5 } = vsubst (nn4, x4,  n5, vb5);
+      match { .nnN, .xN } = vsubst (nn5, x5,  nN, vbN);
+
+      f_out.enq (tuple2 (nnN, xN));
+   endrule
+`endif
+
+   rule rl_log_trace_I_LOAD (f_merged.first.op == TRACE_I_LOAD);
+      let td <- pop (f_merged);
 
       // Encode components of td into byte vecs
       match { .n0, .vb0 } = encode_byte (te_op_begin_group);
@@ -236,18 +330,20 @@ module mkTV_Encode (TV_Encode_IFC);
       match { .nn4, .x4 } = vsubst (nn3, x3,  n4, vb4);
       match { .nnN, .xN } = vsubst (nn4, x4,  nN, vbN);
 
-      f_vb.enq (tuple2 (nnN, xN));
+      f_out.enq (tuple2 (nnN, xN));
    endrule
 
-   rule rl_log_trace_F_LOAD (rg_reset_done && (f_trace_data.first.op == TRACE_F_LOAD));
-      let td <- pop (f_trace_data);
+`ifdef ISA_F
+   rule rl_log_trace_F_LOAD (f_merged.first.op == TRACE_F_LOAD);
+      let td <- pop (f_merged);
 
       // Encode components of td into byte vecs
       match { .n0, .vb0 } = encode_byte (te_op_begin_group);
       match { .n1, .vb1 } = encode_pc (td.pc);
       match { .n2, .vb2 } = encode_instr (td.instr_sz, td.instr);
-      match { .n3, .vb3 } = encode_reg (fv_fpr_regnum (td.rd), td.word1);
+      match { .n3, .vb3 } = encode_fpr (fv_fpr_regnum (td.rd), td.word5);
       match { .n4, .vb4 } = encode_eaddr (truncate (td.word3));
+      match { .n5, .vb5 } = encode_reg (fv_csr_regnum (csr_addr_mstatus), td.word4);
       match { .nN, .vbN } = encode_byte (te_op_end_group);
 
       // Concatenate components into a single byte vec
@@ -256,16 +352,17 @@ module mkTV_Encode (TV_Encode_IFC);
       match { .nn2, .x2 } = vsubst (nn1, x1,  n2, vb2);
       match { .nn3, .x3 } = vsubst (nn2, x2,  n3, vb3);
       match { .nn4, .x4 } = vsubst (nn3, x3,  n4, vb4);
-      match { .nnN, .xN } = vsubst (nn4, x4,  nN, vbN);
+      match { .nn5, .x5 } = vsubst (nn4, x4,  n5, vb5);
+      match { .nnN, .xN } = vsubst (nn5, x5,  nN, vbN);
 
-      f_vb.enq (tuple2 (nnN, xN));
+      f_out.enq (tuple2 (nnN, xN));
    endrule
+`endif
 
-   rule rl_log_trace_STORE (rg_reset_done && (f_trace_data.first.op == TRACE_STORE));
-      let td <- pop (f_trace_data);
+   rule rl_log_trace_I_STORE (f_merged.first.op == TRACE_I_STORE);
+      let td <- pop (f_merged);
 
-      let funct3 = instr_funct3 (td.instr);    // TODO: what if it's a 16b instr?
-      let mem_req_size = funct3 [1:0];
+      let mem_req_size = td.word1 [1:0];    // funct3
 
       // Encode components of td into byte vecs
       match { .n0, .vb0 } = encode_byte (te_op_begin_group);
@@ -283,14 +380,39 @@ module mkTV_Encode (TV_Encode_IFC);
       match { .nn4, .x4 } = vsubst (nn3, x3,  n4, vb4);
       match { .nnN, .xN } = vsubst (nn4, x4,  nN, vbN);
 
-      f_vb.enq (tuple2 (nnN, xN));
+      f_out.enq (tuple2 (nnN, xN));
    endrule
 
-   rule rl_log_trace_AMO (rg_reset_done && (f_trace_data.first.op == TRACE_AMO));
-      let td <- pop (f_trace_data);
+`ifdef ISA_F
+   rule rl_log_trace_F_STORE (f_merged.first.op == TRACE_F_STORE);
+      let td <- pop (f_merged);
 
-      let funct3 = instr_funct3 (td.instr);    // TODO: what if it's a 16b instr?
-      let mem_req_size = funct3 [1:0];
+      let mem_req_size = td.word1 [1:0];    // funct3
+
+      // Encode components of td into byte vecs
+      match { .n0, .vb0 } = encode_byte (te_op_begin_group);
+      match { .n1, .vb1 } = encode_pc (td.pc);
+      match { .n2, .vb2 } = encode_instr (td.instr_sz, td.instr);
+      match { .n3, .vb3 } = encode_fstval (mem_req_size, td.word5);
+      match { .n4, .vb4 } = encode_eaddr (truncate (td.word3));
+      match { .nN, .vbN } = encode_byte (te_op_end_group);
+
+      // Concatenate components into a single byte vec
+      match { .nn0, .x0 } = vsubst (  0,  ?,  n0, vb0);
+      match { .nn1, .x1 } = vsubst (nn0, x0,  n1, vb1);
+      match { .nn2, .x2 } = vsubst (nn1, x1,  n2, vb2);
+      match { .nn3, .x3 } = vsubst (nn2, x2,  n3, vb3);
+      match { .nn4, .x4 } = vsubst (nn3, x3,  n4, vb4);
+      match { .nnN, .xN } = vsubst (nn4, x4,  nN, vbN);
+
+      f_out.enq (tuple2 (nnN, xN));
+   endrule
+`endif
+
+   rule rl_log_trace_AMO (f_merged.first.op == TRACE_AMO);
+      let td <- pop (f_merged);
+
+      let mem_req_size = td.word4 [1:0];    // funct3
 
       // Encode components of td into byte vecs
       match { .n0, .vb0 } = encode_byte (te_op_begin_group);
@@ -310,20 +432,31 @@ module mkTV_Encode (TV_Encode_IFC);
       match { .nn5, .x5 } = vsubst (nn4, x4,  n5, vb5);
       match { .nnN, .xN } = vsubst (nn5, x5,  nN, vbN);
 
-      f_vb.enq (tuple2 (nnN, xN));
+      f_out.enq (tuple2 (nnN, xN));
+
+      if (verbosity != 0)
+	 $display ("%0d: %m.rl_log_trace_AMO, pc = %0h", cur_cycle, td.pc);
    endrule
 
-   rule rl_log_trace_CSRRX (rg_reset_done && (f_trace_data.first.op == TRACE_CSRRX));
-      let td <- pop (f_trace_data);
+   rule rl_log_trace_CSRRX (f_merged.first.op == TRACE_CSRRX);
+      let td <- pop (f_merged);
 
       // Encode components of td into byte vecs
       match { .n0, .vb0 } = encode_byte (te_op_begin_group);
       match { .n1, .vb1 } = encode_pc (td.pc);
       match { .n2, .vb2 } = encode_instr (td.instr_sz, td.instr);
       match { .n3, .vb3 } = encode_reg (fv_gpr_regnum (td.rd), td.word1);
-      match { .n4, .vb4 } = ((td.word2 == 0)
-			     ? tuple2 (0, ?)    // CSR was not written
-			     : encode_reg (fv_csr_regnum (truncate (td.word3)), td.word4));
+      Bool csr_written = (td.word2 [0] == 1'b1);
+      match { .n4, .vb4 } = (csr_written
+			     ? encode_reg (fv_csr_regnum (truncate (td.word3)), td.word4)
+			     : tuple2 (0, ?));
+`ifdef ISA_F
+      // MSTATUS.FS and .SD also updated if CSR instr wrote FFLAGS, FRM or FCSR
+      Bool mstatus_written = (td.word2 [1] == 1'b1);
+      match { .n5, .vb5 } = (mstatus_written
+			     ? encode_reg (fv_csr_regnum (csr_addr_mstatus), td.word5)
+			     : tuple2 (0, ?));
+`endif
       match { .nN, .vbN } = encode_byte (te_op_end_group);
 
       // Concatenate components into a single byte vec
@@ -332,13 +465,18 @@ module mkTV_Encode (TV_Encode_IFC);
       match { .nn2, .x2 } = vsubst (nn1, x1,  n2, vb2);
       match { .nn3, .x3 } = vsubst (nn2, x2,  n3, vb3);
       match { .nn4, .x4 } = vsubst (nn3, x3,  n4, vb4);
+`ifdef ISA_F
+      match { .nn5, .x5 } = vsubst (nn4, x4,  n5, vb5);
+      match { .nnN, .xN } = vsubst (nn5, x5,  nN, vbN);
+`else
       match { .nnN, .xN } = vsubst (nn4, x4,  nN, vbN);
+`endif
 
-      f_vb.enq (tuple2 (nnN, xN));
+      f_out.enq (tuple2 (nnN, xN));
    endrule
 
-   rule rl_log_trace_TRAP (rg_reset_done && (f_trace_data.first.op == TRACE_TRAP));
-      let td <- pop (f_trace_data);
+   rule rl_log_trace_TRAP (f_merged.first.op == TRACE_TRAP);
+      let td <- pop (f_merged);
 
       // Use new priv mode to decide which trap regs are updated (M, S or U priv)
       Priv_Mode priv            = truncate (td.rd);
@@ -387,11 +525,11 @@ module mkTV_Encode (TV_Encode_IFC);
       match { .nn7, .x7 } = vsubst (nn6, x6,  n7, vb7);
       match { .nnN, .xN } = vsubst (nn7, x7,  nN, vbN);
 
-      f_vb.enq (tuple2 (nnN, xN));
+      f_out.enq (tuple2 (nnN, xN));
    endrule
 
-   rule rl_log_trace_INTR (rg_reset_done && (f_trace_data.first.op == TRACE_INTR));
-      let td <- pop (f_trace_data);
+   rule rl_log_trace_INTR (f_merged.first.op == TRACE_INTR);
+      let td <- pop (f_merged);
 
       // Use new priv mode to decide which trap regs are updated (M, S or U priv)
       Priv_Mode priv            = truncate (td.rd);
@@ -432,11 +570,11 @@ module mkTV_Encode (TV_Encode_IFC);
       match { .nn6, .x6 } = vsubst (nn5, x5,  n6, vb6);
       match { .nnN, .xN } = vsubst (nn6, x6,  nN, vbN);
 
-      f_vb.enq (tuple2 (nnN, xN));
+      f_out.enq (tuple2 (nnN, xN));
    endrule
 
-   rule rl_log_trace_RET (rg_reset_done && (f_trace_data.first.op == TRACE_RET));
-      let td <- pop (f_trace_data);
+   rule rl_log_trace_RET (f_merged.first.op == TRACE_RET);
+      let td <- pop (f_merged);
 
       // Encode components of td into byte vecs
       match { .n0, .vb0 } = encode_byte (te_op_begin_group);
@@ -454,17 +592,15 @@ module mkTV_Encode (TV_Encode_IFC);
       match { .nn4, .x4 } = vsubst (nn3, x3,  n4, vb4);
       match { .nnN, .xN } = vsubst (nn4, x4,  nN, vbN);
 
-      f_vb.enq (tuple2 (nnN, xN));
+      f_out.enq (tuple2 (nnN, xN));
    endrule
 
    // ----------------------------------------------------------------
    // INTERFACE
 
-   method Action reset ();
-   endmethod
-
-   interface Put trace_data_in = toPut (f_trace_data);
-   interface Get tv_vb_out     = toGet (f_vb);
+   interface v_cpu_in = map (toPut, v_f_cpu_ins);
+   interface dm_in    = toPut (f_dm_in);
+   interface out      = toGet (f_out);
 endmodule
 
 // ****************************************************************
@@ -648,6 +784,29 @@ function Tuple2 #(Bit #(32), Vector #(TV_VB_SIZE, Byte)) encode_reg (Bit #(16) r
    return tuple2 (n, vb);
 endfunction
 
+`ifdef ISA_F
+function Tuple2 #(Bit #(32), Vector #(TV_VB_SIZE, Byte)) encode_fpr (Bit #(16) regnum, WordFL word);
+   Vector #(TV_VB_SIZE, Byte) vb = newVector;
+   Bit #(32) n = 0;
+   vb [0] = te_op_full_reg;
+   vb [1] = regnum [7:0];
+   vb [2] = regnum [15:8];
+   vb [3] = word[7:0];
+   vb [4] = word [15:8];
+   vb [5] = word [23:16];
+   vb [6] = word [31:24];
+   n = 7;
+`ifdef ISA_D
+   vb [7] = word [39:32];
+   vb [8] = word [47:40];
+   vb [9] = word [55:48];
+   vb [10] = word [63:56];
+   n = 11;
+`endif
+   return tuple2 (n, vb);
+endfunction
+`endif
+
 function Tuple2 #(Bit #(32), Vector #(TV_VB_SIZE, Byte)) encode_priv (Bit #(5) priv);
    Vector #(TV_VB_SIZE, Byte) vb = newVector;
    vb [0] = te_op_addl_state;
@@ -718,6 +877,31 @@ function Tuple2 #(Bit #(32), Vector #(TV_VB_SIZE, Byte)) encode_stval (MemReqSiz
    Bit #(32) n = (1 << pack(mem_req_size)) + 2;
    return tuple2 (n, vb);
 endfunction
+
+`ifdef ISA_F
+function Tuple2 #(Bit #(32), Vector #(TV_VB_SIZE, Byte)) encode_fstval (MemReqSize mem_req_size, WordFL word);
+   Vector #(TV_VB_SIZE, Byte) vb = newVector;
+   vb [0] = te_op_addl_state;
+   vb [1] = case (mem_req_size)
+	       f3_SIZE_B: te_op_addl_state_data8;  // not possible
+	       f3_SIZE_H: te_op_addl_state_data16; // not possible
+	       f3_SIZE_W: te_op_addl_state_data32;
+	       f3_SIZE_D: te_op_addl_state_data64;
+	    endcase;
+   vb [2] = word [7:0];
+   vb [3] = word [15:8];
+   vb [4] = word [23:16];
+   vb [5] = word [31:24];
+`ifdef ISA_D
+   vb [6] = word [39:32];
+   vb [7] = word [47:40];
+   vb [8] = word [55:48];
+   vb [9] = word [63:56];
+`endif
+   Bit #(32) n = (1 << pack(mem_req_size)) + 2;
+   return tuple2 (n, vb);
+endfunction
+`endif
 
 // ================================================================
 

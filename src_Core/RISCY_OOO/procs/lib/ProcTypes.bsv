@@ -1,5 +1,6 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
+// Portions (c) 2020 Bluespec, Inc.
 // 
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
@@ -275,8 +276,22 @@ typedef enum {
     // sanctum user CSR
     CSRtrng       = 12'hcc0, // random number for secure boot
 `endif
+
+   CSRtselect     = 12'h7A0,    // Debug/trace tselect
+   CSRtdata1      = 12'h7A1,    // Debug/trace tdata1
+   CSRtdata2      = 12'h7A2,    // Debug/trace tdata2
+   CSRtdata3      = 12'h7A3,    // Debug/trace tdata3
+
+`ifdef INCLUDE_GDB_CONTROL
+   CSRdcsr        = 12'h7B0,    // Debug control and status
+   CSRdpc         = 12'h7B1,    // Debug PC
+   CSRdscratch0   = 12'h7B2,    // Debug scratch0
+   CSRdscratch1   = 12'h7B3,    // Debug scratch1
+`endif
+
     // CSR that catches all the unimplemented CSRs. To avoid exception on this,
     // make it a user non-standard read/write CSR.
+    // Bluespec: in RenameStage.getTrap(), we force this to be a csr_access_trap
     CSRnone       = 12'h8ff
 } CSR deriving(Bits, Eq, FShow);
 
@@ -332,6 +347,19 @@ function CSR unpackCSR(Bit#(12) x);
         pack(CSR'(CSRmspec     )): (CSRmspec     );
         pack(CSR'(CSRtrng      )): (CSRtrng      );
 `endif
+
+        pack(CSR'(CSRtselect   )): (CSRtselect   );
+        pack(CSR'(CSRtdata1    )): (CSRtdata1    );
+        pack(CSR'(CSRtdata2    )): (CSRtdata2    );
+        pack(CSR'(CSRtdata3    )): (CSRtdata3    );
+
+`ifdef INCLUDE_GDB_CONTROL
+        pack(CSR'(CSRdcsr      )): (CSRdcsr      );
+        pack(CSR'(CSRdpc       )): (CSRdpc       );
+        pack(CSR'(CSRdscratch0 )): (CSRdscratch0 );
+        pack(CSR'(CSRdscratch1 )): (CSRdscratch1 );
+`endif
+
         default                  : (CSRnone      );
     endcase);
 endfunction
@@ -452,13 +480,20 @@ typedef enum {
     MachineTimer       = 4'd7,
     UserExternal       = 4'd8,
     SupervisorExternel = 4'd9,
-    MachineExternal    = 4'd11,
+    MachineExternal    = 4'd11
 
-    DebugExternal      = 4'd14    // Bluespec: for debug mode   
+`ifdef INCLUDE_GDB_CONTROL
+  , DebugHalt          = 4'd14,        // Debugger halt command (^C in GDB)
+    DebugStep          = 4'd15         // dcsr.step is set and 1 instr has been processed
+`endif
+
 } Interrupt deriving(Bits, Eq, FShow);
 
-// typedef 12 InterruptNum;
-typedef 15 InterruptNum;    // Bluespec: extended to 15 bits for debug interrupt
+`ifdef INCLUDE_GDB_CONTROL
+typedef 16 InterruptNum;    // With debugger
+`else
+typedef 12 InterruptNum;    // Without debugger
+`endif
 
 // Traps are either an exception or an interrupt
 typedef union tagged {

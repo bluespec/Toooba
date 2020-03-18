@@ -68,20 +68,20 @@ module mkTooobaRVFIDIIBridge(Toooba_RVFI_DII_Bridge_IFC);
     // Request ID
     FIFO#(Dii_Ids) seq_req <- mkFIFO;
     Reg#(Dii_Id) last_id <- mkReg(0);
-    
+
     Bool verbose = False;
-    
+
     function Bool validReport(RVFI_DII_Execution#(DataSz,DataSz) trace);
         return (trace.rvfi_insn != dii_nop);
     endfunction
-    
+
     // These two functions convert beteween "Invalid" instructions and "nops".
     // This is because the pipeline currently isn't able to handle Invalid injections,
     // so we replace them with special nops in the bridge that we can filter out in the rvfi trace stream.
     function Maybe#(Bit#(32)) maybeToNop(Maybe#(Bit#(32)) in);
         return tagged Valid fromMaybe(dii_nop, in);
     endfunction
-    
+
     function Maybe#(RVFI_DII_Execution #(DataSz,DataSz)) nopToMaybe(Maybe#(RVFI_DII_Execution #(DataSz,DataSz)) in);
         Maybe#(RVFI_DII_Execution #(DataSz,DataSz)) ret = in;
         if (ret matches tagged Valid .val &&& !validReport(val)) ret = tagged Invalid;

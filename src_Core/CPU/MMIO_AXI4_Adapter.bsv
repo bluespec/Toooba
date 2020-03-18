@@ -1,4 +1,13 @@
+// Copyright (c) 2019-2020 Bluespec, Inc.
+
 package MMIO_AXI4_Adapter;
+
+// ================================================================
+// This is an adapter to connect MIT's RISCY-OOO to an AXI4 fabric in
+// Bluespec's Toooba setup. All IO traffic to the fabric flows through
+// this.  Note: a few IO addresses (e.g., MTIME, MTIMECMP, MSIP,
+// TOHOST, FROMHOST are intercepted and handled before they reach this
+// adapter).
 
 // ================================================================
 // BSV lib imports
@@ -30,6 +39,7 @@ import ProcTypes :: *;
 
 import AXI4_Types   :: *;
 import Fabric_Defs  :: *;
+import SoC_Map      :: *;
 
 // ================================================================
 
@@ -55,6 +65,8 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
 
    FIFOF #(MMIOCRq)     f_reqs_from_core <- mkFIFOF;
    FIFOF #(MMIODataPRs) f_rsps_to_core   <- mkFIFOF;
+
+   SoC_Map_IFC  soc_map <- mkSoC_Map;    // for m_is_IO_addr
 
    // ================================================================
    // Fabric request/response
@@ -108,11 +120,25 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
 					     awregion: fabric_default_region,
 					     awuser:   fabric_default_user};
 
-	 let mem_req_wr_data = AXI4_Wr_Data {wid:    fabric_default_id,
-					     wdata:  st_val,
+	 let mem_req_wr_data = AXI4_Wr_Data {wdata:  st_val,
 					     wstrb:  strb,
 					     wlast:  True,
 					     wuser:  fabric_default_user};
+
+`ifdef FABRIC64
+	 // Work-around for a misbehavior on Xilinx UART and its
+	 // Xilinx AXI4 adapter. On 64-bit fabrics, for a write where
+	 // axsize says '8 bytes' but wstrb is for <= 4 bytes, the
+	 // adapter converts it two 32-bit writes, one of which has
+	 // wstrb=4'b0000. The Xilinx UART, in turn ignores wstrb and
+	 // therefore performs a spurious write.  This workaround
+	 // changes axsize for such writes to '4 bytes', avoiding this
+	 // problem.
+
+	 if (strb [7:4] == 0 || strb [3:0] == 0) begin
+	    mem_req_wr_addr.awsize = axsize_4;
+	 end
+`endif
 
 	 master_xactor.i_wr_addr.enq (mem_req_wr_addr);
 	 master_xactor.i_wr_data.enq (mem_req_wr_data);
@@ -122,8 +148,8 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
 
 	 // Debugging
 	 if (cfg_verbosity > 0) begin
-	    $display ("            To fabric: ", fshow (mem_req_wr_addr));
-	    $display ("                       ", fshow (mem_req_wr_data));
+	    $display ("    To fabric: ", fshow (mem_req_wr_addr));
+	    $display ("               ", fshow (mem_req_wr_data));
 	 end
       endaction
    endfunction
@@ -138,11 +164,25 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
       let req <- pop (f_reqs_from_core);
 
       if (cfg_verbosity > 0) begin
-	 $display ("%0d: MMIO_AXI4_Adapter.rl_handle_read_req: Ld request", cur_cycle);
+	 $display ("%0d: %m.rl_handle_read_req: Ld request", cur_cycle);
 	 $display ("    ", fshow (req));
       end
 
-      fa_fabric_send_read_req (req.addr);
+      // Technically the following check for legal IO addrs is not
+      // necessary; the AXI4 fabric should return a DECERR for illegal
+      // addrs; but not all AXI4 fabrics do the right thing.
+      if (soc_map.m_is_IO_addr (req.addr))
+	 fa_fabric_send_read_req (req.addr);
+      else begin
+	 let rsp = MMIODataPRs {valid: False,
+				data: req.addr};    // For debugging convenience only
+	 f_rsps_to_core.enq (rsp);
+	 if (cfg_verbosity > 0) begin
+	    $display ("%0d: %m.rl_handle_read_req: unmapped IO address; returning error response",
+		      cur_cycle);
+	    $display ("    ", fshow (req));
+	 end
+      end
    endrule
 
    // ----------------
@@ -151,12 +191,12 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
       let  mem_rsp <- pop_o (master_xactor.o_rd_data);
 
       if (cfg_verbosity > 0) begin
-	 $display ("%0d: MMIO_AXI4_Adapter.rl_handle_read_rsps ", cur_cycle);
+	 $display ("%0d: %m.rl_handle_read_rsps ", cur_cycle);
 	 $display ("    ", fshow (mem_rsp));
       end
 
       if ((cfg_verbosity > 0) && (mem_rsp.rresp != axi4_resp_okay)) begin
-	 $display ("%0d: MMIO_AXI4_Adapter.rl_handle_read_rsp: fabric response error", cur_cycle);
+	 $display ("%0d: %m.rl_handle_read_rsp: fabric response error", cur_cycle);
 	 $display ("    ", fshow (mem_rsp));
       end
 
@@ -175,11 +215,25 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
       let req <- pop (f_reqs_from_core);
 
       if (cfg_verbosity > 0) begin
-	 $display ("%d: MMIO_AXI4_Adapter.rl_handle_write_req: St request:", cur_cycle);
+	 $display ("%d: %m.rl_handle_write_req: St request:", cur_cycle);
 	 $display ("    ", fshow (req));
       end
 
-      fa_fabric_send_write_req (req.addr, pack (req.byteEn), req.data);
+      // Technically the following check for legal IO addrs is not
+      // necessary; the AXI4 fabric should return a DECERR for illegal
+      // addrs; but not all AXI4 fabrics do the right thing.
+      if (soc_map.m_is_IO_addr (req.addr))
+	 fa_fabric_send_write_req (req.addr, pack (req.byteEn), req.data);
+      else begin
+	 let rsp = MMIODataPRs {valid: False,
+				data: req.addr};    // For debugging convenience only
+	 f_rsps_to_core.enq (rsp);
+	 if (cfg_verbosity > 0) begin
+	    $display ("%0d: %m.rl_handle_write_req: unmapped IO address; returning error response",
+		      cur_cycle);
+	    $display ("    ", fshow (req));
+	 end
+      end
    endrule
 
    // ----------------
@@ -189,12 +243,12 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
       let wr_resp <- pop_o (master_xactor.o_wr_resp);
 
       if (cfg_verbosity > 0) begin
-	 $display ("%0d: MMIO_AXI4_Adapter.rl_discard_write_rsp", cur_cycle);
+	 $display ("%0d: %m.rl_discard_write_rsp", cur_cycle);
 	 $display ("    ", fshow (wr_resp));
       end
 
       if (ctr_wr_rsps_pending.value == 0) begin
-	 $display ("%0d: ERROR: MMIO_AXI4_Adapter.rl_discard_write_rsp: unexpected Wr response (ctr_wr_rsps_pending.value == 0)",
+	 $display ("%0d:%m.rl_discard_write_rsp: ERROR:unexpected Wr response (ctr_wr_rsps_pending.value == 0)",
 		   cur_cycle);
 	 $display ("    ", fshow (wr_resp));
 	 $finish (1);    // Assertion failure
@@ -204,7 +258,7 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
 
       if (wr_resp.bresp != axi4_resp_okay) begin
 	 // TODO: need to raise a non-maskable interrupt (NMI) here
-	 $display ("%0d: MMIO_AXI4_Adapter.rl_discard_write_rsp: fabric response error: exit", cur_cycle);
+	 $display ("%0d:%m.rl_discard_write_rsp: ERROR: fabric response error: exit.", cur_cycle);
 	 $display ("    ", fshow (wr_resp));
 	 $finish (1);
       end
@@ -228,8 +282,7 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
    rule rl_handle_non_Ld_St (! fn_is_Ld_or_St (f_reqs_from_core.first));
       let req <- pop (f_reqs_from_core);
 
-      $display ("%0d: ERROR: MMIO_AXI4_Adapter.rl_handle_non_Ld_St",
-		cur_cycle);
+      $display ("%0d:%m.rl_handle_non_Ld_St: ERROR: neither Ld nor St? exit.", cur_cycle);
       $display ("    ", fshow (req));
       $finish (1);    // Assertion failure
    endrule
