@@ -34,6 +34,8 @@ import RevertingVirtualReg::*;
 import RVFI_DII_Types::*;
 `endif
 
+import Cur_Cycle :: *;
+
 // right after execution, full_result has more up-to-date data (e.g. ppc of mispredicted branch)
 // some parts of full_result are for verification
 // but some are truly used for execution
@@ -58,6 +60,13 @@ typedef struct {
     Addr               pc;
     Bit #(32)          orig_inst;    // original 16b or 32b instruction ([1:0] will distinguish 16b or 32b)
     IType              iType;
+    Maybe#(ArchRIndx)  dst;          // Invalid, GPR or FPR destination ("Rd")
+    Data               dst_data;     // Output of instruction into destination register
+`ifdef INCLUDE_TANDEM_VERIF
+    // Store-data, for those mem instrs that store data
+    Data               store_data;
+    ByteEn             store_data_BE;
+`endif
     Maybe#(CSR)        csr;
     Bool               claimed_phy_reg; // whether we need to commmit renaming
     Maybe#(Trap)       trap;
@@ -100,6 +109,7 @@ typedef enum {
 
 interface Row_setExecuted_doFinishAlu;
     method Action set(
+        Data dst_data,
         Maybe#(Data) csrData,
         ControlFlow cf
 `ifdef RVFI
@@ -109,7 +119,7 @@ interface Row_setExecuted_doFinishAlu;
 endinterface
 
 interface Row_setExecuted_doFinishFpuMulDiv;
-    method Action set(Bit#(5) fflags);
+    method Action set(Data dst_data, Bit#(5) fflags);
 endinterface
 
 interface ReorderBufferRowEhr#(numeric type aluExeNum, numeric type fpuMulDivExeNum);
@@ -130,11 +140,20 @@ interface ReorderBufferRowEhr#(numeric type aluExeNum, numeric type fpuMulDivExe
     // faulting inst cannot have this set, since there is no access to
     // perform), and non-MMIO St can become Executed (NOTE faulting
     // instructions are not Executed, they are set at deqLSQ time)
-    method Action setExecuted_doFinishMem(Addr vaddr, Bool access_at_commit, Bool non_mmio_st_done
+
+    method Action setExecuted_doFinishMem(Addr vaddr,
+                                          Data store_data, ByteEn store_data_BE,
+                                          Bool access_at_commit, Bool non_mmio_st_done
 `ifdef RVFI
-        , ExtraTraceBundle tb
+                                          , ExtraTraceBundle tb
 `endif
     );
+
+`ifdef INCLUDE_TANDEM_VERIF
+    // Used after a Ld, Lr, Sc, Amo to record reg data
+    method Action setExecuted_doFinishMem_RegData (Data dst_data);
+`endif
+
 `ifdef INORDER_CORE
     // in-order core sets LSQ tag after getting out of issue queue
     method Action setLSQTag(LdStQTag t, Bool isFence);
@@ -201,6 +220,12 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     Reg#(Addr)                                                      pc                   <- mkRegU;
     Reg #(Bit #(32))                                                orig_inst            <- mkRegU;
     Reg#(IType)                                                     iType                <- mkRegU;
+    Reg #(Maybe #(ArchRIndx))                                       rg_dst_reg           <- mkRegU;
+    Reg #(Data)                                                     rg_dst_data          <- mkRegU;
+`ifdef INCLUDE_TANDEM_VERIF
+    Reg #(Data)                                                     rg_store_data        <- mkRegU;
+    Reg #(ByteEn)                                                   rg_store_data_BE     <- mkRegU;
+`endif
     Reg#(Maybe#(CSR))                                               csr                  <- mkRegU;
     Reg#(Bool)                                                      claimed_phy_reg      <- mkRegU;
     Ehr#(3, Maybe#(Trap))                                           trap                 <- mkEhr(?);
@@ -235,6 +260,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     for(Integer i = 0; i < valueof(aluExeNum); i = i+1) begin
         aluSetExe[i] = (interface Row_setExecuted_doFinishAlu;
             method Action set(
+                Data dst_data,
                 Maybe#(Data) csrData,
                 ControlFlow cf
 `ifdef RVFI
@@ -242,7 +268,10 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
 `endif
             );
                 // inst is done
-                rob_inst_state[state_finishAlu_port(i)] <= Executed; 
+                rob_inst_state[state_finishAlu_port(i)] <= Executed;
+	        // Destination register data, for Tandem Verification
+                rg_dst_data <= dst_data;
+
                 // update PPC or csrData (vaddr is always useless for ALU results)
                 if(csrData matches tagged Valid .d) begin
                     ppc_vaddr_csrData[pvc_finishAlu_port(i)] <= CSRData (d);
@@ -262,9 +291,10 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     Vector#(fpuMulDivExeNum, Row_setExecuted_doFinishFpuMulDiv) fpuMulDivExe;
     for(Integer i = 0; i < valueof(fpuMulDivExeNum); i = i+1) begin
         fpuMulDivExe[i] = (interface Row_setExecuted_doFinishFpuMulDiv;
-            method Action set(Bit#(5) new_fflags);
+            method Action set(Data dst_data, Bit#(5) new_fflags);
                 // inst is done
                 rob_inst_state[state_finishFpuMulDiv_port(i)] <= Executed; 
+	        rg_dst_data <= dst_data;
                 // update fflags
                 fflags[fflags_finishFpuMulDiv_port(i)] <= new_fflags;
             endmethod
@@ -279,9 +309,11 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
 
     interface setExecuted_doFinishFpuMulDiv = fpuMulDivExe;
 
-    method Action setExecuted_doFinishMem(Addr vaddr, Bool access_at_commit, Bool non_mmio_st_done
+    method Action setExecuted_doFinishMem(Addr   vaddr,
+					  Data   store_data, ByteEn store_data_BE,
+					  Bool   access_at_commit, Bool non_mmio_st_done
 `ifdef RVFI
-        , ExtraTraceBundle tb
+                                          , ExtraTraceBundle tb
 `endif
     );
         doAssert(!(access_at_commit && non_mmio_st_done),
@@ -297,11 +329,23 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         //$display("%t : traceBundle = ", $time(), fshow(tb), " in setExecuted_doFinishMem for %x", pc);
         traceBundle[pvc_finishMem_port] <= tb;
 `endif
+`ifdef INCLUDE_TANDEM_VERIF
+        // Store-data (for mem instrs that store data)
+        rg_store_data    <= store_data;
+        rg_store_data_BE <= store_data_BE;
+`endif
         // update access at commit
         memAccessAtCommit[accessCom_finishMem_port] <= access_at_commit;
         // udpate non mmio st
         nonMMIOStDone[nonMMIOSt_finishMem_port] <= non_mmio_st_done;
     endmethod
+
+`ifdef INCLUDE_TANDEM_VERIF
+    // Used after a Ld, Lr, Sc, Amo to record reg data
+    method Action setExecuted_doFinishMem_RegData (Data dst_data);
+       rg_dst_data <= dst_data;
+    endmethod
+`endif
 
 `ifdef INORDER_CORE
     method Action setLSQTag(LdStQTag t, Bool isFence);
@@ -315,6 +359,10 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         pc <= x.pc;
         orig_inst <= x.orig_inst;
         iType <= x.iType;
+        rg_dst_reg <= x.dst;
+        // rg_dst_data will be written after inst execution
+        // rg_store_data will be written in Mem pipeline
+        // rg_store_data_BE will be written in Mem pipeline
         csr <= x.csr;
         claimed_phy_reg <= x.claimed_phy_reg;
         trap[trap_enq_port] <= x.trap;
@@ -355,6 +403,12 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
             pc: pc,
 	    orig_inst: orig_inst,
             iType: iType,
+	    dst: rg_dst_reg,
+	    dst_data: rg_dst_data,
+`ifdef INCLUDE_TANDEM_VERIF
+	    store_data: rg_store_data,
+	    store_data_BE: rg_store_data_BE,
+`endif
             csr: csr,
             claimed_phy_reg: claimed_phy_reg,
             trap: trap[trap_deq_port],
@@ -466,6 +520,7 @@ endinterface
 
 interface ROB_setExecuted_doFinishAlu;
     method Action set(InstTag x,
+                      Data dst_data,
                       Maybe#(Data) csrData,
                       ControlFlow cf
 `ifdef RVFI
@@ -475,7 +530,7 @@ interface ROB_setExecuted_doFinishAlu;
 endinterface
 
 interface ROB_setExecuted_doFinishFpuMulDiv;
-    method Action set(InstTag x, Bit#(5) fflags);
+    method Action set(InstTag x, Data dst_data, Bit#(5) fflags);
 endinterface
 
 interface ROB_getOrigPC;
@@ -508,11 +563,20 @@ interface SupReorderBuffer#(numeric type aluExeNum, numeric type fpuMulDivExeNum
     interface Vector#(aluExeNum, ROB_setExecuted_doFinishAlu) setExecuted_doFinishAlu;
     interface Vector#(fpuMulDivExeNum, ROB_setExecuted_doFinishFpuMulDiv) setExecuted_doFinishFpuMulDiv;
     // doFinishMem, after addr translation
-    method Action setExecuted_doFinishMem(InstTag x, Addr vaddr, Bool access_at_commit, Bool non_mmio_st_done
+    method Action setExecuted_doFinishMem(InstTag x,
+					  Addr vaddr,
+					  Data store_data, ByteEn store_data_BE,
+					  Bool access_at_commit, Bool non_mmio_st_done
 `ifdef RVFI
-        , ExtraTraceBundle tb
+                                          , ExtraTraceBundle tb
 `endif
     );
+
+`ifdef INCLUDE_TANDEM_VERIF
+    // Used after a Ld, Lr, Sc, Amo to record reg data
+    method Action setExecuted_doFinishMem_RegData (InstTag x, Data dst_data);
+`endif
+
 `ifdef INORDER_CORE
     // in-order core sets LSQ tag after getting out of issue queue
     method Action setLSQTag(InstTag x, LdStQTag t, Bool isFence);
@@ -992,6 +1056,7 @@ module mkSupReorderBuffer#(
         aluSetExeIfc[i] = (interface ROB_setExecuted_doFinishAlu;
             method Action set(
                 InstTag x,
+                Data dst_data,
                 Maybe#(Data) csrData,
                 ControlFlow cf
 `ifdef RVFI
@@ -1001,6 +1066,7 @@ module mkSupReorderBuffer#(
                 all(id, readVReg(setExeAlu_SB_enq)) // ordering: < enq
             );
                 row[x.way][x.ptr].setExecuted_doFinishAlu[i].set(
+                    dst_data,
                     csrData,
                     cf
 `ifdef RVFI
@@ -1015,11 +1081,11 @@ module mkSupReorderBuffer#(
     for(Integer i = 0; i < valueof(fpuMulDivExeNum); i = i+1) begin
         fpuMulDivSetExeIfc[i] = (interface ROB_setExecuted_doFinishFpuMulDiv;
             method Action set(
-                InstTag x, Bit#(5) fflags
+                InstTag x, Data dst_data, Bit#(5) fflags
             ) if(
                 all(id, readVReg(setExeFpuMulDiv_SB_enq)) // ordering: < enq
             );
-                row[x.way][x.ptr].setExecuted_doFinishFpuMulDiv[i].set(fflags);
+                row[x.way][x.ptr].setExecuted_doFinishFpuMulDiv[i].set(dst_data, fflags);
             endmethod
         endinterface);
     end
@@ -1095,19 +1161,28 @@ module mkSupReorderBuffer#(
     interface setExecuted_doFinishFpuMulDiv = fpuMulDivSetExeIfc;
 
     method Action setExecuted_doFinishMem(
-        InstTag x, Addr vaddr, Bool access_at_commit, Bool non_mmio_st_done
+        InstTag x, Addr vaddr, Data store_data, ByteEn store_data_BE, Bool access_at_commit, Bool non_mmio_st_done
 `ifdef RVFI
         , tb
 `endif
     ) if(
         all(id, readVReg(setExeMem_SB_enq)) // ordering: < enq
     );
-        row[x.way][x.ptr].setExecuted_doFinishMem(vaddr, access_at_commit, non_mmio_st_done
+        row[x.way][x.ptr].setExecuted_doFinishMem(vaddr,
+                                                  store_data, store_data_BE,
+                                                  access_at_commit, non_mmio_st_done
 `ifdef RVFI
-            , tb
+                                                  , tb
 `endif
         );
     endmethod
+
+`ifdef INCLUDE_TANDEM_VERIF
+    // Used after a Ld, Lr, Sc, Amo to record reg data
+    method Action setExecuted_doFinishMem_RegData (InstTag x, Data dst_data);
+       row[x.way][x.ptr].setExecuted_doFinishMem_RegData (dst_data);
+    endmethod
+`endif
 
 `ifdef INORDER_CORE
     method Action setLSQTag(InstTag x, LdStQTag t, Bool isFence);

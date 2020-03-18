@@ -1,4 +1,4 @@
-// Copyright (c) 2013-2019 Bluespec, Inc. All Rights Reserved.
+// Copyright (c) 2013-2020 Bluespec, Inc. All Rights Reserved.
 
 //-
 // RVFI_DII modifications:
@@ -33,9 +33,11 @@ package Top_HW_Side;
 
 `include "ProcConfig.bsv"
 
+import FIFOF        :: *;
 import GetPut       :: *;
 import ClientServer :: *;
 import Connectable  :: *;
+import Clocks       :: *;
 
 // ----------------
 // BSV additional libs
@@ -61,6 +63,7 @@ import C_Imports      :: *;
 
 `ifdef INCLUDE_GDB_CONTROL
 import External_Control :: *;
+import Debug_Module     :: *;
 `endif
 
 `ifdef RVFI_DII
@@ -79,45 +82,124 @@ module mkTop_HW_Side (Empty);
 `else
 module mkPre_Top_HW_Side (Toooba_RVFI_DII_Server);
 `endif
-   SoC_Top_IFC    soc_top   <- mkSoC_Top;
-   Mem_Model_IFC  mem_model <- mkMem_Model;
+
+   // ================================================================
+   // The RISC-V Debug Module is at the following point in the module hierarchy:
+   //     soc_top.corew.debug_module
+   //     (instances of mkSoC_Top, mkCoreW, mkDebug_Module)
+
+   // The Debug Module is reset only once, on power-up, hence we pass
+   // its reset down from here.
+
+   // (power-on reset) and the Debug Module's 'hart_reset' control.
+
+   let power_on_reset <- exposeCurrentReset;
+   let dm_power_on_reset = power_on_reset;
+
+   // The rest of the system (soc_top and mem_model) are reset:
+   // - on power-on, and
+   // - when the Debug Module requests an NDM reset (for non-DebugModule).
+
+`ifdef INCLUDE_GDB_CONTROL
+   let clk <- exposeCurrentClock;
+   Bool    initial_reset_val  = False;
+   Integer ndm_reset_duration = 10;    // NOTE: assuming 10 cycle reset enough for NDM
+   let ndm_reset_controller <- mkReset(ndm_reset_duration, initial_reset_val, clk);
+
+   let ndm_reset <- mkResetEither (power_on_reset, ndm_reset_controller.new_rst);
+`else
+   let ndm_reset = power_on_reset;
+`endif
+
+   // ================================================================
+   // STATE
+
+   SoC_Top_IFC    soc_top   <- mkSoC_Top (dm_power_on_reset, reset_by ndm_reset);
+   Mem_Model_IFC  mem_model <- mkMem_Model (reset_by ndm_reset);
 
    // Connect SoC to raw memory
-   let memCnx <- mkConnection (soc_top.to_raw_mem, mem_model.mem_server);
+   let memCnx <- mkConnection (soc_top.to_raw_mem, mem_model.mem_server, reset_by ndm_reset);
+
+   // ================================================================
+   // Actions on reset
+
+   function Action fa_reset_actions;
+      action
+`ifndef RVFI_DII
+	 $display ("================================================================");
+	 $display ("Bluespec RISC-V standalone system simulation v1.2");
+	 $display ("Copyright (c) 2017-2019 Bluespec, Inc. All Rights Reserved.");
+	 $display ("================================================================");
+`endif
+	 // Set CPU verbosity and logdelay (simulation only)
+	 Bool v1 <- $test$plusargs ("v1");
+	 Bool v2 <- $test$plusargs ("v2");
+	 Bit #(4)  verbosity = ((v2 ? 2 : (v1 ? 1 : 0)));
+	 Bit #(64) logdelay  = 0;    // # of instructions after which to set verbosity
+	 soc_top.set_verbosity  (verbosity, logdelay);
+
+	 // ----------------
+	 // Load optional tohost and fromhost addrs from symbol-table file
+	 Fabric_Addr tohost_addr   = 0;
+	 Fabric_Addr fromhost_addr = 0;
+
+	 Bool watch_tohost <- $test$plusargs ("tohost");
+`ifndef IVERILOG
+	 // Note: see 'CAVEAT FOR IVERILOG USERS' above
+	 if (watch_tohost) begin
+	    let tha <- c_get_symbol_val ("tohost");
+	    tohost_addr   = truncate (tha);
+
+	    let fha <- c_get_symbol_val ("fromhost");
+	    fromhost_addr = truncate (fha);
+	 end
+`endif
+	 $display ("INFO: watch_tohost %d, tohost_addr = 0x%0h, fromhost_addr = 0x%0h",
+		   watch_tohost, tohost_addr, fromhost_addr);
+	 soc_top.start (tohost_addr, fromhost_addr);
+      endaction
+   endfunction
+
+   // ================================================================
+
+`ifdef INCLUDE_GDB_CONTROL
+   // ================================================================
+   // NDM reset from DM
+
+   Reg #(Bit #(8))  rg_ndm_reset_delay <- mkReg (0);
+
+   rule rl_ndm_reset (rg_ndm_reset_delay == 0);
+      let x <- soc_top.ndm_reset_client.request.get;
+      ndm_reset_controller.assertReset;
+      rg_ndm_reset_delay <= fromInteger (ndm_reset_duration + 200);    // NOTE: heuristic
+
+      $display ("%0d: %m.rl_ndm_reset: asserting NDM reset (for non-DebugModule) for %0d cycles",
+		cur_cycle, ndm_reset_duration);
+   endrule
+
+   rule rl_ndm_reset_wait (rg_ndm_reset_delay != 0);
+      if (rg_ndm_reset_delay == 1) begin
+	 fa_reset_actions;
+	 Bool is_running = True;
+	 soc_top.ndm_reset_client.response.put (is_running);
+	 $display ("%0d: %m.rl_ndm_reset_wait: sent NDM reset ack (for non-DebugModule) to Debug Module",
+		   cur_cycle);
+      end
+      rg_ndm_reset_delay <= rg_ndm_reset_delay - 1;
+   endrule
+   // ================================================================
+`endif
 
    // ================================================================
    // BEHAVIOR
 
-`ifndef RVFI_DII
    Reg #(Bool) rg_banner_printed <- mkReg (False);
 
    // Display a banner
    rule rl_step0 (! rg_banner_printed);
-      $display ("================================================================");
-      $display ("Bluespec RISC-V standalone system simulation v1.2");
-      $display ("Copyright (c) 2017-2019 Bluespec, Inc. All Rights Reserved.");
-      $display ("================================================================");
-
       rg_banner_printed <= True;
 
-      // Set CPU verbosity and logdelay (simulation only)
-      Bool v1 <- $test$plusargs ("v1");
-      Bool v2 <- $test$plusargs ("v2");
-      Bit #(4)  verbosity = ((v2 ? 2 : (v1 ? 1 : 0)));
-      Bit #(64) logdelay  = 0;    // # of instructions after which to set verbosity
-      soc_top.set_verbosity  (verbosity, logdelay);
-
-      // ----------------
-      // Load tohost addr from symbol-table file
-`ifndef IVERILOG
-      // Note: see 'CAVEAT FOR IVERILOG USERS' above
-      Bool watch_tohost <- $test$plusargs ("tohost");
-      let tha <- c_get_symbol_val ("tohost");
-      Fabric_Addr tohost_addr = truncate (tha);
-      $display ("INFO: watch_tohost = %0d, tohost_addr = 0x%0h",
-		pack (watch_tohost), tohost_addr);
-      soc_top.set_watch_tohost (watch_tohost, tohost_addr);
-`endif
+      fa_reset_actions;
 
       // ----------------
       // Open file for Tandem Verification trace output
@@ -154,7 +236,6 @@ module mkPre_Top_HW_Side (Toooba_RVFI_DII_Server);
 `endif
 
    endrule
-`endif
 
    // ================================================================
    // Tandem verifier: drain and output vectors of bytes
@@ -229,6 +310,10 @@ module mkPre_Top_HW_Side (Toooba_RVFI_DII_Server);
    // Interaction with remote debug client
 
 `ifdef INCLUDE_GDB_CONTROL
+
+   FIFOF #(Control_Req) f_external_control_reqs <- mkFIFOF;
+   FIFOF #(Control_Rsp) f_external_control_rsps <- mkFIFOF;
+
    rule rl_debug_client_request_recv;
       Bit #(64) req <- c_debug_client_request_recv ('hAA);
       Bit #(8)  status = req [63:56];
@@ -247,14 +332,14 @@ module mkPre_Top_HW_Side (Toooba_RVFI_DII_Server);
 	    let control_req = Control_Req {op: external_control_req_op_read_control_fabric,
 					   arg1: zeroExtend (addr),
 					   arg2: 0};
-	    soc_top.server_external_control.request.put (control_req);
+	    f_external_control_reqs.enq (control_req);
 	 end
 	 else if (op == dmi_op_write) begin
 	    // $display (" WRITE 0x%0h 0x%0h", addr, data);
 	    let control_req = Control_Req {op: external_control_req_op_write_control_fabric,
 					   arg1: zeroExtend (addr),
 					   arg2: zeroExtend (data)};
-	    soc_top.server_external_control.request.put (control_req);
+	    f_external_control_reqs.enq (control_req);
 	 end
 	 else if (op == dmi_op_shutdown) begin
 	    $display ("Top_HW_Side.rl_debug_client_request_recv: SHUTDOWN");
@@ -269,7 +354,7 @@ module mkPre_Top_HW_Side (Toooba_RVFI_DII_Server);
    endrule
 
    rule rl_debug_client_response_send;
-      let control_rsp <- soc_top.server_external_control.response.get;
+      let control_rsp <- pop (f_external_control_rsps);
       // $display ("Top_HW_Side.rl_debug_client_response_send: 0x%0h", control_rsp.result);
       let status <- c_debug_client_response_send (truncate (control_rsp.result));
       if (status == dmi_status_err) begin
@@ -277,6 +362,59 @@ module mkPre_Top_HW_Side (Toooba_RVFI_DII_Server);
 		   cur_cycle);
 	 $finish (1);
       end
+   endrule
+
+   // ----------------------------------------------------------------
+   // External debug requests and responses
+
+   Control_Req req = f_external_control_reqs.first;
+   Integer dmi_verbosity = 0;    // For debugging
+
+   rule rl_handle_external_req_read_request (req.op == external_control_req_op_read_control_fabric);
+      f_external_control_reqs.deq;
+      soc_top.dmi.read_addr (truncate (req.arg1));
+      if (dmi_verbosity != 0) begin
+	 $display ("%0d: %m.rl_handle_external_req_read_request", cur_cycle);
+         $display ("    ", fshow (req));
+      end
+   endrule
+
+   rule rl_handle_external_req_read_response;
+      let x <- soc_top.dmi.read_data;
+      let rsp = Control_Rsp {status: external_control_rsp_status_ok, result: signExtend (x)};
+      f_external_control_rsps.enq (rsp);
+      if (dmi_verbosity != 0) begin
+	 $display ("%0d: %m.rl_handle_external_req_read_response", cur_cycle);
+         $display ("    ", fshow (rsp));
+      end
+   endrule
+
+   rule rl_handle_external_req_write (req.op == external_control_req_op_write_control_fabric);
+      f_external_control_reqs.deq;
+      soc_top.dmi.write (truncate (req.arg1), truncate (req.arg2));
+      // let rsp = Control_Rsp {status: external_control_rsp_status_ok, result: 0};
+      // f_external_control_rsps.enq (rsp);
+      if (dmi_verbosity != 0) begin
+         $display ("%0d: %m.rl_handle_external_req_write", cur_cycle);
+         $display ("    ", fshow (req));
+      end
+   endrule
+
+   rule rl_handle_external_req_err (   (req.op != external_control_req_op_read_control_fabric)
+				    && (req.op != external_control_req_op_write_control_fabric));
+      f_external_control_reqs.deq;
+      let rsp = Control_Rsp {status: external_control_rsp_status_err, result: 0};
+      f_external_control_rsps.enq (rsp);
+
+      $display ("%0d: %m.rl_handle_external_req_err: unknown req.op", cur_cycle);
+      $display ("    ", fshow (req));
+   endrule
+
+   (* descending_urgency = "rl_handle_external_req_read_request,  rl_handle_external_req_read_response" *)
+   (* descending_urgency = "rl_handle_external_req_read_response, rl_handle_external_req_write"         *)
+   (* descending_urgency = "rl_handle_external_req_read_response, rl_handle_external_req_err"           *)
+   (* descending_urgency = "rl_handle_external_req_write,         rl_handle_external_req_err"           *)
+   rule rl_handle_external_dummy_for_urgency_attribs_only;
    endrule
 `endif
 

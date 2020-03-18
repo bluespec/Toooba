@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2019 Bluespec, Inc. All Rights Reserved.
+// Copyright (c) 2018-2020 Bluespec, Inc. All Rights Reserved.
 
 package CoreW_IFC;
 
@@ -6,9 +6,8 @@ package CoreW_IFC;
 // This package defines the interface of a CoreW module which
 // contains:
 //     - mkProc (the RISC-V CPU; this a variant of MIT's RISCY-OOO mkProc)
-//            Note: MIT's RISCY-OOO internally contains a 'mkCore'
-//                  and hence this interface and its module is called
-//                  'CoreW', to disambiguate.
+//            Note: MIT's RISCY-OOO internally has a 'mkCore' and hence this
+//                  interface and its module is called 'CoreW', to disambiguate.
 //     - mkFabric_2x3
 //     - mkNear_Mem_IO_AXI4
 //     - mkPLIC_16_2_7
@@ -32,10 +31,6 @@ import Fabric_Defs  :: *;
 // External interrupt request interface
 import PLIC  :: *;
 
-`ifdef INCLUDE_TANDEM_VERIF
-import TV_Info  :: *;
-`endif
-
 `ifdef INCLUDE_GDB_CONTROL
 import Debug_Module  :: *;
 `endif
@@ -44,22 +39,26 @@ import Debug_Module  :: *;
 import Types :: *;
 `endif
 
+`ifdef INCLUDE_TANDEM_VERIF
+import ProcTypes   :: *;
+import Trace_Data2 :: *;
+import TV_Info     :: *;
+`endif
+
 // ================================================================
 // The CoreW interface
 
 interface CoreW_IFC #(numeric type t_n_interrupt_sources);
 
    // ----------------------------------------------------------------
-   // Debugging: set core's verbosity, htif addrs
+   // Debugging: set core's verbosity
 
    method Action  set_verbosity (Bit #(4)  verbosity, Bit #(64)  logdelay);
 
-   method Action  set_htif_addrs  (Bit #(64) tohost_addr, Bit #(64) fromhost_addr);
-
    // ----------------------------------------------------------------
-   // Soft reset
+   // Start
 
-   interface Server #(Bit #(0), Bit #(0))  cpu_reset_server;
+   method Action start (Bit #(64) tohost_addr, Bit #(64) fromhost_addr);
 
    // ----------------------------------------------------------------
    // AXI4 Fabric interfaces
@@ -75,40 +74,41 @@ interface CoreW_IFC #(numeric type t_n_interrupt_sources);
 
    interface Vector #(t_n_interrupt_sources, PLIC_Source_IFC)  core_external_interrupt_sources;
 
-   // ----------------
-   // External interrupt [14] to go into Debug Mode
+   // ----------------------------------------------------------------
+   // Non-maskable interrupt request
 
    (* always_ready, always_enabled *)
-   method Action  debug_external_interrupt_req (Bool set_not_clear);
-
-   // ----------------------------------------------------------------
-   // Optional Tandem Verifier interface output tuples (n,vb),
-   // where 'vb' is a vector of bytes
-   // with relevant bytes in locations [0]..[n-1]
-
-`ifdef INCLUDE_TANDEM_VERIF
-   interface Get #(Info_CPU_to_Verifier)  tv_verifier_info_get;
-`endif
+   method Action nmi_req (Bool set_not_clear);
 
 `ifdef RVFI_DII
     interface Toooba_RVFI_DII_Server rvfi_dii_server;
 `endif
 
+`ifdef INCLUDE_GDB_CONTROL
    // ----------------------------------------------------------------
    // Optional Debug Module interfaces
 
-`ifdef INCLUDE_GDB_CONTROL
    // ----------------
    // DMI (Debug Module Interface) facing remote debugger
 
-   interface DMI dm_dmi;
+   interface DMI dmi;
 
    // ----------------
    // Facing Platform
    // Non-Debug-Module Reset (reset all except DM)
 
-   interface Get #(Bit #(0)) dm_ndm_reset_req_get;
+   interface Client #(Bool, Bool) ndm_reset_client;
 `endif
+
+`ifdef INCLUDE_TANDEM_VERIF
+   // ----------------------------------------------------------------
+   // Optional Tandem Verifier interface output tuples (n,vb),
+   // where 'vb' is a vector of bytes
+   // with relevant bytes in locations [0]..[n-1]
+
+   interface Get #(Info_CPU_to_Verifier)  tv_verifier_info_get;
+`endif
+
 endinterface
 
 // ================================================================

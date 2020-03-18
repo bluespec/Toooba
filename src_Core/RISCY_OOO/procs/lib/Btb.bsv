@@ -31,8 +31,8 @@ export NextAddrPred(..);
 export mkBtb;
 
 interface NextAddrPred;
-    method Addr predPc(Addr pc);
-    method Action update(Addr pc, Addr nextPc, Bool taken);
+    method Maybe#(Addr) predPc(Addr pc);
+    method Action update(Addr pc, Addr brTarget, Bool taken);
     // security
     method Action flush;
     method Bool flush_done;
@@ -96,13 +96,13 @@ module mkBtb(NextAddrPred);
     endrule
 `endif
 
-    method Addr predPc(Addr pc);
+    method Maybe#(Addr) predPc(Addr pc);
         BtbIndex index = getIndex(pc);
         BtbTag tag = getTag(pc);
         if(valid[index] && tag == tags.sub(index))
-            return next_addrs.sub(index);
+            return tagged Valid next_addrs.sub(index);
         else
-            return (pc + 4);
+            return tagged Invalid;
     endmethod
 
     method Action update(Addr pc, Addr nextPc, Bool taken);

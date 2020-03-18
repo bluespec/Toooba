@@ -1,5 +1,6 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
+// Portions Copyright (c) 2019-2020 Bluespec, Inc.
 // 
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
@@ -35,8 +36,8 @@ typedef TDiv#(SupSize, 2) FpuMulDivExeNum;
 // Phy RFile
 // write: Alu < FpuMulDiv < Mem
 // read: Alu, FpuMulDiv, Mem
-typedef TAdd#(1, TAdd#(FpuMulDivExeNum, AluExeNum)) RFileWrPortNum;
-typedef TAdd#(1, TAdd#(FpuMulDivExeNum, AluExeNum)) RFileRdPortNum;
+typedef TAdd#(2, TAdd#(FpuMulDivExeNum, AluExeNum)) RFileWrPortNum;
+typedef TAdd#(2, TAdd#(FpuMulDivExeNum, AluExeNum)) RFileRdPortNum;
 
 // sb lazy lookup num: same as RFile read, becaues all pipelines recv bypass
 typedef RFileRdPortNum SbLazyLookupPortNum;
@@ -65,6 +66,7 @@ Integer memWrAggrPort = 1 + valueof(FpuMulDivExeNum) + valueof(AluExeNum);
 function Integer aluRdPort(Integer i) = i;
 function Integer fpuMulDivRdPort(Integer i) = valueof(AluExeNum) + i;
 Integer memRdPort = valueof(FpuMulDivExeNum) + valueof(AluExeNum);
+Integer debuggerPort = memRdPort + 1;
 
 // ports for correct spec, ordering doesn't matter
 typedef TAdd#(2, AluExeNum) CorrectSpecPortNum;

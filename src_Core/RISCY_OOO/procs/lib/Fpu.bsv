@@ -1,5 +1,6 @@
 
 // Copyright (c) 2016, 2017 Massachusetts Institute of Technology
+// Portions Copyright (c) 2019-2020 Bluespec, Inc.
 
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
@@ -41,6 +42,7 @@ import XilinxFpu::*;
 import HasSpecBits::*;
 import SpecFifo::*;
 import SpecPoisonFifo::*;
+import FP_Utils::*;
 
 export FpuResult(..);
 export FpuResp(..);
@@ -49,8 +51,6 @@ export mkFpuExecPipeline;
 
 typedef FloatingPoint::RoundMode FpuRoundMode;
 typedef FloatingPoint::Exception FpuException;
-
-function FloatingPoint#(e,m) canonicalNaN = FloatingPoint{sign: False, exp: '1, sfd: 1 << (valueof(m)-1)};
 
 typedef struct {
     Data    data;
@@ -172,26 +172,36 @@ function Tuple2#(FloatingPoint#(e,m), FpuException) fcvt_f_wu (Bit#(64) in_bits,
 endfunction
 
 function Tuple2#(Bit#(64), FpuException) fmin_s(Bit#(64) in1, Bit#(64) in2);
-    Float in1_f = unpack(in1[31:0]);
-    Float in2_f = unpack(in2[31:0]);
+    // nirajns: interpret the inputs as floats. Observe that this function
+    // receives raw bits.
+    Float in1_f = fv_unbox(in1);
+    Float in2_f = fv_unbox(in2);
+    Bit #(64) in1_f_packed = fv_nanbox (zeroExtend(pack(in1_f)));
+    Bit #(64) in2_f_packed = fv_nanbox (zeroExtend(pack(in2_f)));
+
     Float nan_f = qnan(); // canonical NAN
     FpuException e = unpack(0);
 
-    if (isSNaN(in1_f) || isSNaN(in2_f) || (isNaN(in1_f) && isNaN(in2_f))) begin
+    // nirajns: TEST 21 failure on fmin ISA tests
+    // e.invalid_op should only be signalled only if either operand is a sNaN
+    // as the fmin and fmax are quiet comparison
+    if (isSNaN(in1_f) || isSNaN(in2_f)) begin
         e.invalid_op = True;
-        return tuple2(zeroExtend(pack(nan_f)), e);
+    end
+    if (isNaN(in1_f) && isNaN(in2_f)) begin
+        return tuple2(fv_nanbox (zeroExtend(pack(nan_f))), e);
     end else if (isNaN(in2_f)) begin
-        return tuple2(in1, e);
+        return tuple2(in1_f_packed, e);
     end else if (isNaN(in1_f)) begin
-        return tuple2(in2, e);
+        return tuple2(in2_f_packed, e);
     end else begin
         let signLT = (in1_f.sign && !in2_f.sign);
         let signEQ = in1_f.sign == in2_f.sign;
         let absLT = {in1_f.exp, in1_f.sfd} < {in2_f.exp, in2_f.sfd};
         if (signLT || (signEQ && (in1_f.sign ? !absLT : absLT))) begin
-            return tuple2(in1, e);
+            return tuple2(in1_f_packed, e);
         end else begin
-            return tuple2(in2, e);
+            return tuple2(in2_f_packed, e);
         end
     end
 endfunction
@@ -202,9 +212,14 @@ function Tuple2#(Bit#(64), FpuException) fmin_d(Bit#(64) in1, Bit#(64) in2);
     Double nan_f = qnan(); // canonical NAN
     FpuException e = unpack(0);
 
-    if (isSNaN(in1_f) || isSNaN(in2_f) || (isNaN(in1_f) && isNaN(in2_f))) begin
+    // nirajns: TEST 21 failure on fmin ISA tests
+    // e.invalid_op should only be signalled only if either operand is a sNaN
+    // as the fmin and fmax are quiet comparison
+    if (isSNaN(in1_f) || isSNaN(in2_f)) begin
         e.invalid_op = True;
-        return tuple2(pack(nan_f), e);
+    end
+    if (isNaN(in1_f) && isNaN(in2_f)) begin
+        return tuple2(zeroExtend(pack(nan_f)), e);
     end else if (isNaN(in2_f)) begin
         return tuple2(in1, e);
     end else if (isNaN(in1_f)) begin
@@ -222,26 +237,39 @@ function Tuple2#(Bit#(64), FpuException) fmin_d(Bit#(64) in1, Bit#(64) in2);
 endfunction
 
 function Tuple2#(Bit#(64), FpuException) fmax_s(Bit#(64) in1, Bit#(64) in2);
-    Float in1_f = unpack(in1[31:0]);
-    Float in2_f = unpack(in2[31:0]);
+    // nirajns: interpret the inputs as floats. Observe that this function
+    // receives raw bits.
+    // If the raw bits are nan-boxed, the fv_nanbox(fv_unbox) are identity
+    // functions. However, if the raw input was not properly nanboxed, then
+    // the output would be a canonical NaN
+    Float in1_f = fv_unbox(in1);
+    Float in2_f = fv_unbox(in2);
+    Bit #(64) in1_f_packed = fv_nanbox (zeroExtend(pack(in1_f)));
+    Bit #(64) in2_f_packed = fv_nanbox (zeroExtend(pack(in2_f)));
+
     Float nan_f = qnan(); // canonical NAN
     FpuException e = unpack(0);
 
-    if (isSNaN(in1_f) || isSNaN(in2_f) || (isNaN(in1_f) && isNaN(in2_f))) begin
+    // nirajns: TEST 21 failure on fmin ISA tests
+    // e.invalid_op should only be signalled only if either operand is a sNaN
+    // as the fmin and fmax are quiet comparison
+    if (isSNaN(in1_f) || isSNaN(in2_f)) begin
         e.invalid_op = True;
-        return tuple2(zeroExtend(pack(nan_f)), e);
+    end
+    if (isNaN(in1_f) && isNaN(in2_f)) begin
+        return tuple2(fv_nanbox (zeroExtend(pack(nan_f))), e);
     end else if (isNaN(in2_f)) begin
-        return tuple2(in1, e);
+        return tuple2(in1_f_packed, e);
     end else if (isNaN(in1_f)) begin
-        return tuple2(in2, e);
+        return tuple2(in2_f_packed, e);
     end else begin
         let signGT = (!in1_f.sign && in2_f.sign);
         let signEQ = in1_f.sign == in2_f.sign;
         let absGT = {in1_f.exp, in1_f.sfd} > {in2_f.exp, in2_f.sfd};
         if (signGT || (signEQ && (in1_f.sign ? !absGT : absGT))) begin
-            return tuple2(in1, e);
+            return tuple2(in1_f_packed, e);
         end else begin
-            return tuple2(in2, e);
+            return tuple2(in2_f_packed, e);
         end
     end
 endfunction
@@ -252,9 +280,14 @@ function Tuple2#(Bit#(64), FpuException) fmax_d(Bit#(64) in1, Bit#(64) in2);
     Double nan_f = qnan(); // canonical NAN
     FpuException e = unpack(0);
 
-    if (isSNaN(in1_f) || isSNaN(in2_f) || (isNaN(in1_f) && isNaN(in2_f))) begin
+    // nirajns: TEST 21 failure on fmin ISA tests
+    // e.invalid_op should only be signalled only if either operand is a sNaN
+    // as the fmin and fmax are quiet comparison
+    if (isSNaN(in1_f) || isSNaN(in2_f)) begin
         e.invalid_op = True;
-        return tuple2(pack(nan_f), e);
+    end
+    if (isNaN(in1_f) && isNaN(in2_f)) begin
+        return tuple2(zeroExtend(pack(nan_f)), e);
     end else if (isNaN(in2_f)) begin
         return tuple2(in1, e);
     end else if (isNaN(in1_f)) begin
@@ -417,8 +450,9 @@ function FpuResult execFpuSimple(FpuInst fpu_inst, Data rVal1, Data rVal2);
 
     if (fpu_inst.precision == Single) begin
         // single precision
-        Float in1 = unpack(rVal1[31:0]);
-        Float in2 = unpack(rVal2[31:0]);
+        // nirajns: interpret them as floats
+        Float in1 = fv_unbox(rVal1);
+        Float in2 = fv_unbox(rVal2);
         Float dst = unpack(0);
         Maybe#(Data) full_dst = Invalid;
         FpuException e = unpack(0);
@@ -436,18 +470,33 @@ function FpuResult execFpuSimple(FpuInst fpu_inst, Data rVal1, Data rVal2);
                 {x, e} = fmax_s(rVal1, rVal2);
                 full_dst = tagged Valid x;
             end
-            FEq:        dst = unpack(zeroExtend(pack(compareFP(in1, in2) == EQ)));
+            FEq: begin
+                // nirajns: TEST 10 failure on fcmp ISA tests
+                Data x;
+                if (isNaN (in1) || isNaN (in2)) x = 0;
+                else x = zeroExtend(pack(compareFP(in1, in2) == EQ));
+                if (isSNaN(in1) || isSNaN(in2)) begin
+                    e.invalid_op = True;
+                end
+                full_dst = tagged Valid x;
+            end
             FLt:        begin
-                dst = unpack(zeroExtend(pack(compareFP(in1, in2) == LT)));
+                Data x;
+                if (isNaN (in1) || isNaN (in2)) x = 0;
+                else x = zeroExtend(pack(compareFP(in1, in2) == LT));
                 if (isNaN(in1) || isNaN(in2)) begin
                     e.invalid_op = True;
                 end
+                full_dst = tagged Valid x;
             end
             FLe:        begin
-                dst = unpack(zeroExtend(pack((compareFP(in1, in2) == LT) || (compareFP(in1, in2) == EQ))));
+                Data x;
+                if (isNaN (in1) || isNaN (in2)) x = 0;
+                else x = zeroExtend(pack((compareFP(in1, in2) == LT) || (compareFP(in1, in2) == EQ)));
                 if (isNaN(in1) || isNaN(in2)) begin
                     e.invalid_op = True;
                 end
+                full_dst = tagged Valid x;
             end
             // CLASS functions
             FClass: begin
@@ -481,9 +530,11 @@ function FpuResult execFpuSimple(FpuInst fpu_inst, Data rVal1, Data rVal2);
                 dst.sign = unpack(pack(in1.sign) ^ pack(in2.sign));
             end
             // Float -> Bits
-            FMv_XF:     full_dst = tagged Valid signExtend(pack(in1));
+            // nirajns: don't interpret the bits - use raw bits rVal1
+            FMv_XF:     full_dst = tagged Valid signExtend(pack(rVal1[31:0]));
             // Bits -> Float
-            FMv_FX:     full_dst = tagged Valid zeroExtend(pack(in1));
+            // nirajns: don't interpret the bits - use raw bits rVal1
+            FMv_FX:     full_dst = tagged Valid fv_nanbox (zeroExtend(pack(rVal1[31:0])));
             // Float -> Float
             FCvt_FF:    begin
                 Double in1_double = unpack(rVal1);
@@ -529,7 +580,7 @@ function FpuResult execFpuSimple(FpuInst fpu_inst, Data rVal1, Data rVal2);
                 if (isNaN(dst)) dst = canonicalNaN;
             end
         endcase
-        fpu_result.data = (full_dst matches tagged Valid .data ? data : zeroExtend(pack(dst)));
+        fpu_result.data = (full_dst matches tagged Valid .data ? data : fv_nanbox(zeroExtend(pack(dst))));
         fpu_result.fflags = pack(e);
     end else if (fpu_inst.precision == Double) begin
         // double precision
@@ -552,15 +603,24 @@ function FpuResult execFpuSimple(FpuInst fpu_inst, Data rVal1, Data rVal2);
                 {x, e} = fmax_d(rVal1, rVal2);
                 full_dst = tagged Valid x;
             end
-            FEq:        dst = unpack(zeroExtend(pack(compareFP(in1, in2) == EQ)));
+            FEq: begin
+                // nirajns: TEST 10 failure on fcmp ISA tests
+                if (isNaN (in1) || isNaN (in2)) dst = unpack (0);
+                else dst = unpack(zeroExtend(pack(compareFP(in1, in2) == EQ)));
+                if (isSNaN(in1) || isSNaN(in2)) begin
+                    e.invalid_op = True;
+                end
+             end
             FLt:        begin
-                dst = unpack(zeroExtend(pack(compareFP(in1, in2) == LT)));
+                if (isNaN (in1) || isNaN (in2)) dst = unpack (0);
+                else dst = unpack(zeroExtend(pack(compareFP(in1, in2) == LT)));
                 if (isNaN(in1) || isNaN(in2)) begin
                     e.invalid_op = True;
                 end
             end
             FLe:        begin
-                dst = unpack(zeroExtend(pack((compareFP(in1, in2) == LT) || (compareFP(in1, in2) == EQ))));
+                if (isNaN (in1) || isNaN (in2)) dst = unpack (0);
+                else dst = unpack(zeroExtend(pack((compareFP(in1, in2) == LT) || (compareFP(in1, in2) == EQ))));
                 if (isNaN(in1) || isNaN(in2)) begin
                     e.invalid_op = True;
                 end
@@ -720,7 +780,7 @@ module mkFpuExecPipeline(FpuExec);
             // canonicalize NaN
             out_f = isNaN(out_f) ? canonicalNaN : out_f;
             res = FpuResult {
-                data: zeroExtend(pack(out_f)),
+                data: fv_nanbox (zeroExtend(pack(out_f))),
                 fflags: pack(info.exc_conv_in | exc_op | exc_conv_out)
             };
         end
@@ -778,9 +838,10 @@ module mkFpuExecPipeline(FpuExec);
         Double in3 = unpack(rVal3);
         if (fpu_inst.precision == Single) begin
             // conver single to double
-            Float f1 = unpack(rVal1[31:0]);
-            Float f2 = unpack(rVal2[31:0]);
-            Float f3 = unpack(rVal3[31:0]);
+            // nirajns: interpret the raw bits as floats first
+            Float f1 = fv_unbox(rVal1);
+            Float f2 = fv_unbox(rVal2);
+            Float f3 = fv_unbox(rVal3);
             let {d1, exc1} = fcvt_d_s(f1, fpu_rm);
             let {d2, exc2} = fcvt_d_s(f2, fpu_rm);
             let {d3, exc3} = fcvt_d_s(f3, fpu_rm);

@@ -27,6 +27,18 @@ interface ResetGuard;
     method Bool isReady;
 endinterface
 
+`ifdef BSIM
+module mkResetGuard(ResetGuard);
+    Reg#(Bool) ready <- mkReg(False);
+
+    (* no_implicit_conditions, fire_when_enabled *)
+    rule rl_ready;
+        ready <= True;
+    endrule
+
+    method isReady = ready;
+endmodule
+`else
 import "BVI" reset_guard =
 module mkResetGuard(ResetGuard);
     default_clock clk(CLK);
@@ -36,3 +48,4 @@ module mkResetGuard(ResetGuard);
 
     schedule (isReady) CF (isReady);
 endmodule
+`endif

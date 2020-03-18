@@ -1,6 +1,9 @@
 package Proc;
 
+// Note: this module corresponds to module 'mkCPU' in Piccolo/Flute.
+
 // Copyright (c) 2018 Massachusetts Institute of Technology
+// Portions Copyright (c) 2019-2020 Bluespec, Inc.
 // 
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
@@ -21,8 +24,6 @@ package Proc;
 // ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-
-// Portions Copyright (c) 2019 Bluespec, Inc.
 
 // ================================================================
 // BSV lib imports
@@ -77,17 +78,13 @@ import SoC_Map      :: *;
 import AXI4_Types   :: *;
 import Fabric_Defs  :: *;
 
-
 `ifdef INCLUDE_GDB_CONTROL
 import DM_CPU_Req_Rsp  :: *;
 `endif
 
 `ifdef INCLUDE_TANDEM_VERIF
-import TV_Info  :: *;
-`endif
-
-`ifdef EXTERNAL_DEBUG_MODULE
-`undef INCLUDE_GDB_CONTROL
+import ProcTypes   :: *;
+import Trace_Data2 :: *;
 `endif
 
 // ================================================================
@@ -107,50 +104,6 @@ module mkProc (Proc_IFC);
 
    // Verbosity: 0=quiet; 1=instruction trace; 2=more detail
    Reg #(Bit #(4))  cfg_verbosity <- mkConfigReg (0);
-
-   // ----------------
-   // Reset requests and responses    (TODO: to be implemented)
-
-   FIFOF #(Bit #(0))  f_reset_reqs <- mkFIFOF;
-   FIFOF #(Bit #(0))  f_reset_rsps <- mkFIFOF;
-
-   // ----------------
-   // Communication to/from External debug module    (TODO: to be implemented)
-
-`ifdef INCLUDE_GDB_CONTROL
-
-   // Debugger run-control
-   FIFOF #(Bool)  f_run_halt_reqs <- mkFIFOF;
-   FIFOF #(Bool)  f_run_halt_rsps <- mkFIFOF;
-
-   // Stop-request from debugger (e.g., GDB ^C or Dsharp 'stop')
-   Reg #(Bool) rg_stop_req <- mkReg (False);
-
-   // Count instrs after step-request from debugger (via dcsr.step)
-   Reg #(Bit #(1))  rg_step_count <- mkReg (0);
-
-   // Debugger GPR read/write request/response
-   FIFOF #(DM_CPU_Req #(5,  XLEN)) f_gpr_reqs <- mkFIFOF1;
-   FIFOF #(DM_CPU_Rsp #(XLEN))     f_gpr_rsps <- mkFIFOF1;
-
-`ifdef ISA_F
-   // Debugger FPR read/write request/response
-   FIFOF #(DM_CPU_Req #(5,  FLEN)) f_fpr_reqs <- mkFIFOF1;
-   FIFOF #(DM_CPU_Rsp #(FLEN))     f_fpr_rsps <- mkFIFOF1;
-`endif
-
-   // Debugger CSR read/write request/response
-   FIFOF #(DM_CPU_Req #(12, XLEN)) f_csr_reqs <- mkFIFOF1;
-   FIFOF #(DM_CPU_Rsp #(XLEN))     f_csr_rsps <- mkFIFOF1;
-
-`endif
-
-   // ----------------
-   // Tandem Verification    (TODO: to be implemented)
-
-`ifdef INCLUDE_TANDEM_VERIF
-   FIFOF #(Trace_Data) f_trace_data  <- mkFIFOF;
-`endif
 
    // ----------------
    // MMIO
@@ -185,16 +138,11 @@ module mkProc (Proc_IFC);
         tlbToMem[i] = core[i].tlbToMem;
     end
 
-   // Stub out memLoader (TODO: can be Debug Module's access)
-   let memLoaderStub = interface MemLoaderMemClient;
-			  interface memReq = nullFifoDeq;
-			  interface respSt = nullFifoEnq;
-		       endinterface;
-
-    mkLLCDmaConnect(llc.dma, memLoaderStub, tlbToMem);
+   // Note: mkLLCDmaConnect is Toooba version, different from riscy-ooo version
+   let llc_mem_server <- mkLLCDmaConnect(llc.dma, tlbToMem);
 
    // ================================================================
-   // interface LLC to AXI4
+   // interface Back-side of LLC to AXI4
 
    LLC_AXI4_Adapter_IFC  llc_axi4_adapter <- mkLLC_AXi4_Adapter (llc.to_mem);
 
@@ -249,18 +197,6 @@ module mkProc (Proc_IFC);
    end
 
    // ================================================================
-   // Reset
-
-   rule rl_reset;
-      let x <- pop (f_reset_reqs);
-
-      llc_axi4_adapter.reset;
-      mmio_axi4_adapter.reset;
-
-      f_reset_rsps.enq (?);
-   endrule
-
-   // ----------------
    // Termination detection
 
    for(Integer i = 0; i < valueof(CoreNum); i = i+1) begin
@@ -270,7 +206,9 @@ module mkProc (Proc_IFC);
       endrule
    end
 
+   // ================================================================
    // Print out values written 'tohost'
+
    rule rl_tohost;
       let x <- mmioPlatform.to_host;
       $display ("%0d: mmioPlatform.rl_tohost: 0x%0x (= %0d)", cur_cycle, x, x);
@@ -292,11 +230,9 @@ module mkProc (Proc_IFC);
    // ================================================================
    // INTERFACE
 
-   // Reset
-   interface Server  hart0_server_reset = toGPServer (f_reset_reqs, f_reset_rsps);
-
    // ----------------
    // Start the cores running
+   // Use toHostAddr = 0 if not monitoring tohost
    method Action start (Addr startpc, Addr tohostAddr, Addr fromhostAddr);
       action
 	 for(Integer i = 0; i < valueof(CoreNum); i = i+1)
@@ -305,8 +241,8 @@ module mkProc (Proc_IFC);
 
       mmioPlatform.start (tohostAddr, fromhostAddr);
 
-      $display ("Proc.start: startpc = 0x%0h, tohostAddr = 0x%0h, fromhostAddr = %0h",
-		startpc, tohostAddr, fromhostAddr);
+      $display ("%0d: %m.method start: startpc %0h, tohostAddr %0h, fromhostAddr %0h",
+		cur_cycle, startpc, tohostAddr, fromhostAddr);
    endmethod
 
    // ----------------
@@ -330,13 +266,6 @@ module mkProc (Proc_IFC);
    endmethod
 
    // ----------------
-   // External interrupt [14] to go into Debug Mode
-
-   method Action  debug_external_interrupt_req (Bool set_not_clear);
-      core[0].setDEIP (pack (set_not_clear));
-   endmethod
-
-   // ----------------
    // Non-maskable interrupt
 
    // TODO: fixup: NMIs should send CPU to an NMI vector (TBD in SoC_Map)
@@ -350,11 +279,9 @@ module mkProc (Proc_IFC);
    endmethod
 
    // ----------------
-   // Optional interface to Tandem Verifier
+   // Coherent port into LLC (used by Debug Module, DMA engines, ... to read/write memory)
 
-`ifdef INCLUDE_TANDEM_VERIF
-   interface Get  trace_data_out = toGet (f_trace_data);
-`endif
+   interface  debug_module_mem_server = llc_mem_server;
 
 `ifdef RVFI_DII
    interface Toooba_RVFI_DII_Server rvfi_dii_server = core[0].rvfi_dii_server;
@@ -364,8 +291,8 @@ module mkProc (Proc_IFC);
    // Optional interface to Debug Module
 
 `ifdef INCLUDE_GDB_CONTROL
-   // run-control, other
-   interface Server  hart0_server_run_halt = toGPServer (f_run_halt_reqs, f_run_halt_rsps);
+   // run/halt, gpr, mem and csr control goes to core
+   interface Server  hart0_run_halt_server = core [0].hart0_run_halt_server;
 
    interface Put  hart0_put_other_req;
       method Action  put (Bit #(4) req);
@@ -373,16 +300,16 @@ module mkProc (Proc_IFC);
       endmethod
    endinterface
 
-   // GPR access
-   interface Server  hart0_gpr_mem_server = toGPServer (f_gpr_reqs, f_gpr_rsps);
-
+   interface Server  hart0_gpr_mem_server  = core[0].hart0_gpr_mem_server;
 `ifdef ISA_F
-   // FPR access
-   interface Server  hart0_fpr_mem_server = toGPServer (f_fpr_reqs, f_fpr_rsps);
+   interface Server  hart0_fpr_mem_server  = core[0].hart0_fpr_mem_server;
+`endif
+   interface Server  hart0_csr_mem_server  = core[0].hart0_csr_mem_server;
+
 `endif
 
-   // CSR access
-   interface Server  hart0_csr_mem_server = toGPServer (f_csr_reqs, f_csr_rsps);
+`ifdef INCLUDE_TANDEM_VERIF
+   interface v_to_TV = core [0].v_to_TV;
 `endif
 
 endmodule: mkProc
