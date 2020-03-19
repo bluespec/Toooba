@@ -25,7 +25,7 @@
 import BuildVector::*;
 import Types::*;
 import ProcTypes::*;
-import Fifo::*;
+import Fifos::*;
 import FIFO::*;
 import XilinxIntMul::*;
 import XilinxIntDiv::*;

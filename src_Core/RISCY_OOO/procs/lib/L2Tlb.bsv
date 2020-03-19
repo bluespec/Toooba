@@ -33,7 +33,7 @@ import Performance::*;
 import FullAssocTlb::*;
 import ConfigReg::*;
 import Ehr::*;
-import Fifo::*;
+import Fifos::*;
 import Cntrs::*;
 import SafeCounter::*;
 import CacheUtils::*;

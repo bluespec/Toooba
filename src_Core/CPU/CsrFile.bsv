@@ -29,7 +29,7 @@ import DefaultValue::*;
 import ConcatReg::*;
 import ConfigReg::*;
 import Ehr::*;
-import Fifo::*;
+import Fifos::*;
 import Vector::*;
 import FIFO::*;
 import GetPut::*;

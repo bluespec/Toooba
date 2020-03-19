@@ -22,7 +22,7 @@
 // SOFTWARE.
 
 import BRAMCore::*;
-import Fifo::*;
+import Fifos::*;
 
 interface RWBramCore#(type addrT, type dataT);
     method Action wrReq(addrT a, dataT d);

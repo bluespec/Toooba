@@ -31,7 +31,7 @@ import Types::*;
 import CCTypes::*;
 import DefaultValue::*;
 import Ehr::*;
-import Fifo::*;
+import Fifos::*;
 import MshrDeadlockChecker::*;
 
 // MSHR dependency chain invariant:

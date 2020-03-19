@@ -39,7 +39,7 @@ import CCPipe::*;
 import SelfInvIPipe ::*;
 import FShow::*;
 import DefaultValue::*;
-import Fifo::*;
+import Fifos::*;
 import CacheUtils::*;
 import Performance::*;
 import LatencyTimer::*;
