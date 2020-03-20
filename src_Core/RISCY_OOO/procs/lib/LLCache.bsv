@@ -29,7 +29,7 @@ import Connectable::*;
 import GetPut::*;
 import Assert::*;
 import CacheUtils::*;
-import Fifo::*;
+import Fifos::*;
 import Types::*;
 import ProcTypes::*;
 import CCTypes::*;

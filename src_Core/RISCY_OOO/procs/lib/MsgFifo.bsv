@@ -21,7 +21,7 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-import Fifo::*;
+import Fifos::*;
 
 typedef union tagged {
     reqT Req;

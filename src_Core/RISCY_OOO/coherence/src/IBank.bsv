@@ -40,7 +40,7 @@ import CCPipe::*;
 import L1Pipe ::*;
 import FShow::*;
 import DefaultValue::*;
-import Fifo::*;
+import Fifos::*;
 import CacheUtils::*;
 import Performance::*;
 import LatencyTimer::*;

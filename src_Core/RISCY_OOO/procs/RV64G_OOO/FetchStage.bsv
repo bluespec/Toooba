@@ -1,7 +1,7 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
 // Portions Copyright (c) 2019-2020 Bluespec, Inc.
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -9,10 +9,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -31,7 +31,7 @@ import ClientServer::*;
 import Connectable::*;
 import Decode::*;
 import Ehr::*;
-import Fifo::*;
+import Fifos::*;
 import FIFOF::*;
 import GetPut::*;
 import MemoryTypes::*;
@@ -487,7 +487,7 @@ module mkFetchStage(FetchStage);
     Fifo#(2, Dii_Ids) dii_instIds <- mkCFFifo;
     Fifo#(2, InstsAndIDs) dii_insts <- mkCFFifo;
     Fifo#(2, Dii_Ids) dii_fetched_ids <- mkCFFifo;
-    
+
     Reg#(Dii_Id) last_trace_id <- mkRegU;
 `endif
 
@@ -654,7 +654,7 @@ module mkFetchStage(FetchStage);
             else
                 $display("Fetch3: Nothing else from Fetch2");
         end
-        
+
         SupCntX2S1 pending_n_items = rg_pending_n_items;
         let out = rg_pending_f32d;
         Maybe #(Tuple3 #(Addr, Bit #(16), Bool)) pending_straddle = ehr_pending_straddle[0];
@@ -933,8 +933,8 @@ module mkFetchStage(FetchStage);
 			// rs1 is invalid, i.e., not link: push
 			ras.ras[i].popPush(False, Valid (push_addr));
 		     end
-                     else if (dInst.iType == Jr) begin // jalr 
-			if (!dst_link && src1_link) begin  
+                     else if (dInst.iType == Jr) begin // jalr
+			if (!dst_link && src1_link) begin
 			   // rd is link while rs1 is not: pop
 			   nextPc = Valid (pop_addr);
 			   ras.ras[i].popPush(True, Invalid);
@@ -1223,7 +1223,7 @@ module mkFetchStage(FetchStage);
         method Bool respValid = perfReqQ.notEmpty;
 `endif
     endinterface
-    
+
 `ifdef RVFI_DII
     interface Client dii;
         interface Get request = toGet(dii_instIds);
@@ -1234,4 +1234,3 @@ module mkFetchStage(FetchStage);
     endmethod
 `endif
 endmodule
- 

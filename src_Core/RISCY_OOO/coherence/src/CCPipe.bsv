@@ -22,7 +22,7 @@
 // SOFTWARE.
 
 import Ehr::*;
-import Fifo::*;
+import Fifos::*;
 import Vector::*;
 import RWBramCore::*;
 import FShow::*;
