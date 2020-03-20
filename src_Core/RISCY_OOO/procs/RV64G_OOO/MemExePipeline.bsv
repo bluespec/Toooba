@@ -1,6 +1,6 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +8,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -27,7 +27,7 @@ import BuildVector::*;
 import GetPut::*;
 import ClientServer::*;
 import Cntrs::*;
-import Fifo::*;
+import Fifos::*;
 import Ehr::*;
 import Types::*;
 import ProcTypes::*;
@@ -175,7 +175,7 @@ interface MemExeInput;
     method Action mmioRespDeq;
 
     // global broadcast methods
-    // set aggressive sb & wake up RS 
+    // set aggressive sb & wake up RS
     method Action setRegReadyAggr_mem(PhyRIndx dst);
     method Action setRegReadyAggr_forward(PhyRIndx dst);
     // write reg file & set conservative sb
@@ -382,7 +382,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         // executed after address transation
         doAssert(!(x.data.mem_func == St && isValid(x.regs.dst)),
                  "St cannot have dst reg");
-        
+
         // go to next stage
         dispToRegQ.enq(ToSpecFifo {
             data: MemDispatchToRegRead {
@@ -451,7 +451,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         // get virtual addr & St/Sc/Amo data
         Addr vaddr = x.rVal1 + signExtend(x.imm);
         Data data = x.rVal2;
-        
+
 `ifdef RVFI_DII
         memData[pack(x.ldstq_tag)] <= data;
         $display("%t : memData[%x] <= %x", $time(), pack(x.ldstq_tag), data);
@@ -716,7 +716,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         end
     endaction
     endfunction
-    
+
     rule doRespLdMem;
         memRespLdQ.deq;
         let {t, d} = memRespLdQ.first;
@@ -851,7 +851,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         waitLrScAmoMMIOResp <= Invalid;
         // get resp data (need shifting)
         let d <- toGet(respLrScAmoQ).get;
-        Data resp = gatherLoad(lsqDeqLd.paddr, lsqDeqLd.byteEn, lsqDeqLd.unsignedLd, d); 
+        Data resp = gatherLoad(lsqDeqLd.paddr, lsqDeqLd.byteEn, lsqDeqLd.unsignedLd, d);
         // write reg file & set ROB as Executed & wakeup rs
         if(lsqDeqLd.dst matches tagged Valid .dst) begin
             inIfc.writeRegFile(dst.indx, resp);

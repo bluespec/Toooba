@@ -25,7 +25,7 @@ import Assert::*;
 import ConfigReg::*;
 import Vector::*;
 import FShow::*;
-import Fifo::*;
+import Fifos::*;
 import Types::*;
 import CCTypes::*;
 import CCPipe::*;

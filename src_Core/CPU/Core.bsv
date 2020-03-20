@@ -33,7 +33,7 @@ import Assert::*;
 import Cntrs::*;
 import ConfigReg::*;
 import FIFO::*;
-import Fifo::*;
+import Fifos::*;
 import Ehr::*;
 import Connectable::*;
 

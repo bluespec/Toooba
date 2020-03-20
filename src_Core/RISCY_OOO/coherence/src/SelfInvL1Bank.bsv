@@ -41,7 +41,7 @@ import SelfInvL1Pipe ::*;
 import FShow::*;
 import DefaultValue::*;
 import Ehr::*;
-import Fifo::*;
+import Fifos::*;
 import CacheUtils::*;
 import CrossBar::*;
 import Performance::*;

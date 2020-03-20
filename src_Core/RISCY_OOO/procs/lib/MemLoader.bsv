@@ -29,7 +29,7 @@ import Connectable::*;
 import FShow::*;
 import FIFO::*;
 import Vector::*;
-import Fifo::*;
+import Fifos::*;
 import Types::*;
 import ProcTypes::*;
 import CCTypes::*;

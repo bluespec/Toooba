@@ -26,7 +26,7 @@
 import Vector::*;
 import GetPut::*;
 import Cntrs::*;
-import Fifo::*;
+import Fifos::*;
 import FIFO::*;
 import Types::*;
 import ProcTypes::*;

@@ -22,7 +22,7 @@
 // SOFTWARE.
 
 import Vector::*;
-import Fifo::*;
+import Fifos::*;
 import CCTypes::*;
 import RWBramCore::*;
 
