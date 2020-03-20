@@ -32,6 +32,7 @@ import CreditCounter  :: *;
 // ----------------
 // From MIT RISCY-OOO
 
+import Types :: *;
 import ProcTypes :: *;
 
 // ----------------
@@ -68,6 +69,7 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
 
    FIFOF #(MMIOCRq)     f_reqs_from_core <- mkFIFOF;
    FIFOF #(MMIODataPRs) f_rsps_to_core   <- mkFIFOF;
+   Reg#(Fabric_Addr)    read_req_addr    <- mkRegU;
 
    SoC_Map_IFC  soc_map <- mkSoC_Map;    // for m_is_IO_addr
 
@@ -99,6 +101,7 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
                                              aruser:   fabric_default_aruser};
 
          master_xactor.slave.ar.put(mem_req_rd_addr);
+         read_req_addr <= addr;
 
          // Debugging
          if (cfg_verbosity > 0) begin
@@ -180,7 +183,7 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
          fa_fabric_send_read_req (req.addr);
       else begin
          let rsp = MMIODataPRs {valid: False,
-                                data: req.addr};    // For debugging convenience only
+                                data: toMemTaggedData(req.addr)};    // For debugging convenience only
          f_rsps_to_core.enq (rsp);
          if (cfg_verbosity > 0) begin
             $display ("%0d: %m.rl_handle_read_req: unmapped IO address; returning error response",
@@ -194,6 +197,7 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
 
    rule rl_handle_read_rsps;
       let mem_rsp <- get(master_xactor.slave.r);
+      dynamicAssert(mem_rsp.rlast, "TODO, implement multi-flit transactions");
 
       if (cfg_verbosity > 0) begin
          $display ("%0d: %m.rl_handle_read_rsps ", cur_cycle);
@@ -205,8 +209,10 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
          $display ("    ", fshow (mem_rsp));
       end
 
+      let newData = MemTaggedData { tag: False
+                                  , data: unpack(zeroExtend(mem_rsp.rdata) << ((read_req_addr[3] == 1) ? 64 : 0))};
       let rsp = MMIODataPRs {valid: (mem_rsp.rresp == OKAY),
-                             data: mem_rsp.rdata};
+                             data: newData };
       f_rsps_to_core.enq (rsp);
 
       if (cfg_verbosity > 0)
@@ -227,11 +233,12 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
       // Technically the following check for legal IO addrs is not
       // necessary; the AXI4 fabric should return a DECERR for illegal
       // addrs; but not all AXI4 fabrics do the right thing.
+      dynamicAssert(pack(req.byteEn)[15:8] == 0, "TODO, handle multiflit transactions");
       if (soc_map.m_is_IO_addr (req.addr))
-         fa_fabric_send_write_req (req.addr, pack (req.byteEn), req.data);
+         fa_fabric_send_write_req (req.addr, truncate(pack(req.byteEn)), fromMemTaggedData(req.data));
       else begin
          let rsp = MMIODataPRs {valid: False,
-                                data: req.addr};    // For debugging convenience only
+                                data: toMemTaggedData(req.addr)};    // For debugging convenience only
          f_rsps_to_core.enq (rsp);
          if (cfg_verbosity > 0) begin
             $display ("%0d: %m.rl_handle_write_req: unmapped IO address; returning error response",

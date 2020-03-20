@@ -111,16 +111,6 @@ function Bool fn_addr_is_in_line (Addr addr, Addr line_addr);
    return (fn_align_addr_to_line (addr) == line_addr);
 endfunction
 
-function Bit #(64) fn_expand_strb_to_mask (Bit #(8) strb);
-   function Bit #(8) fn_bit_to_byte (Integer j);
-      return ((strb [j] == 1'b1) ? 8'hFF : 8'h00);
-   endfunction
-
-   Vector #(8, Bit #(8)) v = genWith (fn_bit_to_byte);
-
-   return pack (v);
-endfunction
-
 // ================================================================
 
 module mkLLCDmaConnect #(
@@ -163,19 +153,13 @@ module mkLLCDmaConnect #(
                                                             rg_cacheline_cache_addr)));
       let wr_addr <- get (axi4_slave_xactor.master.aw);
       let wr_data <- get (axi4_slave_xactor.master.w);
-      Addr      addr = wr_addr.awaddr;
-      Bit #(64) data = wr_data.wdata;
-      Bit #(64) mask = fn_expand_strb_to_mask (wr_data.wstrb);
 
-      // Read rg_cacheline_cache_data as 64-bit words
-      Vector #(8, Bit #(64)) line_dwords = unpack (pack (rg_cacheline_cache_data));
       // Modify relevant bytes of relevant dword
-      Bit #(3)  dword_in_line     = addr [5:3];
-      Bit #(64) old_dword         = line_dwords [dword_in_line];
-      Bit #(64) new_dword         = ((old_dword & (~ mask)) | (data & mask));
-      line_dwords [dword_in_line] = new_dword;
+      let newLine = setDataAtBE( rg_cacheline_cache_data
+                               , getCLineDataSel(wr_addr.awaddr)
+                               , wr_data.wdata, unpack(pack(wr_data.wstrb)));
       // Save it
-      rg_cacheline_cache_data        <= unpack (pack (line_dwords));
+      rg_cacheline_cache_data        <= newLine;
       rg_cacheline_cache_state       <= CACHELINE_CACHE_DIRTY;
       rg_cacheline_cache_dirty_delay <= '1;    // start write-back delay countdown
 
@@ -189,8 +173,8 @@ module mkLLCDmaConnect #(
       if (verbosity >= 2) begin
          $display ("%0d: %m.rl_handle_MemLoader_st_req: addr %0h data %0h strb %0h",
                    cur_cycle, wr_addr.awaddr, wr_data.wdata, wr_data.wstrb);
-         $display ("    old_dword: %0h", old_dword);
-         $display ("    new_dword: %0h", old_dword);
+         //$display ("    old_dword: %0h", old_dword);
+         //$display ("    new_dword: %0h", old_dword);
       end
    endrule
 
@@ -203,12 +187,8 @@ module mkLLCDmaConnect #(
                                     && (fn_addr_is_in_line (axi4_slave_xactor.master.ar.peek.araddr,
                                                             rg_cacheline_cache_addr)));
       let rd_addr <- get (axi4_slave_xactor.master.ar);
-      Addr addr = rd_addr.araddr;
-
-      // Read rg_cacheline_cache as 64-bit words
-      Vector #(8, Bit #(64)) line_dwords = unpack (pack (rg_cacheline_cache_data));
-      Bit #(3)  dword_in_line = addr [5:3];
-      Bit #(64) dword         = line_dwords [dword_in_line];
+      let dword = getDataAt( rg_cacheline_cache_data
+                           , getCLineDataSel(rd_addr.araddr));
 
       // Send response to external client
       axi4_slave_xactor.master.r.put(AXI4_RFlit{
@@ -237,7 +217,7 @@ module mkLLCDmaConnect #(
    function Action fa_writeback;
       action
          dmaRqT req =  DmaRq {addr:   rg_cacheline_cache_addr,
-                              byteEn: replicate (True),       // Write all bytes
+                              byteEn: replicate(replicate(True)), // Write all bytes
                               data:   rg_cacheline_cache_data,
                               id:     tagged MemLoader (?)    // TODO: use  wr_addr.awid?
                               };
@@ -305,7 +285,7 @@ module mkLLCDmaConnect #(
       action
          let line_addr = fn_align_addr_to_line (addr);
          dmaRqT req =  DmaRq {addr:   line_addr,
-                              byteEn: replicate (False),        // all False means 'read'
+                              byteEn: replicate(replicate(False)), // all False means 'read'
                               data:   ?,
                               id:     tagged MemLoader (?)};    // TODO: change uniformly to  wr_addr.awid
          llc.memReq.enq (req);
@@ -384,7 +364,7 @@ module mkLLCDmaConnect #(
         };
         return DmaRq {
             addr: r.addr,
-            byteEn: replicate(False), // tlb req is always load
+            byteEn: replicate(replicate(False)), // tlb req is always load
             data: ?,
             id: Tlb (id)
         };
@@ -410,7 +390,7 @@ module mkLLCDmaConnect #(
         llc.respLd.deq;
         let resp = llc.respLd.first;
         let ld = TlbLdResp {
-            data: resp.data[id.dataSel],
+            data: getDataAt(resp.data, id.dataSel),
             id: id.id
         };
         tlb[id.core].respLd.enq(ld);

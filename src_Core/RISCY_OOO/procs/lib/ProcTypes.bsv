@@ -608,10 +608,10 @@ typedef struct {
     // this. We need this for to remove redundant MMIO accesses (for MSIP), and
     // to determine AMO access range (upper 32 bits, lower 32 bits, or full 64
     // bits). INST FETCH will not specify this field.
-    ByteEn byteEn;
+    MemDataByteEn byteEn;
     // For STORE: this is store data shifted to be 64-bit aligned
     // For AMO: this is UNshifted data (like normal mem req)
-    Data data;
+    MemTaggedData data;
 } MMIOCRq deriving(Bits, Eq, FShow);
 
 // resp from platform to core
@@ -623,7 +623,7 @@ typedef struct {
     // shift the result before writting back to reg).
     // For AMO: this is the result that can be directly written into reg, i.e.,
     // for 32-bit access, the result has been shifted and sign-extended.
-    Data data;
+    MemTaggedData data;
 } MMIODataPRs deriving(Bits, Eq, FShow);
 
 typedef union tagged {
@@ -655,7 +655,7 @@ typedef struct {
 
 // Boot rom: each block is 64-bit data
 typedef `LOG_BOOT_ROM_BYTES LgBootRomBytes;
-typedef TSub#(LgBootRomBytes, TLog#(NumBytes)) LgBootRomSzData;
+typedef TSub#(LgBootRomBytes, TLog#(MemDataBytes)) LgBootRomSzData;
 typedef Bit#(LgBootRomSzData) BootRomIndex;
 
 // mtime: we increment mtime by 50 every 5000 cycles, this simulates a

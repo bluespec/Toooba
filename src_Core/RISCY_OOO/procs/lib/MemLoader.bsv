@@ -1,6 +1,5 @@
-
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +7,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -113,7 +112,7 @@ module mkMemLoader#(Clock portalClk, Reset portalRst)(MemLoader);
     Reg#(LineDataOffset) reqSel <- mkRegU;
     Reg#(LineAddr) reqAddr <- mkRegU;
     Reg#(Line) reqData <- mkRegU;
-    Reg#(Vector#(LineSzData, Bit#(DataSzBytes))) reqBE <- mkRegU;
+    Reg#(LineByteEn) reqBE <- mkRegU;
 
     // sync FIFOs to cross to portal clk
     Clock userClk <- exposeCurrentClock;
@@ -137,7 +136,7 @@ module mkMemLoader#(Clock portalClk, Reset portalRst)(MemLoader);
             expectWrData <= True;
             reqSel <= getLineDataOffset(req.addr);
             reqAddr <= getLineAddr(req.addr);
-            reqBE <= replicate(0);
+            reqBE <= replicate(replicate(False));
             // check addr align to Data
             Bit#(LgDataSzBytes) offset = truncate(req.addr);
             doAssert(offset == 0, "write addr not aligned to Data");
@@ -157,13 +156,12 @@ module mkMemLoader#(Clock portalClk, Reset portalRst)(MemLoader);
         hostWrDataQ.deq;
         HostWrData wr = hostWrDataQ.first;
         // merge with req data & BE
-        Line newData = reqData;
-        Vector#(LineSzData, Bit#(DataSzBytes)) newBE = reqBE;
-        newData[reqSel] = wr.data;
-        newBE[reqSel] = wr.byteEn;
+        Line newLine = setDataAt(reqData, reqSel, wr.data);
+        LineDataByteEn newBE = unpack(pack(reqBE));
+        newBE[reqSel] = unpack(pack(wr.byteEn));
         // common state update
         expectWrData <= !wr.last;
-        reqData <= newData;
+        reqData <= newLine;
         reqSel <= reqSel + 1;
         reqAddr <= reqSel == maxBound ? reqAddr + 1 : reqAddr;
         // print
@@ -177,16 +175,16 @@ module mkMemLoader#(Clock portalClk, Reset portalRst)(MemLoader);
             MemLoaderMemReq req = DmaRq {
                 addr: {reqAddr, 0},
                 byteEn: unpack(pack(newBE)),
-                data: newData,
+                data: newLine,
                 id: ?
             };
             if(verbose) begin
                 $display("[MemLoader doStReq] req to LLC ", fshow(req));
             end
             // reset BE for next fresh LLC req
-            reqBE <= replicate(0);
+            reqBE <= replicate(replicate(False));
             // only send real write to LLC, otherwise may spawn orphan read resp
-            if(req.byteEn != replicate(False)) begin
+            if(req.byteEn != replicate(replicate(False))) begin
                 memReqQ.enq(req);
                 pendStCnt <= pendStCnt + 1;
             end
@@ -195,7 +193,7 @@ module mkMemLoader#(Clock portalClk, Reset portalRst)(MemLoader);
             end
         end
         else begin
-            reqBE <= newBE;
+            reqBE <= unpack(pack(newBE));
         end
     endrule
 
@@ -225,7 +223,7 @@ module mkMemLoader#(Clock portalClk, Reset portalRst)(MemLoader);
             if(wrBE == replicate(False)) begin
                 return MMIODataPRs {
                     valid: True,
-                    data: offset == 0 ? memStartAddr : zeroExtend(pack(busy))
+                    data: offset == 0 ? toMemTaggedData(memStartAddr) : toMemTaggedData(busy)
                 };
             end
             else begin

@@ -1,6 +1,5 @@
-
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +7,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -453,13 +452,13 @@ module mkSelfInvL1Bank#(
         // The silent E->M update is already done in pipeline
         Line curLine = ram.line;
         Line newLine = curLine;
-        LineDataOffset dataSel = getLineDataOffset(req.addr);
+        LineMemDataOffset dataSel = getLineMemDataOffset(req.addr);
         case(req.op) matches
             Ld: begin
-                procResp.respLd(req.id, curLine[dataSel]);
+                procResp.respLd(req.id, getTaggedDataAt(curLine, dataSel));
             end
             Lr: begin
-                procResp.respLrScAmo(req.id, curLine[dataSel]);
+                procResp.respLrScAmo(req.id, getTaggedDataAt(curLine, dataSel));
                 // set link addr
                 linkAddr <= Valid (getLineAddr(req.addr));
             end
@@ -470,11 +469,14 @@ module mkSelfInvL1Bank#(
                 // check Sc succeeds or not
                 Bool succeed = linkAddr == Valid (getLineAddr(req.addr));
                 // resp to proc
-                Data respVal = succeed ? fromInteger(valueof(ScSuccVal)) : fromInteger(valueof(ScFailVal));
+                MemTaggedData respVal = succeed ? fromInteger(valueof(ScSuccVal)) : fromInteger(valueof(ScFailVal));
                 procResp.respLrScAmo(req.id, respVal);
                 // calculate new data to write
                 if(succeed) begin
-                    newLine[dataSel] = getUpdatedData(curLine[dataSel], req.byteEn, req.data);
+                    let taggedData = getTaggedDataAt(curLine, dataSel);
+                    let newTaggedData =
+                      mergeMemTaggedDataBE(taggedData, req.data, zeroExtend(pack(req.byteEn)));
+                    newLine = setTaggedDataAt( newLine, dataSel, newTaggedData);
                 end
                 // reset link addr
                 linkAddr <= Invalid;
@@ -559,16 +561,28 @@ module mkSelfInvL1Bank#(
         // get line and sel
         Line curLine = ram.line;
         Line newLine = curLine;
-        LineDataOffset dataSel = getLineDataOffset(req.addr);
-        Bool upper32 = req.addr[2] == 1;
-        Data curData = curLine[dataSel];
+        LineMemDataOffset dataSel = getLineMemDataOffset(req.addr);
+        MemTaggedData current = getTaggedDataAt(curLine, dataSel);
+        Vector#(2, Bit#(64)) dwordData = current.data;
+        Vector#(4, Bit#(32))  wordData = unpack(pack(current.data));
+        Bit#(1) dwordIdx = req.addr[3];
+        Bit#(2)  wordIdx = req.addr[3:2];
         // resp processor
-        Data resp = req.amoInst.doubleWord ? curData : signExtend(
-            upper32 ? curData[63:32] : curData[31:0]
-        );
+        MemTaggedData resp = case (req.amoInst.width)
+          QWord: current;
+          DWord: MemTaggedData {
+            tag: False,
+            data: unpack(signExtend(dwordData[dwordIdx]))
+          };
+          Word: MemTaggedData {
+            tag: False,
+            data: unpack(signExtend(wordData[wordIdx]))
+          };
+        endcase;
         procResp.respLrScAmo(req.id, resp);
         // calculate new data to write
-        newLine[dataSel] = amoExec(req.amoInst, curData, req.data, upper32);
+        let newData = amoExec(req.amoInst, wordIdx, current, req.data);
+        newLine = setTaggedDataAt(newLine, dataSel, newData);
         // deq pipeline or swap in successor
         // Since AMO always hits in M, hit count is 0 and never self inv
         pipeline.deqWrite(succ, RamData {

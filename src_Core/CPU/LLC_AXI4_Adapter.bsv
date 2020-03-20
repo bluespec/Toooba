@@ -53,7 +53,7 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
             Bits#(childT, b__),
             FShow#(ToMemMsg#(idT, childT)),
             FShow#(MemRsMsg#(idT, childT)),
-            Add#(SizeOf#(Line), 0, 512)); // assert Line sz = 512
+            Add#(SizeOf#(Line), 0, TAdd#(512, 4))); // assert Line sz = 512 + 4 tags
 
    // Verbosity: 0: quiet; 1: LLC transactions; 2: loop detail
    Integer verbosity = 0;
@@ -141,7 +141,7 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
    Reg #(Bit #(3)) rg_rd_rsp_beat <- mkReg (0);
 
    FIFOF #(LdMemRq #(idT, childT)) f_pending_reads <- mkFIFOF;
-   Reg #(Bit #(512)) rg_cline <- mkRegU;
+   Reg #(CLine) rg_cline <- mkRegU;
 
    rule rl_handle_read_req (llc.toM.first matches tagged Ld .ld
                             &&& (ctr_wr_rsps_pending.value == 0));
@@ -180,11 +180,14 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
       end
 
       // Shift next 64 bits from fabric into the cache line being assembled
-      let new_cline = { mem_rsp.rdata, rg_cline [511:64] };
+      let new_cline_tag = { mem_rsp.ruser, pack(rg_cline.tag) [3:1] };
+      let new_cline_data = { mem_rsp.rdata, pack(rg_cline.data) [511:64] };
+      let new_cline = CLine { tag: rg_rd_rsp_beat[0] == 0 ? unpack(new_cline_tag) : rg_cline.tag
+                            , data: unpack(new_cline_data) };
 
       if (rg_rd_rsp_beat == 7) begin
          let ldreq <- pop (f_pending_reads);
-         MemRsMsg #(idT, childT) resp = MemRsMsg {data:  unpack (new_cline),
+         MemRsMsg #(idT, childT) resp = MemRsMsg {data:  new_cline,
                                                   child: ldreq.child,
                                                   id:    ldreq.id};
 
@@ -214,11 +217,11 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
       end
 
       Addr       line_addr = { wb.addr [63:6], 6'h0 };    // Addr of containing cache line
-      Line       line_data = wb.data;
       Vector #(8, Bit #(8)) line_bes = unpack (pack (wb.byteEn));
+      Vector #(8, Bit #(64)) line_data = unpack(pack(wb.data.data));
 
       Addr  offset = zeroExtend ( { rg_wr_req_beat, 3'b_000 } );    // Addr offset of 64b word for this beat
-      Bit #(64)  data64 = line_data [rg_wr_req_beat];
+      Bit #(64)  data64 =  line_data[rg_wr_req_beat];
       Bit #(8)   strb8  = line_bes  [rg_wr_req_beat];
       fa_fabric_send_write_req (line_addr | offset, strb8, data64);
 

@@ -407,8 +407,11 @@ function Maybe#(Trap) checkForException(
 endfunction
 
 // check mem access misaligned: byteEn is unshifted (just from Decode)
-function Bool memAddrMisaligned(Addr addr, ByteEn byteEn);
-    if(byteEn[7]) begin
+function Bool memAddrMisaligned(Addr addr, MemDataByteEn byteEn);
+    if(byteEn[15]) begin
+        return addr[3:0] != 0;
+    end
+    else if(byteEn[7]) begin
         return addr[2:0] != 0;
     end
     else if(byteEn[3]) begin
@@ -422,21 +425,24 @@ function Bool memAddrMisaligned(Addr addr, ByteEn byteEn);
     end
 endfunction
 
-function Data gatherLoad(Addr addr, ByteEn byteEn, Bool unsignedLd, Data data);
+function MemTaggedData gatherLoad( Addr addr, MemDataByteEn byteEn
+                                 , Bool unsignedLd, MemTaggedData data);
     function extend = unsignedLd ? zeroExtend : signExtend;
     Bit#(IndxShamt) offset = truncate(addr);
 
-    if(byteEn[7]) begin
-        return extend(data);
+    if(pack(byteEn) == ~0) return data;
+    else if(byteEn[7]) begin
+        Vector#(2, Bit#(64)) dataVec = unpack(pack(data.data));
+        return MemTaggedData { tag: False, data: unpack(extend(dataVec[offset[3]])) };
     end else if(byteEn[3]) begin
-        Vector#(2, Bit#(32)) dataVec = unpack(data);
-        return extend(dataVec[offset[2]]);
+        Vector#(4, Bit#(32)) dataVec = unpack(pack(data.data));
+        return MemTaggedData { tag: False, data: unpack(extend(dataVec[offset[3:2]])) };
     end else if(byteEn[1]) begin
-        Vector#(4, Bit#(16)) dataVec = unpack(data);
-        return extend(dataVec[offset[2:1]]);
+        Vector#(8, Bit#(16)) dataVec = unpack(pack(data.data));
+        return MemTaggedData { tag: False, data: unpack(extend(dataVec[offset[3:1]])) };
     end else begin
-        Vector#(8, Bit#(8)) dataVec = unpack(data);
-        return extend(dataVec[offset]);
+        Vector#(16, Bit#(8)) dataVec = unpack(pack(data.data));
+        return MemTaggedData { tag: False, data: unpack(extend(dataVec[offset])) };
     end
 endfunction
 

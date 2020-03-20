@@ -103,7 +103,7 @@ function Maybe#(MemInst) decodeMemInst(Instruction inst);
     // byteEn
     // TODO: Some combinations of operations and byteEn's are illegal.
     // They should be detected here.
-    ByteEn byteEn = replicate(False);
+    MemDataByteEn byteEn = replicate(False);
     case (funct3)
         memB, memBU : byteEn[0] = True;
         memH, memHU : begin
@@ -116,7 +116,16 @@ function Maybe#(MemInst) decodeMemInst(Instruction inst);
                           byteEn[2] = True;
                           byteEn[3] = True;
                       end
-        memD        : byteEn = replicate(True);
+        memD        : begin
+                          byteEn[0] = True;
+                          byteEn[1] = True;
+                          byteEn[2] = True;
+                          byteEn[3] = True;
+                          byteEn[4] = True;
+                          byteEn[5] = True;
+                          byteEn[6] = True;
+                          byteEn[7] = True;
+                      end
         default     : illegalInst = True;
     endcase
 
