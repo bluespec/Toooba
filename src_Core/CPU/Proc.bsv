@@ -4,7 +4,7 @@ package Proc;
 
 // Copyright (c) 2018 Massachusetts Institute of Technology
 // Portions Copyright (c) 2019-2020 Bluespec, Inc.
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -12,10 +12,10 @@ package Proc;
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -75,7 +75,7 @@ import LLC_AXI4_Adapter  :: *;
 import MMIO_AXI4_Adapter :: *;
 
 import SoC_Map      :: *;
-import AXI4_Types   :: *;
+import AXI4   :: *;
 import Fabric_Defs  :: *;
 
 `ifdef INCLUDE_GDB_CONTROL

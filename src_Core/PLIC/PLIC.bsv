@@ -25,13 +25,13 @@ import  Assert       :: *;
 import  Cur_Cycle  :: *;
 import  GetPut_Aux :: *;
 import  Semi_FIFOF :: *;
+import  SourceSink :: *;
+import  AXI4       :: *;
 
 // ================================================================
 // Project imports
 
-import AXI4_Types   :: *;
-import AXI4_Fabric  :: *;
-import Fabric_Defs  :: *;    // for Wd_Id, Wd_Addr, Wd_Data, Wd_User
+import Fabric_Defs  :: *;    // for Wd_SId_2x3, Wd_Addr, Wd_Data...
 
 // ================================================================
 // Change bitwidth without requiring < or > constraints.
@@ -84,7 +84,9 @@ interface PLIC_IFC #(numeric type  t_n_external_sources,
    method Action set_addr_map (Bit #(64)  addr_base, Bit #(64)  addr_lim);
 
    // Memory-mapped access
-   interface AXI4_Slave_IFC #(Wd_Id, Wd_Addr, Wd_Data, Wd_User) axi4_slave;
+   interface AXI4_Slave_Synth #(Wd_SId_2x3, Wd_Addr, Wd_Data,
+                                Wd_AW_User, Wd_W_User, Wd_B_User,
+                                Wd_AR_User, Wd_R_User) axi4_slave;
 
    // sources
    interface Vector #(t_n_external_sources, PLIC_Source_IFC)  v_sources;
@@ -126,7 +128,9 @@ module mkPLIC (PLIC_IFC #(t_n_external_sources, t_n_targets, t_max_priority))
    Reg #(Bit #(64))  rg_addr_lim  <- mkRegU;
 
    // Connector to AXI4 fabric
-   AXI4_Slave_Xactor_IFC #(Wd_Id, Wd_Addr, Wd_Data, Wd_User) slave_xactor <- mkAXI4_Slave_Xactor;
+   AXI4_Slave_Width_Xactor#(Wd_SId_2x3, Wd_Addr, Wd_Data_Periph, Wd_Data,
+                              Wd_AW_User_Periph, Wd_W_User_Periph, Wd_B_User_Periph, Wd_AR_User_Periph, Wd_R_User_Periph,
+                              Wd_AW_User, Wd_W_User, Wd_B_User, Wd_AR_User, Wd_R_User) slave_xactor <- mkAXI4_Slave_Zeroing_Xactor;
 
    // ----------------
    // Per-interrupt source state
@@ -228,7 +232,7 @@ module mkPLIC (PLIC_IFC #(t_n_external_sources, t_n_targets, t_max_priority))
          for (Integer source_id = 0; source_id < n_sources; source_id = source_id + 1)
             vvrg_ie [target_id][source_id] <= False;
 
-      slave_xactor.reset;
+      slave_xactor.clear;
 
       f_reset_rsps.enq (?);
    endrule
@@ -243,7 +247,7 @@ module mkPLIC (PLIC_IFC #(t_n_external_sources, t_n_targets, t_max_priority))
 
    rule rl_process_rd_req (! f_reset_reqs.notEmpty);
 
-      let rda <- pop_o (slave_xactor.o_rd_addr);
+      let rda <- get(slave_xactor.master.ar);
       if (cfg_verbosity > 1) begin
          $display ("%0d: PLIC.rl_process_rd_req:", cur_cycle);
          $display ("    ", fshow (rda));
@@ -251,17 +255,17 @@ module mkPLIC (PLIC_IFC #(t_n_external_sources, t_n_targets, t_max_priority))
 
       let        addr_offset = rda.araddr - rg_addr_base;
       Bit #(64)  rdata       = 0;
-      AXI4_Resp  rresp       = axi4_resp_okay;
+      AXI4_Resp  rresp       = OKAY;
 
       if (rda.araddr < rg_addr_base) begin
          // Technically this should not happen: the fabric should
          // never have delivered such an addr to this IP.
          $display ("%0d: ERROR: PLIC.rl_process_rd_req: unrecognized addr", cur_cycle);
          $display ("            ", fshow (rda));
-         rresp = axi4_resp_decerr;
+         rresp = DECERR;
       end
 
-      // Source Priority 
+      // Source Priority
       else if (addr_offset < 'h1000) begin
          Bit #(T_wd_source_id)  source_id = truncate (addr_offset [11:2]);
          if ((0 < source_id) && (source_id <= fromInteger (n_sources - 1))) begin
@@ -272,7 +276,7 @@ module mkPLIC (PLIC_IFC #(t_n_external_sources, t_n_targets, t_max_priority))
                          cur_cycle, source_id, rdata);
          end
          else
-            rresp = axi4_resp_slverr;
+            rresp = SLVERR;
       end
 
       // Source IPs (interrupt pending).
@@ -297,7 +301,7 @@ module mkPLIC (PLIC_IFC #(t_n_external_sources, t_n_targets, t_max_priority))
                          cur_cycle, source_id_base, rdata);
          end
          else
-            rresp = axi4_resp_slverr;
+            rresp = SLVERR;
       end
 
       // Source IEs (interrupt enables) for a target
@@ -324,7 +328,7 @@ module mkPLIC (PLIC_IFC #(t_n_external_sources, t_n_targets, t_max_priority))
                          cur_cycle, source_id_base, rdata);
          end
          else
-            rresp = axi4_resp_slverr;
+            rresp = SLVERR;
       end
 
       // Target threshold
@@ -338,7 +342,7 @@ module mkPLIC (PLIC_IFC #(t_n_external_sources, t_n_targets, t_max_priority))
                          cur_cycle, target_id, rdata);
          end
          else
-            rresp = axi4_resp_slverr;
+            rresp = SLVERR;
       end
 
       // Interrupt service claim by target
@@ -353,7 +357,7 @@ module mkPLIC (PLIC_IFC #(t_n_external_sources, t_n_targets, t_max_priority))
                $display ("    Still servicing interrupt from source %0d", vrg_servicing_source [target_id]);
                $display ("    Trying to claim service   for  source %0d", max_id);
                $display ("    Ignoring.");
-               rresp = axi4_resp_slverr;
+               rresp = SLVERR;
             end
             else begin
                if (max_id != 0) begin
@@ -369,13 +373,13 @@ module mkPLIC (PLIC_IFC #(t_n_external_sources, t_n_targets, t_max_priority))
             end
          end
          else
-            rresp = axi4_resp_slverr;
+            rresp = SLVERR;
       end
 
       else
-         rresp = axi4_resp_slverr;
+         rresp = SLVERR;
 
-      if (rresp != axi4_resp_okay) begin
+      if (rresp != OKAY) begin
          $display ("%0d: ERROR: PLIC.rl_process_rd_req: unrecognized addr", cur_cycle);
          $display ("            ", fshow (rda));
       end
@@ -385,12 +389,12 @@ module mkPLIC (PLIC_IFC #(t_n_external_sources, t_n_targets, t_max_priority))
 
       // Send read-response to bus
       Fabric_Data x = truncate (rdata);
-      let rdr = AXI4_Rd_Data {rid:   rda.arid,
-                              rdata: x,
-                              rresp: rresp,
-                              rlast: True,
-                              ruser: rda.aruser};
-      slave_xactor.i_rd_data.enq (rdr);
+      let rdr = AXI4_RFlit {rid:   rda.arid,
+                            rdata: x,
+                            rresp: rresp,
+                            rlast: True,
+                            ruser: rda.aruser}; // XXX This requires that Wd_AR_User == Wd_R_User
+      slave_xactor.master.r.put(rdr);
 
       if (cfg_verbosity > 1) begin
          $display ("%0d: PLIC.rl_process_rd_req", cur_cycle);
@@ -406,8 +410,8 @@ module mkPLIC (PLIC_IFC #(t_n_external_sources, t_n_targets, t_max_priority))
 
    rule rl_process_wr_req (! f_reset_reqs.notEmpty);
 
-      let wra <- pop_o (slave_xactor.o_wr_addr);
-      let wrd <- pop_o (slave_xactor.o_wr_data);
+      let wra <- get(slave_xactor.master.aw);
+      let wrd <- get(slave_xactor.master.w);
       if (cfg_verbosity > 1) begin
          $display ("%0d: PLIC.rl_process_wr_req", cur_cycle);
          $display ("    ", fshow (wra));
@@ -418,7 +422,7 @@ module mkPLIC (PLIC_IFC #(t_n_external_sources, t_n_targets, t_max_priority))
       let wdata32      = (((valueOf (Wd_Data) == 64) && ((addr_offset & 'h7) == 'h4))
                           ? wrd.wdata [63:32]
                           : wrd.wdata [31:0]);
-      let bresp = axi4_resp_okay;
+      let bresp = OKAY;
 
       if (wra.awaddr < rg_addr_base) begin
          // Technically this should not happen: the fabric should
@@ -426,10 +430,10 @@ module mkPLIC (PLIC_IFC #(t_n_external_sources, t_n_targets, t_max_priority))
          $display ("%0d: ERROR: PLIC.rl_process_wr_req: unrecognized addr", cur_cycle);
          $display ("            ", fshow (wra));
          $display ("            ", fshow (wrd));
-         bresp = axi4_resp_decerr;
+         bresp = DECERR;
       end
 
-      // Source priority 
+      // Source priority
       else if (addr_offset < 'h1000) begin
          Bit #(T_wd_source_id)  source_id = truncate (addr_offset [11:2]);
          if ((0 < source_id) && (source_id <= fromInteger (n_sources - 1))) begin
@@ -441,7 +445,7 @@ module mkPLIC (PLIC_IFC #(t_n_external_sources, t_n_targets, t_max_priority))
          end
          else begin
             // Note: write to source_id 0 is error; should it just be ignored?
-            bresp = axi4_resp_slverr;
+            bresp = SLVERR;
          end
       end
 
@@ -456,7 +460,7 @@ module mkPLIC (PLIC_IFC #(t_n_external_sources, t_n_targets, t_max_priority))
                          cur_cycle, source_id_base);
          end
          else
-            bresp = axi4_resp_slverr;
+            bresp = SLVERR;
       end
 
       // Source IEs (interrupt enables) for a target
@@ -479,7 +483,7 @@ module mkPLIC (PLIC_IFC #(t_n_external_sources, t_n_targets, t_max_priority))
                          cur_cycle, target_id, source_id_base, wdata32);
          end
          else
-            bresp = axi4_resp_slverr;
+            bresp = SLVERR;
       end
 
       // Target threshold
@@ -493,7 +497,7 @@ module mkPLIC (PLIC_IFC #(t_n_external_sources, t_n_targets, t_max_priority))
                          cur_cycle, target_id, wdata32);
          end
          else
-            bresp = axi4_resp_slverr;
+            bresp = SLVERR;
       end
 
       // Interrupt service completion by target
@@ -515,27 +519,27 @@ module mkPLIC (PLIC_IFC #(t_n_external_sources, t_n_targets, t_max_priority))
                          cur_cycle);
                $display ("    Completion message from target %0d to source %0d", target_id, source_id);
                $display ("    Ignoring");
-               bresp = axi4_resp_slverr;
+               bresp = SLVERR;
             end
          end
          else
-            bresp = axi4_resp_slverr;
+            bresp = SLVERR;
       end
 
       else
-         bresp = axi4_resp_slverr;
+         bresp = SLVERR;
 
-      if (bresp != axi4_resp_okay) begin
+      if (bresp != OKAY) begin
          $display ("%0d: ERROR: PLIC.rl_process_wr_req: unrecognized addr", cur_cycle);
          $display ("            ", fshow (wra));
          $display ("            ", fshow (wrd));
       end
 
       // Send write-response to bus
-      let wrr = AXI4_Wr_Resp {bid:   wra.awid,
-                              bresp: bresp,
-                              buser: wra.awuser};
-      slave_xactor.i_wr_resp.enq (wrr);
+      let wrr = AXI4_BFlit {bid:   wra.awid,
+                            bresp: bresp,
+                            buser: wra.awuser}; // XXX This requires that Wd_AW_User == Wd_B_User
+      slave_xactor.master.b.put(wrr);
 
       if (cfg_verbosity > 1) begin
          $display ("%0d: PLIC.AXI4.rl_process_wr_req", cur_cycle);
@@ -610,7 +614,7 @@ module mkPLIC (PLIC_IFC #(t_n_external_sources, t_n_targets, t_max_priority))
    endmethod
 
    // Memory-mapped access
-   interface  axi4_slave = slave_xactor.axi_side;
+   interface  axi4_slave = slave_xactor.slaveSynth;
 
    // sources
    interface  v_sources = genWith  (fn_mk_PLIC_Source_IFC);

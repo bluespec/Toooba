@@ -35,6 +35,8 @@ BSC_COMPILATION_FLAGS += \
 	-D MULT_SYNTH    \
 	-D Near_Mem_Caches    \
 	-D FABRIC64    \
+	-D CAP128 \
+	-D MEM64 \
 	-D RVFI_DII     \
 	-D RVFI
 

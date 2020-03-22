@@ -21,11 +21,14 @@ import Vector        :: *;
 import GetPut        :: *;
 import ClientServer  :: *;
 
+// ----------------
+// BSV additional libs
+import AXI4 :: *;
+
 // ================================================================
 // Project imports
 
 // Main fabric
-import AXI4_Types   :: *;
 import Fabric_Defs  :: *;
 
 // External interrupt request interface
@@ -64,10 +67,12 @@ interface CoreW_IFC #(numeric type t_n_interrupt_sources);
    // AXI4 Fabric interfaces
 
    // CPU IMem to Fabric master interface
-   interface AXI4_Master_IFC #(Wd_Id, Wd_Addr, Wd_Data, Wd_User) cpu_imem_master;
+   interface AXI4_Master_Synth #(TAdd#(Wd_MId,1), Wd_Addr, Wd_Data,
+                                 0, 0, 0, 0, 0) cpu_imem_master;
 
    // CPU DMem to Fabric master interface
-   interface AXI4_Master_IFC #(Wd_Id, Wd_Addr, Wd_Data, Wd_User) cpu_dmem_master;
+   interface AXI4_Master_Synth #(TAdd#(Wd_MId,1), Wd_Addr, Wd_Data,
+                                 0, 0, 0, 0, 0) cpu_dmem_master;
 
    // ----------------------------------------------------------------
    // External interrupt sources

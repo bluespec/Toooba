@@ -19,11 +19,9 @@ package CoreW;
 // This package defines:
 //     Core_IFC
 //     mkCore #(Core_IFC)
-//     mkFabric_2x3    -- specialized AXI4 fabric used inside this core
 //
 // mkCoreW instantiates:
 //     - mkProc (the RISC-V CPU, a version of MIT's RISCY-OOO)
-//     - mkFabric_2x3
 //     - mkPLIC_16_2_7
 //     - mkTV_Encode          (Tandem-Verification logic, optional: INCLUDE_TANDEM_VERIF)
 //     - mkDebug_Module       (RISC-V Debug Module, optional: INCLUDE_GDB_CONTROL)
@@ -44,6 +42,9 @@ import Clocks       :: *;
 
 import Cur_Cycle  :: *;
 import GetPut_Aux :: *;
+import Routable   :: *;
+import AXI4       :: *;
+import TagControllerAXI :: *;
 
 // ================================================================
 // Project imports
@@ -56,9 +57,7 @@ import ProcTypes    :: *;
 // From Toooba
 
 // Main fabric
-import AXI4_Types   :: *;
-import AXI4_Fabric  :: *;
-import Fabric_Defs  :: *;    // for Wd_Id, Wd_Addr, Wd_Data, Wd_User
+import Fabric_Defs  :: *;    // for Wd_Id, Wd_Addr, Wd_Data...
 import SoC_Map      :: *;
 
 `ifdef INCLUDE_GDB_CONTROL
@@ -148,9 +147,13 @@ module mkCoreW #(Reset dm_power_on_reset)
    // RISCY-OOO processor
    // TODO (when we do multicore): need resets for each core.
    Proc_IFC proc <- mkProc (reset_by hart0_reset);
+   // handle imem interface
+   let tmp0 <- fromAXI4_Master_Synth(proc.master0);
+   let tmp1 <- toUnguarded_AXI4_Master(tmp0);
+   let proc_imem = toAXI4_Master_Synth(extendIDFields(zeroMasterUserFields(tmp1), 0));
 
-   // A 2x3 fabric for connecting {CPU, Debug_Module} to {Fabric, PLIC}
-   Fabric_2x3_IFC  fabric_2x3 <- mkFabric_2x3;
+   // AXI4 tagController
+   let tagController <- mkTagControllerAXI(reset_by hart0_reset); // TODO double check if reseting like this is good enough
 
    // PLIC (Platform-Level Interrupt Controller)
    PLIC_IFC_16_2_7  plic <- mkPLIC_16_2_7;
@@ -310,8 +313,7 @@ module mkCoreW #(Reset dm_power_on_reset)
    // BEGIN SECTION: no DM
 
    // No DM, so 'DM bus master' is AXI4 dummy
-   AXI4_Master_IFC #(Wd_Id, Wd_Addr, Wd_Data, Wd_User)
-   dm_master_local = dummy_AXI4_Master_ifc;
+   let dm_master_local = culDeSac;
 
 `ifdef INCLUDE_TANDEM_VERIF
    // TV, no DM: stub out the dm input to TV
@@ -326,14 +328,41 @@ module mkCoreW #(Reset dm_power_on_reset)
    // Connect the local 2x3 fabric
 
    // Masters on the local 2x3 fabric
-   mkConnection (proc.master1,  fabric_2x3.v_from_masters [cpu_dmem_master_num]);
-   mkConnection (dm_master_local, fabric_2x3.v_from_masters [debug_module_sba_master_num]);
+   Vector#(Num_Masters_2x3,
+           AXI4_Master_Synth #(Wd_MId_2x3, Wd_Addr, Wd_Data,
+                               Wd_AW_User, Wd_W_User, Wd_B_User,
+                               Wd_AR_User, Wd_R_User))
+                               master_vector = newVector;
+   //let master_vector = newVector;
+   master_vector[cpu_dmem_master_num]         = proc.master1;
+   master_vector[debug_module_sba_master_num] = dm_master_local;
 
    // Slaves on the local 2x3 fabric
-   // Two of the slaves are connected here.
-   // The third slave (default slave) is taken out directly to the Core interface
-   mkConnection (fabric_2x3.v_to_slaves [plic_slave_num], plic.axi4_slave);
-   mkConnection (fabric_2x3.v_to_slaves [llc_slave_num],  proc.debug_module_mem_server);
+   // default slave is forwarded out directly to the Core interface
+   Vector#(Num_Slaves_2x3,
+           AXI4_Slave_Synth #(Wd_SId_2x3, Wd_Addr, Wd_Data,
+                              Wd_AW_User, Wd_W_User, Wd_B_User,
+                              Wd_AR_User, Wd_R_User))
+                              slave_vector = newVector;
+   //let slave_vector = newVector;
+   slave_vector[default_slave_num] = toAXI4_Slave_Synth(tagController.slave);
+   slave_vector[llc_slave_num]     = proc.debug_module_mem_server;
+   slave_vector[plic_slave_num]    = plic.axi4_slave;
+
+   function Vector#(Num_Slaves_2x3, Bool) route_2x3 (Bit#(Wd_Addr) addr);
+      Vector#(Num_Slaves_2x3, Bool) res = replicate(False);
+      if (inRange(soc_map.m_mem0_controller_addr_range, addr))
+        res[llc_slave_num] = True;
+      else if (inRange(soc_map.m_plic_addr_range, addr))
+        res[plic_slave_num] = True;
+      else
+        res[default_slave_num] = True;
+      Bit #(24) topBits = truncateLSB(addr); //XXX TODO Tag controller masks to 40 bits
+      if (topBits != 0) res = replicate(False);
+      return res;
+   endfunction
+
+   mkAXI4Bus_Synth (route_2x3, master_vector, slave_vector);
 
    // ================================================================
    // Connect external interrupt lines from PLIC to CPU
@@ -363,8 +392,8 @@ module mkCoreW #(Reset dm_power_on_reset)
    // Start
 
    method Action start (Bit #(64) tohost_addr, Bit #(64) fromhost_addr);
-      plic.set_addr_map (zeroExtend (soc_map.m_plic_addr_base),
-                         zeroExtend (soc_map.m_plic_addr_lim));
+      plic.set_addr_map (zeroExtend (soc_map.m_plic_addr_range.base),
+                         zeroExtend (rangeTop(soc_map.m_plic_addr_range)));
 
       let pc = soc_map_struct.pc_reset_value;
       proc.start (pc, tohost_addr, fromhost_addr);
@@ -383,10 +412,10 @@ module mkCoreW #(Reset dm_power_on_reset)
    // AXI4 Fabric interfaces
 
    // IMem to Fabric master interface
-   interface AXI4_Master_IFC  cpu_imem_master = proc.master0;
+   interface cpu_imem_master = proc_imem;
 
    // DMem to Fabric master interface
-   interface AXI4_Master_IFC  cpu_dmem_master = fabric_2x3.v_to_slaves [default_slave_num];
+   interface cpu_dmem_master = toAXI4_Master_Synth(tagController.master);
 
    // ----------------------------------------------------------------
    // External interrupt sources
@@ -442,64 +471,15 @@ endmodule: mkCoreW
 // ----------------
 // Fabric port numbers for masters
 
-typedef 2  Num_Masters_2x3;
-
-typedef Bit #(TLog #(Num_Masters_2x3))  Master_Num_2x3;
-
 Master_Num_2x3  cpu_dmem_master_num         = 0;
 Master_Num_2x3  debug_module_sba_master_num = 1;
 
 // ----------------
 // Fabric port numbers for slaves
 
-typedef 3  Num_Slaves_2x3;
-
-typedef Bit #(TLog #(Num_Slaves_2x3))  Slave_Num_2x3;
-
 Slave_Num_2x3  default_slave_num = 0;    // for I/O, uncached memory, etc.
 Slave_Num_2x3  plic_slave_num    = 1;    // PLIC mem-mapped registers
 Slave_Num_2x3  llc_slave_num     = 2;    // Normal cached memory (connects to coherent Last-Level Cache)
-
-// ----------------
-// Specialization of parameterized AXI4 fabric for 2x3 Core fabric
-
-typedef AXI4_Fabric_IFC #(Num_Masters_2x3,
-                          Num_Slaves_2x3,
-                          Wd_Id,
-                          Wd_Addr,
-                          Wd_Data,
-                          Wd_User)  Fabric_2x3_IFC;
-
-// ----------------
-
-(* synthesize *)
-module mkFabric_2x3 (Fabric_2x3_IFC);
-
-   // System address map
-   SoC_Map_IFC  soc_map  <- mkSoC_Map;
-
-   // ----------------
-   // Slave address decoder
-   // Any addr is legal, and there is only one slave to service it.
-
-   function Tuple2 #(Bool, Slave_Num_2x3) fn_addr_to_slave_num_2x3  (Fabric_Addr addr);
-      if (   (soc_map.m_mem0_controller_addr_base <= addr)
-          && (addr < soc_map.m_mem0_controller_addr_lim))
-         return tuple2 (True, llc_slave_num);
-
-      else if (   (soc_map.m_plic_addr_base <= addr)
-               && (addr < soc_map.m_plic_addr_lim))
-         return tuple2 (True, plic_slave_num);
-
-      else
-         return tuple2 (True, default_slave_num);
-   endfunction
-
-   AXI4_Fabric_IFC #(Num_Masters_2x3, Num_Slaves_2x3, Wd_Id, Wd_Addr, Wd_Data, Wd_User)
-       fabric <- mkAXI4_Fabric (fn_addr_to_slave_num_2x3);
-
-   return fabric;
-endmodule: mkFabric_2x3
 
 // ================================================================
 

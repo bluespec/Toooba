@@ -21,10 +21,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -72,8 +72,10 @@ import MemLoader::*;
 // ----------------
 // From Toooba
 
-import AXI4_Types   :: *;
+import AXI4 :: *;
+import SourceSink :: *;
 import Fabric_Defs  :: *;
+import SoC_Map  :: *;
 import Semi_FIFOF   :: *;
 
 // ================================================================
@@ -125,7 +127,9 @@ module mkLLCDmaConnect #(
     DmaServer#(LLCDmaReqId) llc,
     // MemLoaderMemClient memLoader,    // REPLACED BY AXI4_Slave_interface
     Vector#(CoreNum, TlbMemClient) tlb
-)(AXI4_Slave_IFC #(Wd_Id, Wd_Addr, Wd_Data, Wd_User)) provisos (
+)(AXI4_Slave_Synth #(Wd_SId_2x3, Wd_Addr, Wd_Data,
+                     Wd_AW_User, Wd_W_User, Wd_B_User,
+                     Wd_AR_User, Wd_R_User)) provisos (
     Alias#(dmaRqT, DmaRq#(LLCDmaReqId))
 );
     Bool verbose = False;
@@ -136,7 +140,7 @@ module mkLLCDmaConnect #(
    FIFOF #(Bit #(3)) f_dword_in_line <- mkFIFOF;
 
    // Slave transactor for requests from Debug Module
-   AXI4_Slave_Xactor_IFC #(Wd_Id, Wd_Addr, Wd_Data, Wd_User) axi4_slave_xactor <- mkAXI4_Slave_Xactor;
+   let axi4_slave_xactor <- mkAXI4_Slave_Xactor;
 
    // ================================================================
    // These regs are a 1-location local cache for an LLC Cache Line,
@@ -155,10 +159,10 @@ module mkLLCDmaConnect #(
    // Respond to store-requests from the external client on store-hit
    rule rl_handle_MemLoader_st_req (   (   (rg_cacheline_cache_state == CACHELINE_CACHE_CLEAN)
                                         || (rg_cacheline_cache_state == CACHELINE_CACHE_DIRTY))
-                                    && (fn_addr_is_in_line (axi4_slave_xactor.o_wr_addr.first.awaddr,
+                                    && (fn_addr_is_in_line (axi4_slave_xactor.master.aw.peek.awaddr,
                                                             rg_cacheline_cache_addr)));
-      let wr_addr <- pop_o (axi4_slave_xactor.o_wr_addr);
-      let wr_data <- pop_o (axi4_slave_xactor.o_wr_data);
+      let wr_addr <- get (axi4_slave_xactor.master.aw);
+      let wr_data <- get (axi4_slave_xactor.master.w);
       Addr      addr = wr_addr.awaddr;
       Bit #(64) data = wr_data.wdata;
       Bit #(64) mask = fn_expand_strb_to_mask (wr_data.wstrb);
@@ -176,11 +180,11 @@ module mkLLCDmaConnect #(
       rg_cacheline_cache_dirty_delay <= '1;    // start write-back delay countdown
 
       // Send response to external client
-      AXI4_Wr_Resp #(Wd_Id, Wd_User)
-      wr_resp = AXI4_Wr_Resp {bid:   0,    // TODO: change uniformly to Fabric_id
-                              bresp: axi4_resp_okay,
-                              buser: ?};
-      axi4_slave_xactor.i_wr_resp.enq (wr_resp);
+      axi4_slave_xactor.master.b.put(AXI4_BFlit{
+        bid:   0,    // TODO: change uniformly to Fabric_id
+        bresp: OKAY,
+        buser: ?
+      });
 
       if (verbosity >= 2) begin
          $display ("%0d: %m.rl_handle_MemLoader_st_req: addr %0h data %0h strb %0h",
@@ -196,9 +200,9 @@ module mkLLCDmaConnect #(
    // Responds to load-requests from the external client on load-hit
    rule rl_handle_MemLoader_ld_req (   (   (rg_cacheline_cache_state == CACHELINE_CACHE_CLEAN)
                                         || (rg_cacheline_cache_state == CACHELINE_CACHE_DIRTY))
-                                    && (fn_addr_is_in_line (axi4_slave_xactor.o_rd_addr.first.araddr,
+                                    && (fn_addr_is_in_line (axi4_slave_xactor.master.ar.peek.araddr,
                                                             rg_cacheline_cache_addr)));
-      let rd_addr <- pop_o (axi4_slave_xactor.o_rd_addr);
+      let rd_addr <- get (axi4_slave_xactor.master.ar);
       Addr addr = rd_addr.araddr;
 
       // Read rg_cacheline_cache as 64-bit words
@@ -207,13 +211,13 @@ module mkLLCDmaConnect #(
       Bit #(64) dword         = line_dwords [dword_in_line];
 
       // Send response to external client
-      AXI4_Rd_Data #(Wd_Id, Wd_Data, Wd_User)
-      rd_data = AXI4_Rd_Data {rid: 0,        // TODO: fixup
-                              rdata: dword,
-                              rresp: axi4_resp_okay,
-                              rlast: True,
-                              ruser: ?};
-      axi4_slave_xactor.i_rd_data.enq (rd_data);
+      axi4_slave_xactor.master.r.put(AXI4_RFlit{
+        rid: 0,        // TODO: fixup
+        rdata: dword,
+        rresp: OKAY,
+        rlast: True,
+        ruser: ?
+      });
 
       if (verbosity >= 2) begin
          $display ("%0d: %m.rl_handle_MemLoader_ld_req: addr %0h", cur_cycle, rd_addr.araddr);
@@ -257,12 +261,12 @@ module mkLLCDmaConnect #(
 
    // Initiate writeback if dirty and next request is store-miss
    rule rl_cacheline_cache_writeback_st_miss (   (rg_cacheline_cache_state == CACHELINE_CACHE_DIRTY)
-                                              && (! fn_addr_is_in_line (axi4_slave_xactor.o_wr_addr.first.awaddr,
+                                              && (! fn_addr_is_in_line (axi4_slave_xactor.master.aw.peek.awaddr,
                                                                         rg_cacheline_cache_addr)));
       if (verbosity >= 2) begin
          $display ("%0d: %m.rl_cacheline_cache_writeback_st_miss.", cur_cycle);
          $display ("    Old line addr %0h", rg_cacheline_cache_addr);
-         $display ("    New addr      %0h", axi4_slave_xactor.o_wr_addr.first.awaddr);
+         $display ("    New addr      %0h", axi4_slave_xactor.master.aw.peek.awaddr);
       end
 
       fa_writeback;
@@ -271,12 +275,12 @@ module mkLLCDmaConnect #(
 
    // Initiate writeback if dirty and next request is load-miss
    rule rl_cacheline_cache_writeback_ld_miss (   (rg_cacheline_cache_state == CACHELINE_CACHE_DIRTY)
-                                              && (! fn_addr_is_in_line (axi4_slave_xactor.o_rd_addr.first.araddr,
+                                              && (! fn_addr_is_in_line (axi4_slave_xactor.master.ar.peek.araddr,
                                                                         rg_cacheline_cache_addr)));
       if (verbosity >= 2) begin
          $display ("%0d: %m.rl_cacheline_cache_writeback_ld_miss.", cur_cycle);
          $display ("    Old line addr %0h", rg_cacheline_cache_addr);
-         $display ("    New addr      %0h", axi4_slave_xactor.o_wr_addr.first.awaddr);
+         $display ("    New addr      %0h", axi4_slave_xactor.master.aw.peek.awaddr);
       end
 
       fa_writeback;
@@ -315,9 +319,9 @@ module mkLLCDmaConnect #(
 
    // Initiate reload when cacheline_cache is clean on store-miss
    rule rl_cacheline_cache_reload_req_st (   (rg_cacheline_cache_state == CACHELINE_CACHE_CLEAN)
-                                          && (! fn_addr_is_in_line (axi4_slave_xactor.o_wr_addr.first.awaddr,
+                                          && (! fn_addr_is_in_line (axi4_slave_xactor.master.aw.peek.awaddr,
                                                                     rg_cacheline_cache_addr)));
-      let addr = axi4_slave_xactor.o_wr_addr.first.awaddr;
+      let addr = axi4_slave_xactor.master.aw.peek.awaddr;
 
       if (verbosity >= 2) begin
          $display ("%0d: %m.rl_cacheline_cache_reload_req_st for addr %0h", cur_cycle, addr);
@@ -329,9 +333,9 @@ module mkLLCDmaConnect #(
 
    // Initiate reload when cacheline_cache is clean on load-miss
    rule rl_cacheline_cache_reload_req_ld (   (rg_cacheline_cache_state == CACHELINE_CACHE_CLEAN)
-                                          && (! fn_addr_is_in_line (axi4_slave_xactor.o_rd_addr.first.araddr,
+                                          && (! fn_addr_is_in_line (axi4_slave_xactor.master.ar.peek.araddr,
                                                                     rg_cacheline_cache_addr)));
-      let addr = axi4_slave_xactor.o_rd_addr.first.araddr;
+      let addr = axi4_slave_xactor.master.ar.peek.araddr;
 
       if (verbosity >= 2) begin
          $display ("%0d: %m.rl_cacheline_cache_reload_req_ld for addr %0h", cur_cycle, addr);
@@ -426,5 +430,5 @@ module mkLLCDmaConnect #(
     // ================================================================
     // INTERFACE
 
-    return axi4_slave_xactor.axi_side;
+    return axi4_slave_xactor.slaveSynth;
 endmodule

@@ -29,8 +29,10 @@ import CCTypes     :: *;
 // ----------------
 // From Bluespec Pipes
 
-import AXI4_Types   :: *;
+import AXI4 :: *;
+import SourceSink :: *;
 import Fabric_Defs  :: *;
+import SoC_Map      :: *;
 
 // ================================================================
 
@@ -38,7 +40,9 @@ interface LLC_AXI4_Adapter_IFC;
    method Action reset;
 
    // Fabric master interface for memory
-   interface AXI4_Master_IFC #(Wd_Id, Wd_Addr, Wd_Data, Wd_User) mem_master;
+   interface AXI4_Master_Synth #(Wd_MId, Wd_Addr, Wd_Data,
+                                 Wd_AW_User, Wd_W_User, Wd_B_User,
+                                 Wd_AR_User, Wd_R_User) mem_master;
 endinterface
 
 // ================================================================
@@ -58,7 +62,7 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
    // ================================================================
    // Fabric request/response
 
-   AXI4_Master_Xactor_IFC #(Wd_Id, Wd_Addr, Wd_Data, Wd_User) master_xactor <- mkAXI4_Master_Xactor_2;
+   let master_xactor <- mkAXI4_Master_Xactor;
 
    // For discarding write-responses
    CreditCounter_IFC #(4) ctr_wr_rsps_pending <- mkCreditCounter; // Max 15 writes outstanding
@@ -69,20 +73,20 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
    // Send a read-request into the fabric
    function Action fa_fabric_send_read_req (Fabric_Addr  addr);
       action
-         AXI4_Size  size = axsize_8;
-         let mem_req_rd_addr = AXI4_Rd_Addr {arid:     fabric_default_id,
-                                             araddr:   addr,
-                                             arlen:    0,           // burst len = arlen+1
-                                             arsize:   size,
-                                             arburst:  fabric_default_burst,
-                                             arlock:   fabric_default_lock,
-                                             arcache:  fabric_default_arcache,
-                                             arprot:   fabric_default_prot,
-                                             arqos:    fabric_default_qos,
-                                             arregion: fabric_default_region,
-                                             aruser:   fabric_default_user};
+         AXI4_Size size = 8;
+         let mem_req_rd_addr = AXI4_ARFlit {arid:     fabric_default_mid,
+                                            araddr:   addr,
+                                            arlen:    0,           // burst len = arlen+1
+                                            arsize:   size,
+                                            arburst:  fabric_default_burst,
+                                            arlock:   fabric_default_lock,
+                                            arcache:  fabric_default_arcache,
+                                            arprot:   fabric_default_prot,
+                                            arqos:    fabric_default_qos,
+                                            arregion: fabric_default_region,
+                                            aruser:   fabric_default_aruser};
 
-         master_xactor.i_rd_addr.enq (mem_req_rd_addr);
+         master_xactor.slave.ar.put(mem_req_rd_addr);
 
          // Debugging
          if (cfg_verbosity > 1) begin
@@ -94,35 +98,37 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
    // Send a write-request into the fabric
    function Action fa_fabric_send_write_req (Fabric_Addr  addr, Fabric_Strb  strb, Bit #(64)  st_val);
       action
-         AXI4_Size  size = axsize_8;
-         let mem_req_wr_addr = AXI4_Wr_Addr {awid:     fabric_default_id,
-                                             awaddr:   addr,
-                                             awlen:    0,           // burst len = awlen+1
-                                             awsize:   size,
-                                             awburst:  fabric_default_burst,
-                                             awlock:   fabric_default_lock,
-                                             awcache:  fabric_default_awcache,
-                                             awprot:   fabric_default_prot,
-                                             awqos:    fabric_default_qos,
-                                             awregion: fabric_default_region,
-                                             awuser:   fabric_default_user};
+         AXI4_Size  size = 8;
+         let mem_req_wr_addr = AXI4_AWFlit {awid:     fabric_default_mid,
+                                            awaddr:   addr,
+                                            awlen:    0,           // burst len = awlen+1
+                                            awsize:   size,
+                                            awburst:  fabric_default_burst,
+                                            awlock:   fabric_default_lock,
+                                            awcache:  fabric_default_awcache,
+                                            awprot:   fabric_default_prot,
+                                            awqos:    fabric_default_qos,
+                                            awregion: fabric_default_region,
+                                            awuser:   0};
 
-         let mem_req_wr_data = AXI4_Wr_Data {wdata:  st_val,
-                                             wstrb:  strb,
-                                             wlast:  True,
-                                             wuser:  fabric_default_user};
+         let mem_req_wr_data = AXI4_WFlit {wdata:  st_val,
+                                           wstrb:  strb,
+                                           wlast:  True,
+                                           wuser:  0};
 
-         master_xactor.i_wr_addr.enq (mem_req_wr_addr);
-         master_xactor.i_wr_data.enq (mem_req_wr_data);
+   master_xactor.slave.aw.put (mem_req_wr_addr);
+   master_xactor.slave.w.put (mem_req_wr_data);
 
          // Expect a fabric response
          ctr_wr_rsps_pending.incr;
 
          // Debugging
+         /*
          if (cfg_verbosity > 1) begin
             $display ("            To fabric: ", fshow (mem_req_wr_addr));
             $display ("                       ", fshow (mem_req_wr_data));
          end
+         */
       endaction
    endfunction
 
@@ -159,14 +165,14 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
    endrule
 
    rule rl_handle_read_rsps;
-      let  mem_rsp <- pop_o (master_xactor.o_rd_data);
+      let mem_rsp <- get(master_xactor.slave.r);
 
       if (cfg_verbosity > 1) begin
          $display ("%0d: LLC_AXI4_Adapter.rl_handle_read_rsps: beat %0d ", cur_cycle, rg_rd_rsp_beat);
          $display ("    ", fshow (mem_rsp));
       end
 
-      if (mem_rsp.rresp != axi4_resp_okay) begin
+      if (mem_rsp.rresp != OKAY) begin
          // TODO: need to raise a non-maskable interrupt (NMI) here
          $display ("%0d: LLC_AXI4_Adapter.rl_handle_read_rsp: fabric response error; exit", cur_cycle);
          $display ("    ", fshow (mem_rsp));
@@ -229,7 +235,7 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
    // Discard write-responses from the fabric
 
    rule rl_discard_write_rsp;
-      let wr_resp <- pop_o (master_xactor.o_wr_resp);
+      let wr_resp <- get(master_xactor.slave.b);
 
       if (cfg_verbosity > 1) begin
          $display ("%0d: LLC_AXI4_Adapter.rl_discard_write_rsp: beat %0d ", cur_cycle, rg_wr_rsp_beat);
@@ -245,7 +251,7 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
 
       ctr_wr_rsps_pending.decr;
 
-      if (wr_resp.bresp != axi4_resp_okay) begin
+      if (wr_resp.bresp != OKAY) begin
          // TODO: need to raise a non-maskable interrupt (NMI) here
          $display ("%0d: LLC_AXI4_Adapter.rl_discard_write_rsp: fabric response error: exit", cur_cycle);
          $display ("    ", fshow (wr_resp));
@@ -268,7 +274,7 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
    endmethod
 
    // Fabric interface for memory
-   interface mem_master = master_xactor.axi_side;
+   interface mem_master = master_xactor.masterSynth;
 endmodule
 
 // ================================================================
