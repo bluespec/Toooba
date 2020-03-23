@@ -1,6 +1,6 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +8,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -39,6 +39,9 @@ import SpecFifo::*;
 import MulDiv::*;
 import Fpu::*;
 import Bypass::*;
+import CHERICap::*;
+import CHERICC_Fat::*;
+import ISA_Decls_CHERI::*;
 
 typedef struct {
     // inst info
@@ -90,6 +93,8 @@ interface FpuMulDivExeInput;
     method Data rf_rd3(PhyRIndx rindx);
     // CSR file
     method Data csrf_rd(CSR csr);
+    // Special Capability Register file.
+    method CapReg scaprf_rd(SCR csr);
     // ROB
     method Action rob_setExecuted(InstTag t, Data dst_data, Bit#(5) fflags);
 
@@ -120,7 +125,7 @@ module mkFpuMulDivExePipeline#(FpuMulDivExeInput inIfc)(FpuMulDivExePipeline);
     // pipeline fifos
     let dispToRegQ <- mkFpuMulDivDispToRegFifo;
     let regToExeQ <- mkFpuMulDivRegToExeFifo;
-    
+
     // wire to recv bypass
     Vector#(TMul#(2, AluExeNum), RWire#(Tuple2#(PhyRIndx, Data))) bypassWire <- replicateM(mkRWire);
 
@@ -144,7 +149,7 @@ module mkFpuMulDivExePipeline#(FpuMulDivExeInput inIfc)(FpuMulDivExePipeline);
 
         // FPU MUL DIV never have exception or misprecition, so no spec tag
         doAssert(!isValid(x.spec_tag), "FpuMulDiv should not carry any spec tag");
-        
+
         // go to next stage
         dispToRegQ.enq(ToSpecFifo {
             data: FpuMulDivDispatchToRegRead {

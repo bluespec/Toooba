@@ -34,45 +34,40 @@
 import Types::*;
 import ProcTypes::*;
 import DefaultValue::*;
-import ConcatReg::*;
 import ConfigReg::*;
 import Ehr::*;
-import Fifo::*;
-import Vector::*;
-import FIFO::*;
 import GetPut::*;
-import BuildVector::*;
-import CHERICap :: *;
-import CHERICC_Fat :: *;
-import ISA_Decls_CHERI :: *;
+import CHERICap::*;
+import CHERICC_Fat::*;
+import ISA_Decls_CHERI::*;
 
 // ================================================================
 // BSV additional libs
 
-import Cur_Cycle  :: *;
+import Cur_Cycle::*;
 
 // ================================================================
 // Project imports from Toooba
 
-import SoC_Map :: *;
+import SoC_Map::*;
 
 // ================================================================
 // Information returned on traps and mret/sret/uret
 
 typedef struct {
     Addr      new_pc;
-    } Trap_Updates
+  } Scr_Trap_Updates
 deriving (Bits, FShow);
 
 typedef struct {
     Addr      new_pc;
-    } RET_Updates
+  } Scr_RET_Updates
 deriving (Bits, FShow);
 
 typedef struct {
     Addr top;
     Addr base;
-    Perms perms;
+    HardPerms perms;
     } ScrVMInfo
 deriving (Bits, FShow);
 
@@ -83,19 +78,19 @@ deriving (Bits, FShow);
 
 // ================================================================
 
-interface CsrFile;
+interface ScrFile;
     // Read
     method CapReg rd(SCR csr);
     // normal write by CSRXXX inst to any CSR
-    method Action csrInstWr(SCR csr, CapReg x);
+    method Action scrInstWr(SCR csr, CapReg x);
 
     // The WARL transform performed during CSRRx writes to a CSR
     method CapReg warl_xform (SCR csr, CapReg x);
 
     // Methods for handling traps
-    method ActionValue#(Trap_Updates) trap(Trap t, Addr pc, Addr faultAddr, Bit #(32) orig_inst);
-    method ActionValue#(RET_Updates) sret;
-    method ActionValue#(RET_Updates) mret;
+    method ActionValue#(Scr_Trap_Updates) trap(Trap t, Addr pc, Addr faultAddr, Bit #(32) orig_inst);
+    method ActionValue#(Scr_RET_Updates) sret;
+    method ActionValue#(Scr_RET_Updates) mret;
 
     // Outputs for CSRs that the rest of the processor needs to know about
     method ScrVMInfo vmI;
@@ -132,7 +127,7 @@ module mkConfigEhr#(t init)(Ehr#(n, t)) provisos(Bits#(t, w));
     return ifc;
 endmodule
 
-module mkCsrFile #(Data hartid)(CsrFile);
+module mkScrFile (ScrFile);
     RiscVISASubset isa = defaultValue;
 
     // To save from bypassing logic, CSR reads will get stale value
@@ -145,25 +140,25 @@ module mkCsrFile #(Data hartid)(CsrFile);
 
     // User level SCRs with accessSysRegs
     Reg#(CapReg) utcc_reg      <- mkCsrReg(defaultValue);
-    Reg#(CapReg) utdc_reg      <- mkCsrReg(null_cap);
-    Reg#(CapReg) uScratchC_reg <- mkCsrReg(null_cap);
+    Reg#(CapReg) utdc_reg      <- mkCsrReg(nullCap);
+    Reg#(CapReg) uScratchC_reg <- mkCsrReg(nullCap);
     Reg#(CapReg) uepcc_reg     <- mkCsrReg(defaultValue);
 
     // System level SCRs with accessSysRegs
     Reg#(CapReg) stcc_reg      <- mkCsrReg(defaultValue);
-    Reg#(CapReg) stdc_reg      <- mkCsrReg(null_cap);
-    Reg#(CapReg) sScratchC_reg <- mkCsrReg(null_cap);
+    Reg#(CapReg) stdc_reg      <- mkCsrReg(nullCap);
+    Reg#(CapReg) sScratchC_reg <- mkCsrReg(nullCap);
     Reg#(CapReg) sepcc_reg     <- mkCsrReg(defaultValue);
 
     // Machine level SCRs with accessSysRegs
     Reg#(CapReg) mtcc_reg      <- mkCsrReg(defaultValue);
-    Reg#(CapReg) mtdc_reg      <- mkCsrReg(null_cap);
-    Reg#(CapReg) mScratchC_reg <- mkCsrReg(null_cap);
+    Reg#(CapReg) mtdc_reg      <- mkCsrReg(nullCap);
+    Reg#(CapReg) mScratchC_reg <- mkCsrReg(nullCap);
     Reg#(CapReg) mepcc_reg     <- mkCsrReg(defaultValue);
 
     // Function for getting a csr given an index
-    function Reg#(Data) get_csr(CSR csr);
-        return (case (csr)
+    function Reg#(CapReg) get_scr(SCR scr);
+        return (case (scr)
             // User SCRs
             SCR_PCC:       pcc_reg;
             SCR_DDC:       ddc_reg;
@@ -188,41 +183,44 @@ module mkCsrFile #(Data hartid)(CsrFile);
    // ================================================================
    // INTERFACE
 
-    method Data rd(CSR csr);
-        return get_csr(csr)._read;
+    method CapReg rd(SCR scr);
+        return get_scr(scr)._read;
     endmethod
 
-    method Action csrInstWr(CSR csr, Data x);
-        get_csr(csr)._write(x);
+    method Action scrInstWr(SCR csr, CapReg x);
+        get_scr(csr)._write(x);
     endmethod
 
-    method ActionValue#(Trap_Updates) trap(Trap t, Addr pc, Addr addr, Bit #(32) orig_inst);
-
+    method ActionValue#(Scr_Trap_Updates) trap(Trap t, Addr pc, Addr addr, Bit #(32) orig_inst);
+        return ?;
     endmethod
 
-    method ActionValue#(RET_Updates) mret;
-
+    method ActionValue#(Scr_RET_Updates) mret;
+        return ?;
     endmethod
 
-    method ActionValue#(RET_Updates) sret;
-
+    method ActionValue#(Scr_RET_Updates) sret;
+        return ?;
     endmethod
 
-    method VMInfo vmI;
-        return VMInfo {
-            top: getTop(pcc_reg),
-            base: getBase(pcc_reg),
+    method ScrVMInfo vmI;
+        return ScrVMInfo {
+            top: truncate(getTop(pcc_reg)),
+            base: truncate(getBase(pcc_reg)),
             perms: getHardPerms(pcc_reg)
         };
     endmethod
 
-    method VMInfo vmD;
+    method ScrVMInfo vmD;
         // for load/store, need to consider MPRV
-        return VMInfo {
-            top: getTop(pcc_reg),
-            base: getBase(pcc_reg),
+        return ScrVMInfo {
+            top: truncate(getTop(pcc_reg)),
+            base: truncate(getBase(pcc_reg)),
             perms: getHardPerms(pcc_reg)
         };
     endmethod
+
+    method ScrDecodeInfo decodeInfo =
+      ScrDecodeInfo{cap_mode: getFlags(pcc_reg)==1'b1};
 
 endmodule

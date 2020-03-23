@@ -25,9 +25,9 @@
  *
  * @BERI_LICENSE_HEADER_END@
  */
-
-
-`ifdef ISA_CHERI
+import ISA_Decls::*;
+import CHERICap::*;
+import CHERICC_Fat::*;
 
 typedef TMul#(XLEN, 2) CLEN;
 
@@ -196,13 +196,11 @@ Bit #(3) f3_LQ = 3'h2;
 Bit #(3) f3_SQ = 3'b100;
 
 `ifdef RV64
-Bit #(3) w_SIZE_CAP = w_SIZE_Q;
-Bit #(3) w_SIZE_MAX = w_SIZE_Q;
+Bit #(3) w_SIZE_CAP = f3_SQ;
+Bit #(3) w_SIZE_MAX = f3_SQ;
 `else //RV32
-Bit #(3) w_SIZE_CAP = w_SIZE_D;
-Bit #(3) w_SIZE_MAX = w_SIZE_D;
+Bit #(3) w_SIZE_CAP = f3_SD;
+Bit #(3) w_SIZE_MAX = f3_SD;
 `endif
 
 Bit #(3) f3_AMO_CAP = w_SIZE_CAP;
-
-`endif

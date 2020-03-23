@@ -1,7 +1,7 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
 // Portions Copyright (c) 2019-2020 Bluespec, Inc.
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -9,10 +9,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -41,6 +41,7 @@ import ReorderBufferSynth::*;
 import Scoreboard::*;
 import ScoreboardSynth::*;
 import CsrFile::*;
+import ScrFile::*;
 import SpecTagManager::*;
 import EpochManager::*;
 import ReservationStationEhr::*;
@@ -64,6 +65,7 @@ interface RenameInput;
     interface ScoreboardCons sbConsIfc;
     interface ScoreboardAggr sbAggrIfc;
     interface CsrFile csrfIfc;
+    interface ScrFile scaprfIfc;
     interface EpochManager emIfc;
     interface SpecTagManager smIfc;
     interface Vector#(AluExeNum, ReservationStationAlu) rsAluIfc;
@@ -107,6 +109,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
     ScoreboardCons sbCons = inIfc.sbConsIfc;
     ScoreboardAggr sbAggr = inIfc.sbAggrIfc;
     CsrFile csrf = inIfc.csrfIfc;
+    ScrFile scaprf = inIfc.scaprfIfc;
     EpochManager epochManager = inIfc.emIfc;
     SpecTagManager specTagManager = inIfc.smIfc;
     Vector#(AluExeNum, ReservationStationAlu) reservationStationAlu = inIfc.rsAluIfc;
@@ -1059,7 +1062,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                         // deq fetch & update epochs match
                         fetchStage.pipelines[i].deq;
                         epochManager.updatePrevEpoch[i].update(main_epoch);
-                        
+
                         // Claim a speculation tag
                         if (new_speculation) begin
                             specTagClaimed = True; // mark resource used
@@ -1097,7 +1100,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                                 csr: dInst.csr,
                                                 claimed_phy_reg: True, // XXX we always claim a free reg in rename
                                                 trap: Invalid, // no trap
-						tval: 0,
+                                                tval: 0,
                                                 // default values of FullResult
                                                 ppc_vaddr_csrData: PPC (ppc), // default use PPC
                                                 fflags: 0,

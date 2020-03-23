@@ -1,7 +1,7 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
 // Portions Copyright (c) 2019-2020 Bluespec, Inc.
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -9,10 +9,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -37,6 +37,7 @@ import ReorderBuffer::*;
 import ReorderBufferSynth::*;
 import RenamingTable::*;
 import CsrFile::*;
+import ScrFile::*;
 import StoreBuffer::*;
 import VerificationPacket::*;
 import RenameDebugIF::*;
@@ -78,6 +79,7 @@ interface CommitInput;
     interface ReorderBufferSynth robIfc;
     interface RegRenamingTable rtIfc;
     interface CsrFile csrfIfc;
+    interface ScrFile scaprfIfc;
     // no stores
     method Bool stbEmpty;
     method Bool stqEmpty;
@@ -127,7 +129,7 @@ typedef struct {
 
 interface CommitStage;
     // performance
-    method Data getPerf(ComStagePerfType t); 
+    method Data getPerf(ComStagePerfType t);
     // deadlock check
     interface Get#(CommitStuck) commitInstStuck;
     interface Get#(CommitStuck) commitUserInstStuck;
@@ -336,6 +338,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
     ReorderBufferSynth rob = inIfc.robIfc;
     RegRenamingTable regRenamingTable = inIfc.rtIfc;
     CsrFile csrf = inIfc.csrfIfc;
+    ScrFile scaprf = inIfc.scaprfIfc;
 
     // FIXME FIXME FIXME wires to set atCommit in LSQ: avoid scheduling cycle.
     // Using wire should be fine, because LSQ does not need to see atCommit
@@ -387,7 +390,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
     // RVFI trace report. Not an input?
     FIFO#(Rvfi_Traces) rvfiQ <- mkFIFO;
     Reg#(Dii_Id) traceCnt <- mkReg(0);
-    
+
     function TraceStateBundle getTSB();
         return TraceStateBundle{
             sepc:  csrf.rd(CSRsepc),
@@ -736,7 +739,8 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
        if (! debugger_halt) begin
           // trap handling & redirect
-	  let trap_updates <- csrf.trap(trap.trap, trap.pc, trap.addr, trap.orig_inst);
+          let trap_updates <- csrf.trap(trap.trap, trap.pc, trap.addr, trap.orig_inst);
+          let cap_trap_updates <- scaprf.trap(trap.trap, trap.pc, trap.addr, trap.orig_inst);
           inIfc.redirectPc(trap_updates.new_pc
 `ifdef RVFI_DII
                            , trap.x.diid + 1
@@ -874,17 +878,18 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         Maybe #(RET_Updates) m_ret_updates = no_ret_updates;
 `endif
         if(x.iType == Sret) begin
-	   RET_Updates ret_updates <- csrf.sret;
+           RET_Updates ret_updates <- csrf.sret;
            next_pc = ret_updates.new_pc;
+           Scr_RET_Updates scr_ret_updates <- scaprf.sret;
 `ifdef INCLUDE_TANDEM_VERIF
-	   m_ret_updates = tagged Valid ret_updates;
+      	   m_ret_updates = tagged Valid ret_updates;
 `endif
         end
         else if(x.iType == Mret) begin
-	   RET_Updates ret_updates <- csrf.mret;
+           RET_Updates ret_updates <- csrf.mret;
            next_pc = ret_updates.new_pc;
 `ifdef INCLUDE_TANDEM_VERIF
-	   m_ret_updates = tagged Valid ret_updates;
+           m_ret_updates = tagged Valid ret_updates;
 `endif
         end
         inIfc.redirectPc(next_pc

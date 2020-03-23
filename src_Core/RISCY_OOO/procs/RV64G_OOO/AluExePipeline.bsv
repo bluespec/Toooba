@@ -1,6 +1,6 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +8,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -40,6 +40,9 @@ import ReorderBuffer::*;
 import SpecFifo::*;
 import HasSpecBits::*;
 import Bypass::*;
+import CHERICap::*;
+import CHERICC_Fat::*;
+import ISA_Decls_CHERI::*;
 
 import Cur_Cycle :: *;
 
@@ -140,6 +143,8 @@ interface AluExeInput;
     method Data rf_rd2(PhyRIndx rindx);
     // CSR file
     method Data csrf_rd(CSR csr);
+    // Special Capability Register file.
+    method CapReg scaprf_rd(SCR csr);
     // ROB
     method Addr rob_getPC(InstTag t);
     method Addr rob_getPredPC(InstTag t);
@@ -212,7 +217,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
         if(x.regs.dst matches tagged Valid .dst) begin
             inIfc.setRegReadyAggr(dst.indx);
         end
-        
+
         // go to next stage
         dispToRegQ.enq(ToSpecFifo {
             data: AluDispatchToRegRead {
@@ -378,7 +383,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
             if (x.spec_tag matches tagged Valid .valid_spec_tag) begin
                 inIfc.correctSpec(valid_spec_tag);
             end
-            // train branch predictor if needed 
+            // train branch predictor if needed
             // since we can only do 1 training in a cycle, split the rule
             // XXX not training JAL, reduce chance of conflicts
             if(x.iType == Jr || x.iType == Br) begin
@@ -417,4 +422,3 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
         endcase);
     endmethod
 endmodule
-

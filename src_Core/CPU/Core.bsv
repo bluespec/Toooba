@@ -1,7 +1,7 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
 // Portions Copyright (c) 2019-2020 Bluespec, Inc.
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -9,10 +9,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -86,6 +86,7 @@ import Toooba_RVFI_DII_Bridge::*;
 `endif
 
 import CsrFile :: *;
+import ScrFile :: *;
 
 // ================================================================
 // Toooba
@@ -161,7 +162,7 @@ interface Core;
     // Bluespec: external interrupt requests targeting Machine and Supervisor modes
     method Action setMEIP (Bit #(1) v);
     method Action setSEIP (Bit #(1) v);
-    
+
 `ifdef RVFI_DII
     interface Toooba_RVFI_DII_Server rvfi_dii_server;
 `endif
@@ -235,7 +236,7 @@ module mkCore#(CoreId coreId)(Core);
     FetchStage fetchStage <- mkFetchStage;
     ITlb iTlb = fetchStage.iTlbIfc;
     ICoCache iMem = fetchStage.iMemIfc;
-    
+
     // ================================================================
     // If using Direct Instruction Injection then make a
     // bridge that can insert instructions.
@@ -250,8 +251,10 @@ module mkCore#(CoreId coreId)(Core);
     // back end
     RFileSynth rf <- mkRFileSynth;
 
-   // Bluespec: CsrFile including external interrupt request methods
+    // Bluespec: CsrFile including external interrupt request methods
     CsrFile csrf <- mkCsrFile(zeroExtend(coreId)); // hartid in CSRF should be core id
+    // Special Capability register file
+    ScrFile scaprf <- mkScrFile();
 
     RegRenamingTable regRenamingTable <- mkRegRenamingTable;
     EpochManager epochManager <- mkEpochManager;
@@ -305,7 +308,7 @@ module mkCore#(CoreId coreId)(Core);
         );
 
         // whether perf data is collected
-        Reg#(Bool) doStatsReg <- mkConfigReg(False); 
+        Reg#(Bool) doStatsReg <- mkConfigReg(False);
 
         // write aggressive elements + wakupe reservation stations
         function Action writeAggr(Integer wrAggrPort, PhyRIndx dst);
@@ -353,6 +356,7 @@ module mkCore#(CoreId coreId)(Core);
                 method rf_rd1 = rf.read[aluRdPort(i)].rd1;
                 method rf_rd2 = rf.read[aluRdPort(i)].rd2;
                 method csrf_rd = csrf.rd;
+                method scaprf_rd = scaprf.rd;
                 method rob_getPC = rob.getOrigPC[i].get;
                 method rob_getPredPC = rob.getOrigPredPC[i].get;
                 method rob_getOrig_Inst = rob.getOrig_Inst[i].get;
@@ -396,6 +400,7 @@ module mkCore#(CoreId coreId)(Core);
                 method rf_rd2 = rf.read[fpuMulDivRdPort(i)].rd2;
                 method rf_rd3 = rf.read[fpuMulDivRdPort(i)].rd3;
                 method csrf_rd = csrf.rd;
+                method scaprf_rd = scaprf.rd;
                 method rob_setExecuted = rob.setExecuted_doFinishFpuMulDiv[i].set;
                 method Action writeRegFile(PhyRIndx dst, Data data);
                     writeAggr(fpuMulDivWrAggrPort(i), dst);
@@ -412,6 +417,7 @@ module mkCore#(CoreId coreId)(Core);
             method rf_rd1 = rf.read[memRdPort].rd1;
             method rf_rd2 = rf.read[memRdPort].rd2;
             method csrf_rd = csrf.rd;
+            method scaprf_rd = scaprf.rd;
             method rob_getPC = rob.getOrigPC[valueof(AluExeNum)].get; // last getPC port
             method rob_setExecuted_doFinishMem = rob.setExecuted_doFinishMem;
 `ifdef INCLUDE_TANDEM_VERIF
@@ -540,6 +546,7 @@ module mkCore#(CoreId coreId)(Core);
         interface sbConsIfc = sbCons;
         interface sbAggrIfc = sbAggr;
         interface csrfIfc = csrf;
+        interface scaprfIfc = scaprf;
         interface emIfc = epochManager;
         interface smIfc = specTagManager;
         interface rsAluIfc = reservationStationAlu;
@@ -567,6 +574,7 @@ module mkCore#(CoreId coreId)(Core);
         interface robIfc = rob;
         interface rtIfc = regRenamingTable;
         interface csrfIfc = csrf;
+        interface scaprfIfc = scaprf;
         method stbEmpty = stb.isEmpty;
         method stqEmpty = lsq.stqEmpty;
         method lsqSetAtCommit = lsq.setAtCommit;
@@ -1392,7 +1400,7 @@ module mkCore#(CoreId coreId)(Core);
         interface checkStarted = nullGet;
 `endif
     endinterface
-    
+
 `ifdef RVFI_DII
    interface Toooba_RVFI_DII_Server rvfi_dii_server = rvfi_bridge.rvfi_dii_server;
 `endif

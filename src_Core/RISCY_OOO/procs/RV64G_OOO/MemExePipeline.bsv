@@ -50,6 +50,9 @@ import CCTypes::*;
 import L1CoCache::*;
 import Bypass::*;
 import LatencyTimer::*;
+import CHERICap::*;
+import CHERICC_Fat::*;
+import ISA_Decls_CHERI::*;
 
 import Cur_Cycle :: *;
 
@@ -150,6 +153,8 @@ interface MemExeInput;
     method Data rf_rd2(PhyRIndx rindx);
     // CSR file
     method Data csrf_rd(CSR csr);
+    // Special Capability Register file.
+    method CapReg scaprf_rd(SCR csr);
     // ROB
     method Addr rob_getPC(InstTag t);
     method Action rob_setExecuted_doFinishMem(InstTag t,
