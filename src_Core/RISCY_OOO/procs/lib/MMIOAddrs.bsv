@@ -59,7 +59,7 @@ DataAlignedAddr mainMemBaseAddr   = getDataAlignedAddr(soc_map_struct.main_mem_a
 // upper bound addr (bound itself is invalid addr) for each MMIO reg/device
 // (aligned to Data)
 DataAlignedAddr mainMemBoundAddr   = (mainMemBaseAddr +
-				      getDataAlignedAddr(soc_map_struct.main_mem_addr_size));
+                                      getDataAlignedAddr(soc_map_struct.main_mem_addr_size));
 DataAlignedAddr msipBoundAddr      = msipBaseAddr +
                                      fromInteger(valueof(TDiv#(CoreNum, 2)));
 DataAlignedAddr mtimecmpBoundAddr  = mtimecmpBaseAddr +

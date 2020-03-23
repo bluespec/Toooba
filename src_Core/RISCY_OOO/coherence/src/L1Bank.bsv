@@ -520,7 +520,7 @@ module mkL1Bank#(
                 },
                 line: newLine // write new data into cache
             }, True); // hit, so update rep info
-	   if (verbose)
+           if (verbose)
             $display("%t L1 %m pipelineResp: Hit func: update ram: ", $time,
                 fshow(newLine), " ; ",
                 fshow(succ)
@@ -534,7 +534,7 @@ module mkL1Bank#(
                 req: req,
                 succ: succ
             });
-	   if (verbose)
+           if (verbose)
             $display("%t L1 %m pipelineResp: Hit func: AMO process in next cycle", $time);
         end
     endaction
@@ -618,7 +618,7 @@ module mkL1Bank#(
             end
             // release MSHR entry
             cRqMshr.pipelineResp.releaseEntry(n);
-	   if (verbose)
+           if (verbose)
             $display("%t L1 %m pipelineResp: Sc early fail func: ", $time,
                 fshow(resetOwner), " ; ",
                 fshow(succ)
@@ -722,7 +722,7 @@ module mkL1Bank#(
                 doAssert(isValid(cRqEOC), ("cRq hit on another cRq, cRqEOC must be true"));
                 cRqMshr.pipelineResp.setSucc(fromMaybe(?, cRqEOC), Valid (n));
                 cRqSetDepNoCacheChange;
-	       if (verbose)
+               if (verbose)
                 $display("%t L1 %m pipelineResp: cRq: own by other cRq ", $time,
                     fshow(cOwner), ", depend on cRq ", fshow(cRqEOC)
                 );
@@ -736,7 +736,7 @@ module mkL1Bank#(
                 );
                 // Hit or Miss (but no replacement)
                 if(enough_cs) begin
-		   if (verbose)
+                   if (verbose)
                     $display("%t L1 %m pipelineResp: cRq: own by itself, hit", $time);
                     cRqHit(n, procRq);
                 end
@@ -744,14 +744,14 @@ module mkL1Bank#(
                     // Sc already fails, so we don't need to req parent.  Since
                     // Sc is the owner of the line, we need to reset owner to
                     // Invalid.
-		   if (verbose)
+                   if (verbose)
                     $display("%t L1 %m pipelineResp: cRq: own by itself, Sc early fails, ",
                         $time, fshow(linkAddr)
                     );
                     cRqScEarlyFail(True);
                 end
                 else begin
-		   if (verbose)
+                   if (verbose)
                     $display("%t L1 %m pipelineResp: cRq: own by itself, miss no replace", $time);
                     cRqMissNoReplacement;
                 end
@@ -767,7 +767,7 @@ module mkL1Bank#(
             // check for cRqEOC to append to dependency chain
             // Only append to dep-chain if is in Init state
             if(cRqEOC matches tagged Valid .k &&& cState == Init) begin
-	       if (verbose)
+               if (verbose)
                 $display("%t L1 %m pipelineResp: cRq: no owner, depend on cRq, ", $time,
                     fshow(cState), " ; ", fshow(cRqEOC)
                 );
@@ -779,7 +779,7 @@ module mkL1Bank#(
                 if(tag_match && enough_cs) begin
                     // Hit
                     doAssert(cs_valid, "hit, so cs must > I");
-		   if (verbose)
+                   if (verbose)
                     $display("%t L1 %m pipelineResp: cRq: no owner, hit", $time);
                     cRqHit(n, procRq);
                 end
@@ -787,7 +787,7 @@ module mkL1Bank#(
                     // Sc already fails, so we don't need to req parent.  Since
                     // there is no owner of the line, we can reset owner to
                     // Invalid.
-		   if (verbose)
+                   if (verbose)
                     $display("%t L1 %m pipelineResp: cRq: no owner, Sc early fails, ",
                         $time, fshow(linkAddr)
                     );
@@ -795,12 +795,12 @@ module mkL1Bank#(
                 end
                 else if(cs_valid && !tag_match) begin
                     // Req parent, need replacement
-		   if (verbose)
+                   if (verbose)
                     $display("%t L1 %m pipelineResp: cRq: no owner, replace", $time);
                     cRqReplacement;
                 end
                 else begin
-		   if (verbose)
+                   if (verbose)
                     $display("%t L1 %m pipelineResp: cRq: no owner, miss no replace", $time);
                     // Req parent, no replacement needed
                     cRqMissNoReplacement;
@@ -841,7 +841,7 @@ module mkL1Bank#(
         // and pRq is always directly handled: either dropped or Done
 
         if(pipeOut.pRqMiss || ram.info.cs <= pRq.toState || ram.info.tag != getTag(pRq.addr)) begin
-	   if (verbose)
+           if (verbose)
             $display("%t L1 %m pipelineResp: pRq: drop", $time);
             // pRq can be directly dropped
             // must go through tag match, no successor
@@ -859,7 +859,7 @@ module mkL1Bank#(
             // must be the case the pRq overtakes cRq
             L1CRqState cState = pipeOutCState;
             cRqSlotT cSlot = pipeOutCSlot;
-	   if (verbose)
+           if (verbose)
             $display("%t L1 %m pipelineResp: pRq: overtake cRq: ", $time,
                 fshow(cOwner), " ; ",
                 fshow(cRq), " ; ",
@@ -891,7 +891,7 @@ module mkL1Bank#(
             });
         end
         else begin
-	   if (verbose)
+           if (verbose)
             $display("%t L1 %m pipelineResp: pRq: valid process", $time);
             // line must NOT be owned
             doAssert(ram.info.owner == Invalid,
@@ -937,13 +937,13 @@ module mkL1Bank#(
         // flush always goes through cache pipeline, and is directly handled
         // here: either dropped or Done
         if(ram.info.cs == I) begin
-	   if (verbose)
+           if (verbose)
             $display("%t L1 %m pipelineResp: flush: drop", $time);
             // flush can be directly dropped
             pRqMshr.pipelineResp.releaseEntry(n);
         end
         else begin
-	   if (verbose)
+           if (verbose)
             $display("%t L1 %m pipelineResp: flush: valid process", $time);
             pRqMshr.pipelineResp.setDone_setData(n, ram.info.cs == M ? Valid (ram.line) : Invalid);
             rsToPIndexQ.enq(PRq (n));

@@ -421,7 +421,7 @@ module mkCore#(CoreId coreId)(Core);
             method rob_getPC = rob.getOrigPC[valueof(AluExeNum)].get; // last getPC port
             method rob_setExecuted_doFinishMem = rob.setExecuted_doFinishMem;
 `ifdef INCLUDE_TANDEM_VERIF
-	    method rob_setExecuted_doFinishMem_RegData = rob.setExecuted_doFinishMem_RegData;
+            method rob_setExecuted_doFinishMem_RegData = rob.setExecuted_doFinishMem_RegData;
 `endif
             method rob_setExecuted_deqLSQ = rob.setExecuted_deqLSQ;
             method isMMIOAddr = mmio.isMMIOAddr;
@@ -581,38 +581,38 @@ module mkCore#(CoreId coreId)(Core);
         method tlbNoPendingReq = iTlb.noPendingReq && dTlb.noPendingReq;
 
         method setFlushTlbs;
-	   action
-	      flush_tlbs <= True;
+           action
+              flush_tlbs <= True;
               // $display ("%0d: %m.commitInput.setFlushTlbs", cur_cycle);
-	   endaction
+           endaction
         endmethod
 
         method setUpdateVMInfo;
-	   action
-	      update_vm_info <= True;
+           action
+              update_vm_info <= True;
               // $display ("%0d: %m.commitInput.setUpdateVMInfo", cur_cycle);
-	   endaction
+           endaction
         endmethod
 
         method setFlushReservation;
-	   action
-	      flush_reservation <= True;
+           action
+              flush_reservation <= True;
               // $display ("%0d: %m.commitInput.setFlushReservation", cur_cycle);
-	   endaction
+           endaction
         endmethod
 
         method setFlushBrPred;
-	   action
-	      flush_brpred <= True;
+           action
+              flush_brpred <= True;
               // $display ("%0d: %m.commitInput.setFlushBrPred", cur_cycle);
-	   endaction
+           endaction
         endmethod
 
         method setFlushCaches;
-	   action
-	      flush_caches <= True;
+           action
+              flush_caches <= True;
               // $display ("%0d: %m.commitInput.setFlushCaches", cur_cycle);
-	   endaction
+           endaction
         endmethod
 
         method setReconcileI = reconcile_i._write(True);
@@ -674,13 +674,13 @@ module mkCore#(CoreId coreId)(Core);
         if (flush_reservation) begin
             flush_reservation <= False;
             dMem.resetLinkAddr;
-	   // $display ("%0d: %m.rule prepareCachesAndTlbs: flushing reservation", cur_cycle);
+           // $display ("%0d: %m.rule prepareCachesAndTlbs: flushing reservation", cur_cycle);
         end
         if (flush_tlbs) begin
             flush_tlbs <= False;
             iTlb.flush;
             dTlb.flush;
-	   // $display ("%0d: %m.rule prepareCachesAndTlbs: flushing iTlb and dTlb", cur_cycle);
+           // $display ("%0d: %m.rule prepareCachesAndTlbs: flushing iTlb and dTlb", cur_cycle);
         end
         if (update_vm_info) begin
             update_vm_info <= False;
@@ -689,7 +689,7 @@ module mkCore#(CoreId coreId)(Core);
             iTlb.updateVMInfo(vmI);
             dTlb.updateVMInfo(vmD);
             l2Tlb.updateVMInfo(vmI, vmD);
-	   // $display ("%0d: %m.rule prepareCachesAndTlbs: updating VMInfo", cur_cycle);
+           // $display ("%0d: %m.rule prepareCachesAndTlbs: updating VMInfo", cur_cycle);
         end
     endrule
 
@@ -789,11 +789,11 @@ module mkCore#(CoreId coreId)(Core);
 
 `ifdef INCLUDE_GDB_CONTROL
         if (commitStage.is_debug_halted) begin
-	   started           <= False;
-	   rg_core_run_state <= CORE_HALTING;
-	   if (verbosity >= 1)
-	      $display ("%0d: %m.rule readyToFetch: halting for debug mode", cur_cycle);
-	end
+           started           <= False;
+           rg_core_run_state <= CORE_HALTING;
+           if (verbosity >= 1)
+              $display ("%0d: %m.rule readyToFetch: halting for debug mode", cur_cycle);
+        end
 `endif
     endrule
 
@@ -1067,15 +1067,15 @@ module mkCore#(CoreId coreId)(Core);
    FIFOF #(DM_CPU_Rsp #(64))    f_gpr_rsps <- mkFIFOF1;
 
    rule rl_debug_gpr_read (   (rg_core_run_state == CORE_HALTED)
-			   && f_gpr_reqs.notEmpty
-			   && (! f_gpr_reqs.first.write));
+                           && f_gpr_reqs.notEmpty
+                           && (! f_gpr_reqs.first.write));
       let req <- pop (f_gpr_reqs);
       Bit #(5) regnum = req.address;
 
       let arch_regs = ArchRegs {src1: tagged Valid (tagged Gpr regnum),
-				src2: tagged Invalid,
-				src3: tagged Invalid,
-				dst:  tagged Invalid};
+                                src2: tagged Invalid,
+                                src3: tagged Invalid,
+                                dst:  tagged Invalid};
       let rename_result = regRenamingTable.rename[0].getRename (arch_regs);
       let phy_rindx     = fromMaybe (?, rename_result.phy_regs.src1);
       let data_out      = rf.read [debuggerPort].rd1 (phy_rindx);
@@ -1084,20 +1084,20 @@ module mkCore#(CoreId coreId)(Core);
       f_gpr_rsps.enq (rsp);
 
       if (show_DM_interactions)
-	 $display ("%0d: %m.rl_debug_read_gpr: reg %0d => 0x%0h", cur_cycle, regnum, data_out);
+         $display ("%0d: %m.rl_debug_read_gpr: reg %0d => 0x%0h", cur_cycle, regnum, data_out);
    endrule
 
    rule rl_debug_gpr_write (   (rg_core_run_state == CORE_HALTED)
-			    && f_gpr_reqs.notEmpty
-			    && f_gpr_reqs.first.write);
+                            && f_gpr_reqs.notEmpty
+                            && f_gpr_reqs.first.write);
       let req <- pop (f_gpr_reqs);
       Bit #(5) regnum = req.address;
       let data_in = req.data;
 
       let arch_regs = ArchRegs {src1: tagged Valid (tagged Gpr regnum),
-				src2: tagged Invalid,
-				src3: tagged Invalid,
-				dst:  tagged Invalid};
+                                src2: tagged Invalid,
+                                src3: tagged Invalid,
+                                dst:  tagged Invalid};
       let rename_result = regRenamingTable.rename[0].getRename (arch_regs);
       let phy_rindx     = fromMaybe (?, rename_result.phy_regs.src1);
       rf.write [debuggerPort].wr (phy_rindx, data_in);
@@ -1106,8 +1106,8 @@ module mkCore#(CoreId coreId)(Core);
       f_gpr_rsps.enq (rsp);
 
       if (show_DM_interactions)
-	 $display ("%0d: %m.rl_debug_gpr_write: reg %0d <= 0x%0h (phy_rindx = %0d)",
-		   cur_cycle, regnum, data_in, phy_rindx);
+         $display ("%0d: %m.rl_debug_gpr_write: reg %0d <= 0x%0h (phy_rindx = %0d)",
+                   cur_cycle, regnum, data_in, phy_rindx);
    endrule
 
    rule rl_debug_gpr_access_busy (rg_core_run_state == CORE_RUNNING);
@@ -1127,15 +1127,15 @@ module mkCore#(CoreId coreId)(Core);
    FIFOF #(DM_CPU_Rsp #(64))     f_fpr_rsps <- mkFIFOF1;
 
    rule rl_debug_fpr_read (   (rg_core_run_state == CORE_HALTED)
-			   && (! f_gpr_reqs.notEmpty)    // prioritize gpr reqs
-			   && (! f_fpr_reqs.first.write));
+                           && (! f_gpr_reqs.notEmpty)    // prioritize gpr reqs
+                           && (! f_fpr_reqs.first.write));
       let req <- pop (f_fpr_reqs);
       Bit #(5) regnum = req.address;
 
       let arch_regs = ArchRegs {src1: tagged Valid (tagged Fpu regnum),
-				src2: tagged Invalid,
-				src3: tagged Invalid,
-				dst:  tagged Invalid};
+                                src2: tagged Invalid,
+                                src3: tagged Invalid,
+                                dst:  tagged Invalid};
       let rename_result = regRenamingTable.rename[0].getRename (arch_regs);
       let phy_rindx     = fromMaybe (?, rename_result.phy_regs.src1);
       let data_out      = rf.read [debuggerPort].rd1 (phy_rindx);
@@ -1144,20 +1144,20 @@ module mkCore#(CoreId coreId)(Core);
       f_fpr_rsps.enq (rsp);
 
       if (show_DM_interactions)
-	 $display ("%0d: %m.rl_debug_read_fpr: reg %0d => 0x%0h", cur_cycle, regnum, data_out);
+         $display ("%0d: %m.rl_debug_read_fpr: reg %0d => 0x%0h", cur_cycle, regnum, data_out);
    endrule
 
    rule rl_debug_fpr_write (   (rg_core_run_state == CORE_HALTED)
-			    && (! f_gpr_reqs.notEmpty)    // prioritize gpr reqs
-			    && f_fpr_reqs.first.write);
+                            && (! f_gpr_reqs.notEmpty)    // prioritize gpr reqs
+                            && f_fpr_reqs.first.write);
       let req <- pop (f_fpr_reqs);
       Bit #(5) regnum = req.address;
       let data_in = req.data;
 
       let arch_regs = ArchRegs {src1: tagged Valid (tagged Fpu regnum),
-				src2: tagged Invalid,
-				src3: tagged Invalid,
-				dst:  tagged Invalid};
+                                src2: tagged Invalid,
+                                src3: tagged Invalid,
+                                dst:  tagged Invalid};
       let rename_result = regRenamingTable.rename[0].getRename (arch_regs);
       let phy_rindx     = fromMaybe (?, rename_result.phy_regs.src1);
       rf.write [debuggerPort].wr (phy_rindx, data_in);
@@ -1166,19 +1166,19 @@ module mkCore#(CoreId coreId)(Core);
       f_fpr_rsps.enq (rsp);
 
       if (show_DM_interactions)
-	 $display ("%0d: %m.rl_debug_write_fpr: reg %0d <= 0x%0h (phy_rindx %0d)",
-		   cur_cycle, regnum, data_in, phy_rindx);
+         $display ("%0d: %m.rl_debug_write_fpr: reg %0d <= 0x%0h (phy_rindx %0d)",
+                   cur_cycle, regnum, data_in, phy_rindx);
    endrule
 
    rule rl_debug_fpr_access_busy (   (rg_core_run_state == CORE_RUNNING)
-				  && f_fpr_reqs.notEmpty);
+                                  && f_fpr_reqs.notEmpty);
 
       let req <- pop (f_fpr_reqs);
       let rsp = DM_CPU_Rsp {ok: False, data: ?};
       f_fpr_rsps.enq (rsp);
 
       if (show_DM_interactions)
-	 $display ("%0d: %m.rl_debug_fpr_access_busy", cur_cycle);
+         $display ("%0d: %m.rl_debug_fpr_access_busy", cur_cycle);
    endrule
 `endif
 
@@ -1190,7 +1190,7 @@ module mkCore#(CoreId coreId)(Core);
    FIFOF #(DM_CPU_Rsp #(64))     f_csr_rsps <- mkFIFOF1;
 
    rule rl_debug_csr_read (   (rg_core_run_state == CORE_HALTED)
-			   && (! f_csr_reqs.first.write));
+                           && (! f_csr_reqs.first.write));
       let req <- pop (f_csr_reqs);
       Bit #(12) csr_addr = req.address;
       let data_out = csrf.rd (unpack (csr_addr));
@@ -1199,11 +1199,11 @@ module mkCore#(CoreId coreId)(Core);
       f_csr_rsps.enq (rsp);
 
       if (show_DM_interactions)
-	 $display ("%0d: %m.rl_debug_read_csr: csr [%0h] => 0x%0h", cur_cycle, csr_addr, data_out);
+         $display ("%0d: %m.rl_debug_read_csr: csr [%0h] => 0x%0h", cur_cycle, csr_addr, data_out);
    endrule
 
    rule rl_debug_csr_write (   (rg_core_run_state == CORE_HALTED)
-			    && f_csr_reqs.first.write);
+                            && f_csr_reqs.first.write);
       let req <- pop (f_csr_reqs);
       Bit #(12) csr_addr = req.address;
       let data_in = req.data;
@@ -1213,7 +1213,7 @@ module mkCore#(CoreId coreId)(Core);
       f_csr_rsps.enq (rsp);
 
       if (show_DM_interactions)
-	 $display ("%0d: %m.rl_debug_write_csr: csr [%0h] <= 0x%0h", cur_cycle, csr_addr, data_in);
+         $display ("%0d: %m.rl_debug_write_csr: csr [%0h] <= 0x%0h", cur_cycle, csr_addr, data_in);
    endrule
 
    rule rl_debug_csr_access_busy (rg_core_run_state == CORE_RUNNING);
@@ -1222,7 +1222,7 @@ module mkCore#(CoreId coreId)(Core);
       f_csr_rsps.enq (rsp);
 
       if (show_DM_interactions)
-	 $display ("%0d: %m.rl_debug_csr_access_busy", cur_cycle);
+         $display ("%0d: %m.rl_debug_csr_access_busy", cur_cycle);
    endrule
 
    // ----------------------------------------------------------------
@@ -1235,7 +1235,7 @@ module mkCore#(CoreId coreId)(Core);
    // Debug Module Halt control
 
    rule rl_debug_halt_req (   (rg_core_run_state == CORE_RUNNING)
-			   && (f_run_halt_reqs.first == False));
+                           && (f_run_halt_reqs.first == False));
       f_run_halt_reqs.deq;
 
       // Debugger 'halt' request (e.g., GDB '^C' command)
@@ -1243,18 +1243,18 @@ module mkCore#(CoreId coreId)(Core);
       renameStage.debug_halt_req;
 
       if (show_DM_interactions)
-	 $display ("%0d: %m.rl_debug_halt_req", cur_cycle);
+         $display ("%0d: %m.rl_debug_halt_req", cur_cycle);
    endrule
 
    rule rl_debug_halt_req_already_halted (   (rg_core_run_state != CORE_RUNNING)
-					  && (f_run_halt_reqs.first == False));
+                                          && (f_run_halt_reqs.first == False));
       f_run_halt_reqs.deq;
 
       // Notify debugger that we're halted, but otherwise ignore the request
       f_run_halt_rsps.enq (False);
 
       if (show_DM_interactions)
-	 $display ("%0d: %m.rl_debug_halt_req_already_halted", cur_cycle);
+         $display ("%0d: %m.rl_debug_halt_req_already_halted", cur_cycle);
    endrule
 
    // Monitors when we've reached halted state while running
@@ -1265,7 +1265,7 @@ module mkCore#(CoreId coreId)(Core);
       rg_core_run_state <= CORE_HALTED;
 
       if (show_DM_interactions)
-	 $display ("%0d: %m.rl_debug_halted", cur_cycle);
+         $display ("%0d: %m.rl_debug_halted", cur_cycle);
    endrule
 
    // ----------------
@@ -1273,14 +1273,14 @@ module mkCore#(CoreId coreId)(Core);
 
    // Resume command when in debug mode
    rule rl_debug_resume (   (rg_core_run_state == CORE_HALTED)
-			 && (f_run_halt_reqs.first == True)
+                         && (f_run_halt_reqs.first == True)
 
-			 // prioritise gpr/fpr/csr read/write requests before resuming
-			 && (! f_gpr_reqs.notEmpty)
+                         // prioritise gpr/fpr/csr read/write requests before resuming
+                         && (! f_gpr_reqs.notEmpty)
 `ifdef ISA_F
-			 && (! f_fpr_reqs.notEmpty)
+                         && (! f_fpr_reqs.notEmpty)
 `endif
-			 && (! f_csr_reqs.notEmpty));
+                         && (! f_csr_reqs.notEmpty));
 
       f_run_halt_reqs.deq;
 
@@ -1312,14 +1312,14 @@ module mkCore#(CoreId coreId)(Core);
 
    // Run command when already running
    rule rl_debug_run_redundant (   (rg_core_run_state == CORE_RUNNING)
-				&& (f_run_halt_reqs.first == True));
+                                && (f_run_halt_reqs.first == True));
       f_run_halt_reqs.deq;
 
       // Notify debugger that we're running
       f_run_halt_rsps.enq (True);
 
       if (show_DM_interactions)
-	 $display ("%0d: %m.rl_debug_run_redundant", cur_cycle);
+         $display ("%0d: %m.rl_debug_run_redundant", cur_cycle);
    endrule
 
    // ================================================================
@@ -1340,7 +1340,7 @@ module mkCore#(CoreId coreId)(Core);
             );
             started <= True;
 `ifdef INCLUDE_GDB_CONTROL
-	   rg_core_run_state <= CORE_RUNNING;
+           rg_core_run_state <= CORE_RUNNING;
 `endif
             mmio.setHtifAddrs(toHostAddr, fromHostAddr);
 

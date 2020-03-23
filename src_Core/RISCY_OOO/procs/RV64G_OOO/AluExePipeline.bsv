@@ -271,7 +271,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
                 rVal2: rVal2,
                 pc: pc,
                 ppc: ppc,
-	        orig_inst: orig_inst,
+                orig_inst: orig_inst,
                 spec_tag: x.spec_tag
             },
             spec_bits: dispToReg.spec_bits
@@ -290,7 +290,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
         if (verbosity > 0) begin
            $display ("AluExePipeline.doExeAlu: regToExe    = ", fshow (regToExe));
            $display ("AluExePipeline.doExeAlu: exec_result = ", fshow (exec_result));
-	end
+        end
 
         // when inst needs to store csrData in ROB, it must have iType = Csr, cannot mispredict
         if(isValid(x.dInst.csr)) begin
@@ -342,7 +342,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
         // update the instruction in the reorder buffer.
         inIfc.rob_setExecuted(
             x.tag,
-	    x.data,
+            x.data,
             x.csrData,
             x.controlFlow
 `ifdef RVFI

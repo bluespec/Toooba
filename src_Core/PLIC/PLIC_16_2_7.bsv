@@ -28,8 +28,8 @@ typedef  2  PLIC_N_Targets;
 typedef  7  PLIC_Max_Priority;
 
 typedef  PLIC_IFC #(N_External_Interrupt_Sources,
-		    PLIC_N_Targets,
-		    PLIC_Max_Priority)             PLIC_IFC_16_2_7;
+                    PLIC_N_Targets,
+                    PLIC_Max_Priority)             PLIC_IFC_16_2_7;
 
 (* synthesize *)
 module mkPLIC_16_2_7 (PLIC_IFC_16_2_7);
