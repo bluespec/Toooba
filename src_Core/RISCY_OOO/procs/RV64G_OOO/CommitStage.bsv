@@ -152,7 +152,7 @@ endinterface
 // we apply actions the end of commit rule
 // use struct to record actions to be done
 typedef struct {
-    Addr pc;
+    CapPipe pc;
     Addr addr;
     Trap trap;
     Bit #(32) orig_inst;
@@ -212,7 +212,7 @@ function Maybe#(RVFI_DII_Execution#(DataSz,DataSz)) genRVFI(ToReorderBuffer rot,
         rvfi_rs2_addr: rot.orig_inst[24:20],
         rvfi_rs1_data: ?,
         rvfi_rs2_data: ?,
-        rvfi_pc_rdata: rot.pc,
+        rvfi_pc_rdata: getAddr(rot.pc),
         rvfi_pc_wdata: next_pc,
         rvfi_mem_wdata: wdata,
         rvfi_rd_addr: rd,
@@ -742,8 +742,8 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
        if (! debugger_halt) begin
           // trap handling & redirect
-          let trap_updates <- csrf.trap(trap.trap, trap.pc, trap.addr, trap.orig_inst);
-          let cap_trap_updates <- scaprf.trap(trap.trap, trap.pc, trap.addr, trap.orig_inst);
+          let trap_updates <- csrf.trap(trap.trap, getAddr(trap.pc), trap.addr, trap.orig_inst);
+          let cap_trap_updates <- scaprf.trap(trap.trap, getAddr(trap.pc), trap.addr, trap.orig_inst);
           inIfc.redirectPc(trap_updates.new_pc
 `ifdef RVFI_DII
                            , trap.x.diid + 1
@@ -787,7 +787,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
         // kill everything, redirect, and increment epoch
         inIfc.killAll;
-        inIfc.redirectPc(x.pc
+        inIfc.redirectPc(getAddr(x.pc)
 `ifdef RVFI_DII
             , x.diid
 `endif
@@ -875,8 +875,8 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         end
 
         // redirect (Sret and Mret redirect pc is got from CSRF)
-        Addr next_pc = x.ppc_vaddr_csrData matches tagged PPC .ppc ? getAddr(ppc) : (x.pc + 4);
-        doAssert(next_pc == x.pc + 4, "ppc must be pc + 4");
+        Addr next_pc = x.ppc_vaddr_csrData matches tagged PPC .ppc ? getAddr(ppc) : (getAddr(x.pc) + 4);
+        doAssert(next_pc == getAddr(x.pc) + 4, "ppc must be pc + 4");
 `ifdef INCLUDE_TANDEM_VERIF
         Maybe #(RET_Updates) m_ret_updates = no_ret_updates;
 `endif
@@ -1052,7 +1052,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                 else begin
                     if (verbose) $display("[doCommitNormalInst - %d] ", i, fshow(inst_tag), " ; ", fshow(x));
 `ifdef RVFI
-                    rvfis[i] = genRVFI(x, traceCnt + zeroExtend(whichTrace), getTSB(), x.pc + (is_16b_inst(x.orig_inst) ? 2:4));
+                    rvfis[i] = genRVFI(x, traceCnt + zeroExtend(whichTrace), getTSB(), getAddr(x.pc) + (is_16b_inst(x.orig_inst) ? 2:4));
                     whichTrace = whichTrace + 1;
 `endif
 

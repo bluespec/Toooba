@@ -352,7 +352,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         // This avoids doing incorrect work
         incrEpochStallFetch;
         // just place it in the reorder buffer
-        let y = ToReorderBuffer{pc: pc,
+        let y = ToReorderBuffer{pc: setAddr(cast(scaprf.rd(SCR_PCC)), pc).value,
                                 orig_inst: orig_inst,
                                 iType: dInst.iType,
                                 dst: arch_regs.dst,
@@ -550,7 +550,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
            end
 
         RobInstState rob_inst_state = to_exec ? NotDone : Executed;
-        let y = ToReorderBuffer{pc: pc,
+        let y = ToReorderBuffer{pc: setAddr(cast(scaprf.rd(SCR_PCC)), pc).value,
                                 orig_inst: orig_inst,
                                 iType: dInst.iType,
                                 dst: arch_regs.dst,
@@ -1091,7 +1091,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                         end
                         RobInstState rob_inst_state = (to_exec || to_mem || to_FpuMulDiv) ? NotDone : Executed;
 
-                        let y = ToReorderBuffer{pc: pc,
+                        let y = ToReorderBuffer{pc: setAddr(cast(scaprf.rd(SCR_PCC)), pc).value,
                                                 orig_inst: orig_inst,
                                                 iType: dInst.iType,
                                                 dst: arch_regs.dst,

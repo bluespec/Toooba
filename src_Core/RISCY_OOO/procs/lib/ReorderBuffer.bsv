@@ -59,7 +59,7 @@ typedef struct {
 `endif
 
 typedef struct {
-    Addr               pc;
+    CapPipe            pc;
     Bit #(32)          orig_inst;    // original 16b or 32b instruction ([1:0] will distinguish 16b or 32b)
     IType              iType;
     Maybe#(ArchRIndx)  dst;          // Invalid, GPR or FPR destination ("Rd")
@@ -219,7 +219,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     Integer sb_enq_port = 1; // write spec_bits
     Integer sb_correctSpec_port = 2; // write spec_bits
 
-    Reg#(Addr)                                                      pc                   <- mkRegU;
+    Reg#(CapPipe)                                                   pc                   <- mkRegU;
     Reg #(Bit #(32))                                                orig_inst            <- mkRegU;
     Reg#(IType)                                                     iType                <- mkRegU;
     Reg #(Maybe #(ArchRIndx))                                       rg_dst_reg           <- mkRegU;
@@ -303,7 +303,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         endinterface);
     end
 
-    method Addr getOrigPC = pc;
+    method Addr getOrigPC = getAddr(pc);
     method Addr getOrigPredPC = predPcWire;
     method Bit #(32) getOrig_Inst = orig_inst;
 
