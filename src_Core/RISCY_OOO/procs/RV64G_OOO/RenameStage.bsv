@@ -49,6 +49,9 @@ import ReservationStationAlu::*;
 import ReservationStationMem::*;
 import ReservationStationFpuMulDiv::*;
 import SplitLSQ::*;
+import CHERICap::*;
+import CHERICC_Fat::*;
+import ISA_Decls_CHERI::*;
 
 import Cur_Cycle :: *;
 
@@ -363,7 +366,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                 trap: firstTrap,
 				tval: tval,
                                 // default values of FullResult
-                                ppc_vaddr_csrData: PPC (ppc), // default use PPC
+                                ppc_vaddr_csrData: PPC (setAddr(almightyCap, pc).value), // default use PPC
                                 fflags: 0,
                                 ////////
                                 will_dirty_fpu_state: False,
@@ -561,7 +564,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                 trap: Invalid, // no trap
 	                        tval: 0,
                                 // default values of FullResult
-                                ppc_vaddr_csrData: PPC (ppc), // default use PPC
+                                ppc_vaddr_csrData: PPC (setAddr(almightyCap, ppc).value), // default use PPC
                                 fflags: 0,
                                 ////////
                                 will_dirty_fpu_state: will_dirty_fpu_state,
@@ -1102,7 +1105,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                                 trap: Invalid, // no trap
                                                 tval: 0,
                                                 // default values of FullResult
-                                                ppc_vaddr_csrData: PPC (ppc), // default use PPC
+                                                ppc_vaddr_csrData: PPC (setAddr(almightyCap, ppc).value), // default use PPC
                                                 fflags: 0,
                                                 ////////
                                                 will_dirty_fpu_state: will_dirty_fpu_state,

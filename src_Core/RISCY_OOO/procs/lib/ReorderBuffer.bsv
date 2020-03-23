@@ -1,6 +1,6 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +8,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -33,6 +33,8 @@ import RevertingVirtualReg::*;
 `ifdef RVFI_DII
 import RVFI_DII_Types::*;
 `endif
+import CHERICap::*;
+import CHERICC_Fat::*;
 
 import Cur_Cycle :: *;
 
@@ -44,10 +46,10 @@ import Cur_Cycle :: *;
 // csrData is only used by iType = Csr
 // vaddr is only used by mem inst in page fault
 typedef union tagged {
-    Addr PPC; // at default store ppc
-    Addr VAddr; // for mem inst, store vaddr
+    CapPipe PPC; // at default store ppc
+    CapPipe VAddr; // for mem inst, store vaddr
     Data CSRData; // for Csr inst, store csr_data
-} PPCVAddrCSRData deriving(Bits, Eq, FShow);
+} PPCVAddrCSRData deriving(Bits, FShow);
 
 `ifdef RVFI
 typedef struct {
@@ -100,7 +102,7 @@ typedef struct {
 `ifdef RVFI
     ExtraTraceBundle   traceBundle;
 `endif
-} ToReorderBuffer deriving(Bits, Eq, FShow);
+} ToReorderBuffer deriving(Bits, FShow);
 
 typedef enum {
     NotDone,
@@ -253,7 +255,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     Wire#(Addr) predPcWire <- mkBypassWire;
     (* fire_when_enabled, no_implicit_conditions *)
     rule setPcWires;
-        predPcWire <= ppc_vaddr_csrData[0] matches tagged PPC .a ? a : 0;
+        predPcWire <= ppc_vaddr_csrData[0] matches tagged PPC .a ? getAddr(a) : 0;
     endrule
 
     Vector#(aluExeNum, Row_setExecuted_doFinishAlu) aluSetExe;
@@ -277,7 +279,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
                     ppc_vaddr_csrData[pvc_finishAlu_port(i)] <= CSRData (d);
                 end
                 else begin
-                    ppc_vaddr_csrData[pvc_finishAlu_port(i)] <= PPC (cf.nextPc);
+                    ppc_vaddr_csrData[pvc_finishAlu_port(i)] <= PPC (setAddr(almightyCap, cf.nextPc).value);
                 end
 `ifdef RVFI
                 //$display("%t : traceBundle = ", $time(), fshow(tb), " in Row_setExecuted_doFinishAlu for %x", pc);
@@ -287,13 +289,13 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
             endmethod
         endinterface);
     end
-    
+
     Vector#(fpuMulDivExeNum, Row_setExecuted_doFinishFpuMulDiv) fpuMulDivExe;
     for(Integer i = 0; i < valueof(fpuMulDivExeNum); i = i+1) begin
         fpuMulDivExe[i] = (interface Row_setExecuted_doFinishFpuMulDiv;
             method Action set(Data dst_data, Bit#(5) new_fflags);
                 // inst is done
-                rob_inst_state[state_finishFpuMulDiv_port(i)] <= Executed; 
+                rob_inst_state[state_finishFpuMulDiv_port(i)] <= Executed;
 	        rg_dst_data <= dst_data;
                 // update fflags
                 fflags[fflags_finishFpuMulDiv_port(i)] <= new_fflags;
@@ -324,7 +326,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
             doAssert(iType == St, "must be St");
         end
         // update VAddr
-        ppc_vaddr_csrData[pvc_finishMem_port] <= VAddr (vaddr);
+        ppc_vaddr_csrData[pvc_finishMem_port] <= VAddr (setAddr(almightyCap, vaddr).value);
 `ifdef RVFI
         //$display("%t : traceBundle = ", $time(), fshow(tb), " in setExecuted_doFinishMem for %x", pc);
         traceBundle[pvc_finishMem_port] <= tb;
@@ -551,7 +553,7 @@ interface SupReorderBuffer#(numeric type aluExeNum, numeric type fpuMulDivExeNum
 
     interface Vector#(SupSize, ROB_DeqPort) deqPort;
 
-    // record that we have notified LSQ about inst reaching commit 
+    // record that we have notified LSQ about inst reaching commit
     method Action setLSQAtCommitNotified(InstTag x);
     // deqLSQ rules set ROB state
     method Action setExecuted_deqLSQ(InstTag x, Maybe#(Exception) cause, Maybe#(LdKilledBy) ld_killed

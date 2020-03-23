@@ -37,6 +37,7 @@ import DefaultValue::*;
 import ConfigReg::*;
 import Ehr::*;
 import GetPut::*;
+import Vector::*;
 import CHERICap::*;
 import CHERICC_Fat::*;
 import ISA_Decls_CHERI::*;
@@ -81,9 +82,10 @@ deriving (Bits, FShow);
 interface ScrFile;
     // Read
     method CapReg rd(SCR csr);
-    // normal write by CSRXXX inst to any CSR
+    // normal write by RWSpecialCap inst to any SCR
     method Action scrInstWr(SCR csr, CapReg x);
 
+    interface Vector#(SupSize, Put#(CapReg)) pccWr;
     // The WARL transform performed during CSRRx writes to a CSR
     method CapReg warl_xform (SCR csr, CapReg x);
 
@@ -93,8 +95,8 @@ interface ScrFile;
     method ActionValue#(Scr_RET_Updates) mret;
 
     // Outputs for CSRs that the rest of the processor needs to know about
-    method ScrVMInfo vmI;
-    method ScrVMInfo vmD;
+    method ScrVMInfo pccCheck;
+    method ScrVMInfo ddcCheck;
     method ScrDecodeInfo decodeInfo;
 
     // terminate
@@ -130,12 +132,11 @@ endmodule
 module mkScrFile (ScrFile);
     RiscVISASubset isa = defaultValue;
 
-    // To save from bypassing logic, CSR reads will get stale value
     let mkCsrReg = mkConfigReg;
     let mkCsrEhr = mkConfigEhr;
 
     // User level SCRs
-    Reg#(CapReg) pcc_reg       <- mkCsrReg(defaultValue);
+    Ehr#(SupSize, CapReg) pcc_reg <- mkCsrEhr(defaultValue);
     Reg#(CapReg) ddc_reg       <- mkCsrReg(defaultValue);
 
     // User level SCRs with accessSysRegs
@@ -160,7 +161,7 @@ module mkScrFile (ScrFile);
     function Reg#(CapReg) get_scr(SCR scr);
         return (case (scr)
             // User SCRs
-            SCR_PCC:       pcc_reg;
+            SCR_PCC:       pcc_reg[0];
             SCR_DDC:       ddc_reg;
             // User CSRs with accessSysRegs
             SCR_UTCC:      utcc_reg;
@@ -191,6 +192,8 @@ module mkScrFile (ScrFile);
         get_scr(csr)._write(x);
     endmethod
 
+    interface pccWr = map(toPut,pcc_reg);
+
     method ActionValue#(Scr_Trap_Updates) trap(Trap t, Addr pc, Addr addr, Bit #(32) orig_inst);
         return ?;
     endmethod
@@ -203,24 +206,24 @@ module mkScrFile (ScrFile);
         return ?;
     endmethod
 
-    method ScrVMInfo vmI;
+    method ScrVMInfo pccCheck;
         return ScrVMInfo {
-            top: truncate(getTop(pcc_reg)),
-            base: truncate(getBase(pcc_reg)),
-            perms: getHardPerms(pcc_reg)
+            top: truncate(getTop(pcc_reg[0])),
+            base: truncate(getBase(pcc_reg[0])),
+            perms: getHardPerms(pcc_reg[0])
         };
     endmethod
 
-    method ScrVMInfo vmD;
+    method ScrVMInfo ddcCheck;
         // for load/store, need to consider MPRV
         return ScrVMInfo {
-            top: truncate(getTop(pcc_reg)),
-            base: truncate(getBase(pcc_reg)),
-            perms: getHardPerms(pcc_reg)
+            top: truncate(getTop(ddc_reg)),
+            base: truncate(getBase(ddc_reg)),
+            perms: getHardPerms(ddc_reg)
         };
     endmethod
 
     method ScrDecodeInfo decodeInfo =
-      ScrDecodeInfo{cap_mode: getFlags(pcc_reg)==1'b1};
+      ScrDecodeInfo{cap_mode: getFlags(pcc_reg[0])==1'b1};
 
 endmodule

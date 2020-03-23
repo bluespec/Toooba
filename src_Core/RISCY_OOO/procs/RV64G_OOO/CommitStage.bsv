@@ -41,6 +41,9 @@ import ScrFile::*;
 import StoreBuffer::*;
 import VerificationPacket::*;
 import RenameDebugIF::*;
+import CHERICap::*;
+import CHERICC_Fat::*;
+import ISA_Decls_CHERI::*;
 
 `ifdef RVFI
 import RVFI_DII_Types::*;
@@ -156,7 +159,7 @@ typedef struct {
 `ifdef RVFI_DII
     ToReorderBuffer x;
 `endif
-} CommitTrap deriving(Bits, Eq, FShow);
+} CommitTrap deriving(Bits, FShow);
 
 `ifdef RVFI
 function Bool is_16b_inst (Bit #(n) inst);
@@ -168,7 +171,7 @@ typedef struct {
     Data mepc;
     Data stvec;
     Data mtvec;
-} TraceStateBundle deriving(Bits, Eq, FShow);
+} TraceStateBundle deriving(Bits, FShow);
 
 function Maybe#(RVFI_DII_Execution#(DataSz,DataSz)) genRVFI(ToReorderBuffer rot, Dii_Id traceCnt, TraceStateBundle tsb, Data next_pc);
     Addr addr = 0;
@@ -186,7 +189,7 @@ function Maybe#(RVFI_DII_Execution#(DataSz,DataSz)) genRVFI(ToReorderBuffer rot,
         endcase
         case (rot.ppc_vaddr_csrData) matches
             tagged VAddr .vaddr: begin
-                addr = vaddr;
+                addr = getAddr(vaddr);
                 case (rot.lsqTag) matches
                     tagged Ld .l: rmask = rot.traceBundle.memByteEn;
                     tagged St .s: begin
@@ -195,7 +198,7 @@ function Maybe#(RVFI_DII_Execution#(DataSz,DataSz)) genRVFI(ToReorderBuffer rot,
                     end
                 endcase
             end
-            tagged PPC .ppc: next_pc = ppc;
+            tagged PPC .ppc: next_pc = getAddr(ppc);
             tagged CSRData .csrdata: data = csrdata;
         endcase
     end
@@ -623,7 +626,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 	    vaddr = x.tval;
 	end
         else if(x.ppc_vaddr_csrData matches tagged VAddr .va) begin
-            vaddr = va;
+            vaddr = getAddr(va);
         end
         let commitTrap_val = Valid (CommitTrap {
             trap: trap,
@@ -872,7 +875,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         end
 
         // redirect (Sret and Mret redirect pc is got from CSRF)
-        Addr next_pc = x.ppc_vaddr_csrData matches tagged PPC .ppc ? ppc : (x.pc + 4);
+        Addr next_pc = x.ppc_vaddr_csrData matches tagged PPC .ppc ? getAddr(ppc) : (x.pc + 4);
         doAssert(next_pc == x.pc + 4, "ppc must be pc + 4");
 `ifdef INCLUDE_TANDEM_VERIF
         Maybe #(RET_Updates) m_ret_updates = no_ret_updates;
@@ -1082,6 +1085,9 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                     // every inst here should have been renamed, commit renaming
                     regRenamingTable.commit[i].commit;
                     doAssert(x.claimed_phy_reg, "should have renamed");
+
+                    if (x.ppc_vaddr_csrData matches tagged PPC .ppc)
+                        scaprf.pccWr[i].put(cast(ppc));
 
 `ifdef RENAME_DEBUG
                     // send debug msg for rename error
