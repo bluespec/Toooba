@@ -220,7 +220,7 @@ module mkL1CRqMshrSafe#(
         initIdx <= initIdx + 1;
         if(initIdx == fromInteger(valueOf(cRqNum) - 1)) begin
             inited <= True;
-           if (verbose)
+	   if (verbose)
             $display("%t L1CRqMshrSafe %m: init empty entry done", $time);
         end
     endrule

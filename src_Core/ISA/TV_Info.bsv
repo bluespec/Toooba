@@ -25,25 +25,25 @@ import ISA_Decls    :: *;
 // ================================================================
 
 typedef enum {// These are not from instruction flow and do not have a PC or instruction
-              TRACE_RESET,
-              TRACE_GPR_WRITE,
-              TRACE_FPR_WRITE,
-              TRACE_CSR_WRITE,
-              TRACE_MEM_WRITE,
+	      TRACE_RESET,
+	      TRACE_GPR_WRITE,
+	      TRACE_FPR_WRITE,
+	      TRACE_CSR_WRITE,
+	      TRACE_MEM_WRITE,
 
-              // These are from instruction flow and have a PC and instruction
-              TRACE_OTHER,
-              TRACE_I_RD,   TRACE_F_GRD,   TRACE_F_FRD,
-               TRACE_I_LOAD,  TRACE_F_LOAD,
-              TRACE_I_STORE, TRACE_F_STORE,
-              TRACE_AMO,
-              TRACE_TRAP,
-              TRACE_RET,
-              TRACE_CSRRX,
+	      // These are from instruction flow and have a PC and instruction
+	      TRACE_OTHER,
+	      TRACE_I_RD,   TRACE_F_GRD,   TRACE_F_FRD,
+ 	      TRACE_I_LOAD,  TRACE_F_LOAD,
+	      TRACE_I_STORE, TRACE_F_STORE,
+	      TRACE_AMO,
+	      TRACE_TRAP,
+	      TRACE_RET,
+	      TRACE_CSRRX,
 
-              // These are from an interrupt and has a PC but no instruction
-              TRACE_INTR
-              } Trace_Op
+	      // These are from an interrupt and has a PC but no instruction
+	      TRACE_INTR
+	      } Trace_Op
 deriving (Bits, Eq, FShow);
 
 typedef struct {
@@ -254,7 +254,7 @@ endfunction
 // op    pc    instr_sz    instr    rd    word1    word2    word3    word4
 // x     x     x           x        x     rdval    stval    eaddr    funct3
 function Trace_Data mkTrace_AMO (WordXL pc, Bit #(3) funct3, ISize isize, Bit #(32) instr,
-                                 RegName rd, WordXL rdval, WordXL stval, WordXL eaddr);
+				 RegName rd, WordXL rdval, WordXL stval, WordXL eaddr);
    Trace_Data td = ?;
    td.op       = TRACE_AMO;
    td.pc       = pc;
@@ -272,7 +272,7 @@ endfunction
 // op    pc    instr_sz    instr    rd    word1    word2    word3    word4
 // x     x     x           x        priv  mstatus  mcause   mepc     mtval
 function Trace_Data mkTrace_TRAP (WordXL pc, ISize isize, Bit #(32) instr,
-                                  Priv_Mode  priv, WordXL mstatus, WordXL mcause, WordXL mepc, WordXL mtval);
+				  Priv_Mode  priv, WordXL mstatus, WordXL mcause, WordXL mepc, WordXL mtval);
    Trace_Data td = ?;
    td.op       = TRACE_TRAP;
    td.pc       = pc;
@@ -305,10 +305,10 @@ endfunction
 // x     x     x           x        x     rdval    [1] mstatus_valid  csraddr  csrval  mstatus
 //                                                 [0] csrvalid
 function Trace_Data mkTrace_CSRRX (WordXL pc, ISize isize, Bit #(32) instr,
-                                   RegName rd, WordXL rdval,
-                                   Bool csrvalid, CSR_Addr csraddr, WordXL csrval,
-                                   Bool   mstatus_valid,
-                                   WordXL mstatus);
+				   RegName rd, WordXL rdval,
+				   Bool csrvalid, CSR_Addr csraddr, WordXL csrval,
+				   Bool   mstatus_valid,
+				   WordXL mstatus);
    Trace_Data td = ?;
    td.op       = TRACE_CSRRX;
    td.pc       = pc;
@@ -329,7 +329,7 @@ endfunction
 // op    pc    instr_sz    instr    rd    word1    word2    word3    word4
 // x     x                          priv  mstatus  mcause   mepc     mtval
 function Trace_Data mkTrace_INTR (WordXL pc,
-                                  Priv_Mode  priv, WordXL mstatus, WordXL mcause, WordXL mepc, WordXL mtval);
+				  Priv_Mode  priv, WordXL mstatus, WordXL mcause, WordXL mepc, WordXL mtval);
    Trace_Data td = ?;
    td.op       = TRACE_INTR;
    td.pc       = pc;
@@ -352,57 +352,57 @@ instance FShow #(Trace_Data);
       end
 
       else if ((td.op == TRACE_GPR_WRITE) || (td.op == TRACE_FPR_WRITE))
-         fmt = fmt + $format (" rd %0d  rdval %0h", td.rd, td.word1);
+	 fmt = fmt + $format (" rd %0d  rdval %0h", td.rd, td.word1);
 
       else if (td.op == TRACE_CSR_WRITE)
-         fmt = fmt + $format (" csraddr %0h  csrval %0h", td.word3, td.word4);
+	 fmt = fmt + $format (" csraddr %0h  csrval %0h", td.word3, td.word4);
 
       else if (td.op == TRACE_MEM_WRITE)
-         fmt = fmt + $format (" sz %0d  stval %0h  paddr %0h", td.word1, td.word2, td.word3);
+	 fmt = fmt + $format (" sz %0d  stval %0h  paddr %0h", td.word1, td.word2, td.word3);
 
       else begin
-         fmt = fmt + $format (" pc %0h", td.pc);
+	 fmt = fmt + $format (" pc %0h", td.pc);
 
-         if (td.op != TRACE_INTR)
-            fmt = fmt + $format (" instr.%0d %0h:", pack (td.instr_sz), td.instr);
+	 if (td.op != TRACE_INTR)
+	    fmt = fmt + $format (" instr.%0d %0h:", pack (td.instr_sz), td.instr);
 
-         if (td.op == TRACE_I_RD)
-            fmt = fmt + $format (" rd %0d  rdval %0h", td.rd, td.word1);
+	 if (td.op == TRACE_I_RD)
+	    fmt = fmt + $format (" rd %0d  rdval %0h", td.rd, td.word1);
 `ifdef ISA_F
-         else if (td.op == TRACE_F_FRD)
-            fmt = fmt + $format (" rd %0d  rdval %0h  fflags %05b", td.rd, td.word5, td.word2);
+	 else if (td.op == TRACE_F_FRD)
+	    fmt = fmt + $format (" rd %0d  rdval %0h  fflags %05b", td.rd, td.word5, td.word2);
 
-         else if (td.op == TRACE_F_GRD)
-            fmt = fmt + $format (" rd %0d  rdval %0h  fflags %05b", td.rd, td.word1, td.word2);
+	 else if (td.op == TRACE_F_GRD)
+	    fmt = fmt + $format (" rd %0d  rdval %0h  fflags %05b", td.rd, td.word1, td.word2);
 
-         else if (td.op == TRACE_F_LOAD)
-            fmt = fmt + $format (" rd %0d  rdval %0h  eaddr %0h",
-                                 td.rd, td.word5, td.word3);
+	 else if (td.op == TRACE_F_LOAD)
+	    fmt = fmt + $format (" rd %0d  rdval %0h  eaddr %0h",
+				 td.rd, td.word5, td.word3);
 
-         else if (td.op == TRACE_F_STORE)
-            fmt = fmt + $format (" stval %0h  eaddr %0h", td.word5, td.word3);
+	 else if (td.op == TRACE_F_STORE)
+	    fmt = fmt + $format (" stval %0h  eaddr %0h", td.word5, td.word3);
 `endif
-         else if (td.op == TRACE_I_LOAD)
-            fmt = fmt + $format (" rd %0d  rdval %0h  eaddr %0h",
-                                 td.rd, td.word1, td.word3);
+	 else if (td.op == TRACE_I_LOAD)
+	    fmt = fmt + $format (" rd %0d  rdval %0h  eaddr %0h",
+				 td.rd, td.word1, td.word3);
 
-         else if (td.op == TRACE_I_STORE)
-            fmt = fmt + $format (" stval %0h  eaddr %0h", td.word2, td.word3);
+	 else if (td.op == TRACE_I_STORE)
+	    fmt = fmt + $format (" stval %0h  eaddr %0h", td.word2, td.word3);
 
-         else if (td.op == TRACE_AMO)
-            fmt = fmt + $format (" rd %0d  rdval %0h  stval %0h  eaddr %0h",
-                                 td.rd, td.word1, td.word2, td.word3);
+	 else if (td.op == TRACE_AMO)
+	    fmt = fmt + $format (" rd %0d  rdval %0h  stval %0h  eaddr %0h",
+				 td.rd, td.word1, td.word2, td.word3);
 
-         else if (td.op == TRACE_CSRRX)
-            fmt = fmt + $format (" rd %0d  rdval %0h  csraddr %0h  csrval %0h",
-                                 td.rd, td.word1, td.word3, td.word4);
+	 else if (td.op == TRACE_CSRRX)
+	    fmt = fmt + $format (" rd %0d  rdval %0h  csraddr %0h  csrval %0h",
+				 td.rd, td.word1, td.word3, td.word4);
 
-         else if ((td.op == TRACE_TRAP) || (td.op == TRACE_INTR))
-            fmt = fmt + $format (" priv %0d  mstatus %0h  mcause %0h  mepc %0h  mtval %0h",
-                                 td.rd, td.word1, td.word2, td.word3, td.word4);
+	 else if ((td.op == TRACE_TRAP) || (td.op == TRACE_INTR))
+	    fmt = fmt + $format (" priv %0d  mstatus %0h  mcause %0h  mepc %0h  mtval %0h",
+				 td.rd, td.word1, td.word2, td.word3, td.word4);
 
-         else if (td.op == TRACE_RET)
-            fmt = fmt + $format (" priv %0d  mstatus %0h", td.rd, td.word1);
+	 else if (td.op == TRACE_RET)
+	    fmt = fmt + $format (" priv %0d  mstatus %0h", td.rd, td.word1);
       end
 
       fmt = fmt + $format ("}");

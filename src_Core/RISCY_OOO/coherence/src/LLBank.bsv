@@ -555,7 +555,7 @@ module mkLLBank#(
             });
             toMQ.enq(msg);
             toMInfoQ.deq; // deq info
-           if (verbose)
+	   if (verbose)
             $display("%t LL %m sendToM: load only: ", $time, fshow(msg));
             doAssert(!isValid(data), "cannot have data");
             doAssert(!doLdAfterReplace, "doLdAfterReplace should be false");
@@ -580,7 +580,7 @@ module mkLLBank#(
             toMInfoQ.deq; // deq info
             // dma write can be resp (i.e. mshr entry can be released)
             rsStToDmaIndexQ_sendToM.enq(n);
-           if (verbose)
+	   if (verbose)
             $display("%t LL %m sendToM: dma write: ", $time, fshow(msg));
             doAssert(isRqFromDma(cRq.id), "must be dma write");
             doAssert(isValid(data), "dma write must have data");
@@ -604,7 +604,7 @@ module mkLLBank#(
                 // whole thing is done, reset bit and deq info
                 toMInfoQ.deq;
                 doLdAfterReplace <= False;
-               if (verbose)
+	       if (verbose)
                 $display("%t LL %m sendToM: rep then ld: ld: ", $time, fshow(msg));
 `ifdef PERF_COUNT
                 // performance counter: start miss timer
@@ -620,7 +620,7 @@ module mkLLBank#(
                 toMQ.enq(msg);
                 // don't deq info, do ld next time
                 doLdAfterReplace <= True;
-               if (verbose)
+	       if (verbose)
                 $display("%t LL %m sendToM: rep then ld: rep: ", $time, fshow(msg));
             end
             doAssert(isRqFromC(cRq.id), "must be child req");
@@ -1168,7 +1168,7 @@ module mkLLBank#(
                     // add to same addr dependency
                     cRqMshr.pipelineResp.setAddrSucc(m, Valid (n));
                     cRqSetDepNoCacheChange;
-                   if (verbose)
+		   if (verbose)
                     $display("%t LL %m pipelineResp: cRq: own by other cRq, same addr dep: ", $time,
                         fshow(cOwner), " ; ", fshow(cRqEOC)
                     );
@@ -1178,7 +1178,7 @@ module mkLLBank#(
                     // add to rep dependency
                     cRqMshr.pipelineResp.setRepSucc(cOwner.mshrIdx, Valid (n));
                     cRqSetDepNoCacheChange;
-                   if (verbose)
+		   if (verbose)
                     $display("%t LL %m pipelineResp: cRq: own by other cRq, rep dep: ", $time,
                         fshow(cOwner)
                     );
@@ -1200,12 +1200,12 @@ module mkLLBank#(
                     // req from child, get dir pend
                     Vector#(childNum, DirPend) dirPend = getDirPendNonCompatForChild;
                     if(dirPend == replicate(Invalid)) begin
-                       if (verbose)
+		       if (verbose)
                         $display("%t LL %m pipelineResp: cRq from child: own by itself, hit", $time);
                         cRqFromCHit(n, cRq, False);
                     end
                     else begin
-                       if (verbose)
+		       if (verbose)
                         $display("%t LL %m pipelineResp: cRq from child: own by itself, miss no replace: ", $time,
                             fshow(dirPend)
                         );
@@ -1216,12 +1216,12 @@ module mkLLBank#(
                     // req from DMA, get dir pend
                     Vector#(childNum, DirPend) dirPend = getDirPendNonCompatForDma;
                     if(dirPend == replicate(Invalid)) begin
-                       if (verbose)
+		       if (verbose)
                         $display("%t LL %m pipelineResp: cRq from dma: own by itself, hit", $time);
                         cRqFromDmaHit(n, cRq);
                     end
                     else begin
-                       if (verbose)
+		       if (verbose)
                         $display("%t LL %m pipelineResp: cRq from dma: own by itself, miss by children: ", $time);
                         cRqFromDmaMissByChildren(dirPend);
                     end
@@ -1237,7 +1237,7 @@ module mkLLBank#(
 
             // only check for cRqEOC to append to dependency chain when firt time go through tag match
             if(cRqEOC matches tagged Valid .m &&& cState == Init) begin
-               if (verbose)
+	       if (verbose)
                 $display("%t LL %m pipelineResp: cRq: no owner, depend on cRq ", $time,
                     fshow(cState), " ; ", 
                     fshow(cRqEOC)
@@ -1253,12 +1253,12 @@ module mkLLBank#(
                         // No Replacement necessary, check dir
                         Vector#(childNum, DirPend) dirPend = getDirPendNonCompatForChild;
                         if(ram.info.cs > I && dirPend == replicate(Invalid)) begin
-                           if (verbose)
+			   if (verbose)
                             $display("%t LL %m pipelineResp: cRq: no owner, hit", $time);
                             cRqFromCHit(n, cRq, False);
                         end
                         else begin
-                           if (verbose)
+			   if (verbose)
                             $display("%t LL %m pipelineResp: cRq: no owner, miss no replace: ", $time,
                                 fshow(dirPend)
                             );
@@ -1268,7 +1268,7 @@ module mkLLBank#(
                     else begin
                         // need replacement, check dir
                         Vector#(childNum, DirPend) dirPend = getDirPendNonI;
-                       if (verbose)
+		       if (verbose)
                         $display("%t LL %m pipelineResp: cRq: no owner, replace: ", $time,
                             fshow(dirPend)
                         );
@@ -1289,7 +1289,7 @@ module mkLLBank#(
                     end
                     else begin
                         // miss in LLC, so req mem and req is done!
-                       if (verbose)
+		       if (verbose)
                         $display("%t LL %m pipelineResp: cRq from dma: no owner, miss req mem", $time);
                         toMInfoQ.enq(ToMemInfo {
                             mshrIdx: n,
@@ -1355,7 +1355,7 @@ module mkLLBank#(
             cRqT cRq = pipeOutCRq;
             cRqSlotT cSlot = pipeOutCSlot;
             LLCRqState cState = pipeOutCState;
-           if (verbose)
+	   if (verbose)
             $display("%t LL %m pipelineResp: cRs: match cRq: ", $time,
                 fshow(cOwner), " ; ",
                 fshow(cRq), " ; ",
@@ -1380,7 +1380,7 @@ module mkLLBank#(
                     // replacement done, evict line
                     Maybe#(cRqIndexT) repSucc = pipeOutRepSucc;
                     cRqFromCEvict(cOwner.mshrIdx, cRq, repSucc);
-                   if (verbose)
+		   if (verbose)
                     $display("%t LL %m pipelineResp: cRs: match cRq: replace done: ", $time,
                         fshow(repSucc)
                     );
@@ -1394,7 +1394,7 @@ module mkLLBank#(
                         waitP: cSlot.waitP,
                         dirPend: newDirPend
                     });
-                   if (verbose)
+		   if (verbose)
                     $display("%t LL %m pipelineResp: cRs: match cRq: replace not done: ", $time,
                         fshow(newDirPend)
                     );
@@ -1419,7 +1419,7 @@ module mkLLBank#(
                         end
                     end
                 endcase
-               if (verbose)
+	       if (verbose)
                 $display("%t LL %m pipelineResp: cRs: match cRq: cRq in WaitSt: ", $time,
                     fshow(newDirPend)
                 );
@@ -1446,7 +1446,7 @@ module mkLLBank#(
         end
         else begin
             // does not match any cRq, so just deq pipe & write ram
-           if (verbose)
+	   if (verbose)
             $display("%t LL %m pipelineResp: cRs: no owner: ", $time);
             pipeline.deqWrite(Invalid, ram, False);
         end

@@ -96,7 +96,7 @@ module mkCoreW #(Reset dm_power_on_reset)
 
    // ================================================================
    // Notes on 'reset'
-
+   
    // This module's default reset (Verilog RST_N) is a
    // 'non-debug-module reset', or 'ndm-reset': it resets everything
    // in mkCoreW other than the optional RISC-V Debug Module (DM).
@@ -184,18 +184,18 @@ module mkCoreW #(Reset dm_power_on_reset)
       rg_hart0_reset_delay <= fromInteger (hart_reset_duration + 200);    // NOTE: heuristic
 
       $display ("%0d: %m.rl_dm_hart0_reset: asserting hart0 reset for %0d cycles",
-                cur_cycle, hart_reset_duration);
+		cur_cycle, hart_reset_duration);
    endrule
 
    rule rl_dm_hart0_reset_wait (rg_hart0_reset_delay != 0);
       if (rg_hart0_reset_delay == 1) begin
-         let pc = soc_map_struct.pc_reset_value;
-         proc.start (pc, rg_tohost_addr, rg_fromhost_addr);
+	 let pc = soc_map_struct.pc_reset_value;
+	 proc.start (pc, rg_tohost_addr, rg_fromhost_addr);
 
-         Bool is_running = True;
-         debug_module.hart0_reset_client.response.put (is_running);
-         $display ("%0d: %m.rl_dm_hart0_reset_wait: proc.start (pc %0h, tohostAddr %0h, fromhostAddr %0h",
-                   cur_cycle, pc, rg_tohost_addr, rg_fromhost_addr);
+	 Bool is_running = True;
+	 debug_module.hart0_reset_client.response.put (is_running);
+	 $display ("%0d: %m.rl_dm_hart0_reset_wait: proc.start (pc %0h, tohostAddr %0h, fromhostAddr %0h",
+		   cur_cycle, pc, rg_tohost_addr, rg_fromhost_addr);
       end
       rg_hart0_reset_delay <= rg_hart0_reset_delay - 1;
    endrule
@@ -364,7 +364,7 @@ module mkCoreW #(Reset dm_power_on_reset)
 
    method Action start (Bit #(64) tohost_addr, Bit #(64) fromhost_addr);
       plic.set_addr_map (zeroExtend (soc_map.m_plic_addr_base),
-                         zeroExtend (soc_map.m_plic_addr_lim));
+			 zeroExtend (soc_map.m_plic_addr_lim));
 
       let pc = soc_map_struct.pc_reset_value;
       proc.start (pc, tohost_addr, fromhost_addr);
@@ -376,7 +376,7 @@ module mkCoreW #(Reset dm_power_on_reset)
 `endif
 
       $display ("%0d: %m.method start: proc.start (pc %0h, tohostAddr %0h, fromhostAddr %0h)",
-                cur_cycle, pc, tohost_addr, fromhost_addr);
+		cur_cycle, pc, tohost_addr, fromhost_addr);
    endmethod
 
    // ----------------------------------------------------------------
@@ -464,11 +464,11 @@ Slave_Num_2x3  llc_slave_num     = 2;    // Normal cached memory (connects to co
 // Specialization of parameterized AXI4 fabric for 2x3 Core fabric
 
 typedef AXI4_Fabric_IFC #(Num_Masters_2x3,
-                          Num_Slaves_2x3,
-                          Wd_Id,
-                          Wd_Addr,
-                          Wd_Data,
-                          Wd_User)  Fabric_2x3_IFC;
+			  Num_Slaves_2x3,
+			  Wd_Id,
+			  Wd_Addr,
+			  Wd_Data,
+			  Wd_User)  Fabric_2x3_IFC;
 
 // ----------------
 
@@ -484,15 +484,15 @@ module mkFabric_2x3 (Fabric_2x3_IFC);
 
    function Tuple2 #(Bool, Slave_Num_2x3) fn_addr_to_slave_num_2x3  (Fabric_Addr addr);
       if (   (soc_map.m_mem0_controller_addr_base <= addr)
-          && (addr < soc_map.m_mem0_controller_addr_lim))
-         return tuple2 (True, llc_slave_num);
+	  && (addr < soc_map.m_mem0_controller_addr_lim))
+	 return tuple2 (True, llc_slave_num);
 
       else if (   (soc_map.m_plic_addr_base <= addr)
-               && (addr < soc_map.m_plic_addr_lim))
-         return tuple2 (True, plic_slave_num);
+	       && (addr < soc_map.m_plic_addr_lim))
+	 return tuple2 (True, plic_slave_num);
 
       else
-         return tuple2 (True, default_slave_num);
+	 return tuple2 (True, default_slave_num);
    endfunction
 
    AXI4_Fabric_IFC #(Num_Masters_2x3, Num_Slaves_2x3, Wd_Id, Wd_Addr, Wd_Data, Wd_User)

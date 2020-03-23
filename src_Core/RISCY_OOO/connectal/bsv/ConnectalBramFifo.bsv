@@ -96,7 +96,7 @@ endmodule
 
 module mkDualClockBramFIFOF#(Clock srcClock, Reset srcReset, Clock dstClock, Reset dstReset)(FIFOF#(t))
    provisos (Bits#(t,sizet),
-             Add#(1,a__,sizet));
+	     Add#(1,a__,sizet));
    String fifo_size = "18Kb";
    Vector#(TDiv#(sizet,36),X7FifoSyncMacro#(36)) fifos <- replicateM(vmkBramFifo(fifo_size, srcClock, srcReset, dstClock, dstReset));
    Wire#(Bit#(1)) rdenWire <- mkDWire(0, clocked_by dstClock, reset_by dstReset);
@@ -107,19 +107,19 @@ module mkDualClockBramFIFOF#(Clock srcClock, Reset srcReset, Clock dstClock, Res
       Reg#(Bit#(9)) rdcount <- mkReg(0, clocked_by dstClock, reset_by dstReset);
       Reg#(Bit#(9)) wrcount <- mkReg(0, clocked_by srcClock, reset_by srcReset);
       rule rdenRule;
-         fifos[i].rden(rdenWire);
+	 fifos[i].rden(rdenWire);
       endrule
       rule wrenRule;
-         fifos[i].wren(wrenWire);
+	 fifos[i].wren(wrenWire);
       endrule
       rule inputs;
-         fifos[i].din(dinWires[i]);
+	 fifos[i].din(dinWires[i]);
       endrule
       rule countrds;
-         rdcount <= fifos[i].rdcount();
+	 rdcount <= fifos[i].rdcount();
       endrule
       rule countwrs;
-         wrcount <= fifos[i].wrcount();
+	 wrcount <= fifos[i].wrcount();
       endrule
    end
 
@@ -147,7 +147,7 @@ endmodule
 
 module mkDualClockBramFIFO#(Clock srcClock, Reset srcReset, Clock dstClock, Reset dstReset)(FIFO#(t))
    provisos (Bits#(t,sizet),
-             Add#(1,a__,sizet));
+	     Add#(1,a__,sizet));
    
    let syncFifo <- mkDualClockBramFIFOF(srcClock, srcReset, dstClock, dstReset);
    method enq = syncFifo.enq;
@@ -158,7 +158,7 @@ endmodule
 `else // compatibility mode
 module mkDualClockBramFIFOF#(Clock srcClock, Reset srcReset, Clock dstClock, Reset dstReset)(FIFOF#(t))
    provisos (Bits#(t,sizet),
-             Add#(1,a__,sizet));
+	     Add#(1,a__,sizet));
    let syncFifo <- mkSyncFIFO(512, srcClock, srcReset, dstClock);
    method enq = syncFifo.enq;
    method deq = syncFifo.deq;
@@ -168,7 +168,7 @@ module mkDualClockBramFIFOF#(Clock srcClock, Reset srcReset, Clock dstClock, Res
 endmodule
 module mkDualClockBramFIFO#(Clock srcClock, Reset srcReset, Clock dstClock, Reset dstReset)(FIFO#(t))
    provisos (Bits#(t,sizet),
-             Add#(1,a__,sizet));
+	     Add#(1,a__,sizet));
    
    let syncFifo <- mkSyncFIFO(512, srcClock, srcReset, dstClock);
    method enq = syncFifo.enq;

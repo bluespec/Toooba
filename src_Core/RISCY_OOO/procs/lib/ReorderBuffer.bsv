@@ -271,7 +271,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
             );
                 // inst is done
                 rob_inst_state[state_finishAlu_port(i)] <= Executed;
-                // Destination register data, for Tandem Verification
+	        // Destination register data, for Tandem Verification
                 rg_dst_data <= dst_data;
 
                 // update PPC or csrData (vaddr is always useless for ALU results)
@@ -296,7 +296,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
             method Action set(Data dst_data, Bit#(5) new_fflags);
                 // inst is done
                 rob_inst_state[state_finishFpuMulDiv_port(i)] <= Executed;
-                rg_dst_data <= dst_data;
+	        rg_dst_data <= dst_data;
                 // update fflags
                 fflags[fflags_finishFpuMulDiv_port(i)] <= new_fflags;
             endmethod
@@ -312,8 +312,8 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     interface setExecuted_doFinishFpuMulDiv = fpuMulDivExe;
 
     method Action setExecuted_doFinishMem(Addr   vaddr,
-                                          Data   store_data, ByteEn store_data_BE,
-                                          Bool   access_at_commit, Bool non_mmio_st_done
+					  Data   store_data, ByteEn store_data_BE,
+					  Bool   access_at_commit, Bool non_mmio_st_done
 `ifdef RVFI
                                           , ExtraTraceBundle tb
 `endif
@@ -403,13 +403,13 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     method ToReorderBuffer read_deq;
         return ToReorderBuffer {
             pc: pc,
-            orig_inst: orig_inst,
+	    orig_inst: orig_inst,
             iType: iType,
-            dst: rg_dst_reg,
-            dst_data: rg_dst_data,
+	    dst: rg_dst_reg,
+	    dst_data: rg_dst_data,
 `ifdef INCLUDE_TANDEM_VERIF
-            store_data: rg_store_data,
-            store_data_BE: rg_store_data_BE,
+	    store_data: rg_store_data,
+	    store_data_BE: rg_store_data_BE,
 `endif
             csr: csr,
             claimed_phy_reg: claimed_phy_reg,
@@ -464,7 +464,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         doAssert(!isValid(trap[trap_deqLSQ_port]), "cannot have trap");
         if(cause matches tagged Valid .e) begin
             trap[trap_deqLSQ_port] <= Valid (Exception (e));
-            // TODO: shouldn't we record tval here as well?
+	    // TODO: shouldn't we record tval here as well?
         end
         // record ld misspeculation
         ldKilled[ldKill_deqLSQ_port] <= ld_killed;
@@ -566,9 +566,9 @@ interface SupReorderBuffer#(numeric type aluExeNum, numeric type fpuMulDivExeNum
     interface Vector#(fpuMulDivExeNum, ROB_setExecuted_doFinishFpuMulDiv) setExecuted_doFinishFpuMulDiv;
     // doFinishMem, after addr translation
     method Action setExecuted_doFinishMem(InstTag x,
-                                          Addr vaddr,
-                                          Data store_data, ByteEn store_data_BE,
-                                          Bool access_at_commit, Bool non_mmio_st_done
+					  Addr vaddr,
+					  Data store_data, ByteEn store_data_BE,
+					  Bool access_at_commit, Bool non_mmio_st_done
 `ifdef RVFI
                                           , ExtraTraceBundle tb
 `endif
@@ -850,7 +850,7 @@ module mkSupReorderBuffer#(
                 function Bool getDepOn(Integer i) = row[w][i].dependsOn_wrongSpec(specTag);
                 depVec[w] = map(getDepOn, genVector);
             end
-           if (verbose)
+	   if (verbose)
             $display("[ROB incorrectSpec] ",
                 fshow(specTag), " ; ",
                 fshow(killInstTag), " ; ",

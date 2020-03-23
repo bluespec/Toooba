@@ -1979,7 +1979,7 @@ module mkSplitLSQ(SplitLSQ);
             wrongPath: False,
             dst: Invalid,
 `ifdef INCLUDE_TANDEM_VERIF
-            instTag: ld_instTag [t],    // For recording Ld data in ROB
+	    instTag: ld_instTag [t],    // For recording Ld data in ROB
 `endif
             data: ?
         };

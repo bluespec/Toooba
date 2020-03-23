@@ -39,16 +39,16 @@ module mkCreditCounter (CreditCounter_IFC #(w));
 
    method Action incr;
       if (crg [0] == maxBound) begin
-         $display ("%0d: ERROR: CreditCounter: overflow", cur_cycle);
-         $finish (1);    // Assertion failure
+	 $display ("%0d: ERROR: CreditCounter: overflow", cur_cycle);
+	 $finish (1);    // Assertion failure
       end
       crg [0] <= crg [0] + 1;
    endmethod
 
    method Action decr () if (crg [1] != 0);
       if (crg [1] == 0) begin
-         $display ("%0d: ERROR: CreditCounter: underflow", cur_cycle);
-         $finish (1);    // Assertion failure
+	 $display ("%0d: ERROR: CreditCounter: underflow", cur_cycle);
+	 $finish (1);    // Assertion failure
       end
       crg [1] <= crg [1] - 1;
    endmethod

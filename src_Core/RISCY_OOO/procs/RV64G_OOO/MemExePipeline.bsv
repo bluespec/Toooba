@@ -158,9 +158,9 @@ interface MemExeInput;
     // ROB
     method Addr rob_getPC(InstTag t);
     method Action rob_setExecuted_doFinishMem(InstTag t,
-                                              Addr vaddr,
-                                              Data store_data, ByteEn store_data_BE,
-                                              Bool access_at_commit, Bool non_mmio_st_done
+					      Addr vaddr,
+					      Data store_data, ByteEn store_data_BE,
+					      Bool access_at_commit, Bool non_mmio_st_done
 `ifdef RVFI
                                               , ExtraTraceBundle tb
 `endif
@@ -486,8 +486,8 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
                 shiftedBE: shiftBE,
                 vaddr: vaddr,
 `ifdef INCLUDE_TANDEM_VERIF
-                store_data: data,
-                store_data_BE: origBE,
+	        store_data: data,
+	        store_data_BE: origBE,
 `endif
                 misaligned: memAddrMisaligned(vaddr, origBE)
             },
@@ -699,7 +699,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             inIfc.writeRegFile(dst.indx, res.data);
 
 `ifdef INCLUDE_TANDEM_VERIF
-            inIfc.rob_setExecuted_doFinishMem_RegData (res.instTag, res.data);
+	    inIfc.rob_setExecuted_doFinishMem_RegData (res.instTag, res.data);
 `endif
 
 `ifdef PERF_COUNT
@@ -862,7 +862,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             inIfc.writeRegFile(dst.indx, resp);
             inIfc.setRegReadyAggr_mem(dst.indx);
 `ifdef INCLUDE_TANDEM_VERIF
-            inIfc.rob_setExecuted_doFinishMem_RegData (lsqDeqLd.instTag, resp);
+	    inIfc.rob_setExecuted_doFinishMem_RegData (lsqDeqLd.instTag, resp);
 `endif
         end
         inIfc.rob_setExecuted_deqLSQ(
@@ -950,7 +950,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             inIfc.writeRegFile(dst.indx, resp);
             inIfc.setRegReadyAggr_mem(dst.indx);
 `ifdef INCLUDE_TANDEM_VERIF
-            inIfc.rob_setExecuted_doFinishMem_RegData (lsqDeqLd.instTag, resp);
+	    inIfc.rob_setExecuted_doFinishMem_RegData (lsqDeqLd.instTag, resp);
 `endif
         end
         inIfc.rob_setExecuted_deqLSQ(lsqDeqLd.instTag, Invalid, Invalid
@@ -1201,7 +1201,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             inIfc.writeRegFile(dst.indx, resp);
             inIfc.setRegReadyAggr_mem(dst.indx);
 `ifdef INCLUDE_TANDEM_VERIF
-            inIfc.rob_setExecuted_doFinishMem_RegData (lsqDeqSt.instTag, resp);
+	    inIfc.rob_setExecuted_doFinishMem_RegData (lsqDeqSt.instTag, resp);
 `endif
         end
         inIfc.rob_setExecuted_deqLSQ(lsqDeqSt.instTag, Invalid, Invalid
@@ -1307,7 +1307,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             inIfc.writeRegFile(dst.indx, resp);
             inIfc.setRegReadyAggr_mem(dst.indx);
 `ifdef INCLUDE_TANDEM_VERIF
-            inIfc.rob_setExecuted_doFinishMem_RegData (lsqDeqSt.instTag, resp);
+	    inIfc.rob_setExecuted_doFinishMem_RegData (lsqDeqSt.instTag, resp);
 `endif
         end
         inIfc.rob_setExecuted_deqLSQ(lsqDeqSt.instTag, Invalid, Invalid

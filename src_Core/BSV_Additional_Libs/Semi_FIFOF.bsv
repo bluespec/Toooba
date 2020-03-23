@@ -41,34 +41,34 @@ endtypeclass
 instance To_FIFOF_IO#(FIFOF#(t), t);
    function FIFOF_I #(t) to_FIFOF_I (FIFOF #(t) f);
       return interface FIFOF_I;
-                method enq (x) = f.enq (x);
-                method notFull = f.notFull;
-             endinterface;
+		method enq (x) = f.enq (x);
+		method notFull = f.notFull;
+	     endinterface;
    endfunction
 
    function FIFOF_O #(t) to_FIFOF_O (FIFOF #(t) f);
       return interface FIFOF_O;
-                method first    = f.first;
-                method deq      = f.deq;
-                method notEmpty = f.notEmpty;
-             endinterface;
+		method first    = f.first;
+		method deq      = f.deq;
+		method notEmpty = f.notEmpty;
+	     endinterface;
    endfunction
 endinstance
 
 instance To_FIFOF_IO#(FIFOLevelIfc#(t,n), t);
    function FIFOF_I #(t) to_FIFOF_I (FIFOLevelIfc #(t,n) f);
       return interface FIFOF_I;
-                method enq (x) = f.enq (x);
-                method notFull = f.notFull;
-             endinterface;
+		method enq (x) = f.enq (x);
+		method notFull = f.notFull;
+	     endinterface;
    endfunction
 
    function FIFOF_O #(t) to_FIFOF_O (FIFOLevelIfc #(t,n) f);
       return interface FIFOF_O;
-                method first    = f.first;
-                method deq      = f.deq;
-                method notEmpty = f.notEmpty;
-             endinterface;
+		method first    = f.first;
+		method deq      = f.deq;
+		method notEmpty = f.notEmpty;
+	     endinterface;
    endfunction
 endinstance
 
@@ -78,24 +78,24 @@ endinstance
 instance ToGet#(FIFOF_O#(t), t);
    function toGet(ff) = (
       interface Get;
-         method get();
-            actionvalue
-               ff.deq;
-               return ff.first;
-            endactionvalue
-         endmethod
+	 method get();
+	    actionvalue
+	       ff.deq;
+	       return ff.first;
+	    endactionvalue
+	 endmethod
       endinterface
-                         );
+			 );
 endinstance
 
 instance ToPut#(FIFOF_I#(t), t);
    function toPut(ff) = (
       interface Put;
-         method Action put(x);
-            ff.enq(x);
-         endmethod
+	 method Action put(x);
+	    ff.enq(x);
+	 endmethod
       endinterface
-                         );
+			 );
 endinstance
 
 // ================================================================
@@ -107,8 +107,8 @@ endinstance
 instance Connectable #(FIFOF_O #(t), FIFOF_I #(t));
    module mkConnection #(FIFOF_O #(t) fo, FIFOF_I #(t) fi) (Empty);
       rule rl_connect;
-         fi.enq (fo.first);
-         fo.deq;
+	 fi.enq (fo.first);
+	 fo.deq;
       endrule
    endmodule
 endinstance
@@ -128,8 +128,8 @@ endinstance
 instance Connectable #(FIFOF_O #(t), FIFOF #(t));
    module mkConnection #(FIFOF_O #(t) fo, FIFOF #(t) fi) (Empty);
       rule rl_connect;
-         fi.enq (fo.first);
-         fo.deq;
+	 fi.enq (fo.first);
+	 fo.deq;
       endrule
    endmodule
 endinstance
@@ -140,8 +140,8 @@ endinstance
 instance Connectable #(FIFOF #(t), FIFOF_I #(t));
    module mkConnection #(FIFOF #(t) fo, FIFOF_I #(t) fi) (Empty);
       rule rl_connect;
-         fi.enq (fo.first);
-         fo.deq;
+	 fi.enq (fo.first);
+	 fo.deq;
       endrule
    endmodule
 endinstance
@@ -162,29 +162,29 @@ endfunction
 // dummy_FIFO_I that never accepts anything (always "full")
 
 FIFOF_I #(t) dummy_FIFOF_I = interface FIFOF_I;
-                                method Action enq (x) if (False);
-                                   noAction;
-                                endmethod
-                                method notFull;
-                                   return False;
-                                endmethod
-                             endinterface;
+				method Action enq (x) if (False);
+				   noAction;
+				endmethod
+				method notFull;
+				   return False;
+				endmethod
+			     endinterface;
 
 // Dummy FIFO_O that never yields anything (always "empty")
 
 FIFOF_O #(t) dummy_FIFOF_O = interface FIFOF_O;
-                                method first () if (False);
-                                   return ?;
-                                endmethod
+				method first () if (False);
+				   return ?;
+				endmethod
 
-                                method Action deq () if (False);
-                                   noAction;
-                                endmethod
+				method Action deq () if (False);
+				   noAction;
+				endmethod
 
-                                method notEmpty;
-                                   return False;
-                                endmethod
-                             endinterface;
+				method notEmpty;
+				   return False;
+				endmethod
+			     endinterface;
 
 
 // ================================================================

@@ -116,7 +116,7 @@ module mkProc (Proc_IFC);
       mmioToP[i] = core[i].mmioToPlatform;
    end
    MMIOPlatform mmioPlatform <- mkMMIOPlatform (mmioToP,
-                                                mmio_axi4_adapter.core_side);
+						mmio_axi4_adapter.core_side);
 
    // last level cache
    LLCache llc <- mkLLCache;
@@ -153,7 +153,7 @@ module mkProc (Proc_IFC);
       rule broadcastStats;
          Bool doStats <- core[i].sendDoStats;
          for(Integer j = 0; j < valueof(CoreNum); j = j+1) begin
-            core[j].recvDoStats(doStats);
+	    core[j].recvDoStats(doStats);
          end
          llc.perf.setStatus(doStats);
       endrule
@@ -164,35 +164,35 @@ module mkProc (Proc_IFC);
 
    for(Integer j = 0; j < valueof(CoreNum); j = j+1) begin
       rule rl_dummy1;
-         let x <- core[j].deadlock.dCacheCRqStuck.get;
+	 let x <- core[j].deadlock.dCacheCRqStuck.get;
       endrule
       rule rl_dummy2;
-         let x <- core[j].deadlock.dCachePRqStuck.get;
+	 let x <- core[j].deadlock.dCachePRqStuck.get;
       endrule
       rule rl_dummy3;
-         let x <- core[j].deadlock.iCacheCRqStuck.get;
+	 let x <- core[j].deadlock.iCacheCRqStuck.get;
       endrule
       rule rl_dummy4;
-         let x <- core[j].deadlock.iCachePRqStuck.get;
+	 let x <- core[j].deadlock.iCachePRqStuck.get;
       endrule
       rule rl_dummy5;
-         let x <- core[j].deadlock.renameInstStuck.get;
+	 let x <- core[j].deadlock.renameInstStuck.get;
       endrule
       rule rl_dummy6;
-         let x <- core[j].deadlock.renameCorrectPathStuck.get;
+	 let x <- core[j].deadlock.renameCorrectPathStuck.get;
       endrule
       rule rl_dummy7;
-         let x <- core[j].deadlock.commitInstStuck.get;
+	 let x <- core[j].deadlock.commitInstStuck.get;
       endrule
       rule rl_dummy8;
-         let x <- core[j].deadlock.commitUserInstStuck.get;
+	 let x <- core[j].deadlock.commitUserInstStuck.get;
       endrule
       rule rl_dummy9;
-         let x <- core[j].deadlock.checkStarted.get;
+	 let x <- core[j].deadlock.checkStarted.get;
       endrule
 
       rule rl_dummy20;
-         let x <- core[j].renameDebug.renameErr.get;
+	 let x <- core[j].renameDebug.renameErr.get;
       endrule
    end
 
@@ -201,8 +201,8 @@ module mkProc (Proc_IFC);
 
    for(Integer i = 0; i < valueof(CoreNum); i = i+1) begin
       rule rl_terminate;
-         let x <- core[i].coreIndInv.terminate;
-         $display ("Core %d terminated", i);
+	 let x <- core[i].coreIndInv.terminate;
+	 $display ("Core %d terminated", i);
       endrule
    end
 
@@ -213,15 +213,15 @@ module mkProc (Proc_IFC);
       let x <- mmioPlatform.to_host;
       $display ("%0d: mmioPlatform.rl_tohost: 0x%0x (= %0d)", cur_cycle, x, x);
       if (x != 0) begin
-         // Standard RISC-V ISA tests finish by writing a value tohost with x[0]==1.
-         // Further when x[63:1]==0, all tests within the program pass,
-         // otherwise x[63:1] = the test within the program that failed.
-         let failed_testnum = (x >> 1);
-         if (failed_testnum == 0)
-            $display ("PASS");
-         else
-            $display ("FAIL %0d", failed_testnum);
-         $finish (0);
+	 // Standard RISC-V ISA tests finish by writing a value tohost with x[0]==1.
+	 // Further when x[63:1]==0, all tests within the program pass,
+	 // otherwise x[63:1] = the test within the program that failed.
+	 let failed_testnum = (x >> 1);
+	 if (failed_testnum == 0)
+	    $display ("PASS");
+	 else
+	    $display ("FAIL %0d", failed_testnum);
+	 $finish (0);
       end
    endrule
 
@@ -235,14 +235,14 @@ module mkProc (Proc_IFC);
    // Use toHostAddr = 0 if not monitoring tohost
    method Action start (Addr startpc, Addr tohostAddr, Addr fromhostAddr);
       action
-         for(Integer i = 0; i < valueof(CoreNum); i = i+1)
-            core[i].coreReq.start (startpc, tohostAddr, fromhostAddr);
+	 for(Integer i = 0; i < valueof(CoreNum); i = i+1)
+	    core[i].coreReq.start (startpc, tohostAddr, fromhostAddr);
       endaction
 
       mmioPlatform.start (tohostAddr, fromhostAddr);
 
       $display ("%0d: %m.method start: startpc %0h, tohostAddr %0h, fromhostAddr %0h",
-                cur_cycle, startpc, tohostAddr, fromhostAddr);
+		cur_cycle, startpc, tohostAddr, fromhostAddr);
    endmethod
 
    // ----------------
@@ -296,7 +296,7 @@ module mkProc (Proc_IFC);
 
    interface Put  hart0_put_other_req;
       method Action  put (Bit #(4) req);
-         cfg_verbosity <= req;
+	 cfg_verbosity <= req;
       endmethod
    endinterface
 

@@ -342,19 +342,19 @@ endfunction
 
 function Bool is_invalid_pte (PTE pte);
    return (   (fn_PTE_to_V (pte) == 0)
-           || (   (fn_PTE_to_R (pte) == 0)
-               && (fn_PTE_to_W (pte) == 1)));
+	   || (   (fn_PTE_to_R (pte) == 0)
+	       && (fn_PTE_to_W (pte) == 1)));
 endfunction
 
 // ----------------
 // Check if PTE bits deny a virtual-mem access
 
 function Bool is_pte_denial (Bool       dmem_not_imem,        // load-store or fetch?
-                             Bool       read_not_write,
-                             Priv_Mode  priv,
-                             Bit #(1)   sstatus_SUM,
-                             Bit #(1)   mstatus_MXR,
-                             PTE        pte);
+			     Bool       read_not_write,
+			     Priv_Mode  priv,
+			     Bit #(1)   sstatus_SUM,
+			     Bit #(1)   mstatus_MXR,
+			     PTE        pte);
 
    let pte_u = fn_PTE_to_U (pte);
    let pte_x = fn_PTE_to_X (pte);
@@ -362,7 +362,7 @@ function Bool is_pte_denial (Bool       dmem_not_imem,        // load-store or f
    let pte_r = fn_PTE_to_R (pte);
 
    Bool priv_deny = (   ((priv == u_Priv_Mode) && (pte_u == 1'b0))
-                     || ((priv == s_Priv_Mode) && (pte_u == 1'b1) && (sstatus_SUM == 1'b0)));
+		     || ((priv == s_Priv_Mode) && (pte_u == 1'b1) && (sstatus_SUM == 1'b0)));
 
    Bool access_fetch = ((! dmem_not_imem) && read_not_write);
    Bool access_load  = (dmem_not_imem && read_not_write);
@@ -371,8 +371,8 @@ function Bool is_pte_denial (Bool       dmem_not_imem,        // load-store or f
    let pte_r_mxr = (pte_r | (mstatus_MXR & pte_x));
 
    Bool access_ok = (   (access_fetch && (pte_x     == 1'b1))
-                     || (access_load  && (pte_r_mxr == 1'b1))
-                     || (access_store && (pte_w     == 1'b1)));
+		     || (access_load  && (pte_r_mxr == 1'b1))
+		     || (access_store && (pte_w     == 1'b1)));
 
    
    return (priv_deny || (! access_ok));
@@ -383,7 +383,7 @@ endfunction
 
 function Bool is_pte_A_D_fault (Bool read_not_write, PTE pte);
    return (   (fn_PTE_to_A (pte) == 0)
-           || ((! read_not_write) && (fn_PTE_to_D (pte) == 0)));
+	   || ((! read_not_write) && (fn_PTE_to_D (pte) == 0)));
 endfunction
 
 // ----------------
@@ -391,8 +391,8 @@ endfunction
 
 function Exc_Code  fn_page_fault_exc_code (Bool dmem_not_imem, Bool read_not_write);
    return ((! dmem_not_imem) ? exc_code_INSTR_PAGE_FAULT
-           :(read_not_write  ? exc_code_LOAD_PAGE_FAULT
-             :                 exc_code_STORE_AMO_PAGE_FAULT));
+	   :(read_not_write  ? exc_code_LOAD_PAGE_FAULT
+	     :                 exc_code_STORE_AMO_PAGE_FAULT));
 endfunction   
 
 `else // ifdef ISA_PRIV_S
@@ -414,8 +414,8 @@ endfunction
 
 function Exc_Code  fn_access_exc_code (Bool dmem_not_imem, Bool read_not_write);
    return ((! dmem_not_imem) ? exc_code_INSTR_ACCESS_FAULT
-           :(read_not_write  ? exc_code_LOAD_ACCESS_FAULT
-             :                 exc_code_STORE_AMO_ACCESS_FAULT));
+	   :(read_not_write  ? exc_code_LOAD_ACCESS_FAULT
+	     :                 exc_code_STORE_AMO_ACCESS_FAULT));
 endfunction
 
 // ================================================================

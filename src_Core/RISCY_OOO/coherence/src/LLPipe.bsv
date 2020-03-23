@@ -202,7 +202,7 @@ module mkLLPipe(
         return actionvalue
             function tagT getTag(Addr a) = truncateLSB(a);
 
-            if (verbose)
+	    if (verbose)
             $display("%t LL %m tagMatch: ", $time, 
                 fshow(cmd), " ; ", 
                 fshow(getTag(getAddrFromCmd(cmd))), " ; ",

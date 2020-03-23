@@ -46,10 +46,10 @@ endinterface
 module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
                           (LLC_AXI4_Adapter_IFC)
    provisos(Bits#(idT, a__),
-            Bits#(childT, b__),
-            FShow#(ToMemMsg#(idT, childT)),
-            FShow#(MemRsMsg#(idT, childT)),
-            Add#(SizeOf#(Line), 0, 512)); // assert Line sz = 512
+	    Bits#(childT, b__),
+	    FShow#(ToMemMsg#(idT, childT)),
+	    FShow#(MemRsMsg#(idT, childT)),
+	    Add#(SizeOf#(Line), 0, 512)); // assert Line sz = 512
 
    // Verbosity: 0: quiet; 1: LLC transactions; 2: loop detail
    Integer verbosity = 0;
@@ -69,60 +69,60 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
    // Send a read-request into the fabric
    function Action fa_fabric_send_read_req (Fabric_Addr  addr);
       action
-         AXI4_Size  size = axsize_8;
-         let mem_req_rd_addr = AXI4_Rd_Addr {arid:     fabric_default_id,
-                                             araddr:   addr,
-                                             arlen:    0,           // burst len = arlen+1
-                                             arsize:   size,
-                                             arburst:  fabric_default_burst,
-                                             arlock:   fabric_default_lock,
-                                             arcache:  fabric_default_arcache,
-                                             arprot:   fabric_default_prot,
-                                             arqos:    fabric_default_qos,
-                                             arregion: fabric_default_region,
-                                             aruser:   fabric_default_user};
+	 AXI4_Size  size = axsize_8;
+	 let mem_req_rd_addr = AXI4_Rd_Addr {arid:     fabric_default_id,
+					     araddr:   addr,
+					     arlen:    0,           // burst len = arlen+1
+					     arsize:   size,
+					     arburst:  fabric_default_burst,
+					     arlock:   fabric_default_lock,
+					     arcache:  fabric_default_arcache,
+					     arprot:   fabric_default_prot,
+					     arqos:    fabric_default_qos,
+					     arregion: fabric_default_region,
+					     aruser:   fabric_default_user};
 
-         master_xactor.i_rd_addr.enq (mem_req_rd_addr);
+	 master_xactor.i_rd_addr.enq (mem_req_rd_addr);
 
-         // Debugging
-         if (cfg_verbosity > 1) begin
-            $display ("    ", fshow (mem_req_rd_addr));
-         end
+	 // Debugging
+	 if (cfg_verbosity > 1) begin
+	    $display ("    ", fshow (mem_req_rd_addr));
+	 end
       endaction
    endfunction
 
    // Send a write-request into the fabric
    function Action fa_fabric_send_write_req (Fabric_Addr  addr, Fabric_Strb  strb, Bit #(64)  st_val);
       action
-         AXI4_Size  size = axsize_8;
-         let mem_req_wr_addr = AXI4_Wr_Addr {awid:     fabric_default_id,
-                                             awaddr:   addr,
-                                             awlen:    0,           // burst len = awlen+1
-                                             awsize:   size,
-                                             awburst:  fabric_default_burst,
-                                             awlock:   fabric_default_lock,
-                                             awcache:  fabric_default_awcache,
-                                             awprot:   fabric_default_prot,
-                                             awqos:    fabric_default_qos,
-                                             awregion: fabric_default_region,
-                                             awuser:   fabric_default_user};
+	 AXI4_Size  size = axsize_8;
+	 let mem_req_wr_addr = AXI4_Wr_Addr {awid:     fabric_default_id,
+					     awaddr:   addr,
+					     awlen:    0,           // burst len = awlen+1
+					     awsize:   size,
+					     awburst:  fabric_default_burst,
+					     awlock:   fabric_default_lock,
+					     awcache:  fabric_default_awcache,
+					     awprot:   fabric_default_prot,
+					     awqos:    fabric_default_qos,
+					     awregion: fabric_default_region,
+					     awuser:   fabric_default_user};
 
-         let mem_req_wr_data = AXI4_Wr_Data {wdata:  st_val,
-                                             wstrb:  strb,
-                                             wlast:  True,
-                                             wuser:  fabric_default_user};
+	 let mem_req_wr_data = AXI4_Wr_Data {wdata:  st_val,
+					     wstrb:  strb,
+					     wlast:  True,
+					     wuser:  fabric_default_user};
 
-         master_xactor.i_wr_addr.enq (mem_req_wr_addr);
-         master_xactor.i_wr_data.enq (mem_req_wr_data);
+	 master_xactor.i_wr_addr.enq (mem_req_wr_addr);
+	 master_xactor.i_wr_data.enq (mem_req_wr_data);
 
-         // Expect a fabric response
-         ctr_wr_rsps_pending.incr;
+	 // Expect a fabric response
+	 ctr_wr_rsps_pending.incr;
 
-         // Debugging
-         if (cfg_verbosity > 1) begin
-            $display ("            To fabric: ", fshow (mem_req_wr_addr));
-            $display ("                       ", fshow (mem_req_wr_data));
-         end
+	 // Debugging
+	 if (cfg_verbosity > 1) begin
+	    $display ("            To fabric: ", fshow (mem_req_wr_addr));
+	    $display ("                       ", fshow (mem_req_wr_data));
+	 end
       endaction
    endfunction
 
@@ -138,11 +138,11 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
    Reg #(Bit #(512)) rg_cline <- mkRegU;
 
    rule rl_handle_read_req (llc.toM.first matches tagged Ld .ld
-                            &&& (ctr_wr_rsps_pending.value == 0));
+			    &&& (ctr_wr_rsps_pending.value == 0));
       if ((cfg_verbosity > 0) && (rg_rd_req_beat == 0)) begin
-         $display ("%0d: LLC_AXI4_Adapter.rl_handle_read_req: Ld request from LLC to memory: beat %0d",
-                   cur_cycle, rg_rd_req_beat);
-         $display ("    ", fshow (ld));
+	 $display ("%0d: LLC_AXI4_Adapter.rl_handle_read_req: Ld request from LLC to memory: beat %0d",
+		   cur_cycle, rg_rd_req_beat);
+	 $display ("    ", fshow (ld));
       end
 
       Addr  line_addr = { ld.addr [63:6], 6'h0 };                      // Addr of containing cache line
@@ -150,10 +150,10 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
       fa_fabric_send_read_req (line_addr | offset);
 
       if (rg_rd_req_beat == 0)
-         f_pending_reads.enq (ld);
+	 f_pending_reads.enq (ld);
 
       if (rg_rd_req_beat == 7)
-         llc.toM.deq;
+	 llc.toM.deq;
 
       rg_rd_req_beat <= rg_rd_req_beat + 1;
    endrule
@@ -162,30 +162,30 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
       let  mem_rsp <- pop_o (master_xactor.o_rd_data);
 
       if (cfg_verbosity > 1) begin
-         $display ("%0d: LLC_AXI4_Adapter.rl_handle_read_rsps: beat %0d ", cur_cycle, rg_rd_rsp_beat);
-         $display ("    ", fshow (mem_rsp));
+	 $display ("%0d: LLC_AXI4_Adapter.rl_handle_read_rsps: beat %0d ", cur_cycle, rg_rd_rsp_beat);
+	 $display ("    ", fshow (mem_rsp));
       end
 
       if (mem_rsp.rresp != axi4_resp_okay) begin
-         // TODO: need to raise a non-maskable interrupt (NMI) here
-         $display ("%0d: LLC_AXI4_Adapter.rl_handle_read_rsp: fabric response error; exit", cur_cycle);
-         $display ("    ", fshow (mem_rsp));
-         $finish (1);
+	 // TODO: need to raise a non-maskable interrupt (NMI) here
+	 $display ("%0d: LLC_AXI4_Adapter.rl_handle_read_rsp: fabric response error; exit", cur_cycle);
+	 $display ("    ", fshow (mem_rsp));
+	 $finish (1);
       end
 
       // Shift next 64 bits from fabric into the cache line being assembled
       let new_cline = { mem_rsp.rdata, rg_cline [511:64] };
 
       if (rg_rd_rsp_beat == 7) begin
-         let ldreq <- pop (f_pending_reads);
-         MemRsMsg #(idT, childT) resp = MemRsMsg {data:  unpack (new_cline),
-                                                  child: ldreq.child,
-                                                  id:    ldreq.id};
+	 let ldreq <- pop (f_pending_reads);
+	 MemRsMsg #(idT, childT) resp = MemRsMsg {data:  unpack (new_cline),
+						  child: ldreq.child,
+						  id:    ldreq.id};
 
-         llc.rsFromM.enq (resp);
+	 llc.rsFromM.enq (resp);
 
-         if (cfg_verbosity > 1)
-            $display ("    Response to LLC: ", fshow (resp));
+	 if (cfg_verbosity > 1)
+	    $display ("    Response to LLC: ", fshow (resp));
       end
 
       rg_cline <= new_cline;
@@ -203,8 +203,8 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
 
    rule rl_handle_write_req (llc.toM.first matches tagged Wb .wb);
       if ((cfg_verbosity > 0) && (rg_wr_req_beat == 0)) begin
-         $display ("%d: LLC_AXI4_Adapter.rl_handle_write_req: Wb request from LLC to memory:", cur_cycle);
-         $display ("    ", fshow (wb));
+	 $display ("%d: LLC_AXI4_Adapter.rl_handle_write_req: Wb request from LLC to memory:", cur_cycle);
+	 $display ("    ", fshow (wb));
       end
 
       Addr       line_addr = { wb.addr [63:6], 6'h0 };    // Addr of containing cache line
@@ -217,10 +217,10 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
       fa_fabric_send_write_req (line_addr | offset, strb8, data64);
 
       if (rg_wr_req_beat == 0)
-         f_pending_writes.enq (wb);
+	 f_pending_writes.enq (wb);
 
       if (rg_wr_req_beat == 7)
-         llc.toM.deq;
+	 llc.toM.deq;
 
       rg_wr_req_beat <= rg_wr_req_beat + 1;
    endrule
@@ -232,29 +232,29 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
       let wr_resp <- pop_o (master_xactor.o_wr_resp);
 
       if (cfg_verbosity > 1) begin
-         $display ("%0d: LLC_AXI4_Adapter.rl_discard_write_rsp: beat %0d ", cur_cycle, rg_wr_rsp_beat);
-         $display ("    ", fshow (wr_resp));
+	 $display ("%0d: LLC_AXI4_Adapter.rl_discard_write_rsp: beat %0d ", cur_cycle, rg_wr_rsp_beat);
+	 $display ("    ", fshow (wr_resp));
       end
 
       if (ctr_wr_rsps_pending.value == 0) begin
-         $display ("%0d: ERROR: LLC_AXI4_Adapter.rl_discard_write_rsp: unexpected Wr response (ctr_wr_rsps_pending.value == 0)",
-                   cur_cycle);
-         $display ("    ", fshow (wr_resp));
-         $finish (1);    // Assertion failure
+	 $display ("%0d: ERROR: LLC_AXI4_Adapter.rl_discard_write_rsp: unexpected Wr response (ctr_wr_rsps_pending.value == 0)",
+		   cur_cycle);
+	 $display ("    ", fshow (wr_resp));
+	 $finish (1);    // Assertion failure
       end
 
       ctr_wr_rsps_pending.decr;
 
       if (wr_resp.bresp != axi4_resp_okay) begin
-         // TODO: need to raise a non-maskable interrupt (NMI) here
-         $display ("%0d: LLC_AXI4_Adapter.rl_discard_write_rsp: fabric response error: exit", cur_cycle);
-         $display ("    ", fshow (wr_resp));
-         $finish (1);
+	 // TODO: need to raise a non-maskable interrupt (NMI) here
+	 $display ("%0d: LLC_AXI4_Adapter.rl_discard_write_rsp: fabric response error: exit", cur_cycle);
+	 $display ("    ", fshow (wr_resp));
+	 $finish (1);
       end
 
       if (rg_wr_rsp_beat == 7) begin
-         let wrreq <- pop (f_pending_writes);
-         // LLC does not expect any response for writes
+	 let wrreq <- pop (f_pending_writes);
+	 // LLC does not expect any response for writes
       end
 
       rg_wr_rsp_beat <= rg_wr_rsp_beat + 1;

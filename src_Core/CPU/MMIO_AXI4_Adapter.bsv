@@ -82,75 +82,75 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
    // Send a read-request into the fabric
    function Action fa_fabric_send_read_req (Fabric_Addr  addr);
       action
-         AXI4_Size  size = axsize_8;
-         let mem_req_rd_addr = AXI4_Rd_Addr {arid:     fabric_default_id,
-                                             araddr:   addr,
-                                             arlen:    0,           // burst len = arlen+1
-                                             arsize:   size,
-                                             arburst:  fabric_default_burst,
-                                             arlock:   fabric_default_lock,
-                                             arcache:  fabric_default_arcache,
-                                             arprot:   fabric_default_prot,
-                                             arqos:    fabric_default_qos,
-                                             arregion: fabric_default_region,
-                                             aruser:   fabric_default_user};
+	 AXI4_Size  size = axsize_8;
+	 let mem_req_rd_addr = AXI4_Rd_Addr {arid:     fabric_default_id,
+					     araddr:   addr,
+					     arlen:    0,           // burst len = arlen+1
+					     arsize:   size,
+					     arburst:  fabric_default_burst,
+					     arlock:   fabric_default_lock,
+					     arcache:  fabric_default_arcache,
+					     arprot:   fabric_default_prot,
+					     arqos:    fabric_default_qos,
+					     arregion: fabric_default_region,
+					     aruser:   fabric_default_user};
 
-         master_xactor.i_rd_addr.enq (mem_req_rd_addr);
+	 master_xactor.i_rd_addr.enq (mem_req_rd_addr);
 
-         // Debugging
-         if (cfg_verbosity > 0) begin
-            $display ("    ", fshow (mem_req_rd_addr));
-         end
+	 // Debugging
+	 if (cfg_verbosity > 0) begin
+	    $display ("    ", fshow (mem_req_rd_addr));
+	 end
       endaction
    endfunction
 
    // Send a write-request into the fabric
    function Action fa_fabric_send_write_req (Fabric_Addr  addr, Fabric_Strb  strb, Bit #(64)  st_val);
       action
-         AXI4_Size  size = axsize_8;
-         let mem_req_wr_addr = AXI4_Wr_Addr {awid:     fabric_default_id,
-                                             awaddr:   addr,
-                                             awlen:    0,           // burst len = awlen+1
-                                             awsize:   size,
-                                             awburst:  fabric_default_burst,
-                                             awlock:   fabric_default_lock,
-                                             awcache:  fabric_default_awcache,
-                                             awprot:   fabric_default_prot,
-                                             awqos:    fabric_default_qos,
-                                             awregion: fabric_default_region,
-                                             awuser:   fabric_default_user};
+	 AXI4_Size  size = axsize_8;
+	 let mem_req_wr_addr = AXI4_Wr_Addr {awid:     fabric_default_id,
+					     awaddr:   addr,
+					     awlen:    0,           // burst len = awlen+1
+					     awsize:   size,
+					     awburst:  fabric_default_burst,
+					     awlock:   fabric_default_lock,
+					     awcache:  fabric_default_awcache,
+					     awprot:   fabric_default_prot,
+					     awqos:    fabric_default_qos,
+					     awregion: fabric_default_region,
+					     awuser:   fabric_default_user};
 
-         let mem_req_wr_data = AXI4_Wr_Data {wdata:  st_val,
-                                             wstrb:  strb,
-                                             wlast:  True,
-                                             wuser:  fabric_default_user};
+	 let mem_req_wr_data = AXI4_Wr_Data {wdata:  st_val,
+					     wstrb:  strb,
+					     wlast:  True,
+					     wuser:  fabric_default_user};
 
 `ifdef FABRIC64
-         // Work-around for a misbehavior on Xilinx UART and its
-         // Xilinx AXI4 adapter. On 64-bit fabrics, for a write where
-         // axsize says '8 bytes' but wstrb is for <= 4 bytes, the
-         // adapter converts it two 32-bit writes, one of which has
-         // wstrb=4'b0000. The Xilinx UART, in turn ignores wstrb and
-         // therefore performs a spurious write.  This workaround
-         // changes axsize for such writes to '4 bytes', avoiding this
-         // problem.
+	 // Work-around for a misbehavior on Xilinx UART and its
+	 // Xilinx AXI4 adapter. On 64-bit fabrics, for a write where
+	 // axsize says '8 bytes' but wstrb is for <= 4 bytes, the
+	 // adapter converts it two 32-bit writes, one of which has
+	 // wstrb=4'b0000. The Xilinx UART, in turn ignores wstrb and
+	 // therefore performs a spurious write.  This workaround
+	 // changes axsize for such writes to '4 bytes', avoiding this
+	 // problem.
 
-         if (strb [7:4] == 0 || strb [3:0] == 0) begin
-            mem_req_wr_addr.awsize = axsize_4;
-         end
+	 if (strb [7:4] == 0 || strb [3:0] == 0) begin
+	    mem_req_wr_addr.awsize = axsize_4;
+	 end
 `endif
 
-         master_xactor.i_wr_addr.enq (mem_req_wr_addr);
-         master_xactor.i_wr_data.enq (mem_req_wr_data);
+	 master_xactor.i_wr_addr.enq (mem_req_wr_addr);
+	 master_xactor.i_wr_data.enq (mem_req_wr_data);
 
-         // Expect a fabric response
-         ctr_wr_rsps_pending.incr;
+	 // Expect a fabric response
+	 ctr_wr_rsps_pending.incr;
 
-         // Debugging
-         if (cfg_verbosity > 0) begin
-            $display ("    To fabric: ", fshow (mem_req_wr_addr));
-            $display ("               ", fshow (mem_req_wr_data));
-         end
+	 // Debugging
+	 if (cfg_verbosity > 0) begin
+	    $display ("    To fabric: ", fshow (mem_req_wr_addr));
+	    $display ("               ", fshow (mem_req_wr_data));
+	 end
       endaction
    endfunction
 
@@ -160,28 +160,28 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
    // This is just an adapter from MMIOCRq/MMIODataPRs to AXI4
 
    rule rl_handle_read_req (f_reqs_from_core.first.func matches Ld
-                            &&& (ctr_wr_rsps_pending.value == 0));
+			    &&& (ctr_wr_rsps_pending.value == 0));
       let req <- pop (f_reqs_from_core);
 
       if (cfg_verbosity > 0) begin
-         $display ("%0d: %m.rl_handle_read_req: Ld request", cur_cycle);
-         $display ("    ", fshow (req));
+	 $display ("%0d: %m.rl_handle_read_req: Ld request", cur_cycle);
+	 $display ("    ", fshow (req));
       end
 
       // Technically the following check for legal IO addrs is not
       // necessary; the AXI4 fabric should return a DECERR for illegal
       // addrs; but not all AXI4 fabrics do the right thing.
       if (soc_map.m_is_IO_addr (req.addr))
-         fa_fabric_send_read_req (req.addr);
+	 fa_fabric_send_read_req (req.addr);
       else begin
-         let rsp = MMIODataPRs {valid: False,
-                                data: req.addr};    // For debugging convenience only
-         f_rsps_to_core.enq (rsp);
-         if (cfg_verbosity > 0) begin
-            $display ("%0d: %m.rl_handle_read_req: unmapped IO address; returning error response",
-                      cur_cycle);
-            $display ("    ", fshow (req));
-         end
+	 let rsp = MMIODataPRs {valid: False,
+				data: req.addr};    // For debugging convenience only
+	 f_rsps_to_core.enq (rsp);
+	 if (cfg_verbosity > 0) begin
+	    $display ("%0d: %m.rl_handle_read_req: unmapped IO address; returning error response",
+		      cur_cycle);
+	    $display ("    ", fshow (req));
+	 end
       end
    endrule
 
@@ -191,21 +191,21 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
       let  mem_rsp <- pop_o (master_xactor.o_rd_data);
 
       if (cfg_verbosity > 0) begin
-         $display ("%0d: %m.rl_handle_read_rsps ", cur_cycle);
-         $display ("    ", fshow (mem_rsp));
+	 $display ("%0d: %m.rl_handle_read_rsps ", cur_cycle);
+	 $display ("    ", fshow (mem_rsp));
       end
 
       if ((cfg_verbosity > 0) && (mem_rsp.rresp != axi4_resp_okay)) begin
-         $display ("%0d: %m.rl_handle_read_rsp: fabric response error", cur_cycle);
-         $display ("    ", fshow (mem_rsp));
+	 $display ("%0d: %m.rl_handle_read_rsp: fabric response error", cur_cycle);
+	 $display ("    ", fshow (mem_rsp));
       end
 
       let rsp = MMIODataPRs {valid: (mem_rsp.rresp == axi4_resp_okay),
-                             data: mem_rsp.rdata};
+			     data: mem_rsp.rdata};
       f_rsps_to_core.enq (rsp);
 
       if (cfg_verbosity > 0)
-         $display ("    Response MMIO to core: ", fshow (rsp));
+	 $display ("    Response MMIO to core: ", fshow (rsp));
    endrule
 
    // ================================================================
@@ -215,24 +215,24 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
       let req <- pop (f_reqs_from_core);
 
       if (cfg_verbosity > 0) begin
-         $display ("%d: %m.rl_handle_write_req: St request:", cur_cycle);
-         $display ("    ", fshow (req));
+	 $display ("%d: %m.rl_handle_write_req: St request:", cur_cycle);
+	 $display ("    ", fshow (req));
       end
 
       // Technically the following check for legal IO addrs is not
       // necessary; the AXI4 fabric should return a DECERR for illegal
       // addrs; but not all AXI4 fabrics do the right thing.
       if (soc_map.m_is_IO_addr (req.addr))
-         fa_fabric_send_write_req (req.addr, pack (req.byteEn), req.data);
+	 fa_fabric_send_write_req (req.addr, pack (req.byteEn), req.data);
       else begin
-         let rsp = MMIODataPRs {valid: False,
-                                data: req.addr};    // For debugging convenience only
-         f_rsps_to_core.enq (rsp);
-         if (cfg_verbosity > 0) begin
-            $display ("%0d: %m.rl_handle_write_req: unmapped IO address; returning error response",
-                      cur_cycle);
-            $display ("    ", fshow (req));
-         end
+	 let rsp = MMIODataPRs {valid: False,
+				data: req.addr};    // For debugging convenience only
+	 f_rsps_to_core.enq (rsp);
+	 if (cfg_verbosity > 0) begin
+	    $display ("%0d: %m.rl_handle_write_req: unmapped IO address; returning error response",
+		      cur_cycle);
+	    $display ("    ", fshow (req));
+	 end
       end
    endrule
 
@@ -243,28 +243,28 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
       let wr_resp <- pop_o (master_xactor.o_wr_resp);
 
       if (cfg_verbosity > 0) begin
-         $display ("%0d: %m.rl_discard_write_rsp", cur_cycle);
-         $display ("    ", fshow (wr_resp));
+	 $display ("%0d: %m.rl_discard_write_rsp", cur_cycle);
+	 $display ("    ", fshow (wr_resp));
       end
 
       if (ctr_wr_rsps_pending.value == 0) begin
-         $display ("%0d:%m.rl_discard_write_rsp: ERROR:unexpected Wr response (ctr_wr_rsps_pending.value == 0)",
-                   cur_cycle);
-         $display ("    ", fshow (wr_resp));
-         $finish (1);    // Assertion failure
+	 $display ("%0d:%m.rl_discard_write_rsp: ERROR:unexpected Wr response (ctr_wr_rsps_pending.value == 0)",
+		   cur_cycle);
+	 $display ("    ", fshow (wr_resp));
+	 $finish (1);    // Assertion failure
       end
 
       ctr_wr_rsps_pending.decr;
 
       if (wr_resp.bresp != axi4_resp_okay) begin
-         // TODO: need to raise a non-maskable interrupt (NMI) here
-         $display ("%0d:%m.rl_discard_write_rsp: ERROR: fabric response error: exit.", cur_cycle);
-         $display ("    ", fshow (wr_resp));
-         $finish (1);
+	 // TODO: need to raise a non-maskable interrupt (NMI) here
+	 $display ("%0d:%m.rl_discard_write_rsp: ERROR: fabric response error: exit.", cur_cycle);
+	 $display ("    ", fshow (wr_resp));
+	 $finish (1);
       end
       else begin
-         let rsp = MMIODataPRs {valid: True, data: 0};
-         f_rsps_to_core.enq (rsp);
+	 let rsp = MMIODataPRs {valid: True, data: 0};
+	 f_rsps_to_core.enq (rsp);
       end
    endrule
 
@@ -273,10 +273,10 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
 
    function Bool fn_is_Ld_or_St (MMIOCRq  req);
       return case (req.func) matches
-                Ld     : True;
-                St     : True;
-                default: False;
-             endcase;
+		Ld     : True;
+		St     : True;
+		default: False;
+	     endcase;
    endfunction
 
    rule rl_handle_non_Ld_St (! fn_is_Ld_or_St (f_reqs_from_core.first));

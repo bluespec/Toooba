@@ -81,31 +81,31 @@ function Bit #(64) fn_extract_and_extend_bytes (Bit #(2) sz, Bit #(64) byte_addr
 
    case (sz)
       sz_B: case (addr_lsbs)
-               'h0: result = zeroExtend (word64 [ 7: 0]);
-               'h1: result = zeroExtend (word64 [15: 8]);
-               'h2: result = zeroExtend (word64 [23:16]);
-               'h3: result = zeroExtend (word64 [31:24]);
-               'h4: result = zeroExtend (word64 [39:32]);
-               'h5: result = zeroExtend (word64 [47:40]);
-               'h6: result = zeroExtend (word64 [55:48]);
-               'h7: result = zeroExtend (word64 [63:56]);
-            endcase
+	       'h0: result = zeroExtend (word64 [ 7: 0]);
+	       'h1: result = zeroExtend (word64 [15: 8]);
+	       'h2: result = zeroExtend (word64 [23:16]);
+	       'h3: result = zeroExtend (word64 [31:24]);
+	       'h4: result = zeroExtend (word64 [39:32]);
+	       'h5: result = zeroExtend (word64 [47:40]);
+	       'h6: result = zeroExtend (word64 [55:48]);
+	       'h7: result = zeroExtend (word64 [63:56]);
+	    endcase
 
       sz_H: case (addr_lsbs)
-               'h0: result = zeroExtend (word64 [15: 0]);
-               'h2: result = zeroExtend (word64 [31:16]);
-               'h4: result = zeroExtend (word64 [47:32]);
-               'h6: result = zeroExtend (word64 [63:48]);
-            endcase
+	       'h0: result = zeroExtend (word64 [15: 0]);
+	       'h2: result = zeroExtend (word64 [31:16]);
+	       'h4: result = zeroExtend (word64 [47:32]);
+	       'h6: result = zeroExtend (word64 [63:48]);
+	    endcase
 
       sz_W: case (addr_lsbs)
-               'h0: result = zeroExtend (word64 [31: 0]);
-               'h4: result = zeroExtend (word64 [63:32]);
-            endcase
+	       'h0: result = zeroExtend (word64 [31: 0]);
+	       'h4: result = zeroExtend (word64 [63:32]);
+	    endcase
 
       sz_D: case (addr_lsbs)    // D
-               'h0: result = word64;
-            endcase
+	       'h0: result = word64;
+	    endcase
    endcase
    return result;
 endfunction
@@ -127,31 +127,31 @@ function Bit #(64) fn_update_bytes (Bit #(2) sz, Bit #(64) byte_addr, Bit #(64) 
 
    case (sz)
       sz_B: case (addr_lsbs)
-               'h0: result = { st_val [63:8],  value [7:0] };
-               'h1: result = { st_val [63:16], value [7:0], st_val [7:0] };
-               'h2: result = { st_val [63:24], value [7:0], st_val [15:0] };
-               'h3: result = { st_val [63:32], value [7:0], st_val [23:0] };
-               'h4: result = { st_val [63:40], value [7:0], st_val [31:0] };
-               'h5: result = { st_val [63:48], value [7:0], st_val [39:0] };
-               'h6: result = { st_val [63:56], value [7:0], st_val [47:0] };
-               'h7: result = {                 value [7:0], st_val [55:0] };
-            endcase
+	       'h0: result = { st_val [63:8],  value [7:0] };
+	       'h1: result = { st_val [63:16], value [7:0], st_val [7:0] };
+	       'h2: result = { st_val [63:24], value [7:0], st_val [15:0] };
+	       'h3: result = { st_val [63:32], value [7:0], st_val [23:0] };
+	       'h4: result = { st_val [63:40], value [7:0], st_val [31:0] };
+	       'h5: result = { st_val [63:48], value [7:0], st_val [39:0] };
+	       'h6: result = { st_val [63:56], value [7:0], st_val [47:0] };
+	       'h7: result = {                 value [7:0], st_val [55:0] };
+	    endcase
 
       sz_H: case (addr_lsbs)
-               'h0: result = { st_val [63:16], value [15:0] };
-               'h2: result = { st_val [63:32], value [15:0], st_val [15:0] };
-               'h4: result = { st_val [63:48], value [15:0], st_val [31:0] };
-               'h6: result = {                 value [15:0], st_val [47:0] };
-            endcase
+	       'h0: result = { st_val [63:16], value [15:0] };
+	       'h2: result = { st_val [63:32], value [15:0], st_val [15:0] };
+	       'h4: result = { st_val [63:48], value [15:0], st_val [31:0] };
+	       'h6: result = {                 value [15:0], st_val [47:0] };
+	    endcase
 
       sz_W: case (addr_lsbs)
-               'h0: result = { st_val [63:32], value [31:0] };
-               'h4: result = {                 value [31:0], st_val [31:0] };
-            endcase
+	       'h0: result = { st_val [63:32], value [31:0] };
+	       'h4: result = {                 value [31:0], st_val [31:0] };
+	    endcase
 
       sz_D: case (addr_lsbs)    // D
-               'h0: result = st_val;
-            endcase
+	       'h0: result = st_val;
+	    endcase
    endcase
    return result;
 endfunction
@@ -163,10 +163,10 @@ endfunction
 // Updates the relevant bytes of st_val.
 
 function Bit #(64) fn_amo_op (Bit #(2)   sz,        // encodes data size (.W or .D)
-                              AmoFunc    amofunc,   // encodes the AMO op
-                              Bit #(64)  addr,      // lsbs indicate which 32b W in 64b D (.W)
-                              Bit #(64)  ld_val,    // 64b value loaded from mem
-                              Bit #(64)  st_val);   // 64b value from CPU reg Rs2
+			      AmoFunc    amofunc,   // encodes the AMO op
+			      Bit #(64)  addr,      // lsbs indicate which 32b W in 64b D (.W)
+			      Bit #(64)  ld_val,    // 64b value loaded from mem
+			      Bit #(64)  st_val);   // 64b value from CPU reg Rs2
    // Extract relevant bytes of ld_val and st_val
    Bit #(64) w1     = fn_extract_and_extend_bytes (sz, addr, ld_val);
    Bit #(64) w2     = fn_extract_and_extend_bytes (sz, addr, st_val);
@@ -232,7 +232,7 @@ typedef union tagged {
 } MMIOPlatformReq deriving(Bits, Eq, FShow);
 
 module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
-                        Server #(MMIOCRq, MMIODataPRs) mmio_fabric_adapter_core_side)
+			Server #(MMIOCRq, MMIODataPRs) mmio_fabric_adapter_core_side)
                       (MMIOPlatform)
 
    provisos (Bits #(Data, 64)); // this module assumes Data is 64-bit wide
@@ -268,7 +268,7 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
    Reg#(SupWaySel) fetchingWay <- mkRegU;
    // the already fetched insts
    Vector#(TSub#(SupSize, 1),
-           Reg#(Instruction)) fetchedInsts <- replicateM(mkRegU);
+	   Reg#(Instruction)) fetchedInsts <- replicateM(mkRegU);
 
    // we need to wait for resp from cores when we need to change MTIP
    Reg#(Vector#(CoreNum, Bool)) waitMTIPCRs <- mkRegU;
@@ -323,13 +323,13 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
       Vector#(CoreNum, Bool) needTimerInt = replicate(False);
       for(Integer i = 0; i < valueof(CoreNum); i = i+1) begin
          if(!mtip[i] && mtimecmp[i] <= mtime) begin
-            cores[i].pRq.enq(MMIOPRq {
-               target: MTIP,
-               func: St,
-               data: 1
+	    cores[i].pRq.enq(MMIOPRq {
+	       target: MTIP,
+	       func: St,
+	       data: 1
                });
-            mtip[i] <= True;
-            needTimerInt[i] = True;
+	    mtip[i] <= True;
+	    needTimerInt[i] = True;
          end
       end
       if(needTimerInt != replicate(False)) begin
@@ -337,11 +337,11 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
          curReq <= TimerInterrupt;
          waitMTIPCRs <= needTimerInt;
          if(verbosity > 0) begin
-            $display("[Platform - SelectReq] timer interrupt",
-                     ", mtime %x", mtime,
-                     ", mtimcmp ", fshow(readVReg(mtimecmp)),
-                     ", old mtip ", fshow(readVReg(mtip)),
-                     ", new interrupts ", fshow(needTimerInt));
+	    $display("[Platform - SelectReq] timer interrupt",
+		     ", mtime %x", mtime,
+		     ", mtimcmp ", fshow(readVReg(mtimecmp)),
+		     ", old mtip ", fshow(readVReg(mtip)),
+		     ", new interrupts ", fshow(needTimerInt));
          end
       end
       else begin
@@ -349,57 +349,57 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
          function Bool hasReq(Integer i) = cores[i].cRq.notEmpty;
          Vector#(CoreNum, Integer) idxVec = genVector;
          if(find(hasReq, idxVec) matches tagged Valid .i) begin
-            cores[i].cRq.deq;
-            MMIOCRq req = cores[i].cRq.first;
-            // record req
-            reqCore    <= fromInteger(i);
-            reqFunc    <= req.func;
-            reqAmofunc <= case (req.func) matches
-                             tagged Amo .f : f;
-                             default: None;
-                          endcase;
-            reqBE      <= req.byteEn;
-            reqData    <= req.data;
-            reqSz      <= sz_D;    // TODO: may be sz_H, sz_B or sz_W
-            // set up bookkeepings in case of inst fetch (other
-            // bookkeepings are set at processing time)
-            instSel <= truncate(req.addr >> valueof(LgInstSzBytes));
-            fetchingWay <= 0;
-            // find out which MMIO reg/device is being requested
-            DataAlignedAddr addr = getDataAlignedAddr(req.addr);
-            MMIOPlatformReq newReq = Invalid;
+	    cores[i].cRq.deq;
+	    MMIOCRq req = cores[i].cRq.first;
+	    // record req
+	    reqCore    <= fromInteger(i);
+	    reqFunc    <= req.func;
+	    reqAmofunc <= case (req.func) matches
+			     tagged Amo .f : f;
+			     default: None;
+			  endcase;
+	    reqBE      <= req.byteEn;
+	    reqData    <= req.data;
+	    reqSz      <= sz_D;    // TODO: may be sz_H, sz_B or sz_W
+	    // set up bookkeepings in case of inst fetch (other
+	    // bookkeepings are set at processing time)
+	    instSel <= truncate(req.addr >> valueof(LgInstSzBytes));
+	    fetchingWay <= 0;
+	    // find out which MMIO reg/device is being requested
+	    DataAlignedAddr addr = getDataAlignedAddr(req.addr);
+	    MMIOPlatformReq newReq = Invalid;
 
-            if(addr >= msipBaseAddr && addr < msipBoundAddr) begin
-               newReq = MSIP (truncate(addr - msipBaseAddr));
-            end
+	    if(addr >= msipBaseAddr && addr < msipBoundAddr) begin
+	       newReq = MSIP (truncate(addr - msipBaseAddr));
+	    end
             else if(addr >= mtimecmpBaseAddr &&
-                    addr < mtimecmpBoundAddr)
-               begin
-                  newReq = MTimeCmp (truncate(addr - mtimecmpBaseAddr));
-               end
+		    addr < mtimecmpBoundAddr)
+	       begin
+		  newReq = MTimeCmp (truncate(addr - mtimecmpBaseAddr));
+	       end
             else if(addr == mtimeBaseAddr) begin
-               // assume mtime is of size Data
-               newReq = MTime;
-            end
+	       // assume mtime is of size Data
+	       newReq = MTime;
+	    end
             else if(addr == toHostAddr) begin
-               // assume tohost is of size Data
-               newReq = ToHost;
-            end
+	       // assume tohost is of size Data
+	       newReq = ToHost;
+	    end
             else if(addr == fromHostAddr) begin
-               // assume fromhost is of size Data
-               newReq = FromHost;
-            end
+	       // assume fromhost is of size Data
+	       newReq = FromHost;
+	    end
             else begin    // Send all remaining reqs to the fabric adapter, as is
-               newReq = MMIO_Fabric_Adapter (req.addr);
-            end
+	       newReq = MMIO_Fabric_Adapter (req.addr);
+	    end
             curReq <= newReq;
 
-            // process valid req
-            state <= ProcessReq;
-            if(verbosity > 0) begin
-               $display("[Platform - SelectReq] core %d, req ", i, fshow(req));
-               $display("    req type ", fshow(newReq));
-            end
+	    // process valid req
+	    state <= ProcessReq;
+	    if(verbosity > 0) begin
+	       $display("[Platform - SelectReq] core %d, req ", i, fshow(req));
+	       $display("    req type ", fshow(newReq));
+	    end
          end
       end
    endrule
@@ -408,14 +408,14 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
    rule waitTimerInterruptDone(state == WaitResp && curReq == TimerInterrupt);
       for(Integer i = 0; i < valueof(CoreNum); i = i+1) begin
          if(waitMTIPCRs[i]) begin
-            cores[i].cRs.deq;
+	    cores[i].cRs.deq;
          end
       end
       state <= SelectReq;
       if(verbosity > 0) begin
          $display("[Platform - Done] timer interrupt",
-                  ", mtip ", fshow(readVReg(mtip)),
-                  ", waitCRs ", fshow(waitMTIPCRs));
+		  ", mtip ", fshow(readVReg(mtip)),
+		  ", waitCRs ", fshow(waitMTIPCRs));
       end
    endrule
 
@@ -442,17 +442,17 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
          state <= SelectReq;
          cores[reqCore].pRs.enq(InstFetch (replicate(Invalid)));
          if(verbosity > 0) begin
-            $display("[Platform - process msip] cannot do inst fetch");
+	    $display("[Platform - process msip] cannot do inst fetch");
          end
       end
       else if(upper_en && !upper_valid) begin
          // access invalid core's MSIP, fault
          state <= SelectReq;
          cores[reqCore].pRs.enq(DataAccess (MMIODataPRs {
-            valid: False, data: ?
-            }));
+	    valid: False, data: ?
+	    }));
          if(verbosity > 0) begin
-            $display("[Platform - process msip] access invalid core");
+	    $display("[Platform - process msip] access invalid core");
          end
       end
       else if(reqFunc matches tagged Amo .amoFunc) begin
@@ -461,61 +461,61 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
          // resp is different from load that valid data is already shifted
          // to LSBs). Besides, we only use the lower 32 bits of reqData.
          if(lower_en && upper_en) begin
-            state <= SelectReq;
-            cores[reqCore].pRs.enq(DataAccess (MMIODataPRs {
-               valid: False, data: ?
-               }));
-            if(verbosity > 0) begin
-               $display("[Platform - process msip] ",
-                        "AMO cannot access 2 cores");
-            end
+	    state <= SelectReq;
+	    cores[reqCore].pRs.enq(DataAccess (MMIODataPRs {
+	       valid: False, data: ?
+	       }));
+	    if(verbosity > 0) begin
+	       $display("[Platform - process msip] ",
+			"AMO cannot access 2 cores");
+	    end
          end
          else if(lower_en) begin
-            cores[lower_core].pRq.enq(MMIOPRq {
-               target: MSIP,
-               func: reqFunc,
-               data: truncate(reqData)
-               });
-            waitLowerMSIPCRs <= Valid (lower_core);
-            waitUpperMSIPCRs <= Invalid;
-            state <= WaitResp;
+	    cores[lower_core].pRq.enq(MMIOPRq {
+	       target: MSIP,
+	       func: reqFunc,
+	       data: truncate(reqData)
+	       });
+	    waitLowerMSIPCRs <= Valid (lower_core);
+	    waitUpperMSIPCRs <= Invalid;
+	    state <= WaitResp;
          end
          else if(upper_en) begin
-            cores[upper_core].pRq.enq(MMIOPRq {
-               target: MSIP,
-               func: reqFunc,
-               data: truncate(reqData)
-               });
-            waitLowerMSIPCRs <= Valid (upper_core);
-            waitUpperMSIPCRs <= Invalid;
-            state <= WaitResp;
+	    cores[upper_core].pRq.enq(MMIOPRq {
+	       target: MSIP,
+	       func: reqFunc,
+	       data: truncate(reqData)
+	       });
+	    waitLowerMSIPCRs <= Valid (upper_core);
+	    waitUpperMSIPCRs <= Invalid;
+	    state <= WaitResp;
          end
          else begin
-            // AMO access nothing: fault
-            state <= SelectReq;
-            cores[reqCore].pRs.enq(DataAccess (MMIODataPRs {
-                                                            valid: False, data: ?
-                                                            }));
-            if(verbosity > 0) begin
+	    // AMO access nothing: fault
+	    state <= SelectReq;
+	    cores[reqCore].pRs.enq(DataAccess (MMIODataPRs {
+							    valid: False, data: ?
+							    }));
+	    if(verbosity > 0) begin
                $display("[Platform - process msip] access nothing");
-            end
+	    end
          end
       end
       else begin
          // normal load and store
          if(lower_en) begin
-            cores[lower_core].pRq.enq(MMIOPRq {
-               target: MSIP,
-               func: reqFunc,
-               data: zeroExtend(reqData[0])
-                });
+	    cores[lower_core].pRq.enq(MMIOPRq {
+	       target: MSIP,
+	       func: reqFunc,
+	       data: zeroExtend(reqData[0])
+		});
          end
          if(upper_en) begin
-            cores[upper_core].pRq.enq(MMIOPRq {
-               target: MSIP,
-               func: reqFunc,
-               data: zeroExtend(reqData[32]) 
-               });
+	    cores[upper_core].pRq.enq(MMIOPRq {
+	       target: MSIP,
+	       func: reqFunc,
+	       data: zeroExtend(reqData[32]) 
+	       });
          end
          state <= WaitResp;
          waitLowerMSIPCRs <= lower_en ? Valid (lower_core) : Invalid;
@@ -524,33 +524,33 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
    endrule
 
    rule waitMSIPDone(
-                     curReq matches tagged MSIP .offset &&& state == WaitResp
-                     );
+		     curReq matches tagged MSIP .offset &&& state == WaitResp
+		     );
       Bit#(32) lower_data = 0;
       Bit#(32) upper_data = 0;
       for(Integer i = 0; i < valueof(CoreNum); i = i+1) begin
          if (waitLowerMSIPCRs matches tagged Valid .c &&&
-             c == fromInteger(i)) begin
-                                     cores[i].cRs.deq;
-                                     lower_data = zeroExtend(cores[i].cRs.first.data);
-                                  end
-         else if(waitUpperMSIPCRs matches tagged Valid .c &&&
-                 c == fromInteger(i)) begin
-                                         cores[i].cRs.deq;
-                                         upper_data = zeroExtend(cores[i].cRs.first.data);
-                                      end
+	     c == fromInteger(i)) begin
+				     cores[i].cRs.deq;
+				     lower_data = zeroExtend(cores[i].cRs.first.data);
+				  end
+	 else if(waitUpperMSIPCRs matches tagged Valid .c &&&
+		 c == fromInteger(i)) begin
+					 cores[i].cRs.deq;
+					 upper_data = zeroExtend(cores[i].cRs.first.data);
+				      end
       end
       state <= SelectReq;
       cores[reqCore].pRs.enq(DataAccess (MMIODataPRs {
-                                                      valid: True,
-         // for AMO, resp data should be signExtend(lower_data). However,
-         // lower_data is just 1 or 0, and upper_data is always 0, so we
-         // don't need to do signExtend.
-         data: {upper_data, lower_data}
-        }));
+						      valid: True,
+	 // for AMO, resp data should be signExtend(lower_data). However,
+	 // lower_data is just 1 or 0, and upper_data is always 0, so we
+	 // don't need to do signExtend.
+	 data: {upper_data, lower_data}
+	}));
       if(verbosity > 0) begin
          $display("[Platform - msip done] lower %x, upper %x",
-                  lower_data, upper_data);
+		  lower_data, upper_data);
       end
    endrule
 
@@ -560,11 +560,11 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
          Bool doubleWord = reqBE[4] && reqBE[0];
          Bool upper32 = reqBE[4] && !reqBE[0];
          let amoInst = AmoInst {
-            func: amoFunc,
-            doubleWord: doubleWord,
-            aq: False,
-            rl: False
-            };
+	    func: amoFunc,
+	    doubleWord: doubleWord,
+	    aq: False,
+	    rl: False
+	    };
          return amoExec(amoInst, orig, reqData, upper32);
       end
       else begin
@@ -572,9 +572,9 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
          Vector#(NumBytes, Bit#(8)) data = unpack(orig);
          Vector#(NumBytes, Bit#(8)) wrVec = unpack(reqData);
          for(Integer i = 0; i < valueof(NumBytes); i = i+1) begin
-            if(reqBE[i]) begin
-               data[i] = wrVec[i];
-            end
+	    if(reqBE[i]) begin
+	       data[i] = wrVec[i];
+	    end
          end
          return pack(data);
       end
@@ -597,81 +597,81 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
 
    // handle mtimecmp access
    rule processMTimeCmp(
-                        curReq matches tagged MTimeCmp .offset &&& state == ProcessReq
+			curReq matches tagged MTimeCmp .offset &&& state == ProcessReq
       );
       if(isInstFetch) begin
          state <= SelectReq;
          cores[reqCore].pRs.enq(InstFetch (replicate(Invalid)));
          if(verbosity > 0) begin
-            $display("[Platform - process mtimecmp] cannot do inst fetch");
+	    $display("[Platform - process mtimecmp] cannot do inst fetch");
          end
       end
       else if(offset > fromInteger(valueof(CoreNum) - 1)) begin
          // access invalid core's mtimecmp, fault
          cores[reqCore].pRs.enq(DataAccess (MMIODataPRs {
-            valid: False, data: ?
-            }));
+	    valid: False, data: ?
+	    }));
          state <= SelectReq;
          if(verbosity > 0) begin
-            $display("[Platform - process mtimecmp] access fault");
+	    $display("[Platform - process mtimecmp] access fault");
          end
       end
       else begin
          let oldMTimeCmp = mtimecmp[offset];
          if(reqFunc == Ld) begin
-            cores[reqCore].pRs.enq(DataAccess (MMIODataPRs {
-               valid: True,
-               data: oldMTimeCmp
-                }));
-            state <= SelectReq;
-            if(verbosity > 0) begin
-               $display("[Platform - process mtimecmp] read done, data %x",
-                        oldMTimeCmp);
-            end
+	    cores[reqCore].pRs.enq(DataAccess (MMIODataPRs {
+	       valid: True,
+	       data: oldMTimeCmp
+		}));
+	    state <= SelectReq;
+	    if(verbosity > 0) begin
+	       $display("[Platform - process mtimecmp] read done, data %x",
+			oldMTimeCmp);
+	    end
          end
          else begin
-            // do updates for store or AMO
-            let newData = getWriteData(oldMTimeCmp);
-            mtimecmp[offset] <= newData;
-            // get and record amo resp
-            let respData = getAmoResp(oldMTimeCmp);
-            amoResp <= respData;
-            // check changes to MTIP
-            if(newData <= mtime && !mtip[offset]) begin
-               // need to post new timer interrupt
-               mtip[offset] <= True;
-               cores[offset].pRq.enq(MMIOPRq {
-                  target: MTIP,
-                  func: St,
+	    // do updates for store or AMO
+	    let newData = getWriteData(oldMTimeCmp);
+	    mtimecmp[offset] <= newData;
+	    // get and record amo resp
+	    let respData = getAmoResp(oldMTimeCmp);
+	    amoResp <= respData;
+	    // check changes to MTIP
+	    if(newData <= mtime && !mtip[offset]) begin
+	       // need to post new timer interrupt
+	       mtip[offset] <= True;
+	       cores[offset].pRq.enq(MMIOPRq {
+		  target: MTIP,
+		  func: St,
                   data: 1
-                  });
-               state <= WaitResp;
-            end
+		  });
+	       state <= WaitResp;
+	    end
             else if(newData > mtime && mtip[offset]) begin
-               // need to clear timer interrupt
-               mtip[offset] <= False;
-               cores[offset].pRq.enq(MMIOPRq {
-                  target: MTIP,
-                  func: St,
+	       // need to clear timer interrupt
+	       mtip[offset] <= False;
+	       cores[offset].pRq.enq(MMIOPRq {
+		  target: MTIP,
+		  func: St,
                   data: 0
-                  });
-               state <= WaitResp;
-            end
+		  });
+	       state <= WaitResp;
+	    end
             else begin
-               // nothing happens to mtip, just finish this req
-               cores[reqCore].pRs.enq(DataAccess (MMIODataPRs {
-                  valid: True,
-                  // store doesn't need resp data, just fill in AMO resp
-                  data: respData
+	       // nothing happens to mtip, just finish this req
+	       cores[reqCore].pRs.enq(DataAccess (MMIODataPRs {
+		  valid: True,
+		  // store doesn't need resp data, just fill in AMO resp
+		  data: respData
                   }));
-               state <= SelectReq;
-               if(verbosity > 0) begin
-                  $display("[Platform - process mtimecmp] ",
-                           "no change to mtip ", fshow(readVReg(mtip)),
-                           ", mtime %x", mtime,
+	       state <= SelectReq;
+	       if(verbosity > 0) begin
+		  $display("[Platform - process mtimecmp] ",
+			   "no change to mtip ", fshow(readVReg(mtip)),
+			   ", mtime %x", mtime,
                            ", old mtimecmp ", fshow(readVReg(mtimecmp)),
-                           ", new mtimecmp[%d] %x", offset, newData);
-               end
+			   ", new mtimecmp[%d] %x", offset, newData);
+	       end
             end
          end
       end
@@ -682,17 +682,17 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
       );
       cores[offset].cRs.deq;
       cores[reqCore].pRs.enq(DataAccess (MMIODataPRs {
-         valid: True,
-         // store doesn't need resp data, just fill in AMO resp. We cannot
-         // recompute AMO resp now, because mtimecmp has changed
-         data: amoResp
-        }));
+	 valid: True,
+	 // store doesn't need resp data, just fill in AMO resp. We cannot
+	 // recompute AMO resp now, because mtimecmp has changed
+	 data: amoResp
+	}));
       state <= SelectReq;
       if(verbosity > 0) begin
          $display("[Platform - mtimecmp done]",
-                  ", mtime %x", mtime,
-                  ", mtimecmp ", fshow(readVReg(mtimecmp)),
-                  ", mtip ", fshow(readVReg(mtip)));
+		  ", mtime %x", mtime,
+		  ", mtimecmp ", fshow(readVReg(mtimecmp)),
+		  ", mtip ", fshow(readVReg(mtip)));
       end
    endrule
 
@@ -889,30 +889,30 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
 
    // Forward the request as-is to the fabric adapter.
    rule rl_mmio_to_fabric_req (curReq matches tagged MMIO_Fabric_Adapter .addr
-                               &&& (state == ProcessReq)
-                               &&& (isLd || isSt));
+			       &&& (state == ProcessReq)
+			       &&& (isLd || isSt));
       let req = MMIOCRq {addr:addr, func:reqFunc, byteEn:reqBE, data:reqData};
       mmio_fabric_adapter_core_side.request.put (req);
       state <= WaitResp;
 
       if (verbosity > 0) begin
-         $display ("MMIOPlatform.rl_mmio_to_fabric_req");
-         $display ("    ", fshow (req));
+	 $display ("MMIOPlatform.rl_mmio_to_fabric_req");
+	 $display ("    ", fshow (req));
       end
    endrule
 
    // Forward the fabric-adapter's response as-is to the core.
    rule rl_mmio_from_fabric_rsp (curReq matches tagged MMIO_Fabric_Adapter .addr
-                                 &&& (state == WaitResp)
-                                 &&& (isLd || isSt));
+				 &&& (state == WaitResp)
+				 &&& (isLd || isSt));
       MMIODataPRs dprs <- mmio_fabric_adapter_core_side.response.get;
       let prs = tagged DataAccess dprs;
       cores[reqCore].pRs.enq (prs);
       state <= SelectReq;
 
       if (verbosity > 0) begin
-         $display ("MMIOPlatform.rl_mmio_from_fabric_rsp");
-         $display ("    ", fshow (prs));
+	 $display ("MMIOPlatform.rl_mmio_from_fabric_rsp");
+	 $display ("    ", fshow (prs));
       end
    endrule
 
@@ -920,8 +920,8 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
    // MMIO to Fabric: AMO (not Instruction Fetch)
 
    rule rl_mmio_to_fabric_amo_req (curReq matches tagged MMIO_Fabric_Adapter .addr
-                                   &&& (state == ProcessReq)
-                                   &&& isAmo);
+				   &&& (state == ProcessReq)
+				   &&& isAmo);
       // Send a load-request to the fabric adapter.
       // Align addr to 8-byte boundary (FabricData-aligned)
       Addr addr1 = { addr [63:3], 3'b_000 };
@@ -930,41 +930,41 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
       state <= WaitResp;
 
       if (verbosity > 0) begin
-         $display ("MMIOPlatform.rl_mmio_to_fabric_amo_req: addr 0x%0h", addr);
-         $display ("    ", fshow (req));
+	 $display ("MMIOPlatform.rl_mmio_to_fabric_amo_req: addr 0x%0h", addr);
+	 $display ("    ", fshow (req));
       end
    endrule
 
    // Get the Load-response; do the AMO op; send final write back to fabric, and respond to core
    rule rl_mmio_from_fabric_amo_rsp (curReq matches tagged MMIO_Fabric_Adapter .addr
-                                     &&& (state == WaitResp)
-                                     &&& isAmo);
+				     &&& (state == WaitResp)
+				     &&& isAmo);
       MMIODataPRs dprs <- mmio_fabric_adapter_core_side.response.get;
 
       if (! dprs.valid) begin
-         // Access fault
-         let prs = tagged DataAccess dprs;
-         cores[reqCore].pRs.enq (prs);
-         state <= SelectReq;
+	 // Access fault
+	 let prs = tagged DataAccess dprs;
+	 cores[reqCore].pRs.enq (prs);
+	 state <= SelectReq;
       end
       else begin
-         // Do the AMO op on the loaded value and the store value
-         let ld_val = dprs.data;
-         let new_st_val = fn_amo_op (reqSz, reqAmofunc, addr, ld_val, reqData);
+	 // Do the AMO op on the loaded value and the store value
+	 let ld_val = dprs.data;
+	 let new_st_val = fn_amo_op (reqSz, reqAmofunc, addr, ld_val, reqData);
 
-         // Write back new st_val to fabric
-         let req = MMIOCRq {addr:addr, func:tagged St, byteEn:reqBE, data:new_st_val};
-         mmio_fabric_adapter_core_side.request.put (req);
+	 // Write back new st_val to fabric
+	 let req = MMIOCRq {addr:addr, func:tagged St, byteEn:reqBE, data:new_st_val};
+	 mmio_fabric_adapter_core_side.request.put (req);
 
-         let prs = tagged DataAccess (MMIODataPRs { valid: True, data: ld_val });
-         cores[reqCore].pRs.enq (prs);
-         state <= SelectReq;
+	 let prs = tagged DataAccess (MMIODataPRs { valid: True, data: ld_val });
+	 cores[reqCore].pRs.enq (prs);
+	 state <= SelectReq;
 
-         if (verbosity > 1) begin
-            $display ("MMIO_Platform.rl_mmio_from_fabric_amo_rsp: addr 0x%0h, size %0d, amofunc %0d",
-                      addr, reqSz, reqAmofunc);
-            $display ("    ld_val 0x%0h  op  st_val 0x%0h => new_st_val 0x%0h", ld_val, reqData, new_st_val);
-         end
+	 if (verbosity > 1) begin
+	    $display ("MMIO_Platform.rl_mmio_from_fabric_amo_rsp: addr 0x%0h, size %0d, amofunc %0d",
+		      addr, reqSz, reqAmofunc);
+	    $display ("    ld_val 0x%0h  op  st_val 0x%0h => new_st_val 0x%0h", ld_val, reqData, new_st_val);
+	 end
       end
    endrule
 
@@ -980,8 +980,8 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
    // fetchingWay: initial 0
 
    rule rl_mmio_to_fabric_ifetch_req (curReq matches tagged MMIO_Fabric_Adapter .addr
-                                      &&& (state == ProcessReq)
-                                      &&& isInstFetch);
+				      &&& (state == ProcessReq)
+				      &&& isInstFetch);
       // Note: addr may not be FabricData-aligned; result will be Data that contains addr
       // TODO: currently assumes superscalarity fits in fabric width
       Addr addr1 = { addr [63:3], 3'b_000 };
@@ -990,79 +990,79 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
       state <= WaitResp;
 
       if (verbosity > 0) begin
-         $display ("MMIOPlatform.rl_mmio_to_fabric_ifetch_req: addr 0x%0h  fetchingWay %0d",
-                   addr, fetchingWay);
-         $display ("    ", fshow (req));
+	 $display ("MMIOPlatform.rl_mmio_to_fabric_ifetch_req: addr 0x%0h  fetchingWay %0d",
+		   addr, fetchingWay);
+	 $display ("    ", fshow (req));
       end
    endrule
 
    rule rl_mmio_from_fabric_ifetch_rsp (curReq matches tagged MMIO_Fabric_Adapter .addr
-                                        &&& (state == WaitResp)
-                                        &&& isInstFetch);
+					&&& (state == WaitResp)
+					&&& isInstFetch);
       MMIODataPRs dprs <- mmio_fabric_adapter_core_side.response.get;
       if (! dprs.valid) begin
-         // Access fault
+	 // Access fault
          Vector #(SupSize, Maybe #(Instruction)) resp = replicate (Invalid);
          for(Integer i = 0; i < valueof (SupSize); i = i+1) begin
-            if (fromInteger (i) < fetchingWay)
-               resp [i] = Valid (fetchedInsts [i]);
+	    if (fromInteger (i) < fetchingWay)
+	       resp [i] = Valid (fetchedInsts [i]);
             else if (fromInteger (i) == fetchingWay)
-               resp [i] = tagged Invalid;
+	       resp [i] = tagged Invalid;
          end
          cores[reqCore].pRs.enq (tagged InstFetch (resp));
          state <= SelectReq;
 
-         if (verbosity > 0) begin
-            $display ("MMIOPlatform.rl_mmio_from_fabric_ifetch_rsp: access fault; final resp to core:");
-            $display ("    ", fshow (resp));
-         end
+	 if (verbosity > 0) begin
+	    $display ("MMIOPlatform.rl_mmio_from_fabric_ifetch_rsp: access fault; final resp to core:");
+	    $display ("    ", fshow (resp));
+	 end
       end
 
       else begin
-         // No access fault
-         let data = dprs.data;
+	 // No access fault
+	 let data = dprs.data;
 
          SupWaySel maxWay = 0;
          if(reqFunc matches tagged Inst .w) begin
             maxWay = w;
          end
 
-         // View Data as a vector of instructions
+	 // View Data as a vector of instructions
          Vector#(DataSzInst, Instruction) instVec = unpack(data);
          // extract inst from resp data
          Instruction inst = instVec[instSel];
          // check whether we are done or not
          if (fetchingWay >= maxWay) begin
-            // all 0..maxWay insts are fetched; we can resp now
+	    // all 0..maxWay insts are fetched; we can resp now
             Vector#(SupSize, Maybe#(Instruction)) resp = replicate(Invalid);
             for(Integer i = 0; i < valueof(SupSize); i = i+1) begin
-               if(fromInteger(i) < fetchingWay) begin
+	       if(fromInteger(i) < fetchingWay) begin
                   resp[i] = Valid (fetchedInsts[i]);
-               end
+	       end
                else if(fromInteger(i) == fetchingWay) begin
                   resp[i] = Valid (inst);
-                  end
+		  end
                end
             cores[reqCore].pRs.enq (tagged InstFetch (resp));
             state <= SelectReq;
 
-            if (verbosity > 0) begin
-               $display ("MMIOPlatform.rl_mmio_from_fabric_ifetch_rsp: final resp to core:");
-               $display ("    ", fshow (resp));
-            end
+	    if (verbosity > 0) begin
+	       $display ("MMIOPlatform.rl_mmio_from_fabric_ifetch_rsp: final resp to core:");
+	       $display ("    ", fshow (resp));
+	    end
          end
          else begin
             // continue to fetch next inst, save current inst, increment offset
             fetchedInsts[fetchingWay] <= inst;
             fetchingWay <= fetchingWay + 1;
             instSel <= instSel + 1;
-            curReq <= MMIO_Fabric_Adapter (instSel == maxBound ? addr + 8 : addr);
+	    curReq <= MMIO_Fabric_Adapter (instSel == maxBound ? addr + 8 : addr);
             state <= ProcessReq;
 
-            if (verbosity > 0) begin
-               $display ("MMIOPlatform.rl_mmio_from_fabric_ifetch_rsp:");
-               $display ("     fetchingWay %0d instSel %0d inst 0x%0h", fetchingWay, instSel, inst);
-            end
+	    if (verbosity > 0) begin
+	       $display ("MMIOPlatform.rl_mmio_from_fabric_ifetch_rsp:");
+	       $display ("     fetchingWay %0d instSel %0d inst 0x%0h", fetchingWay, instSel, inst);
+	    end
          end
       end
    endrule

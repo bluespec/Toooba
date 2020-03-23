@@ -263,49 +263,49 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
    Maybe #(RET_Updates)  no_ret_updates  = tagged Invalid;
 
    function Action fa_to_TV (Integer                way,
-                             Bit #(64)              serial_num,
-                             Maybe #(Tuple2 #(Bit #(12), Data)) maybe_csr_upd,
-                             ToReorderBuffer        deq_data,
-                             Bit #(5)               fflags,
-                             Data                   mstatus,
-                             Maybe #(Trap_Updates)  m_trap_updates,
-                             Maybe #(RET_Updates)   m_ret_updates);
+			     Bit #(64)              serial_num,
+			     Maybe #(Tuple2 #(Bit #(12), Data)) maybe_csr_upd,
+			     ToReorderBuffer        deq_data,
+			     Bit #(5)               fflags,
+			     Data                   mstatus,
+			     Maybe #(Trap_Updates)  m_trap_updates,
+			     Maybe #(RET_Updates)   m_ret_updates);
       action
-         let tval     = (m_trap_updates matches tagged Valid .tu ? tu.tval : deq_data.tval);
-         let upd_pc   = (m_ret_updates matches tagged Valid .ru ? ru.new_pc : deq_data.pc);
-         let x = Trace_Data2 {serial_num:           serial_num,
-                              maybe_csr_upd:        maybe_csr_upd,
-                              pc:                   upd_pc,
-                              orig_inst:            deq_data.orig_inst,
-                              iType:                deq_data.iType,
-                              dst:                  deq_data.dst,
-                              dst_data:             deq_data.dst_data,
-                              store_data:           deq_data.store_data,
-                              store_data_BE:        deq_data.store_data_BE,
-                              csr:                  deq_data.csr,
-                              trap:                 deq_data.trap,
-                              tval:                 tval,
-                              ppc_vaddr_csrData:    deq_data.ppc_vaddr_csrData,
-                              fflags:               fflags,    // deq_data.fflags only has incremental flags
-                              will_dirty_fpu_state: deq_data.will_dirty_fpu_state,
-                              mstatus:              mstatus,    // when SD/XS/FS have changed
+	 let tval     = (m_trap_updates matches tagged Valid .tu ? tu.tval : deq_data.tval);
+	 let upd_pc   = (m_ret_updates matches tagged Valid .ru ? ru.new_pc : deq_data.pc);
+	 let x = Trace_Data2 {serial_num:           serial_num,
+			      maybe_csr_upd:        maybe_csr_upd,
+			      pc:                   upd_pc,
+			      orig_inst:            deq_data.orig_inst,
+			      iType:                deq_data.iType,
+			      dst:                  deq_data.dst,
+			      dst_data:             deq_data.dst_data,
+			      store_data:           deq_data.store_data,
+			      store_data_BE:        deq_data.store_data_BE,
+			      csr:                  deq_data.csr,
+			      trap:                 deq_data.trap,
+			      tval:                 tval,
+			      ppc_vaddr_csrData:    deq_data.ppc_vaddr_csrData,
+			      fflags:               fflags,    // deq_data.fflags only has incremental flags
+			      will_dirty_fpu_state: deq_data.will_dirty_fpu_state,
+			      mstatus:              mstatus,    // when SD/XS/FS have changed
 
-                              // Trap and RET updates
-                              prv:                  (  m_trap_updates matches tagged Valid .tu
-                                                     ? tu.prv
-                                                     : (m_ret_updates matches tagged Valid .ru
-                                                        ? ru.prv
-                                                        : ?)),
-                              status:               (  m_trap_updates matches tagged Valid .tu
-                                                     ? tu.status
-                                                     : (m_ret_updates matches tagged Valid .ru
-                                                        ? ru.status
-                                                        : ?)),
-                              tvec:                 fromMaybe (?, m_trap_updates).new_pc,
-                              cause:                fromMaybe (?, m_trap_updates).cause,
-                              epc:                  fromMaybe (?, m_trap_updates).epc
-                              };
-         inIfc.v_to_TV [way].put (x);
+			      // Trap and RET updates
+			      prv:                  (  m_trap_updates matches tagged Valid .tu
+						     ? tu.prv
+						     : (m_ret_updates matches tagged Valid .ru
+							? ru.prv
+							: ?)),
+			      status:               (  m_trap_updates matches tagged Valid .tu
+						     ? tu.status
+						     : (m_ret_updates matches tagged Valid .ru
+							? ru.status
+							: ?)),
+			      tvec:                 fromMaybe (?, m_trap_updates).new_pc,
+			      cause:                fromMaybe (?, m_trap_updates).cause,
+			      epc:                  fromMaybe (?, m_trap_updates).epc
+			      };
+	 inIfc.v_to_TV [way].put (x);
       endaction
    endfunction
 
@@ -314,8 +314,8 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
    rule rl_send_tv_reset (rg_just_after_reset);
       Bit #(64) serial_num = 0;
       fa_to_TV (way0, serial_num,
-                tagged Invalid,
-                no_deq_data, no_fflags, no_mstatus, no_trap_updates, no_ret_updates);
+		tagged Invalid,
+		no_deq_data, no_fflags, no_mstatus, no_trap_updates, no_ret_updates);
       rg_just_after_reset <= False;
       rg_serial_num       <= 1;
    endrule
@@ -328,8 +328,8 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
    rule rl_send_mip_csr_change_to_tv ((! rg_just_after_reset) && send_mip_csr_change_to_tv);
       fa_to_TV (way0, rg_serial_num,
-                tagged Valid (tuple2 (pack (CSRmip), new_mip_csr_val)),
-                no_deq_data, no_fflags, no_mstatus, no_trap_updates, no_ret_updates);
+		tagged Valid (tuple2 (pack (CSRmip), new_mip_csr_val)),
+		no_deq_data, no_fflags, no_mstatus, no_trap_updates, no_ret_updates);
       rg_old_mip_csr_val <= new_mip_csr_val;
       rg_serial_num <= rg_serial_num + 1;
    endrule
@@ -567,7 +567,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
    // This code is patterned after 'makeSystemConsistent' above
    function Action makeSystemConsistent_for_debug_mode;
       action
-         inIfc.setFlushTlbs;
+	 inIfc.setFlushTlbs;
 
          // notify TLB to keep update of CSR changes
          inIfc.setUpdateVMInfo;
@@ -586,8 +586,8 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
          // yield load reservation in cache
          inIfc.setFlushReservation;
 
-         inIfc.setFlushBrPred;
-         inIfc.setFlushCaches;
+	 inIfc.setFlushBrPred;
+	 inIfc.setFlushCaches;
 
 `ifdef SELF_INV_CACHE
          // reconcile I$
@@ -622,9 +622,9 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         // record trap info
         Addr vaddr = ?;
         if (   (trap == tagged Exception InstAccessFault)
-            || (trap == tagged Exception InstPageFault)) begin
-            vaddr = x.tval;
-        end
+	    || (trap == tagged Exception InstPageFault)) begin
+	    vaddr = x.tval;
+	end
         else if(x.ppc_vaddr_csrData matches tagged VAddr .va) begin
             vaddr = getAddr(va);
         end
@@ -636,20 +636,20 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 `ifdef RVFI_DII
             , x: x
 `endif
-        });
+	});
         commitTrap <= commitTrap_val;
 `ifdef INCLUDE_TANDEM_VERIF
         f_rob_data.enq (x);    // Save data to be sent to TV in rule doCommitTrap_handle, next
 `endif
 
         if (verbosity >= 1) begin
-           $display ("instret:%0d  PC:0x%0h  instr:0x%08h", rg_serial_num, x.pc, x.orig_inst,
-                     "  iType:", fshow (x.iType), "    [doCommitTrap]");
-        end
+	   $display ("instret:%0d  PC:0x%0h  instr:0x%08h", rg_serial_num, x.pc, x.orig_inst,
+		     "  iType:", fshow (x.iType), "    [doCommitTrap]");
+	end
         if (verbose) begin
-           $display ("CommitStage.doCommitTrap_flush: deq_data:   ", fshow (x));
-           $display ("CommitStage.doCommitTrap_flush: commitTrap: ", fshow (commitTrap_val));
-        end
+	   $display ("CommitStage.doCommitTrap_flush: deq_data:   ", fshow (x));
+	   $display ("CommitStage.doCommitTrap_flush: commitTrap: ", fshow (commitTrap_val));
+	end
 
         // flush everything. Only increment epoch and stall fetch when we haven
         // not done it yet (we may have already done them at rename stage)
@@ -700,44 +700,44 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         end
 
 `ifdef INCLUDE_GDB_CONTROL
-        else if (trap.trap == tagged Exception Breakpoint) begin
+	else if (trap.trap == tagged Exception Breakpoint) begin
             inIfc.commitCsrInstOrInterrupt;    // TODO: Why?
-        end
+	end
 `endif
 
        Bool debugger_halt = False;
 
 `ifdef INCLUDE_GDB_CONTROL
        if ((trap.trap == tagged Interrupt DebugHalt)
-           || (trap.trap == tagged Interrupt DebugStep)
-           || ((trap.trap == tagged Exception Breakpoint) && (csrf.dcsr_break_bit == 1'b1)))
+	   || (trap.trap == tagged Interrupt DebugStep)
+	   || ((trap.trap == tagged Exception Breakpoint) && (csrf.dcsr_break_bit == 1'b1)))
           begin
-             debugger_halt = True;
+	     debugger_halt = True;
 
-             // Flush everything (tlbs, caches, reservation, branch predictor);
-             // reconcilei and I; update VM info.
-             makeSystemConsistent_for_debug_mode;
+	     // Flush everything (tlbs, caches, reservation, branch predictor);
+	     // reconcilei and I; update VM info.
+	     makeSystemConsistent_for_debug_mode;
 
-             // Save values in debugger CSRs
-             Bit #(3) dcsr_cause = (  (trap.trap == tagged Interrupt DebugHalt)
-                                    ? 3
-                                    : (  (trap.trap == tagged Interrupt DebugStep)
-                                       ? 4
-                                       : 1));
-             csrf.dcsr_cause_write (dcsr_cause);
-             csrf.dpc_write (trap.pc);
+	     // Save values in debugger CSRs
+	     Bit #(3) dcsr_cause = (  (trap.trap == tagged Interrupt DebugHalt)
+				    ? 3
+				    : (  (trap.trap == tagged Interrupt DebugStep)
+				       ? 4
+				       : 1));
+	     csrf.dcsr_cause_write (dcsr_cause);
+	     csrf.dpc_write (trap.pc);
 
-             // Tell fetch stage to wait for redirect
-             // Note: rule doCommitTrap_flush may have done this already; redundant call is ok.
-             inIfc.setFetchWaitRedirect;
-             inIfc.setFetchWaitFlush;
+	     // Tell fetch stage to wait for redirect
+	     // Note: rule doCommitTrap_flush may have done this already; redundant call is ok.
+	     inIfc.setFetchWaitRedirect;
+	     inIfc.setFetchWaitFlush;
 
-             // Go to quiescent state until debugger resumes execution
-             rg_run_state <= RUN_STATE_DEBUGGER_HALTED;
+	     // Go to quiescent state until debugger resumes execution
+	     rg_run_state <= RUN_STATE_DEBUGGER_HALTED;
 
-             if (verbosity >= 2)
-                $display ("%0d: %m.commitStage.doCommitTrap_handle; debugger halt:", cur_cycle);
-          end
+	     if (verbosity >= 2)
+		$display ("%0d: %m.commitStage.doCommitTrap_handle; debugger halt:", cur_cycle);
+	  end
 `endif
 
        if (! debugger_halt) begin
@@ -758,8 +758,8 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
 `ifdef INCLUDE_TANDEM_VERIF
           fa_to_TV (way0, rg_serial_num,
-                    tagged Invalid,
-                    x, no_fflags, no_mstatus, tagged Valid trap_updates, no_ret_updates);
+		    tagged Invalid,
+		    x, no_fflags, no_mstatus, tagged Valid trap_updates, no_ret_updates);
 `endif
           rg_serial_num <= rg_serial_num + 1;
 
@@ -830,9 +830,9 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
         if(verbose) $display("[doCommitSystemInst] ", fshow(x));
         if (verbosity >= 1) begin
-           $display("instret:%0d  PC:0x%0h  instr:0x%08h", rg_serial_num, x.pc, x.orig_inst,
-                    "   iType:", fshow (x.iType), "    [doCommitSystemInst]");
-        end
+	   $display("instret:%0d  PC:0x%0h  instr:0x%08h", rg_serial_num, x.pc, x.orig_inst,
+		    "   iType:", fshow (x.iType), "    [doCommitSystemInst]");
+	end
 
         // we claim a phy reg for every inst, so commit its renaming
         regRenamingTable.commit[0].commit;
@@ -859,12 +859,12 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
 `ifdef INCLUDE_TANDEM_VERIF
             Data data_warl_xformed = csrf.warl_xform (csr_idx, csr_data);
-            x.ppc_vaddr_csrData = tagged CSRData data_warl_xformed;
+	    x.ppc_vaddr_csrData = tagged CSRData data_warl_xformed;
 
-            if (x.will_dirty_fpu_state) begin
-               Data old_mstatus = csrf.rd (CSRmstatus);
-               new_mstatus = { 1'b1, old_mstatus [62:15], 2'b11, old_mstatus [12:0] };
-            end
+	    if (x.will_dirty_fpu_state) begin
+	       Data old_mstatus = csrf.rd (CSRmstatus);
+	       new_mstatus = { 1'b1, old_mstatus [62:15], 2'b11, old_mstatus [12:0] };
+	    end
 `endif
 
             // check if satp is modified or not
@@ -885,7 +885,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
            next_pc = ret_updates.new_pc;
            Scr_RET_Updates scr_ret_updates <- scaprf.sret;
 `ifdef INCLUDE_TANDEM_VERIF
-                 m_ret_updates = tagged Valid ret_updates;
+      	   m_ret_updates = tagged Valid ret_updates;
 `endif
         end
         else if(x.iType == Mret) begin
@@ -910,8 +910,8 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
 `ifdef INCLUDE_TANDEM_VERIF
         fa_to_TV (way0, rg_serial_num,
-                  tagged Invalid,
-                  x, no_fflags, new_mstatus, no_trap_updates, m_ret_updates);
+		  tagged Invalid,
+		  x, no_fflags, new_mstatus, no_trap_updates, m_ret_updates);
 `endif
         rg_serial_num <= rg_serial_num + 1;
 
@@ -1056,28 +1056,28 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                     whichTrace = whichTrace + 1;
 `endif
 
-                    if (verbosity >= 1) begin
-                       $display("instret:%0d  PC:0x%0h  instr:0x%08h", rg_serial_num + instret, x.pc, x.orig_inst,
-                                "   iType:", fshow (x.iType), "    [doCommitNormalInst [%0d]]", i);
-                    end
+		    if (verbosity >= 1) begin
+		       $display("instret:%0d  PC:0x%0h  instr:0x%08h", rg_serial_num + instret, x.pc, x.orig_inst,
+				"   iType:", fshow (x.iType), "    [doCommitNormalInst [%0d]]", i);
+		    end
 
 `ifdef INCLUDE_TANDEM_VERIF
-                   Bool init_for_way0 = (i == 0);
-                   match {. new_fflags, .new_mstatus} = csrf.fpuInst_csr_updates (x.fflags,
-                                                                                  init_for_way0,
-                                                                                  po_fflags,
-                                                                                  po_mstatus);
-                   po_fflags  = new_fflags;
-                   po_mstatus = new_mstatus;
+		   Bool init_for_way0 = (i == 0);
+		   match {. new_fflags, .new_mstatus} = csrf.fpuInst_csr_updates (x.fflags,
+										  init_for_way0,
+										  po_fflags,
+										  po_mstatus);
+		   po_fflags  = new_fflags;
+		   po_mstatus = new_mstatus;
 
-                   fa_to_TV (i, rg_serial_num + instret,
-                             tagged Invalid,
-                             x,
-                             po_fflags,
-                             po_mstatus,
-                             no_trap_updates, no_ret_updates);
+		   fa_to_TV (i, rg_serial_num + instret,
+			     tagged Invalid,
+			     x,
+			     po_fflags,
+			     po_mstatus,
+			     no_trap_updates, no_ret_updates);
 `endif
-                    instret = instret + 1;
+		    instret = instret + 1;
 
                     // inst can be committed, deq it
                     rob.deqPort[i].deq;
@@ -1248,7 +1248,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
    method Action debug_resume () if (rg_run_state == RUN_STATE_DEBUGGER_HALTED);
       rg_run_state <= RUN_STATE_RUNNING;
       if (verbosity >= 2)
-         $display ("%0d: %m.commitStage.debug_resume", cur_cycle);
+	 $display ("%0d: %m.commitStage.debug_resume", cur_cycle);
    endmethod
 `endif
 
