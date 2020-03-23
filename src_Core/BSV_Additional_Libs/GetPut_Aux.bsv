@@ -26,26 +26,26 @@ endfunction
 // 'put' is always enabled and just discards its argument.
 
 Get #(t) getstub = interface Get;
-		      method ActionValue #(t) get () if (False);
-			 return ?;
-		      endmethod
-		   endinterface;
+                      method ActionValue #(t) get () if (False);
+                         return ?;
+                      endmethod
+                   endinterface;
 
 Put #(t) putstub = interface Put;
-		      method Action put (t x) if (True);
-			 noAction;
-		      endmethod
-		   endinterface;
+                      method Action put (t x) if (True);
+                         noAction;
+                      endmethod
+                   endinterface;
 
 Client #(t1,t2) client_stub = interface Client;
-				 interface request  = getstub;
-				 interface response = putstub;
-			      endinterface;
+                                 interface request  = getstub;
+                                 interface response = putstub;
+                              endinterface;
 
 Server #(t1,t2) server_stub = interface Server;
-				 interface request  = putstub;
-				 interface response = getstub;
-			      endinterface;
+                                 interface request  = putstub;
+                                 interface response = getstub;
+                              endinterface;
 
 // ================================================================
 // For debugging, a convenience function to display full/empty status of a FIFO
@@ -96,30 +96,30 @@ endmodule
 //     dequeue side: never ready
 
 FIFOF #(t) dummy_FIFOF = interface FIFOF;
-			    method Action enq (x) if (False);
-			       noAction;
-			    endmethod
+                            method Action enq (x) if (False);
+                               noAction;
+                            endmethod
 
-			    method notFull;
-			       return False;
-			    endmethod
+                            method notFull;
+                               return False;
+                            endmethod
 
-			    method first () if (False);
-			       return ?;
-			    endmethod
+                            method first () if (False);
+                               return ?;
+                            endmethod
 
-			    method Action deq () if (False);
-			       noAction;
-			    endmethod
+                            method Action deq () if (False);
+                               noAction;
+                            endmethod
 
-			    method notEmpty;
-			       return False;
-			    endmethod
+                            method notEmpty;
+                               return False;
+                            endmethod
 
-			    method Action clear;
-			       noAction;
-			    endmethod
-			 endinterface;
+                            method Action clear;
+                               noAction;
+                            endmethod
+                         endinterface;
 
 // ================================================================
 

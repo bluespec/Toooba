@@ -116,7 +116,7 @@ module mkIPRqMshrSafe(
         initIdx <= initIdx + 1;
         if(initIdx == fromInteger(valueOf(pRqNum) - 1)) begin
             inited <= True;
-	   if (verbose)
+           if (verbose)
             $display("%t IPRqMshrSafe %m: init empty entry done", $time);
         end
     endrule

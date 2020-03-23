@@ -234,28 +234,28 @@ deriving (FShow, Bits);
 function Decoded_Instr fv_decode (Instr instr);
    return Decoded_Instr {opcode:    instr_opcode (instr),
 
-			 rd:        instr_rd       (instr),
-			 rs1:       instr_rs1      (instr),
-			 rs2:       instr_rs2      (instr),
-			 rs3:       instr_rs3      (instr),
-			 csr:       instr_csr      (instr),
+                         rd:        instr_rd       (instr),
+                         rs1:       instr_rs1      (instr),
+                         rs2:       instr_rs2      (instr),
+                         rs3:       instr_rs3      (instr),
+                         csr:       instr_csr      (instr),
 
-			 funct3:    instr_funct3   (instr),
-			 funct5:    instr_funct5   (instr),
-			 funct7:    instr_funct7   (instr),
-			 funct10:   instr_funct10  (instr),
+                         funct3:    instr_funct3   (instr),
+                         funct5:    instr_funct5   (instr),
+                         funct7:    instr_funct7   (instr),
+                         funct10:   instr_funct10  (instr),
 
-			 imm12_I:   instr_I_imm12  (instr),
-			 imm12_S:   instr_S_imm12  (instr),
-			 imm13_SB:  instr_SB_imm13 (instr),
-			 imm20_U:   instr_U_imm20  (instr),
-			 imm21_UJ:  instr_UJ_imm21 (instr),
+                         imm12_I:   instr_I_imm12  (instr),
+                         imm12_S:   instr_S_imm12  (instr),
+                         imm13_SB:  instr_SB_imm13 (instr),
+                         imm20_U:   instr_U_imm20  (instr),
+                         imm21_UJ:  instr_UJ_imm21 (instr),
 
-			 pred:      instr_pred     (instr),
-			 succ:      instr_succ     (instr),
+                         pred:      instr_pred     (instr),
+                         succ:      instr_succ     (instr),
 
-			 aqrl:      instr_aqrl     (instr)
-			 };
+                         aqrl:      instr_aqrl     (instr)
+                         };
 endfunction
 
 // Decodes if we need to read the GPR register file. This step becomes necessary
@@ -269,7 +269,7 @@ endfunction
 //    if (di.opcode != op_FP) begin
 //       return (tuple2 (False, True));   // Regular op with GPR read
 //    end
-// 
+//
 //    // This is an FP operation. The following f5 values would work for F and
 //    // D subsets
 //    else begin
@@ -379,9 +379,9 @@ deriving (Eq, Bits, FShow);
 // Data sizes for LOAD/STORE
 
 typedef enum {BITS8,
-	      BITS16,
-	      BITS32,
-	      BITS64    // Even in RV32, to allow for Double (floating point)
+              BITS16,
+              BITS32,
+              BITS64    // Even in RV32, to allow for Double (floating point)
    } Mem_Data_Size
 deriving (Eq, Bits, FShow);
 
@@ -443,23 +443,23 @@ deriving (FShow);
 instance Bits #(Fence_Ordering, 8);
    function Bit #(8) pack (Fence_Ordering fo);
       return {pack (fo.pi),
-	      pack (fo.po),
-	      pack (fo.pr),
-	      pack (fo.pw),
-	      pack (fo.si),
-	      pack (fo.so),
-	      pack (fo.sr),
-	      pack (fo.sw) };
+              pack (fo.po),
+              pack (fo.pr),
+              pack (fo.pw),
+              pack (fo.si),
+              pack (fo.so),
+              pack (fo.sr),
+              pack (fo.sw) };
    endfunction
    function Fence_Ordering unpack (Bit #(8) b8);
       return Fence_Ordering {pi: unpack (b8 [7]),
-			     po: unpack (b8 [6]),
-			     pr: unpack (b8 [5]),
-			     pw: unpack (b8 [4]),
-			     si: unpack (b8 [3]),
-			     so: unpack (b8 [2]),
-			     sr: unpack (b8 [1]),
-			     sw: unpack (b8 [0]) };
+                             po: unpack (b8 [6]),
+                             pr: unpack (b8 [5]),
+                             pw: unpack (b8 [4]),
+                             si: unpack (b8 [3]),
+                             so: unpack (b8 [2]),
+                             sr: unpack (b8 [1]),
+                             sw: unpack (b8 [0]) };
    endfunction
 endinstance
 
@@ -613,10 +613,10 @@ Bit #(10) f10_REMUW  = 10'b000_0001_111;
 
 function Bool is_OP_32_MUL_DIV_REM (Bit #(10) f10);
    return (   (f10 == f10_MULW)
-	   || (f10 == f10_DIVW)
-	   || (f10 == f10_DIVUW)
-	   || (f10 == f10_REMW)
-	   || (f10 == f10_REMUW));
+           || (f10 == f10_DIVW)
+           || (f10 == f10_DIVUW)
+           || (f10 == f10_REMW)
+           || (f10 == f10_REMUW));
 endfunction
 
 // ================================================================
@@ -802,15 +802,15 @@ endfunction
 
 // Check if a rounding mode value in the FCSR.FRM is valid
 function Bool fv_fcsr_frm_valid (Bit #(3) frm);
-   return (   (frm != 3'b101) 
+   return (   (frm != 3'b101)
            && (frm != 3'b110)
            && (frm != 3'b111)
           );
-endfunction 
+endfunction
 
 // Check if a rounding mode value in the instr is valid
 function Bool fv_inst_frm_valid (Bit #(3) frm);
-   return (   (frm != 3'b101) 
+   return (   (frm != 3'b101)
            && (frm != 3'b110)
           );
 endfunction
@@ -841,12 +841,12 @@ function Bool fv_is_fp_instr_legal (
       return (f2 == f2_S);                   // Only SP is legal
 `endif
    else
-      if (    (f7 == f7_FADD_S)  
-          ||  (f7 == f7_FSUB_S)  
-          ||  (f7 == f7_FMUL_S)  
+      if (    (f7 == f7_FADD_S)
+          ||  (f7 == f7_FSUB_S)
+          ||  (f7 == f7_FMUL_S)
 `ifdef ISA_FD_DIV
-          ||  (f7 == f7_FDIV_S)  
-          ||  (f7 == f7_FSQRT_S) 
+          ||  (f7 == f7_FDIV_S)
+          ||  (f7 == f7_FSQRT_S)
 `endif
           || ((f7 == f7_FSGNJ_S)  && ( rm == 0))
           || ((f7 == f7_FSGNJ_S)  && ( rm == 1))
@@ -856,10 +856,10 @@ function Bool fv_is_fp_instr_legal (
 `ifdef RV64
           || ((f7 == f7_FCVT_L_S) && (rs2 == 2))
           || ((f7 == f7_FCVT_LU_S)&& (rs2 == 3))
-`endif                            
+`endif
           || ((f7 == f7_FCVT_S_W) && (rs2 == 0))
-          || ((f7 == f7_FCVT_S_WU)&& (rs2 == 1))             
-`ifdef RV64                       
+          || ((f7 == f7_FCVT_S_WU)&& (rs2 == 1))
+`ifdef RV64
           || ((f7 == f7_FCVT_S_L) && (rs2 == 2))
           || ((f7 == f7_FCVT_S_LU)&& (rs2 == 3))
 `endif
@@ -872,12 +872,12 @@ function Bool fv_is_fp_instr_legal (
           || ((f7 == f7_FMV_W_X)  && ( rm == 0))
           || ((f7 == f7_FCLASS_S) && ( rm == 1))
 `ifdef ISA_D
-          ||  (f7 == f7_FADD_D)  
-          ||  (f7 == f7_FSUB_D)  
-          ||  (f7 == f7_FMUL_D)  
+          ||  (f7 == f7_FADD_D)
+          ||  (f7 == f7_FSUB_D)
+          ||  (f7 == f7_FMUL_D)
 `ifdef ISA_FD_DIV
-          ||  (f7 == f7_FDIV_D)  
-          ||  (f7 == f7_FSQRT_D) 
+          ||  (f7 == f7_FDIV_D)
+          ||  (f7 == f7_FSQRT_D)
 `endif
           || ((f7 == f7_FSGNJ_D)  && ( rm == 0))
           || ((f7 == f7_FSGNJ_D)  && ( rm == 1))
@@ -887,10 +887,10 @@ function Bool fv_is_fp_instr_legal (
 `ifdef RV64
           || ((f7 == f7_FCVT_L_D) && (rs2 == 2))
           || ((f7 == f7_FCVT_LU_D)&& (rs2 == 3))
-`endif                            
+`endif
           || ((f7 == f7_FCVT_D_W) && (rs2 == 0))
-          || ((f7 == f7_FCVT_D_WU)&& (rs2 == 1))             
-`ifdef RV64                       
+          || ((f7 == f7_FCVT_D_WU)&& (rs2 == 1))
+`ifdef RV64
           || ((f7 == f7_FCVT_D_L) && (rs2 == 2))
           || ((f7 == f7_FCVT_D_LU)&& (rs2 == 3))
 `endif
@@ -984,7 +984,7 @@ endfunction
 
 function Bool f3_is_CSRR_S_or_C (Bit #(3) f3);
    return ((f3 == f3_CSRRS) || (f3 == f3_CSRRSI) ||
-	   (f3 == f3_CSRRC) || (f3 == f3_CSRRCI));
+           (f3 == f3_CSRRC) || (f3 == f3_CSRRCI));
 endfunction
 
 // ================================================================
@@ -1001,11 +1001,11 @@ Priv_Mode         m_Priv_Mode = 2'b11;
 
 function Fmt fshow_Priv_Mode (Priv_Mode pm);
    return case (pm)
-	     u_Priv_Mode: $format ("U");
-	     s_Priv_Mode: $format ("S");
-	     m_Priv_Mode: $format ("M");
-	     default: $format ("RESERVED");
-	  endcase;
+             u_Priv_Mode: $format ("U");
+             s_Priv_Mode: $format ("S");
+             m_Priv_Mode: $format ("M");
+             default: $format ("RESERVED");
+          endcase;
 endfunction
 
 // ================================================================
@@ -1106,7 +1106,7 @@ CSR_Addr   csr_addr_hpmcounter29h  = 12'hC9D;    // Upper 32 bits of performance
 CSR_Addr   csr_addr_hpmcounter30h  = 12'hC9E;    // Upper 32 bits of performance-monitoring counter
 CSR_Addr   csr_addr_hpmcounter31h  = 12'hC9F;    // Upper 32 bits of performance-monitoring counter
 
-// Information from the CSR on a new trap. 
+// Information from the CSR on a new trap.
 typedef struct {
    Addr        pc;
    WordXL      mstatus;

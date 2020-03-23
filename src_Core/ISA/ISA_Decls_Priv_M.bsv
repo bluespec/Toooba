@@ -201,56 +201,56 @@ Bit #(2) misa_mxl_128   = 3;
 
 function WordXL misa_to_word (MISA ms);
    return {ms.mxl,
-	   0,        // expands appropriately for RV32 and RV64
-	   ms.z, ms.y,
-	   ms.x, ms.w, ms.v, ms.u, ms.t, ms.s, ms.r, ms.q,
-	   ms.p, ms.o, ms.n, ms.m, ms.l, ms.k, ms.j, ms.i,
-	   ms.h, ms.g, ms.f, ms.e, ms.d, ms.c, ms.b, ms.a};
+           0,        // expands appropriately for RV32 and RV64
+           ms.z, ms.y,
+           ms.x, ms.w, ms.v, ms.u, ms.t, ms.s, ms.r, ms.q,
+           ms.p, ms.o, ms.n, ms.m, ms.l, ms.k, ms.j, ms.i,
+           ms.h, ms.g, ms.f, ms.e, ms.d, ms.c, ms.b, ms.a};
 endfunction
 
 function MISA word_to_misa (WordXL x);
    return MISA {mxl: x [xlen-1:xlen-2],
-		z: x [25], y: x [24],
-		x: x [23], w: x [22], v: x [21], u: x [20], t: x [19], s: x [18], r: x [17], q: x [16],
-		p: x [15], o: x [14], n: x [13], m: x [12], l: x [11], k: x [10], j: x  [9], i: x  [8],
-		h: x  [7], g: x  [6], f: x  [5], e: x  [4], d: x  [3], c: x  [2], b: x  [1], a: x  [0]};
+                z: x [25], y: x [24],
+                x: x [23], w: x [22], v: x [21], u: x [20], t: x [19], s: x [18], r: x [17], q: x [16],
+                p: x [15], o: x [14], n: x [13], m: x [12], l: x [11], k: x [10], j: x  [9], i: x  [8],
+                h: x  [7], g: x  [6], f: x  [5], e: x  [4], d: x  [3], c: x  [2], b: x  [1], a: x  [0]};
 endfunction
 
 instance FShow #(MISA);
    function Fmt fshow (MISA misa);
       let fmt_mxl = case (misa.mxl)
-			1: $format ("mxl 32");
-			2: $format ("mxl 64");
-			3: $format ("mxl 128");
-			default: $format ("mxl unknown %0d", misa.mxl);
-		     endcase;
+                        1: $format ("mxl 32");
+                        2: $format ("mxl 64");
+                        3: $format ("mxl 128");
+                        default: $format ("mxl unknown %0d", misa.mxl);
+                     endcase;
       return (  fmt_mxl
-	      + $format ((misa.z == 1'b1) ? "Z" : "")
-	      + $format ((misa.y == 1'b1) ? "Y" : "")
-	      + $format ((misa.x == 1'b1) ? "X" : "")
-	      + $format ((misa.w == 1'b1) ? "W" : "")
-	      + $format ((misa.v == 1'b1) ? "V" : "")
-	      + $format ((misa.u == 1'b1) ? "U" : "")
-	      + $format ((misa.t == 1'b1) ? "T" : "")
-	      + $format ((misa.s == 1'b1) ? "S" : "")
-	      + $format ((misa.r == 1'b1) ? "R" : "")
-	      + $format ((misa.q == 1'b1) ? "Q" : "")
-	      + $format ((misa.p == 1'b1) ? "P" : "")
-	      + $format ((misa.o == 1'b1) ? "O" : "")
-	      + $format ((misa.n == 1'b1) ? "N" : "")
-	      + $format ((misa.m == 1'b1) ? "M" : "")
-	      + $format ((misa.l == 1'b1) ? "L" : "")
-	      + $format ((misa.k == 1'b1) ? "K" : "")
-	      + $format ((misa.j == 1'b1) ? "J" : "")
-	      + $format ((misa.i == 1'b1) ? "I" : "")
-	      + $format ((misa.h == 1'b1) ? "H" : "")
-	      + $format ((misa.g == 1'b1) ? "G" : "")
-	      + $format ((misa.f == 1'b1) ? "F" : "")
-	      + $format ((misa.d == 1'b1) ? "E" : "")
-	      + $format ((misa.d == 1'b1) ? "D" : "")
-	      + $format ((misa.c == 1'b1) ? "C" : "")
-	      + $format ((misa.b == 1'b1) ? "B" : "")
-	      + $format ((misa.a == 1'b1) ? "A" : ""));
+              + $format ((misa.z == 1'b1) ? "Z" : "")
+              + $format ((misa.y == 1'b1) ? "Y" : "")
+              + $format ((misa.x == 1'b1) ? "X" : "")
+              + $format ((misa.w == 1'b1) ? "W" : "")
+              + $format ((misa.v == 1'b1) ? "V" : "")
+              + $format ((misa.u == 1'b1) ? "U" : "")
+              + $format ((misa.t == 1'b1) ? "T" : "")
+              + $format ((misa.s == 1'b1) ? "S" : "")
+              + $format ((misa.r == 1'b1) ? "R" : "")
+              + $format ((misa.q == 1'b1) ? "Q" : "")
+              + $format ((misa.p == 1'b1) ? "P" : "")
+              + $format ((misa.o == 1'b1) ? "O" : "")
+              + $format ((misa.n == 1'b1) ? "N" : "")
+              + $format ((misa.m == 1'b1) ? "M" : "")
+              + $format ((misa.l == 1'b1) ? "L" : "")
+              + $format ((misa.k == 1'b1) ? "K" : "")
+              + $format ((misa.j == 1'b1) ? "J" : "")
+              + $format ((misa.i == 1'b1) ? "I" : "")
+              + $format ((misa.h == 1'b1) ? "H" : "")
+              + $format ((misa.g == 1'b1) ? "G" : "")
+              + $format ((misa.f == 1'b1) ? "F" : "")
+              + $format ((misa.d == 1'b1) ? "E" : "")
+              + $format ((misa.d == 1'b1) ? "D" : "")
+              + $format ((misa.c == 1'b1) ? "C" : "")
+              + $format ((misa.b == 1'b1) ? "B" : "")
+              + $format ((misa.a == 1'b1) ? "A" : ""));
    endfunction
 endinstance
 
@@ -314,43 +314,43 @@ function Fmt fshow_mstatus (MISA  misa, WordXL  mstatus);
    Bit #(2) mpp = fv_get_bits (mstatus, fromInteger (mstatus_mpp_bitpos));
 
    return (  $format ("MStatus{")
-	   + $format ("sd:%0d", fv_mstatus_sd (mstatus))
+           + $format ("sd:%0d", fv_mstatus_sd (mstatus))
 
-	   + ((misa.mxl == misa_mxl_64) ? $format (" sxl:%0d uxl:%0d", sxl, uxl) : $format (""))
+           + ((misa.mxl == misa_mxl_64) ? $format (" sxl:%0d uxl:%0d", sxl, uxl) : $format (""))
 
-	   + $format (" tsr:%0d",  mstatus [mstatus_tsr_bitpos])
-	   + $format (" tw:%0d",   mstatus [mstatus_tw_bitpos])
-	   + $format (" tvm:%0d",  mstatus [mstatus_tvm_bitpos])
-	   + $format (" mxr:%0d",  mstatus [mstatus_mxr_bitpos])
-	   + $format (" sum:%0d",  mstatus [mstatus_sum_bitpos])
-	   + $format (" mprv:%0d", mstatus [mstatus_mprv_bitpos])
+           + $format (" tsr:%0d",  mstatus [mstatus_tsr_bitpos])
+           + $format (" tw:%0d",   mstatus [mstatus_tw_bitpos])
+           + $format (" tvm:%0d",  mstatus [mstatus_tvm_bitpos])
+           + $format (" mxr:%0d",  mstatus [mstatus_mxr_bitpos])
+           + $format (" sum:%0d",  mstatus [mstatus_sum_bitpos])
+           + $format (" mprv:%0d", mstatus [mstatus_mprv_bitpos])
 
-	   + $format (" xs:%0d",   xs)
-	   + $format (" fs:%0d",   fs)
+           + $format (" xs:%0d",   xs)
+           + $format (" fs:%0d",   fs)
 
-	   + $format (" mpp:%0d",  mpp)
-	   + $format (" spp:%0d",  mstatus [mstatus_spp_bitpos])
+           + $format (" mpp:%0d",  mpp)
+           + $format (" spp:%0d",  mstatus [mstatus_spp_bitpos])
 
-	   + $format (" pies:%0d_%0d%0d",
-		      mstatus [mstatus_mpie_bitpos], mstatus [mstatus_spie_bitpos], mstatus [mstatus_upie_bitpos])
+           + $format (" pies:%0d_%0d%0d",
+                      mstatus [mstatus_mpie_bitpos], mstatus [mstatus_spie_bitpos], mstatus [mstatus_upie_bitpos])
 
-	   + $format (" ies:%0d_%0d%0d",
-		      mstatus [mstatus_mie_bitpos], mstatus [mstatus_sie_bitpos], mstatus [mstatus_uie_bitpos])
-	   + $format ("}")
-	   );
+           + $format (" ies:%0d_%0d%0d",
+                      mstatus [mstatus_mie_bitpos], mstatus [mstatus_sie_bitpos], mstatus [mstatus_uie_bitpos])
+           + $format ("}")
+           );
 endfunction
 
 // ----------------
 // Help functions to manipulate mstatus on traps and trap-returns
 
 function Priv_Mode fv_new_priv_on_exception (MISA       misa,
-					     Priv_Mode  from_priv,
-					     Bool       interrupt,
-					     Exc_Code   exc_code,
-					     Bit #(16)  medeleg,
-					     Bit #(12)  mideleg,
-					     Bit #(16)  sedeleg,
-					     Bit #(12)  sideleg);
+                                             Priv_Mode  from_priv,
+                                             Bool       interrupt,
+                                             Exc_Code   exc_code,
+                                             Bit #(16)  medeleg,
+                                             Bit #(12)  mideleg,
+                                             Bit #(16)  sedeleg,
+                                             Bit #(12)  sideleg);
    Priv_Mode to_priv = m_Priv_Mode;
    Bit #(1) deleg_bit = 1'b0;
 
@@ -358,39 +358,39 @@ function Priv_Mode fv_new_priv_on_exception (MISA       misa,
    if (from_priv < m_Priv_Mode) begin
       // If S is supported
       if (misa.s == 1'b1) begin
-	 // Look in medeleg/mideleg for the cause bit; if set, delegate.
-	 if (interrupt)
-	    deleg_bit = mideleg [exc_code];
-	 else
-	    deleg_bit = medeleg [exc_code];
-	 if (deleg_bit == 1'b1) begin
-	    // If the current priv mode is S, then delegate to S.
-	    to_priv = s_Priv_Mode;
-	    // If the current priv mode is U, and user mode traps are supported,
-	    // then consult sedeleg/sideleg to determine if delegated to U mode.
-	    if ((from_priv == u_Priv_Mode) && (misa.n == 1'b1)) begin
-	       if (interrupt)
-		  deleg_bit = sideleg [exc_code];
-	       else
-		  deleg_bit = sedeleg [exc_code];
-	       if (deleg_bit == 1'b1)
-	          to_priv = u_Priv_Mode;
-	    end
-	 end
+         // Look in medeleg/mideleg for the cause bit; if set, delegate.
+         if (interrupt)
+            deleg_bit = mideleg [exc_code];
+         else
+            deleg_bit = medeleg [exc_code];
+         if (deleg_bit == 1'b1) begin
+            // If the current priv mode is S, then delegate to S.
+            to_priv = s_Priv_Mode;
+            // If the current priv mode is U, and user mode traps are supported,
+            // then consult sedeleg/sideleg to determine if delegated to U mode.
+            if ((from_priv == u_Priv_Mode) && (misa.n == 1'b1)) begin
+               if (interrupt)
+                  deleg_bit = sideleg [exc_code];
+               else
+                  deleg_bit = sedeleg [exc_code];
+               if (deleg_bit == 1'b1)
+                  to_priv = u_Priv_Mode;
+            end
+         end
       end
       else begin
-	 // S is not supported
-	 // If user mode traps are supported,
-	 // then consult medele/mideleg to determine if delegated to U mode.
-	 if (misa.n == 1'b1) begin
-	    // Look in medeleg/mideleg for the cause bit; if set, delegate.
-	    if (interrupt)
-	       deleg_bit = mideleg [exc_code];
-	    else
-	       deleg_bit = medeleg [exc_code];
-	    if (deleg_bit == 1'b1)
-	       to_priv = u_Priv_Mode;
-	 end
+         // S is not supported
+         // If user mode traps are supported,
+         // then consult medele/mideleg to determine if delegated to U mode.
+         if (misa.n == 1'b1) begin
+            // Look in medeleg/mideleg for the cause bit; if set, delegate.
+            if (interrupt)
+               deleg_bit = mideleg [exc_code];
+            else
+               deleg_bit = medeleg [exc_code];
+            if (deleg_bit == 1'b1)
+               to_priv = u_Priv_Mode;
+         end
       end
    end
 
@@ -407,14 +407,14 @@ function WordXL fv_new_mstatus_on_exception (WordXL mstatus, Priv_Mode from_y, P
 
    // xPP = y        Assert: (to_x == m_Priv_Mode) || (to_x == s_Priv_Mode)
    mstatus = (  (to_x == m_Priv_Mode)
-	      ? fv_assign_bits (mstatus, fromInteger (mstatus_mpp_bitpos), from_y)
-	      : fv_assign_bit (mstatus, fromInteger (mstatus_spp_bitpos), from_y [0]));
+              ? fv_assign_bits (mstatus, fromInteger (mstatus_mpp_bitpos), from_y)
+              : fv_assign_bit (mstatus, fromInteger (mstatus_spp_bitpos), from_y [0]));
    return mstatus;
 endfunction
 
 function Tuple2 #(WordXL, Priv_Mode) fv_new_mstatus_on_ret (MISA       misa,
-							    WordXL     mstatus,
-							    Priv_Mode  from_x);
+                                                            WordXL     mstatus,
+                                                            Priv_Mode  from_x);
    Bit #(6) ie_from_x  = extend (from_x);
    Bit #(6) pie_from_x = fromInteger (mstatus_upie_bitpos) + extend (from_x);
 
@@ -478,20 +478,20 @@ deriving (Bits, FShow);
 function WordXL mcounteren_to_word (MCounteren mc);
    return {0,
            mc.ir,
-	   mc.tm,
-	   mc.cy};
+           mc.tm,
+           mc.cy};
 endfunction
 
 function MCounteren word_to_mcounteren (WordXL x);
    return MCounteren {ir: x[2],
                       tm: x[1],
-		      cy: x[0]};
+                      cy: x[0]};
 endfunction
 
 function MCounteren mcounteren_reset_value;
    return MCounteren {ir: 1'b0,
                       tm: 1'b0,
-		      cy: 1'b0};
+                      cy: 1'b0};
 endfunction
 
 // ================================================================
@@ -521,9 +521,9 @@ deriving (Bits);
 instance FShow #(MCause);
    function Fmt fshow (MCause mc);
       if (mc.interrupt == 1)
-	 return fshow_interrupt_Exc_Code (mc.exc_code);
+         return fshow_interrupt_Exc_Code (mc.exc_code);
       else
-	 return fshow_trap_Exc_Code (mc.exc_code);
+         return fshow_trap_Exc_Code (mc.exc_code);
    endfunction
 endinstance
 
@@ -533,7 +533,7 @@ endfunction
 
 function MCause word_to_mcause (WordXL x);
    return MCause {interrupt: msb (x),
-		  exc_code:  truncate (x)};
+                  exc_code:  truncate (x)};
 endfunction
 
 // Exception Codes in mcause
@@ -583,47 +583,47 @@ Exc_Code  exc_code_STORE_AMO_PAGE_FAULT          = 15;
 
 function Fmt fshow_interrupt_Exc_Code (Exc_Code exc_code);
    return case (exc_code)
-	     exc_code_USER_SW_INTERRUPT:             $format ("USER_SW_INTERRUPT");
-	     exc_code_SUPERVISOR_SW_INTERRUPT:       $format ("SUPERVISOR_SW_INTERRUPT");
-	     exc_code_HYPERVISOR_SW_INTERRUPT:       $format ("HYPERVISOR_SW_INTERRUPT");
-	     exc_code_MACHINE_SW_INTERRUPT:          $format ("MACHINE_SW_INTERRUPT");
+             exc_code_USER_SW_INTERRUPT:             $format ("USER_SW_INTERRUPT");
+             exc_code_SUPERVISOR_SW_INTERRUPT:       $format ("SUPERVISOR_SW_INTERRUPT");
+             exc_code_HYPERVISOR_SW_INTERRUPT:       $format ("HYPERVISOR_SW_INTERRUPT");
+             exc_code_MACHINE_SW_INTERRUPT:          $format ("MACHINE_SW_INTERRUPT");
 
-	     exc_code_USER_TIMER_INTERRUPT:          $format ("USER_TIMER_INTERRUPT");
-	     exc_code_SUPERVISOR_TIMER_INTERRUPT:    $format ("SUPERVISOR_TIMER_INTERRUPT");
-	     exc_code_HYPERVISOR_TIMER_INTERRUPT:    $format ("HYPERVISOR_TIMER_INTERRUPT");
-	     exc_code_MACHINE_TIMER_INTERRUPT:       $format ("MACHINE_TIMER_INTERRUPT");
+             exc_code_USER_TIMER_INTERRUPT:          $format ("USER_TIMER_INTERRUPT");
+             exc_code_SUPERVISOR_TIMER_INTERRUPT:    $format ("SUPERVISOR_TIMER_INTERRUPT");
+             exc_code_HYPERVISOR_TIMER_INTERRUPT:    $format ("HYPERVISOR_TIMER_INTERRUPT");
+             exc_code_MACHINE_TIMER_INTERRUPT:       $format ("MACHINE_TIMER_INTERRUPT");
 
-	     exc_code_USER_EXTERNAL_INTERRUPT:       $format ("USER_EXTERNAL_INTERRUPT");
-	     exc_code_SUPERVISOR_EXTERNAL_INTERRUPT: $format ("SUPERVISOR_EXTERNAL_INTERRUPT");
-	     exc_code_HYPERVISOR_EXTERNAL_INTERRUPT: $format ("HYPERVISOR_EXTERNAL_INTERRUPT");
-	     exc_code_MACHINE_EXTERNAL_INTERRUPT:    $format ("MACHINE_EXTERNAL_INTERRUPT");
-	     default:                                $format ("unknown interrupt Exc_Code %d", exc_code);
-	  endcase;
+             exc_code_USER_EXTERNAL_INTERRUPT:       $format ("USER_EXTERNAL_INTERRUPT");
+             exc_code_SUPERVISOR_EXTERNAL_INTERRUPT: $format ("SUPERVISOR_EXTERNAL_INTERRUPT");
+             exc_code_HYPERVISOR_EXTERNAL_INTERRUPT: $format ("HYPERVISOR_EXTERNAL_INTERRUPT");
+             exc_code_MACHINE_EXTERNAL_INTERRUPT:    $format ("MACHINE_EXTERNAL_INTERRUPT");
+             default:                                $format ("unknown interrupt Exc_Code %d", exc_code);
+          endcase;
 endfunction
 
 function Fmt fshow_trap_Exc_Code (Exc_Code exc_code);
    return case (exc_code)
-	     exc_code_INSTR_ADDR_MISALIGNED:      $format ("INSTRUCTION_ADDR_MISALIGNED");
-	     exc_code_INSTR_ACCESS_FAULT:         $format ("INSTRUCTION_ACCESS_FAULT");
-	     exc_code_ILLEGAL_INSTRUCTION:        $format ("ILLEGAL_INSTRUCTION");
-	     exc_code_BREAKPOINT:                 $format ("BREAKPOINT");
+             exc_code_INSTR_ADDR_MISALIGNED:      $format ("INSTRUCTION_ADDR_MISALIGNED");
+             exc_code_INSTR_ACCESS_FAULT:         $format ("INSTRUCTION_ACCESS_FAULT");
+             exc_code_ILLEGAL_INSTRUCTION:        $format ("ILLEGAL_INSTRUCTION");
+             exc_code_BREAKPOINT:                 $format ("BREAKPOINT");
 
-	     exc_code_LOAD_ADDR_MISALIGNED:       $format ("LOAD_ADDR_MISALIGNED");
-	     exc_code_LOAD_ACCESS_FAULT:          $format ("LOAD_ACCESS_FAULT");
+             exc_code_LOAD_ADDR_MISALIGNED:       $format ("LOAD_ADDR_MISALIGNED");
+             exc_code_LOAD_ACCESS_FAULT:          $format ("LOAD_ACCESS_FAULT");
 
-	     exc_code_STORE_AMO_ADDR_MISALIGNED:  $format ("STORE_AMO_ADDR_MISALIGNED");
-	     exc_code_STORE_AMO_ACCESS_FAULT:     $format ("STORE_AMO_ACCESS_FAULT");
+             exc_code_STORE_AMO_ADDR_MISALIGNED:  $format ("STORE_AMO_ADDR_MISALIGNED");
+             exc_code_STORE_AMO_ACCESS_FAULT:     $format ("STORE_AMO_ACCESS_FAULT");
 
-	     exc_code_ECALL_FROM_U:               $format ("ECALL_FROM_U");
-	     exc_code_ECALL_FROM_S:               $format ("ECALL_FROM_S");
-	     exc_code_ECALL_FROM_M:               $format ("ECALL_FROM_M");
+             exc_code_ECALL_FROM_U:               $format ("ECALL_FROM_U");
+             exc_code_ECALL_FROM_S:               $format ("ECALL_FROM_S");
+             exc_code_ECALL_FROM_M:               $format ("ECALL_FROM_M");
 
-	     exc_code_INSTR_PAGE_FAULT:           $format ("INSTRUCTION_PAGE_FAULT");
-	     exc_code_LOAD_PAGE_FAULT:            $format ("LOAD_PAGE_FAULT");
-	     exc_code_STORE_AMO_PAGE_FAULT:       $format ("STORE_AMO_PAGE_FAULT");
+             exc_code_INSTR_PAGE_FAULT:           $format ("INSTRUCTION_PAGE_FAULT");
+             exc_code_LOAD_PAGE_FAULT:            $format ("LOAD_PAGE_FAULT");
+             exc_code_STORE_AMO_PAGE_FAULT:       $format ("STORE_AMO_PAGE_FAULT");
 
-	     default:                             $format ("unknown trap Exc_Code %d", exc_code);
-	  endcase;
+             default:                             $format ("unknown trap Exc_Code %d", exc_code);
+          endcase;
 endfunction
 
 // ================================================================
@@ -632,44 +632,44 @@ endfunction
 // and if so, corresponding exception code
 
 function Maybe #(Exc_Code) fv_interrupt_pending (MISA       misa,
-						 WordXL     mstatus,
-						 WordXL     mip,
-						 WordXL     mie,
-						 Bit #(12)  mideleg,
-						 Bit #(12)  sideleg,
-						 Priv_Mode  cur_priv);
+                                                 WordXL     mstatus,
+                                                 WordXL     mip,
+                                                 WordXL     mie,
+                                                 Bit #(12)  mideleg,
+                                                 Bit #(12)  sideleg,
+                                                 Priv_Mode  cur_priv);
 
    function Maybe #(Exc_Code) fv_interrupt_i_pending (Exc_Code i);
       Bool intr_pending = ((mip [i] == 1) && (mie [i] == 1));
       Priv_Mode handler_priv;
       if (mideleg [i] == 1)
-	 if (misa.u == 1)
-	    if (misa.s == 1)
-	       // System with M, S, U
-	       if (sideleg [i] == 1)
-		  if (misa.n == 1)
-		     // M->S->U delegation
-		     handler_priv = u_Priv_Mode;
-		  else
-		     // Error: SIDELEG [i] should not be 1 if MISA.N is 0
-		     handler_priv = m_Priv_Mode;
-	       else
+         if (misa.u == 1)
+            if (misa.s == 1)
+               // System with M, S, U
+               if (sideleg [i] == 1)
+                  if (misa.n == 1)
+                     // M->S->U delegation
+                     handler_priv = u_Priv_Mode;
+                  else
+                     // Error: SIDELEG [i] should not be 1 if MISA.N is 0
+                     handler_priv = m_Priv_Mode;
+               else
                   // M->S delegation
-		  handler_priv = s_Priv_Mode;
-	    else
-	       // System with M, U
-	       if (misa.n == 1)
-		  // M->U delegation
-		  handler_priv = u_Priv_Mode;
-	       else
-		  // Error: MIDELEG [i] should not be 1 if MISA.N is 0
-		  handler_priv = m_Priv_Mode;
-	 else
-	    // Error: System with M only; MIDELEG [i] should not be 1
-	    handler_priv = m_Priv_Mode;
+                  handler_priv = s_Priv_Mode;
+            else
+               // System with M, U
+               if (misa.n == 1)
+                  // M->U delegation
+                  handler_priv = u_Priv_Mode;
+               else
+                  // Error: MIDELEG [i] should not be 1 if MISA.N is 0
+                  handler_priv = m_Priv_Mode;
+         else
+            // Error: System with M only; MIDELEG [i] should not be 1
+            handler_priv = m_Priv_Mode;
       else
-	 // no delegation
-	 handler_priv = m_Priv_Mode;
+         // no delegation
+         handler_priv = m_Priv_Mode;
 
       Bool xie;
       if (cur_priv == u_Priv_Mode)
@@ -680,10 +680,10 @@ function Maybe #(Exc_Code) fv_interrupt_pending (MISA       misa,
          xie = (mstatus [mstatus_mie_bitpos] == 1);
       else
          // Error: unexpected mode
-	 xie = False;
+         xie = False;
 
       Bool glob_enabled = (   (cur_priv < handler_priv)
-			   || ((cur_priv == handler_priv) && xie));
+                           || ((cur_priv == handler_priv) && xie));
 
       return ((intr_pending && glob_enabled) ? (tagged Valid i) : (tagged Invalid));
    endfunction

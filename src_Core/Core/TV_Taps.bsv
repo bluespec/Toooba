@@ -81,23 +81,23 @@ module mkDM_Mem_Tap (DM_Mem_Tap_IFC);
 
       case (wr_data.wstrb)
 `ifdef FABRIC64
-	 'hFF: begin sh= 0; mask = 'hFFFF_FFFF_FFFF_FFFF; sz=f3_SIZE_D; end
-	 'hF0: begin sh=32; mask =           'hFFFF_FFFF; sz=f3_SIZE_W; end
-	 'hC0: begin sh=48; mask =                'hFFFF; sz=f3_SIZE_H; end
-	 'h30: begin sh=32; mask =                'hFFFF; sz=f3_SIZE_H; end
-	 'h80: begin sh=56; mask =                  'hFF; sz=f3_SIZE_B; end
-	 'h40: begin sh=48; mask =                  'hFF; sz=f3_SIZE_B; end
-	 'h20: begin sh=40; mask =                  'hFF; sz=f3_SIZE_B; end
-	 'h10: begin sh=32; mask =                  'hFF; sz=f3_SIZE_B; end
+         'hFF: begin sh= 0; mask = 'hFFFF_FFFF_FFFF_FFFF; sz=f3_SIZE_D; end
+         'hF0: begin sh=32; mask =           'hFFFF_FFFF; sz=f3_SIZE_W; end
+         'hC0: begin sh=48; mask =                'hFFFF; sz=f3_SIZE_H; end
+         'h30: begin sh=32; mask =                'hFFFF; sz=f3_SIZE_H; end
+         'h80: begin sh=56; mask =                  'hFF; sz=f3_SIZE_B; end
+         'h40: begin sh=48; mask =                  'hFF; sz=f3_SIZE_B; end
+         'h20: begin sh=40; mask =                  'hFF; sz=f3_SIZE_B; end
+         'h10: begin sh=32; mask =                  'hFF; sz=f3_SIZE_B; end
 `endif
-	 'hF:  begin sh= 0; mask =           'hFFFF_FFFF; sz=f3_SIZE_W; end
-	 'hC:  begin sh=16; mask =                'hFFFF; sz=f3_SIZE_H; end
-	 'h3:  begin sh= 0; mask =                'hFFFF; sz=f3_SIZE_H; end
-	 'h8:  begin sh=24; mask =                  'hFF; sz=f3_SIZE_B; end
-	 'h4:  begin sh=16; mask =                  'hFF; sz=f3_SIZE_B; end
-	 'h2:  begin sh= 8; mask =                  'hFF; sz=f3_SIZE_B; end
-	 'h1:  begin sh= 0; mask =                  'hFF; sz=f3_SIZE_B; end
-	 default: dynamicAssert(False, "mkDM_Mem_Tap: unsupported byte enables");
+         'hF:  begin sh= 0; mask =           'hFFFF_FFFF; sz=f3_SIZE_W; end
+         'hC:  begin sh=16; mask =                'hFFFF; sz=f3_SIZE_H; end
+         'h3:  begin sh= 0; mask =                'hFFFF; sz=f3_SIZE_H; end
+         'h8:  begin sh=24; mask =                  'hFF; sz=f3_SIZE_B; end
+         'h4:  begin sh=16; mask =                  'hFF; sz=f3_SIZE_B; end
+         'h2:  begin sh= 8; mask =                  'hFF; sz=f3_SIZE_B; end
+         'h1:  begin sh= 0; mask =                  'hFF; sz=f3_SIZE_B; end
+         default: dynamicAssert(False, "mkDM_Mem_Tap: unsupported byte enables");
       endcase
       paddr = zeroExtend (wr_addr.awaddr);
       stval = ((zeroExtend (wr_data.wdata) >> sh) & mask);
@@ -150,9 +150,9 @@ module mkDM_GPR_Tap (DM_GPR_Tap_IFC);
 
       // Snoop writes and send trace data to TV
       if (req.write) begin
-	 Trace_Data td;
-	 td = mkTrace_GPR_WRITE (req.address, req.data);
-	 f_trace_data.enq (td);
+         Trace_Data td;
+         td = mkTrace_GPR_WRITE (req.address, req.data);
+         f_trace_data.enq (td);
       end
    endrule
 
@@ -192,9 +192,9 @@ module mkDM_FPR_Tap (DM_FPR_Tap_IFC);
 
       // Snoop writes and send trace data to TV
       if (req.write) begin
-	 Trace_Data td;
-	 td = mkTrace_FPR_WRITE (req.address, req.data);
-	 f_trace_data.enq (td);
+         Trace_Data td;
+         td = mkTrace_FPR_WRITE (req.address, req.data);
+         f_trace_data.enq (td);
       end
    endrule
 
@@ -234,8 +234,8 @@ module mkDM_CSR_Tap (DM_CSR_Tap_IFC);
 
       // Snoop writes and send trace data to TV
       if (req.write) begin
-	 Trace_Data td = mkTrace_CSR_WRITE (req.address, req.data);
-	 f_trace_data.enq (td);
+         Trace_Data td = mkTrace_CSR_WRITE (req.address, req.data);
+         f_trace_data.enq (td);
       end
    endrule
 

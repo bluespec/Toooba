@@ -545,7 +545,7 @@ module mkIBank#(
                 doAssert(isValid(cRqEOC), "cRq hit on another cRq, cRqEOC must be true");
                 cRqMshr.pipelineResp.setSucc(fromMaybe(?, cRqEOC), Valid (n));
                 cRqSetDepNoCacheChange;
-	       if (verbose)
+               if (verbose)
                 $display("%t I %m pipelineResp: cRq: own by other cRq ", $time,
                     fshow(cOwner), ", depend on cRq ", fshow(cRqEOC)
                 );
@@ -557,7 +557,7 @@ module mkIBank#(
                     "cRq swapped in by previous cRq, tag must match & cs = S"
                 );
                 // Hit
-	       if (verbose)
+               if (verbose)
                 $display("%t I %m pipelineResp: cRq: own by itself, hit", $time);
                 cRqHit(n, procRq);
             end
@@ -566,7 +566,7 @@ module mkIBank#(
             // cache has no owner, cRq must just go through tag match
             // check for cRqEOC to append to dependency chain
             if(cRqEOC matches tagged Valid .k) begin
-	       if (verbose)
+               if (verbose)
                 $display("%t I %m pipelineResp: cRq: no owner, depend on cRq ", $time, fshow(k));
                 cRqMshr.pipelineResp.setSucc(k, Valid (n));
                 cRqSetDepNoCacheChange;
@@ -574,18 +574,18 @@ module mkIBank#(
             else if(ram.info.cs == I || ram.info.tag == getTag(procRq.addr)) begin
                 // No Replacement necessary
                 if(ram.info.cs > I) begin
-		   if (verbose)
+                   if (verbose)
                     $display("%t I %m pipelineResp: cRq: no owner, hit", $time);
                     cRqHit(n, procRq);
                 end
                 else begin
-		   if (verbose)
+                   if (verbose)
                     $display("%t I %m pipelineResp: cRq: no owner, miss no replace", $time);
                     cRqMissNoReplacement;
                 end
             end
             else begin
-	       if (verbose)
+               if (verbose)
                 $display("%t I %m pipelineResp: cRq: no owner, replace", $time);
                 cRqReplacement;
             end
@@ -627,14 +627,14 @@ module mkIBank#(
         // pRq is always directly handled: either dropped or Done
 
         if(pipeOut.pRqMiss) begin
-	   if (verbose)
+           if (verbose)
             $display("%t I %m pipelineResp: pRq: drop", $time);
             // pRq can be directly dropped, no successor (since just go through pipeline)
             pRqMshr.pipelineResp.releaseEntry(n);
             pipeline.deqWrite(Invalid, pipeOut.ram, False);
         end
         else begin
-	   if (verbose)
+           if (verbose)
             $display("%t I %m pipelineResp: pRq: valid process", $time);
             // should process pRq
             doAssert(ram.info.cs == S && pRq.toState == I && ram.info.tag == getTag(pRq.addr),
@@ -677,13 +677,13 @@ module mkIBank#(
         // flush always goes through cache pipeline, and is directly handled
         // here: either dropped or Done
         if(ram.info.cs == I) begin
-	   if (verbose)
+           if (verbose)
             $display("%t I %m pipelineResp: flush: drop", $time);
             // flush can be directly dropped
             pRqMshr.pipelineResp.releaseEntry(n);
         end
         else begin
-	   if (verbose)
+           if (verbose)
             $display("%t I %m pipelineResp: flush: valid process", $time);
             pRqMshr.pipelineResp.setDone(n);
             rsToPIndexQ.enq(PRq (n));
@@ -751,7 +751,7 @@ module mkIBank#(
             );
                 cRqIndexQ.deq;
                 cRqMshr.sendRsToC.releaseEntry(cRqIndexQ.first); // release MSHR entry
-	       if (verbose)
+               if (verbose)
                 $display("%t I %m sendRsToC: ", $time,
                     fshow(cRqIndexQ.first), " ; ",
                     fshow(inst)

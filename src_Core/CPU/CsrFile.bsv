@@ -87,9 +87,9 @@ interface CsrFile;
 `ifdef INCLUDE_TANDEM_VERIF
     // Returns new fcsr and mstatus (pure function)
     method Tuple2 #(Bit #(5), Data) fpuInst_csr_updates (Bit #(5)  fflags,
-							 Bool      init_for_way0,
-							 Bit #(5)  old_fflags,
-							 Data      old_mstatus);
+                                                         Bool      init_for_way0,
+                                                         Bit #(5)  old_fflags,
+                                                         Data      old_mstatus);
     method Data getMIP;
 `endif
 
@@ -357,22 +357,22 @@ module mkCsrFile #(Data hartid)(CsrFile);
         ie_vec[prvS],      ie_vec[prvU]
     );
     function Data fn_mstatus_val (Bit #(2) sxl_val, Bit #(2) uxl_val,
-				  Bit #(1) tsr_val, Bit #(1) tw_val,  Bit #(1) tvm_val,
-				  Bit #(1) mxr_val, Bit #(1) sum_val, Bit #(1) mprv_val,
-				  Bit #(2) xs_val,  Bit #(2) fs_val,
-				  Bit #(2) mpp_val, Bit #(1) spp_val,
-				  Bit #(1) prev_ie_vec_prvM_val,
-				  Bit #(1) prev_ie_vec_prvS_val, Bit #(1) prev_ie_vec_prvU_val,
-				  Bit #(1) ie_vec_prvM_val,
-				  Bit #(1) ie_vec_prvS_val,      Bit #(1) ie_vec_prvU_val);
+                                  Bit #(1) tsr_val, Bit #(1) tw_val,  Bit #(1) tvm_val,
+                                  Bit #(1) mxr_val, Bit #(1) sum_val, Bit #(1) mprv_val,
+                                  Bit #(2) xs_val,  Bit #(2) fs_val,
+                                  Bit #(2) mpp_val, Bit #(1) spp_val,
+                                  Bit #(1) prev_ie_vec_prvM_val,
+                                  Bit #(1) prev_ie_vec_prvS_val, Bit #(1) prev_ie_vec_prvU_val,
+                                  Bit #(1) ie_vec_prvM_val,
+                                  Bit #(1) ie_vec_prvS_val,      Bit #(1) ie_vec_prvU_val);
        return {fn_sd_val (xs_val, fs_val),
-	       27'b0, sxl_val, uxl_val, 9'b0,
-	       tsr_val, tw_val, tvm_val, mxr_val, sum_val, mprv_val, xs_val, fs_val,
-	       mpp_val, 2'b0, spp_val,
-	       prev_ie_vec_prvM_val, 1'b0,
-	       prev_ie_vec_prvS_val, prev_ie_vec_prvU_val,
-	       ie_vec_prvM_val,      1'b0,
-	       ie_vec_prvS_val,      ie_vec_prvU_val};
+               27'b0, sxl_val, uxl_val, 9'b0,
+               tsr_val, tw_val, tvm_val, mxr_val, sum_val, mprv_val, xs_val, fs_val,
+               mpp_val, 2'b0, spp_val,
+               prev_ie_vec_prvM_val, 1'b0,
+               prev_ie_vec_prvS_val, prev_ie_vec_prvU_val,
+               ie_vec_prvM_val,      1'b0,
+               ie_vec_prvS_val,      ie_vec_prvU_val};
     endfunction
 
     // misa
@@ -512,21 +512,21 @@ module mkCsrFile #(Data hartid)(CsrFile);
         readOnlyReg(2'b0), ie_vec[prvS], ie_vec[prvU]
     );
     function Data fn_sstatus_val (Bit #(2) uxl_val,
-				  Bit #(1) mxr_val, Bit #(1) sum_val,
-				  Bit #(2) xs_val,  Bit #(2) fs_val,
-				  Bit #(1) spp_val,
-				  Bit #(1) prev_ie_vec_prvS_val,
-				  Bit #(1) prev_ie_vec_prvU_val,
-				  Bit #(1) ie_vec_prvS_val,
-				  Bit #(1) ie_vec_prvU_val);
+                                  Bit #(1) mxr_val, Bit #(1) sum_val,
+                                  Bit #(2) xs_val,  Bit #(2) fs_val,
+                                  Bit #(1) spp_val,
+                                  Bit #(1) prev_ie_vec_prvS_val,
+                                  Bit #(1) prev_ie_vec_prvU_val,
+                                  Bit #(1) ie_vec_prvS_val,
+                                  Bit #(1) ie_vec_prvU_val);
        return {fn_sd_val (xs_val, fs_val),
-	       27'b0, 2'b0, uxl_val, 12'b0,
-	       mxr_val, sum_val, 1'b0, xs_val, fs_val,
-	       4'b0, spp_val,
-	       2'b0,
-	       prev_ie_vec_prvS_val, prev_ie_vec_prvU_val,
-	       2'b0,
-	       ie_vec_prvS_val,      ie_vec_prvU_val};
+               27'b0, 2'b0, uxl_val, 12'b0,
+               mxr_val, sum_val, 1'b0, xs_val, fs_val,
+               4'b0, spp_val,
+               2'b0,
+               prev_ie_vec_prvS_val, prev_ie_vec_prvU_val,
+               2'b0,
+               ie_vec_prvS_val,      ie_vec_prvU_val};
     endfunction
 
     // sie: restricted view of mie
@@ -644,20 +644,20 @@ module mkCsrFile #(Data hartid)(CsrFile);
 `ifdef INCLUDE_GDB_CONTROL
    // DCSR is 32b even in RV64
    Bit #(32) dcsr_reset_value =  {4'h4,    // [31:28]  xdebugver
-				  12'h0,   // [27:16]  reserved
-				  1'h0,    // [15]     ebreakm
-				  1'h0,    // [14]     reserved
-				  1'h0,    // [13]     ebreaks
-				  1'h0,    // [12]     ebreaku
-				  1'h0,    // [11]     stepie
-				  1'h0,    // [10]     stopcount
-				  1'h0,    // [9]      stoptime
-				  3'h0,    // [8:6]    cause    // WARNING: 0 is non-standard
-				  1'h0,    // [5]      reserved
-				  1'h1,    // [4]      mprven
-				  1'h0,    // [3]      nmip    // non-maskable interrupt pending
-				  1'h0,    // [2]      step
-				  2'h3};   // [1:0]    prv (machine mode)
+                                  12'h0,   // [27:16]  reserved
+                                  1'h0,    // [15]     ebreakm
+                                  1'h0,    // [14]     reserved
+                                  1'h0,    // [13]     ebreaks
+                                  1'h0,    // [12]     ebreaku
+                                  1'h0,    // [11]     stepie
+                                  1'h0,    // [10]     stopcount
+                                  1'h0,    // [9]      stoptime
+                                  3'h0,    // [8:6]    cause    // WARNING: 0 is non-standard
+                                  1'h0,    // [5]      reserved
+                                  1'h1,    // [4]      mprven
+                                  1'h0,    // [3]      nmip    // non-maskable interrupt pending
+                                  1'h0,    // [2]      step
+                                  2'h3};   // [1:0]    prv (machine mode)
 
    // RV64: dcsr's upper 32b zeroExtended/ignored
    Reg #(Data) rg_dcsr      <- mkConfigReg (zeroExtend (dcsr_reset_value));
@@ -773,16 +773,16 @@ module mkCsrFile #(Data hartid)(CsrFile);
             CSRtrng:       trng_csr;
 `endif
 
-	   CSRtselect:    rg_tselect;
-	   CSRtdata1:     rg_tdata1;
-	   CSRtdata2:     rg_tdata2;
-	   CSRtdata3:     rg_tdata3;
+           CSRtselect:    rg_tselect;
+           CSRtdata1:     rg_tdata1;
+           CSRtdata2:     rg_tdata2;
+           CSRtdata3:     rg_tdata3;
 
 `ifdef INCLUDE_GDB_CONTROL
-	   CSRdcsr:       rg_dcsr;    // TODO: take NMI into account (cf. Piccolo/Flute)
-	   CSRdpc:        rg_dpc;
-	   CSRdscratch0:  rg_dscratch0;
-	   CSRdscratch1:  rg_dscratch1;
+           CSRdcsr:       rg_dcsr;    // TODO: take NMI into account (cf. Piccolo/Flute)
+           CSRdpc:        rg_dpc;
+           CSRdscratch0:  rg_dscratch0;
+           CSRdscratch1:  rg_dscratch1;
 `endif
 
             default:       readOnlyReg(64'b0);
@@ -801,70 +801,70 @@ module mkCsrFile #(Data hartid)(CsrFile);
       Asid      x_asid = truncate (x [59:44]);
       Bit #(16) asid   = zeroExtend (x_asid);
       return (
-	 case (csr)
-	    // Machine CSRs
-	    CSRmisa:      {getXLBits, 36'b0, getExtensionBits(isa)};
-	    CSRmvendorid: 0;
-	    CSRmarchid:   0;
-	    CSRmimpid:    0;
-	    CSRmhartid:   hartid;
-	    CSRmstatus:   fn_mstatus_val (getXLBits,    // sxl
-					  getXLBits,    // uxl
-					  x [22],       // tsr
-					  x [21],       // tw
-					  x [20],       // tvm
-					  x [19],       // mxr
-					  x [18],       // sum
-					  x [17],       // mprv
-					  2'b0,         // xs
-					  ((isa.f || isa.d) ? x [14:13] : 2'b0),    // fs
-					  x [12:11],    // mpp
-					  x [8],        // spp
-					  x [7],        // prev_ie_vec[prvM]
-					  x [5],        // prev_ie_vec[prvS]
-					  x [4],        // prev_ie_vec[prvU]
-					  x [3],        // ie_vec[prvM]
-					  x [1],        // ie_vec[prvS]
-					  x [0]);       // ie_vec[prvU]
-	    CSRmtvec:      { x[63:2], 1'b0, x[0]};
-	    CSRmedeleg:    { 48'b0, x[15], 1'b0, x[13:12], x[11], 1'b0, x[9:0]};
-	    CSRmideleg:    { 52'b0, x[11], 1'b0, x[9:8], x[7], 1'b0, x[5:4], x[3], 1'b0, x[1:0]};
-	    CSRmip:        ((mip_csr & (~ mip_mie_warl_mask)) | (x & mip_mie_warl_mask));
-	    CSRmie:        (x & mip_mie_warl_mask);
-	    CSRmcounteren: { 61'b0, x[2:0]};
-	    CSRmcause:     { x[63], 59'b0, x[3:0] };
+         case (csr)
+            // Machine CSRs
+            CSRmisa:      {getXLBits, 36'b0, getExtensionBits(isa)};
+            CSRmvendorid: 0;
+            CSRmarchid:   0;
+            CSRmimpid:    0;
+            CSRmhartid:   hartid;
+            CSRmstatus:   fn_mstatus_val (getXLBits,    // sxl
+                                          getXLBits,    // uxl
+                                          x [22],       // tsr
+                                          x [21],       // tw
+                                          x [20],       // tvm
+                                          x [19],       // mxr
+                                          x [18],       // sum
+                                          x [17],       // mprv
+                                          2'b0,         // xs
+                                          ((isa.f || isa.d) ? x [14:13] : 2'b0),    // fs
+                                          x [12:11],    // mpp
+                                          x [8],        // spp
+                                          x [7],        // prev_ie_vec[prvM]
+                                          x [5],        // prev_ie_vec[prvS]
+                                          x [4],        // prev_ie_vec[prvU]
+                                          x [3],        // ie_vec[prvM]
+                                          x [1],        // ie_vec[prvS]
+                                          x [0]);       // ie_vec[prvU]
+            CSRmtvec:      { x[63:2], 1'b0, x[0]};
+            CSRmedeleg:    { 48'b0, x[15], 1'b0, x[13:12], x[11], 1'b0, x[9:0]};
+            CSRmideleg:    { 52'b0, x[11], 1'b0, x[9:8], x[7], 1'b0, x[5:4], x[3], 1'b0, x[1:0]};
+            CSRmip:        ((mip_csr & (~ mip_mie_warl_mask)) | (x & mip_mie_warl_mask));
+            CSRmie:        (x & mip_mie_warl_mask);
+            CSRmcounteren: { 61'b0, x[2:0]};
+            CSRmcause:     { x[63], 59'b0, x[3:0] };
 
-	    CSRtdata1:     { 4'b0, x [59:0] };    // Force tdata.type == 0 ("no trigger at this tselect")
+            CSRtdata1:     { 4'b0, x [59:0] };    // Force tdata.type == 0 ("no trigger at this tselect")
 
-	    // Supervisor level CSRs
-	    CSRsstatus:   fn_sstatus_val (getXLBits,    // uxl
-					  x [19],       // mxr
-					  x [18],       // sum
-					  2'b0,         // xs
-					  ((isa.f || isa.d) ? x [14:13] : 2'b0),    // fs
-					  x [8],        // spp
-					  x [5],        // prev_ie_vec[prvS]
-					  x [4],        // prev_ie_vec[prvU]
-					  x [1],        // ie_vec[prvS]
-					  x [0]);       // ie_vec[prvU]
-	    CSRstvec:      { x[63:2], 1'b0, x[0]};
-	    CSRsip:        ((sip_csr & (~ sip_sie_warl_mask)) | (x & sip_sie_warl_mask));
-	    CSRsie:        (x & sip_sie_warl_mask);
-	    CSRscounteren: { 61'b0, x[2:0]};
-	    CSRscause:     { x[63], 59'b0, x[3:0] };
-	    CSRsatp:       { x[63], 3'b0, asid,  x [43:0] };
+            // Supervisor level CSRs
+            CSRsstatus:   fn_sstatus_val (getXLBits,    // uxl
+                                          x [19],       // mxr
+                                          x [18],       // sum
+                                          2'b0,         // xs
+                                          ((isa.f || isa.d) ? x [14:13] : 2'b0),    // fs
+                                          x [8],        // spp
+                                          x [5],        // prev_ie_vec[prvS]
+                                          x [4],        // prev_ie_vec[prvU]
+                                          x [1],        // ie_vec[prvS]
+                                          x [0]);       // ie_vec[prvU]
+            CSRstvec:      { x[63:2], 1'b0, x[0]};
+            CSRsip:        ((sip_csr & (~ sip_sie_warl_mask)) | (x & sip_sie_warl_mask));
+            CSRsie:        (x & sip_sie_warl_mask);
+            CSRscounteren: { 61'b0, x[2:0]};
+            CSRscause:     { x[63], 59'b0, x[3:0] };
+            CSRsatp:       { x[63], 3'b0, asid,  x [43:0] };
 
-	    // User level CSRs
-	    CSRfflags:     { 59'b0, x [4:0] };
-	    CSRfrm:        { 61'b0, x [2:0] };
-	    CSRfcsr:       { 56'b0, x [7:0] };
+            // User level CSRs
+            CSRfflags:     { 59'b0, x [4:0] };
+            CSRfrm:        { 61'b0, x [2:0] };
+            CSRfcsr:       { 56'b0, x [7:0] };
 
 `ifdef INCLUDE_GDB_CONTROL
-	    // Debug Mode CSRs
-	    CSRdcsr:       { 32'b0, x[31:28], 12'b0, x[14], 1'b0, x[13:6], 1'b0, x[4:0] };
+            // Debug Mode CSRs
+            CSRdcsr:       { 32'b0, x[31:28], 12'b0, x[14], 1'b0, x[13:6], 1'b0, x[4:0] };
 `endif
 
-	    default:       x;
+            default:       x;
          endcase);
    endfunction
 
@@ -879,9 +879,9 @@ module mkCsrFile #(Data hartid)(CsrFile);
         get_csr(csr)._write(x);
 `ifdef INCLUDE_GDB_CONTROL
         if (csr == CSRdcsr) begin
-	   let prv = x [1:0];
-	   prv_reg <= prv;
-	end
+           let prv = x [1:0];
+           prv_reg <= prv;
+        end
 `endif
     endmethod
 
@@ -901,9 +901,9 @@ module mkCsrFile #(Data hartid)(CsrFile);
 
 `ifdef INCLUDE_TANDEM_VERIF
     method Tuple2 #(Bit #(5), Data) fpuInst_csr_updates (Bit #(5)  fflags,
-							 Bool      init_for_way0,
-							 Bit #(5)  old_fflags,
-							 Data      old_mstatus);
+                                                         Bool      init_for_way0,
+                                                         Bit #(5)  old_fflags,
+                                                         Data      old_mstatus);
 
        // Note: old_fflags and old_mstatus are accumulated in
        // sequential program order, and so may differ from fflags_reg
@@ -966,10 +966,10 @@ module mkCsrFile #(Data hartid)(CsrFile);
             tagged Exception .e: begin
                 cause_code = pack(e);
                 trap_val = (case(e)
-		    IllegalInst: zeroExtend (orig_inst);
+                    IllegalInst: zeroExtend (orig_inst);
                     InstAddrMisaligned, Breakpoint: return pc;
 
-		    InstAccessFault, InstPageFault,
+                    InstAccessFault, InstPageFault,
                     LoadAddrMisaligned, LoadAccessFault,
                     StoreAddrMisaligned, StoreAccessFault,
                     LoadPageFault, StorePageFault: return addr;
@@ -1013,24 +1013,24 @@ module mkCsrFile #(Data hartid)(CsrFile);
             stval_csr <= trap_val;
             // return next pc
             // return getNextPc(stvec_mode_low_reg, stvec_base_hi_reg);
-	    Data sstatus_val = fn_sstatus_val (uxl_reg,
-					       mxr_reg, sum_reg,
-					       xs_reg,  fs_reg,
-					       /* spp_reg */ prv_reg [0],
-					       /* prev_ie_vec_[prvS] */ ie_vec[prvS],
-					       prev_ie_vec [prvU],
-					       /* ie_vec [prvS] */ 0,
-					       ie_vec [prvU]);
-	    Data scause_val = fn_scause_val (cause_interrupt, cause_code);
-	    return Trap_Updates {new_pc: getNextPc(stvec_mode_low_reg, stvec_base_hi_reg)
+            Data sstatus_val = fn_sstatus_val (uxl_reg,
+                                               mxr_reg, sum_reg,
+                                               xs_reg,  fs_reg,
+                                               /* spp_reg */ prv_reg [0],
+                                               /* prev_ie_vec_[prvS] */ ie_vec[prvS],
+                                               prev_ie_vec [prvU],
+                                               /* ie_vec [prvS] */ 0,
+                                               ie_vec [prvU]);
+            Data scause_val = fn_scause_val (cause_interrupt, cause_code);
+            return Trap_Updates {new_pc: getNextPc(stvec_mode_low_reg, stvec_base_hi_reg)
 `ifdef INCLUDE_TANDEM_VERIF
-				 , prv:    prvS,
-				 status: sstatus_val,
-				 cause:  scause_val,
-				 epc:    pc,
-				 tval:   trap_val
+                                 , prv:    prvS,
+                                 status: sstatus_val,
+                                 cause:  scause_val,
+                                 epc:    pc,
+                                 tval:   trap_val
 `endif
-				 };
+                                 };
         end
         else begin
             // ie/prv stack
@@ -1045,27 +1045,27 @@ module mkCsrFile #(Data hartid)(CsrFile);
             mtval_csr <= trap_val;
             // return next pc
             // return getNextPc(mtvec_mode_low_reg, mtvec_base_hi_reg);
-	    Data mstatus_val = fn_mstatus_val (sxl_reg, uxl_reg,
-					       tsr_reg, tw_reg,  tvm_reg,
-					       mxr_reg, sum_reg, mprv_reg,
-					       xs_reg,  fs_reg,
-					       /* mpp */ prv_reg, spp_reg,
-					       /* prev_ie_vec [prvM] */ ie_vec [prvM],
-					       prev_ie_vec [prvS],
-					       prev_ie_vec [prvU],
-					       /* ie_vec [prvM] */ 0,
-					       ie_vec [prvS],
-					       ie_vec [prvU]);
-	    Data mcause_val = fn_mcause_val (cause_interrupt, cause_code);
-	    return Trap_Updates {new_pc: getNextPc(mtvec_mode_low_reg, mtvec_base_hi_reg)
+            Data mstatus_val = fn_mstatus_val (sxl_reg, uxl_reg,
+                                               tsr_reg, tw_reg,  tvm_reg,
+                                               mxr_reg, sum_reg, mprv_reg,
+                                               xs_reg,  fs_reg,
+                                               /* mpp */ prv_reg, spp_reg,
+                                               /* prev_ie_vec [prvM] */ ie_vec [prvM],
+                                               prev_ie_vec [prvS],
+                                               prev_ie_vec [prvU],
+                                               /* ie_vec [prvM] */ 0,
+                                               ie_vec [prvS],
+                                               ie_vec [prvU]);
+            Data mcause_val = fn_mcause_val (cause_interrupt, cause_code);
+            return Trap_Updates {new_pc: getNextPc(mtvec_mode_low_reg, mtvec_base_hi_reg)
 `ifdef INCLUDE_TANDEM_VERIF
-				 , prv:    prvM,
-				 status: mstatus_val,
-				 cause:  mcause_val,
-				 epc:    pc,
-				 tval:   trap_val
+                                 , prv:    prvM,
+                                 status: mstatus_val,
+                                 cause:  mcause_val,
+                                 epc:    pc,
+                                 tval:   trap_val
 `endif
-				 };
+                                 };
         end
         // XXX yield load reservation should be done outside this method
     endmethod
@@ -1077,23 +1077,23 @@ module mkCsrFile #(Data hartid)(CsrFile);
         prev_ie_vec[prvM] <= 1;
 
         Data mstatus_val = fn_mstatus_val(sxl_reg, uxl_reg,
-					  tsr_reg, tw_reg,  tvm_reg,
-					  mxr_reg, sum_reg, mprv_reg,
-					  xs_reg,  fs_reg,
-					  /* mpp */ prvU,
-					  spp_reg,
-					  /* prev_ie_vec [prvM] */ 1,
-					  prev_ie_vec [prvS],
-					  prev_ie_vec [prvU],
-					  /* ie_vec [prvM] */ prev_ie_vec[prvM],
-					  ie_vec [prvS],
-					  ie_vec [prvU]);
+                                          tsr_reg, tw_reg,  tvm_reg,
+                                          mxr_reg, sum_reg, mprv_reg,
+                                          xs_reg,  fs_reg,
+                                          /* mpp */ prvU,
+                                          spp_reg,
+                                          /* prev_ie_vec [prvM] */ 1,
+                                          prev_ie_vec [prvS],
+                                          prev_ie_vec [prvU],
+                                          /* ie_vec [prvM] */ prev_ie_vec[prvM],
+                                          ie_vec [prvS],
+                                          ie_vec [prvU]);
         return RET_Updates {new_pc: mepc_csr
 `ifdef INCLUDE_TANDEM_VERIF
-			    , prv:    prev_prv_vec[prvM],
-			    status: mstatus_val
+                            , prv:    prev_prv_vec[prvM],
+                            status: mstatus_val
 `endif
-			    };
+                            };
     endmethod
 
     method ActionValue#(RET_Updates) sret;
@@ -1104,25 +1104,25 @@ module mkCsrFile #(Data hartid)(CsrFile);
 
         // For Tandem Verification, we return the full underlying MSTATUS register
         Data mstatus_val = fn_mstatus_val(sxl_reg, uxl_reg,
-					  tsr_reg, tw_reg,  tvm_reg,
-					  mxr_reg, sum_reg, mprv_reg,
-					  xs_reg,  fs_reg,
-					  mpp_reg,
-					  /* spp_reg */ prvU [0],
+                                          tsr_reg, tw_reg,  tvm_reg,
+                                          mxr_reg, sum_reg, mprv_reg,
+                                          xs_reg,  fs_reg,
+                                          mpp_reg,
+                                          /* spp_reg */ prvU [0],
 
-					  prev_ie_vec [prvM],
-					  /* prev_ie_vec_[prvS] */ 1,
-					  prev_ie_vec [prvU],
+                                          prev_ie_vec [prvM],
+                                          /* prev_ie_vec_[prvS] */ 1,
+                                          prev_ie_vec [prvU],
 
-					  ie_vec [prvM],
-					  /* ie_vec [prvS] */ prev_ie_vec[prvS],
-					  ie_vec [prvU]);
+                                          ie_vec [prvM],
+                                          /* ie_vec [prvS] */ prev_ie_vec[prvS],
+                                          ie_vec [prvU]);
         return RET_Updates {new_pc: sepc_csr
 `ifdef INCLUDE_TANDEM_VERIF
-			    , prv:    prev_prv_vec[prvS],
-			    status: mstatus_val
+                            , prv:    prev_prv_vec[prvS],
+                            status: mstatus_val
 `endif
-			    };
+                            };
     endmethod
 
     method VMInfo vmI;
@@ -1244,10 +1244,10 @@ module mkCsrFile #(Data hartid)(CsrFile);
    // Check whether to enter Debug Mode based on dcsr.{ebreakm, ebreaks, ebreaku}
    method Bit #(1) dcsr_break_bit;
       return case (prv_reg)
-		prvM: rg_dcsr [15];
-		prvS: rg_dcsr [13];
-		prvU: rg_dcsr [12];
-	     endcase;
+                prvM: rg_dcsr [15];
+                prvS: rg_dcsr [13];
+                prvU: rg_dcsr [12];
+             endcase;
    endmethod
 
    // Check whether to enter Debug Mode based on dcsr.step
@@ -1262,7 +1262,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
 
       /*
       $display ("%0d: %m mkCsrFile.method-dcsr_cause_write: cause %0d, prv %0d",
-		cur_cycle, dcsr_cause, prv_reg);
+                cur_cycle, dcsr_cause, prv_reg);
       */
    endmethod
 

@@ -83,49 +83,49 @@ DM_Addr dm_addr_sbdata3      = 'h3f;
 
 function Fmt fshow_dm_addr (DM_Addr dm_addr);
    return case (dm_addr)
-	     // Run Control
-	     dm_addr_dmcontrol:    $format ("dm_addr_dmcontrol");
-	     dm_addr_dmstatus:     $format ("dm_addr_dmstatus");
-	     dm_addr_hartinfo:     $format ("dm_addr_hartinfo");
-	     dm_addr_haltsum:      $format ("dm_addr_haltsum");
-	     dm_addr_hawindowsel:  $format ("dm_addr_hawindowsel");
-	     dm_addr_hawindow:     $format ("dm_addr_hawindow");
-	     dm_addr_devtreeaddr0: $format ("dm_addr_devtreeaddr0");
-	     dm_addr_authdata:     $format ("dm_addr_authdata");
-	     dm_addr_haltregion0:  $format ("dm_addr_haltregion0");
-	     dm_addr_haltregion31: $format ("dm_addr_haltregion31");
+             // Run Control
+             dm_addr_dmcontrol:    $format ("dm_addr_dmcontrol");
+             dm_addr_dmstatus:     $format ("dm_addr_dmstatus");
+             dm_addr_hartinfo:     $format ("dm_addr_hartinfo");
+             dm_addr_haltsum:      $format ("dm_addr_haltsum");
+             dm_addr_hawindowsel:  $format ("dm_addr_hawindowsel");
+             dm_addr_hawindow:     $format ("dm_addr_hawindow");
+             dm_addr_devtreeaddr0: $format ("dm_addr_devtreeaddr0");
+             dm_addr_authdata:     $format ("dm_addr_authdata");
+             dm_addr_haltregion0:  $format ("dm_addr_haltregion0");
+             dm_addr_haltregion31: $format ("dm_addr_haltregion31");
              dm_addr_verbosity:    $format ("dm_addr_verbosity");
 
-	     // Abstract Commands
-	     dm_addr_abstractcs:   $format ("dm_addr_abstractcs");
-	     dm_addr_command:      $format ("dm_addr_command");
-	     dm_addr_data0:        $format ("dm_addr_data0");
-	     dm_addr_data1:        $format ("dm_addr_data1");
-	     dm_addr_data2:        $format ("dm_addr_data2");
-	     dm_addr_data3:        $format ("dm_addr_data3");
-	     dm_addr_data4:        $format ("dm_addr_data4");
-	     dm_addr_data5:        $format ("dm_addr_data5");
-	     dm_addr_data6:        $format ("dm_addr_data6");
-	     dm_addr_data7:        $format ("dm_addr_data7");
-	     dm_addr_data8:        $format ("dm_addr_data8");
-	     dm_addr_data9:        $format ("dm_addr_data9");
-	     dm_addr_data10:       $format ("dm_addr_data10");
-	     dm_addr_data11:       $format ("dm_addr_data11");
-	     dm_addr_abstractauto: $format ("dm_addr_abstractauto");
-	     dm_addr_progbuf0:     $format ("dm_addr_progbuf0");
+             // Abstract Commands
+             dm_addr_abstractcs:   $format ("dm_addr_abstractcs");
+             dm_addr_command:      $format ("dm_addr_command");
+             dm_addr_data0:        $format ("dm_addr_data0");
+             dm_addr_data1:        $format ("dm_addr_data1");
+             dm_addr_data2:        $format ("dm_addr_data2");
+             dm_addr_data3:        $format ("dm_addr_data3");
+             dm_addr_data4:        $format ("dm_addr_data4");
+             dm_addr_data5:        $format ("dm_addr_data5");
+             dm_addr_data6:        $format ("dm_addr_data6");
+             dm_addr_data7:        $format ("dm_addr_data7");
+             dm_addr_data8:        $format ("dm_addr_data8");
+             dm_addr_data9:        $format ("dm_addr_data9");
+             dm_addr_data10:       $format ("dm_addr_data10");
+             dm_addr_data11:       $format ("dm_addr_data11");
+             dm_addr_abstractauto: $format ("dm_addr_abstractauto");
+             dm_addr_progbuf0:     $format ("dm_addr_progbuf0");
 
-	     // System Bus
-	     dm_addr_sbcs:         $format ("dm_addr_sbcs");
-	     dm_addr_sbaddress0:   $format ("dm_addr_sbaddress0");
-	     dm_addr_sbaddress1:   $format ("dm_addr_sbaddress1");
-	     dm_addr_sbaddress2:   $format ("dm_addr_sbaddress2");
-	     dm_addr_sbdata0:      $format ("dm_addr_sbdata0");
-	     dm_addr_sbdata1:      $format ("dm_addr_sbdata1");
-	     dm_addr_sbdata2:      $format ("dm_addr_sbdata2");
-	     dm_addr_sbdata3:      $format ("dm_addr_sbdata3");
+             // System Bus
+             dm_addr_sbcs:         $format ("dm_addr_sbcs");
+             dm_addr_sbaddress0:   $format ("dm_addr_sbaddress0");
+             dm_addr_sbaddress1:   $format ("dm_addr_sbaddress1");
+             dm_addr_sbaddress2:   $format ("dm_addr_sbaddress2");
+             dm_addr_sbdata0:      $format ("dm_addr_sbdata0");
+             dm_addr_sbdata1:      $format ("dm_addr_sbdata1");
+             dm_addr_sbdata2:      $format ("dm_addr_sbdata2");
+             dm_addr_sbdata3:      $format ("dm_addr_sbdata3");
 
-	     default:              $format ("<Unknown dm_abstract_command dm_addr 0x%0h>", dm_addr);
-	  endcase;
+             default:              $format ("<Unknown dm_abstract_command dm_addr 0x%0h>", dm_addr);
+          endcase;
 endfunction
 
 // ================================================================
@@ -135,21 +135,21 @@ endfunction
 // 'dmcontrol' register
 
 function DM_Word fn_mk_dmcontrol (Bool       haltreq,
-				  Bool       resumereq,
-				  Bool       hartreset,
-				  Bool       hasel,
-				  Bit #(10)  hartsel,
-				  Bool       ndmreset,
-				  Bool       dmactive);
+                                  Bool       resumereq,
+                                  Bool       hartreset,
+                                  Bool       hasel,
+                                  Bit #(10)  hartsel,
+                                  Bool       ndmreset,
+                                  Bool       dmactive);
    return {pack (haltreq),
-	   pack (resumereq),
-	   pack (hartreset),
-	   2'b0,
-	   pack (hasel),
-	   hartsel,
-	   14'b0,
-	   pack (ndmreset),
-	   pack (dmactive)};
+           pack (resumereq),
+           pack (hartreset),
+           2'b0,
+           pack (hasel),
+           hartsel,
+           14'b0,
+           pack (ndmreset),
+           pack (dmactive)};
 endfunction
 
 function Bool fn_dmcontrol_haltreq (DM_Word dm_word);
@@ -241,23 +241,23 @@ endfunction
 
 function Fmt fshow_dmstatus (DM_Word x);
    Fmt fmt_version = (  (x[3:0] == 0)
-		      ? $format ("v.none")
-		      : (  (x[3:0] == 1)
-			 ? $format ("v0.11")
-			 : (  (x[3:0] == 2)
-			    ? $format ("v0.13")
-			    : $format ("v??"))));
+                      ? $format ("v.none")
+                      : (  (x[3:0] == 1)
+                         ? $format ("v0.11")
+                         : (  (x[3:0] == 2)
+                            ? $format ("v0.13")
+                            : $format ("v??"))));
 
    return (  $format ("(all/any) ")
-	   + $format ("resumeack %0d/%0d ",   x[17], x[16])
-	   + $format ("nonexistent %0d/%0d ", x[15], x[14])
-	   + $format ("unavail %0d/%0d ",     x[13], x[12])
-	   + $format ("running %0d/%0d ",     x[11], x[10])
-	   + $format ("halted %0d/%0d ",      x[9],  x[8])
-	   + $format ("authenticated %0d ",   x[7])
-	   + $format ("authbusy %0d ",        x[6])
-	   + $format ("devtreevalid %0d ",    x[4])
-	   + fmt_version);
+           + $format ("resumeack %0d/%0d ",   x[17], x[16])
+           + $format ("nonexistent %0d/%0d ", x[15], x[14])
+           + $format ("unavail %0d/%0d ",     x[13], x[12])
+           + $format ("running %0d/%0d ",     x[11], x[10])
+           + $format ("halted %0d/%0d ",      x[9],  x[8])
+           + $format ("authenticated %0d ",   x[7])
+           + $format ("authbusy %0d ",        x[6])
+           + $format ("devtreevalid %0d ",    x[4])
+           + fmt_version);
 endfunction
 
 // ================================================================
@@ -267,13 +267,13 @@ endfunction
 // 'dm_abstractcs' register
 
 typedef enum {DM_ABSTRACTCS_CMDERR_NONE,             // 0
-	      DM_ABSTRACTCS_CMDERR_BUSY,             // 1
-	      DM_ABSTRACTCS_CMDERR_NOT_SUPPORTED,    // 2
-	      DM_ABSTRACTCS_CMDERR_EXCEPTION,        // 3
-	      DM_ABSTRACTCS_CMDERR_HALT_RESUME,      // 4
-	      DM_ABSTRACTCS_CMDERR_UNDEF5,           // 5
-	      DM_ABSTRACTCS_CMDERR_UNDEF6,           // 6
-	      DM_ABSTRACTCS_CMDERR_OTHER             // 7
+              DM_ABSTRACTCS_CMDERR_BUSY,             // 1
+              DM_ABSTRACTCS_CMDERR_NOT_SUPPORTED,    // 2
+              DM_ABSTRACTCS_CMDERR_EXCEPTION,        // 3
+              DM_ABSTRACTCS_CMDERR_HALT_RESUME,      // 4
+              DM_ABSTRACTCS_CMDERR_UNDEF5,           // 5
+              DM_ABSTRACTCS_CMDERR_UNDEF6,           // 6
+              DM_ABSTRACTCS_CMDERR_OTHER             // 7
    } DM_abstractcs_cmderr
 deriving (Bits, Eq, FShow);
 
@@ -304,18 +304,18 @@ endfunction
 // 'command' register
 
 typedef enum {DM_COMMAND_CMDTYPE_ACCESS_REG,
-	      DM_COMMAND_CMDTYPE_QUICK_ACCESS
+              DM_COMMAND_CMDTYPE_QUICK_ACCESS
    } DM_command_cmdtype
 deriving (Bits, Eq, FShow);
 
 typedef enum {DM_COMMAND_ACCESS_REG_SIZE_UNDEF0,     // 0
-	      DM_COMMAND_ACCESS_REG_SIZE_UNDEF1,     // 1
-	      DM_COMMAND_ACCESS_REG_SIZE_LOWER32,    // 2
-	      DM_COMMAND_ACCESS_REG_SIZE_LOWER64,    // 3
-	      DM_COMMAND_ACCESS_REG_SIZE_LOWER128,   // 4
-	      DM_COMMAND_ACCESS_REG_SIZE_UNDEF5,     // 5
-	      DM_COMMAND_ACCESS_REG_SIZE_UNDEF6,     // 6
-	      DM_COMMAND_ACCESS_REG_SIZE_UNDEF7      // 7
+              DM_COMMAND_ACCESS_REG_SIZE_UNDEF1,     // 1
+              DM_COMMAND_ACCESS_REG_SIZE_LOWER32,    // 2
+              DM_COMMAND_ACCESS_REG_SIZE_LOWER64,    // 3
+              DM_COMMAND_ACCESS_REG_SIZE_LOWER128,   // 4
+              DM_COMMAND_ACCESS_REG_SIZE_UNDEF5,     // 5
+              DM_COMMAND_ACCESS_REG_SIZE_UNDEF6,     // 6
+              DM_COMMAND_ACCESS_REG_SIZE_UNDEF7      // 7
    } DM_command_access_reg_size
 deriving (Bits, Eq, FShow);
 
@@ -327,20 +327,20 @@ Integer dm_command_access_reg_regno_fpr_0   = 'h1020;
 Integer dm_command_access_reg_regno_fpr_1F  = 'h103F;
 
 function DM_Word fn_mk_command_access_reg (DM_command_access_reg_size  size,
-					   Bool                        postexec,
-					   Bool                        transfer,
-					   Bool                        write,
-					   Bit #(16)                   regno);
+                                           Bool                        postexec,
+                                           Bool                        transfer,
+                                           Bool                        write,
+                                           Bit #(16)                   regno);
    Bit #(8)  b8_cmdtype = zeroExtend (pack (DM_COMMAND_CMDTYPE_ACCESS_REG));
    Bit #(3)  b3_size    = pack (size);
    return {b8_cmdtype,
-	   1'b0,
-	   b3_size,
-	   1'b0,
-	   pack (postexec),
-	   pack (transfer),
-	   pack (write),
-	   regno};
+           1'b0,
+           b3_size,
+           1'b0,
+           pack (postexec),
+           pack (transfer),
+           pack (write),
+           regno};
 endfunction
 
 function DM_command_cmdtype fn_command_cmdtype (DM_Word dm_word);
@@ -374,10 +374,10 @@ endfunction
 // 'dm_sbcs' register
 
 typedef enum {DM_SBACCESS_8_BIT,
-	      DM_SBACCESS_16_BIT,
-	      DM_SBACCESS_32_BIT,
-	      DM_SBACCESS_64_BIT,
-	      DM_SBACCESS_128_BIT
+              DM_SBACCESS_16_BIT,
+              DM_SBACCESS_32_BIT,
+              DM_SBACCESS_64_BIT,
+              DM_SBACCESS_128_BIT
    } DM_sbaccess
 deriving (Bits, Eq, FShow);
 
@@ -392,47 +392,47 @@ function Integer fn_sbaccess_to_addr_incr (DM_sbaccess sbaccess);
 endfunction
 
 typedef enum {DM_SBERROR_NONE,          // 0
-	      DM_SBERROR_TIMEOUT,       // 1
-	      DM_SBERROR_BADADDR,       // 2
-	      DM_SBERROR_OTHER,         // 3
-	      DM_SBERROR_BUSY_STALE,    // 4
-	      DM_SBERROR_UNDEF5,        // 5
-	      DM_SBERROR_UNDEF6,        // 6
-	      DM_SBERROR_UNDEF7_W1C     // 7, used in writes, to clear sberror
+              DM_SBERROR_TIMEOUT,       // 1
+              DM_SBERROR_BADADDR,       // 2
+              DM_SBERROR_OTHER,         // 3
+              DM_SBERROR_BUSY_STALE,    // 4
+              DM_SBERROR_UNDEF5,        // 5
+              DM_SBERROR_UNDEF6,        // 6
+              DM_SBERROR_UNDEF7_W1C     // 7, used in writes, to clear sberror
    } DM_sberror
 deriving (Bits, Eq, FShow);
 
 // Constructor
 
 function DM_Word fn_mk_sbcs_val (Bit #(3)     sbversion,
-				 Bool         sbbusyerror,
-				 Bool         sbbusy,
-				 Bool         sbreadonaddr,
-				 DM_sbaccess  sbaccess,
-				 Bool         sbautoincrement,
-				 Bool         sbreadondata,
-				 DM_sberror   sberror,
-				 Bit #(7)     sbasize,
-				 Bit #(1)     sbaccess128,
-				 Bit #(1)     sbaccess64,
-				 Bit #(1)     sbaccess32,
-				 Bit #(1)     sbaccess16,
-				 Bit #(1)     sbaccess8);
+                                 Bool         sbbusyerror,
+                                 Bool         sbbusy,
+                                 Bool         sbreadonaddr,
+                                 DM_sbaccess  sbaccess,
+                                 Bool         sbautoincrement,
+                                 Bool         sbreadondata,
+                                 DM_sberror   sberror,
+                                 Bit #(7)     sbasize,
+                                 Bit #(1)     sbaccess128,
+                                 Bit #(1)     sbaccess64,
+                                 Bit #(1)     sbaccess32,
+                                 Bit #(1)     sbaccess16,
+                                 Bit #(1)     sbaccess8);
    return {sbversion,
-	   6'b0,
-	   pack (sbbusyerror),
-	   pack (sbbusy),
-	   pack (sbreadonaddr),
-	   pack (sbaccess),
-	   pack (sbautoincrement),
-	   pack (sbreadondata),
-	   pack (sberror),
-	   sbasize,
-	   sbaccess128,
-	   sbaccess64,
-	   sbaccess32,
-	   sbaccess16,
-	   sbaccess8};
+           6'b0,
+           pack (sbbusyerror),
+           pack (sbbusy),
+           pack (sbreadonaddr),
+           pack (sbaccess),
+           pack (sbautoincrement),
+           pack (sbreadondata),
+           pack (sberror),
+           sbasize,
+           sbaccess128,
+           sbaccess64,
+           sbaccess32,
+           sbaccess16,
+           sbaccess8};
 endfunction
 
 // Selectors
@@ -456,35 +456,35 @@ function Bool        fn_sbcs_sbaccess8       (DM_Word dm_word);  return unpack (
 
 function Fmt fshow_sbcs (DM_Word dm_word);
    return (  $format ("SBCS{")
-	   + $format ("sbversion %0d",      fn_sbcs_sbversion (dm_word))
-	   + $format (" sbbusyerror %0d",   fn_sbcs_sbbusyerror (dm_word))
-	   + $format (" sbbusy %0d",        fn_sbcs_sbbusy (dm_word))
-	   + $format (" sbreadonaddr ")     + fshow (fn_sbcs_sbreadonaddr (dm_word))
-	   + $format (" sbaccess ")         + fshow (fn_sbcs_sbaccess (dm_word))
-	   + $format (" sbautoincrement ")  + fshow (fn_sbcs_sbautoincrement (dm_word))
-	   + $format (" sbreadondata ")     + fshow (fn_sbcs_sbreadondata (dm_word))
-	   + $format (" sberror ")          + fshow (fn_sbcs_sberror (dm_word))
-	   + $format (" sbasize %0d",       fn_sbcs_sbasize (dm_word))
-	   + $format (" sbaccess")
-	   + ((fn_sbcs_sbaccess128 (dm_word)) ? $format ("_128") : $format ("x"))
-	   + ((fn_sbcs_sbaccess64  (dm_word)) ? $format ("_64")  : $format ("x"))
-	   + ((fn_sbcs_sbaccess32  (dm_word)) ? $format ("_32")  : $format ("x"))
-	   + ((fn_sbcs_sbaccess16  (dm_word)) ? $format ("_16")  : $format ("x"))
-	   + ((fn_sbcs_sbaccess8   (dm_word)) ? $format ("_8")   : $format ("x"))
-	   + $format ("}"));
+           + $format ("sbversion %0d",      fn_sbcs_sbversion (dm_word))
+           + $format (" sbbusyerror %0d",   fn_sbcs_sbbusyerror (dm_word))
+           + $format (" sbbusy %0d",        fn_sbcs_sbbusy (dm_word))
+           + $format (" sbreadonaddr ")     + fshow (fn_sbcs_sbreadonaddr (dm_word))
+           + $format (" sbaccess ")         + fshow (fn_sbcs_sbaccess (dm_word))
+           + $format (" sbautoincrement ")  + fshow (fn_sbcs_sbautoincrement (dm_word))
+           + $format (" sbreadondata ")     + fshow (fn_sbcs_sbreadondata (dm_word))
+           + $format (" sberror ")          + fshow (fn_sbcs_sberror (dm_word))
+           + $format (" sbasize %0d",       fn_sbcs_sbasize (dm_word))
+           + $format (" sbaccess")
+           + ((fn_sbcs_sbaccess128 (dm_word)) ? $format ("_128") : $format ("x"))
+           + ((fn_sbcs_sbaccess64  (dm_word)) ? $format ("_64")  : $format ("x"))
+           + ((fn_sbcs_sbaccess32  (dm_word)) ? $format ("_32")  : $format ("x"))
+           + ((fn_sbcs_sbaccess16  (dm_word)) ? $format ("_16")  : $format ("x"))
+           + ((fn_sbcs_sbaccess8   (dm_word)) ? $format ("_8")   : $format ("x"))
+           + $format ("}"));
 endfunction
 
 // ================================================================
 // DCSR 'cause' field values
 
 typedef enum {DCSR_CAUSE_RESERVED0,
-	      DCSR_CAUSE_EBREAK,
-	      DCSR_CAUSE_TRIGGER,
-	      DCSR_CAUSE_HALTREQ,
-	      DCSR_CAUSE_STEP,
-	      DCSR_CAUSE_RESERVED5,
-	      DCSR_CAUSE_RESERVED6,
-	      DCSR_CAUSE_RESERVED7
+              DCSR_CAUSE_EBREAK,
+              DCSR_CAUSE_TRIGGER,
+              DCSR_CAUSE_HALTREQ,
+              DCSR_CAUSE_STEP,
+              DCSR_CAUSE_RESERVED5,
+              DCSR_CAUSE_RESERVED6,
+              DCSR_CAUSE_RESERVED7
    } DCSR_Cause
 deriving (Bits, Eq, FShow);
 
@@ -500,12 +500,12 @@ endinterface
 // A dummy interface to tie off DMI if it is not used.
 
 DMI dummy_DMI_ifc = interface DMI;
-		       method Action                 read_addr (DM_Addr dm_addr) = noAction;
-		       method ActionValue #(DM_Word) read_data = actionvalue
-								    return 0;
-								 endactionvalue;
-		       method Action                 write    (DM_Addr dm_addr, DM_Word dm_word) = noAction;
-		    endinterface;
+                       method Action                 read_addr (DM_Addr dm_addr) = noAction;
+                       method ActionValue #(DM_Word) read_data = actionvalue
+                                                                    return 0;
+                                                                 endactionvalue;
+                       method Action                 write    (DM_Addr dm_addr, DM_Word dm_word) = noAction;
+                    endinterface;
 
 // ================================================================
 

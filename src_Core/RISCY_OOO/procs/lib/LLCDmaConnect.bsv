@@ -93,10 +93,10 @@ typedef union tagged {
 // Help functions for read-modify-writes of 4-Byte values on a 64-Byte Cache Line
 
 typedef enum {CACHELINE_CACHE_INVALID,
-	      CACHELINE_CACHE_WRITING_BACK,
-	      CACHELINE_CACHE_RELOADING,
-	      CACHELINE_CACHE_CLEAN,
-	      CACHELINE_CACHE_DIRTY
+              CACHELINE_CACHE_WRITING_BACK,
+              CACHELINE_CACHE_RELOADING,
+              CACHELINE_CACHE_CLEAN,
+              CACHELINE_CACHE_DIRTY
    } Cacheline_Cache_State
 deriving (Bits, Eq, FShow);
 
@@ -154,9 +154,9 @@ module mkLLCDmaConnect #(
 
    // Respond to store-requests from the external client on store-hit
    rule rl_handle_MemLoader_st_req (   (   (rg_cacheline_cache_state == CACHELINE_CACHE_CLEAN)
-					|| (rg_cacheline_cache_state == CACHELINE_CACHE_DIRTY))
-				    && (fn_addr_is_in_line (axi4_slave_xactor.o_wr_addr.first.awaddr,
-							    rg_cacheline_cache_addr)));
+                                        || (rg_cacheline_cache_state == CACHELINE_CACHE_DIRTY))
+                                    && (fn_addr_is_in_line (axi4_slave_xactor.o_wr_addr.first.awaddr,
+                                                            rg_cacheline_cache_addr)));
       let wr_addr <- pop_o (axi4_slave_xactor.o_wr_addr);
       let wr_data <- pop_o (axi4_slave_xactor.o_wr_data);
       Addr      addr = wr_addr.awaddr;
@@ -178,15 +178,15 @@ module mkLLCDmaConnect #(
       // Send response to external client
       AXI4_Wr_Resp #(Wd_Id, Wd_User)
       wr_resp = AXI4_Wr_Resp {bid:   0,    // TODO: change uniformly to Fabric_id
-			      bresp: axi4_resp_okay,
-			      buser: ?};
+                              bresp: axi4_resp_okay,
+                              buser: ?};
       axi4_slave_xactor.i_wr_resp.enq (wr_resp);
 
       if (verbosity >= 2) begin
          $display ("%0d: %m.rl_handle_MemLoader_st_req: addr %0h data %0h strb %0h",
-		   cur_cycle, wr_addr.awaddr, wr_data.wdata, wr_data.wstrb);
-	 $display ("    old_dword: %0h", old_dword);
-	 $display ("    new_dword: %0h", old_dword);
+                   cur_cycle, wr_addr.awaddr, wr_data.wdata, wr_data.wstrb);
+         $display ("    old_dword: %0h", old_dword);
+         $display ("    new_dword: %0h", old_dword);
       end
    endrule
 
@@ -195,9 +195,9 @@ module mkLLCDmaConnect #(
 
    // Responds to load-requests from the external client on load-hit
    rule rl_handle_MemLoader_ld_req (   (   (rg_cacheline_cache_state == CACHELINE_CACHE_CLEAN)
-					|| (rg_cacheline_cache_state == CACHELINE_CACHE_DIRTY))
-				    && (fn_addr_is_in_line (axi4_slave_xactor.o_rd_addr.first.araddr,
-							    rg_cacheline_cache_addr)));
+                                        || (rg_cacheline_cache_state == CACHELINE_CACHE_DIRTY))
+                                    && (fn_addr_is_in_line (axi4_slave_xactor.o_rd_addr.first.araddr,
+                                                            rg_cacheline_cache_addr)));
       let rd_addr <- pop_o (axi4_slave_xactor.o_rd_addr);
       Addr addr = rd_addr.araddr;
 
@@ -209,15 +209,15 @@ module mkLLCDmaConnect #(
       // Send response to external client
       AXI4_Rd_Data #(Wd_Id, Wd_Data, Wd_User)
       rd_data = AXI4_Rd_Data {rid: 0,        // TODO: fixup
-			      rdata: dword,
-			      rresp: axi4_resp_okay,
-			      rlast: True,
-			      ruser: ?};
+                              rdata: dword,
+                              rresp: axi4_resp_okay,
+                              rlast: True,
+                              ruser: ?};
       axi4_slave_xactor.i_rd_data.enq (rd_data);
 
       if (verbosity >= 2) begin
          $display ("%0d: %m.rl_handle_MemLoader_ld_req: addr %0h", cur_cycle, rd_addr.araddr);
-	 $display ("    dword: %0h", dword);
+         $display ("    dword: %0h", dword);
       end
    endrule
 
@@ -226,29 +226,29 @@ module mkLLCDmaConnect #(
 
    // Maintain dirty delay countdown
    rule rl_cacheline_cache_writeback_dirty_delay (   (rg_cacheline_cache_state == CACHELINE_CACHE_DIRTY)
-					      && (rg_cacheline_cache_dirty_delay != 0));
+                                              && (rg_cacheline_cache_dirty_delay != 0));
       rg_cacheline_cache_dirty_delay <= rg_cacheline_cache_dirty_delay - 1;
    endrule
 
    function Action fa_writeback;
       action
-	 dmaRqT req =  DmaRq {addr:   rg_cacheline_cache_addr,
-			      byteEn: replicate (True),       // Write all bytes
-			      data:   rg_cacheline_cache_data,
-			      id:     tagged MemLoader (?)    // TODO: use  wr_addr.awid?
-			      };
-	 llc.memReq.enq (req);
-	 // $display ("%0d: %m.fa_writeback line at %0h", cur_cycle, rg_cacheline_cache_addr);
-	 // $display ("  data %0128h", rg_cacheline_cache_data);
+         dmaRqT req =  DmaRq {addr:   rg_cacheline_cache_addr,
+                              byteEn: replicate (True),       // Write all bytes
+                              data:   rg_cacheline_cache_data,
+                              id:     tagged MemLoader (?)    // TODO: use  wr_addr.awid?
+                              };
+         llc.memReq.enq (req);
+         // $display ("%0d: %m.fa_writeback line at %0h", cur_cycle, rg_cacheline_cache_addr);
+         // $display ("  data %0128h", rg_cacheline_cache_data);
       endaction
    endfunction
 
    // Initiate writeback if dirty for full delay
    rule rl_cacheline_cache_writeback_dirty_aged (   (rg_cacheline_cache_state == CACHELINE_CACHE_DIRTY)
-					     && (rg_cacheline_cache_dirty_delay == 0));
+                                             && (rg_cacheline_cache_dirty_delay == 0));
       if (verbosity >= 2) begin
-	 $display ("%0d: %m.rl_cacheline_cache_writeback_dirty_aged.", cur_cycle);
-	 $display ("    Old line addr %0h", rg_cacheline_cache_addr);
+         $display ("%0d: %m.rl_cacheline_cache_writeback_dirty_aged.", cur_cycle);
+         $display ("    Old line addr %0h", rg_cacheline_cache_addr);
       end
 
       fa_writeback;
@@ -257,12 +257,12 @@ module mkLLCDmaConnect #(
 
    // Initiate writeback if dirty and next request is store-miss
    rule rl_cacheline_cache_writeback_st_miss (   (rg_cacheline_cache_state == CACHELINE_CACHE_DIRTY)
-					      && (! fn_addr_is_in_line (axi4_slave_xactor.o_wr_addr.first.awaddr,
-									rg_cacheline_cache_addr)));
+                                              && (! fn_addr_is_in_line (axi4_slave_xactor.o_wr_addr.first.awaddr,
+                                                                        rg_cacheline_cache_addr)));
       if (verbosity >= 2) begin
-	 $display ("%0d: %m.rl_cacheline_cache_writeback_st_miss.", cur_cycle);
-	 $display ("    Old line addr %0h", rg_cacheline_cache_addr);
-	 $display ("    New addr      %0h", axi4_slave_xactor.o_wr_addr.first.awaddr);
+         $display ("%0d: %m.rl_cacheline_cache_writeback_st_miss.", cur_cycle);
+         $display ("    Old line addr %0h", rg_cacheline_cache_addr);
+         $display ("    New addr      %0h", axi4_slave_xactor.o_wr_addr.first.awaddr);
       end
 
       fa_writeback;
@@ -271,12 +271,12 @@ module mkLLCDmaConnect #(
 
    // Initiate writeback if dirty and next request is load-miss
    rule rl_cacheline_cache_writeback_ld_miss (   (rg_cacheline_cache_state == CACHELINE_CACHE_DIRTY)
-					      && (! fn_addr_is_in_line (axi4_slave_xactor.o_rd_addr.first.araddr,
-									rg_cacheline_cache_addr)));
+                                              && (! fn_addr_is_in_line (axi4_slave_xactor.o_rd_addr.first.araddr,
+                                                                        rg_cacheline_cache_addr)));
       if (verbosity >= 2) begin
-	 $display ("%0d: %m.rl_cacheline_cache_writeback_ld_miss.", cur_cycle);
-	 $display ("    Old line addr %0h", rg_cacheline_cache_addr);
-	 $display ("    New addr      %0h", axi4_slave_xactor.o_wr_addr.first.awaddr);
+         $display ("%0d: %m.rl_cacheline_cache_writeback_ld_miss.", cur_cycle);
+         $display ("    Old line addr %0h", rg_cacheline_cache_addr);
+         $display ("    New addr      %0h", axi4_slave_xactor.o_wr_addr.first.awaddr);
       end
 
       fa_writeback;
@@ -285,42 +285,42 @@ module mkLLCDmaConnect #(
 
    // Finish writeback
    rule rl_cacheline_cache_writeback_finish (llc.respSt.first matches tagged MemLoader .id
-					     &&& (rg_cacheline_cache_state == CACHELINE_CACHE_WRITING_BACK));
+                                             &&& (rg_cacheline_cache_state == CACHELINE_CACHE_WRITING_BACK));
       let resp = llc.respSt.first;
       llc.respSt.deq;
       rg_cacheline_cache_state <= CACHELINE_CACHE_CLEAN;
 
       if (verbosity >= 2) begin
-	 $display ("%0d: %m.rl_cacheline_cache_writeback_finish. Line addr %0h",
-		   cur_cycle, rg_cacheline_cache_addr);
-	 $display ("    Line data %0h", rg_cacheline_cache_data);
+         $display ("%0d: %m.rl_cacheline_cache_writeback_finish. Line addr %0h",
+                   cur_cycle, rg_cacheline_cache_addr);
+         $display ("    Line data %0h", rg_cacheline_cache_data);
       end
    endrule
 
    function Action fa_initiate_reload (Addr addr);
       action
-	 let line_addr = fn_align_addr_to_line (addr);
-	 dmaRqT req =  DmaRq {addr:   line_addr,
-			      byteEn: replicate (False),        // all False means 'read'
-			      data:   ?,
-			      id:     tagged MemLoader (?)};    // TODO: change uniformly to  wr_addr.awid
-	 llc.memReq.enq (req);
-	 rg_cacheline_cache_addr <= line_addr;
+         let line_addr = fn_align_addr_to_line (addr);
+         dmaRqT req =  DmaRq {addr:   line_addr,
+                              byteEn: replicate (False),        // all False means 'read'
+                              data:   ?,
+                              id:     tagged MemLoader (?)};    // TODO: change uniformly to  wr_addr.awid
+         llc.memReq.enq (req);
+         rg_cacheline_cache_addr <= line_addr;
 
-	 if (verbosity >= 2) begin
-	    $display ("    fa_initiate_reload: line_addr %0h", line_addr);
-	 end
+         if (verbosity >= 2) begin
+            $display ("    fa_initiate_reload: line_addr %0h", line_addr);
+         end
       endaction
    endfunction
 
    // Initiate reload when cacheline_cache is clean on store-miss
    rule rl_cacheline_cache_reload_req_st (   (rg_cacheline_cache_state == CACHELINE_CACHE_CLEAN)
-					  && (! fn_addr_is_in_line (axi4_slave_xactor.o_wr_addr.first.awaddr,
-								    rg_cacheline_cache_addr)));
+                                          && (! fn_addr_is_in_line (axi4_slave_xactor.o_wr_addr.first.awaddr,
+                                                                    rg_cacheline_cache_addr)));
       let addr = axi4_slave_xactor.o_wr_addr.first.awaddr;
 
       if (verbosity >= 2) begin
-	 $display ("%0d: %m.rl_cacheline_cache_reload_req_st for addr %0h", cur_cycle, addr);
+         $display ("%0d: %m.rl_cacheline_cache_reload_req_st for addr %0h", cur_cycle, addr);
       end
 
       fa_initiate_reload (addr);
@@ -329,12 +329,12 @@ module mkLLCDmaConnect #(
 
    // Initiate reload when cacheline_cache is clean on load-miss
    rule rl_cacheline_cache_reload_req_ld (   (rg_cacheline_cache_state == CACHELINE_CACHE_CLEAN)
-					  && (! fn_addr_is_in_line (axi4_slave_xactor.o_rd_addr.first.araddr,
-								    rg_cacheline_cache_addr)));
+                                          && (! fn_addr_is_in_line (axi4_slave_xactor.o_rd_addr.first.araddr,
+                                                                    rg_cacheline_cache_addr)));
       let addr = axi4_slave_xactor.o_rd_addr.first.araddr;
 
       if (verbosity >= 2) begin
-	 $display ("%0d: %m.rl_cacheline_cache_reload_req_ld for addr %0h", cur_cycle, addr);
+         $display ("%0d: %m.rl_cacheline_cache_reload_req_ld for addr %0h", cur_cycle, addr);
       end
 
       fa_initiate_reload (addr);
@@ -343,15 +343,15 @@ module mkLLCDmaConnect #(
 
    // Finish reload
    rule rl_cacheline_cache_reload_finish (llc.respLd.first.id matches tagged MemLoader .id
-					  &&& (rg_cacheline_cache_state == CACHELINE_CACHE_RELOADING));
+                                          &&& (rg_cacheline_cache_state == CACHELINE_CACHE_RELOADING));
       let resp = llc.respLd.first;
       llc.respLd.deq;
       rg_cacheline_cache_state <= CACHELINE_CACHE_CLEAN;
       rg_cacheline_cache_data  <= resp.data;
 
       if (verbosity >= 2) begin
-	 $display ("%0d: %m.rl_cacheline_cache_reload_finish. Line addr %0h", cur_cycle, rg_cacheline_cache_addr);
-	 $display ("    Line data %0h", resp.data);
+         $display ("%0d: %m.rl_cacheline_cache_reload_finish. Line addr %0h", cur_cycle, rg_cacheline_cache_addr);
+         $display ("    Line data %0h", resp.data);
       end
    endrule
 

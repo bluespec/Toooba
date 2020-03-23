@@ -180,11 +180,11 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
 
    function Action fa_step_check;
       action
-	 if (csrf.dcsr_step_bit == 1'b1) begin
-	    rg_m_halt_req <= tagged Valid DebugStep;
-	    if (verbosity >= 2)
-	       $display ("%0d: %m.renameStage.fa_step_check: rg_m_halt_req <= tagged Valid DebugStep", cur_cycle);
-	 end
+         if (csrf.dcsr_step_bit == 1'b1) begin
+            rg_m_halt_req <= tagged Valid DebugStep;
+            if (verbosity >= 2)
+               $display ("%0d: %m.renameStage.fa_step_check: rg_m_halt_req <= tagged Valid DebugStep", cur_cycle);
+         end
       endaction
    endfunction
 `endif
@@ -221,8 +221,8 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
    function Bool fn_ArchReg_is_FpuReg (Maybe #(ArchRIndx) m_arch_r_indx);
       Bool result = False;
       if (m_arch_r_indx matches tagged Valid .arch_r_indx)
-	 if (arch_r_indx matches tagged Fpu .fpu_r_index)
-	    result = True;
+         if (arch_r_indx matches tagged Fpu .fpu_r_index)
+            result = True;
       return result;
    endfunction
 
@@ -235,46 +235,46 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
 
         // If Fpu regs are accessed, trap if mstatus_fs is "Off" (2'b00)
         Bool fpr_access = (   fn_ArchReg_is_FpuReg (x.regs.src1)
-			   || fn_ArchReg_is_FpuReg (x.regs.src2)
-			   || isValid (x.regs.src3)
-			   || fn_ArchReg_is_FpuReg (x.regs.dst));
+                           || fn_ArchReg_is_FpuReg (x.regs.src2)
+                           || isValid (x.regs.src3)
+                           || fn_ArchReg_is_FpuReg (x.regs.dst));
         let mstatus   = csrf.rd (CSRmstatus);
         Bool fs_trap = ((mstatus [14:13] == 2'b00) && fpr_access);
 
         // Check CSR access permission
         Bool csr_access_trap = False;
         if (x.dInst.iType == Csr) begin
-	   Bit #(12) csr_addr  = case (x.dInst.csr) matches
-				    tagged Valid .c: pack (c);
-				    default:         12'hCFF;
-				 endcase;
-	   let rs1 = case (x.regs.src2) matches
-			tagged Valid (tagged Gpr .r) : r;
-			default: 0;
-		     endcase;
-	   let imm = case (x.dInst.imm) matches
-			tagged Valid .n: n;
-			default: 0;
-		     endcase;
-	   Bool writes_csr = ((x.dInst.execFunc == tagged Alu Csrw) || (rs1 != 0) || (imm != 0));
-	   Bool read_only  = (csr_addr [11:10] == 2'b11);
+           Bit #(12) csr_addr  = case (x.dInst.csr) matches
+                                    tagged Valid .c: pack (c);
+                                    default:         12'hCFF;
+                                 endcase;
+           let rs1 = case (x.regs.src2) matches
+                        tagged Valid (tagged Gpr .r) : r;
+                        default: 0;
+                     endcase;
+           let imm = case (x.dInst.imm) matches
+                        tagged Valid .n: n;
+                        default: 0;
+                     endcase;
+           Bool writes_csr = ((x.dInst.execFunc == tagged Alu Csrw) || (rs1 != 0) || (imm != 0));
+           Bool read_only  = (csr_addr [11:10] == 2'b11);
            Bool write_deny = (writes_csr && read_only);
-	   Bool priv_deny  = (csrf.decodeInfo.prv < csr_addr [9:8]);
-	   Bool unimplemented = (csr_addr == 12'h8ff);    // Added by Bluespec
-	   csr_access_trap = (write_deny || priv_deny || unimplemented);
-	end
+           Bool priv_deny  = (csrf.decodeInfo.prv < csr_addr [9:8]);
+           Bool unimplemented = (csr_addr == 12'h8ff);    // Added by Bluespec
+           csr_access_trap = (write_deny || priv_deny || unimplemented);
+        end
 
         // Check WFI trap (using a time-out of 0)
         Bit #(32) inst_WFI = 32'h_1050_0073;
         Bit #(1) mstatus_tw = mstatus [21];
         Bool wfi_trap = (   (x.inst == inst_WFI)
-			 && (mstatus_tw == 1'b1)
-			 && (csrf.decodeInfo.prv < prvM));
+                         && (mstatus_tw == 1'b1)
+                         && (csrf.decodeInfo.prv < prvM));
 
 `ifdef INCLUDE_GDB_CONTROL
         if (rg_m_halt_req matches tagged Valid .cause) begin
-	   // Stop due to debugger halt or step
-	   trap = tagged Valid (tagged Interrupt cause);
+           // Stop due to debugger halt or step
+           trap = tagged Valid (tagged Interrupt cause);
         end else
 `endif
 
@@ -288,9 +288,9 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
             // newly found exception
             trap = tagged Valid (tagged Exception fromMaybe(?, new_exception));
         end
-	else if (fs_trap || csr_access_trap || wfi_trap) begin
+        else if (fs_trap || csr_access_trap || wfi_trap) begin
             trap = tagged Valid (tagged Exception IllegalInst);
-	end
+        end
         return trap;
     endfunction
 
@@ -324,12 +324,12 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         fa_step_check;
 
        if (verbosity >= 1) begin
-	  if (firstTrap == tagged Valid (tagged Interrupt DebugHalt))
-	     $display ("%0d: %m.renameStage.doRenaming_Trap: DebugHalt", cur_cycle);
-	  else if (firstTrap == tagged Valid (tagged Interrupt DebugStep))
-	     $display ("%0d: %m.renameStage.doRenaming_Trap: DebugStep", cur_cycle);
-	  else if (firstTrap == tagged Valid (tagged Exception Breakpoint))
-	     $display ("%0d: %m.renameStage.doRenaming_Trap: Breakpoint", cur_cycle);
+          if (firstTrap == tagged Valid (tagged Interrupt DebugHalt))
+             $display ("%0d: %m.renameStage.doRenaming_Trap: DebugHalt", cur_cycle);
+          else if (firstTrap == tagged Valid (tagged Interrupt DebugStep))
+             $display ("%0d: %m.renameStage.doRenaming_Trap: DebugStep", cur_cycle);
+          else if (firstTrap == tagged Valid (tagged Exception Breakpoint))
+             $display ("%0d: %m.renameStage.doRenaming_Trap: Breakpoint", cur_cycle);
        end
 `endif
         let x = fetchStage.pipelines[0].first;
@@ -353,18 +353,18 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         incrEpochStallFetch;
         // just place it in the reorder buffer
         let y = ToReorderBuffer{pc: pc,
-				orig_inst: orig_inst,
+                                orig_inst: orig_inst,
                                 iType: dInst.iType,
-				dst: arch_regs.dst,
-				dst_data: ?,    // Available only after execution
+                                dst: arch_regs.dst,
+                                dst_data: ?,    // Available only after execution
 `ifdef INCLUDE_TANDEM_VERIF
-				store_data: ?,
-				store_data_BE: ?,
+                                store_data: ?,
+                                store_data_BE: ?,
 `endif
                                 csr: dInst.csr,
                                 claimed_phy_reg: False, // no renaming is done
                                 trap: firstTrap,
-				tval: tval,
+                                tval: tval,
                                 // default values of FullResult
                                 ppc_vaddr_csrData: PPC (setAddr(almightyCap, pc).value), // default use PPC
                                 fflags: 0,
@@ -390,7 +390,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
 `ifdef INCLUDE_GDB_CONTROL
         else if (firstTrap == tagged Valid (tagged Exception Breakpoint)) begin
             inIfc.issueCsrInstOrInterrupt;
-	end
+        end
 `endif
 
 `ifdef CHECK_DEADLOCK
@@ -540,29 +540,29 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
 
         // CSR instrs that touch certain FP CSRs will dirty FP state.
         if (dInst.csr matches tagged Valid .csr
-	    &&& ((dInst.iType == Csr)
-		 && ((csr == CSRfflags) || (csr == CSRfrm) || (csr == CSRfcsr))))
-	   begin
-	      Bool is_CSRR_W = (dInst.execFunc == tagged Alu Csrw);
-	      Bool rs1_is_0 = ((arch_regs.src2 == tagged Valid (tagged Gpr 0))
-			       || (dInst.imm == tagged Valid 0));
-	      will_dirty_fpu_state = (is_CSRR_W || (! rs1_is_0));
-	   end
+            &&& ((dInst.iType == Csr)
+                 && ((csr == CSRfflags) || (csr == CSRfrm) || (csr == CSRfcsr))))
+           begin
+              Bool is_CSRR_W = (dInst.execFunc == tagged Alu Csrw);
+              Bool rs1_is_0 = ((arch_regs.src2 == tagged Valid (tagged Gpr 0))
+                               || (dInst.imm == tagged Valid 0));
+              will_dirty_fpu_state = (is_CSRR_W || (! rs1_is_0));
+           end
 
         RobInstState rob_inst_state = to_exec ? NotDone : Executed;
         let y = ToReorderBuffer{pc: pc,
-				orig_inst: orig_inst,
+                                orig_inst: orig_inst,
                                 iType: dInst.iType,
-				dst: arch_regs.dst,
-				dst_data: ?,    // Available only after execution
+                                dst: arch_regs.dst,
+                                dst_data: ?,    // Available only after execution
 `ifdef INCLUDE_TANDEM_VERIF
-				store_data: ?,
-				store_data_BE: ?,
+                                store_data: ?,
+                                store_data_BE: ?,
 `endif
                                 csr: dInst.csr,
                                 claimed_phy_reg: True, // XXX we always claim a free reg in rename
                                 trap: Invalid, // no trap
-	                        tval: 0,
+                                tval: 0,
                                 // default values of FullResult
                                 ppc_vaddr_csrData: PPC (setAddr(almightyCap, ppc).value), // default use PPC
                                 fflags: 0,
@@ -700,7 +700,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                         regs_ready: regs_ready_aggr // mem currently recv bypass
                     });
                 end
-	        doAssert(ppc == fallthrough_pc, "Mem next PC is not PC+4/PC+2");
+                doAssert(ppc == fallthrough_pc, "Mem next PC is not PC+4/PC+2");
                 doAssert(!isValid(dInst.csr), "Mem never explicitly read/write CSR");
                 doAssert((dInst.iType != Fence) == isValid(dInst.imm),
                          "Mem (non-Fence) needs imm for virtual addr");
@@ -728,13 +728,13 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         end
         RobInstState rob_inst_state = NotDone; // mem inst always needs execution
         let y = ToReorderBuffer{pc: pc,
-				orig_inst: orig_inst,
+                                orig_inst: orig_inst,
                                 iType: dInst.iType,
-				dst: arch_regs.dst,
-				dst_data: ?,    // Available only after execution
+                                dst: arch_regs.dst,
+                                dst_data: ?,    // Available only after execution
 `ifdef INCLUDE_TANDEM_VERIF
-				store_data: ?,
-				store_data_BE: ?,
+                                store_data: ?,
+                                store_data_BE: ?,
 `endif
                                 csr: dInst.csr,
                                 claimed_phy_reg: True, // XXX we always claim a free reg in rename
@@ -853,7 +853,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
             if(!stop && fetchStage.pipelines[i].canDeq) begin
                 let x = fetchStage.pipelines[i].first; // don't deq now, inst may not have resource
                 let pc = x.pc;
-	        let orig_inst = x.orig_inst;
+                let orig_inst = x.orig_inst;
                 let ppc = x.ppc;
                 let main_epoch = x.main_epoch;
                 let dpTrain = x.dpTrain;
@@ -865,10 +865,10 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                 Addr fallthrough_pc = ((orig_inst[1:0] == 2'b11) ? pc + 4 : pc + 2);
 
 `ifdef INCLUDE_GDB_CONTROL
-	        if ((i != 0) && (csrf.dcsr_step_bit == 1'b1)) begin
-		   stop       = True;
-		   debug_step = True;
-		end
+                if ((i != 0) && (csrf.dcsr_step_bit == 1'b1)) begin
+                   stop       = True;
+                   debug_step = True;
+                end
 `endif
 
                 // check for wrong path, if wrong path, don't process it, leave to the other rule in next cycle
@@ -1092,13 +1092,13 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                         RobInstState rob_inst_state = (to_exec || to_mem || to_FpuMulDiv) ? NotDone : Executed;
 
                         let y = ToReorderBuffer{pc: pc,
-						orig_inst: orig_inst,
+                                                orig_inst: orig_inst,
                                                 iType: dInst.iType,
-						dst: arch_regs.dst,
-						dst_data: ?,    // Available only after execution
+                                                dst: arch_regs.dst,
+                                                dst_data: ?,    // Available only after execution
 `ifdef INCLUDE_TANDEM_VERIF
-						store_data: ?,
-						store_data_BE: ?,
+                                                store_data: ?,
+                                                store_data_BE: ?,
 `endif
                                                 csr: dInst.csr,
                                                 claimed_phy_reg: True, // XXX we always claim a free reg in rename
@@ -1138,7 +1138,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
 
 `ifdef INCLUDE_GDB_CONTROL
         if (debug_step)
-	   rg_m_halt_req <= tagged Valid DebugStep;
+           rg_m_halt_req <= tagged Valid DebugStep;
 `endif
 
         // only fire this rule if we make some progress
@@ -1186,13 +1186,13 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
    method Action debug_halt_req () if (rg_m_halt_req == tagged Invalid);
       rg_m_halt_req <= tagged Valid DebugHalt;
       if (verbosity >= 1)
-	 $display ("%0d: %m.renameStage.renameStage.debug_halt_req", cur_cycle);
+         $display ("%0d: %m.renameStage.renameStage.debug_halt_req", cur_cycle);
    endmethod
 
    method Action debug_resume;
       rg_m_halt_req <= tagged Invalid;
       if (verbosity >= 1)
-	 $display ("%0d: %m.renameStage.renameStage.debug_resume", cur_cycle);
+         $display ("%0d: %m.renameStage.renameStage.debug_resume", cur_cycle);
    endmethod
 `endif
 

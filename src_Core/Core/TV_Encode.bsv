@@ -86,14 +86,14 @@ module mkTV_Encode (TV_Encode_IFC);
    // v_f_cpu_ins are merged in program order (using serialnum)
    for (Integer j = 0; j < valueOf (SupSize); j = j + 1)
       rule rl_merge_cpu_ins (tpl_1 (v_f_cpu_ins [j].first) == rg_serialnum);
-	 let td = tpl_2 (v_f_cpu_ins [j].first);
-	 v_f_cpu_ins [j].deq;
-	 f_merged.enq (td);
-	 rg_serialnum <= rg_serialnum + 1;
+         let td = tpl_2 (v_f_cpu_ins [j].first);
+         v_f_cpu_ins [j].deq;
+         f_merged.enq (td);
+         rg_serialnum <= rg_serialnum + 1;
 
-	 if (verbosity != 0) begin
-	    $display ("%0d: %m.rl_merge_cpu_in [%0d]: serialnum = %0d", cur_cycle, j, rg_serialnum);
-	 end
+         if (verbosity != 0) begin
+            $display ("%0d: %m.rl_merge_cpu_in [%0d]: serialnum = %0d", cur_cycle, j, rg_serialnum);
+         end
       endrule
 
    // f_dm_ins is merged in at any time
@@ -103,7 +103,7 @@ module mkTV_Encode (TV_Encode_IFC);
       f_merged.enq (td);
 
       if (verbosity != 0) begin
-	 $display ("%0d: %m.rl_merge_dm_in", cur_cycle);
+         $display ("%0d: %m.rl_merge_dm_in", cur_cycle);
       end
    endrule
 
@@ -231,7 +231,7 @@ module mkTV_Encode (TV_Encode_IFC);
       f_out.enq (tuple2 (nnN, xN));
 
       if (verbosity != 0)
-	 $display ("%0d: %m.rl_log_trace_OTHER, pc = %0h", cur_cycle, td.pc);
+         $display ("%0d: %m.rl_log_trace_OTHER, pc = %0h", cur_cycle, td.pc);
    endrule
 
    rule rl_log_trace_I_RD (f_merged.first.op == TRACE_I_RD);
@@ -254,7 +254,7 @@ module mkTV_Encode (TV_Encode_IFC);
       f_out.enq (tuple2 (nnN, xN));
 
       if (verbosity != 0)
-	 $display ("%0d: %m.rl_log_trace_I_RD, pc = %0h", cur_cycle, td.pc);
+         $display ("%0d: %m.rl_log_trace_I_RD, pc = %0h", cur_cycle, td.pc);
    endrule
 
 `ifdef ISA_F
@@ -435,7 +435,7 @@ module mkTV_Encode (TV_Encode_IFC);
       f_out.enq (tuple2 (nnN, xN));
 
       if (verbosity != 0)
-	 $display ("%0d: %m.rl_log_trace_AMO, pc = %0h", cur_cycle, td.pc);
+         $display ("%0d: %m.rl_log_trace_AMO, pc = %0h", cur_cycle, td.pc);
    endrule
 
    rule rl_log_trace_CSRRX (f_merged.first.op == TRACE_CSRRX);
@@ -448,14 +448,14 @@ module mkTV_Encode (TV_Encode_IFC);
       match { .n3, .vb3 } = encode_reg (fv_gpr_regnum (td.rd), td.word1);
       Bool csr_written = (td.word2 [0] == 1'b1);
       match { .n4, .vb4 } = (csr_written
-			     ? encode_reg (fv_csr_regnum (truncate (td.word3)), td.word4)
-			     : tuple2 (0, ?));
+                             ? encode_reg (fv_csr_regnum (truncate (td.word3)), td.word4)
+                             : tuple2 (0, ?));
 `ifdef ISA_F
       // MSTATUS.FS and .SD also updated if CSR instr wrote FFLAGS, FRM or FCSR
       Bool mstatus_written = (td.word2 [1] == 1'b1);
       match { .n5, .vb5 } = (mstatus_written
-			     ? encode_reg (fv_csr_regnum (csr_addr_mstatus), td.word5)
-			     : tuple2 (0, ?));
+                             ? encode_reg (fv_csr_regnum (csr_addr_mstatus), td.word5)
+                             : tuple2 (0, ?));
 `endif
       match { .nN, .vbN } = encode_byte (te_op_end_group);
 
@@ -485,28 +485,28 @@ module mkTV_Encode (TV_Encode_IFC);
       CSR_Addr  csr_addr_epc    = csr_addr_mepc;
       CSR_Addr  csr_addr_tval   = csr_addr_mtval;
       if (priv == s_Priv_Mode) begin
-	 csr_addr_status = csr_addr_sstatus;
-	 csr_addr_cause  = csr_addr_scause;
-	 csr_addr_epc    = csr_addr_sepc;
-	 csr_addr_tval   = csr_addr_stval;
+         csr_addr_status = csr_addr_sstatus;
+         csr_addr_cause  = csr_addr_scause;
+         csr_addr_epc    = csr_addr_sepc;
+         csr_addr_tval   = csr_addr_stval;
       end
       else if (priv == u_Priv_Mode) begin
-	 csr_addr_status = csr_addr_ustatus;
-	 csr_addr_cause  = csr_addr_ucause;
-	 csr_addr_epc    = csr_addr_uepc;
-	 csr_addr_tval   = csr_addr_utval;
+         csr_addr_status = csr_addr_ustatus;
+         csr_addr_cause  = csr_addr_ucause;
+         csr_addr_epc    = csr_addr_uepc;
+         csr_addr_tval   = csr_addr_utval;
       end
 
       // Omit the instruction if cause is instruction fault since the instruction is then bogus
       Bool is_instr_fault = (   (truncate (td.word2) == exc_code_INSTR_ACCESS_FAULT)
-			     || (truncate (td.word2) == exc_code_INSTR_PAGE_FAULT));
+                             || (truncate (td.word2) == exc_code_INSTR_PAGE_FAULT));
 
       // Encode components of td into byte vecs
       match { .n0, .vb0 } = encode_byte (te_op_begin_group);
       match { .n1, .vb1 } = encode_pc (td.pc);
       match { .n2, .vb2 } = (is_instr_fault
-			     ? tuple2 (0, ?)
-			     : encode_instr (td.instr_sz, td.instr));
+                             ? tuple2 (0, ?)
+                             : encode_instr (td.instr_sz, td.instr));
       match { .n3, .vb3 } = encode_priv (td.rd);
       match { .n4, .vb4 } = encode_reg (fv_csr_regnum (csr_addr_status), td.word1);
       match { .n5, .vb5 } = encode_reg (fv_csr_regnum (csr_addr_cause),  td.word2);
@@ -538,16 +538,16 @@ module mkTV_Encode (TV_Encode_IFC);
       CSR_Addr  csr_addr_epc    = csr_addr_mepc;
       CSR_Addr  csr_addr_tval   = csr_addr_mtval;
       if (priv == s_Priv_Mode) begin
-	 csr_addr_status = csr_addr_sstatus;
-	 csr_addr_cause  = csr_addr_scause;
-	 csr_addr_epc    = csr_addr_sepc;
-	 csr_addr_tval   = csr_addr_stval;
+         csr_addr_status = csr_addr_sstatus;
+         csr_addr_cause  = csr_addr_scause;
+         csr_addr_epc    = csr_addr_sepc;
+         csr_addr_tval   = csr_addr_stval;
       end
       else if (priv == u_Priv_Mode) begin
-	 csr_addr_status = csr_addr_ustatus;
-	 csr_addr_cause  = csr_addr_ucause;
-	 csr_addr_epc    = csr_addr_uepc;
-	 csr_addr_tval   = csr_addr_utval;
+         csr_addr_status = csr_addr_ustatus;
+         csr_addr_cause  = csr_addr_ucause;
+         csr_addr_epc    = csr_addr_uepc;
+         csr_addr_tval   = csr_addr_utval;
       end
 
       // Encode components of td into byte vecs
@@ -682,15 +682,15 @@ endfunction
 // vsubst substitutes vb1[j1:j1+j2-1] with vb2[0:j2-1]
 
 function Tuple2 #(Bit #(32),
-		  Vector #(TV_VB_SIZE, Byte))
+                  Vector #(TV_VB_SIZE, Byte))
    vsubst (Bit #(32) j1, Vector #(TV_VB_SIZE, Byte) vb1,
-	   Bit #(32) j2, Vector #(m, Byte)          vb2);
+           Bit #(32) j2, Vector #(m, Byte)          vb2);
 
    function Byte f (Integer j);
       Byte      x  = vb1 [j];
       Bit #(32) jj = fromInteger (j);
       if ((j1 <= jj) && (jj < j1 + j2))
-	 x = vb2 [jj - j1];
+         x = vb2 [jj - j1];
       return x;
    endfunction
 
@@ -859,11 +859,11 @@ function Tuple2 #(Bit #(32), Vector #(TV_VB_SIZE, Byte)) encode_stval (MemReqSiz
    Vector #(TV_VB_SIZE, Byte) vb = newVector;
    vb [0] = te_op_addl_state;
    vb [1] = case (mem_req_size)
-	       f3_SIZE_B: te_op_addl_state_data8;
-	       f3_SIZE_H: te_op_addl_state_data16;
-	       f3_SIZE_W: te_op_addl_state_data32;
-	       f3_SIZE_D: te_op_addl_state_data64;
-	    endcase;
+               f3_SIZE_B: te_op_addl_state_data8;
+               f3_SIZE_H: te_op_addl_state_data16;
+               f3_SIZE_W: te_op_addl_state_data32;
+               f3_SIZE_D: te_op_addl_state_data64;
+            endcase;
    vb [2] = word [7:0];
    vb [3] = word [15:8];
    vb [4] = word [23:16];
@@ -883,11 +883,11 @@ function Tuple2 #(Bit #(32), Vector #(TV_VB_SIZE, Byte)) encode_fstval (MemReqSi
    Vector #(TV_VB_SIZE, Byte) vb = newVector;
    vb [0] = te_op_addl_state;
    vb [1] = case (mem_req_size)
-	       f3_SIZE_B: te_op_addl_state_data8;  // not possible
-	       f3_SIZE_H: te_op_addl_state_data16; // not possible
-	       f3_SIZE_W: te_op_addl_state_data32;
-	       f3_SIZE_D: te_op_addl_state_data64;
-	    endcase;
+               f3_SIZE_B: te_op_addl_state_data8;  // not possible
+               f3_SIZE_H: te_op_addl_state_data16; // not possible
+               f3_SIZE_W: te_op_addl_state_data32;
+               f3_SIZE_D: te_op_addl_state_data64;
+            endcase;
    vb [2] = word [7:0];
    vb [3] = word [15:8];
    vb [4] = word [23:16];
