@@ -154,6 +154,7 @@ interface AluExeInput;
         Data dst_data,
         Maybe#(Data) csrData,
         ControlFlow cf,
+        Maybe#(Exception) cause,
         CapPipe pcc
 `ifdef RVFI
         , ExtraTraceBundle tb
@@ -346,6 +347,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
             x.data,
             x.csrData,
             x.controlFlow,
+            tagged Invalid,
             cast(inIfc.scaprf_rd(SCR_PCC))
 `ifdef RVFI
             , x.traceBundle

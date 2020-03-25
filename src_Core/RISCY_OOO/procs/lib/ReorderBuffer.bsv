@@ -114,6 +114,7 @@ interface Row_setExecuted_doFinishAlu;
         Data dst_data,
         Maybe#(Data) csrData,
         ControlFlow cf,
+        Maybe#(Exception) cause,
         CapPipe pcc
 `ifdef RVFI
         , ExtraTraceBundle tb
@@ -122,7 +123,7 @@ interface Row_setExecuted_doFinishAlu;
 endinterface
 
 interface Row_setExecuted_doFinishFpuMulDiv;
-    method Action set(Data dst_data, Bit#(5) fflags, CapPipe pcc);
+    method Action set(Data dst_data, Bit#(5) fflags, Maybe#(Exception) cause, CapPipe pcc);
 endinterface
 
 interface ReorderBufferRowEhr#(numeric type aluExeNum, numeric type fpuMulDivExeNum);
@@ -147,6 +148,7 @@ interface ReorderBufferRowEhr#(numeric type aluExeNum, numeric type fpuMulDivExe
     method Action setExecuted_doFinishMem(Addr vaddr,
                                           Data store_data, ByteEn store_data_BE,
                                           Bool access_at_commit, Bool non_mmio_st_done,
+                                          Maybe#(Exception) cause,
                                           CapPipe pcc
 `ifdef RVFI
                                           , ExtraTraceBundle tb
@@ -274,6 +276,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
                 Data dst_data,
                 Maybe#(Data) csrData,
                 ControlFlow cf,
+                Maybe#(Exception) cause,
                 CapPipe pcc
 `ifdef RVFI
                 , ExtraTraceBundle tb
@@ -291,7 +294,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
                 else begin
                     ppc_vaddr_csrData[pvc_finishAlu_port(i)] <= PPC (setAddr(almightyCap, cf.nextPc).value);
                 end
-                pc[pc_finishAlu_port(i)] <= setAddr(pcc, getAddr(pc[pc_finishAlu_port(i)])).value;
+                pc[pc_finishAlu_port(i)] <= setAddrUnsafe(pcc, getAddr(pc[pc_finishAlu_port(i)]));
                 trap[trap_finishAlu_port(i)] <= trap[trap_finishAlu_port(i)];
                 tval[trap_finishAlu_port(i)] <= tval[trap_finishAlu_port(i)];
 `ifdef RVFI
@@ -306,13 +309,13 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     Vector#(fpuMulDivExeNum, Row_setExecuted_doFinishFpuMulDiv) fpuMulDivExe;
     for(Integer i = 0; i < valueof(fpuMulDivExeNum); i = i+1) begin
         fpuMulDivExe[i] = (interface Row_setExecuted_doFinishFpuMulDiv;
-            method Action set(Data dst_data, Bit#(5) new_fflags, CapPipe pcc);
+            method Action set(Data dst_data, Bit#(5) new_fflags, Maybe#(Exception) cause, CapPipe pcc);
                 // inst is done
                 rob_inst_state[state_finishFpuMulDiv_port(i)] <= Executed;
                 rg_dst_data <= dst_data;
                 // update fflags
                 fflags[fflags_finishFpuMulDiv_port(i)] <= new_fflags;
-                //pc[pc_finishFpuMulDiv_port(i)] <= setAddr(pcc, getAddr(pc[pc_finishFpuMulDiv_port(i)])).value; //XXX add pcc checks on FPU instructions
+                //pc[pc_finishFpuMulDiv_port(i)] <= setAddrUnsafe(pcc, getAddr(pc[pc_finishFpuMulDiv_port(i)])).value; //XXX add pcc checks on FPU instructions
             endmethod
         endinterface);
     end
@@ -328,6 +331,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     method Action setExecuted_doFinishMem(Addr   vaddr,
                                           Data   store_data, ByteEn store_data_BE,
                                           Bool   access_at_commit, Bool non_mmio_st_done,
+                                          Maybe#(Exception) cause,
                                           CapPipe pcc
 `ifdef RVFI
                                           , ExtraTraceBundle tb
@@ -355,7 +359,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         memAccessAtCommit[accessCom_finishMem_port] <= access_at_commit;
         // udpate non mmio st
         nonMMIOStDone[nonMMIOSt_finishMem_port] <= non_mmio_st_done;
-        pc[pc_finishMem_port] <= setAddr(pcc, getAddr(pc[pc_finishMem_port])).value;
+        pc[pc_finishMem_port] <= setAddrUnsafe(pcc, getAddr(pc[pc_finishMem_port]));
     endmethod
 
 `ifdef INCLUDE_TANDEM_VERIF
@@ -541,6 +545,7 @@ interface ROB_setExecuted_doFinishAlu;
                       Data dst_data,
                       Maybe#(Data) csrData,
                       ControlFlow cf,
+                      Maybe#(Exception) cause,
                       CapPipe pcc
 `ifdef RVFI
                       , ExtraTraceBundle tb
@@ -549,7 +554,7 @@ interface ROB_setExecuted_doFinishAlu;
 endinterface
 
 interface ROB_setExecuted_doFinishFpuMulDiv;
-    method Action set(InstTag x, Data dst_data, Bit#(5) fflags, CapPipe pcc);
+    method Action set(InstTag x, Data dst_data, Bit#(5) fflags, Maybe#(Exception) cause, CapPipe pcc);
 endinterface
 
 interface ROB_getOrigPC;
@@ -586,6 +591,7 @@ interface SupReorderBuffer#(numeric type aluExeNum, numeric type fpuMulDivExeNum
                                           Addr vaddr,
                                           Data store_data, ByteEn store_data_BE,
                                           Bool access_at_commit, Bool non_mmio_st_done,
+                                          Maybe#(Exception) cause,
                                           CapPipe pcc
 `ifdef RVFI
                                           , ExtraTraceBundle tb
@@ -1079,6 +1085,7 @@ module mkSupReorderBuffer#(
                 Data dst_data,
                 Maybe#(Data) csrData,
                 ControlFlow cf,
+                Maybe#(Exception) cause,
                 CapPipe pcc
 `ifdef RVFI
                 , ExtraTraceBundle tb
@@ -1090,6 +1097,7 @@ module mkSupReorderBuffer#(
                     dst_data,
                     csrData,
                     cf,
+                    cause,
                     pcc
 `ifdef RVFI
                     , tb
@@ -1103,11 +1111,11 @@ module mkSupReorderBuffer#(
     for(Integer i = 0; i < valueof(fpuMulDivExeNum); i = i+1) begin
         fpuMulDivSetExeIfc[i] = (interface ROB_setExecuted_doFinishFpuMulDiv;
             method Action set(
-                InstTag x, Data dst_data, Bit#(5) fflags, CapPipe pcc
+                InstTag x, Data dst_data, Bit#(5) fflags, Maybe#(Exception) cause, CapPipe pcc
             ) if(
                 all(id, readVReg(setExeFpuMulDiv_SB_enq)) // ordering: < enq
             );
-                row[x.way][x.ptr].setExecuted_doFinishFpuMulDiv[i].set(dst_data, fflags, pcc);
+                row[x.way][x.ptr].setExecuted_doFinishFpuMulDiv[i].set(dst_data, fflags, cause, pcc);
             endmethod
         endinterface);
     end
@@ -1184,7 +1192,7 @@ module mkSupReorderBuffer#(
 
     method Action setExecuted_doFinishMem(
         InstTag x, Addr vaddr, Data store_data, ByteEn store_data_BE, Bool access_at_commit,
-        Bool non_mmio_st_done, CapPipe pcc
+        Bool non_mmio_st_done, Maybe#(Exception) cause, CapPipe pcc
 `ifdef RVFI
         , tb
 `endif
@@ -1194,7 +1202,7 @@ module mkSupReorderBuffer#(
         row[x.way][x.ptr].setExecuted_doFinishMem(vaddr,
                                                   store_data, store_data_BE,
                                                   access_at_commit, non_mmio_st_done,
-                                                  pcc
+                                                  cause, pcc
 `ifdef RVFI
                                                   , tb
 `endif
