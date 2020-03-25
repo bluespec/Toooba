@@ -153,7 +153,8 @@ interface AluExeInput;
         InstTag t,
         Data dst_data,
         Maybe#(Data) csrData,
-        ControlFlow cf
+        ControlFlow cf,
+        CapPipe pcc
 `ifdef RVFI
         , ExtraTraceBundle tb
 `endif
@@ -344,7 +345,8 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
             x.tag,
             x.data,
             x.csrData,
-            x.controlFlow
+            x.controlFlow,
+            cast(inIfc.scaprf_rd(SCR_PCC))
 `ifdef RVFI
             , x.traceBundle
 `endif

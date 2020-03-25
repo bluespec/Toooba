@@ -160,7 +160,8 @@ interface MemExeInput;
     method Action rob_setExecuted_doFinishMem(InstTag t,
                                               Addr vaddr,
                                               Data store_data, ByteEn store_data_BE,
-                                              Bool access_at_commit, Bool non_mmio_st_done
+                                              Bool access_at_commit, Bool non_mmio_st_done,
+                                              CapPipe pcc
 `ifdef RVFI
                                               , ExtraTraceBundle tb
 `endif
@@ -560,7 +561,8 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         Bool access_at_commit = !isValid(cause) && (isMMIO || isLrScAmo);
         Bool non_mmio_st_done = !isValid(cause) && !isMMIO && x.mem_func == St;
         inIfc.rob_setExecuted_doFinishMem(x.tag, x.vaddr, store_data, store_data_BE,
-                                          access_at_commit, non_mmio_st_done
+                                          access_at_commit, non_mmio_st_done,
+                                          cast(inIfc.scaprf_rd(SCR_PCC))
 `ifdef RVFI
                                           , ExtraTraceBundle{
                                               regWriteData: memData[pack(x.ldstq_tag)],

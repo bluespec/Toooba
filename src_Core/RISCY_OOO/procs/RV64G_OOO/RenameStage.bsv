@@ -352,7 +352,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         // This avoids doing incorrect work
         incrEpochStallFetch;
         // just place it in the reorder buffer
-        let y = ToReorderBuffer{pc: setAddr(cast(scaprf.rd(SCR_PCC)), pc).value,
+        let y = ToReorderBuffer{pc: setAddr(almightyCap, pc).value,
                                 orig_inst: orig_inst,
                                 iType: dInst.iType,
                                 dst: arch_regs.dst,
