@@ -178,9 +178,10 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
 );
     Integer trap_deq_port = 0;
     function Integer trap_finishAlu_port(Integer i) = i;
-    Integer trap_deqLSQ_port = valueof(aluExeNum);
-    Integer trap_finishMem_port = valueof(aluExeNum); // write trap
-    Integer trap_enq_port = 1 + valueof(aluExeNum);
+    function Integer trap_finishFpuMulDiv_port(Integer i) = valueof(aluExeNum) + i;
+    Integer trap_deqLSQ_port = valueof(TAdd#(aluExeNum, TDiv#(aluExeNum,2)));
+    Integer trap_finishMem_port = valueof(TAdd#(aluExeNum, TDiv#(aluExeNum,2))); // write trap
+    Integer trap_enq_port = 1 + valueof(TAdd#(aluExeNum, TDiv#(aluExeNum,2)));
 
     Integer pc_deq_port = 0;
     function Integer pc_finishAlu_port(Integer i) = i;
@@ -241,8 +242,8 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
 `endif
     Reg#(Maybe#(CSR))                                               csr                  <- mkRegU;
     Reg#(Bool)                                                      claimed_phy_reg      <- mkRegU;
-    Ehr#(TAdd#(2, aluExeNum), Maybe#(Trap))                         trap                 <- mkEhr(?);
-    Ehr#(TAdd#(2, aluExeNum), Addr)                                 tval                 <- mkEhr(?);
+    Ehr#(TAdd#(TAdd#(2, TDiv#(aluExeNum,2)), aluExeNum), Maybe#(Trap)) trap              <- mkEhr(?);
+    Ehr#(TAdd#(TAdd#(2, TDiv#(aluExeNum,2)), aluExeNum), Addr)      tval                 <- mkEhr(?);
     Ehr#(TAdd#(2, aluExeNum), PPCVAddrCSRData)                      ppc_vaddr_csrData    <- mkEhr(?);
     Ehr#(TAdd#(1, fpuMulDivExeNum), Bit#(5))                        fflags               <- mkEhr(?);
     Reg#(Bool)                                                      will_dirty_fpu_state <- mkRegU;
@@ -294,9 +295,15 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
                 else begin
                     ppc_vaddr_csrData[pvc_finishAlu_port(i)] <= PPC (setAddr(almightyCap, cf.nextPc).value);
                 end
-                pc[pc_finishAlu_port(i)] <= setAddrUnsafe(pcc, getAddr(pc[pc_finishAlu_port(i)]));
-                trap[trap_finishAlu_port(i)] <= trap[trap_finishAlu_port(i)];
-                tval[trap_finishAlu_port(i)] <= tval[trap_finishAlu_port(i)];
+                CapPipe new_pcc = setAddrUnsafe(pcc, getAddr(pc[pc_finishAlu_port(i)]));
+                pc[pc_finishAlu_port(i)] <= new_pcc;
+                if (!isInBounds(new_pcc, False)) begin
+                    trap[trap_finishAlu_port(i)] <= Valid (tagged Exception CapabilityFault);
+                    tval[trap_finishAlu_port(i)] <= tval[trap_finishAlu_port(i)];
+                end else if (cause matches tagged Valid .exp) begin
+                    trap[trap_finishAlu_port(i)] <= Valid (tagged Exception exp);
+                    tval[trap_finishAlu_port(i)] <= tval[trap_finishAlu_port(i)];
+                end
 `ifdef RVFI
                 //$display("%t : traceBundle = ", $time(), fshow(tb), " in Row_setExecuted_doFinishAlu for %x", pc);
                 traceBundle[pvc_finishAlu_port(i)] <= tb;
@@ -315,7 +322,15 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
                 rg_dst_data <= dst_data;
                 // update fflags
                 fflags[fflags_finishFpuMulDiv_port(i)] <= new_fflags;
-                //pc[pc_finishFpuMulDiv_port(i)] <= setAddrUnsafe(pcc, getAddr(pc[pc_finishFpuMulDiv_port(i)])).value; //XXX add pcc checks on FPU instructions
+                CapPipe new_pcc = setAddrUnsafe(pcc, getAddr(pc[pc_finishAlu_port(i)]));
+                if (!isInBounds(new_pcc, False)) begin
+                    trap[trap_finishFpuMulDiv_port(i)] <= Valid (tagged Exception CapabilityFault);
+                    tval[trap_finishFpuMulDiv_port(i)] <= tval[trap_finishAlu_port(i)];
+                end else if (cause matches tagged Valid .exp) begin
+                    trap[trap_finishFpuMulDiv_port(i)] <= Valid (tagged Exception exp);
+                    tval[trap_finishFpuMulDiv_port(i)] <= tval[trap_finishAlu_port(i)];
+                end
+                //pc[pc_finishFpuMulDiv_port(i)] <= newPcc; //XXX add pcc checks on FPU instructions
             endmethod
         endinterface);
     end
@@ -359,7 +374,15 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         memAccessAtCommit[accessCom_finishMem_port] <= access_at_commit;
         // udpate non mmio st
         nonMMIOStDone[nonMMIOSt_finishMem_port] <= non_mmio_st_done;
-        pc[pc_finishMem_port] <= setAddrUnsafe(pcc, getAddr(pc[pc_finishMem_port]));
+        CapPipe new_pcc = setAddrUnsafe(pcc, getAddr(pc[pc_finishMem_port]));
+        pc[pc_finishMem_port] <= new_pcc;
+        if (!isInBounds(new_pcc, False)) begin
+            trap[trap_finishMem_port] <= Valid (tagged Exception CapabilityFault);
+            tval[trap_finishMem_port] <= tval[trap_finishMem_port];
+        end else if (cause matches tagged Valid .exp) begin
+            trap[trap_finishMem_port] <= Valid (tagged Exception exp);
+            tval[trap_finishMem_port] <= tval[trap_finishMem_port];
+        end
     endmethod
 
 `ifdef INCLUDE_TANDEM_VERIF

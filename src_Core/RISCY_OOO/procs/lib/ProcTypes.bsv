@@ -1,7 +1,7 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
 // Portions (c) 2020 Bluespec, Inc.
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -9,10 +9,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -195,7 +195,7 @@ function Opcode unpackOpcode(Bit#(7) x);
     return (case(x)
         pack(Opcode'(Load   )): (Load   );
         pack(Opcode'(LoadFp )): (LoadFp );
-        pack(Opcode'(MiscMem)): (MiscMem); 
+        pack(Opcode'(MiscMem)): (MiscMem);
         pack(Opcode'(OpImm  )): (OpImm  );
         pack(Opcode'(Auipc  )): (Auipc  );
         pack(Opcode'(OpImm32)): (OpImm32);
@@ -455,20 +455,21 @@ typedef enum {
 } RVRoundMode deriving(Bits, Eq, FShow);
 
 typedef enum {
-    InstAddrMisaligned  = 4'd0,
-    InstAccessFault     = 4'd1,
-    IllegalInst         = 4'd2,
-    Breakpoint          = 4'd3,
-    LoadAddrMisaligned  = 4'd4,
-    LoadAccessFault     = 4'd5,
-    StoreAddrMisaligned = 4'd6,
-    StoreAccessFault    = 4'd7,
-    EnvCallU            = 4'd8,
-    EnvCallS            = 4'd9,
-    EnvCallM            = 4'd11,
-    InstPageFault       = 4'd12,
-    LoadPageFault       = 4'd13,
-    StorePageFault      = 4'd15
+    InstAddrMisaligned  = 5'd0,
+    InstAccessFault     = 5'd1,
+    IllegalInst         = 5'd2,
+    Breakpoint          = 5'd3,
+    LoadAddrMisaligned  = 5'd4,
+    LoadAccessFault     = 5'd5,
+    StoreAddrMisaligned = 5'd6,
+    StoreAccessFault    = 5'd7,
+    EnvCallU            = 5'd8,
+    EnvCallS            = 5'd9,
+    EnvCallM            = 5'd11,
+    InstPageFault       = 5'd12,
+    LoadPageFault       = 5'd13,
+    StorePageFault      = 5'd15,
+    CapabilityFault     = 5'd28
 } Exception deriving(Bits, Eq, FShow);
 
 typedef enum {
@@ -968,7 +969,7 @@ function Fmt showInst(Instruction inst);
             privMRET: fshow("mret");
             privWFI: fshow("wfi");
             default: (
-              funct7 == privSFENCEVMA ? 
+              funct7 == privSFENCEVMA ?
               (fshow("sfence.vma ") + fshow(rs1) + fshow(" ") + fshow(rs2)) :
               fshow("SYSTEM not implemented")
             );
@@ -985,4 +986,3 @@ function Fmt showInst(Instruction inst);
 
   return ret;
 endfunction
-

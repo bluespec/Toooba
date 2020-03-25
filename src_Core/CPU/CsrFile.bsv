@@ -1,7 +1,7 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
 // Portions Copyright (c) 2019-2020 Bluespec, Inc.
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -9,10 +9,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -48,6 +48,8 @@ import SoC_Map :: *;
 
 // ================================================================
 // Information returned on traps and mret/sret/uret
+
+typedef Bit#(SizeOf#(Exception)) Cause;
 
 typedef struct {
    Addr      new_pc;
@@ -307,7 +309,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
 
     // current prv level (this is not a csr...)
     Reg#(Bit#(2)) prv_reg <- mkCsrReg(prvM);
-    
+
     // Machine level CSRs
     // mstatus
     Reg#(Bit#(2)) xs_reg   <- mkReadOnlyReg(0); // XXX no extension
@@ -441,12 +443,12 @@ module mkCsrFile #(Data hartid)(CsrFile);
     Reg#(Data) mepc_csr <- mkCsrReg(0);
     // mcause
     Reg#(Bit#(1)) mcause_interrupt_reg <- mkCsrReg(0);
-    Reg#(Bit#(4)) mcause_code_reg      <- mkCsrReg(0);
+    Reg#(Cause) mcause_code_reg      <- mkCsrReg(0);
     Reg#(Data) mcause_csr = concatReg3(
-        mcause_interrupt_reg, readOnlyReg(59'b0), mcause_code_reg
+        mcause_interrupt_reg, readOnlyReg(0), mcause_code_reg
     );
-    function Data fn_mcause_val (Bit #(1) mcause_interrupt_val, Bit #(4) mcause_code_val);
-       return { mcause_interrupt_val, 59'b0, mcause_code_val };
+    function Data fn_mcause_val (Bit #(1) mcause_interrupt_val, Cause mcause_code_val);
+       return { mcause_interrupt_val, 'b0, mcause_code_val };
     endfunction
 
     // mtval (mbadaddr in spike)
@@ -560,12 +562,12 @@ module mkCsrFile #(Data hartid)(CsrFile);
     Reg#(Data) sepc_csr <- mkCsrReg(0);
     // scause
     Reg#(Bit#(1)) scause_interrupt_reg <- mkCsrReg(0);
-    Reg#(Bit#(4)) scause_code_reg      <- mkCsrReg(0);
+    Reg#(Cause) scause_code_reg <- mkCsrReg(0);
     Reg#(Data) scause_csr = concatReg3(
-        scause_interrupt_reg, readOnlyReg(59'b0), scause_code_reg
+        scause_interrupt_reg, readOnlyReg('b0), scause_code_reg
     );
-    function Data fn_scause_val (Bit #(1) scause_interrupt_val, Bit #(4) scause_code_val);
-       return { scause_interrupt_val, 59'b0, scause_code_val };
+    function Data fn_scause_val (Bit #(1) scause_interrupt_val, Cause scause_code_val);
+       return { scause_interrupt_val, 0, scause_code_val };
     endfunction
 
     // stval (sbadaddr in spike)
@@ -598,7 +600,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
     // User level CSRs
     // According to spike, any write to fflags/frm/fcsr will set fs_reg as
     // dirty, regardless of whether the write truly changes value or not.
-    // Besides, any non-zero FP exception flags will also make fs_reg dirty. 
+    // Besides, any non-zero FP exception flags will also make fs_reg dirty.
     // fflags: if we directly change fflags_reg (instead of fflags_csr), then
     // we must set fs_reg manually
     Reg#(Bit#(5)) fflags_reg <- mkCsrReg(0);
@@ -960,7 +962,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
     method ActionValue#(Trap_Updates) trap(Trap t, Addr pc, Addr addr, Bit #(32) orig_inst);
         // figure out trap cause & trap val
         Bit#(1) cause_interrupt = 0;
-        Bit#(4) cause_code = 0;
+        Cause cause_code = 0;
         Data trap_val = 0;
         case(t) matches
             tagged Exception .e: begin
@@ -978,7 +980,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
                 endcase);
             end
             tagged Interrupt .i: begin
-                cause_code = pack(i);
+                cause_code = zeroExtend(pack(i));
                 cause_interrupt = 1;
             end
         endcase
