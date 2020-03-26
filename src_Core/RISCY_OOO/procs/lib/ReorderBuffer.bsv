@@ -145,7 +145,7 @@ interface ReorderBufferRowEhr#(numeric type aluExeNum, numeric type fpuMulDivExe
     // perform), and non-MMIO St can become Executed (NOTE faulting
     // instructions are not Executed, they are set at deqLSQ time)
 
-    method Action setExecuted_doFinishMem(Addr vaddr,
+    method Action setExecuted_doFinishMem(CapPipe vaddr,
                                           Data store_data, ByteEn store_data_BE,
                                           Bool access_at_commit, Bool non_mmio_st_done,
                                           Maybe#(Exception) cause,
@@ -243,6 +243,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     Reg#(Maybe#(CSR))                                               csr                  <- mkRegU;
     Reg#(Bool)                                                      claimed_phy_reg      <- mkRegU;
     Ehr#(TAdd#(TAdd#(2, TDiv#(aluExeNum,2)), aluExeNum), Maybe#(Trap)) trap              <- mkEhr(?);
+    Ehr#(3, Maybe#(Trap))                                           mem_early_trap       <- mkEhr(?);
     Ehr#(TAdd#(TAdd#(2, TDiv#(aluExeNum,2)), aluExeNum), Addr)      tval                 <- mkEhr(?);
     Ehr#(TAdd#(2, aluExeNum), PPCVAddrCSRData)                      ppc_vaddr_csrData    <- mkEhr(?);
     Ehr#(TAdd#(1, fpuMulDivExeNum), Bit#(5))                        fflags               <- mkEhr(?);
@@ -343,7 +344,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
 
     interface setExecuted_doFinishFpuMulDiv = fpuMulDivExe;
 
-    method Action setExecuted_doFinishMem(Addr   vaddr,
+    method Action setExecuted_doFinishMem(CapPipe vaddr,
                                           Data   store_data, ByteEn store_data_BE,
                                           Bool   access_at_commit, Bool non_mmio_st_done,
                                           Maybe#(Exception) cause,
@@ -360,7 +361,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
             doAssert(iType == St, "must be St");
         end
         // update VAddr
-        ppc_vaddr_csrData[pvc_finishMem_port] <= VAddr (setAddr(almightyCap, vaddr).value);
+        ppc_vaddr_csrData[pvc_finishMem_port] <= VAddr (vaddr);
 `ifdef RVFI
         //$display("%t : traceBundle = ", $time(), fshow(tb), " in setExecuted_doFinishMem for %x", pc);
         traceBundle[pvc_finishMem_port] <= tb;
@@ -377,10 +378,10 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         CapPipe new_pcc = setAddrUnsafe(pcc, getAddr(pc[pc_finishMem_port]));
         pc[pc_finishMem_port] <= new_pcc;
         if (!isInBounds(new_pcc, False)) begin
-            trap[trap_finishMem_port] <= Valid (tagged Exception CapabilityFault);
+            mem_early_trap[0] <= Valid (tagged Exception CapabilityFault);
             tval[trap_finishMem_port] <= tval[trap_finishMem_port];
         end else if (cause matches tagged Valid .exp) begin
-            trap[trap_finishMem_port] <= Valid (tagged Exception exp);
+            mem_early_trap[0] <= Valid (tagged Exception exp);
             tval[trap_finishMem_port] <= tval[trap_finishMem_port];
         end
     endmethod
@@ -418,6 +419,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         rob_inst_state[state_enq_port] <= x.rob_inst_state;
         epochIncremented <= x.epochIncremented;
         spec_bits[sb_enq_port] <= x.spec_bits;
+        mem_early_trap[1] <= Invalid;
 `ifdef INORDER_CORE
         // in-order core enqs to LSQ later, so don't set LSQ tag; and other
         // flags should default to false
@@ -504,11 +506,10 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         //$display("%t: Wrote tb for deqLSQ ", $time(), fshow(tb));
 `endif
         // record trap
-        doAssert(!isValid(trap[trap_deqLSQ_port]), "cannot have trap");
-        if(cause matches tagged Valid .e) begin
-            trap[trap_deqLSQ_port] <= Valid (Exception (e));
-            // TODO: shouldn't we record tval here as well?
-        end
+        //doAssert(!isValid(trap[trap_deqLSQ_port]), "cannot have trap");
+        if (isValid(mem_early_trap[0])) trap[trap_deqLSQ_port] <= mem_early_trap[0];
+        else if(cause matches tagged Valid .e) trap[trap_deqLSQ_port] <= Valid (Exception (e));
+        // TODO: shouldn't we record tval here as well?
         // record ld misspeculation
         ldKilled[ldKill_deqLSQ_port] <= ld_killed;
     endmethod
@@ -611,7 +612,7 @@ interface SupReorderBuffer#(numeric type aluExeNum, numeric type fpuMulDivExeNum
     interface Vector#(fpuMulDivExeNum, ROB_setExecuted_doFinishFpuMulDiv) setExecuted_doFinishFpuMulDiv;
     // doFinishMem, after addr translation
     method Action setExecuted_doFinishMem(InstTag x,
-                                          Addr vaddr,
+                                          CapPipe vaddr,
                                           Data store_data, ByteEn store_data_BE,
                                           Bool access_at_commit, Bool non_mmio_st_done,
                                           Maybe#(Exception) cause,
@@ -1214,7 +1215,7 @@ module mkSupReorderBuffer#(
     interface setExecuted_doFinishFpuMulDiv = fpuMulDivSetExeIfc;
 
     method Action setExecuted_doFinishMem(
-        InstTag x, Addr vaddr, Data store_data, ByteEn store_data_BE, Bool access_at_commit,
+        InstTag x, CapPipe vaddr, Data store_data, ByteEn store_data_BE, Bool access_at_commit,
         Bool non_mmio_st_done, Maybe#(Exception) cause, CapPipe pcc
 `ifdef RVFI
         , tb

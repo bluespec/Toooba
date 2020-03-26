@@ -83,14 +83,14 @@ typedef struct {
     LdStQTag ldstq_tag;
     // result
     ByteEn shiftedBE;
-    Addr vaddr;         // virtual addr
+    CapPipe vaddr;         // virtual addr
 `ifdef INCLUDE_TANDEM_VERIF
     // for those mem instrs that store data
     Data    store_data;
     ByteEn  store_data_BE;
 `endif
     Bool misaligned;
-} MemExeToFinish deriving(Bits, Eq, FShow);
+} MemExeToFinish deriving(Bits, FShow);
 
 // bookkeeping when waiting for MMIO resp which may cause exception
 typedef struct {
@@ -134,7 +134,7 @@ typedef DTlb#(MemExeToFinish) DTlbSynth;
 module mkDTlbSynth(DTlbSynth);
     function TlbReq getTlbReq(MemExeToFinish x);
         return TlbReq {
-            addr: x.vaddr,
+            addr: getAddr(x.vaddr),
             write: (case(x.mem_func)
                         St, Sc, Amo: True;
                         default: False;
@@ -158,7 +158,7 @@ interface MemExeInput;
     // ROB
     method Addr rob_getPC(InstTag t);
     method Action rob_setExecuted_doFinishMem(InstTag t,
-                                              Addr vaddr,
+                                              CapPipe vaddr,
                                               Data store_data, ByteEn store_data_BE,
                                               Bool access_at_commit, Bool non_mmio_st_done,
                                               Maybe#(Exception) cause, CapPipe pcc
@@ -455,7 +455,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         if(verbose) $display("[doExeMem] ", fshow(regToExe));
 
         // get virtual addr & St/Sc/Amo data
-        Addr vaddr = x.rVal1 + signExtend(x.imm);
+        CapPipe vaddr = modifyOffset(setAddrUnsafe(almightyCap, x.rVal1), signExtend(x.imm), True).value;
         Data data = x.rVal2;
 
 `ifdef RVFI_DII
@@ -470,7 +470,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             Bit#(TLog#(NumBytes)) byteOffset = truncate(addr);
             return tuple2(unpack(pack(be) << byteOffset), d << {byteOffset, 3'b0});
         endfunction
-        let {shiftBE, shiftData} = getShiftedBEData(vaddr, origBE, data);
+        let {shiftBE, shiftData} = getShiftedBEData(getAddr(vaddr), origBE, data);
 
         // update LSQ data now
         if(x.ldstq_tag matches tagged St .stTag) begin
@@ -490,7 +490,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
                 store_data: data,
                 store_data_BE: origBE,
 `endif
-                misaligned: memAddrMisaligned(vaddr, origBE)
+                misaligned: memAddrMisaligned(getAddr(vaddr), origBE)
             },
             specBits: regToExe.spec_bits
         });
@@ -560,14 +560,18 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         endcase);
         Bool access_at_commit = !isValid(cause) && (isMMIO || isLrScAmo);
         Bool non_mmio_st_done = !isValid(cause) && !isMMIO && x.mem_func == St;
+        CapPipe pcc = cast(inIfc.scaprf_rd(SCR_PCC));
+        CapPipe ddc = cast(inIfc.scaprf_rd(SCR_DDC));
+        Bool ddc_out_of_bounds = !isInBounds(modifyOffset(ddc,getAddr(x.vaddr),True).value,True);
+        Bool out_of_bounds = (getFlags(pcc) == 1'b1) ? isInBounds(x.vaddr, False):ddc_out_of_bounds;
         inIfc.rob_setExecuted_doFinishMem(x.tag, x.vaddr, store_data, store_data_BE,
                                           access_at_commit, non_mmio_st_done,
-                                          tagged Invalid,
-                                          cast(inIfc.scaprf_rd(SCR_PCC))
+                                          (out_of_bounds) ? Valid(CapabilityFault):Invalid,
+                                          pcc
 `ifdef RVFI
                                           , ExtraTraceBundle{
                                               regWriteData: memData[pack(x.ldstq_tag)],
-                                              memByteEn: unpack(pack(x.shiftedBE) >> x.vaddr[2:0])
+                                              memByteEn: unpack(pack(x.shiftedBE) >> getAddr(x.vaddr)[2:0])
                                           }
 `endif
                                          );
