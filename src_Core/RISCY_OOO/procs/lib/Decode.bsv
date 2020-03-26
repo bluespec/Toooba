@@ -721,6 +721,91 @@ function DecodeResult decode(Instruction inst);
             end
         end
 
+        opCHERI: begin
+            case (funct3)
+                f3_CIncOffsetImmediate: begin
+                end
+                f3_CSetBoundsImmediate: begin
+                end
+                f3_ThreeOp: begin
+                    case (funct7)
+                        f7_CSpecialRW: begin
+                        end
+                        f7_CSetBounds: begin
+                        end
+                        f7_CSetBoundsExact: begin
+                        end
+                        f7_CSetOffset: begin
+                        end
+                        f7_CSetAddr: begin
+                        end
+                        f7_CIncOffset: begin
+                        end
+                        f7_CSeal: begin
+                        end
+                        f7_CCSeal: begin
+                        end
+                        f7_TwoSrc: begin
+                        end
+                        f7_CUnseal: begin
+                        end
+                        f7_CTestSubset: begin
+                        end
+                        f7_CCopyType: begin
+                        end
+                        f7_CAndPerm: begin
+                        end
+                        f7_CSetFlags: begin
+                        end
+                        f7_CToPtr: begin
+                        end
+                        f7_CFromPtr: begin
+                        end
+                        f7_CSub: begin
+                        end
+                        f7_CBuildCap: begin
+                        end
+                        f7_Loads: begin
+                        end
+                        f7_Stores: begin
+                        end
+                        f7_TwoOp: begin
+                            case (funct5rs2)
+                                f5rs2_CGetLen: begin
+                                end
+                                f5rs2_CGetBase: begin
+                                end
+                                f5rs2_CGetTag: begin
+                                end
+                                f5rs2_CGetSealed: begin
+                                end
+                                f5rs2_CRRL: begin
+                                end
+                                f5rs2_CRAM: begin
+                                end
+                                f5rs2_CMove: begin
+                                end
+                                f5rs2_CClearTag: begin
+                                end
+                                f5rs2_CGetAddr: begin
+                                end
+                                f5rs2_CGetOffset: begin
+                                end
+                                f5rs2_CGetFlags: begin
+                                end
+                                f5rs2_CGetPerm: begin
+                                end
+                                f5rs2_CJARL: begin
+                                end
+                                f5rs2_CGetType: begin
+                                end
+                            endcase
+                        end
+                    endcase
+                end
+            endcase
+        end
+
         default: begin
             illegalInst = True;
         end

@@ -54,6 +54,68 @@ function Data alu(Data a, Data b, AluFunc func);
 endfunction
 
 (* noinline *)
+function CapPipe capModify(CapPipe a, CapPipe b, AluCapFunc func);
+    CapPipe res = (case(func) matches
+               tagged ModifyOffset (offsetOp):
+                   modifyOffset(a, b, offsetOp == IncOffset)
+               tagged SpecialRW              :
+                   error("SpecialRW not yet implemented")
+               tagged SetAddr                :
+                   setAddr(a, getAddr(b))
+               tagged Seal                   :
+                   setType(a, truncate(getAddr(b)))
+               tagged Unseal                 :
+                   setType(a, -1)
+               tagged AndPerm                :
+                   setPerms(a, pack(getPerms(a)) & truncate(getAddr(b)))
+               tagged SetFlags               :
+                   setFlags(a, truncate(getAddr(b)));
+               tagged BuildCap               :
+                   setValidCap(a, True);
+               tagged CMove                  :
+                   a
+               tagged ClearTag               :
+                   setValidCap(a, False);
+               tagged CJALR                  :
+                   error("CJALR not yet implemented")
+               default : 0;
+        endcase);
+    return res;
+endfunction
+
+(* noinline *)
+function Data capInspect(CapPipe a, CapPipe b, CapInspectFunc func);
+    SetBoundsReturn boundsResult = combinedSetBounds(a, getAddr(b), func.SetBounds);
+    CapPipe res = (case(func) matches
+               tagged TestSubset             :
+                   error("TestSubset not yet implemented")
+               tagged CSub                   :
+                   getAddr(a) - getAddr(b)
+               tagged GetBase                :
+                   getBase(a)
+               tagged GetTag                 :
+                   getTag(a)
+               tagged GetSealed              :
+                   getSealed(a)
+               tagged GetAddr                :
+                   getAddr(a)
+               tagged GetOffset              :
+                   getOffset(a)
+               tagged GetFlags               :
+                   getFlags(a)
+               tagged GetPerm                :
+                   getPerms(a)
+               tagged GetType                :
+                   getType(a)
+               tagged ToPtr                  :
+                   getAddr(a) - getBase(b);
+               tagged CJALR                  :
+               default : 0;
+        endcase);
+    return res;
+endfunction
+
+(* noinline *)
 function Bool aluBr(Data a, Data b, BrFunc brFunc);
     Bool brTaken = (case(brFunc)
             Eq      : (a == b);
@@ -111,6 +173,9 @@ function ExecResult basicExec(DecodedInst dInst, Data rVal1, Data rVal2, Addr pc
     AluFunc alu_f = dInst.execFunc matches tagged Alu .alu_f ? alu_f : Add;
     Data alu_result = alu(rVal1, aluVal2, alu_f);
 
+    Data inspect_result = capInspect(rVal1, aluVal2, dInst.execFunc.CapInspect);
+    CapPipe modify_resut = capModify(rVal1, aluVal2, dInst.execFunc.capModify);
+
     // Default branch function is not taken
     BrFunc br_f = dInst.execFunc matches tagged Br .br_f ? br_f : NT;
     cf.taken = aluBr(rVal1, rVal2, br_f);
@@ -124,6 +189,8 @@ function ExecResult basicExec(DecodedInst dInst, Data rVal1, Data rVal2, Addr pc
             J, Jr       : (pc + fallthrough_incr); // could be computed with alu
             Auipc       : (pc + fromMaybe(?, getDInstImm(dInst))); // could be computed with alu
             Csr         : rVal1;
+            capInspect  : inspect_result;
+            capModify   : modify_result;
             default     : alu_result;
         endcase);
     csr_data = alu_result;

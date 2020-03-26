@@ -371,6 +371,19 @@ typedef enum {
     Csrw, Csrs, Csrc
 } AluFunc deriving(Bits, Eq, FShow);
 
+typedef enum {
+    SetOffset, IncOffset
+} ModifyOffsetFunc
+
+typedef enum {
+    SetBounds, SetBoundsExact, CRRL, CRAM
+} SetBoundsFunc
+
+typedef union tagged {
+    Bool ModifyOffset;
+    Bool SetBounds;
+} AluCapFunc deriving(Bits, Eq, FShow);
+
 typedef enum {Mul, Mulh, Div, Rem} MulDivFunc deriving(Bits, Eq, FShow);
 
 typedef enum {
@@ -427,21 +440,49 @@ typedef enum {
 } RVRoundMode deriving(Bits, Eq, FShow);
 
 typedef enum {
-    InstAddrMisaligned  = 4'd0,
-    InstAccessFault     = 4'd1,
-    IllegalInst         = 4'd2,
-    Breakpoint          = 4'd3,
-    LoadAddrMisaligned  = 4'd4,
-    LoadAccessFault     = 4'd5,
-    StoreAddrMisaligned = 4'd6,
-    StoreAccessFault    = 4'd7,
-    EnvCallU            = 4'd8,
-    EnvCallS            = 4'd9,
-    EnvCallM            = 4'd11,
-    InstPageFault       = 4'd12,
-    LoadPageFault       = 4'd13,
-    StorePageFault      = 4'd15
+    InstAddrMisaligned  = 5'd0,
+    InstAccessFault     = 5'd1,
+    IllegalInst         = 5'd2,
+    Breakpoint          = 5'd3,
+    LoadAddrMisaligned  = 5'd4,
+    LoadAccessFault     = 5'd5,
+    StoreAddrMisaligned = 5'd6,
+    StoreAccessFault    = 5'd7,
+    EnvCallU            = 5'd8,
+    EnvCallS            = 5'd9,
+    EnvCallM            = 5'd11,
+    InstPageFault       = 5'd12,
+    LoadPageFault       = 5'd13,
+    StorePageFault      = 5'd15,
+    CHERIFault          = 5'd28
 } Exception deriving(Bits, Eq, FShow);
+
+typedef enum {
+    None                     = 5'd0,
+    LengthViolation          = 5'd1,
+    TagViolation             = 5'd2,
+    SealViolation            = 5'd3,
+    TypeViolation            = 5'd4,
+    CallTrap                 = 5'd5,
+    ReturnTrap               = 5'd6,
+    StackUnderflow           = 5'd7,
+    MMUStoreCapProhibit      = 5'd8,
+    RepresentViolation       = 5'd9,
+    UnalignedBase            = 5'd10,
+    // 5'd11 - 5'd15 reserved
+    GlobalViolation          = 5'd16,
+    PermitXViolation         = 5'd17,
+    PermitRViolation         = 5'd18,
+    PermitWViolation         = 5'd19,
+    PermitRCapViolation      = 5'd20,
+    PermitWCapViolation      = 5'd21,
+    PermitWLocalCapViolation = 5'd22,
+    PermitSealViolation      = 5'd23,
+    PermitASRViolation       = 5'd24,
+    PermitCCallViolation     = 5'd25,
+    PermitUnsealViolation    = 5'd26,
+    PermitSetCIDViolation    = 5'd27
+    // 5'd28 - 5'd31 reserved
 
 typedef enum {
     UserSoftware       = 4'd0,
@@ -569,8 +610,29 @@ typedef struct {
 typedef Bit#(32) ImmData; // 32-bit decoded immediate data
 
 typedef struct {
+    Bool a_tag;
+    Bool b_tag;
+    Bool a_sealed_with_type;
+    Bool a_unsealed;
+    Bool b_unsealed;
+    Bool a_sealed;
+    Bool b_sealed;
+    Bool a_b_types_match;
+    Bool a_permit_ccall;
+    Bool b_permit_ccall;
+    Bool a_permit_x;
+    Bool b_no_permit_x;
+    Bool b_permit_unseal;
+    Bool b_permit_seal;
+    Bool b_points_to_a_type;
+    Bool b_addr_valid_type;
+    Bool b_perm_subset_a;
+} CapChecks;
+
+typedef struct {
     IType           iType;
     ExecFunc        execFunc;
+    CapChecks       capChecks;
     Maybe#(CSR)     csr;
     Maybe#(ImmData) imm;
 } DecodedInst deriving(Bits, Eq, FShow);
