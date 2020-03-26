@@ -1,6 +1,6 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +8,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -40,6 +40,11 @@ import ReorderBuffer::*;
 import SpecFifo::*;
 import HasSpecBits::*;
 import Bypass::*;
+import CHERICap::*;
+import CHERICC_Fat::*;
+import ISA_Decls_CHERI::*;
+
+import Cur_Cycle :: *;
 
 // ALU pipeline has 4 stages
 // dispatch -> reg read -> exe -> finish (write reg)
@@ -78,6 +83,7 @@ typedef struct {
     Maybe#(PhyDst) dst;
     InstTag tag;
     DirPredTrainInfo dpTrain;
+    Bool isCompressed;
     // result
     Data data; // alu compute result
     Maybe#(Data) csrData; // data to write CSR file
@@ -126,6 +132,7 @@ typedef struct {
     Bool taken;
     DirPredTrainInfo dpTrain;
     Bool mispred;
+    Bool isCompressed;
 } FetchTrainBP deriving(Bits, Eq, FShow);
 
 interface AluExeInput;
@@ -136,14 +143,19 @@ interface AluExeInput;
     method Data rf_rd2(PhyRIndx rindx);
     // CSR file
     method Data csrf_rd(CSR csr);
+    // Special Capability Register file.
+    method CapReg scaprf_rd(SCR csr);
     // ROB
     method Addr rob_getPC(InstTag t);
     method Addr rob_getPredPC(InstTag t);
     method Bit #(32) rob_getOrig_Inst (InstTag t);
     method Action rob_setExecuted(
         InstTag t,
+        Data dst_data,
         Maybe#(Data) csrData,
-        ControlFlow cf
+        ControlFlow cf,
+        Maybe#(Exception) cause,
+        CapPipe pcc
 `ifdef RVFI
         , ExtraTraceBundle tb
 `endif
@@ -207,7 +219,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
         if(x.regs.dst matches tagged Valid .dst) begin
             inIfc.setRegReadyAggr(dst.indx);
         end
-        
+
         // go to next stage
         dispToRegQ.enq(ToSpecFifo {
             data: AluDispatchToRegRead {
@@ -261,7 +273,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
                 rVal2: rVal2,
                 pc: pc,
                 ppc: ppc,
-	        orig_inst: orig_inst,
+                orig_inst: orig_inst,
                 spec_tag: x.spec_tag
             },
             spec_bits: dispToReg.spec_bits
@@ -280,7 +292,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
         if (verbosity > 0) begin
            $display ("AluExePipeline.doExeAlu: regToExe    = ", fshow (regToExe));
            $display ("AluExePipeline.doExeAlu: exec_result = ", fshow (exec_result));
-	end
+        end
 
         // when inst needs to store csrData in ROB, it must have iType = Csr, cannot mispredict
         if(isValid(x.dInst.csr)) begin
@@ -301,6 +313,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
                 dst: x.dst,
                 tag: x.tag,
                 dpTrain: x.dpTrain,
+                isCompressed: x.orig_inst[1:0] != 2'b11,
                 data: exec_result.data,
                 csrData: isValid(x.dInst.csr) ? Valid (exec_result.csrData) : tagged Invalid,
 `ifdef RVFI
@@ -331,8 +344,11 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
         // update the instruction in the reorder buffer.
         inIfc.rob_setExecuted(
             x.tag,
+            x.data,
             x.csrData,
-            x.controlFlow
+            x.controlFlow,
+            tagged Invalid,
+            cast(inIfc.scaprf_rd(SCR_PCC))
 `ifdef RVFI
             , x.traceBundle
 `endif
@@ -352,7 +368,8 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
                 iType: x.iType,
                 taken: x.controlFlow.taken,
                 dpTrain: x.dpTrain,
-                mispred: True
+                mispred: True,
+                isCompressed: x.isCompressed
             });
 `ifdef PERF_COUNT
             // performance counter
@@ -370,7 +387,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
             if (x.spec_tag matches tagged Valid .valid_spec_tag) begin
                 inIfc.correctSpec(valid_spec_tag);
             end
-            // train branch predictor if needed 
+            // train branch predictor if needed
             // since we can only do 1 training in a cycle, split the rule
             // XXX not training JAL, reduce chance of conflicts
             if(x.iType == Jr || x.iType == Br) begin
@@ -380,7 +397,8 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
                     iType: x.iType,
                     taken: x.controlFlow.taken,
                     dpTrain: x.dpTrain,
-                    mispred: False
+                    mispred: False,
+                    isCompressed: x.isCompressed
                 });
             end
         end
@@ -408,4 +426,3 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
         endcase);
     endmethod
 endmodule
-

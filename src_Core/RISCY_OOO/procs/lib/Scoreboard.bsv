@@ -24,7 +24,7 @@
 `include "ProcConfig.bsv"
 
 import Vector::*;
-import Fifo::*;
+import Fifos::*;
 import ProcTypes::*;
 import CsrFile::*; // for mkReadOnlyReg
 import Ehr::*;

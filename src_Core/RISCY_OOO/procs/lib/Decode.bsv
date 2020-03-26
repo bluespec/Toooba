@@ -1,6 +1,6 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +8,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -28,6 +28,7 @@ import ProcTypes::*;
 import MemoryTypes::*;
 import Vector::*;
 import DefaultValue::*;
+import ISA_Decls_CHERI::*;
 
 Bit#(3) memWU   = 3'b110;
 
@@ -150,7 +151,8 @@ function DecodeResult decode(Instruction inst);
         iType: Unsupported,
         execFunc: tagged Other,
         csr: tagged Invalid,
-        imm: tagged Invalid
+        imm: tagged Invalid,
+        capChecks: unpack(0)
     };
     ArchRegs regs = ArchRegs {
         src1: tagged Invalid,
@@ -174,6 +176,8 @@ function DecodeResult decode(Instruction inst);
     // For "A" ISA extension
     Bool aq       =       unpack(inst[ 26 ]);
     Bool rl       =       unpack(inst[ 25 ]);
+    // For "xCHERI" ISA extension
+    let funct5rs2 =              inst[ 24 : 20 ];
 
     ImmData immI  = signExtend(inst[31:20]);
     ImmData immS  = signExtend({ inst[31:25], inst[11:7] });
@@ -721,83 +725,83 @@ function DecodeResult decode(Instruction inst);
             end
         end
 
-        opCHERI: begin
+        OpCHERI: begin
             case (funct3)
-                f3_CIncOffsetImmediate: begin
+                f3_cap_CIncOffsetImmediate: begin
                 end
-                f3_CSetBoundsImmediate: begin
+                f3_cap_CSetBoundsImmediate: begin
                 end
-                f3_ThreeOp: begin
+                f3_cap_ThreeOp: begin
                     case (funct7)
-                        f7_CSpecialRW: begin
+                        f7_cap_CSpecialRW: begin
                         end
-                        f7_CSetBounds: begin
+                        f7_cap_CSetBounds: begin
                         end
-                        f7_CSetBoundsExact: begin
+                        f7_cap_CSetBoundsExact: begin
                         end
-                        f7_CSetOffset: begin
+                        f7_cap_CSetOffset: begin
                         end
-                        f7_CSetAddr: begin
+                        f7_cap_CSetAddr: begin
                         end
-                        f7_CIncOffset: begin
+                        f7_cap_CIncOffset: begin
                         end
-                        f7_CSeal: begin
+                        f7_cap_CSeal: begin
                         end
-                        f7_CCSeal: begin
+                        f7_cap_CCSeal: begin
                         end
-                        f7_TwoSrc: begin
+                        f7_cap_TwoSrc: begin
                         end
-                        f7_CUnseal: begin
+                        f7_cap_CUnseal: begin
                         end
-                        f7_CTestSubset: begin
+                        f7_cap_CTestSubset: begin
                         end
-                        f7_CCopyType: begin
+                        f7_cap_CCopyType: begin
                         end
-                        f7_CAndPerm: begin
+                        f7_cap_CAndPerm: begin
                         end
-                        f7_CSetFlags: begin
+                        f7_cap_CSetFlags: begin
                         end
-                        f7_CToPtr: begin
+                        f7_cap_CToPtr: begin
                         end
-                        f7_CFromPtr: begin
+                        f7_cap_CFromPtr: begin
                         end
-                        f7_CSub: begin
+                        f7_cap_CSub: begin
                         end
-                        f7_CBuildCap: begin
+                        f7_cap_CBuildCap: begin
                         end
-                        f7_Loads: begin
+                        f7_cap_Loads: begin
                         end
-                        f7_Stores: begin
+                        f7_cap_Stores: begin
                         end
-                        f7_TwoOp: begin
+                        f7_cap_TwoOp: begin
                             case (funct5rs2)
-                                f5rs2_CGetLen: begin
+                                f5rs2_cap_CGetLen: begin
                                 end
-                                f5rs2_CGetBase: begin
+                                f5rs2_cap_CGetBase: begin
                                 end
-                                f5rs2_CGetTag: begin
+                                f5rs2_cap_CGetTag: begin
                                 end
-                                f5rs2_CGetSealed: begin
+                                f5rs2_cap_CGetSealed: begin
                                 end
-                                f5rs2_CRRL: begin
+                                f5rs2_cap_CRRL: begin
                                 end
-                                f5rs2_CRAM: begin
+                                f5rs2_cap_CRAM: begin
                                 end
-                                f5rs2_CMove: begin
+                                f5rs2_cap_CMove: begin
                                 end
-                                f5rs2_CClearTag: begin
+                                f5rs2_cap_CClearTag: begin
                                 end
-                                f5rs2_CGetAddr: begin
+                                f5rs2_cap_CGetAddr: begin
                                 end
-                                f5rs2_CGetOffset: begin
+                                f5rs2_cap_CGetOffset: begin
                                 end
-                                f5rs2_CGetFlags: begin
+                                f5rs2_cap_CGetFlags: begin
                                 end
-                                f5rs2_CGetPerm: begin
+                                f5rs2_cap_CGetPerm: begin
                                 end
-                                f5rs2_CJARL: begin
+                                f5rs2_cap_CJALR: begin
                                 end
-                                f5rs2_CGetType: begin
+                                f5rs2_cap_CGetType: begin
                                 end
                             endcase
                         end

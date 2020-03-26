@@ -12,8 +12,10 @@ CONNECTAL_DIRS = $(RISCY_HOME)/connectal/bsv:$(RISCY_HOME)/connectal/tests/spi:$
 
 RVFI_DII_DIRS = $(RISCY_HOME)/../../src_Verifier:$(RISCY_HOME)/../../src_Verifier/BSV-RVFI-DII
 
+CHERI_DIRS = $(RISCY_HOME)/../CHERI:$(RISCY_HOME)/../../libs/cheri-cap-lib
+
 # ALL_RISCY_DIRS = $(RISCY_DIRS)
-ALL_RISCY_DIRS = $(RISCY_DIRS):$(CONNECTAL_DIRS):$(RVFI_DII_DIRS)
+ALL_RISCY_DIRS = $(RISCY_DIRS):$(CONNECTAL_DIRS):$(RVFI_DII_DIRS):$(CHERI_DIRS)
 
 # ================================================================
 
@@ -24,6 +26,7 @@ ARCH ?= RV64ACDFIMSU
 # RISC-V config macros passed into Bluespec 'bsc' compiler
 
 BSC_COMPILATION_FLAGS += \
+	-D RISCV \
 	-D RV64 \
 	-D ISA_PRIV_M  -D ISA_PRIV_U  -D ISA_PRIV_S  \
 	-D SV39  \

@@ -30,7 +30,7 @@ import Types::*;
 import CCTypes::*;
 import DefaultValue::*;
 import Ehr::*;
-import Fifo::*;
+import Fifos::*;
 import MshrDeadlockChecker::*;
 
 // MSHR dependency chain invariant:
@@ -124,7 +124,7 @@ module mkL1PRqMshrSafe(
         initIdx <= initIdx + 1;
         if(initIdx == fromInteger(valueOf(pRqNum) - 1)) begin
             inited <= True;
-	   if (verbose)
+           if (verbose)
             $display("%t L1PRqMshrSafe %m: init empty entry done", $time);
         end
     endrule

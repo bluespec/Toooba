@@ -96,7 +96,7 @@ interface Debug_Module_IFC;
    // This section replicated for additional harts.
 
    // Reset and run-control
-   interface Get #(Token)         hart0_get_reset_req;
+   interface Client #(Bool, Bool) hart0_reset_client;
    interface Client #(Bool, Bool) hart0_client_run_halt;
    interface Get #(Bit #(4))      hart0_get_other_req;
 
@@ -115,7 +115,8 @@ interface Debug_Module_IFC;
    // Facing Platform
 
    // Non-Debug-Module Reset (reset all except DM)
-   interface Get #(Token) get_ndm_reset_req;
+   // Bool indicates 'running' hart state.
+   interface Client #(Bool, Bool) ndm_reset_client;
 
    // Read/Write RISC-V memory
    interface AXI4_Master_IFC #(Wd_Id, Wd_Addr, Wd_Data, Wd_User) master;
@@ -125,6 +126,9 @@ endinterface
 
 (* synthesize *)
 module mkDebug_Module (Debug_Module_IFC);
+
+   // Local verbosity: 0 = quiet; 1 = print DMI transactions
+   Integer verbosity = 0;
 
    // The three parts
    DM_Run_Control_IFC        dm_run_control       <- mkDM_Run_Control;
@@ -151,116 +155,127 @@ module mkDebug_Module (Debug_Module_IFC);
 
    interface DMI dmi;
       method Action read_addr  (DM_Addr dm_addr);
-	 f_read_addr.enq(dm_addr);
+         f_read_addr.enq(dm_addr);
+
+         if (verbosity != 0)
+            $display ("%0d: %m.DMI read: dm_addr 0x%0h", cur_cycle, dm_addr);
       endmethod
 
       method ActionValue #(DM_Word) read_data;
-	 let dm_addr = f_read_addr.first;
-	 f_read_addr.deq;
+         let dm_addr = f_read_addr.first;
+         f_read_addr.deq;
 
-	 DM_Word dm_word = ?;
+         DM_Word dm_word = ?;
 
-	 if (   (dm_addr == dm_addr_dmcontrol)
-	    || (dm_addr == dm_addr_dmstatus)
-	    || (dm_addr == dm_addr_hartinfo)
-	    || (dm_addr == dm_addr_haltsum)
-	    || (dm_addr == dm_addr_hawindowsel)
-	    || (dm_addr == dm_addr_hawindow)
-	    || (dm_addr == dm_addr_devtreeaddr0)
-	    || (dm_addr == dm_addr_authdata)
-	    || (dm_addr == dm_addr_haltregion0)
-	    || (dm_addr == dm_addr_haltregion31)
-	    || (dm_addr == dm_addr_verbosity))
+         if (   (dm_addr == dm_addr_dmcontrol)
+            || (dm_addr == dm_addr_dmstatus)
+            || (dm_addr == dm_addr_hartinfo)
+            || (dm_addr == dm_addr_haltsum)
+            || (dm_addr == dm_addr_hawindowsel)
+            || (dm_addr == dm_addr_hawindow)
+            || (dm_addr == dm_addr_devtreeaddr0)
+            || (dm_addr == dm_addr_authdata)
+            || (dm_addr == dm_addr_haltregion0)
+            || (dm_addr == dm_addr_haltregion31)
+            || (dm_addr == dm_addr_verbosity))
 
-	    dm_word <- dm_run_control.av_read (dm_addr);
+            dm_word <- dm_run_control.av_read (dm_addr);
 
-	 else if (   (dm_addr == dm_addr_abstractcs)
-		  || (dm_addr == dm_addr_command)
-		  || (dm_addr == dm_addr_data0)
-		  || (dm_addr == dm_addr_data1)
-		  || (dm_addr == dm_addr_data2)
-		  || (dm_addr == dm_addr_data3)
-		  || (dm_addr == dm_addr_data4)
-		  || (dm_addr == dm_addr_data5)
-		  || (dm_addr == dm_addr_data6)
-		  || (dm_addr == dm_addr_data7)
-		  || (dm_addr == dm_addr_data8)
-		  || (dm_addr == dm_addr_data9)
-		  || (dm_addr == dm_addr_data10)
-		  || (dm_addr == dm_addr_data11)
-		  || (dm_addr == dm_addr_abstractauto)
-		  || (dm_addr == dm_addr_progbuf0))
+         else if (   (dm_addr == dm_addr_abstractcs)
+                  || (dm_addr == dm_addr_command)
+                  || (dm_addr == dm_addr_data0)
+                  || (dm_addr == dm_addr_data1)
+                  || (dm_addr == dm_addr_data2)
+                  || (dm_addr == dm_addr_data3)
+                  || (dm_addr == dm_addr_data4)
+                  || (dm_addr == dm_addr_data5)
+                  || (dm_addr == dm_addr_data6)
+                  || (dm_addr == dm_addr_data7)
+                  || (dm_addr == dm_addr_data8)
+                  || (dm_addr == dm_addr_data9)
+                  || (dm_addr == dm_addr_data10)
+                  || (dm_addr == dm_addr_data11)
+                  || (dm_addr == dm_addr_abstractauto)
+                  || (dm_addr == dm_addr_progbuf0))
 
-	    dm_word <- dm_abstract_commands.av_read (dm_addr);
+            dm_word <- dm_abstract_commands.av_read (dm_addr);
 
-	 else if (   (dm_addr == dm_addr_sbcs)
-		  || (dm_addr == dm_addr_sbaddress0)
-		  || (dm_addr == dm_addr_sbaddress1)
-		  || (dm_addr == dm_addr_sbaddress2)
-		  || (dm_addr == dm_addr_sbdata0)
-		  || (dm_addr == dm_addr_sbdata1)
-		  || (dm_addr == dm_addr_sbdata2)
-		  || (dm_addr == dm_addr_sbdata3))
+         else if (   (dm_addr == dm_addr_sbcs)
+                  || (dm_addr == dm_addr_sbaddress0)
+                  || (dm_addr == dm_addr_sbaddress1)
+                  || (dm_addr == dm_addr_sbaddress2)
+                  || (dm_addr == dm_addr_sbdata0)
+                  || (dm_addr == dm_addr_sbdata1)
+                  || (dm_addr == dm_addr_sbdata2)
+                  || (dm_addr == dm_addr_sbdata3))
 
-	    dm_word <- dm_system_bus.av_read (dm_addr);
+            dm_word <- dm_system_bus.av_read (dm_addr);
 
-	 else begin
-	    // TODO: set error status?
-	    dm_word = 0;
-	 end
+         else begin
+            // TODO: set error status?
+            dm_word = 0;
+         end
 
-	 return dm_word;
+         if (verbosity != 0)
+            $display ("%0d: %m.DMI read response: dm_addr 0x%0h, dm_word 0x%0h",
+                      cur_cycle, dm_addr, dm_word);
+
+         return dm_word;
       endmethod
 
       method Action write (DM_Addr dm_addr, DM_Word dm_word);
-	 if (   (dm_addr == dm_addr_dmcontrol)
-	    || (dm_addr == dm_addr_dmstatus)
-	    || (dm_addr == dm_addr_hartinfo)
-	    || (dm_addr == dm_addr_haltsum)
-	    || (dm_addr == dm_addr_hawindowsel)
-	    || (dm_addr == dm_addr_hawindow)
-	    || (dm_addr == dm_addr_devtreeaddr0)
-	    || (dm_addr == dm_addr_authdata)
-	    || (dm_addr == dm_addr_haltregion0)
-	    || (dm_addr == dm_addr_haltregion31)
-	    || (dm_addr == dm_addr_verbosity))
+         if (   (dm_addr == dm_addr_dmcontrol)
+            || (dm_addr == dm_addr_dmstatus)
+            || (dm_addr == dm_addr_hartinfo)
+            || (dm_addr == dm_addr_haltsum)
+            || (dm_addr == dm_addr_hawindowsel)
+            || (dm_addr == dm_addr_hawindow)
+            || (dm_addr == dm_addr_devtreeaddr0)
+            || (dm_addr == dm_addr_authdata)
+            || (dm_addr == dm_addr_haltregion0)
+            || (dm_addr == dm_addr_haltregion31)
+            || (dm_addr == dm_addr_verbosity))
 
-	    dm_run_control.write (dm_addr, dm_word);
+            dm_run_control.write (dm_addr, dm_word);
 
-	 else if (   (dm_addr == dm_addr_abstractcs)
-		  || (dm_addr == dm_addr_command)
-		  || (dm_addr == dm_addr_data0)
-		  || (dm_addr == dm_addr_data1)
-		  || (dm_addr == dm_addr_data2)
-		  || (dm_addr == dm_addr_data3)
-		  || (dm_addr == dm_addr_data4)
-		  || (dm_addr == dm_addr_data5)
-		  || (dm_addr == dm_addr_data6)
-		  || (dm_addr == dm_addr_data7)
-		  || (dm_addr == dm_addr_data8)
-		  || (dm_addr == dm_addr_data9)
-		  || (dm_addr == dm_addr_data10)
-		  || (dm_addr == dm_addr_data11)
-		  || (dm_addr == dm_addr_abstractauto)
-		  || (dm_addr == dm_addr_progbuf0))
+         else if (   (dm_addr == dm_addr_abstractcs)
+                  || (dm_addr == dm_addr_command)
+                  || (dm_addr == dm_addr_data0)
+                  || (dm_addr == dm_addr_data1)
+                  || (dm_addr == dm_addr_data2)
+                  || (dm_addr == dm_addr_data3)
+                  || (dm_addr == dm_addr_data4)
+                  || (dm_addr == dm_addr_data5)
+                  || (dm_addr == dm_addr_data6)
+                  || (dm_addr == dm_addr_data7)
+                  || (dm_addr == dm_addr_data8)
+                  || (dm_addr == dm_addr_data9)
+                  || (dm_addr == dm_addr_data10)
+                  || (dm_addr == dm_addr_data11)
+                  || (dm_addr == dm_addr_abstractauto)
+                  || (dm_addr == dm_addr_progbuf0))
 
-	    dm_abstract_commands.write (dm_addr, dm_word);
+            dm_abstract_commands.write (dm_addr, dm_word);
 
-	 else if (   (dm_addr == dm_addr_sbcs)
-		  || (dm_addr == dm_addr_sbaddress0)
-		  || (dm_addr == dm_addr_sbaddress1)
-		  || (dm_addr == dm_addr_sbaddress2)
-		  || (dm_addr == dm_addr_sbdata0)
-		  || (dm_addr == dm_addr_sbdata1)
-		  || (dm_addr == dm_addr_sbdata2)
-		  || (dm_addr == dm_addr_sbdata3))
+         else if (   (dm_addr == dm_addr_sbcs)
+                  || (dm_addr == dm_addr_sbaddress0)
+                  || (dm_addr == dm_addr_sbaddress1)
+                  || (dm_addr == dm_addr_sbaddress2)
+                  || (dm_addr == dm_addr_sbdata0)
+                  || (dm_addr == dm_addr_sbdata1)
+                  || (dm_addr == dm_addr_sbdata2)
+                  || (dm_addr == dm_addr_sbdata3))
 
-	    dm_system_bus.write (dm_addr, dm_word);
+            dm_system_bus.write (dm_addr, dm_word);
 
-	 else begin
-	    // TODO: set error status?
-	    noAction;
-	 end
+         else begin
+            // TODO: set error status?
+            noAction;
+         end
+
+         if (verbosity != 0)
+            $display ("%0d: %m.DMI write: dm_addr 0x%0h, dm_word 0x%0h",
+                      cur_cycle, dm_addr, dm_word);
       endmethod
    endinterface
 
@@ -268,7 +283,7 @@ module mkDebug_Module (Debug_Module_IFC);
    // Facing CPU/hart0
 
    // Reset and run-control
-   interface Get    hart0_get_reset_req   = dm_run_control.hart0_get_reset_req;
+   interface Client hart0_reset_client    = dm_run_control.hart0_reset_client;
    interface Client hart0_client_run_halt = dm_run_control.hart0_client_run_halt;
    interface Get    hart0_get_other_req   = dm_run_control.hart0_get_other_req;
 
@@ -287,7 +302,7 @@ module mkDebug_Module (Debug_Module_IFC);
    // Facing Platform
 
    // Non-Debug-Module Reset (reset all except DM)
-   interface Get get_ndm_reset_req = dm_run_control.get_ndm_reset_req;
+   interface Client ndm_reset_client = dm_run_control.ndm_reset_client;
 
    // Read/Write RISC-V memory
    interface AXI4_Master_IFC master = dm_system_bus.master;

@@ -18,7 +18,7 @@ Verilog_RTL:
 .PHONY: compile
 compile:  build_dir  Verilog_RTL
 	@echo  "INFO: Verilog RTL generation ..."
-	bsc -u -elab -verilog  $(RTL_GEN_DIRS)  $(BSC_COMPILATION_FLAGS)  $(BSC_PATH)  $(TOPFILE)
+	bsc -u -elab -verilog  $(RTL_GEN_DIRS)  $(BSC_COMPILATION_FLAGS)  -p $(BSC_PATH)  $(TOPFILE)
 	@echo  "INFO: Verilog RTL generation finished"
 
 # ================================================================
@@ -34,7 +34,7 @@ SIM_EXE_FILE = exe_HW_sim
 #    --x-initial fast   Optimize uninitialized value
 #    --noassert         Disable all assertions
 
-VERILATOR_FLAGS = --stats                 -LDFLAGS -static --x-assign fast --x-initial fast --noassert
+VERILATOR_FLAGS = --stats --x-assign fast --x-initial fast --noassert
 # VERILATOR_FLAGS = --stats -O3 -CFLAGS -O3 -LDFLAGS -static --x-assign fast --x-initial fast --noassert
 
 # Verilator flags: use the following to include code to generate VCDs

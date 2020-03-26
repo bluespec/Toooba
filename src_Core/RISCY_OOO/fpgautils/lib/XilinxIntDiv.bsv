@@ -76,10 +76,15 @@ module mkIntDivUnsignedSim(IntDivUnsignedImport);
         let {dividend, user} = dividendQ.first;
         let divisor = divisorQ.first;
 
+        // Be careful to avoid divide-by-zero in bluesim's C++, which turns
+        //   res = cond ? exp1 : exp2
+        // into
+        //   tmp1 = exp1; tmp2 = exp2; res = cond ? tmp1 : tmp2
+        // so we must give a fake non-zero input even if it looks unused.
         UInt#(64) a = unpack(dividend);
-        UInt#(64) b = unpack(divisor);
-        Bit#(64) q = pack(a / b);
-        Bit#(64) r = pack(a % b);
+        UInt#(64) b = divisor == 0 ? 1 : unpack(divisor);
+        Bit#(64) q = divisor == 0 ? maxBound : pack(a / b);
+        Bit#(64) r = divisor == 0 ? dividend : pack(a % b);
         respQ.enq(tuple2({q, r}, user));
     endrule
 

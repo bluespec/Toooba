@@ -1,6 +1,6 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +8,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -26,6 +26,8 @@
 import Types::*;
 import ProcTypes::*;
 import Vector::*;
+import CHERICap::*;
+import CHERICC_Fat::*;
 
 (* noinline *)
 function Data alu(Data a, Data b, AluFunc func);
@@ -54,62 +56,62 @@ function Data alu(Data a, Data b, AluFunc func);
 endfunction
 
 (* noinline *)
-function CapPipe capModify(CapPipe a, CapPipe b, AluCapFunc func);
+function CapPipe capModify(CapPipe a, CapPipe b, CapModifyFunc func);
     CapPipe res = (case(func) matches
-               tagged ModifyOffset (offsetOp):
-                   modifyOffset(a, b, offsetOp == IncOffset)
-               tagged SpecialRW              :
-                   error("SpecialRW not yet implemented")
-               tagged SetAddr                :
-                   setAddr(a, getAddr(b))
-               tagged Seal                   :
-                   setType(a, truncate(getAddr(b)))
-               tagged Unseal                 :
-                   setType(a, -1)
-               tagged AndPerm                :
-                   setPerms(a, pack(getPerms(a)) & truncate(getAddr(b)))
-               tagged SetFlags               :
-                   setFlags(a, truncate(getAddr(b)));
-               tagged BuildCap               :
-                   setValidCap(a, True);
-               tagged CMove                  :
-                   a
-               tagged ClearTag               :
-                   setValidCap(a, False);
-               tagged CJALR                  :
-                   error("CJALR not yet implemented")
-               default : 0;
+            tagged ModifyOffset .incOffsetBool:
+                modifyOffset(a, getAddr(b), incOffsetBool).value;
+            tagged SetBounds .exact       :
+                setBounds(a, getAddr(b)).value;
+            //tagged SpecialRW              :
+            //    error("SpecialRW not yet implemented");
+            tagged SetAddr                :
+                setAddr(a, getAddr(b)).value;
+            tagged Seal                   :
+                setType(a, truncate(getAddr(b)));
+            tagged Unseal                 :
+                setType(a, -1);
+            tagged AndPerm                :
+                setPerms(a, pack(getPerms(a)) & truncate(getAddr(b)));
+            tagged SetFlags               :
+                setFlags(a, truncate(getAddr(b)));
+            tagged BuildCap               :
+                setValidCap(a, True);
+            tagged CMove                  :
+                a;
+            tagged ClearTag               :
+                setValidCap(a, False);
+            //tagged CJALR                  :
+            //    error("CJALR not yet implemented");
+            default : nullCap;
         endcase);
     return res;
 endfunction
 
 (* noinline *)
 function Data capInspect(CapPipe a, CapPipe b, CapInspectFunc func);
-    SetBoundsReturn boundsResult = combinedSetBounds(a, getAddr(b), func.SetBounds);
-    CapPipe res = (case(func) matches
-               tagged TestSubset             :
-                   error("TestSubset not yet implemented")
+    Data res = (case(func) matches
+               //tagged TestSubset             :
+               //   error("TestSubset not yet implemented");
                tagged CSub                   :
-                   getAddr(a) - getAddr(b)
+                   (getAddr(a) - getAddr(b));
                tagged GetBase                :
-                   getBase(a)
+                   getBase(a);
                tagged GetTag                 :
-                   getTag(a)
+                   zeroExtend(pack(isValidCap(a)));
                tagged GetSealed              :
-                   getSealed(a)
+                   zeroExtend(pack(isSealed(a)));
                tagged GetAddr                :
-                   getAddr(a)
+                   getAddr(a);
                tagged GetOffset              :
-                   getOffset(a)
+                   getOffset(a);
                tagged GetFlags               :
-                   getFlags(a)
+                   zeroExtend(getFlags(a));
                tagged GetPerm                :
-                   getPerms(a)
+                   zeroExtend(getPerms(a));
                tagged GetType                :
-                   getType(a)
+                   signExtend(getType(a));
                tagged ToPtr                  :
-                   getAddr(a) - getBase(b);
-               tagged CJALR                  :
+                   (getAddr(a) - getBase(b));
                default : 0;
         endcase);
     return res;
@@ -173,8 +175,9 @@ function ExecResult basicExec(DecodedInst dInst, Data rVal1, Data rVal2, Addr pc
     AluFunc alu_f = dInst.execFunc matches tagged Alu .alu_f ? alu_f : Add;
     Data alu_result = alu(rVal1, aluVal2, alu_f);
 
-    Data inspect_result = capInspect(rVal1, aluVal2, dInst.execFunc.CapInspect);
-    CapPipe modify_resut = capModify(rVal1, aluVal2, dInst.execFunc.capModify);
+    // Pass capabilities into these functions when they are passed in.
+    Data inspect_result = capInspect(nullWithAddr(rVal1), nullWithAddr(aluVal2), dInst.execFunc.CapInspect);
+    CapPipe modify_result = capModify(nullWithAddr(rVal1), nullWithAddr(aluVal2), dInst.execFunc.CapModify);
 
     // Default branch function is not taken
     BrFunc br_f = dInst.execFunc matches tagged Br .br_f ? br_f : NT;
@@ -189,8 +192,8 @@ function ExecResult basicExec(DecodedInst dInst, Data rVal1, Data rVal2, Addr pc
             J, Jr       : (pc + fallthrough_incr); // could be computed with alu
             Auipc       : (pc + fromMaybe(?, getDInstImm(dInst))); // could be computed with alu
             Csr         : rVal1;
-            capInspect  : inspect_result;
-            capModify   : modify_result;
+            CapInspect  : inspect_result;
+            CapModify   : getAddr(modify_result); // Obviously return the whole thing when data is a capability.
             default     : alu_result;
         endcase);
     csr_data = alu_result;
@@ -317,4 +320,3 @@ function Tuple2#(ByteEn, Data) scatterStore(Addr addr, ByteEn byteEn, Data data)
         return tuple2(unpack(pack(byteEn) << (offset)), data << {(offset), 3'b0});
     end
 endfunction
-

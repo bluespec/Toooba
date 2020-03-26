@@ -3,10 +3,10 @@
 // Flags for verilator
 
 `verilator_config
-lint_off -msg WIDTH
-lint_off -msg CASEINCOMPLETE
-lint_off -msg STMTDLY
-lint_off -msg INITIALDLY
-lint_off -msg UNSIGNED
-lint_off -msg CMPCONST
+lint_off -rule WIDTH
+lint_off -rule CASEINCOMPLETE
+lint_off -rule STMTDLY
+lint_off -rule INITIALDLY
+lint_off -rule UNSIGNED
+lint_off -rule CMPCONST
 `verilog

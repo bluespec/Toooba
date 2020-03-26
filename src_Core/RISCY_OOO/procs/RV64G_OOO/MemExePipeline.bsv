@@ -1,6 +1,6 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +8,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -27,7 +27,7 @@ import BuildVector::*;
 import GetPut::*;
 import ClientServer::*;
 import Cntrs::*;
-import Fifo::*;
+import Fifos::*;
 import Ehr::*;
 import Types::*;
 import ProcTypes::*;
@@ -50,6 +50,11 @@ import CCTypes::*;
 import L1CoCache::*;
 import Bypass::*;
 import LatencyTimer::*;
+import CHERICap::*;
+import CHERICC_Fat::*;
+import ISA_Decls_CHERI::*;
+
+import Cur_Cycle :: *;
 
 typedef struct {
     // inst info
@@ -78,9 +83,14 @@ typedef struct {
     LdStQTag ldstq_tag;
     // result
     ByteEn shiftedBE;
-    Addr vaddr; // virtual addr
+    CapPipe vaddr;         // virtual addr
+`ifdef INCLUDE_TANDEM_VERIF
+    // for those mem instrs that store data
+    Data    store_data;
+    ByteEn  store_data_BE;
+`endif
     Bool misaligned;
-} MemExeToFinish deriving(Bits, Eq, FShow);
+} MemExeToFinish deriving(Bits, FShow);
 
 // bookkeeping when waiting for MMIO resp which may cause exception
 typedef struct {
@@ -124,7 +134,7 @@ typedef DTlb#(MemExeToFinish) DTlbSynth;
 module mkDTlbSynth(DTlbSynth);
     function TlbReq getTlbReq(MemExeToFinish x);
         return TlbReq {
-            addr: x.vaddr,
+            addr: getAddr(x.vaddr),
             write: (case(x.mem_func)
                         St, Sc, Amo: True;
                         default: False;
@@ -143,18 +153,27 @@ interface MemExeInput;
     method Data rf_rd2(PhyRIndx rindx);
     // CSR file
     method Data csrf_rd(CSR csr);
+    // Special Capability Register file.
+    method CapReg scaprf_rd(SCR csr);
     // ROB
     method Addr rob_getPC(InstTag t);
-    method Action rob_setExecuted_doFinishMem(InstTag t, Addr vaddr, Bool access_at_commit, Bool non_mmio_st_done
+    method Action rob_setExecuted_doFinishMem(InstTag t,
+                                              CapPipe vaddr,
+                                              Data store_data, ByteEn store_data_BE,
+                                              Bool access_at_commit, Bool non_mmio_st_done,
+                                              Maybe#(Exception) cause, CapPipe pcc
 `ifdef RVFI
-        , ExtraTraceBundle tb
+                                              , ExtraTraceBundle tb
 `endif
-    );
+                                             );
+`ifdef INCLUDE_TANDEM_VERIF
+    method Action rob_setExecuted_doFinishMem_RegData (InstTag t, Data dst_data);
+`endif
     method Action rob_setExecuted_deqLSQ(InstTag t, Maybe#(Exception) cause, Maybe#(LdKilledBy) ld_killed
 `ifdef RVFI
-        , ExtraTraceBundle tb
+                                         , ExtraTraceBundle tb
 `endif
-    );
+                                        );
     // MMIO
     method Bool isMMIOAddr(Addr a);
     method Action mmioReq(MMIOCRq r);
@@ -162,7 +181,7 @@ interface MemExeInput;
     method Action mmioRespDeq;
 
     // global broadcast methods
-    // set aggressive sb & wake up RS 
+    // set aggressive sb & wake up RS
     method Action setRegReadyAggr_mem(PhyRIndx dst);
     method Action setRegReadyAggr_forward(PhyRIndx dst);
     // write reg file & set conservative sb
@@ -369,7 +388,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         // executed after address transation
         doAssert(!(x.data.mem_func == St && isValid(x.regs.dst)),
                  "St cannot have dst reg");
-        
+
         // go to next stage
         dispToRegQ.enq(ToSpecFifo {
             data: MemDispatchToRegRead {
@@ -436,9 +455,9 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         if(verbose) $display("[doExeMem] ", fshow(regToExe));
 
         // get virtual addr & St/Sc/Amo data
-        Addr vaddr = x.rVal1 + signExtend(x.imm);
+        CapPipe vaddr = modifyOffset(setAddrUnsafe(almightyCap, x.rVal1), signExtend(x.imm), True).value;
         Data data = x.rVal2;
-        
+
 `ifdef RVFI_DII
         memData[pack(x.ldstq_tag)] <= data;
         $display("%t : memData[%x] <= %x", $time(), pack(x.ldstq_tag), data);
@@ -451,7 +470,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             Bit#(TLog#(NumBytes)) byteOffset = truncate(addr);
             return tuple2(unpack(pack(be) << byteOffset), d << {byteOffset, 3'b0});
         endfunction
-        let {shiftBE, shiftData} = getShiftedBEData(vaddr, origBE, data);
+        let {shiftBE, shiftData} = getShiftedBEData(getAddr(vaddr), origBE, data);
 
         // update LSQ data now
         if(x.ldstq_tag matches tagged St .stTag) begin
@@ -467,7 +486,11 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
                 ldstq_tag: x.ldstq_tag,
                 shiftedBE: shiftBE,
                 vaddr: vaddr,
-                misaligned: memAddrMisaligned(vaddr, origBE)
+`ifdef INCLUDE_TANDEM_VERIF
+                store_data: data,
+                store_data_BE: origBE,
+`endif
+                misaligned: memAddrMisaligned(getAddr(vaddr), origBE)
             },
             specBits: regToExe.spec_bits
         });
@@ -495,6 +518,13 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
 
         if(verbose) $display("[doFinishMem] ", fshow(dTlbResp));
         if(isValid(cause) && verbose) $display("  [doFinishMem - dTlb response] PAGEFAULT!");
+
+        Data store_data = ?;
+        ByteEn store_data_BE = ?;
+`ifdef INCLUDE_TANDEM_VERIF
+        store_data    = x.store_data;
+        store_data_BE = x.store_data_BE;
+`endif
 
         // check misalignment
         if(!isValid(cause) && x.misaligned) begin
@@ -530,28 +560,28 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         endcase);
         Bool access_at_commit = !isValid(cause) && (isMMIO || isLrScAmo);
         Bool non_mmio_st_done = !isValid(cause) && !isMMIO && x.mem_func == St;
-        inIfc.rob_setExecuted_doFinishMem(
-            x.tag,
-            x.vaddr,
-            access_at_commit,
-            non_mmio_st_done
+        CapPipe pcc = cast(inIfc.scaprf_rd(SCR_PCC));
+        CapPipe ddc = cast(inIfc.scaprf_rd(SCR_DDC));
+        Bool ddc_out_of_bounds = !isInBounds(modifyOffset(ddc,getAddr(x.vaddr),True).value,True);
+        Bool out_of_bounds = (getFlags(pcc) == 1'b1) ? isInBounds(x.vaddr, False):ddc_out_of_bounds;
+        inIfc.rob_setExecuted_doFinishMem(x.tag, x.vaddr, store_data, store_data_BE,
+                                          access_at_commit, non_mmio_st_done,
+                                          (out_of_bounds) ? Valid(CHERIFault):Invalid,
+                                          pcc
 `ifdef RVFI
-            , ExtraTraceBundle{
-                regWriteData: memData[pack(x.ldstq_tag)],
-                memByteEn: unpack(pack(x.shiftedBE) >> x.vaddr[2:0])
-            }
+                                          , ExtraTraceBundle{
+                                              regWriteData: memData[pack(x.ldstq_tag)],
+                                              memByteEn: unpack(pack(x.shiftedBE) >> getAddr(x.vaddr)[2:0])
+                                          }
 `endif
-        );
-`ifdef RVFI
-        $display("%t : memData[%x]: %x", $time(), pack(x.ldstq_tag), memData[pack(x.ldstq_tag)]);
-`endif
+                                         );
 
         // update LSQ
         LSQUpdateAddrResult updRes <- lsq.updateAddr(
             x.ldstq_tag, cause, paddr, isMMIO, x.shiftedBE
         );
 
-        // issue non-MMIO Ld which has no excpetion and is not waiting for
+        // issue non-MMIO Ld which has no exception and is not waiting for
         // wrong path resp
         if (x.mem_func == Ld && !isMMIO &&
             !isValid(cause) && !updRes.waitWPResp) begin
@@ -674,6 +704,11 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         if(verbose) $display("%t : ", $time, rule_name, " ", fshow(tag), "; ", fshow(data), "; ", fshow(res));
         if(res.dst matches tagged Valid .dst) begin
             inIfc.writeRegFile(dst.indx, res.data);
+
+`ifdef INCLUDE_TANDEM_VERIF
+            inIfc.rob_setExecuted_doFinishMem_RegData (res.instTag, res.data);
+`endif
+
 `ifdef PERF_COUNT
             // perf: load to use latency
             let lat <- ldToUseLatTimer.done(tag);
@@ -693,7 +728,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         end
     endaction
     endfunction
-    
+
     rule doRespLdMem;
         memRespLdQ.deq;
         let {t, d} = memRespLdQ.first;
@@ -828,11 +863,14 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         waitLrScAmoMMIOResp <= Invalid;
         // get resp data (need shifting)
         let d <- toGet(respLrScAmoQ).get;
-        Data resp = gatherLoad(lsqDeqLd.paddr, lsqDeqLd.byteEn, lsqDeqLd.unsignedLd, d); 
+        Data resp = gatherLoad(lsqDeqLd.paddr, lsqDeqLd.byteEn, lsqDeqLd.unsignedLd, d);
         // write reg file & set ROB as Executed & wakeup rs
         if(lsqDeqLd.dst matches tagged Valid .dst) begin
             inIfc.writeRegFile(dst.indx, resp);
             inIfc.setRegReadyAggr_mem(dst.indx);
+`ifdef INCLUDE_TANDEM_VERIF
+            inIfc.rob_setExecuted_doFinishMem_RegData (lsqDeqLd.instTag, resp);
+`endif
         end
         inIfc.rob_setExecuted_deqLSQ(
             lsqDeqLd.instTag,
@@ -918,6 +956,9 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         if(lsqDeqLd.dst matches tagged Valid .dst) begin
             inIfc.writeRegFile(dst.indx, resp);
             inIfc.setRegReadyAggr_mem(dst.indx);
+`ifdef INCLUDE_TANDEM_VERIF
+            inIfc.rob_setExecuted_doFinishMem_RegData (lsqDeqLd.instTag, resp);
+`endif
         end
         inIfc.rob_setExecuted_deqLSQ(lsqDeqLd.instTag, Invalid, Invalid
 `ifdef RVFI
@@ -1166,6 +1207,9 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         if(lsqDeqSt.dst matches tagged Valid .dst) begin
             inIfc.writeRegFile(dst.indx, resp);
             inIfc.setRegReadyAggr_mem(dst.indx);
+`ifdef INCLUDE_TANDEM_VERIF
+            inIfc.rob_setExecuted_doFinishMem_RegData (lsqDeqSt.instTag, resp);
+`endif
         end
         inIfc.rob_setExecuted_deqLSQ(lsqDeqSt.instTag, Invalid, Invalid
 `ifdef RVFI
@@ -1269,6 +1313,9 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         if(lsqDeqSt.dst matches tagged Valid .dst) begin
             inIfc.writeRegFile(dst.indx, resp);
             inIfc.setRegReadyAggr_mem(dst.indx);
+`ifdef INCLUDE_TANDEM_VERIF
+            inIfc.rob_setExecuted_doFinishMem_RegData (lsqDeqSt.instTag, resp);
+`endif
         end
         inIfc.rob_setExecuted_deqLSQ(lsqDeqSt.instTag, Invalid, Invalid
 `ifdef RVFI

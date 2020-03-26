@@ -30,7 +30,7 @@ import LLCRqMshr::*;
 import CCPipe::*;
 import SelfInvLLPipe ::*;
 import FShow::*;
-import Fifo::*;
+import Fifos::*;
 import CacheUtils::*;
 import Performance::*;
 import LatencyTimer::*;

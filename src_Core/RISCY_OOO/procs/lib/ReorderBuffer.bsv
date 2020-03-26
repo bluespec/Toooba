@@ -1,6 +1,6 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +8,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -33,6 +33,10 @@ import RevertingVirtualReg::*;
 `ifdef RVFI_DII
 import RVFI_DII_Types::*;
 `endif
+import CHERICap::*;
+import CHERICC_Fat::*;
+
+import Cur_Cycle :: *;
 
 // right after execution, full_result has more up-to-date data (e.g. ppc of mispredicted branch)
 // some parts of full_result are for verification
@@ -42,10 +46,10 @@ import RVFI_DII_Types::*;
 // csrData is only used by iType = Csr
 // vaddr is only used by mem inst in page fault
 typedef union tagged {
-    Addr PPC; // at default store ppc
-    Addr VAddr; // for mem inst, store vaddr
+    CapPipe PPC; // at default store ppc
+    CapPipe VAddr; // for mem inst, store vaddr
     Data CSRData; // for Csr inst, store csr_data
-} PPCVAddrCSRData deriving(Bits, Eq, FShow);
+} PPCVAddrCSRData deriving(Bits, FShow);
 
 `ifdef RVFI
 typedef struct {
@@ -55,9 +59,16 @@ typedef struct {
 `endif
 
 typedef struct {
-    Addr               pc;
+    CapPipe            pc;
     Bit #(32)          orig_inst;    // original 16b or 32b instruction ([1:0] will distinguish 16b or 32b)
     IType              iType;
+    Maybe#(ArchRIndx)  dst;          // Invalid, GPR or FPR destination ("Rd")
+    Data               dst_data;     // Output of instruction into destination register
+`ifdef INCLUDE_TANDEM_VERIF
+    // Store-data, for those mem instrs that store data
+    Data               store_data;
+    ByteEn             store_data_BE;
+`endif
     Maybe#(CSR)        csr;
     Bool               claimed_phy_reg; // whether we need to commmit renaming
     Maybe#(Trap)       trap;
@@ -91,7 +102,7 @@ typedef struct {
 `ifdef RVFI
     ExtraTraceBundle   traceBundle;
 `endif
-} ToReorderBuffer deriving(Bits, Eq, FShow);
+} ToReorderBuffer deriving(Bits, FShow);
 
 typedef enum {
     NotDone,
@@ -100,8 +111,11 @@ typedef enum {
 
 interface Row_setExecuted_doFinishAlu;
     method Action set(
+        Data dst_data,
         Maybe#(Data) csrData,
-        ControlFlow cf
+        ControlFlow cf,
+        Maybe#(Exception) cause,
+        CapPipe pcc
 `ifdef RVFI
         , ExtraTraceBundle tb
 `endif
@@ -109,7 +123,7 @@ interface Row_setExecuted_doFinishAlu;
 endinterface
 
 interface Row_setExecuted_doFinishFpuMulDiv;
-    method Action set(Bit#(5) fflags);
+    method Action set(Data dst_data, Bit#(5) fflags, Maybe#(Exception) cause, CapPipe pcc);
 endinterface
 
 interface ReorderBufferRowEhr#(numeric type aluExeNum, numeric type fpuMulDivExeNum);
@@ -130,11 +144,22 @@ interface ReorderBufferRowEhr#(numeric type aluExeNum, numeric type fpuMulDivExe
     // faulting inst cannot have this set, since there is no access to
     // perform), and non-MMIO St can become Executed (NOTE faulting
     // instructions are not Executed, they are set at deqLSQ time)
-    method Action setExecuted_doFinishMem(Addr vaddr, Bool access_at_commit, Bool non_mmio_st_done
+
+    method Action setExecuted_doFinishMem(CapPipe vaddr,
+                                          Data store_data, ByteEn store_data_BE,
+                                          Bool access_at_commit, Bool non_mmio_st_done,
+                                          Maybe#(Exception) cause,
+                                          CapPipe pcc
 `ifdef RVFI
-        , ExtraTraceBundle tb
+                                          , ExtraTraceBundle tb
 `endif
     );
+
+`ifdef INCLUDE_TANDEM_VERIF
+    // Used after a Ld, Lr, Sc, Amo to record reg data
+    method Action setExecuted_doFinishMem_RegData (Data dst_data);
+`endif
+
 `ifdef INORDER_CORE
     // in-order core sets LSQ tag after getting out of issue queue
     method Action setLSQTag(LdStQTag t, Bool isFence);
@@ -152,9 +177,17 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     Add#(1, a__, aluExeNum), Add#(1, b__, fpuMulDivExeNum)
 );
     Integer trap_deq_port = 0;
-    Integer trap_deqLSQ_port = 0; // write trap
-    Integer trap_finishMem_port = 1; // write trap
-    Integer trap_enq_port = 2; // write trap
+    function Integer trap_finishAlu_port(Integer i) = i;
+    function Integer trap_finishFpuMulDiv_port(Integer i) = valueof(aluExeNum) + i;
+    Integer trap_deqLSQ_port = valueof(TAdd#(aluExeNum, TDiv#(aluExeNum,2)));
+    Integer trap_finishMem_port = valueof(TAdd#(aluExeNum, TDiv#(aluExeNum,2))); // write trap
+    Integer trap_enq_port = 1 + valueof(TAdd#(aluExeNum, TDiv#(aluExeNum,2)));
+
+    Integer pc_deq_port = 0;
+    function Integer pc_finishAlu_port(Integer i) = i;
+    Integer pc_deqLSQ_port = valueof(aluExeNum);
+    Integer pc_finishMem_port = valueof(aluExeNum);
+    Integer pc_enq_port = 1 + valueof(aluExeNum);
 
     Integer pvc_deq_port = 0;
     function Integer pvc_finishAlu_port(Integer i) = i; // write ppc_vaddr_csrData
@@ -198,13 +231,20 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     Integer sb_enq_port = 1; // write spec_bits
     Integer sb_correctSpec_port = 2; // write spec_bits
 
-    Reg#(Addr)                                                      pc                   <- mkRegU;
+    Ehr#(TAdd#(2, aluExeNum), CapPipe)                              pc                   <- mkEhr(?);
     Reg #(Bit #(32))                                                orig_inst            <- mkRegU;
     Reg#(IType)                                                     iType                <- mkRegU;
+    Reg #(Maybe #(ArchRIndx))                                       rg_dst_reg           <- mkRegU;
+    Reg #(Data)                                                     rg_dst_data          <- mkRegU;
+`ifdef INCLUDE_TANDEM_VERIF
+    Reg #(Data)                                                     rg_store_data        <- mkRegU;
+    Reg #(ByteEn)                                                   rg_store_data_BE     <- mkRegU;
+`endif
     Reg#(Maybe#(CSR))                                               csr                  <- mkRegU;
     Reg#(Bool)                                                      claimed_phy_reg      <- mkRegU;
-    Ehr#(3, Maybe#(Trap))                                           trap                 <- mkEhr(?);
-    Ehr#(3, Addr)                                                   tval                 <- mkEhr(?);
+    Ehr#(TAdd#(TAdd#(2, TDiv#(aluExeNum,2)), aluExeNum), Maybe#(Trap)) trap              <- mkEhr(?);
+    Ehr#(3, Maybe#(Trap))                                           mem_early_trap       <- mkEhr(?);
+    Ehr#(TAdd#(TAdd#(2, TDiv#(aluExeNum,2)), aluExeNum), Addr)      tval                 <- mkEhr(?);
     Ehr#(TAdd#(2, aluExeNum), PPCVAddrCSRData)                      ppc_vaddr_csrData    <- mkEhr(?);
     Ehr#(TAdd#(1, fpuMulDivExeNum), Bit#(5))                        fflags               <- mkEhr(?);
     Reg#(Bool)                                                      will_dirty_fpu_state <- mkRegU;
@@ -228,27 +268,42 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     Wire#(Addr) predPcWire <- mkBypassWire;
     (* fire_when_enabled, no_implicit_conditions *)
     rule setPcWires;
-        predPcWire <= ppc_vaddr_csrData[0] matches tagged PPC .a ? a : 0;
+        predPcWire <= ppc_vaddr_csrData[0] matches tagged PPC .a ? getAddr(a) : 0;
     endrule
 
     Vector#(aluExeNum, Row_setExecuted_doFinishAlu) aluSetExe;
     for(Integer i = 0; i < valueof(aluExeNum); i = i+1) begin
         aluSetExe[i] = (interface Row_setExecuted_doFinishAlu;
             method Action set(
+                Data dst_data,
                 Maybe#(Data) csrData,
-                ControlFlow cf
+                ControlFlow cf,
+                Maybe#(Exception) cause,
+                CapPipe pcc
 `ifdef RVFI
                 , ExtraTraceBundle tb
 `endif
             );
                 // inst is done
-                rob_inst_state[state_finishAlu_port(i)] <= Executed; 
+                rob_inst_state[state_finishAlu_port(i)] <= Executed;
+                // Destination register data, for Tandem Verification
+                rg_dst_data <= dst_data;
+
                 // update PPC or csrData (vaddr is always useless for ALU results)
                 if(csrData matches tagged Valid .d) begin
                     ppc_vaddr_csrData[pvc_finishAlu_port(i)] <= CSRData (d);
                 end
                 else begin
-                    ppc_vaddr_csrData[pvc_finishAlu_port(i)] <= PPC (cf.nextPc);
+                    ppc_vaddr_csrData[pvc_finishAlu_port(i)] <= PPC (setAddr(almightyCap, cf.nextPc).value);
+                end
+                CapPipe new_pcc = setAddrUnsafe(pcc, getAddr(pc[pc_finishAlu_port(i)]));
+                pc[pc_finishAlu_port(i)] <= new_pcc;
+                if (!isInBounds(new_pcc, False)) begin
+                    trap[trap_finishAlu_port(i)] <= Valid (tagged Exception CHERIFault);
+                    tval[trap_finishAlu_port(i)] <= tval[trap_finishAlu_port(i)];
+                end else if (cause matches tagged Valid .exp) begin
+                    trap[trap_finishAlu_port(i)] <= Valid (tagged Exception exp);
+                    tval[trap_finishAlu_port(i)] <= tval[trap_finishAlu_port(i)];
                 end
 `ifdef RVFI
                 //$display("%t : traceBundle = ", $time(), fshow(tb), " in Row_setExecuted_doFinishAlu for %x", pc);
@@ -258,20 +313,30 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
             endmethod
         endinterface);
     end
-    
+
     Vector#(fpuMulDivExeNum, Row_setExecuted_doFinishFpuMulDiv) fpuMulDivExe;
     for(Integer i = 0; i < valueof(fpuMulDivExeNum); i = i+1) begin
         fpuMulDivExe[i] = (interface Row_setExecuted_doFinishFpuMulDiv;
-            method Action set(Bit#(5) new_fflags);
+            method Action set(Data dst_data, Bit#(5) new_fflags, Maybe#(Exception) cause, CapPipe pcc);
                 // inst is done
-                rob_inst_state[state_finishFpuMulDiv_port(i)] <= Executed; 
+                rob_inst_state[state_finishFpuMulDiv_port(i)] <= Executed;
+                rg_dst_data <= dst_data;
                 // update fflags
                 fflags[fflags_finishFpuMulDiv_port(i)] <= new_fflags;
+                CapPipe new_pcc = setAddrUnsafe(pcc, getAddr(pc[pc_finishAlu_port(i)]));
+                if (!isInBounds(new_pcc, False)) begin
+                    trap[trap_finishFpuMulDiv_port(i)] <= Valid (tagged Exception CHERIFault);
+                    tval[trap_finishFpuMulDiv_port(i)] <= tval[trap_finishAlu_port(i)];
+                end else if (cause matches tagged Valid .exp) begin
+                    trap[trap_finishFpuMulDiv_port(i)] <= Valid (tagged Exception exp);
+                    tval[trap_finishFpuMulDiv_port(i)] <= tval[trap_finishAlu_port(i)];
+                end
+                //pc[pc_finishFpuMulDiv_port(i)] <= newPcc; //XXX add pcc checks on FPU instructions
             endmethod
         endinterface);
     end
 
-    method Addr getOrigPC = pc;
+    method Addr getOrigPC = getAddr(pc[0]);
     method Addr getOrigPredPC = predPcWire;
     method Bit #(32) getOrig_Inst = orig_inst;
 
@@ -279,9 +344,13 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
 
     interface setExecuted_doFinishFpuMulDiv = fpuMulDivExe;
 
-    method Action setExecuted_doFinishMem(Addr vaddr, Bool access_at_commit, Bool non_mmio_st_done
+    method Action setExecuted_doFinishMem(CapPipe vaddr,
+                                          Data   store_data, ByteEn store_data_BE,
+                                          Bool   access_at_commit, Bool non_mmio_st_done,
+                                          Maybe#(Exception) cause,
+                                          CapPipe pcc
 `ifdef RVFI
-        , ExtraTraceBundle tb
+                                          , ExtraTraceBundle tb
 `endif
     );
         doAssert(!(access_at_commit && non_mmio_st_done),
@@ -297,11 +366,32 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         //$display("%t : traceBundle = ", $time(), fshow(tb), " in setExecuted_doFinishMem for %x", pc);
         traceBundle[pvc_finishMem_port] <= tb;
 `endif
+`ifdef INCLUDE_TANDEM_VERIF
+        // Store-data (for mem instrs that store data)
+        rg_store_data    <= store_data;
+        rg_store_data_BE <= store_data_BE;
+`endif
         // update access at commit
         memAccessAtCommit[accessCom_finishMem_port] <= access_at_commit;
         // udpate non mmio st
         nonMMIOStDone[nonMMIOSt_finishMem_port] <= non_mmio_st_done;
+        CapPipe new_pcc = setAddrUnsafe(pcc, getAddr(pc[pc_finishMem_port]));
+        pc[pc_finishMem_port] <= new_pcc;
+        if (!isInBounds(new_pcc, False)) begin
+            mem_early_trap[0] <= Valid (tagged Exception CHERIFault);
+            tval[trap_finishMem_port] <= tval[trap_finishMem_port];
+        end else if (cause matches tagged Valid .exp) begin
+            mem_early_trap[0] <= Valid (tagged Exception exp);
+            tval[trap_finishMem_port] <= tval[trap_finishMem_port];
+        end
     endmethod
+
+`ifdef INCLUDE_TANDEM_VERIF
+    // Used after a Ld, Lr, Sc, Amo to record reg data
+    method Action setExecuted_doFinishMem_RegData (Data dst_data);
+       rg_dst_data <= dst_data;
+    endmethod
+`endif
 
 `ifdef INORDER_CORE
     method Action setLSQTag(LdStQTag t, Bool isFence);
@@ -312,9 +402,13 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
 `endif
 
     method Action write_enq(ToReorderBuffer x);
-        pc <= x.pc;
+        pc[pc_enq_port] <= x.pc;
         orig_inst <= x.orig_inst;
         iType <= x.iType;
+        rg_dst_reg <= x.dst;
+        // rg_dst_data will be written after inst execution
+        // rg_store_data will be written in Mem pipeline
+        // rg_store_data_BE will be written in Mem pipeline
         csr <= x.csr;
         claimed_phy_reg <= x.claimed_phy_reg;
         trap[trap_enq_port] <= x.trap;
@@ -325,6 +419,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         rob_inst_state[state_enq_port] <= x.rob_inst_state;
         epochIncremented <= x.epochIncremented;
         spec_bits[sb_enq_port] <= x.spec_bits;
+        mem_early_trap[1] <= Invalid;
 `ifdef INORDER_CORE
         // in-order core enqs to LSQ later, so don't set LSQ tag; and other
         // flags should default to false
@@ -352,9 +447,15 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
 
     method ToReorderBuffer read_deq;
         return ToReorderBuffer {
-            pc: pc,
-	    orig_inst: orig_inst,
+            pc: pc[pc_deq_port],
+            orig_inst: orig_inst,
             iType: iType,
+            dst: rg_dst_reg,
+            dst_data: rg_dst_data,
+`ifdef INCLUDE_TANDEM_VERIF
+            store_data: rg_store_data,
+            store_data_BE: rg_store_data_BE,
+`endif
             csr: csr,
             claimed_phy_reg: claimed_phy_reg,
             trap: trap[trap_deq_port],
@@ -405,11 +506,10 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         //$display("%t: Wrote tb for deqLSQ ", $time(), fshow(tb));
 `endif
         // record trap
-        doAssert(!isValid(trap[trap_deqLSQ_port]), "cannot have trap");
-        if(cause matches tagged Valid .e) begin
-            trap[trap_deqLSQ_port] <= Valid (Exception (e));
-	    // TODO: shouldn't we record tval here as well?
-        end
+        //doAssert(!isValid(trap[trap_deqLSQ_port]), "cannot have trap");
+        if (isValid(mem_early_trap[0])) trap[trap_deqLSQ_port] <= mem_early_trap[0];
+        else if(cause matches tagged Valid .e) trap[trap_deqLSQ_port] <= Valid (Exception (e));
+        // TODO: shouldn't we record tval here as well?
         // record ld misspeculation
         ldKilled[ldKill_deqLSQ_port] <= ld_killed;
     endmethod
@@ -466,8 +566,11 @@ endinterface
 
 interface ROB_setExecuted_doFinishAlu;
     method Action set(InstTag x,
+                      Data dst_data,
                       Maybe#(Data) csrData,
-                      ControlFlow cf
+                      ControlFlow cf,
+                      Maybe#(Exception) cause,
+                      CapPipe pcc
 `ifdef RVFI
                       , ExtraTraceBundle tb
 `endif
@@ -475,7 +578,7 @@ interface ROB_setExecuted_doFinishAlu;
 endinterface
 
 interface ROB_setExecuted_doFinishFpuMulDiv;
-    method Action set(InstTag x, Bit#(5) fflags);
+    method Action set(InstTag x, Data dst_data, Bit#(5) fflags, Maybe#(Exception) cause, CapPipe pcc);
 endinterface
 
 interface ROB_getOrigPC;
@@ -496,7 +599,7 @@ interface SupReorderBuffer#(numeric type aluExeNum, numeric type fpuMulDivExeNum
 
     interface Vector#(SupSize, ROB_DeqPort) deqPort;
 
-    // record that we have notified LSQ about inst reaching commit 
+    // record that we have notified LSQ about inst reaching commit
     method Action setLSQAtCommitNotified(InstTag x);
     // deqLSQ rules set ROB state
     method Action setExecuted_deqLSQ(InstTag x, Maybe#(Exception) cause, Maybe#(LdKilledBy) ld_killed
@@ -508,11 +611,22 @@ interface SupReorderBuffer#(numeric type aluExeNum, numeric type fpuMulDivExeNum
     interface Vector#(aluExeNum, ROB_setExecuted_doFinishAlu) setExecuted_doFinishAlu;
     interface Vector#(fpuMulDivExeNum, ROB_setExecuted_doFinishFpuMulDiv) setExecuted_doFinishFpuMulDiv;
     // doFinishMem, after addr translation
-    method Action setExecuted_doFinishMem(InstTag x, Addr vaddr, Bool access_at_commit, Bool non_mmio_st_done
+    method Action setExecuted_doFinishMem(InstTag x,
+                                          CapPipe vaddr,
+                                          Data store_data, ByteEn store_data_BE,
+                                          Bool access_at_commit, Bool non_mmio_st_done,
+                                          Maybe#(Exception) cause,
+                                          CapPipe pcc
 `ifdef RVFI
-        , ExtraTraceBundle tb
+                                          , ExtraTraceBundle tb
 `endif
     );
+
+`ifdef INCLUDE_TANDEM_VERIF
+    // Used after a Ld, Lr, Sc, Amo to record reg data
+    method Action setExecuted_doFinishMem_RegData (InstTag x, Data dst_data);
+`endif
+
 `ifdef INORDER_CORE
     // in-order core sets LSQ tag after getting out of issue queue
     method Action setLSQTag(InstTag x, LdStQTag t, Bool isFence);
@@ -784,7 +898,7 @@ module mkSupReorderBuffer#(
                 function Bool getDepOn(Integer i) = row[w][i].dependsOn_wrongSpec(specTag);
                 depVec[w] = map(getDepOn, genVector);
             end
-	   if (verbose)
+           if (verbose)
             $display("[ROB incorrectSpec] ",
                 fshow(specTag), " ; ",
                 fshow(killInstTag), " ; ",
@@ -992,8 +1106,11 @@ module mkSupReorderBuffer#(
         aluSetExeIfc[i] = (interface ROB_setExecuted_doFinishAlu;
             method Action set(
                 InstTag x,
+                Data dst_data,
                 Maybe#(Data) csrData,
-                ControlFlow cf
+                ControlFlow cf,
+                Maybe#(Exception) cause,
+                CapPipe pcc
 `ifdef RVFI
                 , ExtraTraceBundle tb
 `endif
@@ -1001,8 +1118,11 @@ module mkSupReorderBuffer#(
                 all(id, readVReg(setExeAlu_SB_enq)) // ordering: < enq
             );
                 row[x.way][x.ptr].setExecuted_doFinishAlu[i].set(
+                    dst_data,
                     csrData,
-                    cf
+                    cf,
+                    cause,
+                    pcc
 `ifdef RVFI
                     , tb
 `endif
@@ -1015,11 +1135,11 @@ module mkSupReorderBuffer#(
     for(Integer i = 0; i < valueof(fpuMulDivExeNum); i = i+1) begin
         fpuMulDivSetExeIfc[i] = (interface ROB_setExecuted_doFinishFpuMulDiv;
             method Action set(
-                InstTag x, Bit#(5) fflags
+                InstTag x, Data dst_data, Bit#(5) fflags, Maybe#(Exception) cause, CapPipe pcc
             ) if(
                 all(id, readVReg(setExeFpuMulDiv_SB_enq)) // ordering: < enq
             );
-                row[x.way][x.ptr].setExecuted_doFinishFpuMulDiv[i].set(fflags);
+                row[x.way][x.ptr].setExecuted_doFinishFpuMulDiv[i].set(dst_data, fflags, cause, pcc);
             endmethod
         endinterface);
     end
@@ -1095,19 +1215,30 @@ module mkSupReorderBuffer#(
     interface setExecuted_doFinishFpuMulDiv = fpuMulDivSetExeIfc;
 
     method Action setExecuted_doFinishMem(
-        InstTag x, Addr vaddr, Bool access_at_commit, Bool non_mmio_st_done
+        InstTag x, CapPipe vaddr, Data store_data, ByteEn store_data_BE, Bool access_at_commit,
+        Bool non_mmio_st_done, Maybe#(Exception) cause, CapPipe pcc
 `ifdef RVFI
         , tb
 `endif
     ) if(
         all(id, readVReg(setExeMem_SB_enq)) // ordering: < enq
     );
-        row[x.way][x.ptr].setExecuted_doFinishMem(vaddr, access_at_commit, non_mmio_st_done
+        row[x.way][x.ptr].setExecuted_doFinishMem(vaddr,
+                                                  store_data, store_data_BE,
+                                                  access_at_commit, non_mmio_st_done,
+                                                  cause, pcc
 `ifdef RVFI
-            , tb
+                                                  , tb
 `endif
         );
     endmethod
+
+`ifdef INCLUDE_TANDEM_VERIF
+    // Used after a Ld, Lr, Sc, Amo to record reg data
+    method Action setExecuted_doFinishMem_RegData (InstTag x, Data dst_data);
+       row[x.way][x.ptr].setExecuted_doFinishMem_RegData (dst_data);
+    endmethod
+`endif
 
 `ifdef INORDER_CORE
     method Action setLSQTag(InstTag x, LdStQTag t, Bool isFence);

@@ -1,6 +1,7 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// 
+// Portions (c) 2020 Bluespec, Inc.
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +9,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -184,6 +185,7 @@ typedef enum {
     Fnmsub  = 7'b1001011,
     Fnmadd  = 7'b1001111,
     OpFp    = 7'b1010011,
+    OpCHERI = 7'b1011011,
     Branch  = 7'b1100011,
     Jalr    = 7'b1100111,
     Jal     = 7'b1101111,
@@ -194,7 +196,7 @@ function Opcode unpackOpcode(Bit#(7) x);
     return (case(x)
         pack(Opcode'(Load   )): (Load   );
         pack(Opcode'(LoadFp )): (LoadFp );
-        pack(Opcode'(MiscMem)): (MiscMem); 
+        pack(Opcode'(MiscMem)): (MiscMem);
         pack(Opcode'(OpImm  )): (OpImm  );
         pack(Opcode'(Auipc  )): (Auipc  );
         pack(Opcode'(OpImm32)): (OpImm32);
@@ -275,8 +277,22 @@ typedef enum {
     // sanctum user CSR
     CSRtrng       = 12'hcc0, // random number for secure boot
 `endif
+
+   CSRtselect     = 12'h7A0,    // Debug/trace tselect
+   CSRtdata1      = 12'h7A1,    // Debug/trace tdata1
+   CSRtdata2      = 12'h7A2,    // Debug/trace tdata2
+   CSRtdata3      = 12'h7A3,    // Debug/trace tdata3
+
+`ifdef INCLUDE_GDB_CONTROL
+   CSRdcsr        = 12'h7B0,    // Debug control and status
+   CSRdpc         = 12'h7B1,    // Debug PC
+   CSRdscratch0   = 12'h7B2,    // Debug scratch0
+   CSRdscratch1   = 12'h7B3,    // Debug scratch1
+`endif
+
     // CSR that catches all the unimplemented CSRs. To avoid exception on this,
     // make it a user non-standard read/write CSR.
+    // Bluespec: in RenameStage.getTrap(), we force this to be a csr_access_trap
     CSRnone       = 12'h8ff
 } CSR deriving(Bits, Eq, FShow);
 
@@ -332,6 +348,19 @@ function CSR unpackCSR(Bit#(12) x);
         pack(CSR'(CSRmspec     )): (CSRmspec     );
         pack(CSR'(CSRtrng      )): (CSRtrng      );
 `endif
+
+        pack(CSR'(CSRtselect   )): (CSRtselect   );
+        pack(CSR'(CSRtdata1    )): (CSRtdata1    );
+        pack(CSR'(CSRtdata2    )): (CSRtdata2    );
+        pack(CSR'(CSRtdata3    )): (CSRtdata3    );
+
+`ifdef INCLUDE_GDB_CONTROL
+        pack(CSR'(CSRdcsr      )): (CSRdcsr      );
+        pack(CSR'(CSRdpc       )): (CSRdpc       );
+        pack(CSR'(CSRdscratch0 )): (CSRdscratch0 );
+        pack(CSR'(CSRdscratch1 )): (CSRdscratch1 );
+`endif
+
         default                  : (CSRnone      );
     endcase);
 endfunction
@@ -355,6 +384,7 @@ typedef enum {
     FenceI, SFence,
     Ecall, Ebreak,
     Sret, Mret, // do not support URET
+    CapInspect, CapModify,
     Interrupt // we may turn an inst to an interrupt in implementation
 } IType deriving(Bits, Eq, FShow);
 
@@ -373,16 +403,40 @@ typedef enum {
 
 typedef enum {
     SetOffset, IncOffset
-} ModifyOffsetFunc
+} ModifyOffsetFunc deriving(Bits, Eq, FShow);
 
 typedef enum {
     SetBounds, SetBoundsExact, CRRL, CRAM
-} SetBoundsFunc
+} SetBoundsFunc deriving(Bits, Eq, FShow);
 
 typedef union tagged {
     Bool ModifyOffset;
     Bool SetBounds;
-} AluCapFunc deriving(Bits, Eq, FShow);
+    void SpecialRW;
+    void SetAddr;
+    void Seal;
+    void Unseal;
+    void AndPerm;
+    void SetFlags;
+    void BuildCap;
+    void CMove;
+    void ClearTag;
+    void CJALR;
+} CapModifyFunc deriving(Bits, Eq, FShow);
+
+typedef union tagged {
+    void TestSubset;
+    void CSub;
+    void GetBase;
+    void GetTag;
+    void GetSealed;
+    void GetAddr;
+    void GetOffset;
+    void GetFlags;
+    void GetPerm;
+    void GetType;
+    void ToPtr;
+} CapInspectFunc deriving(Bits, Eq, FShow);
 
 typedef enum {Mul, Mulh, Div, Rem} MulDivFunc deriving(Bits, Eq, FShow);
 
@@ -426,6 +480,8 @@ typedef union tagged {
     MemInst     Mem;
     MulDivInst  MulDiv;
     FpuInst     Fpu;
+    CapInspectFunc CapInspect;
+    CapModifyFunc CapModify;
     void        Other;
 } ExecFunc deriving(Bits, Eq, FShow);
 
@@ -458,33 +514,6 @@ typedef enum {
 } Exception deriving(Bits, Eq, FShow);
 
 typedef enum {
-    None                     = 5'd0,
-    LengthViolation          = 5'd1,
-    TagViolation             = 5'd2,
-    SealViolation            = 5'd3,
-    TypeViolation            = 5'd4,
-    CallTrap                 = 5'd5,
-    ReturnTrap               = 5'd6,
-    StackUnderflow           = 5'd7,
-    MMUStoreCapProhibit      = 5'd8,
-    RepresentViolation       = 5'd9,
-    UnalignedBase            = 5'd10,
-    // 5'd11 - 5'd15 reserved
-    GlobalViolation          = 5'd16,
-    PermitXViolation         = 5'd17,
-    PermitRViolation         = 5'd18,
-    PermitWViolation         = 5'd19,
-    PermitRCapViolation      = 5'd20,
-    PermitWCapViolation      = 5'd21,
-    PermitWLocalCapViolation = 5'd22,
-    PermitSealViolation      = 5'd23,
-    PermitASRViolation       = 5'd24,
-    PermitCCallViolation     = 5'd25,
-    PermitUnsealViolation    = 5'd26,
-    PermitSetCIDViolation    = 5'd27
-    // 5'd28 - 5'd31 reserved
-
-typedef enum {
     UserSoftware       = 4'd0,
     SupervisorSoftware = 4'd1,
     MachineSoftware    = 4'd3,
@@ -493,13 +522,20 @@ typedef enum {
     MachineTimer       = 4'd7,
     UserExternal       = 4'd8,
     SupervisorExternel = 4'd9,
-    MachineExternal    = 4'd11,
+    MachineExternal    = 4'd11
 
-    DebugExternal      = 4'd14    // Bluespec: for debug mode   
+`ifdef INCLUDE_GDB_CONTROL
+  , DebugHalt          = 4'd14,        // Debugger halt command (^C in GDB)
+    DebugStep          = 4'd15         // dcsr.step is set and 1 instr has been processed
+`endif
+
 } Interrupt deriving(Bits, Eq, FShow);
 
-// typedef 12 InterruptNum;
-typedef 15 InterruptNum;    // Bluespec: extended to 15 bits for debug interrupt
+`ifdef INCLUDE_GDB_CONTROL
+typedef 16 InterruptNum;    // With debugger
+`else
+typedef 12 InterruptNum;    // Without debugger
+`endif
 
 // Traps are either an exception or an interrupt
 typedef union tagged {
@@ -627,7 +663,7 @@ typedef struct {
     Bool b_points_to_a_type;
     Bool b_addr_valid_type;
     Bool b_perm_subset_a;
-} CapChecks;
+} CapChecks deriving(Bits, Eq, FShow);
 
 typedef struct {
     IType           iType;
@@ -995,7 +1031,7 @@ function Fmt showInst(Instruction inst);
             privMRET: fshow("mret");
             privWFI: fshow("wfi");
             default: (
-              funct7 == privSFENCEVMA ? 
+              funct7 == privSFENCEVMA ?
               (fshow("sfence.vma ") + fshow(rs1) + fshow(" ") + fshow(rs2)) :
               fshow("SYSTEM not implemented")
             );
@@ -1012,4 +1048,3 @@ function Fmt showInst(Instruction inst);
 
   return ret;
 endfunction
-

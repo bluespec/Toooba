@@ -1,6 +1,7 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// 
+// Portions Copyright (c) 2019-2020 Bluespec, Inc.
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +9,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -27,6 +28,7 @@ import GetPut::*;
 import Cntrs::*;
 import ConfigReg::*;
 import FIFO::*;
+import FIFOF::*;
 import Types::*;
 import ProcTypes::*;
 import CCTypes::*;
@@ -35,12 +37,21 @@ import ReorderBuffer::*;
 import ReorderBufferSynth::*;
 import RenamingTable::*;
 import CsrFile::*;
+import ScrFile::*;
 import StoreBuffer::*;
 import VerificationPacket::*;
 import RenameDebugIF::*;
+import CHERICap::*;
+import CHERICC_Fat::*;
+import ISA_Decls_CHERI::*;
 
 `ifdef RVFI
 import RVFI_DII_Types::*;
+`endif
+import Cur_Cycle :: *;
+
+`ifdef INCLUDE_TANDEM_VERIF
+import Trace_Data2 :: *;
 `endif
 
 typedef struct {
@@ -60,7 +71,7 @@ typedef struct {
     Bool stbEmpty;
     Bool stqEmpty;
     Bool tlbNoPendingReq;
-    // CSR info: previlige mode
+    // CSR info: privilege mode
     Bit#(2) prv;
     // inst count
     Data instCount;
@@ -71,6 +82,7 @@ interface CommitInput;
     interface ReorderBufferSynth robIfc;
     interface RegRenamingTable rtIfc;
     interface CsrFile csrfIfc;
+    interface ScrFile scaprfIfc;
     // no stores
     method Bool stbEmpty;
     method Bool stqEmpty;
@@ -94,6 +106,9 @@ interface CommitInput;
 `endif
     );
     method Action setFetchWaitRedirect;
+`ifdef INCLUDE_GDB_CONTROL
+    method Action setFetchWaitFlush;
+`endif
     method Action incrementEpoch;
     // record if we commit a CSR inst or interrupt
     method Action commitCsrInstOrInterrupt;
@@ -101,6 +116,10 @@ interface CommitInput;
     method Bool doStats;
     // deadlock check
     method Bool checkDeadlock;
+
+`ifdef INCLUDE_TANDEM_VERIF
+    interface Vector #(SupSize, Put #(Trace_Data2)) v_to_TV;
+`endif
 endinterface
 
 typedef struct {
@@ -113,7 +132,7 @@ typedef struct {
 
 interface CommitStage;
     // performance
-    method Data getPerf(ComStagePerfType t); 
+    method Data getPerf(ComStagePerfType t);
     // deadlock check
     interface Get#(CommitStuck) commitInstStuck;
     interface Get#(CommitStuck) commitUserInstStuck;
@@ -124,18 +143,23 @@ interface CommitStage;
     // RVFI trace report. Not an input?
     method Get#(Rvfi_Traces) rvfi;
 `endif
+`ifdef INCLUDE_GDB_CONTROL
+   method Bool is_debug_halted;
+   method Action debug_resume;
+`endif
 endinterface
 
 // we apply actions the end of commit rule
 // use struct to record actions to be done
 typedef struct {
-    Addr pc;
+    CapPipe pc;
     Addr addr;
     Trap trap;
+    Bit #(32) orig_inst;
 `ifdef RVFI_DII
     ToReorderBuffer x;
 `endif
-} CommitTrap deriving(Bits, Eq, FShow);
+} CommitTrap deriving(Bits, FShow);
 
 `ifdef RVFI
 function Bool is_16b_inst (Bit #(n) inst);
@@ -147,7 +171,7 @@ typedef struct {
     Data mepc;
     Data stvec;
     Data mtvec;
-} TraceStateBundle deriving(Bits, Eq, FShow);
+} TraceStateBundle deriving(Bits, FShow);
 
 function Maybe#(RVFI_DII_Execution#(DataSz,DataSz)) genRVFI(ToReorderBuffer rot, Dii_Id traceCnt, TraceStateBundle tsb, Data next_pc);
     Addr addr = 0;
@@ -165,7 +189,7 @@ function Maybe#(RVFI_DII_Execution#(DataSz,DataSz)) genRVFI(ToReorderBuffer rot,
         endcase
         case (rot.ppc_vaddr_csrData) matches
             tagged VAddr .vaddr: begin
-                addr = vaddr;
+                addr = getAddr(vaddr);
                 case (rot.lsqTag) matches
                     tagged Ld .l: rmask = rot.traceBundle.memByteEn;
                     tagged St .s: begin
@@ -174,7 +198,7 @@ function Maybe#(RVFI_DII_Execution#(DataSz,DataSz)) genRVFI(ToReorderBuffer rot,
                     end
                 endcase
             end
-            tagged PPC .ppc: next_pc = ppc;
+            tagged PPC .ppc: next_pc = getAddr(ppc);
             tagged CSRData .csrdata: data = csrdata;
         endcase
     end
@@ -188,7 +212,7 @@ function Maybe#(RVFI_DII_Execution#(DataSz,DataSz)) genRVFI(ToReorderBuffer rot,
         rvfi_rs2_addr: rot.orig_inst[24:20],
         rvfi_rs1_data: ?,
         rvfi_rs2_data: ?,
-        rvfi_pc_rdata: rot.pc,
+        rvfi_pc_rdata: getAddr(rot.pc),
         rvfi_pc_wdata: next_pc,
         rvfi_mem_wdata: wdata,
         rvfi_rd_addr: rd,
@@ -201,17 +225,123 @@ function Maybe#(RVFI_DII_Execution#(DataSz,DataSz)) genRVFI(ToReorderBuffer rot,
 endfunction
 `endif
 
-module mkCommitStage#(CommitInput inIfc)(CommitStage);
-    Bool verbose = True;
+`ifdef INCLUDE_GDB_CONTROL
 
-    // Bluespec: for lightweight verbosity trace
-    Integer verbosity = 0;
-    Reg #(Bit #(64)) rg_instret <- mkReg (0);
+typedef enum {
+   RUN_STATE_RUNNING,                // Normal state
+   RUN_STATE_DEBUGGER_HALTED         // When halted for debugger
+   } Run_State
+deriving (Eq, FShow, Bits);
+
+`endif
+
+module mkCommitStage#(CommitInput inIfc)(CommitStage);
+    Bool verbose = False;
+
+    Integer verbosity = 0;   // Bluespec: for lightweight verbosity trace
+
+    // Used to inform tandem-verifier about program order.
+    // 0 is used to indicate we've just come out of reset
+    // TODO: we could use fewer bits and allow and recognize wraparound.
+    Reg #(Bit #(64)) rg_serial_num <- mkReg (0);
+
+`ifdef INCLUDE_TANDEM_VERIF
+    FIFOF #(ToReorderBuffer) f_rob_data <- mkFIFOF;
+`endif
+
+`ifdef INCLUDE_GDB_CONTROL
+   Reg #(Run_State) rg_run_state   <- mkReg (RUN_STATE_RUNNING);
+`endif
+
+`ifdef INCLUDE_TANDEM_VERIF
+   Integer way0 = 0;
+
+   ToReorderBuffer       no_deq_data = ?;
+   Bit #(5)              no_fflags   = ?;
+   Data                  no_mstatus  = ?;
+   Maybe #(Trap_Updates) no_trap_updates = tagged Invalid;
+   Maybe #(RET_Updates)  no_ret_updates  = tagged Invalid;
+
+   function Action fa_to_TV (Integer                way,
+                             Bit #(64)              serial_num,
+                             Maybe #(Tuple2 #(Bit #(12), Data)) maybe_csr_upd,
+                             ToReorderBuffer        deq_data,
+                             Bit #(5)               fflags,
+                             Data                   mstatus,
+                             Maybe #(Trap_Updates)  m_trap_updates,
+                             Maybe #(RET_Updates)   m_ret_updates);
+      action
+         let tval     = (m_trap_updates matches tagged Valid .tu ? tu.tval : deq_data.tval);
+         let upd_pc   = (m_ret_updates matches tagged Valid .ru ? ru.new_pc : deq_data.pc);
+         let x = Trace_Data2 {serial_num:           serial_num,
+                              maybe_csr_upd:        maybe_csr_upd,
+                              pc:                   upd_pc,
+                              orig_inst:            deq_data.orig_inst,
+                              iType:                deq_data.iType,
+                              dst:                  deq_data.dst,
+                              dst_data:             deq_data.dst_data,
+                              store_data:           deq_data.store_data,
+                              store_data_BE:        deq_data.store_data_BE,
+                              csr:                  deq_data.csr,
+                              trap:                 deq_data.trap,
+                              tval:                 tval,
+                              ppc_vaddr_csrData:    deq_data.ppc_vaddr_csrData,
+                              fflags:               fflags,    // deq_data.fflags only has incremental flags
+                              will_dirty_fpu_state: deq_data.will_dirty_fpu_state,
+                              mstatus:              mstatus,    // when SD/XS/FS have changed
+
+                              // Trap and RET updates
+                              prv:                  (  m_trap_updates matches tagged Valid .tu
+                                                     ? tu.prv
+                                                     : (m_ret_updates matches tagged Valid .ru
+                                                        ? ru.prv
+                                                        : ?)),
+                              status:               (  m_trap_updates matches tagged Valid .tu
+                                                     ? tu.status
+                                                     : (m_ret_updates matches tagged Valid .ru
+                                                        ? ru.status
+                                                        : ?)),
+                              tvec:                 fromMaybe (?, m_trap_updates).new_pc,
+                              cause:                fromMaybe (?, m_trap_updates).cause,
+                              epc:                  fromMaybe (?, m_trap_updates).epc
+                              };
+         inIfc.v_to_TV [way].put (x);
+      endaction
+   endfunction
+
+   Reg #(Bool) rg_just_after_reset <- mkReg (True);
+
+   rule rl_send_tv_reset (rg_just_after_reset);
+      Bit #(64) serial_num = 0;
+      fa_to_TV (way0, serial_num,
+                tagged Invalid,
+                no_deq_data, no_fflags, no_mstatus, no_trap_updates, no_ret_updates);
+      rg_just_after_reset <= False;
+      rg_serial_num       <= 1;
+   endrule
+
+   Reg #(Data) rg_old_mip_csr_val <- mkReg (0);
+
+   Data new_mip_csr_val = inIfc.csrfIfc.getMIP;
+
+   Bool send_mip_csr_change_to_tv = (new_mip_csr_val != rg_old_mip_csr_val);
+
+   rule rl_send_mip_csr_change_to_tv ((! rg_just_after_reset) && send_mip_csr_change_to_tv);
+      fa_to_TV (way0, rg_serial_num,
+                tagged Valid (tuple2 (pack (CSRmip), new_mip_csr_val)),
+                no_deq_data, no_fflags, no_mstatus, no_trap_updates, no_ret_updates);
+      rg_old_mip_csr_val <= new_mip_csr_val;
+      rg_serial_num <= rg_serial_num + 1;
+   endrule
+`else
+   Bool send_mip_csr_change_to_tv = False;
+`endif
 
     // func units
     ReorderBufferSynth rob = inIfc.robIfc;
     RegRenamingTable regRenamingTable = inIfc.rtIfc;
     CsrFile csrf = inIfc.csrfIfc;
+    ScrFile scaprf = inIfc.scaprfIfc;
 
     // FIXME FIXME FIXME wires to set atCommit in LSQ: avoid scheduling cycle.
     // Using wire should be fine, because LSQ does not need to see atCommit
@@ -263,7 +393,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
     // RVFI trace report. Not an input?
     FIFO#(Rvfi_Traces) rvfiQ <- mkFIFO;
     Reg#(Dii_Id) traceCnt <- mkReg(0);
-    
+
     function TraceStateBundle getTSB();
         return TraceStateBundle{
             sepc:  csrf.rd(CSRsepc),
@@ -432,12 +562,56 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
     endaction
     endfunction
 
+`ifdef INCLUDE_GDB_CONTROL
+   // Maintain system consistency when halting into debug mode
+   // This code is patterned after 'makeSystemConsistent' above
+   function Action makeSystemConsistent_for_debug_mode;
+      action
+         inIfc.setFlushTlbs;
+
+         // notify TLB to keep update of CSR changes
+         inIfc.setUpdateVMInfo;
+         // always wait store buffer and SQ to be empty
+         when(inIfc.stbEmpty && inIfc.stqEmpty, noAction);
+         // We wait TLB to finish all requests and become sync with memory.
+         // Notice that currently TLB is read only, so TLB is always in sync
+         // with memory (i.e., there is no write to commit to memory). Since all
+         // insts have been killed, nothing can be issued to D TLB at this time.
+         // Since fetch stage is set to wait for redirect, fetch1 stage is
+         // stalled, and nothing can be issued to I TLB at this time.
+         // Therefore, we just need to make sure that I and D TLBs are not
+         // handling any miss req. Besides, when I and D TLBs do not have any
+         // miss req, L2 TLB must be idling.
+         when(inIfc.tlbNoPendingReq, noAction);
+         // yield load reservation in cache
+         inIfc.setFlushReservation;
+
+         inIfc.setFlushBrPred;
+         inIfc.setFlushCaches;
+
+`ifdef SELF_INV_CACHE
+         // reconcile I$
+         if(reconcileI) begin
+            inIfc.setReconcileI;
+         end
+`ifdef SYSTEM_SELF_INV_L1D
+         // FIXME is this reconcile of D$ necessary?
+         inIfc.setReconcileD;
+`endif
+`endif
+      endaction
+   endfunction
+`endif
+
     // TODO Currently we don't check spec bits == 0 when we commit an
     // instruction. This is because killings of wrong path instructions are
     // done in a single cycle. However, when we make killings distributed or
     // pipelined, then we need to check spec bits at commit port.
 
     rule doCommitTrap_flush(
+`ifdef INCLUDE_GDB_CONTROL
+        (rg_run_state == RUN_STATE_RUNNING) &&&
+`endif
         !isValid(commitTrap) &&&
         rob.deqPort[0].deq_data.trap matches tagged Valid .trap
     );
@@ -448,30 +622,34 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         // record trap info
         Addr vaddr = ?;
         if (   (trap == tagged Exception InstAccessFault)
-	    || (trap == tagged Exception InstPageFault)) begin
-	    vaddr = x.tval;
-	end
+            || (trap == tagged Exception InstPageFault)) begin
+            vaddr = x.tval;
+        end
         else if(x.ppc_vaddr_csrData matches tagged VAddr .va) begin
-            vaddr = va;
+            vaddr = getAddr(va);
         end
         let commitTrap_val = Valid (CommitTrap {
             trap: trap,
             pc: x.pc,
-            addr: vaddr
+            addr: vaddr,
+            orig_inst: x.orig_inst
 `ifdef RVFI_DII
             , x: x
 `endif
-	});
+        });
         commitTrap <= commitTrap_val;
+`ifdef INCLUDE_TANDEM_VERIF
+        f_rob_data.enq (x);    // Save data to be sent to TV in rule doCommitTrap_handle, next
+`endif
 
-        if (verbosity > 0) begin
-	   $display ("instret:%0d  PC:0x%0h  instr:0x%08h", rg_instret, x.pc, x.orig_inst,
-		     "  iType:", fshow (x.iType), "    [doCommitTrap]");
-	end
+        if (verbosity >= 1) begin
+           $display ("instret:%0d  PC:0x%0h  instr:0x%08h", rg_serial_num, x.pc, x.orig_inst,
+                     "  iType:", fshow (x.iType), "    [doCommitTrap]");
+        end
         if (verbose) begin
-	   $display ("CommitStage.doCommitTrap_flush: deq_data:   ", fshow (x));
-	   $display ("CommitStage.doCommitTrap_flush: commitTrap: ", fshow (commitTrap_val));
-	end
+           $display ("CommitStage.doCommitTrap_flush: deq_data:   ", fshow (x));
+           $display ("CommitStage.doCommitTrap_flush: commitTrap: ", fshow (commitTrap_val));
+        end
 
         // flush everything. Only increment epoch and stall fetch when we haven
         // not done it yet (we may have already done them at rename stage)
@@ -501,41 +679,104 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         doAssert(x.spec_bits == 0, "cannot have spec bits");
     endrule
 
-    rule doCommitTrap_handle(commitTrap matches tagged Valid .trap);
+    rule doCommitTrap_handle(
+       commitTrap matches tagged Valid .trap
+`ifdef INCLUDE_GDB_CONTROL
+       &&& (rg_run_state == RUN_STATE_RUNNING)
+`endif
+       &&& (! send_mip_csr_change_to_tv));
+
         // reset commitTrap
         commitTrap <= Invalid;
+
+`ifdef INCLUDE_TANDEM_VERIF
+        let x = f_rob_data.first;
+        f_rob_data.deq;
+`endif
 
         // notify commit of interrupt (so MMIO pRq may be handled)
         if(trap.trap matches tagged Interrupt .inter) begin
             inIfc.commitCsrInstOrInterrupt;
         end
-        if (verbose) $display ("CommitStage.doCommitTrap_handle: ", fshow (commitTrap));
 
-        // trap handling & redirect
-        let new_pc <- csrf.trap(trap.trap, trap.pc, trap.addr);
-        inIfc.redirectPc(new_pc
+`ifdef INCLUDE_GDB_CONTROL
+        else if (trap.trap == tagged Exception Breakpoint) begin
+            inIfc.commitCsrInstOrInterrupt;    // TODO: Why?
+        end
+`endif
+
+       Bool debugger_halt = False;
+
+`ifdef INCLUDE_GDB_CONTROL
+       if ((trap.trap == tagged Interrupt DebugHalt)
+           || (trap.trap == tagged Interrupt DebugStep)
+           || ((trap.trap == tagged Exception Breakpoint) && (csrf.dcsr_break_bit == 1'b1)))
+          begin
+             debugger_halt = True;
+
+             // Flush everything (tlbs, caches, reservation, branch predictor);
+             // reconcilei and I; update VM info.
+             makeSystemConsistent_for_debug_mode;
+
+             // Save values in debugger CSRs
+             Bit #(3) dcsr_cause = (  (trap.trap == tagged Interrupt DebugHalt)
+                                    ? 3
+                                    : (  (trap.trap == tagged Interrupt DebugStep)
+                                       ? 4
+                                       : 1));
+             csrf.dcsr_cause_write (dcsr_cause);
+             csrf.dpc_write (trap.pc);
+
+             // Tell fetch stage to wait for redirect
+             // Note: rule doCommitTrap_flush may have done this already; redundant call is ok.
+             inIfc.setFetchWaitRedirect;
+             inIfc.setFetchWaitFlush;
+
+             // Go to quiescent state until debugger resumes execution
+             rg_run_state <= RUN_STATE_DEBUGGER_HALTED;
+
+             if (verbosity >= 2)
+                $display ("%0d: %m.commitStage.doCommitTrap_handle; debugger halt:", cur_cycle);
+          end
+`endif
+
+       if (! debugger_halt) begin
+          // trap handling & redirect
+          let trap_updates <- csrf.trap(trap.trap, getAddr(trap.pc), trap.addr, trap.orig_inst);
+          let cap_trap_updates <- scaprf.trap(trap.trap, getAddr(trap.pc), trap.addr, trap.orig_inst);
+          inIfc.redirectPc(trap_updates.new_pc
 `ifdef RVFI_DII
-            , trap.x.diid + 1
+                           , trap.x.diid + 1
 `endif
-        );
-        
+);
 `ifdef RVFI
-        Rvfi_Traces rvfis = replicate(tagged Invalid);
-        rvfis[0] = genRVFI(trap.x, traceCnt, getTSB(), new_pc);
-        rvfiQ.enq(rvfis);
-        traceCnt <= traceCnt + 1;
+          Rvfi_Traces rvfis = replicate(tagged Invalid);
+          rvfis[0] = genRVFI(trap.x, traceCnt, getTSB(), trap_updates.new_pc);
+          rvfiQ.enq(rvfis);
+          traceCnt <= traceCnt + 1;
 `endif
 
-        // system consistency
-        // TODO spike flushes TLB here, but perhaps it is because spike's TLB
-        // does not include prv info, and it has to flush when prv changes.
-        // XXX As approximation, Trap may cause context switch, so flush for
-        // security
-        makeSystemConsistent(False, True, False);
+`ifdef INCLUDE_TANDEM_VERIF
+          fa_to_TV (way0, rg_serial_num,
+                    tagged Invalid,
+                    x, no_fflags, no_mstatus, tagged Valid trap_updates, no_ret_updates);
+`endif
+          rg_serial_num <= rg_serial_num + 1;
+
+          // system consistency
+          // TODO spike flushes TLB here, but perhaps it is because spike's TLB
+          // does not include prv info, and it has to flush when prv changes.
+          // XXX As approximation, Trap may cause context switch, so flush for
+          // security
+          makeSystemConsistent(False, True, False);
+       end
     endrule
 
     // commit misspeculated load
     rule doCommitKilledLd(
+`ifdef INCLUDE_GDB_CONTROL
+       (rg_run_state == RUN_STATE_RUNNING) &&&
+`endif
         !isValid(commitTrap) &&&
         !isValid(rob.deqPort[0].deq_data.trap) &&&
         rob.deqPort[0].deq_data.ldKilled matches tagged Valid .killBy
@@ -546,7 +787,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
         // kill everything, redirect, and increment epoch
         inIfc.killAll;
-        inIfc.redirectPc(x.pc
+        inIfc.redirectPc(getAddr(x.pc)
 `ifdef RVFI_DII
             , x.diid
 `endif
@@ -574,25 +815,33 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
     // commit system inst
     rule doCommitSystemInst(
+`ifdef INCLUDE_GDB_CONTROL
+       (rg_run_state == RUN_STATE_RUNNING) &&
+`endif
         !isValid(commitTrap) &&
         !isValid(rob.deqPort[0].deq_data.trap) &&
         !isValid(rob.deqPort[0].deq_data.ldKilled) &&
         rob.deqPort[0].deq_data.rob_inst_state == Executed &&
-        isSystem(rob.deqPort[0].deq_data.iType)
+        isSystem(rob.deqPort[0].deq_data.iType) &&
+        (! send_mip_csr_change_to_tv)
     );
         rob.deqPort[0].deq;
         let x = rob.deqPort[0].deq_data;
+
         if(verbose) $display("[doCommitSystemInst] ", fshow(x));
-        if (verbosity > 0) begin
-	   $display("instret:%0d  PC:0x%0h  instr:0x%08h", rg_instret, x.pc, x.orig_inst,
-		    "   iType:", fshow (x.iType), "    [doCommitSystemInst]");
-	   rg_instret <= rg_instret + 1;
-	end
+        if (verbosity >= 1) begin
+           $display("instret:%0d  PC:0x%0h  instr:0x%08h", rg_serial_num, x.pc, x.orig_inst,
+                    "   iType:", fshow (x.iType), "    [doCommitSystemInst]");
+        end
 
         // we claim a phy reg for every inst, so commit its renaming
         regRenamingTable.commit[0].commit;
 
-        Bool write_satp = False; // flush tlb when satp csr is modified
+`ifdef INCLUDE_TANDEM_VERIF
+        Data new_mstatus = no_mstatus;
+`endif
+
+        Bool write_satp     = False; // flush tlb when satp csr is modified
         Bool flush_security = False; // flush for security when the flush csr is written
         if(x.iType == Csr) begin
             // notify commit of CSR (so MMIO pRq may be handled)
@@ -607,6 +856,17 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                 doAssert(False, "must have csr data");
             end
             csrf.csrInstWr(csr_idx, csr_data);
+
+`ifdef INCLUDE_TANDEM_VERIF
+            Data data_warl_xformed = csrf.warl_xform (csr_idx, csr_data);
+            x.ppc_vaddr_csrData = tagged CSRData data_warl_xformed;
+
+            if (x.will_dirty_fpu_state) begin
+               Data old_mstatus = csrf.rd (CSRmstatus);
+               new_mstatus = { 1'b1, old_mstatus [62:15], 2'b11, old_mstatus [12:0] };
+            end
+`endif
+
             // check if satp is modified or not
             write_satp = csr_idx == CSRsatp;
 `ifdef SECURITY
@@ -615,13 +875,25 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         end
 
         // redirect (Sret and Mret redirect pc is got from CSRF)
-        Addr next_pc = x.ppc_vaddr_csrData matches tagged PPC .ppc ? ppc : (x.pc + 4);
-        doAssert(next_pc == x.pc + 4, "ppc must be pc + 4");
+        Addr next_pc = x.ppc_vaddr_csrData matches tagged PPC .ppc ? getAddr(ppc) : (getAddr(x.pc) + 4);
+        doAssert(next_pc == getAddr(x.pc) + 4, "ppc must be pc + 4");
+`ifdef INCLUDE_TANDEM_VERIF
+        Maybe #(RET_Updates) m_ret_updates = no_ret_updates;
+`endif
         if(x.iType == Sret) begin
-            next_pc <- csrf.sret;
+           RET_Updates ret_updates <- csrf.sret;
+           next_pc = ret_updates.new_pc;
+           Scr_RET_Updates scr_ret_updates <- scaprf.sret;
+`ifdef INCLUDE_TANDEM_VERIF
+                 m_ret_updates = tagged Valid ret_updates;
+`endif
         end
         else if(x.iType == Mret) begin
-            next_pc <- csrf.mret;
+           RET_Updates ret_updates <- csrf.mret;
+           next_pc = ret_updates.new_pc;
+`ifdef INCLUDE_TANDEM_VERIF
+           m_ret_updates = tagged Valid ret_updates;
+`endif
         end
         inIfc.redirectPc(next_pc
 `ifdef RVFI_DII
@@ -635,6 +907,13 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         rvfiQ.enq(rvfis);
         traceCnt <= traceCnt + 1;
 `endif
+
+`ifdef INCLUDE_TANDEM_VERIF
+        fa_to_TV (way0, rg_serial_num,
+                  tagged Invalid,
+                  x, no_fflags, new_mstatus, no_trap_updates, m_ret_updates);
+`endif
+        rg_serial_num <= rg_serial_num + 1;
 
         // rename stage only sends out system inst when ROB is empty, so no
         // need to flush ROB again
@@ -672,7 +951,9 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         // checks
         doAssert(x.epochIncremented, "must have already incremented epoch");
         doAssert((x.iType == Csr) == isValid(x.csr), "only CSR has valid csr idx");
-        doAssert(x.fflags == 0 && !x.will_dirty_fpu_state, "cannot dirty FPU");
+        // RSN 2020-03-08: Removed this assertion. Csr instrs that write to
+        // fflags/frm/fcsr do indeed 'dirty' the fpu state
+        // doAssert(x.fflags == 0 && !x.will_dirty_fpu_state, "cannot dirty FPU");
         doAssert(x.spec_bits == 0, "cannot have spec bits");
         doAssert(x.claimed_phy_reg, "must have claimed phy reg");
 `ifdef RENAME_DEBUG
@@ -709,11 +990,15 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
     // commit normal: fire when at least one commit can be done
     rule doCommitNormalInst(
+`ifdef INCLUDE_GDB_CONTROL
+       (rg_run_state == RUN_STATE_RUNNING) &&
+`endif
         !isValid(commitTrap) &&
         !isValid(rob.deqPort[0].deq_data.trap) &&
         !isValid(rob.deqPort[0].deq_data.ldKilled) &&
         rob.deqPort[0].deq_data.rob_inst_state == Executed &&
-        !isSystem(rob.deqPort[0].deq_data.iType)
+        !isSystem(rob.deqPort[0].deq_data.iType) &&
+        (! send_mip_csr_change_to_tv)
     );
         // stop superscalar commit after we
         // 1. see a trap or system inst or killed Ld
@@ -747,6 +1032,12 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
         Bit #(64) instret = 0;
 
+`ifdef INCLUDE_TANDEM_VERIF
+       // These variables accumulate fflags and mstatus in sequential Program Order ('po')
+       // (whereas the 'fflags' variable does just one update after superscalar retirement).
+       Bit #(5) po_fflags  = ?;
+       Data     po_mstatus = ?;
+`endif
         // compute what actions to take
         for(Integer i = 0; i < valueof(SupSize); i = i+1) begin
             if(!stop && rob.deqPort[i].canDeq) begin
@@ -761,15 +1052,32 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                 else begin
                     if (verbose) $display("[doCommitNormalInst - %d] ", i, fshow(inst_tag), " ; ", fshow(x));
 `ifdef RVFI
-                    rvfis[i] = genRVFI(x, traceCnt + zeroExtend(whichTrace), getTSB(), x.pc + (is_16b_inst(x.orig_inst) ? 2:4));
+                    rvfis[i] = genRVFI(x, traceCnt + zeroExtend(whichTrace), getTSB(), getAddr(x.pc) + (is_16b_inst(x.orig_inst) ? 2:4));
                     whichTrace = whichTrace + 1;
 `endif
 
-		    if (verbosity > 0) begin
-		       $display("instret:%0d  PC:0x%0h  instr:0x%08h", rg_instret + instret, x.pc, x.orig_inst,
-				"   iType:", fshow (x.iType), "    [doCommitNormalInst [%0d]]", i);
-		       instret = instret + 1;
-		    end
+                    if (verbosity >= 1) begin
+                       $display("instret:%0d  PC:0x%0h  instr:0x%08h", rg_serial_num + instret, x.pc, x.orig_inst,
+                                "   iType:", fshow (x.iType), "    [doCommitNormalInst [%0d]]", i);
+                    end
+
+`ifdef INCLUDE_TANDEM_VERIF
+                   Bool init_for_way0 = (i == 0);
+                   match {. new_fflags, .new_mstatus} = csrf.fpuInst_csr_updates (x.fflags,
+                                                                                  init_for_way0,
+                                                                                  po_fflags,
+                                                                                  po_mstatus);
+                   po_fflags  = new_fflags;
+                   po_mstatus = new_mstatus;
+
+                   fa_to_TV (i, rg_serial_num + instret,
+                             tagged Invalid,
+                             x,
+                             po_fflags,
+                             po_mstatus,
+                             no_trap_updates, no_ret_updates);
+`endif
+                    instret = instret + 1;
 
                     // inst can be committed, deq it
                     rob.deqPort[i].deq;
@@ -777,6 +1085,9 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                     // every inst here should have been renamed, commit renaming
                     regRenamingTable.commit[i].commit;
                     doAssert(x.claimed_phy_reg, "should have renamed");
+
+                    if (x.ppc_vaddr_csrData matches tagged PPC .ppc)
+                        scaprf.pccWr[i].put(cast(ppc));
 
 `ifdef RENAME_DEBUG
                     // send debug msg for rename error
@@ -822,7 +1133,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                 end
             end
         end
-        rg_instret <= rg_instret + instret;
+        rg_serial_num <= rg_serial_num + instret;
 
         // write FPU csr
         if(csrf.fpuInstNeedWr(fflags, will_dirty_fpu_state)) begin
@@ -873,6 +1184,8 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 `endif
     endrule
 
+   // ================================================================
+   // INTERFACE
 
     method Data getPerf(ComStagePerfType t);
         return (case(t)
@@ -926,4 +1239,17 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
     endmethod
     interface renameErr = nullGet;
 `endif
+
+`ifdef INCLUDE_GDB_CONTROL
+   method Bool is_debug_halted;
+      return (rg_run_state == RUN_STATE_DEBUGGER_HALTED);
+   endmethod
+
+   method Action debug_resume () if (rg_run_state == RUN_STATE_DEBUGGER_HALTED);
+      rg_run_state <= RUN_STATE_RUNNING;
+      if (verbosity >= 2)
+         $display ("%0d: %m.commitStage.debug_resume", cur_cycle);
+   endmethod
+`endif
+
 endmodule

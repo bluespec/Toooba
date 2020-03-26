@@ -33,7 +33,7 @@ import Performance::*;
 import FullAssocTlb::*;
 import ConfigReg::*;
 import Ehr::*;
-import Fifo::*;
+import Fifos::*;
 import Cntrs::*;
 import SafeCounter::*;
 import CacheUtils::*;
@@ -628,10 +628,10 @@ module mkL2Tlb(L2Tlb::L2Tlb);
                     transCache.addEntry(cRq.vpn, walkLevel, pte.ppn, vm_info.asid);
                 end
             end
-	    else if (! isPpnAligned (pte.ppn, walkLevel)) begin
-	       // Leaf page, but PPN is not aligne
-	       pageFault("PPN is not aligned");
-	    end
+            else if (! isPpnAligned (pte.ppn, walkLevel)) begin
+               // Leaf page, but PPN is not aligne
+               pageFault("PPN is not aligned");
+            end
             else begin
                 // leaf page, get new entry
                 Vpn masked_vpn = getMaskedVpn(cRq.vpn, walkLevel);

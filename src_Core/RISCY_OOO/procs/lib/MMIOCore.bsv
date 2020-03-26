@@ -26,7 +26,7 @@ import ConfigReg::*;
 import ProcTypes::*;
 import MMIOAddrs::*;
 import CacheUtils::*;
-import Fifo::*;
+import Fifos::*;
 import Amo::*;
 import MMIOInst::*;
 

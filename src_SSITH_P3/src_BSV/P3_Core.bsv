@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2019 Bluespec, Inc. All Rights Reserved.
+// Copyright (c) 2018-2020 Bluespec, Inc. All Rights Reserved.
 
 package P3_Core;
 
@@ -24,12 +24,14 @@ import GetPut        :: *;
 import ClientServer  :: *;
 import Connectable   :: *;
 import Bus           :: *;
+import Clocks        :: *;
 
 // ----------------
 // BSV additional libs
 
 import GetPut_Aux :: *;
 import Semi_FIFOF :: *;
+import Cur_Cycle  :: *;
 
 // ================================================================
 // Project imports
@@ -75,22 +77,14 @@ interface P3_Core_IFC;
 
    // External interrupt sources
    (* always_ready, always_enabled, prefix="" *)
-   method  Action interrupt_reqs ((* port="cpu_external_interrupt_req" *) Bit #(N_External_Interrupt_Sources)  reqs);
+   method  Action interrupt_reqs ((* port="cpu_external_interrupt_req" *)
+				  Bit #(N_External_Interrupt_Sources)  reqs);
 
    // ----------------
    // External interrupt [14] to go into Debug Mode
 
    (* always_ready, always_enabled *)
    method Action  debug_external_interrupt_req (Bool set_not_clear);
-
-`ifdef INCLUDE_TANDEM_VERIF
-   // ----------------------------------------------------------------
-   // Optional Tandem Verifier interface.  The data signal is
-   // packed output tuples (n,vb),/ where 'vb' is a vector of
-   // bytes with relevant bytes in locations [0]..[n-1]
-
-      interface AXI4_Stream_Master_IFC #(Wd_SId, Wd_SDest, Wd_SData, Wd_SUser)  tv_verifier_info_tx;
-`endif
 
 `ifdef INCLUDE_GDB_CONTROL
    // ----------------
@@ -100,6 +94,17 @@ interface P3_Core_IFC;
    interface JTAG_IFC jtag;
 `endif
 `endif
+
+`ifdef INCLUDE_TANDEM_VERIF
+   // ----------------------------------------------------------------
+   // Optional Tandem Verifier interface.  The data signal is
+   // packed output tuples (n,vb),/ where 'vb' is a vector of
+   // bytes with relevant bytes in locations [0]..[n-1]
+
+      interface AXI4_Stream_Master_IFC #(Wd_SId, Wd_SDest, Wd_SData, Wd_SUser)
+                tv_verifier_info_tx;
+`endif
+
 endinterface
 
 // ================================================================
@@ -107,8 +112,39 @@ endinterface
 (* synthesize *)
 module mkP3_Core (P3_Core_IFC);
 
-   // CoreW: CPU + Near_Mem_IO (CLINT) + PLIC + Debug module (optional) + TV (optional)
-   CoreW_IFC #(N_External_Interrupt_Sources)  corew <- mkCoreW;
+   // ================================================================
+   // The RISC-V Debug Module is at the following point in the module hierarchy:
+   //     p3_core.corew.debug_module
+   //     (instances of mkP3_Core, mkCoreW, mkDebug_Module)
+
+   // The Debug Module is reset only once, on power-up, hence we pass
+   // its reset down from here.
+
+   // (power-on reset) and the Debug Module's 'hart_reset' control.
+
+   let power_on_reset <- exposeCurrentReset;
+   let dm_power_on_reset = power_on_reset;
+
+   // The rest of the system (corew minus the Debug Module) are reset:
+   // - on power-on, and
+   // - when the Debug Module requests an NDM reset (for non-DebugModule).
+
+`ifdef INCLUDE_GDB_CONTROL
+   let clk <- exposeCurrentClock;
+   Bool    initial_reset_val  = False;
+   Integer ndm_reset_duration = 10;    // NOTE: assuming 10 cycle reset enough for NDM
+   let ndm_reset_controller <- mkReset(ndm_reset_duration, initial_reset_val, clk);
+
+   let ndm_reset <- mkResetEither (power_on_reset, ndm_reset_controller.new_rst);
+`else
+   let ndm_reset = power_on_reset;
+`endif
+
+   // ================================================================
+   // CoreW
+   //     CPU + Near_Mem_IO (CLINT) + PLIC + Debug module (optional) + TV (optional)
+   CoreW_IFC #(N_External_Interrupt_Sources)  corew <- mkCoreW (dm_power_on_reset,
+								reset_by ndm_reset);
 
    // ================================================================
    // Tie-offs (not used in SSITH GFE)
@@ -118,31 +154,56 @@ module mkP3_Core (P3_Core_IFC);
       corew.set_verbosity (?, ?);
    endrule
 
-   // ================================================================
-   // Reset on startup, and also on NDM reset from Debug Module
-   // (NDM reset from Debug Module = reset all except Debug Module)
-
-   Reg #(Bool) rg_once <- mkReg (False);
-
-   rule rl_once (! rg_once);
-      corew.cpu_reset_server.request.put (?);
-      rg_once <= True;
+   // Tie-offs
+   rule rl_always (True);
+      // Non-maskable interrupt request.
+      corew.nmi_req (False);
    endrule
 
-   rule rl_reset_response;
-      let tmp <- corew.cpu_reset_server.response.get;
-   endrule
-
-   rule rl_ndmreset (rg_once);
-      let tmp <- corew.dm_ndm_reset_req_get.get;
-      rg_once <= False;
-   endrule
-
-   // ================================================================
 `ifdef INCLUDE_GDB_CONTROL
+   // ================================================================
+   // NDM reset (reset for non-DebugModule)
 
+   Reg #(Bit #(8))  rg_ndm_reset_delay <- mkReg (0);
+
+   // Get an NDM-reset request from the Debug Module, assert ndm-reset,
+   // and then wait for a suitable delay.
+   rule rl_ndm_reset (rg_ndm_reset_delay == 0);
+      let x <- corew.ndm_reset_client.request.get;
+      ndm_reset_controller.assertReset;
+      rg_ndm_reset_delay <= fromInteger (ndm_reset_duration + 100);    // NOTE: heuristic
+
+      $display ("%0d: %m.rl_ndm_reset: asserting NDM reset (for non-DebugModule) for %0d cycles",
+		cur_cycle, ndm_reset_duration);
+   endrule
+
+   // Wait for suitable delay, then send ack response to Debug Module for NDM-reset request
+   rule rl_ndm_reset_wait (rg_ndm_reset_delay != 0);
+      if (rg_ndm_reset_delay == 1) begin
+	 Bool is_running = True;
+         // Restart the corew
+         corew.start (0, 0);
+	 corew.ndm_reset_client.response.put (is_running);
+	 $display ("%0d: %m.rl_ndm_reset_wait: sent NDM reset ack (for non-DebugModule) to Debug Module",
+		   cur_cycle);
+      end
+      rg_ndm_reset_delay <= rg_ndm_reset_delay - 1;
+   endrule
+
+   // ================================================================
+   // Start the corew after a PoR
+   Reg #(Bool) rg_corew_start_after_por <- mkReg(False);
+   rule rl_step_0 (!rg_corew_start_after_por);
+      corew.start (0, 0);
+      rg_corew_start_after_por <= True;
+   endrule
+   // ================================================================
+
+
+
+   // ================================================================
    // Instantiate JTAG TAP controller,
-   // connect to corew.dm_dmi;
+   // connect to corew.dmi;
    // and export its JTAG interface
 
    Wire#(Bit#(7)) w_dmi_req_addr <- mkDWire(0);
@@ -184,9 +245,9 @@ module mkP3_Core (P3_Core_IFC);
       match {.addr, .data, .op} = bus_dmi_req.out.first;
       bus_dmi_req.out.deq;
       case (op)
-	 1: corew.dm_dmi.read_addr(addr);
+	 1: corew.dmi.read_addr(addr);
 	 2: begin
-	       corew.dm_dmi.write(addr, data);
+	       corew.dmi.write(addr, data);
 	       bus_dmi_rsp.in.enq(tuple2(?, 0));
 	    end
 	 default: bus_dmi_rsp.in.enq(tuple2(?, 2));
@@ -194,15 +255,19 @@ module mkP3_Core (P3_Core_IFC);
    endrule
 
    rule rl_dmi_rsp_cpu;
-      let data <- corew.dm_dmi.read_data;
+      let data <- corew.dmi.read_data;
       bus_dmi_rsp.in.enq(tuple2(data, 0));
    endrule
 
+   // ================================================================
 `endif
 
 `ifdef INCLUDE_TANDEM_VERIF
+   // ================================================================
    let tv_xactor <- mkTV_Xactor;
+
    mkConnection (corew.tv_verifier_info_get, tv_xactor.tv_in);
+   // ================================================================
 `endif
 
    // ================================================================
@@ -225,12 +290,14 @@ module mkP3_Core (P3_Core_IFC);
       end
    endmethod
 
-   // ----------------
-   // External interrupt [14] to go into Debug Mode
+`ifdef INCLUDE_GDB_CONTROL
+   // ----------------------------------------------------------------
+   // Optional Debug Module interfaces
 
-   method Action  debug_external_interrupt_req (Bool set_not_clear);
-      corew.debug_external_interrupt_req (set_not_clear);
-   endmethod
+`ifdef JTAG_TAP
+   interface JTAG_IFC jtag = jtagtap.jtag;
+`endif
+`endif
 
 `ifdef INCLUDE_TANDEM_VERIF
    // ----------------------------------------------------------------
@@ -241,15 +308,6 @@ module mkP3_Core (P3_Core_IFC);
    interface tv_verifier_info_tx = tv_xactor.axi_out;
 `endif
 
-`ifdef INCLUDE_GDB_CONTROL
-   // ----------------------------------------------------------------
-   // Optional Debug Module interfaces
-
-`ifdef JTAG_TAP
-   interface JTAG_IFC jtag = jtagtap.jtag;
-`endif
-
-`endif
 endmodule
 
 // ================================================================

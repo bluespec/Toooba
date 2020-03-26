@@ -28,7 +28,7 @@ import CacheUtils::*;
 import CCTypes::*;
 import Types::*;
 import FShow::*;
-import Fifo::*;
+import Fifos::*;
 import Ehr::*;
 
 typedef struct {
@@ -118,7 +118,7 @@ module mkXBar#(
         for(Integer i = 0; i < valueOf(srcNum); i = i+1) begin
             if(isDeqSrc(fromInteger(i))) begin
                 propDstIdx[i][1] <= Invalid;
-	       if (verbose)
+               if (verbose)
                 $display("%t XBar %m: deq src %d", $time, i);
                 doAssert(isValid(propDstIdx[i][1]), "src must be proposing");
             end
@@ -133,7 +133,7 @@ module mkXBar#(
         rule doEnq(enqDst[i][1] matches tagged Valid .d);
             dstIfc[i].put(d);
             enqDst[i][1] <= Invalid; // reset enq command
-	   if (verbose)
+           if (verbose)
             $display("%t XBAR %m: enq dst %d ; ", $time, i, fshow(d));
         endrule
     end
