@@ -56,7 +56,7 @@ import SoC_Map::*;
 // Information returned on traps and mret/sret/uret
 
 typedef struct {
-    Addr      new_pc;
+    Bit#(0) nothing_now;
   } Scr_Trap_Updates
 deriving (Bits, FShow);
 
@@ -90,7 +90,7 @@ interface ScrFile;
     method CapReg warl_xform (SCR csr, CapReg x);
 
     // Methods for handling traps
-    method ActionValue#(Scr_Trap_Updates) trap(Trap t, Addr pc, Addr faultAddr, Bit #(32) orig_inst);
+    method ActionValue#(Scr_Trap_Updates) trap(CapPipe pc, Bit#(2) prv);
     method ActionValue#(Scr_RET_Updates) sret;
     method ActionValue#(Scr_RET_Updates) mret;
 
@@ -136,8 +136,8 @@ module mkScrFile (ScrFile);
     let mkCsrEhr = mkConfigEhr;
 
     // User level SCRs
-    Ehr#(SupSize, CapReg) pcc_reg <- mkCsrEhr(defaultValue);
-    Reg#(CapReg) ddc_reg       <- mkCsrReg(defaultValue);
+    Ehr#(SupSize, CapReg) pcc_reg <- mkConfigEhr(defaultValue);
+    Reg#(CapReg) ddc_reg          <- mkCsrReg(defaultValue);
 
     // User level SCRs with accessSysRegs
     Reg#(CapReg) utcc_reg      <- mkCsrReg(defaultValue);
@@ -155,7 +155,7 @@ module mkScrFile (ScrFile);
     Reg#(CapReg) mtcc_reg      <- mkCsrReg(defaultValue);
     Reg#(CapReg) mtdc_reg      <- mkCsrReg(nullCap);
     Reg#(CapReg) mScratchC_reg <- mkCsrReg(nullCap);
-    Reg#(CapReg) mepcc_reg     <- mkCsrReg(defaultValue);
+    Ehr#(2, CapReg) mepcc_reg  <- mkConfigEhr(defaultValue);
 
     // Function for getting a csr given an index
     function Reg#(CapReg) get_scr(SCR scr);
@@ -177,7 +177,7 @@ module mkScrFile (ScrFile);
             SCR_MTCC:      mtcc_reg;
             SCR_MTDC:      mtdc_reg;
             SCR_MScratchC: mScratchC_reg;
-            SCR_MEPCC:     mepcc_reg;
+            SCR_MEPCC:     mepcc_reg[1];
         endcase);
     endfunction
 
@@ -194,7 +194,9 @@ module mkScrFile (ScrFile);
 
     interface pccWr = map(toPut,pcc_reg);
 
-    method ActionValue#(Scr_Trap_Updates) trap(Trap t, Addr pc, Addr addr, Bit #(32) orig_inst);
+    method ActionValue#(Scr_Trap_Updates) trap(CapPipe pc, Bit#(2) prv);
+        mepcc_reg[0] <= cast(pc);
+        pcc_reg[0] <= mtcc_reg;
         return ?;
     endmethod
 

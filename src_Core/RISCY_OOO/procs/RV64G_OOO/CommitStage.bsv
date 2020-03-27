@@ -726,6 +726,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                                        : 1));
              csrf.dcsr_cause_write (dcsr_cause);
              csrf.dpc_write (trap.pc);
+             scaprfIfc.trap(trap.pc,?);
 
              // Tell fetch stage to wait for redirect
              // Note: rule doCommitTrap_flush may have done this already; redundant call is ok.
@@ -743,7 +744,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
        if (! debugger_halt) begin
           // trap handling & redirect
           let trap_updates <- csrf.trap(trap.trap, getAddr(trap.pc), trap.addr, trap.orig_inst);
-          let cap_trap_updates <- scaprf.trap(trap.trap, getAddr(trap.pc), trap.addr, trap.orig_inst);
+          let cap_trap_updates <- scaprf.trap(trap.pc, ?);
           inIfc.redirectPc(trap_updates.new_pc
 `ifdef RVFI_DII
                            , trap.x.diid + 1
