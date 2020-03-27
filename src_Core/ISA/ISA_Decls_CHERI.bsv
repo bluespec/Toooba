@@ -61,6 +61,23 @@ typedef enum {
     // 5'd28 - 5'd31 reserved
 } CHERIException  deriving(Bits, Eq, FShow);
 
+typedef struct {
+    Bit #(6) cheri_exc_reg;
+    CHERIException cheri_exc_code;
+} CSR_XCapCause deriving(Bits);
+
+function Bit#(64) xccsr_to_word(CSR_XCapCause xccsr);
+    return zeroExtend({xccsr.cheri_exc_reg, pack(xccsr.cheri_exc_code), 3'b0, 1'b1, 1'b1});
+endfunction
+
+function Reg#(Bit#(64)) csr_capcause(Reg#(CSR_XCapCause) r);
+    return (interface Reg;
+        method Bit#(64) _read = xccsr_to_word(r._read);
+        method Action _write(Bit#(64) x) =
+            r._write(CSR_XCapCause{cheri_exc_reg: x[15:10], cheri_exc_code: unpack(x[9:5]) });
+    endinterface);
+endfunction
+
 // SCR map
 
 typedef enum {

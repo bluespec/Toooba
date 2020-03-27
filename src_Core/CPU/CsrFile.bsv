@@ -34,7 +34,7 @@ import Vector::*;
 import FIFO::*;
 import GetPut::*;
 import BuildVector::*;
-//import TRNG::*;
+import ISA_Decls_CHERI::*;
 
 // ================================================================
 // BSV additional libs
@@ -642,6 +642,8 @@ module mkCsrFile #(Data hartid)(CsrFile);
    Reg #(Data) rg_tdata1  = concatReg3 (rg_tdata1_type, rg_tdata1_dmode, rg_tdata1_data);
    Reg #(Data) rg_tdata2  <- mkConfigRegU;
    Reg #(Data) rg_tdata3  <- mkConfigRegU;
+   // Capability cause register
+   Reg #(CSR_XCapCause) mccsr_reg <- mkCsrReg(unpack(0));
 
 `ifdef INCLUDE_GDB_CONTROL
    // DCSR is 32b even in RV64
@@ -761,6 +763,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
             CSRmarchid:    marchid_csr;
             CSRmimpid:     mimpid_csr;
             CSRmhartid:    mhartid_csr;
+            CSRmccsr:      csr_capcause(mccsr_reg);
 `ifdef SECURITY
             CSRmevbase:    mevbase_csr;
             CSRmevmask:    mevmask_csr;

@@ -230,6 +230,7 @@ typedef enum {
     // user non-standard CSRs (TODO)
     CSRterminate  = 12'h800, // terminate (used to exit Linux)
     CSRstats      = 12'h801, // turn on/off perf counters
+    CSRuccsr      = 12'h8c0,
     // supervisor standard CSRs
     CSRsstatus    = 12'h100,
     // no user trap handler, so no se/ideleg
@@ -242,6 +243,7 @@ typedef enum {
     CSRstval      = 12'h143, // it's still called sbadaddr in spike
     CSRsip        = 12'h144,
     CSRsatp       = 12'h180, // it's still called sptbr in spike
+    CSRsccsr      = 12'h9c0,
     // machine standard CSRs
     CSRmstatus    = 12'h300,
     CSRmisa       = 12'h301,
@@ -261,6 +263,7 @@ typedef enum {
     CSRmarchid    = 12'hf12,
     CSRmimpid     = 12'hf13,
     CSRmhartid    = 12'hf14,
+    CSRmccsr      = 12'hbc0,
 `ifdef SECURITY
     // sanctum machine CSR
     CSRmevbase    = 12'h7c0,
