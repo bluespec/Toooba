@@ -1,6 +1,6 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +8,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -35,37 +35,37 @@ import Vector::*;
 import Ehr::*;
 import ConfigReg::*;
 
-interface RFileWr;
-    method Action wr( PhyRIndx rindx, Data data );
+interface RFileWr#(type d);
+    method Action wr( PhyRIndx rindx, d data );
 endinterface
 
-interface RFileRd;
-    method Data rd1( PhyRIndx rindx );
-    method Data rd2( PhyRIndx rindx );
-    method Data rd3( PhyRIndx rindx );
+interface RFileRd#(type d);
+    method d rd1( PhyRIndx rindx );
+    method d rd2( PhyRIndx rindx );
+    method d rd3( PhyRIndx rindx );
 endinterface
 
-interface RFile#(numeric type wrNum, numeric type rdNum);
-    interface Vector#(wrNum, RFileWr) write;
-    interface Vector#(rdNum, RFileRd) read;
+interface RFile#(numeric type wrNum, numeric type rdNum, type d);
+    interface Vector#(wrNum, RFileWr#(d)) write;
+    interface Vector#(rdNum, RFileRd#(d)) read;
 endinterface
 
 
 // lazy: read EHR port 0 of the regfile
 // this must be used together with lazy reservation station
-module mkRFile#(Bool lazy)( RFile#(wrNum, rdNum) ) provisos (
-    NumAlias#(ehrPortNum, TAdd#(wrNum, 1)) // wr [< rd] (only in case lazy = false)
+module mkRFile#(d defaultRegisterValue, Bool lazy)( RFile#(wrNum, rdNum, d) ) provisos (
+    NumAlias#(ehrPortNum, TAdd#(wrNum, 1)), Bits#(d, d_Size) // wr [< rd] (only in case lazy = false)
 );
     let verbose = False;
 
     // phy reg init val must be 0: because x0 is renamed to phy reg 0,
     // which must be 0 at all time
-    Vector#(NumPhyReg, Ehr#(ehrPortNum, Data)) rfile <- replicateM(mkEhr(0));
+    Vector#(NumPhyReg, Ehr#(ehrPortNum, d)) rfile <- replicateM(mkEhr(defaultRegisterValue));
 
-    Vector#(NumPhyReg, Data) rdData = ?;
+    Vector#(NumPhyReg, d) rdData = ?;
     if(lazy) begin
         // if being lazy, just return port 0 for read
-        Vector#(NumPhyReg, Wire#(Data)) rdWire <- replicateM(mkBypassWire);
+        Vector#(NumPhyReg, Wire#(d)) rdWire <- replicateM(mkBypassWire);
         (* fire_when_enabled, no_implicit_conditions *)
         rule setWire;
             for(Integer i = 0; i < valueof(NumPhyReg); i = i+1) begin
@@ -83,26 +83,26 @@ module mkRFile#(Bool lazy)( RFile#(wrNum, rdNum) ) provisos (
         end
     end
 
-    function Data getRead(PhyRIndx rindx);
+    function d getRead(PhyRIndx rindx);
         return rdData[rindx];
     endfunction
 
-    Vector#(wrNum, RFileWr) wrIfc = ?;
+    Vector#(wrNum, RFileWr#(d)) wrIfc = ?;
     for(Integer i = 0; i < valueof(wrNum); i = i+1) begin
         wrIfc[i] = (interface RFileWr;
-            method Action wr( PhyRIndx rindx, Data data );
+            method Action wr( PhyRIndx rindx, d data );
                 if (verbose) $display("[RFile] wr_%d: r %h <= %h", i, rindx, data);
                 rfile[rindx][i] <= data;
             endmethod
         endinterface);
     end
 
-    Vector#(rdNum, RFileRd) rdIfc = ?;
+    Vector#(rdNum, RFileRd#(d)) rdIfc = ?;
     for(Integer i = 0; i < valueof(rdNum); i = i+1) begin
         rdIfc[i] = (interface RFileRd;
-            method Data rd1( PhyRIndx rindx ) = getRead(rindx);
-            method Data rd2( PhyRIndx rindx ) = getRead(rindx);
-            method Data rd3( PhyRIndx rindx ) = getRead(rindx);
+            method d rd1( PhyRIndx rindx ) = getRead(rindx);
+            method d rd2( PhyRIndx rindx ) = getRead(rindx);
+            method d rd3( PhyRIndx rindx ) = getRead(rindx);
         endinterface);
     end
 
