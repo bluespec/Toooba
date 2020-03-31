@@ -129,7 +129,7 @@ def main (argv = None):
         n_workers = int (argv [j])
     else:
         n_workers = multiprocessing.cpu_count () - 4
-    n_workers = min (n_workers_max, n_workers)
+    n_workers = max(min (n_workers_max, n_workers), 1)
     sys.stdout.write ("Using {0} worker processes\n".format (n_workers))
 
     # End of command-line arg processing
