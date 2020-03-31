@@ -28,6 +28,8 @@ import Types::*;
 import FShow::*;
 import DefaultValue::*;
 import MemoryTypes::*;
+import CHERICap::*;
+import CHERICC_Fat::*;
 `ifdef RVFI_DII
 import RVFI_DII_Types::*;
 `endif
@@ -681,11 +683,11 @@ function Maybe#(Data) getDInstImm(DecodedInst dInst);
 endfunction
 
 typedef struct {
-    Data        data;
+    CapPipe     data;
     Data        csrData;
-    Addr        addr;
+    CapPipe     addr;
     ControlFlow controlFlow;
-} ExecResult deriving(Bits, Eq, FShow);
+} ExecResult deriving(Bits, FShow);
 
 // MMIO
 typedef union tagged {

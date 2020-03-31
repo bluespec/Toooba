@@ -80,6 +80,8 @@ import MMIOCore::*;
 import RenameStage::*;
 import CommitStage::*;
 import Bypass::*;
+import CHERICap::*;
+import CHERICC_Fat::*;
 
 `ifdef RVFI_DII
 import Toooba_RVFI_DII_Bridge::*;
@@ -325,9 +327,9 @@ module mkCore#(CoreId coreId)(Core);
         endfunction
 
         // write conservative elements
-        function Action writeCons(Integer wrConsPort, PhyRIndx dst, Data data);
+        function Action writeCons(Integer wrConsPort, PhyRIndx dst, CapPipe data);
         action
-            rf.write[wrConsPort].wr(dst, data);
+            rf.write[wrConsPort].wr(dst, cast(data));
             sbCons.setReady[wrConsPort].put(dst);
         endaction
         endfunction
@@ -338,7 +340,7 @@ module mkCore#(CoreId coreId)(Core);
             Vector#(2, SendBypass) sendBypassIfc; // exe and finish
             for(Integer sendPort = 0; sendPort < 2; sendPort = sendPort + 1) begin
                 sendBypassIfc[sendPort] = (interface SendBypass;
-                    method Action send(PhyRIndx dst, Data data);
+                    method Action send(PhyRIndx dst, CapPipe data);
                         // broadcast bypass
                         Integer recvPort = valueof(AluExeNum) * sendPort + i;
                         for(Integer j = 0; j < valueof(FpuMulDivExeNum); j = j+1) begin
@@ -353,8 +355,8 @@ module mkCore#(CoreId coreId)(Core);
             end
             let aluExeInput = (interface AluExeInput;
                 method sbCons_lazyLookup = sbCons.lazyLookup[aluRdPort(i)].get;
-                method rf_rd1 = rf.read[aluRdPort(i)].rd1;
-                method rf_rd2 = rf.read[aluRdPort(i)].rd2;
+                method rf_rd1 = cast(rf.read[aluRdPort(i)].rd1);
+                method rf_rd2 = cast(rf.read[aluRdPort(i)].rd2);
                 method csrf_rd = csrf.rd;
                 method scaprf_rd = scaprf.rd;
                 method rob_getPC = rob.getOrigPC[i].get;
@@ -396,13 +398,13 @@ module mkCore#(CoreId coreId)(Core);
         for(Integer i = 0; i < valueof(FpuMulDivExeNum); i = i+1) begin
             let fpuMulDivExeInput = (interface FpuMulDivExeInput;
                 method sbCons_lazyLookup = sbCons.lazyLookup[fpuMulDivRdPort(i)].get;
-                method rf_rd1 = rf.read[fpuMulDivRdPort(i)].rd1;
-                method rf_rd2 = rf.read[fpuMulDivRdPort(i)].rd2;
-                method rf_rd3 = rf.read[fpuMulDivRdPort(i)].rd3;
+                method rf_rd1 = cast(rf.read[fpuMulDivRdPort(i)].rd1);
+                method rf_rd2 = cast(rf.read[fpuMulDivRdPort(i)].rd2);
+                method rf_rd3 = cast(rf.read[fpuMulDivRdPort(i)].rd3);
                 method csrf_rd = csrf.rd;
                 method scaprf_rd = scaprf.rd;
                 method rob_setExecuted = rob.setExecuted_doFinishFpuMulDiv[i].set;
-                method Action writeRegFile(PhyRIndx dst, Data data);
+                method Action writeRegFile(PhyRIndx dst, CapPipe data);
                     writeAggr(fpuMulDivWrAggrPort(i), dst);
                     writeCons(fpuMulDivWrConsPort(i), dst, data);
                 endmethod
@@ -414,8 +416,8 @@ module mkCore#(CoreId coreId)(Core);
 
         let memExeInput = (interface MemExeInput;
             method sbCons_lazyLookup = sbCons.lazyLookup[memRdPort].get;
-            method rf_rd1 = rf.read[memRdPort].rd1;
-            method rf_rd2 = rf.read[memRdPort].rd2;
+            method rf_rd1 = cast(rf.read[memRdPort].rd1);
+            method rf_rd2 = cast(rf.read[memRdPort].rd2);
             method csrf_rd = csrf.rd;
             method scaprf_rd = scaprf.rd;
             method rob_getPC = rob.getOrigPC[valueof(AluExeNum)].get; // last getPC port

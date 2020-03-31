@@ -63,7 +63,7 @@ typedef struct {
     Bit #(32)          orig_inst;    // original 16b or 32b instruction ([1:0] will distinguish 16b or 32b)
     IType              iType;
     Maybe#(ArchRIndx)  dst;          // Invalid, GPR or FPR destination ("Rd")
-    Data               dst_data;     // Output of instruction into destination register
+    CapPipe            dst_data;     // Output of instruction into destination register
 `ifdef INCLUDE_TANDEM_VERIF
     // Store-data, for those mem instrs that store data
     Data               store_data;
@@ -111,7 +111,7 @@ typedef enum {
 
 interface Row_setExecuted_doFinishAlu;
     method Action set(
-        Data dst_data,
+        CapPipe dst_data,
         Maybe#(Data) csrData,
         ControlFlow cf,
         Maybe#(Exception) cause,
@@ -235,7 +235,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     Reg #(Bit #(32))                                                orig_inst            <- mkRegU;
     Reg#(IType)                                                     iType                <- mkRegU;
     Reg #(Maybe #(ArchRIndx))                                       rg_dst_reg           <- mkRegU;
-    Reg #(Data)                                                     rg_dst_data          <- mkRegU;
+    Reg #(CapPipe)                                                  rg_dst_data          <- mkRegU;
 `ifdef INCLUDE_TANDEM_VERIF
     Reg #(Data)                                                     rg_store_data        <- mkRegU;
     Reg #(ByteEn)                                                   rg_store_data_BE     <- mkRegU;
@@ -275,7 +275,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     for(Integer i = 0; i < valueof(aluExeNum); i = i+1) begin
         aluSetExe[i] = (interface Row_setExecuted_doFinishAlu;
             method Action set(
-                Data dst_data,
+                CapPipe dst_data,
                 Maybe#(Data) csrData,
                 ControlFlow cf,
                 Maybe#(Exception) cause,
@@ -320,7 +320,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
             method Action set(Data dst_data, Bit#(5) new_fflags, Maybe#(Exception) cause, CapPipe pcc);
                 // inst is done
                 rob_inst_state[state_finishFpuMulDiv_port(i)] <= Executed;
-                rg_dst_data <= dst_data;
+                rg_dst_data <= nullWithAddr(dst_data);
                 // update fflags
                 fflags[fflags_finishFpuMulDiv_port(i)] <= new_fflags;
                 CapPipe new_pcc = setAddrUnsafe(pcc, getAddr(pc[pc_finishAlu_port(i)]));
@@ -389,7 +389,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
 `ifdef INCLUDE_TANDEM_VERIF
     // Used after a Ld, Lr, Sc, Amo to record reg data
     method Action setExecuted_doFinishMem_RegData (Data dst_data);
-       rg_dst_data <= dst_data;
+       rg_dst_data <= nullWithAddr(dst_data);
     endmethod
 `endif
 
@@ -566,7 +566,7 @@ endinterface
 
 interface ROB_setExecuted_doFinishAlu;
     method Action set(InstTag x,
-                      Data dst_data,
+                      CapPipe dst_data,
                       Maybe#(Data) csrData,
                       ControlFlow cf,
                       Maybe#(Exception) cause,
@@ -1106,7 +1106,7 @@ module mkSupReorderBuffer#(
         aluSetExeIfc[i] = (interface ROB_setExecuted_doFinishAlu;
             method Action set(
                 InstTag x,
-                Data dst_data,
+                CapPipe dst_data,
                 Maybe#(Data) csrData,
                 ControlFlow cf,
                 Maybe#(Exception) cause,

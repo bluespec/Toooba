@@ -72,9 +72,9 @@ typedef struct {
     InstTag tag;
     LdStQTag ldstq_tag;
     // src reg vals
-    Data rVal1;
-    Data rVal2;
-} MemRegReadToExe deriving(Bits, Eq, FShow);
+    CapPipe rVal1;
+    CapPipe rVal2;
+} MemRegReadToExe deriving(Bits, FShow);
 
 typedef struct {
     // inst info
@@ -149,8 +149,8 @@ interface MemExeInput;
     // conservative scoreboard check in reg read stage
     method RegsReady sbCons_lazyLookup(PhyRegs r);
     // Phys reg file
-    method Data rf_rd1(PhyRIndx rindx);
-    method Data rf_rd2(PhyRIndx rindx);
+    method CapPipe rf_rd1(PhyRIndx rindx);
+    method CapPipe rf_rd2(PhyRIndx rindx);
     // CSR file
     method Data csrf_rd(CSR csr);
     // Special Capability Register file.
@@ -185,7 +185,7 @@ interface MemExeInput;
     method Action setRegReadyAggr_mem(PhyRIndx dst);
     method Action setRegReadyAggr_forward(PhyRIndx dst);
     // write reg file & set conservative sb
-    method Action writeRegFile(PhyRIndx dst, Data data);
+    method Action writeRegFile(PhyRIndx dst, CapPipe data);
 
     // performance
     method Bool doStats;
@@ -249,7 +249,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
     let regToExeQ <- mkMemRegToExeFifo;
 
     // wire to recv bypass
-    Vector#(TMul#(2, AluExeNum), RWire#(Tuple2#(PhyRIndx, Data))) bypassWire <- replicateM(mkRWire);
+    Vector#(TMul#(2, AluExeNum), RWire#(Tuple2#(PhyRIndx, CapPipe))) bypassWire <- replicateM(mkRWire);
 
     // TLB
     DTlbSynth dTlb <- mkDTlbSynth;
@@ -419,13 +419,13 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         let regsReady = inIfc.sbCons_lazyLookup(x.regs);
 
         // get rVal1 (check bypass)
-        Data rVal1 = ?;
+        CapPipe rVal1 = ?;
         if(x.regs.src1 matches tagged Valid .src1) begin
             rVal1 <- readRFBypass(src1, regsReady.src1, inIfc.rf_rd1(src1), bypassWire);
         end
 
         // get rVal2 (check bypass)
-        Data rVal2 = ?;
+        CapPipe rVal2 = ?;
         if(x.regs.src2 matches tagged Valid .src2) begin
             rVal2 <- readRFBypass(src2, regsReady.src2, inIfc.rf_rd2(src2), bypassWire);
         end
@@ -455,12 +455,12 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         if(verbose) $display("[doExeMem] ", fshow(regToExe));
 
         // get virtual addr & St/Sc/Amo data
-        CapPipe vaddr = modifyOffset(setAddrUnsafe(almightyCap, x.rVal1), signExtend(x.imm), True).value;
-        Data data = x.rVal2;
+        CapPipe vaddr = modifyOffset(x.rVal1, signExtend(x.imm), True).value;
+        CapPipe data = x.rVal2;
 
 `ifdef RVFI_DII
-        memData[pack(x.ldstq_tag)] <= data;
-        $display("%t : memData[%x] <= %x", $time(), pack(x.ldstq_tag), data);
+        memData[pack(x.ldstq_tag)] <= getAddr(data);
+        $display("%t : memData[%x] <= %x", $time(), pack(x.ldstq_tag), getAddr(data));
 `endif
 
         // get shifted data and BE
@@ -470,11 +470,11 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             Bit#(TLog#(NumBytes)) byteOffset = truncate(addr);
             return tuple2(unpack(pack(be) << byteOffset), d << {byteOffset, 3'b0});
         endfunction
-        let {shiftBE, shiftData} = getShiftedBEData(getAddr(vaddr), origBE, data);
+        let {shiftBE, shiftData} = getShiftedBEData(getAddr(vaddr), origBE, getAddr(data));
 
         // update LSQ data now
         if(x.ldstq_tag matches tagged St .stTag) begin
-            Data d = x.mem_func == Amo ? data : shiftData; // XXX don't shift for AMO
+            Data d = x.mem_func == Amo ? getAddr(data) : shiftData; // XXX don't shift for AMO
             lsq.updateData(stTag, d);
         end
 
@@ -703,7 +703,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         LSQRespLdResult res <- lsq.respLd(tag, data);
         if(verbose) $display("%t : ", $time, rule_name, " ", fshow(tag), "; ", fshow(data), "; ", fshow(res));
         if(res.dst matches tagged Valid .dst) begin
-            inIfc.writeRegFile(dst.indx, res.data);
+            inIfc.writeRegFile(dst.indx, nullWithAddr(res.data));
 
 `ifdef INCLUDE_TANDEM_VERIF
             inIfc.rob_setExecuted_doFinishMem_RegData (res.instTag, res.data);
@@ -866,7 +866,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         Data resp = gatherLoad(lsqDeqLd.paddr, lsqDeqLd.byteEn, lsqDeqLd.unsignedLd, d);
         // write reg file & set ROB as Executed & wakeup rs
         if(lsqDeqLd.dst matches tagged Valid .dst) begin
-            inIfc.writeRegFile(dst.indx, resp);
+            inIfc.writeRegFile(dst.indx, nullWithAddr(resp));
             inIfc.setRegReadyAggr_mem(dst.indx);
 `ifdef INCLUDE_TANDEM_VERIF
             inIfc.rob_setExecuted_doFinishMem_RegData (lsqDeqLd.instTag, resp);
@@ -954,7 +954,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         Data resp = gatherLoad(lsqDeqLd.paddr, lsqDeqLd.byteEn, lsqDeqLd.unsignedLd, d);
         // write reg file & wakeup rs (this wakeup is late but MMIO is rare) & set ROB as Executed
         if(lsqDeqLd.dst matches tagged Valid .dst) begin
-            inIfc.writeRegFile(dst.indx, resp);
+            inIfc.writeRegFile(dst.indx, nullWithAddr(resp));
             inIfc.setRegReadyAggr_mem(dst.indx);
 `ifdef INCLUDE_TANDEM_VERIF
             inIfc.rob_setExecuted_doFinishMem_RegData (lsqDeqLd.instTag, resp);
@@ -1205,7 +1205,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         Data resp <- toGet(respLrScAmoQ).get;
         // write reg file & set ROB as Executed & wake up rs
         if(lsqDeqSt.dst matches tagged Valid .dst) begin
-            inIfc.writeRegFile(dst.indx, resp);
+            inIfc.writeRegFile(dst.indx, nullWithAddr(resp));
             inIfc.setRegReadyAggr_mem(dst.indx);
 `ifdef INCLUDE_TANDEM_VERIF
             inIfc.rob_setExecuted_doFinishMem_RegData (lsqDeqSt.instTag, resp);
@@ -1311,7 +1311,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         Data resp = inIfc.mmioRespVal.data;
         // write reg file & wakeup rs (this wakeup is late but MMIO is rare) & set ROB as Executed
         if(lsqDeqSt.dst matches tagged Valid .dst) begin
-            inIfc.writeRegFile(dst.indx, resp);
+            inIfc.writeRegFile(dst.indx, nullWithAddr(resp));
             inIfc.setRegReadyAggr_mem(dst.indx);
 `ifdef INCLUDE_TANDEM_VERIF
             inIfc.rob_setExecuted_doFinishMem_RegData (lsqDeqSt.instTag, resp);

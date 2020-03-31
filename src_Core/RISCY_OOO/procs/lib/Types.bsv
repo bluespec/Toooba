@@ -38,8 +38,6 @@ typedef Bit#(AddrSz) Addr;
 typedef 64 DataSz;
 typedef Bit#(DataSz) Data;
 
-typedef CapReg Register;
-
 typedef 32 InstSz;
 typedef Bit#(InstSz) Instruction;
 

@@ -163,43 +163,44 @@ function ControlFlow getControlFlow(DecodedInst dInst, Data rVal1, Data rVal2, A
 endfunction
 
 (* noinline *)
-function ExecResult basicExec(DecodedInst dInst, Data rVal1, Data rVal2, Addr pc, Addr ppc, Bit #(32) orig_inst);
+function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, Addr pc, Addr ppc, Bit #(32) orig_inst);
     // just data, addr, and control flow
-    Data data = 0;
+    CapPipe data = nullCap;
     Data csr_data = 0;
-    Addr addr = 0;
+    CapPipe addr = nullCap;
     ControlFlow cf = ControlFlow{pc: pc, nextPc: 0, taken: False, mispredict: False};
 
-    Data aluVal2 = fromMaybe(rVal2, getDInstImm(dInst)); //isValid(dInst.imm) ? fromMaybe(?, dInst.imm) : rVal2;
+    CapPipe aluVal2 = rVal2;
+    if (getDInstImm(dInst) matches tagged Valid .imm) aluVal2 = nullWithAddr(imm); //isValid(dInst.imm) ? fromMaybe(?, dInst.imm) : rVal2;
     // Get the alu function. By default, it adds. This is used by memory instructions
     AluFunc alu_f = dInst.execFunc matches tagged Alu .alu_f ? alu_f : Add;
-    Data alu_result = alu(rVal1, aluVal2, alu_f);
+    Data alu_result = alu(getAddr(rVal1), getAddr(aluVal2), alu_f);
 
     // Pass capabilities into these functions when they are passed in.
-    Data inspect_result = capInspect(nullWithAddr(rVal1), nullWithAddr(aluVal2), dInst.execFunc.CapInspect);
-    CapPipe modify_result = capModify(nullWithAddr(rVal1), nullWithAddr(aluVal2), dInst.execFunc.CapModify);
+    Data inspect_result = capInspect(rVal1, aluVal2, dInst.execFunc.CapInspect);
+    CapPipe modify_result = capModify(rVal1, aluVal2, dInst.execFunc.CapModify);
 
     // Default branch function is not taken
     BrFunc br_f = dInst.execFunc matches tagged Br .br_f ? br_f : NT;
-    cf.taken = aluBr(rVal1, rVal2, br_f);
-    cf.nextPc = brAddrCalc(pc, rVal1, dInst.iType, validValue(getDInstImm(dInst)), cf.taken, orig_inst);
+    cf.taken = aluBr(getAddr(rVal1), getAddr(rVal2), br_f);
+    cf.nextPc = brAddrCalc(pc, getAddr(rVal1), dInst.iType, validValue(getDInstImm(dInst)), cf.taken, orig_inst);
     cf.mispredict = cf.nextPc != ppc;
 
     Addr fallthrough_incr = ((orig_inst [1:0] == 2'b11) ? 4 : 2);
 
     data = (case (dInst.iType)
             St, Sc, Amo : rVal2;
-            J, Jr       : (pc + fallthrough_incr); // could be computed with alu
-            Auipc       : (pc + fromMaybe(?, getDInstImm(dInst))); // could be computed with alu
+            J, Jr       : nullWithAddr(pc + fallthrough_incr); // could be computed with alu
+            Auipc       : nullWithAddr(pc + fromMaybe(?, getDInstImm(dInst))); // could be computed with alu
             Csr         : rVal1;
-            CapInspect  : inspect_result;
-            CapModify   : getAddr(modify_result); // Obviously return the whole thing when data is a capability.
-            default     : alu_result;
+            CapInspect  : nullWithAddr(inspect_result);
+            CapModify   : modify_result; // Obviously return the whole thing when data is a capability.
+            default     : nullWithAddr(alu_result);
         endcase);
     csr_data = alu_result;
     addr = (case (dInst.iType)
-            Ld, St, Lr, Sc, Amo : alu_result;
-            default             : cf.nextPc;
+            Ld, St, Lr, Sc, Amo : nullWithAddr(alu_result);
+            default             : nullWithAddr(cf.nextPc);
         endcase);
 
     return ExecResult{data: data, csrData: csr_data, addr: addr, controlFlow: cf};

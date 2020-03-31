@@ -68,14 +68,14 @@ typedef struct {
     InstTag tag;
     DirPredTrainInfo dpTrain;
     // src reg vals & pc & ppc
-    Data rVal1;
-    Data rVal2;
+    CapPipe rVal1;
+    CapPipe rVal2;
     Addr pc;
     Addr ppc;
     Bit #(32) orig_inst;
     // specualtion
     Maybe#(SpecTag) spec_tag;
-} AluRegReadToExe deriving(Bits, Eq, FShow);
+} AluRegReadToExe deriving(Bits, FShow);
 
 typedef struct {
     // inst info
@@ -85,7 +85,7 @@ typedef struct {
     DirPredTrainInfo dpTrain;
     Bool isCompressed;
     // result
-    Data data; // alu compute result
+    CapPipe data; // alu compute result
     Maybe#(Data) csrData; // data to write CSR file
     ControlFlow controlFlow;
     // speculation
@@ -93,7 +93,7 @@ typedef struct {
 `ifdef RVFI
     ExtraTraceBundle   traceBundle;
 `endif
-} AluExeToFinish deriving(Bits, Eq, FShow);
+} AluExeToFinish deriving(Bits, FShow);
 
 // XXX currently ALU/Br should not have any exception, so we don't have cause feild above
 // TODO FIXME In future, if branch target is unaligned to 4 bytes, we may have exception
@@ -139,8 +139,8 @@ interface AluExeInput;
     // conservative scoreboard check in reg read stage
     method RegsReady sbCons_lazyLookup(PhyRegs r);
     // Phys reg file
-    method Data rf_rd1(PhyRIndx rindx);
-    method Data rf_rd2(PhyRIndx rindx);
+    method CapPipe rf_rd1(PhyRIndx rindx);
+    method CapPipe rf_rd2(PhyRIndx rindx);
     // CSR file
     method Data csrf_rd(CSR csr);
     // Special Capability Register file.
@@ -151,7 +151,7 @@ interface AluExeInput;
     method Bit #(32) rob_getOrig_Inst (InstTag t);
     method Action rob_setExecuted(
         InstTag t,
-        Data dst_data,
+        CapPipe dst_data,
         Maybe#(Data) csrData,
         ControlFlow cf,
         Maybe#(Exception) cause,
@@ -169,7 +169,7 @@ interface AluExeInput;
     // send bypass from exe and finish stage
     interface Vector#(2, SendBypass) sendBypass;
     // write reg file & set conservative sb
-    method Action writeRegFile(PhyRIndx dst, Data data);
+    method Action writeRegFile(PhyRIndx dst, CapPipe data);
     // redirect
     method Action redirect(Addr new_pc, SpecTag spec_tag, InstTag inst_tag);
     // spec update
@@ -198,7 +198,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
     let regToExeQ <- mkAluRegToExeFifo;
     let exeToFinQ <- mkAluExeToFinFifo;
     // wire to recv bypass
-    Vector#(TMul#(2, AluExeNum), RWire#(Tuple2#(PhyRIndx, Data))) bypassWire <- replicateM(mkRWire);
+    Vector#(TMul#(2, AluExeNum), RWire#(Tuple2#(PhyRIndx, CapPipe))) bypassWire <- replicateM(mkRWire);
     // index to send bypass, ordering doesn't matter
     Integer exeSendBypassPort = 0;
     Integer finishSendBypassPort = 1;
@@ -243,16 +243,16 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
         let regsReady = inIfc.sbCons_lazyLookup(x.regs);
 
         // get rVal1 (check bypass)
-        Data rVal1 = ?;
+        CapPipe rVal1 = ?;
         if(x.dInst.csr matches tagged Valid .csr) begin
-            rVal1 = inIfc.csrf_rd(csr);
+            rVal1 = nullWithAddr(inIfc.csrf_rd(csr));
         end
         else if(x.regs.src1 matches tagged Valid .src1) begin
             rVal1 <- readRFBypass(src1, regsReady.src1, inIfc.rf_rd1(src1), bypassWire);
         end
 
         // get rVal2 (check bypass)
-        Data rVal2 = ?;
+        CapPipe rVal2 = ?;
         if(x.regs.src2 matches tagged Valid .src2) begin
             rVal2 <- readRFBypass(src2, regsReady.src2, inIfc.rf_rd2(src2), bypassWire);
         end
@@ -318,7 +318,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
                 csrData: isValid(x.dInst.csr) ? Valid (exec_result.csrData) : tagged Invalid,
 `ifdef RVFI
                 traceBundle: ExtraTraceBundle{
-                    regWriteData: exec_result.data,
+                    regWriteData: getAddr(exec_result.data),
                     memByteEn: replicate(False)
                 },
 `endif

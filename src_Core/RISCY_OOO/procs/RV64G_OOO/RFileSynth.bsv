@@ -25,14 +25,15 @@
 import PhysRFile::*;
 import SynthParam::*;
 import Types::*;
+import CHERICap::*;
 import CHERICC_Fat::*;
 
-typedef RFile#(RFileWrPortNum, RFileRdPortNum, Data) RFileSynth;
+typedef RFile#(RFileWrPortNum, RFileRdPortNum, CapReg) RFileSynth;
 
 (* synthesize *)
 module mkRFileSynth(RFileSynth);
-    //CapReg default_register_value = nullCap;
-    Data default_register_value = 0;
+    CapReg default_register_value = nullCap;
+    //Data default_register_value = 0;
     `ifdef RVFI_DII
     //    default_register_value = almightyCap;
     `endif
