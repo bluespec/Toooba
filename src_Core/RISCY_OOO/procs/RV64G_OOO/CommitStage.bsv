@@ -236,9 +236,9 @@ deriving (Eq, FShow, Bits);
 `endif
 
 module mkCommitStage#(CommitInput inIfc)(CommitStage);
-    Bool verbose = False;
+    Bool verbose = True;
 
-    Integer verbosity = 1;   // Bluespec: for lightweight verbosity trace
+    Integer verbosity = 2;   // Bluespec: for lightweight verbosity trace
 
     // Used to inform tandem-verifier about program order.
     // 0 is used to indicate we've just come out of reset
@@ -904,6 +904,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
 `ifdef RVFI
         Rvfi_Traces rvfis = replicate(tagged Invalid);
+        x.ppc_vaddr_csrData = tagged PPC setAddrUnsafe(x.pc, next_pc);
         rvfis[0] = genRVFI(x, traceCnt, getTSB(), next_pc);
         rvfiQ.enq(rvfis);
         traceCnt <= traceCnt + 1;
