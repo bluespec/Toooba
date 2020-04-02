@@ -239,11 +239,15 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                            || isValid (x.regs.src3)
                            || fn_ArchReg_is_FpuReg (x.regs.dst));
         let mstatus   = csrf.rd (CSRmstatus);
-        Bool fs_trap = ((mstatus [14:13] == 2'b00) && fpr_access);
 
         // Check CSR access permission
         Bool csr_access_trap = False;
         if (x.dInst.iType == Csr) begin
+           if (x.dInst.csr matches tagged Valid .c) begin
+              case (c)
+                 CSRfcsr: fpr_access = True;
+              endcase
+           end
            Bit #(12) csr_addr  = case (x.dInst.csr) matches
                                     tagged Valid .c: pack (c);
                                     default:         12'hCFF;
@@ -263,6 +267,8 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
            Bool unimplemented = (csr_addr == 12'h8ff);    // Added by Bluespec
            csr_access_trap = (write_deny || priv_deny || unimplemented);
         end
+
+        Bool fs_trap = ((mstatus [14:13] == 2'b00) && fpr_access);
 
         // Check WFI trap (using a time-out of 0)
         Bit #(32) inst_WFI = 32'h_1050_0073;
