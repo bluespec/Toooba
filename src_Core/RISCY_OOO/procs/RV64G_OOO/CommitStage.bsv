@@ -181,12 +181,12 @@ function Maybe#(RVFI_DII_Execution#(DataSz,DataSz)) genRVFI(ToReorderBuffer rot,
     ByteEn wmask = replicate(False);
     Bit#(5) rd = 0;
     if (!isValid(rot.trap)) begin
-        case (rot.iType)
-            Amo, Alu, Ld, Lr, Sc, J, Jr, Auipc, Csr: begin // Defaults for register-to-register operations.
+        if (rot.dst matches tagged Valid .regWrite) begin
+            if (regWrite matches tagged Gpr .regNum) begin
                 data = rot.traceBundle.regWriteData;
                 rd = rot.orig_inst[11:7];
             end
-        endcase
+        end
         case (rot.ppc_vaddr_csrData) matches
             tagged VAddr .vaddr: begin
                 addr = getAddr(vaddr);
