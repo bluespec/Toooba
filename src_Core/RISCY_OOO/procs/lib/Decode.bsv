@@ -728,88 +728,336 @@ function DecodeResult decode(Instruction inst);
         OpCHERI: begin
             case (funct3)
                 f3_cap_CIncOffsetImmediate: begin
+                    dInst.capChecks.src1_unsealed = True;
+
+                    dInst.iType = CapModify;
+                    regs.dst = Valid(tagged Gpr rd);
+                    regs.src1 = Valid(tagged Gpr rs1);
+                    dInst.imm = Valid (immI);
                 end
                 f3_cap_CSetBoundsImmediate: begin
+                    // TODO
+                    // dInst.capChecks.src1_tag = True;
+                    // dInst.capChecks.src1_unsealed = True;
+
+                    // regs.dst = Valid(tagged Gpr rd);
+                    // regs.src1 = Valid(tagged Gpr rs1);
+                    // regs.src1 = Invalid;
+                    // dInst.imm = Valid (immI);
                 end
                 f3_cap_ThreeOp: begin
                     case (funct7)
                         f7_cap_CSpecialRW: begin
+                            // TODO
                         end
                         f7_cap_CSetBounds: begin
+                            // TODO
+                            // dInst.capChecks.src1_tag = True;
+                            // dInst.capChecks.src1_unsealed = True;
+
+                            // regs.dst = Valid(tagged Gpr rd);
+                            // regs.src1 = Valid(tagged Gpr rs1);
+                            // regs.src2 = Valid(tagged Gpr rs2);
+                            // dInst.imm = Invalid;
                         end
                         f7_cap_CSetBoundsExact: begin
+                            // TODO
+                            // dInst.capChecks.src1_tag = True;
+                            // dInst.capChecks.src1_unsealed = True;
+
+                            // regs.dst = Valid(tagged Gpr rd);
+                            // regs.src1 = Valid(tagged Gpr rs1);
+                            // regs.src2 = Valid(tagged Gpr rs2);
+                            // dInst.imm = Invalid;
                         end
                         f7_cap_CSetOffset: begin
+                            dInst.capChecks.src1_unsealed = True;
+
+                            dInst.iType = CapModify;
+                            regs.dst = Valid(tagged Gpr rd);
+                            regs.src1 = Valid(tagged Gpr rs1);
+                            regs.src2 = Valid(tagged Gpr rs2);
+                            dInst.imm = Invalid;
+                            dInst.execFunc = CapModify (ModifyOffset (SetOffset));
                         end
                         f7_cap_CSetAddr: begin
+                            dInst.capChecks.src1_unsealed = True;
+
+                            dInst.iType = CapModify;
+                            regs.dst = Valid(tagged Gpr rd);
+                            regs.src1 = Valid(tagged Gpr rs1);
+                            regs.src2 = Valid(tagged Gpr rs2);
+                            dInst.imm = Invalid;
+                            dInst.execFunc = CapModify (SetAddr (Src2Addr));
                         end
                         f7_cap_CIncOffset: begin
+                            dInst.capChecks.src1_unsealed = True;
+
+                            dInst.iType = CapModify;
+                            regs.dst = Valid(tagged Gpr rd);
+                            regs.src1 = Valid(tagged Gpr rs1);
+                            regs.src2 = Valid(tagged Gpr rs2);
+                            dInst.imm = Invalid;
+                            dInst.execFunc = CapModify (ModifyOffset (IncOffset));
                         end
                         f7_cap_CSeal: begin
+                            dInst.capChecks.src1_tag = True;
+                            dInst.capChecks.src2_tag = True;
+                            dInst.capChecks.src1_unsealed = True;
+                            dInst.capChecks.src2_unsealed = True;
+                            dInst.capChecks.src2_permit_seal = True;
+                            dInst.capChecks.src2_addr_valid_type = True;
+
+                            dInst.iType = CapModify;
+                            regs.dst = Valid(tagged Gpr rd);
+                            regs.src1 = Valid(tagged Gpr rs1);
+                            regs.src2 = Valid(tagged Gpr rs2);
+                            dInst.imm = Invalid;
+                            dInst.execFunc = CapModify (Seal);
                         end
                         f7_cap_CCSeal: begin
+                            // TODO problematic because checks depend on register value
                         end
                         f7_cap_TwoSrc: begin
+                            case (rd)
+                                rd_cap_CCall: begin
+                                    // TODO
+                                    // dInst.capChecks.src1_tag = True;
+                                    // dInst.capChecks.src2_tag = True;
+                                    // dInst.capChecks.src1_sealed = True;
+                                    // dInst.capChecks.src2_sealed = True;
+                                    // dInst.capChecks.src1_src2_types_match = True;
+                                    // dInst.capChecks.src1_permit_x = True;
+                                    // dInst.capChecks.src2_no_permit_x = True;
+                                    // dInst.capChecks.src1_permit_ccall = True;
+                                    // dInst.capChecks.src2_permit_ccall = True;
+
+                                    // regs.rd = Invalid;
+                                    // regs.src1 = Valid(tagged Gpr rs1);
+                                    // regs.src2 = Valid(tagged Gpr rs2);
+                                    // dInst.imm = Invalid;
+                                end
+                                default: begin
+                                    illegalInst = True;
+                                end
+                            endcase
                         end
                         f7_cap_CUnseal: begin
+                            dInst.capChecks.src1_tag = True;
+                            dInst.capChecks.src2_tag = True;
+                            dInst.capChecks.src1_sealed_with_type = True;
+                            dInst.capChecks.src2_unsealed = True;
+                            dInst.capChecks.src2_points_to_src1_type = True;
+                            dInst.capChecks.src2_permit_unseal = True;
+
+                            dInst.iType = CapModify;
+                            regs.dst = Valid(tagged Gpr rd);
+                            regs.src1 = Valid(tagged Gpr rs1);
+                            regs.src2 = Valid(tagged Gpr rs2);
+                            dInst.imm = Invalid;
+                            dInst.execFunc = CapModify (Unseal);
                         end
                         f7_cap_CTestSubset: begin
+                            dInst.iType = CapInspect;
+                            regs.dst = Valid(tagged Gpr rd);
+                            regs.src1 = Valid(tagged Gpr rs1);
+                            regs.src2 = Valid(tagged Gpr rs2);
+                            dInst.imm = Invalid;
+                            dInst.execFunc = CapInspect (TestSubset);
                         end
                         f7_cap_CCopyType: begin
+                            dInst.capChecks.src1_tag = True;
+                            dInst.capChecks.src1_unsealed = True;
+
+                            dInst.iType = CapModify;
+                            regs.dst = Valid(tagged Gpr rd);
+                            regs.src1 = Valid(tagged Gpr rs1);
+                            regs.src2 = Valid(tagged Gpr rs2);
+                            dInst.imm = Invalid;
+                            dInst.execFunc = CapModify (SetAddr (Src2Type));
                         end
                         f7_cap_CAndPerm: begin
+                            dInst.capChecks.src1_tag = True;
+                            dInst.capChecks.src1_unsealed = True;
+
+                            dInst.iType = CapModify;
+                            regs.dst = Valid(tagged Gpr rd);
+                            regs.src1 = Valid(tagged Gpr rs1);
+                            regs.src2 = Valid(tagged Gpr rs2);
+                            dInst.imm = Invalid;
+                            dInst.execFunc = CapModify (AndPerm);
                         end
                         f7_cap_CSetFlags: begin
+                            dInst.capChecks.src1_unsealed = True;
+
+                            dInst.iType = CapModify;
+                            regs.dst = Valid(tagged Gpr rd);
+                            regs.src1 = Valid(tagged Gpr rs1);
+                            regs.src2 = Valid(tagged Gpr rs2);
+                            dInst.imm = Invalid;
+                            dInst.execFunc = CapModify (SetFlags);
                         end
                         f7_cap_CToPtr: begin
+                            dInst.capChecks.src1_unsealed = True;
+                            dInst.capChecks.src2_tag = True;
+
+                            dInst.iType = CapInspect;
+                            regs.dst = Valid(tagged Gpr rd);
+                            regs.src1 = Valid(tagged Gpr rs1);
+                            regs.src2 = Valid(tagged Gpr rs2);
+                            dInst.imm = Invalid;
+                            dInst.execFunc = CapInspect (ToPtr);
                         end
                         f7_cap_CFromPtr: begin
+                            //TODO these should only be checked when b non-zero
+                            dInst.capChecks.src1_tag = True;
+                            dInst.capChecks.src1_unsealed = True;
+
+                            dInst.iType = CapModify;
+                            regs.dst = Valid(tagged Gpr rd);
+                            regs.src1 = Valid(tagged Gpr rs1);
+                            regs.src2 = Valid(tagged Gpr rs2);
+                            dInst.imm = Invalid;
+                            dInst.execFunc = CapModify (SetAddr (Src2Addr));
                         end
                         f7_cap_CSub: begin
+                            // CSub is just a riscv subtract
+                            dInst.iType = Alu;
+                            regs.dst  = Valid(tagged Gpr rd);
+                            regs.src1 = Valid(tagged Gpr rs1);
+                            regs.src2 = Valid(tagged Gpr rs2);
+                            dInst.imm = Invalid;
+                            dInst.csr = Invalid;
+                            dInst.execFunc = Alu (Sub);
                         end
                         f7_cap_CBuildCap: begin
+                            dInst.capChecks.src1_tag = True;
+                            dInst.capChecks.src1_unsealed = True;
+                            dInst.capChecks.src2_perm_subset_src1 = True;
+                            dInst.capChecks.src2_derivable = True;
+
+                            dInst.iType = CapModify;
+                            regs.dst = Valid(tagged Gpr rd);
+                            regs.src1 = Valid(tagged Gpr rs1);
+                            regs.src2 = Valid(tagged Gpr rs2);
+                            dInst.imm = Invalid;
+                            dInst.execFunc = CapModify (BuildCap);
                         end
                         f7_cap_Loads: begin
+                            //TODO
                         end
                         f7_cap_Stores: begin
+                            //TODO
                         end
                         f7_cap_TwoOp: begin
                             case (funct5rs2)
                                 f5rs2_cap_CGetLen: begin
+                                    dInst.iType = CapInspect;
+                                    regs.dst = Valid(tagged Gpr rd);
+                                    regs.src1 = Valid(tagged Gpr rs1);
+                                    dInst.imm = Invalid;
+                                    dInst.execFunc = CapInspect (GetLen);
                                 end
                                 f5rs2_cap_CGetBase: begin
+                                    dInst.iType = CapInspect;
+                                    regs.dst = Valid(tagged Gpr rd);
+                                    regs.src1 = Valid(tagged Gpr rs1);
+                                    dInst.imm = Invalid;
+                                    dInst.execFunc = CapInspect (GetBase);
                                 end
                                 f5rs2_cap_CGetTag: begin
+                                    dInst.iType = CapInspect;
+                                    regs.dst = Valid(tagged Gpr rd);
+                                    regs.src1 = Valid(tagged Gpr rs1);
+                                    dInst.imm = Invalid;
+                                    dInst.execFunc = CapInspect (GetTag);
                                 end
                                 f5rs2_cap_CGetSealed: begin
+                                    dInst.iType = CapInspect;
+                                    regs.dst = Valid(tagged Gpr rd);
+                                    regs.src1 = Valid(tagged Gpr rs1);
+                                    dInst.imm = Invalid;
+                                    dInst.execFunc = CapInspect (GetSealed);
                                 end
                                 f5rs2_cap_CRRL: begin
+                                    // TODO
+                                    // regs.dst = Valid(tagged Gpr rd);
+                                    // regs.src1 = Valid(tagged Gpr rs1);
+                                    // dInst.imm = Invalid;
                                 end
                                 f5rs2_cap_CRAM: begin
+                                    // TODO
+                                    // regs.dst = Valid(tagged Gpr rd);
+                                    // regs.src1 = Valid(tagged Gpr rs1);
+                                    // dInst.imm = Invalid;
                                 end
                                 f5rs2_cap_CMove: begin
+                                    dInst.iType = CapModify;
+                                    regs.dst = Valid(tagged Gpr rd);
+                                    regs.src1 = Valid(tagged Gpr rs1);
+                                    dInst.imm = Invalid;
+                                    dInst.execFunc = CapModify (Move);
                                 end
                                 f5rs2_cap_CClearTag: begin
+                                    dInst.iType = CapModify;
+                                    regs.dst = Valid(tagged Gpr rd);
+                                    regs.src1 = Valid(tagged Gpr rs1);
+                                    dInst.imm = Invalid;
+                                    dInst.execFunc = CapModify (ClearTag);
                                 end
                                 f5rs2_cap_CGetAddr: begin
+                                    dInst.iType = CapInspect;
+                                    regs.dst = Valid(tagged Gpr rd);
+                                    regs.src1 = Valid(tagged Gpr rs1);
+                                    dInst.imm = Invalid;
+                                    dInst.execFunc = CapInspect (GetAddr);
                                 end
                                 f5rs2_cap_CGetOffset: begin
+                                    dInst.iType = CapInspect;
+                                    regs.dst = Valid(tagged Gpr rd);
+                                    regs.src1 = Valid(tagged Gpr rs1);
+                                    dInst.imm = Invalid;
+                                    dInst.execFunc = CapInspect (GetOffset);
                                 end
                                 f5rs2_cap_CGetFlags: begin
+                                    dInst.iType = CapInspect;
+                                    regs.dst = Valid(tagged Gpr rd);
+                                    regs.src1 = Valid(tagged Gpr rs1);
+                                    dInst.imm = Invalid;
+                                    dInst.execFunc = CapInspect (GetFlags);
                                 end
                                 f5rs2_cap_CGetPerm: begin
+                                    dInst.iType = CapInspect;
+                                    regs.dst = Valid(tagged Gpr rd);
+                                    regs.src1 = Valid(tagged Gpr rs1);
+                                    dInst.imm = Invalid;
+                                    dInst.execFunc = CapInspect (GetPerm);
                                 end
                                 f5rs2_cap_CJALR: begin
+                                    // TODO
                                 end
                                 f5rs2_cap_CGetType: begin
+                                    dInst.iType = CapInspect;
+                                    regs.dst = Valid(tagged Gpr rd);
+                                    regs.src1 = Valid(tagged Gpr rs1);
+                                    dInst.imm = Invalid;
+                                    dInst.execFunc = CapInspect (GetType);
+                                end
+                                default: begin
+                                    illegalInst = True;
                                 end
                             endcase
                         end
+                        default: begin
+                            illegalInst = True;
+                        end
                     endcase
+                end
+                default: begin
+                    illegalInst = True;
                 end
             endcase
         end
-
         default: begin
             illegalInst = True;
         end

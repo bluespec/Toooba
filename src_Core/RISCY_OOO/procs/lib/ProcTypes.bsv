@@ -414,17 +414,21 @@ typedef enum {
     SetBounds, SetBoundsExact, CRRL, CRAM
 } SetBoundsFunc deriving(Bits, Eq, FShow);
 
+typedef enum {
+    Src2Type, Src2Addr
+} AddrSource deriving(Bits, Eq, FShow);
+
 typedef union tagged {
-    Bool ModifyOffset;
+    ModifyOffsetFunc ModifyOffset;
     Bool SetBounds;
     void SpecialRW;
-    void SetAddr;
+    AddrSource SetAddr;
     void Seal;
     void Unseal;
     void AndPerm;
     void SetFlags;
     void BuildCap;
-    void CMove;
+    void Move;
     void ClearTag;
     void CJALR;
 } CapModifyFunc deriving(Bits, Eq, FShow);
@@ -432,6 +436,7 @@ typedef union tagged {
 typedef union tagged {
     void TestSubset;
     void CSub;
+    void GetLen;
     void GetBase;
     void GetTag;
     void GetSealed;
@@ -651,23 +656,24 @@ typedef struct {
 typedef Bit#(32) ImmData; // 32-bit decoded immediate data
 
 typedef struct {
-    Bool a_tag;
-    Bool b_tag;
-    Bool a_sealed_with_type;
-    Bool a_unsealed;
-    Bool b_unsealed;
-    Bool a_sealed;
-    Bool b_sealed;
-    Bool a_b_types_match;
-    Bool a_permit_ccall;
-    Bool b_permit_ccall;
-    Bool a_permit_x;
-    Bool b_no_permit_x;
-    Bool b_permit_unseal;
-    Bool b_permit_seal;
-    Bool b_points_to_a_type;
-    Bool b_addr_valid_type;
-    Bool b_perm_subset_a;
+    Bool src1_tag;
+    Bool src2_tag;
+    Bool src1_sealed_with_type;
+    Bool src1_unsealed;
+    Bool src2_unsealed;
+    Bool src1_sealed;
+    Bool src2_sealed;
+    Bool src1_src2_types_match;
+    Bool src1_permit_ccall;
+    Bool src2_permit_ccall;
+    Bool src1_permit_x;
+    Bool src2_no_permit_x;
+    Bool src2_permit_unseal;
+    Bool src2_permit_seal;
+    Bool src2_points_to_src1_type;
+    Bool src2_addr_valid_type;
+    Bool src2_perm_subset_src1;
+    Bool src2_derivable;
 } CapChecks deriving(Bits, Eq, FShow);
 
 typedef struct {

@@ -58,14 +58,14 @@ endfunction
 (* noinline *)
 function CapPipe capModify(CapPipe a, CapPipe b, CapModifyFunc func);
     CapPipe res = (case(func) matches
-            tagged ModifyOffset .incOffsetBool:
-                modifyOffset(a, getAddr(b), incOffsetBool).value;
+            tagged ModifyOffset .offsetOp:
+                modifyOffset(a, getAddr(b), offsetOp == IncOffset).value;
             tagged SetBounds .exact       :
                 setBounds(a, getAddr(b)).value;
             //tagged SpecialRW              :
             //    error("SpecialRW not yet implemented");
-            tagged SetAddr                :
-                setAddr(a, getAddr(b)).value;
+            tagged SetAddr .addrSource    :
+                setAddr(a, addrSource == Src2Type ? (isSealed(b) ? zeroExtend(getType(b)) : -1) : getAddr(b)).value;
             tagged Seal                   :
                 setType(a, truncate(getAddr(b)));
             tagged Unseal                 :
@@ -74,15 +74,17 @@ function CapPipe capModify(CapPipe a, CapPipe b, CapModifyFunc func);
                 setPerms(a, pack(getPerms(a)) & truncate(getAddr(b)));
             tagged SetFlags               :
                 setFlags(a, truncate(getAddr(b)));
+            //tagged FromPtr                :
+            //     error("FromPtr not yet implemented");
             tagged BuildCap               :
                 setValidCap(a, True);
-            tagged CMove                  :
+            tagged Move                   :
                 a;
             tagged ClearTag               :
                 setValidCap(a, False);
             //tagged CJALR                  :
             //    error("CJALR not yet implemented");
-            default : nullCap;
+            default: ?;
         endcase);
     return res;
 endfunction
@@ -92,8 +94,8 @@ function Data capInspect(CapPipe a, CapPipe b, CapInspectFunc func);
     Data res = (case(func) matches
                //tagged TestSubset             :
                //   error("TestSubset not yet implemented");
-               tagged CSub                   :
-                   (getAddr(a) - getAddr(b));
+               tagged GetLen                 :
+                   truncate(getLength(a));
                tagged GetBase                :
                    getBase(a);
                tagged GetTag                 :
@@ -112,7 +114,7 @@ function Data capInspect(CapPipe a, CapPipe b, CapInspectFunc func);
                    signExtend(getType(a));
                tagged ToPtr                  :
                    (getAddr(a) - getBase(b));
-               default : 0;
+               default: ?;
         endcase);
     return res;
 endfunction
@@ -194,7 +196,7 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, A
             Auipc       : nullWithAddr(pc + fromMaybe(?, getDInstImm(dInst))); // could be computed with alu
             Csr         : rVal1;
             CapInspect  : nullWithAddr(inspect_result);
-            CapModify   : modify_result; // Obviously return the whole thing when data is a capability.
+            CapModify   : modify_result;
             default     : nullWithAddr(alu_result);
         endcase);
     csr_data = alu_result;
