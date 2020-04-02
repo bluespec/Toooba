@@ -96,7 +96,16 @@ interface FpuMulDivExeInput;
     // Special Capability Register file.
     method CapReg scaprf_rd(SCR csr);
     // ROB
-    method Action rob_setExecuted(InstTag t, Data dst_data, Bit#(5) fflags, Maybe#(Exception) cast, CapPipe pcc);
+    method Action rob_setExecuted(
+        InstTag t,
+        Data dst_data,
+        Bit#(5) fflags,
+        Maybe#(Exception) cast,
+        CapPipe pcc
+`ifdef RVFI
+        , ExtraTraceBundle tb
+`endif
+    );
 
     // global broadcast methods
     // write reg file & set both conservative and aggressive sb & wake up inst
@@ -233,7 +242,9 @@ module mkFpuMulDivExePipeline#(FpuMulDivExeInput inIfc)(FpuMulDivExePipeline);
             inIfc.writeRegFile(valid_dst.indx, nullWithAddr(data));
         end
         // update the instruction in the reorder buffer.
-        inIfc.rob_setExecuted(tag, data, fflags, tagged Invalid, cast(inIfc.scaprf_rd(SCR_PCC)));
+        inIfc.rob_setExecuted(tag, data, fflags, tagged Invalid, cast(inIfc.scaprf_rd(SCR_PCC))
+                              , ExtraTraceBundle{regWriteData: data, memByteEn: ?}
+        );
         // since FPU op has no spec tag, this doFinish rule is ordered before
         // other rules that calls incorrectSpec, and BSV compiler creates
         // cycles in scheduling. We manually creates a conflict between this

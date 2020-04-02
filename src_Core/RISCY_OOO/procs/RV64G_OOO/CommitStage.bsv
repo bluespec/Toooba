@@ -182,7 +182,7 @@ function Maybe#(RVFI_DII_Execution#(DataSz,DataSz)) genRVFI(ToReorderBuffer rot,
     Bit#(5) rd = 0;
     if (!isValid(rot.trap)) begin
         case (rot.iType)
-            Amo, Alu, Ld, Lr, Sc, J, Jr, Auipc, Fpu, Csr: begin // Defaults for register-to-register operations.
+            Amo, Alu, Ld, Lr, Sc, J, Jr, Auipc, Csr: begin // Defaults for register-to-register operations.
                 data = rot.traceBundle.regWriteData;
                 rd = rot.orig_inst[11:7];
             end
