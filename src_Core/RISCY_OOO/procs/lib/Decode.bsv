@@ -1034,7 +1034,13 @@ function DecodeResult decode(Instruction inst);
                                     dInst.execFunc = CapInspect (GetPerm);
                                 end
                                 f5rs2_cap_CJALR: begin
-                                    // TODO
+                                    dInst.iType = Jr;
+                                    regs.dst  = Valid(tagged Gpr rd);
+                                    regs.src1 = Valid(tagged Gpr rs1);
+                                    regs.src2 = Invalid;
+                                    dInst.imm = Invalid;
+                                    dInst.csr = tagged Invalid;
+                                    dInst.execFunc = tagged Br AT;
                                 end
                                 f5rs2_cap_CGetType: begin
                                     dInst.iType = CapInspect;

@@ -185,7 +185,7 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, A
     // Default branch function is not taken
     BrFunc br_f = dInst.execFunc matches tagged Br .br_f ? br_f : NT;
     cf.taken = aluBr(getAddr(rVal1), getAddr(rVal2), br_f);
-    cf.nextPc = brAddrCalc(pc, getAddr(rVal1), dInst.iType, validValue(getDInstImm(dInst)), cf.taken, orig_inst);
+    cf.nextPc = brAddrCalc(pc, getAddr(rVal1), dInst.iType, fromMaybe(0,getDInstImm(dInst)), cf.taken, orig_inst);
     cf.mispredict = cf.nextPc != ppc;
 
     Addr fallthrough_incr = ((orig_inst [1:0] == 2'b11) ? 4 : 2);
