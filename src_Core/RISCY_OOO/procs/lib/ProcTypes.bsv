@@ -213,6 +213,7 @@ function Opcode unpackOpcode(Bit#(7) x);
         pack(Opcode'(Fnmsub )): (Fnmsub );
         pack(Opcode'(Fnmadd )): (Fnmadd );
         pack(Opcode'(OpFp   )): (OpFp   );
+        pack(Opcode'(OpCHERI)): (OpCHERI);
         pack(Opcode'(Branch )): (Branch );
         pack(Opcode'(Jalr   )): (Jalr   );
         pack(Opcode'(Jal    )): (Jal    );
