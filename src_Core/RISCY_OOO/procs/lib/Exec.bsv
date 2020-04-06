@@ -35,39 +35,39 @@ function Maybe#(CapException) capChecks(CapPipe a, CapPipe b, CapChecks toCheck)
     // TODO plumb register indices here
     Maybe#(CapException) result = Invalid;
     if      (toCheck.src1_tag                 && !isValidCap(a))
-        result =  Valid (CapException {excCode: TagViolation});
+        result =  Valid (CapException {cheri_exc_code: TagViolation});
     else if (toCheck.src2_tag                 && !isValidCap(b))
-        result =  Valid (CapException {excCode: TagViolation});
+        result =  Valid (CapException {cheri_exc_code: TagViolation});
     else if (toCheck.src1_sealed_with_type    && getKind(a) != SEALED_WITH_TYPE)
-        result =  Valid (CapException {excCode: SealViolation});
+        result =  Valid (CapException {cheri_exc_code: SealViolation});
     else if (toCheck.src1_unsealed            && isValidCap(a) && isSealed(a))
-        result =  Valid (CapException {excCode: SealViolation});
+        result =  Valid (CapException {cheri_exc_code: SealViolation});
     else if (toCheck.src2_unsealed            && isValidCap(b) && isSealed(b))
-        result =  Valid (CapException {excCode: SealViolation});
+        result =  Valid (CapException {cheri_exc_code: SealViolation});
     else if (toCheck.src1_sealed              && isValidCap(a) && !isSealed(a))
-        result =  Valid (CapException {excCode: SealViolation});
+        result =  Valid (CapException {cheri_exc_code: SealViolation});
     else if (toCheck.src2_sealed              && isValidCap(b) && !isSealed(b))
-        result =  Valid (CapException {excCode: SealViolation});
+        result =  Valid (CapException {cheri_exc_code: SealViolation});
     else if (toCheck.src1_src2_types_match    && getType(a) != getType(b))
-        result =  Valid (CapException {excCode: TypeViolation});
+        result =  Valid (CapException {cheri_exc_code: TypeViolation});
     else if (toCheck.src1_permit_ccall        && !getHardPerms(a).permitCCall)
-        result =  Valid (CapException {excCode: PermitCCallViolation});
+        result =  Valid (CapException {cheri_exc_code: PermitCCallViolation});
     else if (toCheck.src2_permit_ccall        && !getHardPerms(b).permitCCall)
-        result =  Valid (CapException {excCode: PermitCCallViolation});
+        result =  Valid (CapException {cheri_exc_code: PermitCCallViolation});
     else if (toCheck.src1_permit_x            && !getHardPerms(a).permitExecute)
-        result =  Valid (CapException {excCode: PermitXViolation});
+        result =  Valid (CapException {cheri_exc_code: PermitXViolation});
     else if (toCheck.src2_no_permit_x         && getHardPerms(b).permitExecute)
-        result =  Valid (CapException {excCode: PermitXViolation});
+        result =  Valid (CapException {cheri_exc_code: PermitXViolation});
     else if (toCheck.src2_permit_unseal       && !getHardPerms(b).permitUnseal)
-        result =  Valid (CapException {excCode: PermitUnsealViolation});
+        result =  Valid (CapException {cheri_exc_code: PermitUnsealViolation});
     else if (toCheck.src2_permit_seal         && !getHardPerms(b).permitSeal)
-        result =  Valid (CapException {excCode: PermitSealViolation});
+        result =  Valid (CapException {cheri_exc_code: PermitSealViolation});
     else if (toCheck.src2_points_to_src1_type && getAddr(b) != zeroExtend(getType(a)))
-        result =  Valid (CapException {excCode: TypeViolation});
+        result =  Valid (CapException {cheri_exc_code: TypeViolation});
     else if (toCheck.src2_addr_valid_type     && !validAsType(b, truncate(getAddr(b))))
-        result =  Valid (CapException {excCode: LengthViolation});
+        result =  Valid (CapException {cheri_exc_code: LengthViolation});
     else if (toCheck.src2_perm_subset_src1    && (getPerms(a) & getPerms(b)) != getPerms(b))
-        result =  Valid (CapException {excCode: SoftwarePermViolation});
+        result =  Valid (CapException {cheri_exc_code: SoftwarePermViolation});
     return result;
 endfunction
 
@@ -212,7 +212,7 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, A
     CapPipe data = nullCap;
     Data csr_data = 0;
     CapPipe addr = nullCap;
-    ControlFlow cf = ControlFlow{pc: pc, nextPc: 0, taken: False, mispredict: False};
+    ControlFlow cf = ControlFlow{pc: pc, nextPc: 0, taken: False, newPcc: dInst.capChecks.src1_tag, mispredict: False};
 
     CapPipe aluVal2 = rVal2;
     if (getDInstImm(dInst) matches tagged Valid .imm) aluVal2 = nullWithAddr(imm); //isValid(dInst.imm) ? fromMaybe(?, dInst.imm) : rVal2;
@@ -246,8 +246,9 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, A
             Ld, St, Lr, Sc, Amo : nullWithAddr(alu_result);
             default             : nullWithAddr(cf.nextPc);
         endcase);
+    CapPipe scr_data = rVal1;
 
-    return ExecResult{data: data, csrData: csr_data, addr: addr, controlFlow: cf, capException: capException};
+    return ExecResult{data: data, csrData: csr_data, scrData: scr_data, addr: addr, controlFlow: cf, capException: capException};
 endfunction
 
 (* noinline *)

@@ -151,6 +151,7 @@ function DecodeResult decode(Instruction inst);
         iType: Unsupported,
         execFunc: tagged Other,
         csr: tagged Invalid,
+        scr: tagged Invalid,
         imm: tagged Invalid,
         capChecks: unpack(0)
     };
@@ -1039,8 +1040,11 @@ function DecodeResult decode(Instruction inst);
                                     regs.src1 = Valid(tagged Gpr rs1);
                                     regs.src2 = Invalid;
                                     dInst.imm = Invalid;
-                                    dInst.csr = tagged Invalid;
+                                    //dInst.scr = tagged Valid SCR_PCC;
                                     dInst.execFunc = tagged Br AT;
+                                    dInst.capChecks.src1_tag = True;
+                                    dInst.capChecks.src1_permit_x = True;
+                                    dInst.capChecks.src1_unsealed = True;
                                 end
                                 f5rs2_cap_CGetType: begin
                                     dInst.iType = CapInspect;

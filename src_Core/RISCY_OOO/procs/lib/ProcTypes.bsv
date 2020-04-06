@@ -30,6 +30,7 @@ import DefaultValue::*;
 import MemoryTypes::*;
 import CHERICap::*;
 import CHERICC_Fat::*;
+import ISA_Decls_CHERI::*;
 `ifdef RVFI_DII
 import RVFI_DII_Types::*;
 `endif
@@ -555,6 +556,11 @@ typedef union tagged {
     Interrupt Interrupt;
 } Trap deriving(Bits, Eq, FShow);
 
+typedef struct {
+    Trap trap;
+    CHERIException capExp;
+} TrapWithCap deriving(Bits, Eq, FShow);
+
 // privilege modes
 Bit#(2) prvU = 0;
 Bit#(2) prvS = 1;
@@ -646,6 +652,7 @@ typedef struct {
     Addr pc;
     Addr nextPc;
     Bool taken;
+    Bool newPcc;
     Bool mispredict;
 } ControlFlow deriving (Bits, Eq, FShow);
 
@@ -678,16 +685,14 @@ typedef struct {
     Bool src2_derivable;
 } CapChecks deriving(Bits, Eq, FShow);
 
-typedef struct {
-   CHERIException excCode;
-// TODO GPR or SCR index of cause;
-} CapException deriving(Bits, FShow);
+typedef CSR_XCapCause CapException;
 
 typedef struct {
     IType           iType;
     ExecFunc        execFunc;
     CapChecks       capChecks;
     Maybe#(CSR)     csr;
+    Maybe#(SCR)     scr; // Special Capability Register.
     Maybe#(ImmData) imm;
 } DecodedInst deriving(Bits, Eq, FShow);
 
@@ -698,6 +703,7 @@ endfunction
 typedef struct {
     CapPipe     data;
     Data        csrData;
+    CapPipe     scrData;
     CapPipe     addr;
     ControlFlow controlFlow;
     Maybe#(CapException) capException;

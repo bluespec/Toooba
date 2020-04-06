@@ -621,15 +621,15 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
         // record trap info
         Addr vaddr = ?;
-        if (   (trap == tagged Exception InstAccessFault)
-            || (trap == tagged Exception InstPageFault)) begin
+        if (   (trap.trap == tagged Exception InstAccessFault)
+            || (trap.trap == tagged Exception InstPageFault)) begin
             vaddr = x.tval;
         end
         else if(x.ppc_vaddr_csrData matches tagged VAddr .va) begin
             vaddr = getAddr(va);
         end
         let commitTrap_val = Valid (CommitTrap {
-            trap: trap,
+            trap: trap.trap,
             pc: x.pc,
             addr: vaddr,
             orig_inst: x.orig_inst

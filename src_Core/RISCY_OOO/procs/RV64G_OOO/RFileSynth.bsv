@@ -35,7 +35,7 @@ module mkRFileSynth(RFileSynth);
     CapReg default_register_value = nullCap;
     //Data default_register_value = 0;
     `ifdef RVFI_DII
-    //    default_register_value = almightyCap;
+        default_register_value = almightyCap;
     `endif
     let m <- mkRFile(default_register_value, `LAZY_RS_RF);
     return m;

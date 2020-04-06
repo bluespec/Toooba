@@ -357,6 +357,8 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         // Flip epoch without redirecting
         // This avoids doing incorrect work
         incrEpochStallFetch;
+        Maybe#(TrapWithCap) trapWithCap = Invalid;
+        if (firstTrap matches tagged Valid .trap) trapWithCap = tagged Valid TrapWithCap{trap: trap, capExp: None};
         // just place it in the reorder buffer
         let y = ToReorderBuffer{pc: setAddr(almightyCap, pc).value,
                                 orig_inst: orig_inst,
@@ -369,7 +371,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
 `endif
                                 csr: dInst.csr,
                                 claimed_phy_reg: False, // no renaming is done
-                                trap: firstTrap,
+                                trap: trapWithCap,
                                 tval: tval,
                                 // default values of FullResult
                                 ppc_vaddr_csrData: PPC (setAddr(almightyCap, pc).value), // default use PPC

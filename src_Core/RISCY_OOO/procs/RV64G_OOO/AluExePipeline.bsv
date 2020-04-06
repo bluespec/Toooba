@@ -87,8 +87,9 @@ typedef struct {
     // result
     CapPipe data; // alu compute result
     Maybe#(Data) csrData; // data to write CSR file
+    Maybe#(CapPipe) scrData; // datat to write to special capability register file.
     ControlFlow controlFlow;
-    Maybe#(CapException) capException;
+    Maybe#(CHERIException) capException;
     // speculation
     Maybe#(SpecTag) spec_tag;
 `ifdef RVFI
@@ -154,8 +155,9 @@ interface AluExeInput;
         InstTag t,
         CapPipe dst_data,
         Maybe#(Data) csrData,
+        Maybe#(CapPipe) scrData,
         ControlFlow cf,
-        Maybe#(CapException) capCause,
+        Maybe#(CHERIException) capCause,
         CapPipe pcc
 `ifdef RVFI
         , ExtraTraceBundle tb
@@ -317,6 +319,11 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
                 isCompressed: x.orig_inst[1:0] != 2'b11,
                 data: exec_result.data,
                 csrData: isValid(x.dInst.csr) ? Valid (exec_result.csrData) : tagged Invalid,
+                // The above case will never be valid due to assertions above, but the below one will be in the case of CJALR.
+                // This means that we will have instructions that both write SCR registers and also get mispredictions, unlike
+                // the CSR file.  Given the assertions above, this seems dangerous...
+                scrData: isValid(x.dInst.scr) ? Valid (exec_result.scrData) : tagged Invalid,
+                capException: isValid(exec_result.capException) ? (Valid (exec_result.capException.Valid.cheri_exc_code)) : Invalid,
 `ifdef RVFI
                 traceBundle: ExtraTraceBundle{
                     regWriteData: getAddr(exec_result.data),
@@ -347,6 +354,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
             x.tag,
             x.data,
             x.csrData,
+            x.scrData,
             x.controlFlow,
             x.capException,
             cast(inIfc.scaprf_rd(SCR_PCC))

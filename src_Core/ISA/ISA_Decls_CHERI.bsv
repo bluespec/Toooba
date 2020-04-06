@@ -65,7 +65,7 @@ typedef enum {
 typedef struct {
     Bit #(6) cheri_exc_reg;
     CHERIException cheri_exc_code;
-} CSR_XCapCause deriving(Bits);
+} CSR_XCapCause deriving(Bits, FShow);
 
 function Bit#(64) xccsr_to_word(CSR_XCapCause xccsr);
     return zeroExtend({xccsr.cheri_exc_reg, pack(xccsr.cheri_exc_code), 3'b0, 1'b1, 1'b1});
