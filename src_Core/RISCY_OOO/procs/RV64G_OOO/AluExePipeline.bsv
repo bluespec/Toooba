@@ -88,6 +88,7 @@ typedef struct {
     CapPipe data; // alu compute result
     Maybe#(Data) csrData; // data to write CSR file
     ControlFlow controlFlow;
+    Maybe#(CapException) capException;
     // speculation
     Maybe#(SpecTag) spec_tag;
 `ifdef RVFI
@@ -154,7 +155,7 @@ interface AluExeInput;
         CapPipe dst_data,
         Maybe#(Data) csrData,
         ControlFlow cf,
-        Maybe#(Exception) cause,
+        Maybe#(CapException) capCause,
         CapPipe pcc
 `ifdef RVFI
         , ExtraTraceBundle tb
@@ -347,7 +348,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
             x.data,
             x.csrData,
             x.controlFlow,
-            tagged Invalid,
+            x.capException,
             cast(inIfc.scaprf_rd(SCR_PCC))
 `ifdef RVFI
             , x.traceBundle
@@ -355,6 +356,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
         );
 
         // handle spec tags for branch predictions
+        // TODO what happens here if we trap?
         (* split *)
         if (x.controlFlow.mispredict) (* nosplit *) begin
             // wrong branch predictin, we must have spec tag

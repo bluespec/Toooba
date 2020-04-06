@@ -28,6 +28,48 @@ import ProcTypes::*;
 import Vector::*;
 import CHERICap::*;
 import CHERICC_Fat::*;
+import ISA_Decls_CHERI::*;
+
+(* noinline *)
+function Maybe#(CapException) capChecks(CapPipe a, CapPipe b, CapChecks toCheck);
+    // TODO plumb register indices here
+    Maybe#(CapException) result = Invalid;
+    if      (toCheck.src1_tag                 && !isValidCap(a))
+        result =  Valid (CapException {excCode: TagViolation});
+    else if (toCheck.src2_tag                 && !isValidCap(b))
+        result =  Valid (CapException {excCode: TagViolation});
+    else if (toCheck.src1_sealed_with_type    && getKind(a) != SEALED_WITH_TYPE)
+        result =  Valid (CapException {excCode: SealViolation});
+    else if (toCheck.src1_unsealed            && isValidCap(a) && isSealed(a))
+        result =  Valid (CapException {excCode: SealViolation});
+    else if (toCheck.src2_unsealed            && isValidCap(b) && isSealed(b))
+        result =  Valid (CapException {excCode: SealViolation});
+    else if (toCheck.src1_sealed              && isValidCap(a) && !isSealed(a))
+        result =  Valid (CapException {excCode: SealViolation});
+    else if (toCheck.src2_sealed              && isValidCap(b) && !isSealed(b))
+        result =  Valid (CapException {excCode: SealViolation});
+    else if (toCheck.src1_src2_types_match    && getType(a) != getType(b))
+        result =  Valid (CapException {excCode: TypeViolation});
+    else if (toCheck.src1_permit_ccall        && !getHardPerms(a).permitCCall)
+        result =  Valid (CapException {excCode: PermitCCallViolation});
+    else if (toCheck.src2_permit_ccall        && !getHardPerms(b).permitCCall)
+        result =  Valid (CapException {excCode: PermitCCallViolation});
+    else if (toCheck.src1_permit_x            && !getHardPerms(a).permitExecute)
+        result =  Valid (CapException {excCode: PermitXViolation});
+    else if (toCheck.src2_no_permit_x         && getHardPerms(b).permitExecute)
+        result =  Valid (CapException {excCode: PermitXViolation});
+    else if (toCheck.src2_permit_unseal       && !getHardPerms(b).permitUnseal)
+        result =  Valid (CapException {excCode: PermitUnsealViolation});
+    else if (toCheck.src2_permit_seal         && !getHardPerms(b).permitSeal)
+        result =  Valid (CapException {excCode: PermitSealViolation});
+    else if (toCheck.src2_points_to_src1_type && getAddr(b) != zeroExtend(getType(a)))
+        result =  Valid (CapException {excCode: TypeViolation});
+    else if (toCheck.src2_addr_valid_type     && !validAsType(b, truncate(getAddr(b))))
+        result =  Valid (CapException {excCode: LengthViolation});
+    else if (toCheck.src2_perm_subset_src1    && (getPerms(a) & getPerms(b)) != getPerms(b))
+        result =  Valid (CapException {excCode: SoftwarePermViolation});
+    return result;
+endfunction
 
 (* noinline *)
 function Data alu(Data a, Data b, AluFunc func);
@@ -58,7 +100,7 @@ endfunction
 (* noinline *)
 function CapPipe capModify(CapPipe a, CapPipe b, CapModifyFunc func);
     CapPipe res = (case(func) matches
-            tagged ModifyOffset .offsetOp:
+            tagged ModifyOffset .offsetOp :
                 modifyOffset(a, getAddr(b), offsetOp == IncOffset).value;
             tagged SetBounds .exact       :
                 setBounds(a, getAddr(b)).value;
@@ -178,9 +220,9 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, A
     AluFunc alu_f = dInst.execFunc matches tagged Alu .alu_f ? alu_f : Add;
     Data alu_result = alu(getAddr(rVal1), getAddr(aluVal2), alu_f);
 
-    // Pass capabilities into these functions when they are passed in.
     Data inspect_result = capInspect(rVal1, aluVal2, dInst.execFunc.CapInspect);
     CapPipe modify_result = capModify(rVal1, aluVal2, dInst.execFunc.CapModify);
+    Maybe#(CapException) capException = capChecks(rVal1, aluVal2, dInst.capChecks); // TODO use this to throw exceptions
 
     // Default branch function is not taken
     BrFunc br_f = dInst.execFunc matches tagged Br .br_f ? br_f : NT;
@@ -205,7 +247,7 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, A
             default             : nullWithAddr(cf.nextPc);
         endcase);
 
-    return ExecResult{data: data, csrData: csr_data, addr: addr, controlFlow: cf};
+    return ExecResult{data: data, csrData: csr_data, addr: addr, controlFlow: cf, capException: capException};
 endfunction
 
 (* noinline *)

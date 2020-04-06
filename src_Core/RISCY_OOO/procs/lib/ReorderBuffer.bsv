@@ -114,7 +114,7 @@ interface Row_setExecuted_doFinishAlu;
         CapPipe dst_data,
         Maybe#(Data) csrData,
         ControlFlow cf,
-        Maybe#(Exception) cause,
+        Maybe#(CapException) cause,
         CapPipe pcc
 `ifdef RVFI
         , ExtraTraceBundle tb
@@ -285,7 +285,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
                 CapPipe dst_data,
                 Maybe#(Data) csrData,
                 ControlFlow cf,
-                Maybe#(Exception) cause,
+                Maybe#(CapException) cause,
                 CapPipe pcc
 `ifdef RVFI
                 , ExtraTraceBundle tb
@@ -309,7 +309,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
                     trap[trap_finishAlu_port(i)] <= Valid (tagged Exception CHERIFault);
                     tval[trap_finishAlu_port(i)] <= tval[trap_finishAlu_port(i)];
                 end else if (cause matches tagged Valid .exp) begin
-                    trap[trap_finishAlu_port(i)] <= Valid (tagged Exception exp);
+                    trap[trap_finishAlu_port(i)] <= Valid (tagged Exception CHERIFault); // TODO propagate CHERI cause
                     tval[trap_finishAlu_port(i)] <= tval[trap_finishAlu_port(i)];
                 end
 `ifdef RVFI
@@ -587,7 +587,7 @@ interface ROB_setExecuted_doFinishAlu;
                       CapPipe dst_data,
                       Maybe#(Data) csrData,
                       ControlFlow cf,
-                      Maybe#(Exception) cause,
+                      Maybe#(CapException) cause,
                       CapPipe pcc
 `ifdef RVFI
                       , ExtraTraceBundle tb
@@ -1135,7 +1135,7 @@ module mkSupReorderBuffer#(
                 CapPipe dst_data,
                 Maybe#(Data) csrData,
                 ControlFlow cf,
-                Maybe#(Exception) cause,
+                Maybe#(CapException) cause,
                 CapPipe pcc
 `ifdef RVFI
                 , ExtraTraceBundle tb

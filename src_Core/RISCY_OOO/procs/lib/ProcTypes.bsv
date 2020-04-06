@@ -33,6 +33,7 @@ import CHERICC_Fat::*;
 `ifdef RVFI_DII
 import RVFI_DII_Types::*;
 `endif
+import ISA_Decls_CHERI::*;
 
 typedef `NUM_CORES CoreNum;
 typedef Bit#(TLog#(CoreNum)) CoreId;
@@ -678,6 +679,11 @@ typedef struct {
 } CapChecks deriving(Bits, Eq, FShow);
 
 typedef struct {
+   CHERIException excCode;
+// TODO GPR or SCR index of cause;
+} CapException deriving(Bits, FShow);
+
+typedef struct {
     IType           iType;
     ExecFunc        execFunc;
     CapChecks       capChecks;
@@ -694,6 +700,7 @@ typedef struct {
     Data        csrData;
     CapPipe     addr;
     ControlFlow controlFlow;
+    Maybe#(CapException) capException;
 } ExecResult deriving(Bits, FShow);
 
 // MMIO

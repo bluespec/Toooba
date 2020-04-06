@@ -42,10 +42,11 @@ typedef enum {
     CallTrap                 = 5'd5,
     ReturnTrap               = 5'd6,
     StackUnderflow           = 5'd7,
-    MMUStoreCapProhibit      = 5'd8,
-    RepresentViolation       = 5'd9,
-    UnalignedBase            = 5'd10,
-    // 5'd11 - 5'd15 reserved
+    SoftwarePermViolation    = 5'd8,
+    MMUStoreCapProhibit      = 5'd9,
+    RepresentViolation       = 5'd10,
+    UnalignedBase            = 5'd11,
+    // 5'd12 - 5'd15 reserved
     GlobalViolation          = 5'd16,
     PermitXViolation         = 5'd17,
     PermitRViolation         = 5'd18,
