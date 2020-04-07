@@ -15,3 +15,5 @@ Tests/Logs
 AA_*
 symbol_table.txt
 vpi_wrapper_*
+builds/RV*/build_dir
+builds/RV*/Verilog_RTL
