@@ -207,12 +207,14 @@ function ControlFlow getControlFlow(DecodedInst dInst, Data rVal1, Data rVal2, A
 endfunction
 
 (* noinline *)
-function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, Addr pc, Addr ppc, Bit #(32) orig_inst);
+function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, CapPipe pcc, Addr ppc, Bit #(32) orig_inst);
     // just data, addr, and control flow
+    Addr pc = getAddr(pcc);
     CapPipe data = nullCap;
     Data csr_data = 0;
     CapPipe addr = nullCap;
-    ControlFlow cf = ControlFlow{pc: pc, nextPc: 0, taken: False, newPcc: dInst.capChecks.src1_tag, mispredict: False};
+    Bool cjalr = (dInst.iType == Jr) && dInst.capChecks.src1_tag;
+    ControlFlow cf = ControlFlow{pc: pc, nextPc: 0, taken: False, newPcc: cjalr, mispredict: False};
 
     CapPipe aluVal2 = rVal2;
     if (getDInstImm(dInst) matches tagged Valid .imm) aluVal2 = nullWithAddr(imm); //isValid(dInst.imm) ? fromMaybe(?, dInst.imm) : rVal2;
@@ -231,10 +233,11 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, A
     cf.mispredict = cf.nextPc != ppc;
 
     Addr fallthrough_incr = ((orig_inst [1:0] == 2'b11) ? 4 : 2);
+    CapPipe link_pcc = setAddrUnsafe(pcc, getAddr(pcc) + fallthrough_incr);
 
     data = (case (dInst.iType)
             St, Sc, Amo : rVal2;
-            J, Jr       : nullWithAddr(pc + fallthrough_incr); // could be computed with alu
+            J, Jr       : (cjalr ? link_pcc : nullWithAddr(getAddr(link_pcc))); // could be computed with alu
             Auipc       : nullWithAddr(pc + fromMaybe(?, getDInstImm(dInst))); // could be computed with alu
             Csr         : rVal1;
             CapInspect  : nullWithAddr(inspect_result);
