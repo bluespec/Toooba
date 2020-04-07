@@ -28,7 +28,7 @@ import CacheUtils::*;
 import CCTypes::*;
 import Types::*;
 import FShow::*;
-import Fifo::*;
+import Fifos::*;
 import Ehr::*;
 
 typedef struct {

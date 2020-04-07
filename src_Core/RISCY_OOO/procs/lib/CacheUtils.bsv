@@ -29,7 +29,7 @@ import GetPut::*;
 import ClientServer::*;
 import Connectable::*;
 import Vector::*;
-import Fifo::*;
+import Fifos::*;
 import Ehr::*;
 import FIFO::*;
 import FIFOF::*;

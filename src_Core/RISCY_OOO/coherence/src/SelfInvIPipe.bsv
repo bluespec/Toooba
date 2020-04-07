@@ -26,7 +26,7 @@ import ConfigReg::*;
 import Vector::*;
 import FShow::*;
 import Types::*;
-import Fifo::*;
+import Fifos::*;
 import CCTypes::*;
 import CCPipe::*;
 import RWBramCore::*;

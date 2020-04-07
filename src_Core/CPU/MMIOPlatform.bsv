@@ -46,7 +46,7 @@ import GetPut_Aux :: *;
 // ----------------
 // From MIT RISCY-OOO
 
-import Fifo::*;
+import Fifos::*;
 import Types::*;
 import ProcTypes::*;
 import CCTypes::*;

@@ -33,7 +33,7 @@ import CacheUtils::*;
 import Types::*;
 import ProcTypes::*;
 import Performance::*;
-import Fifo::*;
+import Fifos::*;
 import CCTypes::*;
 import L1Pipe::*;
 import L1CRqMshr::*;

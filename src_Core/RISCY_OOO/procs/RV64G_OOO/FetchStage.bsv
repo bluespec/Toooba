@@ -31,7 +31,7 @@ import ClientServer::*;
 import Connectable::*;
 import Decode::*;
 import Ehr::*;
-import Fifo::*;
+import Fifos::*;
 import GetPut::*;
 import MemoryTypes::*;
 import Types::*;

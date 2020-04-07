@@ -27,7 +27,7 @@ import BuildVector::*;
 import GetPut::*;
 import ClientServer::*;
 import Cntrs::*;
-import Fifo::*;
+import Fifos::*;
 import Types::*;
 import ProcTypes::*;
 import MemoryTypes::*;

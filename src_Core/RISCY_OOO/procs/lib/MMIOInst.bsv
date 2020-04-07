@@ -23,7 +23,7 @@
 
 import Vector::*;
 import ConfigReg::*;
-import Fifo::*;
+import Fifos::*;
 import Types::*;
 import ProcTypes::*;
 import CCTypes::*;

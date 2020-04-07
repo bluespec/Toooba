@@ -31,7 +31,7 @@ import TlbTypes::*;
 import Performance::*;
 import FullAssocTlb::*;
 import ConfigReg::*;
-import Fifo::*;
+import Fifos::*;
 import Cntrs::*;
 import SafeCounter::*;
 import CacheUtils::*;

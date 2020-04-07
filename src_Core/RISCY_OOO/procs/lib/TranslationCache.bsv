@@ -24,7 +24,7 @@
 import Vector::*;
 import Assert::*;
 import Ehr::*;
-import Fifo::*;
+import Fifos::*;
 import Types::*;
 import ProcTypes::*;
 import TlbTypes::*;
