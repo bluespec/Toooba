@@ -226,6 +226,11 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
     CapPipe modify_result = capModify(rVal1, aluVal2, dInst.execFunc.CapModify);
     Maybe#(CapException) capException = capChecks(rVal1, aluVal2, dInst.capChecks); // TODO use this to throw exceptions
 
+    CapPipe cap_alu_result = case (dInst.execFunc) matches tagged CapInspect .x: nullWithAddr(inspect_result);
+                                                           tagged CapModify .x: modify_result;
+                                                           default: nullWithAddr(alu_result);
+                             endcase;
+
     // Default branch function is not taken
     BrFunc br_f = dInst.execFunc matches tagged Br .br_f ? br_f : NT;
     cf.taken = aluBr(getAddr(rVal1), getAddr(rVal2), br_f);
@@ -240,9 +245,7 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
             J, Jr       : (cjalr ? link_pcc : nullWithAddr(getAddr(link_pcc))); // could be computed with alu
             Auipc       : nullWithAddr(pc + fromMaybe(?, getDInstImm(dInst))); // could be computed with alu
             Csr         : rVal1;
-            CapInspect  : nullWithAddr(inspect_result);
-            CapModify   : modify_result;
-            default     : nullWithAddr(alu_result);
+            default     : cap_alu_result;
         endcase);
     csr_data = alu_result;
     addr = (case (dInst.iType)

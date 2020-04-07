@@ -392,7 +392,6 @@ typedef enum {
     FenceI, SFence,
     Ecall, Ebreak,
     Sret, Mret, // do not support URET
-    CapInspect, CapModify,
     Interrupt // we may turn an inst to an interrupt in implementation
 } IType deriving(Bits, Eq, FShow);
 
