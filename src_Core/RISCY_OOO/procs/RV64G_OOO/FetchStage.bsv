@@ -272,8 +272,8 @@ function ActionValue #(Tuple4 #(SupCntX2,
 								     orig_inst: 0,
 								     inst: 0});
       Maybe #(Tuple3 #(Addr, Bit #(16), Bool)) next_straddle = tagged Invalid;
-      // Start parse at parcel 0/1 depending on pc lsbs and pending straddle
-      SupCntX2 j  = ((pc_start [1:0] == 2'b00 || isValid(pending_straddle)) ? 0 : 1);
+      // Start parse at parcel 0/1 depending on pc lsbs.
+      SupCntX2 j  = (pc_start [1:0] == 2'b00 ? 0 : 1);
       Addr     pc = pc_start;
       Integer n_items = 0;
       for (Integer i = 0; i < valueOf (SupSizeX2); i = i + 1) begin
@@ -289,9 +289,9 @@ function ActionValue #(Tuple4 #(SupCntX2,
 	       end
                pc        = s_pc;
 	       inst_kind = Inst_32b;
-	       orig_inst = { v_x16[0], s_lsbs };
+	       orig_inst = { v_x16[j], s_lsbs };
 	       inst      = orig_inst;
-	       j         = 1;
+	       j         = j + 1;
 	       next_pc   = s_pc + 4;
 	       n_items   = 1;
 	    end
