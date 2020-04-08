@@ -390,7 +390,7 @@ module mkFetchStage(FetchStage);
    Ehr #(2, Maybe #(Tuple3 #(Addr, Bit #(16), Bool))) ehr_pending_straddle <- mkEhr(tagged Invalid);
    // Reg to hold extra instructions from Fetch3 to send to decode the next cycle
    Reg #(Vector #(SupSizeX2S1, Inst_Item)) rg_pending_decode <- mkReg(replicate(defaultValue));
-   Reg #(SupCntX2S1) rg_pending_n_items <- mkRegU;
+   Reg #(SupCntX2S1) rg_pending_n_items <- mkReg(0);
    Reg #(Fetch3ToDecode) rg_pending_f32d <- mkRegU;
 
     // Pipeline Stage FIFOs
