@@ -125,7 +125,6 @@ typedef struct {
 } Fetch2ToFetch3 deriving(Bits, Eq, FShow);
 
 typedef struct {
-    Addr pc;
     Addr pred_next_pc;
     Bool mispred_first_half;
     Maybe#(Exception) cause;
@@ -692,7 +691,6 @@ module mkFetchStage(FetchStage);
 
             if (pending_n_items == 0) begin
                 out = Fetch3ToDecode {
-                    pc: fetch3In.pc,
                     pred_next_pc: pred_next_pc,
                     mispred_first_half: mispred_first_half,
                     cause: fetch3In.cause,
@@ -742,7 +740,6 @@ module mkFetchStage(FetchStage);
                     next_pending_n_items = truncate(n_items - fromInteger(valueOf(SupSize)));
                     rg_pending_decode <= drop(v_items);
                     rg_pending_f32d <= Fetch3ToDecode {
-                        pc: v_items[valueOf(SupSize)].pc,
                         pred_next_pc: out.pred_next_pc,
                         mispred_first_half: False,
                         cause: tagged Invalid,
