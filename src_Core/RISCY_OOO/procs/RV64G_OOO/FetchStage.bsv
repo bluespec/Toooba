@@ -125,7 +125,6 @@ typedef struct {
 } Fetch2ToFetch3 deriving(Bits, Eq, FShow);
 
 typedef struct {
-    Addr pc;
     Addr pred_next_pc;
     Bool mispred_first_half;
     Maybe#(Exception) cause;
@@ -273,8 +272,8 @@ function ActionValue #(Tuple4 #(SupCntX2,
 								     orig_inst: 0,
 								     inst: 0});
       Maybe #(Tuple3 #(Addr, Bit #(16), Bool)) next_straddle = tagged Invalid;
-      // Start parse at parcel 0/1 depending on pc lsbs and pending straddle
-      SupCntX2 j  = ((pc_start [1:0] == 2'b00 || isValid(pending_straddle)) ? 0 : 1);
+      // Start parse at parcel 0/1 depending on pc lsbs.
+      SupCntX2 j  = (pc_start [1:0] == 2'b00 ? 0 : 1);
       Addr     pc = pc_start;
       Integer n_items = 0;
       for (Integer i = 0; i < valueOf (SupSizeX2); i = i + 1) begin
@@ -290,9 +289,9 @@ function ActionValue #(Tuple4 #(SupCntX2,
 	       end
                pc        = s_pc;
 	       inst_kind = Inst_32b;
-	       orig_inst = { v_x16[0], s_lsbs };
+	       orig_inst = { v_x16[j], s_lsbs };
 	       inst      = orig_inst;
-	       j         = 1;
+	       j         = j + 1;
 	       next_pc   = s_pc + 4;
 	       n_items   = 1;
 	    end
@@ -390,7 +389,7 @@ module mkFetchStage(FetchStage);
    Ehr #(2, Maybe #(Tuple3 #(Addr, Bit #(16), Bool))) ehr_pending_straddle <- mkEhr(tagged Invalid);
    // Reg to hold extra instructions from Fetch3 to send to decode the next cycle
    Reg #(Vector #(SupSizeX2S1, Inst_Item)) rg_pending_decode <- mkReg(replicate(defaultValue));
-   Reg #(SupCntX2S1) rg_pending_n_items <- mkRegU;
+   Reg #(SupCntX2S1) rg_pending_n_items <- mkReg(0);
    Reg #(Fetch3ToDecode) rg_pending_f32d <- mkRegU;
 
     // Pipeline Stage FIFOs
@@ -692,7 +691,6 @@ module mkFetchStage(FetchStage);
 
             if (pending_n_items == 0) begin
                 out = Fetch3ToDecode {
-                    pc: fetch3In.pc,
                     pred_next_pc: pred_next_pc,
                     mispred_first_half: mispred_first_half,
                     cause: fetch3In.cause,
@@ -742,7 +740,6 @@ module mkFetchStage(FetchStage);
                     next_pending_n_items = truncate(n_items - fromInteger(valueOf(SupSize)));
                     rg_pending_decode <= drop(v_items);
                     rg_pending_f32d <= Fetch3ToDecode {
-                        pc: v_items[valueOf(SupSize)].pc,
                         pred_next_pc: out.pred_next_pc,
                         mispred_first_half: False,
                         cause: tagged Invalid,
