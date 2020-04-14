@@ -823,21 +823,22 @@ function DecodeResult decode(Instruction inst);
                         f7_cap_TwoSrc: begin
                             case (rd)
                                 rd_cap_CCall: begin
-                                    // TODO
-                                    // dInst.capChecks.src1_tag = True;
-                                    // dInst.capChecks.src2_tag = True;
-                                    // dInst.capChecks.src1_sealed = True;
-                                    // dInst.capChecks.src2_sealed = True;
-                                    // dInst.capChecks.src1_src2_types_match = True;
-                                    // dInst.capChecks.src1_permit_x = True;
-                                    // dInst.capChecks.src2_no_permit_x = True;
-                                    // dInst.capChecks.src1_permit_ccall = True;
-                                    // dInst.capChecks.src2_permit_ccall = True;
+                                    dInst.capChecks.src1_tag = True;
+                                    dInst.capChecks.src2_tag = True;
+                                    dInst.capChecks.src1_sealed = True;
+                                    dInst.capChecks.src2_sealed = True;
+                                    dInst.capChecks.src1_src2_types_match = True;
+                                    dInst.capChecks.src1_permit_x = True;
+                                    dInst.capChecks.src2_no_permit_x = True;
+                                    dInst.capChecks.src1_permit_ccall = True;
+                                    dInst.capChecks.src2_permit_ccall = True;
 
-                                    // regs.rd = Invalid;
-                                    // regs.src1 = Valid(tagged Gpr rs1);
-                                    // regs.src2 = Valid(tagged Gpr rs2);
-                                    // dInst.imm = Invalid;
+                                    dInst.iType = Jr;
+                                    dInst.execFunc = tagged Br AT;
+                                    regs.dst = Valid(tagged Gpr 31);
+                                    regs.src1 = Valid(tagged Gpr rs1);
+                                    regs.src2 = Valid(tagged Gpr rs2);
+                                    dInst.imm = Invalid;
                                 end
                                 default: begin
                                     illegalInst = True;
@@ -857,7 +858,7 @@ function DecodeResult decode(Instruction inst);
                             regs.src1 = Valid(tagged Gpr rs1);
                             regs.src2 = Valid(tagged Gpr rs2);
                             dInst.imm = Invalid;
-                            dInst.execFunc = CapModify (Unseal);
+                            dInst.execFunc = CapModify (Unseal (Src1));
                         end
                         f7_cap_CTestSubset: begin
                             dInst.iType = Alu;
@@ -1036,16 +1037,16 @@ function DecodeResult decode(Instruction inst);
                                     dInst.execFunc = CapInspect (GetPerm);
                                 end
                                 f5rs2_cap_CJALR: begin
+                                    dInst.capChecks.src1_tag = True;
+                                    dInst.capChecks.src1_permit_x = True;
+                                    dInst.capChecks.src1_unsealed = True;
+
                                     dInst.iType = Jr;
+                                    dInst.execFunc = tagged Br AT;
                                     regs.dst  = Valid(tagged Gpr rd);
                                     regs.src1 = Valid(tagged Gpr rs1);
                                     regs.src2 = Invalid;
                                     dInst.imm = Invalid;
-                                    //dInst.scr = tagged Valid SCR_PCC;
-                                    dInst.execFunc = tagged Br AT;
-                                    dInst.capChecks.src1_tag = True;
-                                    dInst.capChecks.src1_permit_x = True;
-                                    dInst.capChecks.src1_unsealed = True;
                                 end
                                 f5rs2_cap_CGetType: begin
                                     dInst.iType = Alu;

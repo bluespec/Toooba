@@ -224,6 +224,13 @@ function Opcode unpackOpcode(Bit#(7) x);
     endcase);
 endfunction
 
+/* If Bluespec never allows illegal values of sparse enumerated types, this function should replace the one above:
+function Opcode unpackOpcode(Bit#(7) x);
+  Opcode test = unpack(x);
+  if (pack(test) != x) return Invalid;
+  else return test;
+endfunction
+*/
 typedef enum {
     // user standard CSRs
     CSRfflags     = 12'h001,
@@ -420,13 +427,17 @@ typedef enum {
     Src2Type, Src2Addr
 } AddrSource deriving(Bits, Eq, FShow);
 
+typedef enum {
+    Src1, Src2
+} SrcSelector deriving(Bits, Eq, FShow);
+
 typedef union tagged {
     ModifyOffsetFunc ModifyOffset;
     Bool SetBounds;
     void SpecialRW;
     AddrSource SetAddr;
     void Seal;
-    void Unseal;
+    SrcSelector Unseal;
     void AndPerm;
     void SetFlags;
     void BuildCap;

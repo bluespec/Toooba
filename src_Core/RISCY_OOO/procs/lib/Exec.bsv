@@ -110,8 +110,8 @@ function CapPipe capModify(CapPipe a, CapPipe b, CapModifyFunc func);
                 setAddr(a, addrSource == Src2Type ? (isSealed(b) ? zeroExtend(getType(b)) : -1) : getAddr(b)).value;
             tagged Seal                   :
                 setType(a, truncate(getAddr(b)));
-            tagged Unseal                 :
-                setType(a, -1);
+            tagged Unseal .src            :
+                setType(((src == Src1) ? a:b), -1);
             tagged AndPerm                :
                 setPerms(a, pack(getPerms(a)) & truncate(getAddr(b)));
             tagged SetFlags               :
@@ -213,7 +213,13 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
     CapPipe data = nullCap;
     Data csr_data = 0;
     CapPipe addr = nullCap;
-    Bool cjalr = (dInst.iType == Jr) && dInst.capChecks.src1_tag;
+    Bool cjalr = False;
+    Bool ccall = False;
+    if (dInst.iType == Jr) begin
+        if (dInst.capChecks.src1_src2_types_match) ccall = True;
+        else if (dInst.capChecks.src1_tag) cjalr = True;
+    end
+
     ControlFlow cf = ControlFlow{pc: pc, nextPc: 0, taken: False, newPcc: cjalr, mispredict: False};
 
     CapPipe aluVal2 = rVal2;
@@ -223,11 +229,13 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
     Data alu_result = alu(getAddr(rVal1), getAddr(aluVal2), alu_f);
 
     Data inspect_result = capInspect(rVal1, aluVal2, dInst.execFunc.CapInspect);
-    CapPipe modify_result = capModify(rVal1, aluVal2, dInst.execFunc.CapModify);
+    CapModifyFunc modFunc = ccall ? (Unseal (Src1)):dInst.execFunc.CapModify;
+    CapPipe modify_result = capModify(rVal1, aluVal2, modFunc);
     Maybe#(CapException) capException = capChecks(rVal1, aluVal2, dInst.capChecks); // TODO use this to throw exceptions
 
     CapPipe cap_alu_result = case (dInst.execFunc) matches tagged CapInspect .x: nullWithAddr(inspect_result);
                                                            tagged CapModify .x: modify_result;
+                                                           tagged Br .x: modify_result;
                                                            default: nullWithAddr(alu_result);
                              endcase;
 
@@ -240,9 +248,14 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
     Addr fallthrough_incr = ((orig_inst [1:0] == 2'b11) ? 4 : 2);
     CapPipe link_pcc = setAddrUnsafe(pcc, getAddr(pcc) + fallthrough_incr);
 
-    data = (case (dInst.iType)
-            St, Sc, Amo : rVal2;
-            J, Jr       : (cjalr ? link_pcc : nullWithAddr(getAddr(link_pcc))); // could be computed with alu
+    data = (case (dInst.iType) matches
+            St          : rVal2;
+            Sc          : rVal2;
+            Amo         : rVal2;
+            J           : nullWithAddr(getAddr(link_pcc));
+            Jr &&& (ccall): cap_alu_result; // Depending on defaults falling through!
+            Jr &&& (cjalr): link_pcc;
+            Jr          : nullWithAddr(getAddr(link_pcc));
             Auipc       : nullWithAddr(pc + fromMaybe(?, getDInstImm(dInst))); // could be computed with alu
             Csr         : rVal1;
             default     : cap_alu_result;
