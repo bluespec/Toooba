@@ -729,13 +729,13 @@ function DecodeResult decode(Instruction inst);
         OpCHERI: begin
             case (funct3)
                 f3_cap_CIncOffsetImmediate: begin
-                    // TODO
-                    // dInst.capChecks.src1_unsealed = True;
+                    dInst.capChecks.src1_unsealed = True;
 
-                    // dInst.iType = CapModify;
-                    // regs.dst = Valid(tagged Gpr rd);
-                    // regs.src1 = Valid(tagged Gpr rs1);
-                    // dInst.imm = Valid (immI);
+                    dInst.iType = Alu;
+                    regs.dst = Valid(tagged Gpr rd);
+                    regs.src1 = Valid(tagged Gpr rs1);
+                    dInst.imm = Valid(immI);
+                    dInst.execFunc = CapModify (ModifyOffset (IncOffset));
                 end
                 f3_cap_CSetBoundsImmediate: begin
                     // TODO
