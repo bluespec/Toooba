@@ -738,6 +738,7 @@ function DecodeResult decode(Instruction inst);
                     dInst.execFunc = CapModify (ModifyOffset (IncOffset));
                 end
                 f3_cap_CSetBoundsImmediate: begin
+                    illegalInst = True;
                     // TODO
                     // dInst.capChecks.src1_tag = True;
                     // dInst.capChecks.src1_unsealed = True;
@@ -753,6 +754,7 @@ function DecodeResult decode(Instruction inst);
                             // TODO
                         end
                         f7_cap_CSetBounds: begin
+                            illegalInst = True;
                             // TODO
                             // dInst.capChecks.src1_tag = True;
                             // dInst.capChecks.src1_unsealed = True;
@@ -763,6 +765,7 @@ function DecodeResult decode(Instruction inst);
                             // dInst.imm = Invalid;
                         end
                         f7_cap_CSetBoundsExact: begin
+                            illegalInst = True;
                             // TODO
                             // dInst.capChecks.src1_tag = True;
                             // dInst.capChecks.src1_unsealed = True;
@@ -818,6 +821,7 @@ function DecodeResult decode(Instruction inst);
                             dInst.execFunc = CapModify (Seal);
                         end
                         f7_cap_CCSeal: begin
+                            illegalInst = True;
                             // TODO problematic because checks depend on register value
                         end
                         f7_cap_TwoSrc: begin
@@ -861,6 +865,8 @@ function DecodeResult decode(Instruction inst);
                             dInst.execFunc = CapModify (Unseal (Src1));
                         end
                         f7_cap_CTestSubset: begin
+                            illegalInst = True;
+                            // TODO
                             dInst.iType = Alu;
                             regs.dst = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs1);
@@ -912,6 +918,7 @@ function DecodeResult decode(Instruction inst);
                             dInst.execFunc = CapInspect (ToPtr);
                         end
                         f7_cap_CFromPtr: begin
+                            illegalInst = True;
                             //TODO these should only be checked when b non-zero
                             dInst.capChecks.src1_tag = True;
                             dInst.capChecks.src1_unsealed = True;
@@ -934,6 +941,8 @@ function DecodeResult decode(Instruction inst);
                             dInst.execFunc = Alu (Sub);
                         end
                         f7_cap_CBuildCap: begin
+                            illegalInst = True;
+                            // TODO
                             dInst.capChecks.src1_tag = True;
                             dInst.capChecks.src1_unsealed = True;
                             dInst.capChecks.src2_perm_subset_src1 = True;
@@ -947,9 +956,11 @@ function DecodeResult decode(Instruction inst);
                             dInst.execFunc = CapModify (BuildCap);
                         end
                         f7_cap_Loads: begin
+                            illegalInst = True;
                             //TODO
                         end
                         f7_cap_Stores: begin
+                            illegalInst = True;
                             //TODO
                         end
                         f7_cap_TwoOp: begin
@@ -983,12 +994,14 @@ function DecodeResult decode(Instruction inst);
                                     dInst.execFunc = CapInspect (GetSealed);
                                 end
                                 f5rs2_cap_CRRL: begin
+                                    illegalInst = True;
                                     // TODO
                                     // regs.dst = Valid(tagged Gpr rd);
                                     // regs.src1 = Valid(tagged Gpr rs1);
                                     // dInst.imm = Invalid;
                                 end
                                 f5rs2_cap_CRAM: begin
+                                    illegalInst = True;
                                     // TODO
                                     // regs.dst = Valid(tagged Gpr rd);
                                     // regs.src1 = Valid(tagged Gpr rs1);
