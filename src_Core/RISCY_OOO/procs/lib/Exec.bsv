@@ -179,9 +179,10 @@ function Bool aluBr(Data a, Data b, BrFunc brFunc);
 endfunction
 
 (* noinline *)
-function Addr brAddrCalc(Addr pc, Data val, IType iType, Data imm, Bool taken, Bit #(32) orig_inst);
+function Addr brAddrCalc(Addr pc, Addr pccBase, Data val, IType iType, Data imm, Bool taken, Bit #(32) orig_inst, Bool cap);
     Addr fallthrough_incr = ((orig_inst [1:0] == 2'b11) ? 4 : 2);
     Addr pcPlusN = pc + fallthrough_incr;
+    if (!cap) val = pccBase + val;
     Addr targetAddr = (case (iType)
             J       : (pc + imm);
             Jr      : {(val + imm)[valueOf(AddrSz)-1:1], 1'b0};
@@ -190,7 +191,7 @@ function Addr brAddrCalc(Addr pc, Data val, IType iType, Data imm, Bool taken, B
         endcase);
     return targetAddr;
 endfunction
-
+/*
 (* noinline *)
 function ControlFlow getControlFlow(DecodedInst dInst, Data rVal1, Data rVal2, Addr pc, Addr ppc, Bit #(32) orig_inst);
     ControlFlow cf = unpack(0);
@@ -206,7 +207,7 @@ function ControlFlow getControlFlow(DecodedInst dInst, Data rVal1, Data rVal2, A
 
     return cf;
 endfunction
-
+*/
 (* noinline *)
 function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, CapPipe pcc, Addr ppc, Bit #(32) orig_inst);
     // just data, addr, and control flow
@@ -243,7 +244,7 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
     // Default branch function is not taken
     BrFunc br_f = dInst.execFunc matches tagged Br .br_f ? br_f : NT;
     cf.taken = aluBr(getAddr(rVal1), getAddr(rVal2), br_f);
-    cf.nextPc = brAddrCalc(pc, getAddr(rVal1), dInst.iType, fromMaybe(0,getDInstImm(dInst)), cf.taken, orig_inst);
+    cf.nextPc = brAddrCalc(pc, getBase(pcc), getAddr(rVal1), dInst.iType, fromMaybe(0,getDInstImm(dInst)), cf.taken, orig_inst, (ccall || cjalr));
     cf.mispredict = cf.nextPc != ppc;
 
     Addr fallthrough_incr = ((orig_inst [1:0] == 2'b11) ? 4 : 2);
@@ -256,7 +257,7 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
             J           : nullWithAddr(getAddr(link_pcc));
             Jr &&& (ccall): cap_alu_result; // Depending on defaults falling through!
             Jr &&& (cjalr): link_pcc;
-            Jr          : nullWithAddr(getAddr(link_pcc));
+            Jr          : nullWithAddr(getOffset(link_pcc));
             Auipc       : nullWithAddr(pc + fromMaybe(?, getDInstImm(dInst))); // could be computed with alu
             Csr         : rVal1;
             default     : cap_alu_result;
