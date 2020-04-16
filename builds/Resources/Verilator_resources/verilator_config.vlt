@@ -2,6 +2,12 @@
 
 // Flags for verilator
 
+// -msg is deprecated in 4.026 (Jan 2020) and replaced by -rule. Use -msg and
+// ignore deprecation warnings until we can rely on -rule support. We also rely
+// on -Wfuture-DEPRECATED since that warning category didn't even exist prior
+// to 4.026. For some reason this needs to be in a pragma comment rather than
+// in `verilator_config for -Wfuture-DEPRECATED to affect it.
+// verilator lint_off DEPRECATED
 `verilator_config
 lint_off -msg WIDTH
 lint_off -msg CASEINCOMPLETE
@@ -10,3 +16,4 @@ lint_off -msg INITIALDLY
 lint_off -msg UNSIGNED
 lint_off -msg CMPCONST
 `verilog
+// verilator lint_on DEPRECATED
