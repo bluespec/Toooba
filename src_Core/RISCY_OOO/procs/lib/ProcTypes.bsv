@@ -424,6 +424,10 @@ typedef enum {
 } SetBoundsFunc deriving(Bits, Eq, FShow);
 
 typedef enum {
+    TCC, EPCC, Normal
+} SpecialRWFunc deriving(Bits, Eq, FShow);
+
+typedef enum {
     Src2Type, Src2Addr
 } AddrSource deriving(Bits, Eq, FShow);
 
@@ -434,7 +438,7 @@ typedef enum {
 typedef union tagged {
     ModifyOffsetFunc ModifyOffset;
     SetBoundsFunc SetBounds;
-    void SpecialRW;
+    SpecialRWFunc SpecialRW;
     AddrSource SetAddr;
     void Seal;
     SrcSelector Unseal;

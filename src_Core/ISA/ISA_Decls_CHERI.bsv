@@ -98,8 +98,32 @@ typedef enum {
     SCR_MTCC      = 5'd28,
     SCR_MTDC      = 5'd29,
     SCR_MScratchC = 5'd30,
-    SCR_MEPCC     = 5'd31
-} SCR deriving(Bits, Eq, FShow);
+    SCR_MEPCC     = 5'd31,
+
+    // As with CSRs, SCR that catches all unimplemented SCRs
+    SCR_None      = 5'd10
+} SCR deriving(Bits, Eq, FShow, Bounded);
+
+function SCR unpackSCR(Bit#(5) x);
+    return (case(x)
+        pack(SCR'(SCR_PCC      )): (SCR_PCC      );
+        pack(SCR'(SCR_DDC      )): (SCR_DDC      );
+//      pack(SCR'(SCR_UTCC     )): (SCR_UTCC     );
+//      pack(SCR'(SCR_UTDC     )): (SCR_UTDC     );
+//      pack(SCR'(SCR_UScratchC)): (SCR_UScratchC);
+//      pack(SCR'(SCR_UEPCC    )): (SCR_UEPCC    );
+        pack(SCR'(SCR_STCC     )): (SCR_STCC     );
+        pack(SCR'(SCR_STDC     )): (SCR_STDC     );
+        pack(SCR'(SCR_SScratchC)): (SCR_SScratchC);
+        pack(SCR'(SCR_SEPCC    )): (SCR_SEPCC    );
+        pack(SCR'(SCR_MTCC     )): (SCR_MTCC     );
+        pack(SCR'(SCR_MTDC     )): (SCR_MTDC     );
+        pack(SCR'(SCR_MScratchC)): (SCR_MScratchC);
+        pack(SCR'(SCR_MEPCC    )): (SCR_MEPCC    );
+
+        default                  : (SCR_None     );
+    endcase);
+endfunction
 
 function CapPipe update_scr_via_csr (CapPipe old_scr, WordXL new_csr);
     let new_scr = setOffset(old_scr, new_csr);

@@ -256,6 +256,9 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
 
         // get rVal2 (check bypass)
         CapPipe rVal2 = nullCap;
+        if(x.dInst.scr matches tagged Valid .scr) begin
+            rVal2 = cast(inIfc.scaprf_rd(scr));
+        end
         if(x.regs.src2 matches tagged Valid .src2 &&& src2 != 0) begin
             rVal2 <- readRFBypass(src2, regsReady.src2, inIfc.rf_rd2(src2), bypassWire);
         end

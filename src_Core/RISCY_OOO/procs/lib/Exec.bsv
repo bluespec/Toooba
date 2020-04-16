@@ -116,8 +116,8 @@ function CapPipe capModify(CapPipe a, CapPipe b, CapModifyFunc func);
                 modifyOffset(a, getAddr(b), offsetOp == IncOffset).value;
             tagged SetBounds .boundsOp    :
                 setBoundsALU(a, getAddr(b), boundsOp);
-            //tagged SpecialRW              :
-            //    error("SpecialRW not yet implemented");
+            tagged SpecialRW .scrType     :
+                a; //TODO masking of various bits
             tagged SetAddr .addrSource    :
                 setAddr(a, addrSource == Src2Type ? (isSealed(b) ? zeroExtend(getType(b)) : -1) : getAddr(b)).value;
             tagged Seal                   :
@@ -277,7 +277,7 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
             Ld, St, Lr, Sc, Amo : nullWithAddr(alu_result);
             default             : nullWithAddr(cf.nextPc);
         endcase);
-    CapPipe scr_data = rVal1;
+    CapPipe scr_data = modify_result;
 
     return ExecResult{data: data, csrData: csr_data, scrData: scr_data, addr: addr, controlFlow: cf, capException: capException};
 endfunction

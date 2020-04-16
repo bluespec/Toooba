@@ -753,7 +753,21 @@ function DecodeResult decode(Instruction inst);
                 f3_cap_ThreeOp: begin
                     case (funct7)
                         f7_cap_CSpecialRW: begin
-                            // TODO
+                            // TODO capChecks
+
+                            dInst.iType = Alu;
+                            regs.dst = Valid(tagged Gpr rd);
+                            regs.src1 = Valid(tagged Gpr rs1);
+                            regs.src2 = Invalid;
+                            dInst.scr = Valid (unpackSCR(rs2));
+
+                            let scrType = case (rs2[1:0])
+                                              0: TCC;
+                                              3: EPCC;
+                                              default: Normal;
+                                          endcase;
+
+                            dInst.execFunc = CapModify (SpecialRW (scrType));
                         end
                         f7_cap_CSetBounds: begin
                             illegalInst = True;
@@ -922,7 +936,13 @@ function DecodeResult decode(Instruction inst);
                             dInst.iType = Alu;
                             regs.dst = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs1);
-                            regs.src2 = Valid(tagged Gpr rs2);
+                            if (rs2 == 0) begin
+                                regs.src2 = Invalid;
+                                dInst.scr = Valid (SCR_DDC);
+                            end else begin
+                                regs.src2 = Valid (tagged Gpr rs2);
+                                dInst.scr = Invalid;
+                            end
                             dInst.imm = Invalid;
                             dInst.execFunc = CapInspect (ToPtr);
                         end
