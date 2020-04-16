@@ -1082,6 +1082,8 @@ function DecodeResult decode(Instruction inst);
                     illegalInst = True;
                 end
             endcase
+            dInst.capChecks.rn1 = {1'b0, regs.src1.Valid.Gpr};
+            dInst.capChecks.rn2 = {1'b0, regs.src2.Valid.Gpr};
         end
         default: begin
             illegalInst = True;
