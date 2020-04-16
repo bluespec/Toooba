@@ -85,10 +85,10 @@ typedef enum {
     SCR_PCC       = 5'd00,
     SCR_DDC       = 5'd01,
 
-    SCR_UTCC      = 5'd04,
-    SCR_UTDC      = 5'd05,
-    SCR_UScratchC = 5'd06,
-    SCR_UEPCC     = 5'd07,
+//  SCR_UTCC      = 5'd04,
+//  SCR_UTDC      = 5'd05,
+//  SCR_UScratchC = 5'd06,
+//  SCR_UEPCC     = 5'd07,
 
     SCR_STCC      = 5'd12,
     SCR_STDC      = 5'd13,

@@ -140,10 +140,10 @@ module mkScrFile (ScrFile);
     Reg#(CapReg) ddc_reg          <- mkCsrReg(defaultValue);
 
     // User level SCRs with accessSysRegs
-    Reg#(CapReg) utcc_reg      <- mkCsrReg(defaultValue);
-    Reg#(CapReg) utdc_reg      <- mkCsrReg(nullCap);
-    Reg#(CapReg) uScratchC_reg <- mkCsrReg(nullCap);
-    Reg#(CapReg) uepcc_reg     <- mkCsrReg(defaultValue);
+    // Reg#(CapReg) utcc_reg      <- mkCsrReg(defaultValue);
+    // Reg#(CapReg) utdc_reg      <- mkCsrReg(nullCap);
+    // Reg#(CapReg) uScratchC_reg <- mkCsrReg(nullCap);
+    // Reg#(CapReg) uepcc_reg     <- mkCsrReg(defaultValue);
 
     // System level SCRs with accessSysRegs
     Reg#(CapReg) stcc_reg      <- mkCsrReg(defaultValue);
@@ -164,10 +164,10 @@ module mkScrFile (ScrFile);
             SCR_PCC:       pcc_reg[0];
             SCR_DDC:       ddc_reg;
             // User CSRs with accessSysRegs
-            SCR_UTCC:      utcc_reg;
-            SCR_UTDC:      utdc_reg;
-            SCR_UScratchC: uScratchC_reg;
-            SCR_UEPCC:     uepcc_reg;
+            // SCR_UTCC:      utcc_reg;
+            // SCR_UTDC:      utdc_reg;
+            // SCR_UScratchC: uScratchC_reg;
+            // SCR_UEPCC:     uepcc_reg;
             // System CSRs with accessSysRegs
             SCR_STCC:      stcc_reg;
             SCR_STDC:      stdc_reg;
