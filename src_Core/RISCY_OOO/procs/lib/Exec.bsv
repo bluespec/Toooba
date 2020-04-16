@@ -1,4 +1,3 @@
-
 // Copyright (c) 2017 Massachusetts Institute of Technology
 //
 // Permission is hereby granted, free of charge, to any person
@@ -32,42 +31,43 @@ import ISA_Decls_CHERI::*;
 
 (* noinline *)
 function Maybe#(CapException) capChecks(CapPipe a, CapPipe b, CapChecks toCheck);
-    // TODO plumb register indices here
+    function Maybe#(CapException) e1(CHERIException e) = Valid(CapException{cheri_exc_reg: toCheck.rn1, cheri_exc_code: e});
+    function Maybe#(CapException) e2(CHERIException e) = Valid(CapException{cheri_exc_reg: toCheck.rn2, cheri_exc_code: e});
     Maybe#(CapException) result = Invalid;
     if      (toCheck.src1_tag                 && !isValidCap(a))
-        result =  Valid (CapException {cheri_exc_code: TagViolation});
+        result = e1(TagViolation);
     else if (toCheck.src2_tag                 && !isValidCap(b))
-        result =  Valid (CapException {cheri_exc_code: TagViolation});
+        result = e2(TagViolation);
     else if (toCheck.src1_sealed_with_type    && getKind(a) != SEALED_WITH_TYPE)
-        result =  Valid (CapException {cheri_exc_code: SealViolation});
+        result = e1(SealViolation);
     else if (toCheck.src1_unsealed            && isValidCap(a) && isSealed(a))
-        result =  Valid (CapException {cheri_exc_code: SealViolation});
+        result = e1(SealViolation);
     else if (toCheck.src2_unsealed            && isValidCap(b) && isSealed(b))
-        result =  Valid (CapException {cheri_exc_code: SealViolation});
+        result = e2(SealViolation);
     else if (toCheck.src1_sealed              && isValidCap(a) && !isSealed(a))
-        result =  Valid (CapException {cheri_exc_code: SealViolation});
+        result = e1(SealViolation);
     else if (toCheck.src2_sealed              && isValidCap(b) && !isSealed(b))
-        result =  Valid (CapException {cheri_exc_code: SealViolation});
+        result = e2(SealViolation);
     else if (toCheck.src1_src2_types_match    && getType(a) != getType(b))
-        result =  Valid (CapException {cheri_exc_code: TypeViolation});
+        result = e1(TypeViolation);
     else if (toCheck.src1_permit_ccall        && !getHardPerms(a).permitCCall)
-        result =  Valid (CapException {cheri_exc_code: PermitCCallViolation});
+        result = e1(PermitCCallViolation);
     else if (toCheck.src2_permit_ccall        && !getHardPerms(b).permitCCall)
-        result =  Valid (CapException {cheri_exc_code: PermitCCallViolation});
+        result = e2(PermitCCallViolation);
     else if (toCheck.src1_permit_x            && !getHardPerms(a).permitExecute)
-        result =  Valid (CapException {cheri_exc_code: PermitXViolation});
+        result = e1(PermitXViolation);
     else if (toCheck.src2_no_permit_x         && getHardPerms(b).permitExecute)
-        result =  Valid (CapException {cheri_exc_code: PermitXViolation});
+        result = e2(PermitXViolation);
     else if (toCheck.src2_permit_unseal       && !getHardPerms(b).permitUnseal)
-        result =  Valid (CapException {cheri_exc_code: PermitUnsealViolation});
+        result = e2(PermitUnsealViolation);
     else if (toCheck.src2_permit_seal         && !getHardPerms(b).permitSeal)
-        result =  Valid (CapException {cheri_exc_code: PermitSealViolation});
+        result = e2(PermitSealViolation);
     else if (toCheck.src2_points_to_src1_type && getAddr(b) != zeroExtend(getType(a)))
-        result =  Valid (CapException {cheri_exc_code: TypeViolation});
+        result = e2(TypeViolation);
     else if (toCheck.src2_addr_valid_type     && !validAsType(b, truncate(getAddr(b))))
-        result =  Valid (CapException {cheri_exc_code: LengthViolation});
+        result = e2(LengthViolation);
     else if (toCheck.src2_perm_subset_src1    && (getPerms(a) & getPerms(b)) != getPerms(b))
-        result =  Valid (CapException {cheri_exc_code: SoftwarePermViolation});
+        result = e2(SoftwarePermViolation);
     return result;
 endfunction
 
@@ -119,7 +119,8 @@ function CapPipe capModify(CapPipe a, CapPipe b, CapModifyFunc func);
             tagged SpecialRW .scrType     :
                 a; //TODO masking of various bits
             tagged SetAddr .addrSource    :
-                setAddr(a, addrSource == Src2Type ? (isSealed(b) ? zeroExtend(getType(b)) : -1) : getAddr(b)).value;
+                if (addrSource == Src2Type && !isSealed(b)) return nullWithAddr(-1);
+                else return setAddr(a, (addrSource == Src2Type) ? zeroExtend(getType(b)) : getAddr(b) ).value;
             tagged Seal                   :
                 setType(a, truncate(getAddr(b)));
             tagged Unseal .src            :
@@ -190,9 +191,10 @@ function Bool aluBr(Data a, Data b, BrFunc brFunc);
 endfunction
 
 (* noinline *)
-function Addr brAddrCalc(Addr pc, Data val, IType iType, Data imm, Bool taken, Bit #(32) orig_inst);
+function Addr brAddrCalc(Addr pc, Addr pccBase, Data val, IType iType, Data imm, Bool taken, Bit #(32) orig_inst, Bool cap);
     Addr fallthrough_incr = ((orig_inst [1:0] == 2'b11) ? 4 : 2);
     Addr pcPlusN = pc + fallthrough_incr;
+    if (!cap) val = pccBase + val;
     Addr targetAddr = (case (iType)
             J       : (pc + imm);
             Jr      : {(val + imm)[valueOf(AddrSz)-1:1], 1'b0};
@@ -201,7 +203,7 @@ function Addr brAddrCalc(Addr pc, Data val, IType iType, Data imm, Bool taken, B
         endcase);
     return targetAddr;
 endfunction
-
+/*
 (* noinline *)
 function ControlFlow getControlFlow(DecodedInst dInst, Data rVal1, Data rVal2, Addr pc, Addr ppc, Bit #(32) orig_inst);
     ControlFlow cf = unpack(0);
@@ -217,7 +219,7 @@ function ControlFlow getControlFlow(DecodedInst dInst, Data rVal1, Data rVal2, A
 
     return cf;
 endfunction
-
+*/
 (* noinline *)
 function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, CapPipe pcc, Addr ppc, Bit #(32) orig_inst);
     // just data, addr, and control flow
@@ -241,7 +243,7 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
     Data alu_result = alu(getAddr(rVal1), getAddr(aluVal2), alu_f);
 
     Data inspect_result = capInspect(rVal1, aluVal2, dInst.execFunc.CapInspect);
-    CapModifyFunc modFunc = ccall ? (Unseal (Src1)):dInst.execFunc.CapModify;
+    CapModifyFunc modFunc = ccall ? (Unseal (Src2)):dInst.execFunc.CapModify;
     CapPipe modify_result = capModify(rVal1, aluVal2, modFunc);
     Maybe#(CapException) capException = capChecks(rVal1, aluVal2, dInst.capChecks); // TODO use this to throw exceptions
 
@@ -254,7 +256,7 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
     // Default branch function is not taken
     BrFunc br_f = dInst.execFunc matches tagged Br .br_f ? br_f : NT;
     cf.taken = aluBr(getAddr(rVal1), getAddr(rVal2), br_f);
-    cf.nextPc = brAddrCalc(pc, getAddr(rVal1), dInst.iType, fromMaybe(0,getDInstImm(dInst)), cf.taken, orig_inst);
+    cf.nextPc = brAddrCalc(pc, getBase(pcc), getAddr(rVal1), dInst.iType, fromMaybe(0,getDInstImm(dInst)), cf.taken, orig_inst, (ccall || cjalr));
     cf.mispredict = cf.nextPc != ppc;
 
     Addr fallthrough_incr = ((orig_inst [1:0] == 2'b11) ? 4 : 2);
@@ -267,7 +269,7 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
             J           : nullWithAddr(getAddr(link_pcc));
             Jr &&& (ccall): cap_alu_result; // Depending on defaults falling through!
             Jr &&& (cjalr): link_pcc;
-            Jr          : nullWithAddr(getAddr(link_pcc));
+            Jr          : nullWithAddr(getOffset(link_pcc));
             Auipc       : nullWithAddr(pc + fromMaybe(?, getDInstImm(dInst))); // could be computed with alu
             Csr         : rVal1;
             default     : cap_alu_result;

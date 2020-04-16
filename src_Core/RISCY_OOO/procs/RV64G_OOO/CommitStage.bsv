@@ -184,7 +184,7 @@ function Maybe#(RVFI_DII_Execution#(DataSz,DataSz)) genRVFI(ToReorderBuffer rot,
         if (rot.dst matches tagged Valid .regWrite) begin
             if (regWrite matches tagged Gpr .regNum) begin
                 data = rot.traceBundle.regWriteData;
-                rd = rot.orig_inst[11:7];
+                rd = regNum;
             end
         end
         case (rot.ppc_vaddr_csrData) matches

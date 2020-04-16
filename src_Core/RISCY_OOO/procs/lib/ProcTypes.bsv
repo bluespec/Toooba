@@ -697,6 +697,8 @@ typedef struct {
     Bool src2_addr_valid_type;
     Bool src2_perm_subset_src1;
     Bool src2_derivable;
+    Bit#(6) rn1;
+    Bit#(6) rn2;
 } CapChecks deriving(Bits, Eq, FShow);
 
 typedef CSR_XCapCause CapException;
