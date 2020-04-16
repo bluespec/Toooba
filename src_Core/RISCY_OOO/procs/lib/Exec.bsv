@@ -98,12 +98,24 @@ function Data alu(Data a, Data b, AluFunc func);
 endfunction
 
 (* noinline *)
+function CapPipe setBoundsALU(CapPipe cap, Data len, SetBoundsFunc boundsOp);
+    let combinedResult = setBoundsCombined(cap, len);
+    CapPipe res = (case (boundsOp) matches
+            SetBounds: combinedResult.cap;
+            CRRL: nullWithAddr(combinedResult.length);
+            CRAM: nullWithAddr(combinedResult.mask);
+        endcase);
+    // TODO exfiltrate exact somehow...
+    return res;
+endfunction
+
+(* noinline *)
 function CapPipe capModify(CapPipe a, CapPipe b, CapModifyFunc func);
     CapPipe res = (case(func) matches
             tagged ModifyOffset .offsetOp :
                 modifyOffset(a, getAddr(b), offsetOp == IncOffset).value;
-            tagged SetBounds .exact       :
-                setBounds(a, getAddr(b)).value;
+            tagged SetBounds .boundsOp    :
+                setBoundsALU(a, getAddr(b), boundsOp);
             //tagged SpecialRW              :
             //    error("SpecialRW not yet implemented");
             tagged SetAddr .addrSource    :
