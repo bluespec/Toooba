@@ -107,7 +107,8 @@ function CapPipe capModify(CapPipe a, CapPipe b, CapModifyFunc func);
             //tagged SpecialRW              :
             //    error("SpecialRW not yet implemented");
             tagged SetAddr .addrSource    :
-                setAddr(a, addrSource == Src2Type ? (isSealed(b) ? zeroExtend(getType(b)) : -1) : getAddr(b)).value;
+                if (addrSource == Src2Type && !isSealed(b)) return nullWithAddr(-1);
+                else return setAddr(a, (addrSource == Src2Type) ? zeroExtend(getType(b)) : getAddr(b) ).value;
             tagged Seal                   :
                 setType(a, truncate(getAddr(b)));
             tagged Unseal .src            :
@@ -229,7 +230,7 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
     Data alu_result = alu(getAddr(rVal1), getAddr(aluVal2), alu_f);
 
     Data inspect_result = capInspect(rVal1, aluVal2, dInst.execFunc.CapInspect);
-    CapModifyFunc modFunc = ccall ? (Unseal (Src1)):dInst.execFunc.CapModify;
+    CapModifyFunc modFunc = ccall ? (Unseal (Src2)):dInst.execFunc.CapModify;
     CapPipe modify_result = capModify(rVal1, aluVal2, modFunc);
     Maybe#(CapException) capException = capChecks(rVal1, aluVal2, dInst.capChecks); // TODO use this to throw exceptions
 
