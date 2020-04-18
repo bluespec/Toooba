@@ -1,24 +1,6 @@
-# Open-source RISC-V CPUs from Bluespec, Inc.
+# CHERI-Enabled Out-of-Order RISC-V Core
 
-This is one of a family of free, open-source RISC-V CPUs created by Bluespec, Inc.
-
-- [Piccolo](https://github.com/bluespec/Piccolo): 3-stage, in-order pipeline
-
-  Piccolo is intended for low-end applications (Embedded Systems, IoT, microcontrollers, etc.).
-
-- [Flute](https://github.com/bluespec/Flute): 5-stage, in-order pipeline
-
-  Flute is intended for low-end to medium applications that require
-  64-bit operation, an MMU (Virtual Memory) and more performance than
-  Piccolo-class processors.
-
-- [Toooba](https://github.com/bluespec/Toooba): superscalar, out-of-order
-  pipeline, slight variation on MIT's RISCY-OOO
-
-  Toooba is intended as a high-end application processor.
-
-The three repo structures are nearly identical, and the ways to build
-and run are identical.
+This is a prototype of an out-of-order core that implements hardware capabilities (see [CHERI](https://www.cl.cam.ac.uk/research/security/ctsrd/cheri/) for details). It is based off of [Bluespec's Toooba](https://github.com/bluespec/Toooba), which is a slight variation of MIT's RISCY-OO core.
 
 ----------------------------------------------------------------
 ### Note re. distribution of MIT RISCY-OOO sources.
@@ -61,15 +43,13 @@ repository are for one specific configuration:
     - Boots the Linux kernel
 
 If you want to generate other Verilog variants, you'll need a Bluespec
-`bsc` compiler [Note: Bluespec, Inc. provides free licenses to
-academia and for non-profit research].
+`bsc` compiler, which is open source and can be found in [this repository](https://github.com/B-Lang-org/bsc).
 
 ### Testbench included
 
 This repository contains a simple testbench (a small SoC) with which
 one can run RISC-V binaries in simulation by loading standard mem hex
-files and executing in Bluespec's Bluesim, Verilator simulation or
-iVerilog simulation.  The testbench contains an AXI4 interconnect
+files.  The testbench contains an AXI4 interconnect
 fabric that connects the CPU to models of a boot ROM, a memory, a
 timer and a UART for console I/O.
 
@@ -79,13 +59,11 @@ parts of the testbench.]
 
 This repository contains one sample build directory, to build
 an RV64ACDFIMSU simulator, using Verilator Verilog simulation.
+The generated Verilog is synthesizable.
 
-The generated Verilog is synthesizable. Bluespec tests all this code
-on Xilinx FPGAs.
+#### Simulation
 
-#### Plans
-
-- Ongoing continuous micro-architectural improvements for performance and hardware area.
+We currently only support verilator simulation. There is also some code related to simulation on Bluespec's Bluesim and iVerilog, but these are currently not working and not being maintained.
 
 ----------------------------------------------------------------
 ## Source codes
@@ -93,24 +71,19 @@ on Xilinx FPGAs.
 This repository contains two levels of source code: Verilog and BSV.
 
 **Verilog RTL** can be found in directories with names suffixed in
-'_verilator' or '_iverilog' in the 'builds' directory:
+'_verilator' in the 'builds' directory:
 
-        builds/..._<verilator or iverilog>/Verilog_RTL/
-
-[There is no difference between Verilog in a Verilator directory
-vs. the corresponding iverilog directory. ]
+        builds/..._verilator/Verilog_RTL/
 
 The Verilog RTL is _synthesizable_ (and hence acceptable to
-Verilator).  It can be simulated in any Verilog simulator (we provide
-Makefiles to build simulation executables for Verilator and for Icarus
-Verilog (iverilog)).
+Verilator).  It can be simulated in any Verilog simulator.
 
 The RTL represents RISC-V CPU RTL, plus a rudimentary surrounding SoC
 enabling immediate simulation here, and which is rich enough to enable
 booting a Linux kernel.  Users are free to use the CPU RTL in their
 own Verilog system designs.  The top-level module for the CPU RTL is
 `Verilog_RTL/mkProc.v`.  The top-level module for the surrounding
-SoC is `Verilog_RTL/mkTop_HW_Side.v`.  The SoC has an AXI4
+SoC was originally `Verilog_RTL/mkTop_HW_Side.v`, but is now `Verilog_RTL/mkTop_HW_Side_edited.v`.  The SoC has an AXI4
 fabric, a timer, a software-interrupt device, and a UART.  Additional
 library RTL can be found in the directory `src_bsc_lib_RTL`.
 
@@ -124,6 +97,7 @@ library RTL can be found in the directory `src_bsc_lib_RTL`.
    - 'PLIC/': Platform-Level Interrupt Controller (standard RISC-V spec)
    - `BSV_Additional_Libs/`: generic utilities (not CPU-specific)
    - `Debug_Module/`: RISC-V Debug Module to debug the CPU from GDB or other debuggers
+   - `CHERI/`: contains source code for capability hardware
 
 - `src_Testbench/`, for the surrounding testbench, with sub-directories:
 
@@ -134,8 +108,6 @@ library RTL can be found in the directory `src_bsc_lib_RTL`.
 
    - `SoC/`: An interconnect, a boot ROM, a memory controller, a timer
        and software-interrupt device, and a UART for console tty I/O.
-
-   - `Fabrics/`: Generic AXI4 code for the SoC fabric.
 
 The BSV source code has a rich set of parameters. The provided RTL
 source has been generated from the BSV source automatically using
@@ -152,9 +124,27 @@ against a RISC-V Golden Reference Model.  Please contact Bluespec,
 Inc. for more information.
 
 ----------------------------------------------------------------
-### Building and running from the Verilog sources, out of the box
+## Build Instructions
 
-In the Verilog-build directory:
+### Dependencies
+
+Build the Bluespec Compiler `bsc` from [this repository](https://github.com/B-Lang-org/bsc)
+
+You need Verilator with version 3.922 or later. You can build any version of Verilator from [this repository](https://github.com/verilator/verilator/releases).
+
+        $ verilator --version
+        Verilator 3.922 2018-03-17 rev verilator_3_920-32-gdf3d1a4
+
+### Generating Verilog RTL from BSV
+
+We currently only support the `RV64ACDFIMSU_Toooba_RVFIDII_verilator` build, so use the following commands to re-generate the Verilog RTL:
+
+        $ cd  builds/RV64ACDFIMSU_Toooba_RVFIDII_verilator
+        $ make compile
+
+### Building and running from the Verilog sources
+
+You must follow the steps in the previous section to generate the Verilog before simulation. Simulation does not work out of the box. In the Verilog-build directory:
 
             builds/RV64ACDFIMSU_Toooba_verilator/
 
@@ -177,58 +167,5 @@ In the Verilog-build directory:
       all the standard RISC-V ISA tests relevant for RV64ACDFIMSU (regression testing).
       This uses the Python script `Tests/Run_regression.py`.
       Please see the documentation at the top of that program for details.
-
-#### Tool dependencies:
-
-We test our builds with the following versions
-Verilator.  Later versions are probably ok; we have observed some
-problems with earlier versions.
-
-        $ verilator --version
-        Verilator 3.922 2018-03-17 rev verilator_3_920-32-gdf3d1a4
-
-----------------------------------------------------------------
-### What you can build and run if you have Bluespec's `bsc` compiler
-
-[Note: Bluespec, Inc. provides free licenses to academia and for non-profit research].
-
-Note: even without Bluespec's `bsc` compiler, you can use the Verilog
-sources in any of the `builds/<ARCH>_<CPU>_verilator/Verilog_RTL`
-directories-- build and run Verilog simulations, incorporate the
-Verilog CPU into your own SoC, etc.  This section describes additional
-things you can do with a `bsc` compiler.
-
-#### Building a Bluesim simulator
-
-In any of the following directories:
-
-        builds/<ARCH>_<CPU>_bluesim
-
-  - `$ make compile simulator`
-
-will compile and link a Bluesim executable.  Then, you can `make test`
-or `make isa_tests` as described above to run an individual ISA test
-or run regressions on the full suite of relevant ISA tests.
-
-#### Re-generating Verilog RTL
-
-You can regenerate the Verilog RTL in any of the
-`build/<ARCH>_<CPU>_verilator/` or `build/<ARCH>_<CPU>_iverilog/`
-directories.  Example:
-
-        $ cd  builds/RV32ACIMU_<CPU>_verilator
-        $ make compile
-
-#### Creating a new architecture configuration
-
-[This documentation needs to be fleshed out.] The `builds/Resources`
-directory contains some "include" files for Makefiles, and illustrate
-the compile-time flags that determine the micro-architectural
-configuration.
-
-In addition, MIT's riscy-ooo code provides further configuration
-controls, which can be found in:
-
-        Toooba/src_Core/RISCY_OOO/procs/RV64G_OOO/ProcConfig.bsv
 
 ----------------------------------------------------------------
