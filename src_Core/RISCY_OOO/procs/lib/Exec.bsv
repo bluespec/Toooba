@@ -309,7 +309,7 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
             Jr &&& (ccall): cap_alu_result; // Depending on defaults falling through!
             Jr &&& (cjalr): link_pcc;
             Jr          : nullWithAddr(getOffset(link_pcc));
-            Auipc       : nullWithAddr(pc + fromMaybe(?, getDInstImm(dInst))); // could be computed with alu
+            Auipc       : (getFlags(pcc)[0] == 1'b0 ? nullWithAddr(pc + fromMaybe(?, getDInstImm(dInst))) : modifyOffset(pcc, fromMaybe(?, getDInstImm(dInst)), True).value); // could be computed with alu
             Csr         : rVal1;
             default     : cap_alu_result;
         endcase);
