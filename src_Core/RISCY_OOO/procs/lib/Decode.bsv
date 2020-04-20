@@ -774,7 +774,6 @@ function DecodeResult decode(Instruction inst);
                             dInst.execFunc = CapModify (SpecialRW (scrType));
                         end
                         f7_cap_CSetBounds: begin
-                            illegalInst = True;
                             dInst.capChecks.src1_tag = True;
                             dInst.capChecks.src1_unsealed = True;
 
