@@ -101,7 +101,7 @@ function Maybe#(BoundsCheck) prepareBoundsCheck(CapPipe a, CapPipe b, CapPipe c,
         Src1Top: ret.check_high = getTop(a);
         Src2Addr: ret.check_high = {0,getAddr(b)};
         Src2Type: ret.check_high = zeroExtend(getType(b));
-        ResultAddr: ret.check_high = {0,getAddr(c)};
+        ResultTop: ret.check_high = {0,getTop(c)}; // TODO will be bad for timing
     endcase
 
     ret.check_inclusive = toCheck.check_inclusive;

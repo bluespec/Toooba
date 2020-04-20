@@ -692,7 +692,7 @@ typedef enum {
     Src1Top,
     Src2Addr,
     Src2Type,
-    ResultAddr
+    ResultTop
 } CheckHighSrc deriving(Bits, Eq, FShow);
 
 typedef struct {

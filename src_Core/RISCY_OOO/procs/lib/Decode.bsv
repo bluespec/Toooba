@@ -744,7 +744,8 @@ function DecodeResult decode(Instruction inst);
                     dInst.capChecks.check_enable = True;
                     dInst.capChecks.check_authority_src = Src1;
                     dInst.capChecks.check_low_src = Src1Addr;
-                    dInst.capChecks.check_high_src = ResultAddr;
+                    dInst.capChecks.check_high_src = ResultTop;
+                    dInst.capChecks.check_inclusive = True;
 
                     dInst.iType = Alu;
                     regs.dst = Valid(tagged Gpr rd);
@@ -777,7 +778,11 @@ function DecodeResult decode(Instruction inst);
                             dInst.capChecks.src1_tag = True;
                             dInst.capChecks.src1_unsealed = True;
 
-                            // TODO bounds check
+                            dInst.capChecks.check_enable = True;
+                            dInst.capChecks.check_authority_src = Src1;
+                            dInst.capChecks.check_low_src = Src1Addr;
+                            dInst.capChecks.check_high_src = ResultTop;
+                            dInst.capChecks.check_inclusive = True;
 
                             dInst.iType = Alu;
                             regs.dst = Valid(tagged Gpr rd);
@@ -795,7 +800,8 @@ function DecodeResult decode(Instruction inst);
                             dInst.capChecks.check_enable = True;
                             dInst.capChecks.check_authority_src = Src1;
                             dInst.capChecks.check_low_src = Src1Addr;
-                            dInst.capChecks.check_high_src = ResultAddr;
+                            dInst.capChecks.check_high_src = ResultTop;
+                            dInst.capChecks.check_inclusive = True;
 
                             dInst.iType = Alu;
                             regs.dst = Valid(tagged Gpr rd);
@@ -923,6 +929,7 @@ function DecodeResult decode(Instruction inst);
                             dInst.capChecks.check_authority_src = Src1;
                             dInst.capChecks.check_low_src = Src2Type;
                             dInst.capChecks.check_high_src = Src2Type;
+                            dInst.capChecks.check_inclusive = False;
 
                             dInst.iType = Alu;
                             regs.dst = Valid(tagged Gpr rd);
@@ -1002,6 +1009,7 @@ function DecodeResult decode(Instruction inst);
                             dInst.capChecks.check_authority_src = Src2;
                             dInst.capChecks.check_low_src = Src1Base;
                             dInst.capChecks.check_high_src = Src1Top;
+                            dInst.capChecks.check_inclusive = True;
 
                             // Swap arguments so SCR possibly goes in RS2
                             dInst.iType = Alu;
