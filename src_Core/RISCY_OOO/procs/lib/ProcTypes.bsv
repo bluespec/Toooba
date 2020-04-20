@@ -572,8 +572,8 @@ typedef union tagged {
 
 typedef struct {
     Trap trap;
-    CHERIException capExp;
-} TrapWithCap deriving(Bits, Eq, FShow);
+    CSR_XCapCause capExp;
+} TrapWithCap deriving(Bits, FShow);
 
 // privilege modes
 Bit#(2) prvU = 0;
@@ -676,6 +676,36 @@ typedef struct {
     Bool        illegalInst;
 } DecodeResult deriving(Bits, Eq, FShow);
 
+typedef enum {
+    Src1,
+    Src2
+} CheckAuthoritySrc deriving(Bits, Eq, FShow);
+
+typedef enum {
+    Src1Addr,
+    Src2Addr,
+    Src2Type,
+    Src1Base
+} CheckLowSrc deriving(Bits, Eq, FShow);
+
+typedef enum {
+    Src1Top,
+    Src2Addr,
+    Src2Type,
+    ResultAddr
+} CheckHighSrc deriving(Bits, Eq, FShow);
+
+typedef struct {
+    Data authority_base;
+    CapTop authority_top;
+    Bit#(6) authority_idx;
+    Data check_low;
+    CapTop check_high;
+    Bool check_inclusive;
+} BoundsCheck deriving(Bits, Eq, FShow);
+
+typedef Bit#(65) CapTop;
+
 typedef Bit#(32) ImmData; // 32-bit decoded immediate data
 
 typedef struct {
@@ -695,8 +725,15 @@ typedef struct {
     Bool src2_permit_seal;
     Bool src2_points_to_src1_type;
     Bool src2_addr_valid_type;
-    Bool src2_perm_subset_src1;
-    Bool src2_derivable;
+    Bool src1_perm_subset_src2;
+    Bool src1_derivable;
+
+    Bool check_enable;
+    CheckAuthoritySrc check_authority_src;
+    CheckLowSrc check_low_src;
+    CheckHighSrc check_high_src;
+    Bool check_inclusive;
+
     Bit#(6) rn1;
     Bit#(6) rn2;
 } CapChecks deriving(Bits, Eq, FShow);
@@ -723,6 +760,7 @@ typedef struct {
     CapPipe     addr;
     ControlFlow controlFlow;
     Maybe#(CapException) capException;
+    Maybe#(BoundsCheck) boundsCheck;
 } ExecResult deriving(Bits, FShow);
 
 // MMIO

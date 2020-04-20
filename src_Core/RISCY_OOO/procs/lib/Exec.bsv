@@ -66,9 +66,47 @@ function Maybe#(CapException) capChecks(CapPipe a, CapPipe b, CapChecks toCheck)
         result = e2(TypeViolation);
     else if (toCheck.src2_addr_valid_type     && !validAsType(b, truncate(getAddr(b))))
         result = e2(LengthViolation);
-    else if (toCheck.src2_perm_subset_src1    && (getPerms(a) & getPerms(b)) != getPerms(b))
+    else if (toCheck.src1_perm_subset_src2    && (getPerms(a) & getPerms(b)) != getPerms(a))
         result = e2(SoftwarePermViolation);
+    else if (toCheck.src1_derivable           && !isDerivable(a))
+        result = e1(LengthViolation);
     return result;
+endfunction
+
+(* noinline *)
+function Maybe#(BoundsCheck) prepareBoundsCheck(CapPipe a, CapPipe b, CapPipe c, CapChecks toCheck);
+    BoundsCheck ret = ?;
+    CapPipe authority = ?;
+    case(toCheck.check_authority_src)
+        Src1: begin
+            authority = a;
+            ret.authority_idx = toCheck.rn1;
+        end
+        Src2: begin
+            authority = b;
+            ret.authority_idx = toCheck.rn2;
+        end
+    endcase
+    ret.authority_base = getBase(authority);
+    ret.authority_top = getTop(authority);
+
+    case(toCheck.check_low_src)
+        Src1Addr: ret.check_low = getAddr(a);
+        Src1Base: ret.check_low = getBase(a);
+        Src2Addr: ret.check_low = getAddr(b);
+        Src2Type: ret.check_low = zeroExtend(getType(b));
+    endcase
+
+    case(toCheck.check_high_src)
+        Src1Top: ret.check_high = getTop(a);
+        Src2Addr: ret.check_high = {0,getAddr(b)};
+        Src2Type: ret.check_high = zeroExtend(getType(b));
+        ResultAddr: ret.check_high = {0,getAddr(c)};
+    endcase
+
+    ret.check_inclusive = toCheck.check_inclusive;
+    if (toCheck.check_enable) return Valid(ret);
+    else                      return Invalid;
 endfunction
 
 (* noinline *)
@@ -245,7 +283,8 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
     Data inspect_result = capInspect(rVal1, aluVal2, dInst.execFunc.CapInspect);
     CapModifyFunc modFunc = ccall ? (Unseal (Src2)):dInst.execFunc.CapModify;
     CapPipe modify_result = capModify(rVal1, aluVal2, modFunc);
-    Maybe#(CapException) capException = capChecks(rVal1, aluVal2, dInst.capChecks); // TODO use this to throw exceptions
+    Maybe#(CapException) capException = capChecks(rVal1, aluVal2, dInst.capChecks);
+    Maybe#(BoundsCheck) boundsCheck = prepareBoundsCheck(rVal1, aluVal2, modify_result, dInst.capChecks);
 
     CapPipe cap_alu_result = case (dInst.execFunc) matches tagged CapInspect .x: nullWithAddr(inspect_result);
                                                            tagged CapModify .x: modify_result;
@@ -281,7 +320,7 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
         endcase);
     CapPipe scr_data = modify_result;
 
-    return ExecResult{data: data, csrData: csr_data, scrData: scr_data, addr: addr, controlFlow: cf, capException: capException};
+    return ExecResult{data: data, csrData: csr_data, scrData: scr_data, addr: addr, controlFlow: cf, capException: capException, boundsCheck: boundsCheck};
 endfunction
 
 (* noinline *)

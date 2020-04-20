@@ -358,7 +358,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         // This avoids doing incorrect work
         incrEpochStallFetch;
         Maybe#(TrapWithCap) trapWithCap = Invalid;
-        if (firstTrap matches tagged Valid .trap) trapWithCap = tagged Valid TrapWithCap{trap: trap, capExp: None};
+        if (firstTrap matches tagged Valid .trap) trapWithCap = tagged Valid TrapWithCap{trap: trap, capExp: noCapCause};
         // just place it in the reorder buffer
         let y = ToReorderBuffer{pc: setAddr(almightyCap, pc).value,
                                 orig_inst: orig_inst,

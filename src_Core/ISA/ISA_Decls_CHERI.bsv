@@ -67,6 +67,9 @@ typedef struct {
     CHERIException cheri_exc_code;
 } CSR_XCapCause deriving(Bits, FShow);
 
+CSR_XCapCause noCapCause = CSR_XCapCause {cheri_exc_code: None,
+                                          cheri_exc_reg: unpack(0)};
+
 function Bit#(64) xccsr_to_word(CSR_XCapCause xccsr);
     return zeroExtend({xccsr.cheri_exc_reg, pack(xccsr.cheri_exc_code), 3'b0, 1'b1, 1'b1});
 endfunction

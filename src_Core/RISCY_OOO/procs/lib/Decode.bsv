@@ -741,7 +741,10 @@ function DecodeResult decode(Instruction inst);
                     dInst.capChecks.src1_tag = True;
                     dInst.capChecks.src1_unsealed = True;
 
-                    // TODO bounds check
+                    dInst.capChecks.check_enable = True;
+                    dInst.capChecks.check_authority_src = Src1;
+                    dInst.capChecks.check_low_src = Src1Addr;
+                    dInst.capChecks.check_high_src = ResultAddr;
 
                     dInst.iType = Alu;
                     regs.dst = Valid(tagged Gpr rd);
@@ -787,9 +790,12 @@ function DecodeResult decode(Instruction inst);
                             illegalInst = True;
                             dInst.capChecks.src1_tag = True;
                             dInst.capChecks.src1_unsealed = True;
-                            // TODO assert exact here instead of in exec func?
+                            // TODO assert exact
 
-                            // TODO bounds check
+                            dInst.capChecks.check_enable = True;
+                            dInst.capChecks.check_authority_src = Src1;
+                            dInst.capChecks.check_low_src = Src1Addr;
+                            dInst.capChecks.check_high_src = ResultAddr;
 
                             dInst.iType = Alu;
                             regs.dst = Valid(tagged Gpr rd);
@@ -836,6 +842,12 @@ function DecodeResult decode(Instruction inst);
                             dInst.capChecks.src2_permit_seal = True;
                             dInst.capChecks.src2_addr_valid_type = True;
 
+                            dInst.capChecks.check_enable = True;
+                            dInst.capChecks.check_authority_src = Src2;
+                            dInst.capChecks.check_low_src = Src2Addr;
+                            dInst.capChecks.check_high_src = Src2Addr;
+                            dInst.capChecks.check_inclusive = False;
+
                             dInst.iType = Alu;
                             regs.dst = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs1);
@@ -880,6 +892,12 @@ function DecodeResult decode(Instruction inst);
                             dInst.capChecks.src2_points_to_src1_type = True;
                             dInst.capChecks.src2_permit_unseal = True;
 
+                            dInst.capChecks.check_enable = True;
+                            dInst.capChecks.check_authority_src = Src2;
+                            dInst.capChecks.check_low_src = Src2Addr;
+                            dInst.capChecks.check_high_src = Src2Addr;
+                            dInst.capChecks.check_inclusive = False;
+
                             dInst.iType = Alu;
                             regs.dst = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs1);
@@ -900,6 +918,11 @@ function DecodeResult decode(Instruction inst);
                         f7_cap_CCopyType: begin
                             dInst.capChecks.src1_tag = True;
                             dInst.capChecks.src1_unsealed = True;
+
+                            dInst.capChecks.check_enable = True;
+                            dInst.capChecks.check_authority_src = Src1;
+                            dInst.capChecks.check_low_src = Src2Type;
+                            dInst.capChecks.check_high_src = Src2Type;
 
                             dInst.iType = Alu;
                             regs.dst = Valid(tagged Gpr rd);
@@ -970,17 +993,25 @@ function DecodeResult decode(Instruction inst);
                             dInst.execFunc = Alu (Sub);
                         end
                         f7_cap_CBuildCap: begin
-                            illegalInst = True;
-                            // TODO
-                            dInst.capChecks.src1_tag = True;
-                            dInst.capChecks.src1_unsealed = True;
-                            dInst.capChecks.src2_perm_subset_src1 = True;
-                            dInst.capChecks.src2_derivable = True;
+                            dInst.capChecks.src2_tag = True;
+                            dInst.capChecks.src2_unsealed = True;
+                            dInst.capChecks.src1_perm_subset_src2 = True;
+                            dInst.capChecks.src1_derivable = True;
 
+                            dInst.capChecks.check_enable = True;
+                            dInst.capChecks.check_authority_src = Src2;
+                            dInst.capChecks.check_low_src = Src1Base;
+                            dInst.capChecks.check_high_src = Src1Top;
+
+                            // Swap arguments so SCR possibly goes in RS2
                             dInst.iType = Alu;
                             regs.dst = Valid(tagged Gpr rd);
-                            regs.src1 = Valid(tagged Gpr rs1);
-                            regs.src2 = Valid(tagged Gpr rs2);
+                            regs.src1 = Valid(tagged Gpr rs2);
+                            if (rs1 == 0) begin
+                                dInst.scr = Valid(SCR_DDC);
+                            end else begin
+                                regs.src2 = Valid(tagged Gpr rs1);
+                            end
                             dInst.imm = Invalid;
                             dInst.execFunc = CapModify (BuildCap);
                         end
