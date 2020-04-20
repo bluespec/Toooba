@@ -709,24 +709,9 @@ typedef Bit#(65) CapTop;
 typedef Bit#(32) ImmData; // 32-bit decoded immediate data
 
 typedef struct {
-    Bool src1_tag;
-    Bool src2_tag;
-    Bool src1_sealed_with_type;
-    Bool src1_unsealed;
-    Bool src2_unsealed;
-    Bool src1_sealed;
-    Bool src2_sealed;
-    Bool src1_src2_types_match;
-    Bool src1_permit_ccall;
-    Bool src2_permit_ccall;
-    Bool src1_permit_x;
-    Bool src2_no_permit_x;
-    Bool src2_permit_unseal;
-    Bool src2_permit_seal;
-    Bool src2_points_to_src1_type;
-    Bool src2_addr_valid_type;
-    Bool src1_perm_subset_src2;
-    Bool src1_derivable;
+`define CAP_CHECK_FIELD(x,s) Bool x;
+`include "CapChecks.bsvi"
+`undef CAP_CHECK_FIELD
 
     Bool check_enable;
     CheckAuthoritySrc check_authority_src;
@@ -736,7 +721,27 @@ typedef struct {
 
     Bit#(6) rn1;
     Bit#(6) rn2;
-} CapChecks deriving(Bits, Eq, FShow);
+} CapChecks deriving(Bits, Eq);
+
+instance FShow#(CapChecks);
+    function Fmt fshow(CapChecks x);
+        let ret = $format("CapChecks {",
+            "rn1 ", fshow(x.rn1), ", rn2 ", fshow(x.rn2));
+
+`define CAP_CHECK_FIELD(f,s) if (x.f) ret = ret + $format(", ", s);
+`include "CapChecks.bsvi"
+`undef CAP_CHECK_FIELD
+
+        if (x.check_enable)
+            ret = $format(ret, ", bounds check: ",
+                "auth ", fshow(x.check_authority_src), ", ",
+                "low ",  fshow(x.check_low_src), ", ",
+                "high ", fshow(x.check_high_src), ", ",
+                "inclusive ", fshow(x.check_inclusive));
+
+        return $format(ret, "}");
+    endfunction
+endinstance
 
 typedef CSR_XCapCause CapException;
 
