@@ -171,212 +171,37 @@ function Bool allRegsReady(RegsReady x);
 endfunction
 
 typedef enum {
-    Invalid = 7'b0,
-    Load    = 7'b0000011,
-    LoadFp  = 7'b0000111,
-    MiscMem = 7'b0001111,
-    OpImm   = 7'b0010011,
-    Auipc   = 7'b0010111,
-    OpImm32 = 7'b0011011,
-    Store   = 7'b0100011,
-    StoreFp = 7'b0100111,
-    Amo     = 7'b0101111,
-    Op      = 7'b0110011,
-    Lui     = 7'b0110111,
-    Op32    = 7'b0111011,
-    Fmadd   = 7'b1000011,
-    Fmsub   = 7'b1000111,
-    Fnmsub  = 7'b1001011,
-    Fnmadd  = 7'b1001111,
-    OpFp    = 7'b1010011,
-    OpCHERI = 7'b1011011,
-    Branch  = 7'b1100011,
-    Jalr    = 7'b1100111,
-    Jal     = 7'b1101111,
-    System  = 7'b1110011
+`define OPCODE(o,v) o = v,
+`include "Opcodes.bsvi"
+`undef OPCODE
+    Invalid = 7'b0
 } Opcode deriving(Bits, Eq, FShow);
 
 function Opcode unpackOpcode(Bit#(7) x);
     return (case(x)
-        pack(Opcode'(Load   )): (Load   );
-        pack(Opcode'(LoadFp )): (LoadFp );
-        pack(Opcode'(MiscMem)): (MiscMem);
-        pack(Opcode'(OpImm  )): (OpImm  );
-        pack(Opcode'(Auipc  )): (Auipc  );
-        pack(Opcode'(OpImm32)): (OpImm32);
-        pack(Opcode'(Store  )): (Store  );
-        pack(Opcode'(StoreFp)): (StoreFp);
-        pack(Opcode'(Amo    )): (Amo    );
-        pack(Opcode'(Op     )): (Op     );
-        pack(Opcode'(Lui    )): (Lui    );
-        pack(Opcode'(Op32   )): (Op32   );
-        pack(Opcode'(Fmadd  )): (Fmadd  );
-        pack(Opcode'(Fmsub  )): (Fmsub  );
-        pack(Opcode'(Fnmsub )): (Fnmsub );
-        pack(Opcode'(Fnmadd )): (Fnmadd );
-        pack(Opcode'(OpFp   )): (OpFp   );
-        pack(Opcode'(OpCHERI)): (OpCHERI);
-        pack(Opcode'(Branch )): (Branch );
-        pack(Opcode'(Jalr   )): (Jalr   );
-        pack(Opcode'(Jal    )): (Jal    );
-        pack(Opcode'(System )): (System );
-        default               : (Invalid);
+`define OPCODE(o,v) pack(Opcode'(o)): (o);
+`include "Opcodes.bsvi"
+`undef OPCODE
+        default : Invalid;
     endcase);
 endfunction
 
-/* If Bluespec never allows illegal values of sparse enumerated types, this function should replace the one above:
-function Opcode unpackOpcode(Bit#(7) x);
-  Opcode test = unpack(x);
-  if (pack(test) != x) return Invalid;
-  else return test;
-endfunction
-*/
 typedef enum {
-    // user standard CSRs
-    CSRfflags     = 12'h001,
-    CSRfrm        = 12'h002,
-    CSRfcsr       = 12'h003,
-    CSRcycle      = 12'hc00,
-    CSRtime       = 12'hc01,
-    CSRinstret    = 12'hc02,
-    // user non-standard CSRs (TODO)
-    CSRterminate  = 12'h800, // terminate (used to exit Linux)
-    CSRstats      = 12'h801, // turn on/off perf counters
-    CSRuccsr      = 12'h8c0,
-    // supervisor standard CSRs
-    CSRsstatus    = 12'h100,
-    // no user trap handler, so no se/ideleg
-    CSRsie        = 12'h104,
-    CSRstvec      = 12'h105,
-    CSRscounteren = 12'h106,
-    CSRsscratch   = 12'h140,
-    CSRsepc       = 12'h141,
-    CSRscause     = 12'h142,
-    CSRstval      = 12'h143, // it's still called sbadaddr in spike
-    CSRsip        = 12'h144,
-    CSRsatp       = 12'h180, // it's still called sptbr in spike
-    CSRsccsr      = 12'h9c0,
-    // machine standard CSRs
-    CSRmstatus    = 12'h300,
-    CSRmisa       = 12'h301,
-    CSRmedeleg    = 12'h302,
-    CSRmideleg    = 12'h303,
-    CSRmie        = 12'h304,
-    CSRmtvec      = 12'h305,
-    CSRmcounteren = 12'h306,
-    CSRmscratch   = 12'h340,
-    CSRmepc       = 12'h341,
-    CSRmcause     = 12'h342,
-    CSRmtval      = 12'h343, // it's still called mbadaddr in spike
-    CSRmip        = 12'h344,
-    CSRmcycle     = 12'hb00,
-    CSRminstret   = 12'hb02,
-    CSRmvendorid  = 12'hf11,
-    CSRmarchid    = 12'hf12,
-    CSRmimpid     = 12'hf13,
-    CSRmhartid    = 12'hf14,
-    CSRmccsr      = 12'hbc0,
-`ifdef SECURITY
-    // sanctum machine CSR
-    CSRmevbase    = 12'h7c0,
-    CSRmevmask    = 12'h7c1,
-    CSRmeatp      = 12'h7c2,
-    CSRmmrbm      = 12'h7c3,
-    CSRmemrbm     = 12'h7c4,
-    CSRmparbase   = 12'h7c5,
-    CSRmparmask   = 12'h7c6,
-    CSRmeparbase  = 12'h7c7,
-    CSRmeparmask  = 12'h7c8,
-    CSRmflush     = 12'h7c9, // flush pipeline + cache
-    CSRmspec      = 12'h7ca, // control speculation
-    // sanctum user CSR
-    CSRtrng       = 12'hcc0, // random number for secure boot
-`endif
-
-   CSRtselect     = 12'h7A0,    // Debug/trace tselect
-   CSRtdata1      = 12'h7A1,    // Debug/trace tdata1
-   CSRtdata2      = 12'h7A2,    // Debug/trace tdata2
-   CSRtdata3      = 12'h7A3,    // Debug/trace tdata3
-
-`ifdef INCLUDE_GDB_CONTROL
-   CSRdcsr        = 12'h7B0,    // Debug control and status
-   CSRdpc         = 12'h7B1,    // Debug PC
-   CSRdscratch0   = 12'h7B2,    // Debug scratch0
-   CSRdscratch1   = 12'h7B3,    // Debug scratch1
-`endif
-
+`define CSR(c,v) c = v,
+`include "CSRs.bsvi"
+`undef CSR
     // CSR that catches all the unimplemented CSRs. To avoid exception on this,
     // make it a user non-standard read/write CSR.
     // Bluespec: in RenameStage.getTrap(), we force this to be a csr_access_trap
-    CSRnone       = 12'h8ff
+    CSRnone = 12'h8ff
 } CSR deriving(Bits, Eq, FShow);
 
 function CSR unpackCSR(Bit#(12) x);
     return (case(x)
-        pack(CSR'(CSRfflags    )): (CSRfflags    );
-        pack(CSR'(CSRfrm       )): (CSRfrm       );
-        pack(CSR'(CSRfcsr      )): (CSRfcsr      );
-        pack(CSR'(CSRcycle     )): (CSRcycle     );
-        pack(CSR'(CSRtime      )): (CSRtime      );
-        pack(CSR'(CSRinstret   )): (CSRinstret   );
-        pack(CSR'(CSRterminate )): (CSRterminate );
-        pack(CSR'(CSRstats     )): (CSRstats     );
-        pack(CSR'(CSRsstatus   )): (CSRsstatus   );
-        pack(CSR'(CSRsie       )): (CSRsie       );
-        pack(CSR'(CSRstvec     )): (CSRstvec     );
-        pack(CSR'(CSRscounteren)): (CSRscounteren);
-        pack(CSR'(CSRsscratch  )): (CSRsscratch  );
-        pack(CSR'(CSRsepc      )): (CSRsepc      );
-        pack(CSR'(CSRscause    )): (CSRscause    );
-        pack(CSR'(CSRstval     )): (CSRstval     );
-        pack(CSR'(CSRsip       )): (CSRsip       );
-        pack(CSR'(CSRsatp      )): (CSRsatp      );
-        pack(CSR'(CSRmstatus   )): (CSRmstatus   );
-        pack(CSR'(CSRmisa      )): (CSRmisa      );
-        pack(CSR'(CSRmedeleg   )): (CSRmedeleg   );
-        pack(CSR'(CSRmideleg   )): (CSRmideleg   );
-        pack(CSR'(CSRmie       )): (CSRmie       );
-        pack(CSR'(CSRmtvec     )): (CSRmtvec     );
-        pack(CSR'(CSRmcounteren)): (CSRmcounteren);
-        pack(CSR'(CSRmscratch  )): (CSRmscratch  );
-        pack(CSR'(CSRmepc      )): (CSRmepc      );
-        pack(CSR'(CSRmcause    )): (CSRmcause    );
-        pack(CSR'(CSRmtval     )): (CSRmtval     );
-        pack(CSR'(CSRmip       )): (CSRmip       );
-        pack(CSR'(CSRmcycle    )): (CSRmcycle    );
-        pack(CSR'(CSRminstret  )): (CSRminstret  );
-        pack(CSR'(CSRmvendorid )): (CSRmvendorid );
-        pack(CSR'(CSRmarchid   )): (CSRmarchid   );
-        pack(CSR'(CSRmimpid    )): (CSRmimpid    );
-        pack(CSR'(CSRmhartid   )): (CSRmhartid   );
-`ifdef SECURITY
-        pack(CSR'(CSRmevbase   )): (CSRmevbase   );
-        pack(CSR'(CSRmevmask   )): (CSRmevmask   );
-        pack(CSR'(CSRmeatp     )): (CSRmeatp     );
-        pack(CSR'(CSRmmrbm     )): (CSRmmrbm     );
-        pack(CSR'(CSRmemrbm    )): (CSRmemrbm    );
-        pack(CSR'(CSRmparbase  )): (CSRmparbase  );
-        pack(CSR'(CSRmparmask  )): (CSRmparmask  );
-        pack(CSR'(CSRmeparbase )): (CSRmeparbase );
-        pack(CSR'(CSRmeparmask )): (CSRmeparmask );
-        pack(CSR'(CSRmflush    )): (CSRmflush    );
-        pack(CSR'(CSRmspec     )): (CSRmspec     );
-        pack(CSR'(CSRtrng      )): (CSRtrng      );
-`endif
-
-        pack(CSR'(CSRtselect   )): (CSRtselect   );
-        pack(CSR'(CSRtdata1    )): (CSRtdata1    );
-        pack(CSR'(CSRtdata2    )): (CSRtdata2    );
-        pack(CSR'(CSRtdata3    )): (CSRtdata3    );
-
-`ifdef INCLUDE_GDB_CONTROL
-        pack(CSR'(CSRdcsr      )): (CSRdcsr      );
-        pack(CSR'(CSRdpc       )): (CSRdpc       );
-        pack(CSR'(CSRdscratch0 )): (CSRdscratch0 );
-        pack(CSR'(CSRdscratch1 )): (CSRdscratch1 );
-`endif
-
-        default                  : (CSRnone      );
+`define CSR(c,v) pack(CSR'(c)): (c);
+`include "CSRs.bsvi"
+`undef CSR
+        default : (CSRnone      );
     endcase);
 endfunction
 
