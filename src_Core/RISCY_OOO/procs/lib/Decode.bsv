@@ -185,6 +185,7 @@ function DecodeResult decode(Instruction inst);
     ImmData immB  = signExtend({ inst[31], inst[7], inst[30:25], inst[11:8], 1'b0});
     ImmData immU  = signExtend({ inst[31:12], 12'b0 });
     ImmData immJ  = signExtend({ inst[31], inst[19:12], inst[20], inst[30:21], 1'b0});
+    ImmData immIunsigned = zeroExtend(inst[31:20]);
 
     // Results of mini-decoders
     Maybe#(MemInst) mem_inst = decodeMemInst(inst);
@@ -751,7 +752,7 @@ function DecodeResult decode(Instruction inst);
                     regs.dst = Valid(tagged Gpr rd);
                     regs.src1 = Valid(tagged Gpr rs1);
                     regs.src2 = Invalid;
-                    dInst.imm = Valid (immI);
+                    dInst.imm = Valid (immIunsigned);
                     dInst.execFunc = CapModify (SetBounds (SetBounds));
                 end
                 f3_cap_ThreeOp: begin
