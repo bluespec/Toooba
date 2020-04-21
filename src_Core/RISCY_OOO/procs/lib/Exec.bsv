@@ -206,7 +206,7 @@ function Data capInspect(CapPipe a, CapPipe b, CapInspectFunc func);
                tagged GetType                :
                    signExtend(getType(a));
                tagged ToPtr                  :
-                   (getAddr(a) - getBase(b));
+                   (isValidCap(a) ? (getAddr(a) - getBase(b)) : 0);
                default: ?;
         endcase);
     return res;
