@@ -117,7 +117,7 @@ interface Row_setExecuted_doFinishAlu;
         Maybe#(Data) csrData,
         Maybe#(CapPipe) scrData,
         ControlFlow cf,
-        Maybe#(CHERIException) cause,
+        Maybe#(CSR_XCapCause) cause,
         CapPipe pcc
 `ifdef RVFI
         , ExtraTraceBundle tb
@@ -289,7 +289,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
                 Maybe#(Data) csrData,
                 Maybe#(CapPipe) scrData,
                 ControlFlow cf,
-                Maybe#(CHERIException) cause,
+                Maybe#(CSR_XCapCause) cause,
                 CapPipe pcc
 `ifdef RVFI
                 , ExtraTraceBundle tb
@@ -313,10 +313,12 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
                 CapPipe new_pcc = setAddrUnsafe(pcc, getAddr(pc[pc_finishAlu_port(i)]));
                 pc[pc_finishAlu_port(i)] <= new_pcc;
                 if (!isInBounds(new_pcc, False)) begin
-                    trap[trap_finishAlu_port(i)] <= Valid (TrapWithCap{trap: tagged Exception CHERIFault, capExp: LengthViolation});
+                    trap[trap_finishAlu_port(i)] <= Valid (TrapWithCap{trap: tagged Exception CHERIFault,
+                                                                       capExp: CSR_XCapCause {cheri_exc_code: LengthViolation,
+                                                                                              cheri_exc_reg: {1,pack(SCR_PCC)}}});
                     tval[trap_finishAlu_port(i)] <= tval[trap_finishAlu_port(i)];
                 end else if (cause matches tagged Valid .exp) begin
-                    trap[trap_finishAlu_port(i)] <= Valid (TrapWithCap{trap: tagged Exception CHERIFault, capExp: fromMaybe(None, cause)});
+                    trap[trap_finishAlu_port(i)] <= Valid (TrapWithCap{trap: tagged Exception CHERIFault, capExp: exp});
                     tval[trap_finishAlu_port(i)] <= tval[trap_finishAlu_port(i)];
                 end
 `ifdef RVFI
@@ -346,10 +348,12 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
                 fflags[fflags_finishFpuMulDiv_port(i)] <= new_fflags;
                 CapPipe new_pcc = setAddrUnsafe(pcc, getAddr(pc[pc_finishAlu_port(i)]));
                 if (!isInBounds(new_pcc, False)) begin
-                    trap[trap_finishFpuMulDiv_port(i)] <= Valid (TrapWithCap{trap: tagged Exception CHERIFault, capExp: LengthViolation});
+                    trap[trap_finishFpuMulDiv_port(i)] <= Valid (TrapWithCap{trap: tagged Exception CHERIFault,
+                                                                             capExp: CSR_XCapCause {cheri_exc_code: LengthViolation,
+                                                                                                    cheri_exc_reg: {1,pack(SCR_PCC)}}});
                     tval[trap_finishFpuMulDiv_port(i)] <= tval[trap_finishAlu_port(i)];
                 end else if (cause matches tagged Valid .exp) begin
-                    trap[trap_finishFpuMulDiv_port(i)] <= Valid (TrapWithCap{trap: tagged Exception exp, capExp: None});
+                    trap[trap_finishFpuMulDiv_port(i)] <= Valid (TrapWithCap{trap: tagged Exception exp, capExp: noCapCause});
                     tval[trap_finishFpuMulDiv_port(i)] <= tval[trap_finishAlu_port(i)];
                 end
                 //pc[pc_finishFpuMulDiv_port(i)] <= newPcc; //XXX add pcc checks on FPU instructions
@@ -403,10 +407,12 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         CapPipe new_pcc = setAddrUnsafe(pcc, getAddr(pc[pc_finishMem_port]));
         pc[pc_finishMem_port] <= new_pcc;
         if (!isInBounds(new_pcc, False)) begin
-            mem_early_trap[0] <= Valid (TrapWithCap{trap: tagged Exception CHERIFault, capExp: LengthViolation});
+            mem_early_trap[0] <= Valid (TrapWithCap{trap: tagged Exception CHERIFault,
+                                                    capExp: CSR_XCapCause {cheri_exc_code: LengthViolation,
+                                                                           cheri_exc_reg: {1,pack(SCR_PCC)}}});
             tval[trap_finishMem_port] <= tval[trap_finishMem_port];
         end else if (cause matches tagged Valid .exp) begin
-            mem_early_trap[0] <= Valid (TrapWithCap{trap: tagged Exception exp, capExp: None});
+            mem_early_trap[0] <= Valid (TrapWithCap{trap: tagged Exception exp, capExp: noCapCause});
             tval[trap_finishMem_port] <= tval[trap_finishMem_port];
         end
     endmethod
@@ -533,7 +539,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         // record trap
         //doAssert(!isValid(trap[trap_deqLSQ_port]), "cannot have trap");
         if (isValid(mem_early_trap[0])) trap[trap_deqLSQ_port] <= mem_early_trap[0];
-        else if(cause matches tagged Valid .e) trap[trap_deqLSQ_port] <= Valid (TrapWithCap{trap: tagged Exception e, capExp: None});
+        else if(cause matches tagged Valid .e) trap[trap_deqLSQ_port] <= Valid (TrapWithCap{trap: tagged Exception e, capExp: noCapCause});
         // TODO: shouldn't we record tval here as well?
         // record ld misspeculation
         ldKilled[ldKill_deqLSQ_port] <= ld_killed;
@@ -595,7 +601,7 @@ interface ROB_setExecuted_doFinishAlu;
                       Maybe#(Data) csrData,
                       Maybe#(CapPipe) scrData,
                       ControlFlow cf,
-                      Maybe#(CHERIException) cause,
+                      Maybe#(CSR_XCapCause) cause,
                       CapPipe pcc
 `ifdef RVFI
                       , ExtraTraceBundle tb
@@ -1144,7 +1150,7 @@ module mkSupReorderBuffer#(
                 Maybe#(Data) csrData,
                 Maybe#(CapPipe) scrData,
                 ControlFlow cf,
-                Maybe#(CHERIException) cause,
+                Maybe#(CSR_XCapCause) cause,
                 CapPipe pcc
 `ifdef RVFI
                 , ExtraTraceBundle tb

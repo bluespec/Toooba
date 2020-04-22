@@ -66,9 +66,47 @@ function Maybe#(CapException) capChecks(CapPipe a, CapPipe b, CapChecks toCheck)
         result = e2(TypeViolation);
     else if (toCheck.src2_addr_valid_type     && !validAsType(b, truncate(getAddr(b))))
         result = e2(LengthViolation);
-    else if (toCheck.src2_perm_subset_src1    && (getPerms(a) & getPerms(b)) != getPerms(b))
+    else if (toCheck.src1_perm_subset_src2    && (getPerms(a) & getPerms(b)) != getPerms(a))
         result = e2(SoftwarePermViolation);
+    else if (toCheck.src1_derivable           && !isDerivable(a))
+        result = e1(LengthViolation);
     return result;
+endfunction
+
+(* noinline *)
+function Maybe#(BoundsCheck) prepareBoundsCheck(CapPipe a, CapPipe b, CapChecks toCheck);
+    BoundsCheck ret = ?;
+    CapPipe authority = ?;
+    case(toCheck.check_authority_src)
+        Src1: begin
+            authority = a;
+            ret.authority_idx = toCheck.rn1;
+        end
+        Src2: begin
+            authority = b;
+            ret.authority_idx = toCheck.rn2;
+        end
+    endcase
+    ret.authority_base = getBase(authority);
+    ret.authority_top = getTop(authority);
+
+    case(toCheck.check_low_src)
+        Src1Addr: ret.check_low = getAddr(a);
+        Src1Base: ret.check_low = getBase(a);
+        Src2Addr: ret.check_low = getAddr(b);
+        Src2Type: ret.check_low = zeroExtend(getType(b));
+    endcase
+
+    case(toCheck.check_high_src)
+        Src1Top: ret.check_high = getTop(a);
+        Src2Addr: ret.check_high = {1'b0,getAddr(b)};
+        Src2Type: ret.check_high = zeroExtend(getType(b));
+        ResultTop: ret.check_high = {1'b0,getAddr(a)} + {1'b0,getAddr(b)};
+    endcase
+
+    ret.check_inclusive = toCheck.check_inclusive;
+    if (toCheck.check_enable) return Valid(ret);
+    else                      return Invalid;
 endfunction
 
 (* noinline *)
@@ -98,14 +136,26 @@ function Data alu(Data a, Data b, AluFunc func);
 endfunction
 
 (* noinline *)
+function CapPipe setBoundsALU(CapPipe cap, Data len, SetBoundsFunc boundsOp);
+    let combinedResult = setBoundsCombined(cap, len);
+    CapPipe res = (case (boundsOp) matches
+            SetBounds: combinedResult.cap;
+            CRRL: nullWithAddr(combinedResult.length);
+            CRAM: nullWithAddr(combinedResult.mask);
+        endcase);
+    // TODO exfiltrate exact somehow...
+    return res;
+endfunction
+
+(* noinline *)
 function CapPipe capModify(CapPipe a, CapPipe b, CapModifyFunc func);
     CapPipe res = (case(func) matches
             tagged ModifyOffset .offsetOp :
                 modifyOffset(a, getAddr(b), offsetOp == IncOffset).value;
-            tagged SetBounds .exact       :
-                setBounds(a, getAddr(b)).value;
-            //tagged SpecialRW              :
-            //    error("SpecialRW not yet implemented");
+            tagged SetBounds .boundsOp    :
+                setBoundsALU(a, getAddr(b), boundsOp);
+            tagged SpecialRW .scrType     :
+                a; //TODO masking of various bits
             tagged SetAddr .addrSource    :
                 if (addrSource == Src2Type && !isSealed(b)) return nullWithAddr(-1);
                 else return setAddr(a, (addrSource == Src2Type) ? zeroExtend(getType(b)) : getAddr(b) ).value;
@@ -120,7 +170,7 @@ function CapPipe capModify(CapPipe a, CapPipe b, CapModifyFunc func);
             //tagged FromPtr                :
             //     error("FromPtr not yet implemented");
             tagged BuildCap               :
-                setValidCap(a, True);
+                setType(setValidCap(a, True),-1);
             tagged Move                   :
                 a;
             tagged ClearTag               :
@@ -156,7 +206,7 @@ function Data capInspect(CapPipe a, CapPipe b, CapInspectFunc func);
                tagged GetType                :
                    signExtend(getType(a));
                tagged ToPtr                  :
-                   (getAddr(a) - getBase(b));
+                   (isValidCap(a) ? (getAddr(a) - getBase(b)) : 0);
                default: ?;
         endcase);
     return res;
@@ -233,7 +283,8 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
     Data inspect_result = capInspect(rVal1, aluVal2, dInst.execFunc.CapInspect);
     CapModifyFunc modFunc = ccall ? (Unseal (Src2)):dInst.execFunc.CapModify;
     CapPipe modify_result = capModify(rVal1, aluVal2, modFunc);
-    Maybe#(CapException) capException = capChecks(rVal1, aluVal2, dInst.capChecks); // TODO use this to throw exceptions
+    Maybe#(CapException) capException = capChecks(rVal1, aluVal2, dInst.capChecks);
+    Maybe#(BoundsCheck) boundsCheck = prepareBoundsCheck(rVal1, aluVal2, dInst.capChecks);
 
     CapPipe cap_alu_result = case (dInst.execFunc) matches tagged CapInspect .x: nullWithAddr(inspect_result);
                                                            tagged CapModify .x: modify_result;
@@ -258,7 +309,7 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
             Jr &&& (ccall): cap_alu_result; // Depending on defaults falling through!
             Jr &&& (cjalr): link_pcc;
             Jr          : nullWithAddr(getOffset(link_pcc));
-            Auipc       : nullWithAddr(pc + fromMaybe(?, getDInstImm(dInst))); // could be computed with alu
+            Auipc       : (getFlags(pcc)[0] == 1'b0 ? nullWithAddr(pc + fromMaybe(?, getDInstImm(dInst))) : modifyOffset(pcc, fromMaybe(?, getDInstImm(dInst)), True).value); // could be computed with alu
             Csr         : rVal1;
             default     : cap_alu_result;
         endcase);
@@ -267,9 +318,9 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
             Ld, St, Lr, Sc, Amo : nullWithAddr(alu_result);
             default             : nullWithAddr(cf.nextPc);
         endcase);
-    CapPipe scr_data = rVal1;
+    CapPipe scr_data = modify_result;
 
-    return ExecResult{data: data, csrData: csr_data, scrData: scr_data, addr: addr, controlFlow: cf, capException: capException};
+    return ExecResult{data: data, csrData: csr_data, scrData: scr_data, addr: addr, controlFlow: cf, capException: capException, boundsCheck: boundsCheck};
 endfunction
 
 (* noinline *)

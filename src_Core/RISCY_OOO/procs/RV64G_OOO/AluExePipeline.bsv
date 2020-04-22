@@ -89,7 +89,8 @@ typedef struct {
     Maybe#(Data) csrData; // data to write CSR file
     Maybe#(CapPipe) scrData; // datat to write to special capability register file.
     ControlFlow controlFlow;
-    Maybe#(CHERIException) capException;
+    Maybe#(CSR_XCapCause) capException;
+    Maybe#(BoundsCheck) check;
     // speculation
     Maybe#(SpecTag) spec_tag;
 `ifdef RVFI
@@ -157,7 +158,7 @@ interface AluExeInput;
         Maybe#(Data) csrData,
         Maybe#(CapPipe) scrData,
         ControlFlow cf,
-        Maybe#(CHERIException) capCause,
+        Maybe#(CSR_XCapCause) capCause,
         CapPipe pcc
 `ifdef RVFI
         , ExtraTraceBundle tb
@@ -256,6 +257,9 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
 
         // get rVal2 (check bypass)
         CapPipe rVal2 = nullCap;
+        if(x.dInst.scr matches tagged Valid .scr) begin
+            rVal2 = cast(inIfc.scaprf_rd(scr));
+        end
         if(x.regs.src2 matches tagged Valid .src2 &&& src2 != 0) begin
             rVal2 <- readRFBypass(src2, regsReady.src2, inIfc.rf_rd2(src2), bypassWire);
         end
@@ -323,7 +327,8 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
                 // This means that we will have instructions that both write SCR registers and also get mispredictions, unlike
                 // the CSR file.  Given the assertions above, this seems dangerous...
                 scrData: isValid(x.dInst.scr) ? Valid (exec_result.scrData) : tagged Invalid,
-                capException: isValid(exec_result.capException) ? (Valid (exec_result.capException.Valid.cheri_exc_code)) : Invalid,
+                capException: exec_result.capException,
+                check: exec_result.boundsCheck,
 `ifdef RVFI
                 traceBundle: ExtraTraceBundle{
                     regWriteData: getAddr(exec_result.data),
@@ -347,6 +352,13 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
         if(x.dst matches tagged Valid .dst) begin
             inIfc.sendBypass[finishSendBypassPort].send(dst.indx, x.data);
             inIfc.writeRegFile(dst.indx, x.data);
+        end
+
+        if (x.check matches tagged Valid .check &&& x.capException matches tagged Invalid) begin
+            if (!(                         (check.check_low  >= check.authority_base) &&
+                  (check.check_inclusive ? (check.check_high <= check.authority_top )
+                                         : (check.check_high <  check.authority_top ))))
+                x.capException = Valid(CSR_XCapCause{cheri_exc_reg: check.authority_idx, cheri_exc_code: LengthViolation});
         end
 
         // update the instruction in the reorder buffer.

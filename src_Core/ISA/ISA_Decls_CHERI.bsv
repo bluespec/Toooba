@@ -67,6 +67,9 @@ typedef struct {
     CHERIException cheri_exc_code;
 } CSR_XCapCause deriving(Bits, FShow);
 
+CSR_XCapCause noCapCause = CSR_XCapCause {cheri_exc_code: None,
+                                          cheri_exc_reg: unpack(0)};
+
 function Bit#(64) xccsr_to_word(CSR_XCapCause xccsr);
     return zeroExtend({xccsr.cheri_exc_reg, pack(xccsr.cheri_exc_code), 3'b0, 1'b1, 1'b1});
 endfunction
@@ -85,10 +88,10 @@ typedef enum {
     SCR_PCC       = 5'd00,
     SCR_DDC       = 5'd01,
 
-    SCR_UTCC      = 5'd04,
-    SCR_UTDC      = 5'd05,
-    SCR_UScratchC = 5'd06,
-    SCR_UEPCC     = 5'd07,
+//  SCR_UTCC      = 5'd04,
+//  SCR_UTDC      = 5'd05,
+//  SCR_UScratchC = 5'd06,
+//  SCR_UEPCC     = 5'd07,
 
     SCR_STCC      = 5'd12,
     SCR_STDC      = 5'd13,
@@ -98,8 +101,32 @@ typedef enum {
     SCR_MTCC      = 5'd28,
     SCR_MTDC      = 5'd29,
     SCR_MScratchC = 5'd30,
-    SCR_MEPCC     = 5'd31
-} SCR deriving(Bits, Eq, FShow);
+    SCR_MEPCC     = 5'd31,
+
+    // As with CSRs, SCR that catches all unimplemented SCRs
+    SCR_None      = 5'd10
+} SCR deriving(Bits, Eq, FShow, Bounded);
+
+function SCR unpackSCR(Bit#(5) x);
+    return (case(x)
+        pack(SCR'(SCR_PCC      )): (SCR_PCC      );
+        pack(SCR'(SCR_DDC      )): (SCR_DDC      );
+//      pack(SCR'(SCR_UTCC     )): (SCR_UTCC     );
+//      pack(SCR'(SCR_UTDC     )): (SCR_UTDC     );
+//      pack(SCR'(SCR_UScratchC)): (SCR_UScratchC);
+//      pack(SCR'(SCR_UEPCC    )): (SCR_UEPCC    );
+        pack(SCR'(SCR_STCC     )): (SCR_STCC     );
+        pack(SCR'(SCR_STDC     )): (SCR_STDC     );
+        pack(SCR'(SCR_SScratchC)): (SCR_SScratchC);
+        pack(SCR'(SCR_SEPCC    )): (SCR_SEPCC    );
+        pack(SCR'(SCR_MTCC     )): (SCR_MTCC     );
+        pack(SCR'(SCR_MTDC     )): (SCR_MTDC     );
+        pack(SCR'(SCR_MScratchC)): (SCR_MScratchC);
+        pack(SCR'(SCR_MEPCC    )): (SCR_MEPCC    );
+
+        default                  : (SCR_None     );
+    endcase);
+endfunction
 
 function CapPipe update_scr_via_csr (CapPipe old_scr, WordXL new_csr);
     let new_scr = setOffset(old_scr, new_csr);
