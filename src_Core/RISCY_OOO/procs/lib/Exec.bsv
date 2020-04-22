@@ -74,7 +74,7 @@ function Maybe#(CapException) capChecks(CapPipe a, CapPipe b, CapChecks toCheck)
 endfunction
 
 (* noinline *)
-function Maybe#(BoundsCheck) prepareBoundsCheck(CapPipe a, CapPipe b, CapPipe c, CapChecks toCheck);
+function Maybe#(BoundsCheck) prepareBoundsCheck(CapPipe a, CapPipe b, CapChecks toCheck);
     BoundsCheck ret = ?;
     CapPipe authority = ?;
     case(toCheck.check_authority_src)
@@ -99,9 +99,9 @@ function Maybe#(BoundsCheck) prepareBoundsCheck(CapPipe a, CapPipe b, CapPipe c,
 
     case(toCheck.check_high_src)
         Src1Top: ret.check_high = getTop(a);
-        Src2Addr: ret.check_high = {0,getAddr(b)};
+        Src2Addr: ret.check_high = {1'b0,getAddr(b)};
         Src2Type: ret.check_high = zeroExtend(getType(b));
-        ResultTop: ret.check_high = {0,getTop(c)}; // TODO will be bad for timing
+        ResultTop: ret.check_high = {1'b0,getAddr(a)} + {1'b0,getAddr(b)};
     endcase
 
     ret.check_inclusive = toCheck.check_inclusive;
@@ -284,7 +284,7 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
     CapModifyFunc modFunc = ccall ? (Unseal (Src2)):dInst.execFunc.CapModify;
     CapPipe modify_result = capModify(rVal1, aluVal2, modFunc);
     Maybe#(CapException) capException = capChecks(rVal1, aluVal2, dInst.capChecks);
-    Maybe#(BoundsCheck) boundsCheck = prepareBoundsCheck(rVal1, aluVal2, modify_result, dInst.capChecks);
+    Maybe#(BoundsCheck) boundsCheck = prepareBoundsCheck(rVal1, aluVal2, dInst.capChecks);
 
     CapPipe cap_alu_result = case (dInst.execFunc) matches tagged CapInspect .x: nullWithAddr(inspect_result);
                                                            tagged CapModify .x: modify_result;
