@@ -170,7 +170,7 @@ function CapPipe capModify(CapPipe a, CapPipe b, CapModifyFunc func);
             //tagged FromPtr                :
             //     error("FromPtr not yet implemented");
             tagged BuildCap               :
-                setValidCap(a, True);
+                setType(setValidCap(a, True),-1);
             tagged Move                   :
                 a;
             tagged ClearTag               :
