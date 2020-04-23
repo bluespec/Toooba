@@ -1,0 +1,17 @@
+  `SCR(SCR_PCC       , 5'd00)
+  `SCR(SCR_DDC       , 5'd01)
+
+//`SCR(SCR_UTCC      , 5'd0)
+//`SCR(SCR_UTDC      , 5'd05)
+//`SCR(SCR_UScratchC , 5'd06)
+//`SCR(SCR_UEPCC     , 5'd07)
+
+  `SCR(SCR_STCC      , 5'd12)
+  `SCR(SCR_STDC      , 5'd13)
+  `SCR(SCR_SScratchC , 5'd14)
+  `SCR(SCR_SEPCC     , 5'd15)
+
+  `SCR(SCR_MTCC      , 5'd28)
+  `SCR(SCR_MTDC      , 5'd29)
+  `SCR(SCR_MScratchC , 5'd30)
+  `SCR(SCR_MEPCC     , 5'd31)
