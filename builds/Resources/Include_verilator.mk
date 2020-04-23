@@ -20,12 +20,12 @@ Verilog_RTL:
 	bsc -verilog -elab -bdir build_dir -vdir Verilog_RTL $(BSC_COMPILATION_FLAGS) -p $(BSC_PATH) $<
 
 .PHONY: compile
-compile: Verilog_RTL/mkTop_HW_Side.v
+compile: build_dir/Top_HW_Side.bo
 #Verilog_RTL/mkTop_HW_Side.v:  build_dir Verilog_RTL /tmp/src_dir $(VERILOG_SUB_MODULES)
-Verilog_RTL/mkTop_HW_Side.v: $(TOPFILE) build_dir/Top_HW_Side.bo build_dir Verilog_RTL
-	@echo  "INFO: Verilog RTL generation ..."
-	bsc -u -verilog  $(RTL_GEN_DIRS)  $(BSC_COMPILATION_FLAGS) -p $(BSC_PATH) $<
-	@echo  "INFO: Verilog RTL generation finished"
+#Verilog_RTL/mkTop_HW_Side.v: $(TOPFILE) build_dir/Top_HW_Side.bo build_dir Verilog_RTL
+#	@echo  "INFO: Verilog RTL generation ..."
+#	bsc -u -verilog  $(RTL_GEN_DIRS)  $(BSC_COMPILATION_FLAGS) -p $(BSC_PATH) $<
+#	@echo  "INFO: Verilog RTL generation finished"
 
 # ================================================================
 # Compile and link Verilog RTL sources into an verilator executable
@@ -51,7 +51,7 @@ VTOP                = V$(TOPMODULE)_edited
 VERILATOR_RESOURCES = $(REPO)/builds/Resources/Verilator_resources
 
 .PHONY: simulator
-simulator: Verilog_RTL/mkTop_HW_Side.v
+simulator: build_dir/Top_HW_Side.bo
 	@echo "INFO: Verilating Verilog files (in newly created obj_dir)"
 	sed  -f $(VERILATOR_RESOURCES)/sed_script.txt  Verilog_RTL/$(TOPMODULE).v > tmp1.v
 	cat  $(VERILATOR_RESOURCES)/verilator_config.vlt \
