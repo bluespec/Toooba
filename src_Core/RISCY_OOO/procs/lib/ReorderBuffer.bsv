@@ -312,12 +312,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
                 end
                 CapPipe new_pcc = setAddrUnsafe(pcc, getAddr(pc[pc_finishAlu_port(i)]));
                 pc[pc_finishAlu_port(i)] <= new_pcc;
-                if (!isInBounds(new_pcc, False)) begin
-                    trap[trap_finishAlu_port(i)] <= Valid (TrapWithCap{trap: tagged Exception CHERIFault,
-                                                                       capExp: CSR_XCapCause {cheri_exc_code: LengthViolation,
-                                                                                              cheri_exc_reg: {1,pack(SCR_PCC)}}});
-                    tval[trap_finishAlu_port(i)] <= tval[trap_finishAlu_port(i)];
-                end else if (cause matches tagged Valid .exp) begin
+                if (cause matches tagged Valid .exp) begin
                     trap[trap_finishAlu_port(i)] <= Valid (TrapWithCap{trap: tagged Exception CHERIFault, capExp: exp});
                     tval[trap_finishAlu_port(i)] <= tval[trap_finishAlu_port(i)];
                 end
@@ -346,13 +341,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
                 rg_dst_data <= nullWithAddr(dst_data);
                 // update fflags
                 fflags[fflags_finishFpuMulDiv_port(i)] <= new_fflags;
-                CapPipe new_pcc = setAddrUnsafe(pcc, getAddr(pc[pc_finishAlu_port(i)]));
-                if (!isInBounds(new_pcc, False)) begin
-                    trap[trap_finishFpuMulDiv_port(i)] <= Valid (TrapWithCap{trap: tagged Exception CHERIFault,
-                                                                             capExp: CSR_XCapCause {cheri_exc_code: LengthViolation,
-                                                                                                    cheri_exc_reg: {1,pack(SCR_PCC)}}});
-                    tval[trap_finishFpuMulDiv_port(i)] <= tval[trap_finishAlu_port(i)];
-                end else if (cause matches tagged Valid .exp) begin
+                if (cause matches tagged Valid .exp) begin
                     trap[trap_finishFpuMulDiv_port(i)] <= Valid (TrapWithCap{trap: tagged Exception exp, capExp: noCapCause});
                     tval[trap_finishFpuMulDiv_port(i)] <= tval[trap_finishAlu_port(i)];
                 end
@@ -406,12 +395,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         nonMMIOStDone[nonMMIOSt_finishMem_port] <= non_mmio_st_done;
         CapPipe new_pcc = setAddrUnsafe(pcc, getAddr(pc[pc_finishMem_port]));
         pc[pc_finishMem_port] <= new_pcc;
-        if (!isInBounds(new_pcc, False)) begin
-            mem_early_trap[0] <= Valid (TrapWithCap{trap: tagged Exception CHERIFault,
-                                                    capExp: CSR_XCapCause {cheri_exc_code: LengthViolation,
-                                                                           cheri_exc_reg: {1,pack(SCR_PCC)}}});
-            tval[trap_finishMem_port] <= tval[trap_finishMem_port];
-        end else if (cause matches tagged Valid .exp) begin
+        if (cause matches tagged Valid .exp) begin
             mem_early_trap[0] <= Valid (TrapWithCap{trap: tagged Exception exp, capExp: noCapCause});
             tval[trap_finishMem_port] <= tval[trap_finishMem_port];
         end

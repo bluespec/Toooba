@@ -1124,6 +1124,12 @@ function DecodeResult decode(Instruction inst);
                                     dInst.capChecks.src1_permit_x = True;
                                     dInst.capChecks.src1_unsealed = True;
 
+                                    dInst.capChecks.check_enable = True;
+                                    dInst.capChecks.check_authority_src = Src1;
+                                    dInst.capChecks.check_low_src = Src1Addr;
+                                    dInst.capChecks.check_high_src = Src1AddrPlus2;
+                                    dInst.capChecks.check_inclusive = False;
+
                                     dInst.iType = Jr;
                                     dInst.execFunc = tagged Br AT;
                                     regs.dst  = Valid(tagged Gpr rd);
