@@ -85,46 +85,19 @@ endfunction
 // SCR map
 
 typedef enum {
-    SCR_PCC       = 5'd00,
-    SCR_DDC       = 5'd01,
-
-//  SCR_UTCC      = 5'd04,
-//  SCR_UTDC      = 5'd05,
-//  SCR_UScratchC = 5'd06,
-//  SCR_UEPCC     = 5'd07,
-
-    SCR_STCC      = 5'd12,
-    SCR_STDC      = 5'd13,
-    SCR_SScratchC = 5'd14,
-    SCR_SEPCC     = 5'd15,
-
-    SCR_MTCC      = 5'd28,
-    SCR_MTDC      = 5'd29,
-    SCR_MScratchC = 5'd30,
-    SCR_MEPCC     = 5'd31,
-
+`define SCR(s,v) s = v,
+`include "SCRs.bsvi"
+`undef SCR
     // As with CSRs, SCR that catches all unimplemented SCRs
     SCR_None      = 5'd10
 } SCR deriving(Bits, Eq, FShow, Bounded);
 
 function SCR unpackSCR(Bit#(5) x);
     return (case(x)
-        pack(SCR'(SCR_PCC      )): (SCR_PCC      );
-        pack(SCR'(SCR_DDC      )): (SCR_DDC      );
-//      pack(SCR'(SCR_UTCC     )): (SCR_UTCC     );
-//      pack(SCR'(SCR_UTDC     )): (SCR_UTDC     );
-//      pack(SCR'(SCR_UScratchC)): (SCR_UScratchC);
-//      pack(SCR'(SCR_UEPCC    )): (SCR_UEPCC    );
-        pack(SCR'(SCR_STCC     )): (SCR_STCC     );
-        pack(SCR'(SCR_STDC     )): (SCR_STDC     );
-        pack(SCR'(SCR_SScratchC)): (SCR_SScratchC);
-        pack(SCR'(SCR_SEPCC    )): (SCR_SEPCC    );
-        pack(SCR'(SCR_MTCC     )): (SCR_MTCC     );
-        pack(SCR'(SCR_MTDC     )): (SCR_MTDC     );
-        pack(SCR'(SCR_MScratchC)): (SCR_MScratchC);
-        pack(SCR'(SCR_MEPCC    )): (SCR_MEPCC    );
-
-        default                  : (SCR_None     );
+`define SCR(s,v) pack(SCR'(s)): (s);
+`include "SCRs.bsvi"
+`undef SCR
+        default : (SCR_None);
     endcase);
 endfunction
 

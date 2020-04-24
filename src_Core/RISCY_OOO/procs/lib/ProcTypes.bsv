@@ -514,6 +514,7 @@ typedef enum {
 } CheckLowSrc deriving(Bits, Eq, FShow);
 
 typedef enum {
+    Src1AddrPlus2,
     Src1Top,
     Src2Addr,
     Src2Type,
