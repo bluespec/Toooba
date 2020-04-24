@@ -63,10 +63,6 @@ BSC_COMPILATION_FLAGS += \
 
 EXAMPLE ?= PLEASE_DEFINE_EXAMPLE_PATH_TO_ELF
 
-# ================================================================
-# Rules to compile .bo files.  .depends.mk is the dependency graph extracted from an analysis of mkTop_HW_Side
-include $(REPO)/builds/Resources/.depends.mk
-
 
 .PHONY: run_example
 run_example:
