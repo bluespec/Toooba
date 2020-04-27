@@ -10,7 +10,7 @@
 RTL_GEN_DIRS = -vdir Verilog_RTL  -bdir build_dir  -info-dir build_dir
 
 .depends.mk: $(REPO)/builds/Resources/genDependencies.tcl build_dir
-	$(info WHAAAAAAAT $(BSC_DEFINES))
+	$(info generating bsv dependency graph)
 	BSC_PATH=$(BSC_PATH) \
 	BSC_DEFINES="$(BSC_DEFINES)" \
 	BSC_BUILDDIR=build_dir \
