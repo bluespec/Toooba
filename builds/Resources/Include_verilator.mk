@@ -9,17 +9,34 @@
 
 RTL_GEN_DIRS = -vdir Verilog_RTL  -bdir build_dir  -info-dir build_dir
 
+.depends.mk: $(REPO)/builds/Resources/genDependencies.tcl build_dir
+	$(info WHAAAAAAAT $(BSC_DEFINES))
+	BSC_PATH=$(BSC_PATH) \
+	BSC_DEFINES="$(BSC_DEFINES)" \
+	BSC_BUILDDIR=build_dir \
+	BSC_TOPFILE=$(REPO)/src_Testbench/Top/Top_HW_Side.bsv \
+	OUTPUTFILE=$@ \
+	$<
+
 build_dir:
 	mkdir -p $@
 
 Verilog_RTL:
 	mkdir -p $@
 
+include .depends.mk
+
+%.bo:
+	$(info building $@)
+	bsc -verilog -elab -bdir build_dir -vdir Verilog_RTL $(BSC_COMPILATION_FLAGS) -p $(BSC_PATH) $<
+
 .PHONY: compile
-compile:  build_dir  Verilog_RTL
-	@echo  "INFO: Verilog RTL generation ..."
-	bsc -u -elab -verilog  $(RTL_GEN_DIRS)  $(BSC_COMPILATION_FLAGS)  -p $(BSC_PATH)  $(TOPFILE)
-	@echo  "INFO: Verilog RTL generation finished"
+compile: .depends.mk build_dir Verilog_RTL build_dir/Top_HW_Side.bo
+#Verilog_RTL/mkTop_HW_Side.v:  build_dir Verilog_RTL /tmp/src_dir $(VERILOG_SUB_MODULES)
+#Verilog_RTL/mkTop_HW_Side.v: $(TOPFILE) build_dir/Top_HW_Side.bo build_dir Verilog_RTL
+#	@echo  "INFO: Verilog RTL generation ..."
+#	bsc -u -verilog  $(RTL_GEN_DIRS)  $(BSC_COMPILATION_FLAGS) -p $(BSC_PATH) $<
+#	@echo  "INFO: Verilog RTL generation finished"
 
 # ================================================================
 # Compile and link Verilog RTL sources into an verilator executable
@@ -45,7 +62,7 @@ VTOP                = V$(TOPMODULE)_edited
 VERILATOR_RESOURCES = $(REPO)/builds/Resources/Verilator_resources
 
 .PHONY: simulator
-simulator:
+simulator: build_dir/Top_HW_Side.bo
 	@echo "INFO: Verilating Verilog files (in newly created obj_dir)"
 	sed  -f $(VERILATOR_RESOURCES)/sed_script.txt  Verilog_RTL/$(TOPMODULE).v > tmp1.v
 	cat  $(VERILATOR_RESOURCES)/verilator_config.vlt \

@@ -55,13 +55,14 @@ TOPMODULE ?= mkTop_HW_Side
 
 BSC_COMPILATION_FLAGS += \
 	-keep-fires -aggressive-conditions -no-warn-action-shadowing -check-assert \
-	-suppress-warnings G0020    \
+	-suppress-warnings G0020 -steps-max-intervals 10000000   \
 	+RTS -K128M -RTS  -show-range-conflict
 
 # ================================================================
 # Runs simulation executable on ELF given by EXAMPLE
 
 EXAMPLE ?= PLEASE_DEFINE_EXAMPLE_PATH_TO_ELF
+
 
 .PHONY: run_example
 run_example:
@@ -95,7 +96,7 @@ isa_tests:
 
 .PHONY: clean
 clean:
-	rm -r -f  *~  Makefile_*  symbol_table.txt  build_dir  obj_dir
+	rm -r -f  *~  Makefile_*  symbol_table.txt  build_dir/*  obj_dir Verilog_RTL/*
 
 .PHONY: full_clean
 full_clean: clean
