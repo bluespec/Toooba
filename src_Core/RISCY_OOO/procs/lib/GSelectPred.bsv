@@ -1,6 +1,6 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +8,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -28,6 +28,8 @@ import Ehr::*;
 import Vector::*;
 import GlobalBrHistReg::*;
 import BrPred::*;
+import CHERICC_Fat::*;
+import CHERICap::*;
 
 export GSelectGHistSz;
 export GSelectGHist;
@@ -65,13 +67,13 @@ module mkGSelectPred(DirPredictor#(GSelectTrainInfo));
 
     // global branch history
     GSelectGHistReg globalHist <- mkGSelectGHistReg;
-    
+
     // EHR to record predict results in this cycle
     Ehr#(TAdd#(1, SupSize), Bit#(TLog#(TAdd#(SupSize, 1)))) predCnt <- mkEhr(0);
     Ehr#(TAdd#(1, SupSize), Bit#(SupSize)) predRes <- mkEhr(0);
 
-    function BhtIndex getIndex(Addr pc, GSelectGHist gHist);
-        Bit#(PCIndexSz) pcIdx = truncate(pc >> 2);
+    function BhtIndex getIndex(CapMem pc, GSelectGHist gHist);
+        Bit#(PCIndexSz) pcIdx = truncate(getAddr(pc) >> 2);
         return {gHist, pcIdx};
     endfunction
 
@@ -93,7 +95,7 @@ module mkGSelectPred(DirPredictor#(GSelectTrainInfo));
     Vector#(SupSize, DirPred#(GSelectTrainInfo)) predIfc;
     for(Integer i = 0; i < valueof(SupSize); i = i+1) begin
         predIfc[i] = (interface DirPred;
-            method ActionValue#(DirPredResult#(GSelectTrainInfo)) pred(Addr pc);
+            method ActionValue#(DirPredResult#(GSelectTrainInfo)) pred(CapMem pc);
                 // get the global history
                 // all previous branch in this cycle must be not taken
                 // otherwise this branch should be on wrong path
@@ -106,7 +108,7 @@ module mkGSelectPred(DirPredictor#(GSelectTrainInfo));
                 Bit#(SupSize) res = predRes[i];
                 res[predCnt[i]] = pack(taken);
                 predRes[i] <= res;
-                
+
                 // return
                 return DirPredResult {
                     taken: taken,
@@ -127,7 +129,7 @@ module mkGSelectPred(DirPredictor#(GSelectTrainInfo));
 
     interface pred = predIfc;
 
-    method Action update(Addr pc, Bool taken, GSelectTrainInfo train, Bool mispred);
+    method Action update(CapMem pc, Bool taken, GSelectTrainInfo train, Bool mispred);
         // update history if mispred
         if(mispred) begin
             GSelectGHist newHist = truncate({pack(taken), train.gHist} >> 1);

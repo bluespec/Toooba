@@ -232,14 +232,16 @@ function Bool aluBr(Data a, Data b, BrFunc brFunc);
 endfunction
 
 (* noinline *)
-function Addr brAddrCalc(Addr pc, Addr pccBase, Data val, IType iType, Data imm, Bool taken, Bit #(32) orig_inst, Bool cap);
-    Addr fallthrough_incr = ((orig_inst [1:0] == 2'b11) ? 4 : 2);
-    Addr pcPlusN = pc + fallthrough_incr;
-    if (!cap) val = pccBase + val;
-    Addr targetAddr = (case (iType)
-            J       : (pc + imm);
-            Jr      : {(val + imm)[valueOf(AddrSz)-1:1], 1'b0};
-            Br      : (taken? pc + imm : pcPlusN);
+function CapPipe brAddrCalc(CapPipe pc, CapPipe val, IType iType, Data imm, Bool taken, Bit #(32) orig_inst, Bool cap);
+    CapPipe pcPlusN = addPc(pc, ((orig_inst [1:0] == 2'b11) ? 4 : 2));
+    if (!cap) val = setOffset(pc, getAddr(val)).value;
+    CapPipe branchTarget = incOffset(pc, imm).value;
+    CapPipe jumpTarget = incOffset(val, imm).value;
+    jumpTarget = setAddrUnsafe(jumpTarget, {truncateLSB(getAddr(jumpTarget)), 1'b0});
+    CapPipe targetAddr = (case (iType)
+            J       : branchTarget;
+            Jr      : jumpTarget;
+            Br      : (taken? branchTarget : pcPlusN);
             default : pcPlusN;
         endcase);
     return targetAddr;
@@ -262,9 +264,8 @@ function ControlFlow getControlFlow(DecodedInst dInst, Data rVal1, Data rVal2, A
 endfunction
 */
 (* noinline *)
-function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, CapPipe pcc, Addr ppc, Bit #(32) orig_inst);
+function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, CapPipe pcc, CapPipe ppc, Bit #(32) orig_inst);
     // just data, addr, and control flow
-    Addr pc = getAddr(pcc);
     CapPipe data = nullCap;
     Data csr_data = 0;
     CapPipe addr = nullCap;
@@ -275,7 +276,7 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
         else if (dInst.capChecks.src1_tag) cjalr = True;
     end
 
-    ControlFlow cf = ControlFlow{pc: pc, nextPc: 0, taken: False, newPcc: cjalr, mispredict: False};
+    ControlFlow cf = ControlFlow{pc: pcc, nextPc: nullCap, taken: False, newPcc: cjalr, mispredict: False};
 
     CapPipe aluVal2 = rVal2;
     if (getDInstImm(dInst) matches tagged Valid .imm) aluVal2 = nullWithAddr(imm); //isValid(dInst.imm) ? fromMaybe(?, dInst.imm) : rVal2;
@@ -286,8 +287,7 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
     Data inspect_result = capInspect(rVal1, aluVal2, dInst.execFunc.CapInspect);
     CapModifyFunc modFunc = ccall ? (Unseal (Src2)):dInst.execFunc.CapModify;
     CapPipe modify_result = capModify(rVal1, aluVal2, modFunc);
-    Addr fallthrough_incr = ((orig_inst [1:0] == 2'b11) ? 4 : 2);
-    CapPipe link_pcc = setAddrUnsafe(pcc, pc + fallthrough_incr);
+    CapPipe link_pcc = addPc(pcc, ((orig_inst [1:0] == 2'b11) ? 4 : 2));
     Maybe#(CapException) capException = capChecks(rVal1, aluVal2, dInst.capChecks, link_pcc);
     Maybe#(BoundsCheck) boundsCheck = prepareBoundsCheck(rVal1, aluVal2, dInst.capChecks);
 
@@ -300,7 +300,7 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
     // Default branch function is not taken
     BrFunc br_f = dInst.execFunc matches tagged Br .br_f ? br_f : NT;
     cf.taken = aluBr(getAddr(rVal1), getAddr(rVal2), br_f);
-    cf.nextPc = brAddrCalc(pc, getBase(pcc), getAddr(rVal1), dInst.iType, fromMaybe(0,getDInstImm(dInst)), cf.taken, orig_inst, (ccall || cjalr));
+    cf.nextPc = brAddrCalc(pcc, rVal1, dInst.iType, fromMaybe(0,getDInstImm(dInst)), cf.taken, orig_inst, (ccall || cjalr));
     cf.mispredict = cf.nextPc != ppc;
 
     data = (case (dInst.iType) matches
@@ -311,14 +311,14 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
             Jr &&& (ccall): cap_alu_result; // Depending on defaults falling through!
             Jr &&& (cjalr): link_pcc;
             Jr          : nullWithAddr(getOffset(link_pcc));
-            Auipc       : (getFlags(pcc)[0] == 1'b0 ? nullWithAddr(pc + fromMaybe(?, getDInstImm(dInst))) : modifyOffset(pcc, fromMaybe(?, getDInstImm(dInst)), True).value); // could be computed with alu
+            Auipc       : (getFlags(pcc)[0] == 1'b0 ? nullWithAddr(getOffset(pcc) + fromMaybe(?, getDInstImm(dInst))) : incOffset(pcc, fromMaybe(?, getDInstImm(dInst))).value); // could be computed with alu
             Csr         : rVal1;
             default     : cap_alu_result;
         endcase);
     csr_data = alu_result;
     addr = (case (dInst.iType)
             Ld, St, Lr, Sc, Amo : nullWithAddr(alu_result);
-            default             : nullWithAddr(cf.nextPc);
+            default             : cf.nextPc;
         endcase);
     CapPipe scr_data = modify_result;
 

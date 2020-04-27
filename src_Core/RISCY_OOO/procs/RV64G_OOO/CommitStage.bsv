@@ -100,7 +100,7 @@ interface CommitInput;
     method Action setReconcileD; // recocile D$
     // redirect
     method Action killAll;
-    method Action redirectPc(Addr trap_pc
+    method Action redirectPc(CapMem trap_pc
 `ifdef RVFI_DII
         , Dii_Id diid
 `endif
@@ -152,7 +152,7 @@ endinterface
 // we apply actions the end of commit rule
 // use struct to record actions to be done
 typedef struct {
-    CapPipe pc;
+    CapMem pc;
     Addr addr;
     Trap trap;
     Bit #(32) orig_inst;
@@ -198,7 +198,10 @@ function Maybe#(RVFI_DII_Execution#(DataSz,DataSz)) genRVFI(ToReorderBuffer rot,
                     end
                 endcase
             end
-            tagged PPC .ppc: next_pc = getAddr(ppc);
+            tagged PPC .ppc: begin
+                CapPipe cp = cast(ppc);
+                next_pc = getOffset(cp);
+            end
             tagged CSRData .csrdata: data = csrdata;
         endcase
     end
@@ -744,8 +747,9 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
        if (! debugger_halt) begin
           // trap handling & redirect
           let trap_updates <- csrf.trap(trap.trap, getAddr(trap.pc), trap.addr, trap.orig_inst);
-          let cap_trap_updates <- scaprf.trap(trap.pc, ?);
-          inIfc.redirectPc(trap_updates.new_pc
+          let cap_trap_updates <- scaprf.trap(cast(trap.pc), ?);
+          CapPipe new_pc = setOffset(cast(cap_trap_updates.new_pcc), trap_updates.new_pc).value;
+          inIfc.redirectPc(cast(new_pc)
 `ifdef RVFI_DII
                            , trap.x.diid + 1
 `endif
@@ -788,7 +792,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
         // kill everything, redirect, and increment epoch
         inIfc.killAll;
-        inIfc.redirectPc(getAddr(x.pc)
+        inIfc.redirectPc(x.pc
 `ifdef RVFI_DII
             , x.diid
 `endif
@@ -876,22 +880,25 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         end
 
         // redirect (Sret and Mret redirect pc is got from CSRF)
-        Addr next_pc = x.ppc_vaddr_csrData matches tagged PPC .ppc ? getAddr(ppc) : (getAddr(x.pc) + 4);
-        doAssert(next_pc == getAddr(x.pc) + 4, "ppc must be pc + 4");
+        CapMem next_pc = x.ppc_vaddr_csrData matches tagged PPC .ppc ? ppc : addPc(x.pc, 4);
+        doAssert(getAddr(next_pc) == getAddr(x.pc) + 4, "ppc must be pc + 4");
 `ifdef INCLUDE_TANDEM_VERIF
         Maybe #(RET_Updates) m_ret_updates = no_ret_updates;
 `endif
         if(x.iType == Sret) begin
            RET_Updates ret_updates <- csrf.sret;
-           next_pc = ret_updates.new_pc;
            Scr_RET_Updates scr_ret_updates <- scaprf.sret;
+           CapPipe tc = setOffset(cast(scr_ret_updates.new_pcc), ret_updates.new_pc).value;
+           next_pc = cast(tc);
 `ifdef INCLUDE_TANDEM_VERIF
                  m_ret_updates = tagged Valid ret_updates;
 `endif
         end
         else if(x.iType == Mret) begin
            RET_Updates ret_updates <- csrf.mret;
-           next_pc = ret_updates.new_pc;
+           Scr_RET_Updates scr_ret_updates <- scaprf.sret;
+           CapPipe tc = setOffset(cast(scr_ret_updates.new_pcc), ret_updates.new_pc).value;
+           next_pc = cast(tc);
 `ifdef INCLUDE_TANDEM_VERIF
            m_ret_updates = tagged Valid ret_updates;
 `endif
@@ -904,8 +911,9 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
 `ifdef RVFI
         Rvfi_Traces rvfis = replicate(tagged Invalid);
-        x.ppc_vaddr_csrData = tagged PPC setAddrUnsafe(x.pc, next_pc);
-        rvfis[0] = genRVFI(x, traceCnt, getTSB(), next_pc);
+        x.ppc_vaddr_csrData = tagged PPC next_pc;
+        CapPipe cp = cast(next_pc);
+        rvfis[0] = genRVFI(x, traceCnt, getTSB(), getOffset(cp));
         rvfiQ.enq(rvfis);
         traceCnt <= traceCnt + 1;
 `endif

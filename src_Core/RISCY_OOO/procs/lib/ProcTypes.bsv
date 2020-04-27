@@ -488,8 +488,8 @@ typedef struct {
 } Redirect deriving (Bits, Eq, FShow);
 
 typedef struct {
-    Addr pc;
-    Addr nextPc;
+    CapPipe pc;
+    CapPipe nextPc;
     Bool taken;
     Bool newPcc;
     Bool mispredict;
@@ -958,3 +958,5 @@ function Fmt showInst(Instruction inst);
 
   return ret;
 endfunction
+
+function x addPc(x cap, Bit#(12) inc) provisos (Add#(f, 12, c), CHERICap::CHERICap#(x, a, b, c, d, e)) = setAddrUnsafe(cap, getAddr(cap) + signExtend(inc));

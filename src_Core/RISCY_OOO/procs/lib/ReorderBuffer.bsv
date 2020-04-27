@@ -47,7 +47,7 @@ import Cur_Cycle :: *;
 // csrData is only used by iType = Csr
 // vaddr is only used by mem inst in page fault
 typedef union tagged {
-    CapPipe PPC; // at default store ppc
+    CapMem PPC; // at default store ppc
     CapPipe VAddr; // for mem inst, store vaddr
     Data CSRData; // for Csr inst, store csr_data
     CapPipe SCRData; // for special capability register store
@@ -61,7 +61,7 @@ typedef struct {
 `endif
 
 typedef struct {
-    CapPipe            pc;
+    CapMem             pc;
     Bit #(32)          orig_inst;    // original 16b or 32b instruction ([1:0] will distinguish 16b or 32b)
     IType              iType;
     Maybe#(ArchRIndx)  dst;          // Invalid, GPR or FPR destination ("Rd")
@@ -117,8 +117,7 @@ interface Row_setExecuted_doFinishAlu;
         Maybe#(Data) csrData,
         Maybe#(CapPipe) scrData,
         ControlFlow cf,
-        Maybe#(CSR_XCapCause) cause,
-        CapPipe pcc
+        Maybe#(CSR_XCapCause) cause
 `ifdef RVFI
         , ExtraTraceBundle tb
 `endif
@@ -129,8 +128,7 @@ interface Row_setExecuted_doFinishFpuMulDiv;
     method Action set(
         Data dst_data,
         Bit#(5) fflags,
-        Maybe#(Exception) cause,
-        CapPipe pcc
+        Maybe#(Exception) cause
 `ifdef RVFI
         , ExtraTraceBundle tb
 `endif
@@ -159,8 +157,7 @@ interface ReorderBufferRowEhr#(numeric type aluExeNum, numeric type fpuMulDivExe
     method Action setExecuted_doFinishMem(CapPipe vaddr,
                                           Data store_data, ByteEn store_data_BE,
                                           Bool access_at_commit, Bool non_mmio_st_done,
-                                          Maybe#(Exception) cause,
-                                          CapPipe pcc
+                                          Maybe#(Exception) cause
 `ifdef RVFI
                                           , ExtraTraceBundle tb
 `endif
@@ -176,8 +173,8 @@ interface ReorderBufferRowEhr#(numeric type aluExeNum, numeric type fpuMulDivExe
     method Action setLSQTag(LdStQTag t, Bool isFence);
 `endif
     // get original PC/PPC before execution, EHR port 0 will suffice
-    method Addr getOrigPC;
-    method Addr getOrigPredPC;
+    method CapMem getOrigPC;
+    method CapMem getOrigPredPC;
     method Bit #(32) getOrig_Inst;
     // speculation
     method Bool dependsOn_wrongSpec(SpecTag tag);
@@ -242,7 +239,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     Integer sb_enq_port = 1; // write spec_bits
     Integer sb_correctSpec_port = 2; // write spec_bits
 
-    Ehr#(TAdd#(2, aluExeNum), CapPipe)                              pc                   <- mkEhr(?);
+    Ehr#(TAdd#(2, aluExeNum), CapMem)                              pc                   <- mkEhr(?);
     Reg #(Bit #(32))                                                orig_inst            <- mkRegU;
     Reg#(IType)                                                     iType                <- mkRegU;
     Reg #(Maybe #(ArchRIndx))                                       rg_dst_reg           <- mkRegU;
@@ -275,10 +272,10 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
 `endif
 
     // wires to get stale (EHR port 0) values of PPC
-    Wire#(Addr) predPcWire <- mkBypassWire;
+    Wire#(CapMem) predPcWire <- mkBypassWire;
     (* fire_when_enabled, no_implicit_conditions *)
     rule setPcWires;
-        predPcWire <= ppc_vaddr_csrData[0] matches tagged PPC .a ? getAddr(a) : 0;
+        predPcWire <= ppc_vaddr_csrData[0] matches tagged PPC .a ? cast(a) : nullCap;
     endrule
 
     Vector#(aluExeNum, Row_setExecuted_doFinishAlu) aluSetExe;
@@ -289,8 +286,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
                 Maybe#(Data) csrData,
                 Maybe#(CapPipe) scrData,
                 ControlFlow cf,
-                Maybe#(CSR_XCapCause) cause,
-                CapPipe pcc
+                Maybe#(CSR_XCapCause) cause
 `ifdef RVFI
                 , ExtraTraceBundle tb
 `endif
@@ -308,10 +304,8 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
                     ppc_vaddr_csrData[pvc_finishAlu_port(i)] <= SCRData (d);
                 end
                 else begin
-                    ppc_vaddr_csrData[pvc_finishAlu_port(i)] <= PPC (setAddr(pcc, cf.nextPc).value);
+                    ppc_vaddr_csrData[pvc_finishAlu_port(i)] <= PPC (cast(cf.nextPc));
                 end
-                CapPipe new_pcc = setAddrUnsafe(pcc, getAddr(pc[pc_finishAlu_port(i)]));
-                pc[pc_finishAlu_port(i)] <= new_pcc;
                 if (cause matches tagged Valid .exp) begin
                     trap[trap_finishAlu_port(i)] <= Valid (TrapWithCap{trap: tagged Exception CHERIFault, capExp: exp});
                     tval[trap_finishAlu_port(i)] <= tval[trap_finishAlu_port(i)];
@@ -330,8 +324,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         fpuMulDivExe[i] = (interface Row_setExecuted_doFinishFpuMulDiv;
             method Action set(Data dst_data,
                               Bit#(5) new_fflags,
-                              Maybe#(Exception) cause,
-                              CapPipe pcc
+                              Maybe#(Exception) cause
             `ifdef RVFI
                             , ExtraTraceBundle tb
             `endif
@@ -345,7 +338,6 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
                     trap[trap_finishFpuMulDiv_port(i)] <= Valid (TrapWithCap{trap: tagged Exception exp, capExp: noCapCause});
                     tval[trap_finishFpuMulDiv_port(i)] <= tval[trap_finishAlu_port(i)];
                 end
-                //pc[pc_finishFpuMulDiv_port(i)] <= newPcc; //XXX add pcc checks on FPU instructions
 `ifdef RVFI
                 //$display("%t : traceBundle = ", $time(), fshow(tb), " in Row_setExecuted_doFinishAlu for %x", pc);
                 traceBundle[trap_finishFpuMulDiv_port(i)] <= tb;
@@ -354,8 +346,8 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         endinterface);
     end
 
-    method Addr getOrigPC = getAddr(pc[0]);
-    method Addr getOrigPredPC = predPcWire;
+    method CapMem getOrigPC = pc[0];
+    method CapMem getOrigPredPC = predPcWire;
     method Bit #(32) getOrig_Inst = orig_inst;
 
     interface setExecuted_doFinishAlu = aluSetExe;
@@ -365,8 +357,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     method Action setExecuted_doFinishMem(CapPipe vaddr,
                                           Data   store_data, ByteEn store_data_BE,
                                           Bool   access_at_commit, Bool non_mmio_st_done,
-                                          Maybe#(Exception) cause,
-                                          CapPipe pcc
+                                          Maybe#(Exception) cause
 `ifdef RVFI
                                           , ExtraTraceBundle tb
 `endif
@@ -393,8 +384,6 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         memAccessAtCommit[accessCom_finishMem_port] <= access_at_commit;
         // udpate non mmio st
         nonMMIOStDone[nonMMIOSt_finishMem_port] <= non_mmio_st_done;
-        CapPipe new_pcc = setAddrUnsafe(pcc, getAddr(pc[pc_finishMem_port]));
-        pc[pc_finishMem_port] <= new_pcc;
         if (cause matches tagged Valid .exp) begin
             mem_early_trap[0] <= Valid (TrapWithCap{trap: tagged Exception exp, capExp: noCapCause});
             tval[trap_finishMem_port] <= tval[trap_finishMem_port];
@@ -585,8 +574,7 @@ interface ROB_setExecuted_doFinishAlu;
                       Maybe#(Data) csrData,
                       Maybe#(CapPipe) scrData,
                       ControlFlow cf,
-                      Maybe#(CSR_XCapCause) cause,
-                      CapPipe pcc
+                      Maybe#(CSR_XCapCause) cause
 `ifdef RVFI
                       , ExtraTraceBundle tb
 `endif
@@ -597,8 +585,7 @@ interface ROB_setExecuted_doFinishFpuMulDiv;
     method Action set(InstTag x,
                       Data dst_data,
                       Bit#(5) fflags,
-                      Maybe#(Exception) cause,
-                      CapPipe pcc
+                      Maybe#(Exception) cause
 `ifdef RVFI
                     , ExtraTraceBundle tb
 `endif
@@ -606,11 +593,11 @@ interface ROB_setExecuted_doFinishFpuMulDiv;
 endinterface
 
 interface ROB_getOrigPC;
-    method Addr get(InstTag x);
+    method CapMem get(InstTag x);
 endinterface
 
 interface ROB_getOrigPredPC;
-    method Addr get(InstTag x);
+    method CapMem get(InstTag x);
 endinterface
 
 interface ROB_getOrig_Inst;
@@ -639,8 +626,7 @@ interface SupReorderBuffer#(numeric type aluExeNum, numeric type fpuMulDivExeNum
                                           CapPipe vaddr,
                                           Data store_data, ByteEn store_data_BE,
                                           Bool access_at_commit, Bool non_mmio_st_done,
-                                          Maybe#(Exception) cause,
-                                          CapPipe pcc
+                                          Maybe#(Exception) cause
 `ifdef RVFI
                                           , ExtraTraceBundle tb
 `endif
@@ -1134,8 +1120,7 @@ module mkSupReorderBuffer#(
                 Maybe#(Data) csrData,
                 Maybe#(CapPipe) scrData,
                 ControlFlow cf,
-                Maybe#(CSR_XCapCause) cause,
-                CapPipe pcc
+                Maybe#(CSR_XCapCause) cause
 `ifdef RVFI
                 , ExtraTraceBundle tb
 `endif
@@ -1147,8 +1132,7 @@ module mkSupReorderBuffer#(
                     csrData,
                     scrData,
                     cf,
-                    cause,
-                    pcc
+                    cause
 `ifdef RVFI
                     , tb
 `endif
@@ -1164,8 +1148,7 @@ module mkSupReorderBuffer#(
                 InstTag x,
                 Data dst_data,
                 Bit#(5) fflags,
-                Maybe#(Exception) cause,
-                CapPipe pcc
+                Maybe#(Exception) cause
 `ifdef RVFI
                 , ExtraTraceBundle tb
 `endif
@@ -1175,8 +1158,7 @@ module mkSupReorderBuffer#(
                 row[x.way][x.ptr].setExecuted_doFinishFpuMulDiv[i].set(
                     dst_data,
                     fflags,
-                    cause,
-                    pcc
+                    cause
 `ifdef RVFI
                     , tb
 `endif
@@ -1190,12 +1172,12 @@ module mkSupReorderBuffer#(
     Vector#(aluExeNum, ROB_getOrigPredPC) getOrigPredPCIfc;
     for(Integer i = 0; i < valueof(aluExeNum) + 1; i = i+1) begin
         getOrigPCIfc[i] = (interface ROB_getOrigPC;
-            method Addr get(InstTag x) = row[x.way][x.ptr].getOrigPC;
+            method CapMem get(InstTag x) = row[x.way][x.ptr].getOrigPC;
         endinterface);
     end
     for(Integer i = 0; i < valueof(aluExeNum); i = i+1) begin
         getOrigPredPCIfc[i] = (interface ROB_getOrigPredPC;
-            method Addr get(InstTag x) = row[x.way][x.ptr].getOrigPredPC;
+            method CapMem get(InstTag x) = row[x.way][x.ptr].getOrigPredPC;
         endinterface);
     end
 
@@ -1257,7 +1239,7 @@ module mkSupReorderBuffer#(
 
     method Action setExecuted_doFinishMem(
         InstTag x, CapPipe vaddr, Data store_data, ByteEn store_data_BE, Bool access_at_commit,
-        Bool non_mmio_st_done, Maybe#(Exception) cause, CapPipe pcc
+        Bool non_mmio_st_done, Maybe#(Exception) cause
 `ifdef RVFI
         , tb
 `endif
@@ -1267,7 +1249,7 @@ module mkSupReorderBuffer#(
         row[x.way][x.ptr].setExecuted_doFinishMem(vaddr,
                                                   store_data, store_data_BE,
                                                   access_at_commit, non_mmio_st_done,
-                                                  cause, pcc
+                                                  cause
 `ifdef RVFI
                                                   , tb
 `endif

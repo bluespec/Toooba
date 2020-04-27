@@ -100,8 +100,7 @@ interface FpuMulDivExeInput;
         InstTag t,
         Data dst_data,
         Bit#(5) fflags,
-        Maybe#(Exception) cast,
-        CapPipe pcc
+        Maybe#(Exception) cast
 `ifdef RVFI
         , ExtraTraceBundle tb
 `endif
@@ -242,7 +241,7 @@ module mkFpuMulDivExePipeline#(FpuMulDivExeInput inIfc)(FpuMulDivExePipeline);
             inIfc.writeRegFile(valid_dst.indx, nullWithAddr(data));
         end
         // update the instruction in the reorder buffer.
-        inIfc.rob_setExecuted(tag, data, fflags, tagged Invalid, cast(inIfc.scaprf_rd(SCR_PCC))
+        inIfc.rob_setExecuted(tag, data, fflags, tagged Invalid
 `ifdef RVFI_DII
                               , ExtraTraceBundle{regWriteData: data, memByteEn: ?}
 `endif

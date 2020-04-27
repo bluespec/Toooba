@@ -367,7 +367,7 @@ module mkCore#(CoreId coreId)(Core);
                 method setRegReadyAggr = writeAggr(aluWrAggrPort(i));
                 interface sendBypass = sendBypassIfc;
                 method writeRegFile = writeCons(aluWrConsPort(i));
-                method Action redirect(Addr new_pc, SpecTag spec_tag, InstTag inst_tag);
+                method Action redirect(CapMem new_pc, SpecTag spec_tag, InstTag inst_tag);
                     if (verbose) begin
                         $display("[ALU redirect - %d] ", i, fshow(new_pc),
                                  "; ", fshow(spec_tag), "; ", fshow(inst_tag));
@@ -1335,7 +1335,7 @@ module mkCore#(CoreId coreId)(Core);
             Bit#(64) startpc,
             Addr toHostAddr, Addr fromHostAddr
         );
-            fetchStage.start(startpc
+            fetchStage.start(setAddrUnsafe(almightyCap, startpc)
 `ifdef RVFI_DII
                 , 0
 `endif

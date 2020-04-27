@@ -360,7 +360,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         Maybe#(TrapWithCap) trapWithCap = Invalid;
         if (firstTrap matches tagged Valid .trap) trapWithCap = tagged Valid TrapWithCap{trap: trap, capExp: noCapCause};
         // just place it in the reorder buffer
-        let y = ToReorderBuffer{pc: setAddr(almightyCap, pc).value,
+        let y = ToReorderBuffer{pc: cast(pc),
                                 orig_inst: orig_inst,
                                 iType: dInst.iType,
                                 dst: arch_regs.dst,
@@ -374,7 +374,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                 trap: trapWithCap,
                                 tval: tval,
                                 // default values of FullResult
-                                ppc_vaddr_csrData: PPC (setAddr(almightyCap, pc).value), // default use PPC
+                                ppc_vaddr_csrData: PPC (cast(pc)), // default use PPC
                                 fflags: 0,
                                 ////////
                                 will_dirty_fpu_state: False,
@@ -558,7 +558,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
            end
 
         RobInstState rob_inst_state = to_exec ? NotDone : Executed;
-        let y = ToReorderBuffer{pc: setAddr(cast(scaprf.rd(SCR_PCC)), pc).value,
+        let y = ToReorderBuffer{pc: cast(pc),
                                 orig_inst: orig_inst,
                                 iType: dInst.iType,
                                 dst: arch_regs.dst,
@@ -572,7 +572,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                 trap: Invalid, // no trap
                                 tval: 0,
                                 // default values of FullResult
-                                ppc_vaddr_csrData: PPC (setAddr(almightyCap, ppc).value), // default use PPC
+                                ppc_vaddr_csrData: PPC (cast(ppc)), // default use PPC
                                 fflags: 0,
                                 ////////
                                 will_dirty_fpu_state: will_dirty_fpu_state,
@@ -870,7 +870,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                 let arch_regs = x.regs;
                 let cause = x.cause;
 
-                Addr fallthrough_pc = ((orig_inst[1:0] == 2'b11) ? pc + 4 : pc + 2);
+                CapMem fallthrough_pc = addPc(pc, ((orig_inst[1:0] == 2'b11) ? 4 : 2));
 
 `ifdef INCLUDE_GDB_CONTROL
                 if ((i != 0) && (csrf.dcsr_step_bit == 1'b1)) begin
@@ -1101,7 +1101,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                         end
                         RobInstState rob_inst_state = (to_exec || to_mem || to_FpuMulDiv) ? NotDone : Executed;
 
-                        let y = ToReorderBuffer{pc: setAddr(cast(scaprf.rd(SCR_PCC)), pc).value,
+                        let y = ToReorderBuffer{pc: cast(pc),
                                                 orig_inst: orig_inst,
                                                 iType: dInst.iType,
                                                 dst: arch_regs.dst,
@@ -1115,7 +1115,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                                 trap: Invalid, // no trap
                                                 tval: 0,
                                                 // default values of FullResult
-                                                ppc_vaddr_csrData: PPC (setAddr(almightyCap, ppc).value), // default use PPC
+                                                ppc_vaddr_csrData: PPC (cast(ppc)), // default use PPC
                                                 fflags: 0,
                                                 ////////
                                                 will_dirty_fpu_state: will_dirty_fpu_state,

@@ -1,6 +1,6 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +8,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -27,11 +27,13 @@ import ProcTypes::*;
 import RegFile::*;
 import Vector::*;
 import Ehr::*;
+import CHERICC_Fat::*;
+import CHERICap::*;
 
 interface RAS;
-    method Addr first;
+    method CapMem first;
     // first pop, then push
-    method Action popPush(Bool pop, Maybe#(Addr) pushAddr);
+    method Action popPush(Bool pop, Maybe#(CapMem) pushAddr);
 endinterface
 
 interface ReturnAddrStack;
@@ -46,7 +48,7 @@ typedef Bit#(TLog#(RasEntries)) RasIndex;
 
 (* synthesize *)
 module mkRas(ReturnAddrStack) provisos(NumAlias#(TExp#(TLog#(RasEntries)), RasEntries));
-    Vector#(RasEntries, Ehr#(TAdd#(SupSize, 1), Addr)) stack <- replicateM(mkEhr(0));
+    Vector#(RasEntries, Ehr#(TAdd#(SupSize, 1), CapMem)) stack <- replicateM(mkEhr(nullCap));
     // head points past valid data
     // to gracefully overflow, head is allowed to overflow to 0 and overwrite the oldest data
     Ehr#(TAdd#(SupSize, 1), RasIndex) head <- mkEhr(0);
@@ -64,10 +66,10 @@ module mkRas(ReturnAddrStack) provisos(NumAlias#(TExp#(TLog#(RasEntries)), RasEn
     Vector#(SupSize, RAS) rasIfc;
     for(Integer i = 0; i < valueof(SupSize); i = i+1) begin
         rasIfc[i] = (interface RAS;
-            method Addr first;
+            method CapMem first;
                 return stack[head[i]][i];
             endmethod
-            method Action popPush(Bool pop, Maybe#(Addr) pushAddr);
+            method Action popPush(Bool pop, Maybe#(CapMem) pushAddr);
                 // first pop, then push
                 RasIndex h = head[i];
                 if(pop) begin

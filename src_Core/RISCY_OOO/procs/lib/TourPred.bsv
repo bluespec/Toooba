@@ -1,6 +1,6 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +8,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -28,6 +28,8 @@ import Ehr::*;
 import Vector::*;
 import GlobalBrHistReg::*;
 import BrPred::*;
+import CHERICC_Fat::*;
+import CHERICap::*;
 
 export TourLocalHistSz;
 export TourLocalHist;
@@ -81,8 +83,8 @@ module mkTourPred(DirPredictor#(TourTrainInfo));
     Ehr#(TAdd#(1, SupSize), SupCnt) predCnt <- mkEhr(0);
     Ehr#(TAdd#(1, SupSize), Bit#(SupSize)) predRes <- mkEhr(0);
 
-    function PCIndex getPCIndex(Addr pc);
-        return truncate(pc >> 2);
+    function PCIndex getPCIndex(CapMem pc);
+        return truncate(getAddr(pc) >> 2);
     endfunction
 
     // common sat counter operations
@@ -105,7 +107,7 @@ module mkTourPred(DirPredictor#(TourTrainInfo));
     Vector#(SupSize, DirPred#(TourTrainInfo)) predIfc;
     for(Integer i = 0; i < valueof(SupSize); i = i+1) begin
         predIfc[i] = (interface DirPred;
-            method ActionValue#(DirPredResult#(TourTrainInfo)) pred(Addr pc);
+            method ActionValue#(DirPredResult#(TourTrainInfo)) pred(CapMem pc);
                 // get local history & prediction
                 TourLocalHist localHist = localHistTab.sub(getPCIndex(pc));
                 Bool localTaken = isTaken(localBht.sub(localHist));
@@ -151,7 +153,7 @@ module mkTourPred(DirPredictor#(TourTrainInfo));
 
     interface pred = predIfc;
 
-    method Action update(Addr pc, Bool taken, TourTrainInfo train, Bool mispred);
+    method Action update(CapMem pc, Bool taken, TourTrainInfo train, Bool mispred);
         // update history if mispred
         if(mispred) begin
             TourGlobalHist newHist = truncateLSB({pack(taken), train.globalHist});

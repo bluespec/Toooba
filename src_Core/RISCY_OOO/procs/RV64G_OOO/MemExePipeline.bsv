@@ -156,12 +156,12 @@ interface MemExeInput;
     // Special Capability Register file.
     method CapReg scaprf_rd(SCR csr);
     // ROB
-    method Addr rob_getPC(InstTag t);
+    method CapMem rob_getPC(InstTag t);
     method Action rob_setExecuted_doFinishMem(InstTag t,
                                               CapPipe vaddr,
                                               Data store_data, ByteEn store_data_BE,
                                               Bool access_at_commit, Bool non_mmio_st_done,
-                                              Maybe#(Exception) cause, CapPipe pcc
+                                              Maybe#(Exception) cause
 `ifdef RVFI
                                               , ExtraTraceBundle tb
 `endif
@@ -560,14 +560,13 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         endcase);
         Bool access_at_commit = !isValid(cause) && (isMMIO || isLrScAmo);
         Bool non_mmio_st_done = !isValid(cause) && !isMMIO && x.mem_func == St;
-        CapPipe pcc = cast(inIfc.scaprf_rd(SCR_PCC));
+        CapPipe pcc = cast(inIfc.rob_getPC(x.tag));
         CapPipe ddc = cast(inIfc.scaprf_rd(SCR_DDC));
         Bool ddc_out_of_bounds = !isInBounds(modifyOffset(ddc,getAddr(x.vaddr),True).value,True);
         Bool out_of_bounds = (getFlags(pcc) == 1'b1) ? isInBounds(x.vaddr, False):ddc_out_of_bounds;
         inIfc.rob_setExecuted_doFinishMem(x.tag, x.vaddr, store_data, store_data_BE,
                                           access_at_commit, non_mmio_st_done,
-                                          (out_of_bounds) ? Valid(CHERIFault):Invalid,
-                                          pcc
+                                          (out_of_bounds) ? Valid(CHERIFault):Invalid
 `ifdef RVFI
                                           , ExtraTraceBundle{
                                               regWriteData: memData[pack(x.ldstq_tag)],

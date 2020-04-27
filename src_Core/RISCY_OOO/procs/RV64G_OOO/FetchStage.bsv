@@ -51,6 +51,8 @@ import ITlb::*;
 import CCTypes::*;
 import L1CoCache::*;
 import MMIOInst::*;
+import CHERICap::*;
+import CHERICC_Fat::*;
 `ifdef RVFI_DII
 import RVFI_DII_Types::*;
 import Types::*;
@@ -76,7 +78,7 @@ interface FetchStage;
     interface MMIOInstToCore mmioIfc;
 
     // starting and stopping
-    method Action start(Addr pc
+    method Action start(CapMem pc
 `ifdef RVFI_DII
         , Dii_Id id
 `endif
@@ -85,7 +87,7 @@ interface FetchStage;
 
     // redirection methods
     method Action setWaitRedirect;
-    method Action redirect(Addr pc
+    method Action redirect(CapMem pc
 `ifdef RVFI_DII
         , Dii_Id id
 `endif
@@ -95,7 +97,7 @@ interface FetchStage;
 `endif
     method Action done_flushing();
     method Action train_predictors(
-        Addr pc, Addr next_pc, IType iType, Bool taken,
+        CapMem pc, CapMem next_pc, IType iType, Bool taken,
         DirPredTrainInfo dpTrain, Bool mispred, Bool isCompressed
     );
 
@@ -123,16 +125,16 @@ typedef struct {
 } FetchDebugState deriving(Bits, Eq, FShow);
 
 typedef struct {
-    Addr pc;
-    Maybe#(Addr) pred_next_pc;
+    CapMem pc;
+    Maybe#(CapMem) pred_next_pc;
     Bool fetch3_epoch;
     Bool decode_epoch;
     Epoch main_epoch;
 } Fetch1ToFetch2 deriving(Bits, Eq, FShow);
 
 typedef struct {
-    Addr pc;
-    Maybe#(Addr) pred_next_pc;
+    CapMem pc;
+    Maybe#(CapMem) pred_next_pc;
     Maybe#(Exception) cause;
     Addr tval;                 // in case of exception
     Bool access_mmio; // inst fetch from MMIO
@@ -142,8 +144,8 @@ typedef struct {
 } Fetch2ToFetch3 deriving(Bits, Eq, FShow);
 
 typedef struct {
-    Addr pc;
-    Addr pred_next_pc;
+    CapMem pc;
+    CapMem pred_next_pc;
     Bool mispred_first_half;
     Maybe#(Exception) cause;
     Addr tval;                 // in case of exception
@@ -153,8 +155,8 @@ typedef struct {
 
 // Used purely internally in doDecode.
 typedef struct {
-  Addr pc;
-  Addr ppc;
+  CapMem pc;
+  CapMem ppc;
   Bool decode_epoch;
   Epoch main_epoch;
   Instruction inst;
@@ -162,8 +164,8 @@ typedef struct {
 } InstrFromFetch3 deriving(Bits, Eq, FShow);
 
 typedef struct {
-  Addr pc;
-  Addr ppc;
+  CapMem pc;
+  CapMem ppc;
   Epoch main_epoch;
   DirPredTrainInfo dpTrain;
   Instruction inst;
@@ -179,8 +181,8 @@ typedef struct {
 
 // train next addr pred (BTB)
 typedef struct {
-    Addr pc;
-    Addr nextPc;
+    CapMem pc;
+    CapMem nextPc;
 } TrainNAP deriving(Bits, Eq, FShow);
 
 // ================================================================
@@ -239,7 +241,7 @@ deriving (Bits, Eq, FShow);
 // longer a simple multiple of 4 away from the start-pc of the sequence.
 
 typedef struct {
-   Addr        pc;
+   CapMem     pc;
    Inst_Kind   inst_kind;
    Bit #(32)   orig_inst;    // inst_kind => 0, 16b or 32b relevant
    Bit #(32)   inst;         // Original 32b instruction, or expansion of 16b instruction
@@ -248,7 +250,7 @@ deriving (Bits, Eq, FShow);
 
 instance DefaultValue #(Inst_Item);
    function Inst_Item defaultValue = Inst_Item {
-      pc: 0, inst_kind: Inst_None, orig_inst: 0, inst: 0
+      pc: nullCap, inst_kind: Inst_None, orig_inst: 0, inst: 0
    };
 endinstance
 
@@ -273,16 +275,18 @@ function ActionValue #(Tuple2 #(SupCntX2,
    endactionvalue
 endfunction
 
+typedef Maybe #(Tuple3 #(CapMem, Bit #(16), Bool)) MStraddle;
+
 // Parse 16b parcels (v_x16) into a sequence of 16b or 32b instructions.
 // This is a pure function; ActionValue is used only to allow $displays for debugging.
 function ActionValue #(Tuple4 #(SupCntX2,
                                 Vector #(SupSizeX2, Inst_Item),
-                                Addr,
-                                Maybe #(Tuple3 #(Addr, Bit #(16), Bool))))
+                                CapMem,
+                                MStraddle))
          fav_parse_insts (Bool  verbose,
-                          Addr  pc_start,
-                          Maybe #(Addr) pred_next_pc,
-                          Maybe #(Tuple3 #(Addr, Bit #(16), Bool)) pending_straddle,
+                          CapMem  pc_start,
+                          Maybe #(CapMem) pred_next_pc,
+                          MStraddle pending_straddle,
                           SupCntX2 n_x16s,
                           Vector #(SupSizeX2, Bit #(16)) v_x16);
    actionvalue
@@ -291,13 +295,13 @@ function ActionValue #(Tuple4 #(SupCntX2,
                                                                      inst_kind: Inst_None,
                                                                      orig_inst: 0,
                                                                      inst: 0});
-      Maybe #(Tuple3 #(Addr, Bit #(16), Bool)) next_straddle = tagged Invalid;
+      MStraddle next_straddle = tagged Invalid;
       // Start parse at parcel 0/1 depending on pc lsbs and pending straddle
-      SupCntX2 j  = ((pc_start [1:0] == 2'b00 || isValid(pending_straddle)) ? 0 : 1);
+      SupCntX2 j  = ((getAddr(pc_start) [1:0] == 2'b00 || isValid(pending_straddle)) ? 0 : 1);
 `ifdef RVFI_DII
       j  = 0;
 `endif
-      Addr     pc = pc_start;
+      Addr     pc = getAddr(pc_start);
       Integer n_items = 0;
 `ifndef RVFI_DII
       for (Integer i = 0; i < valueOf (SupSizeX2); i = i + 1) begin
@@ -339,7 +343,7 @@ function ActionValue #(Tuple4 #(SupCntX2,
                   n_items   = i + 1;
                end
                else begin
-                  next_straddle = tagged Valid tuple3(pc, v_x16[j], isValid(pred_next_pc));
+                  next_straddle = tagged Valid tuple3(setAddrUnsafe(pc_start, pc), v_x16[j], isValid(pred_next_pc));
                   j = j + 1;
                   // Leave next_pc unchanged and clear pred_next_pc so we
                   // return the right predicted pc for the vector, which
@@ -365,7 +369,7 @@ function ActionValue #(Tuple4 #(SupCntX2,
          v_items[i].orig_inst = inst;
          v_items[i].inst = inst;
       end
-      pc = pc_start + 8;
+      pc = getAddr(pc_start) + 8;
       n_items = 2;
 `endif
 
@@ -377,7 +381,7 @@ function ActionValue #(Tuple4 #(SupCntX2,
          $display ("    next_straddle: ", fshow (next_straddle));
       end
 
-      return tuple4(fromInteger(n_items), v_items, fromMaybe(pc, pred_next_pc), next_straddle);
+      return tuple4(fromInteger(n_items), v_items, fromMaybe(setAddrUnsafe(pc_start, pc), pred_next_pc), next_straddle);
    endactionvalue
 endfunction
 
@@ -408,7 +412,7 @@ module mkFetchStage(FetchStage);
     // We stall until the flush is done
     Reg#(Bool) waitForFlush <- mkReg(False);
 
-    Ehr#(4, Addr) pc_reg <- mkEhr(0);
+    Ehr#(4, CapMem) pc_reg <- mkEhr(nullCap);
     Integer pc_fetch1_port = 0;
     Integer pc_decode_port = 1;
     Integer pc_fetch3_port = 2;
@@ -420,7 +424,7 @@ module mkFetchStage(FetchStage);
     Reg#(Epoch) f_main_epoch <- mkReg(0); // fetch estimate of main epoch
 
    // Reg to hold the first half of an instruction that straddles a cache line boundary
-   Ehr #(2, Maybe #(Tuple3 #(Addr, Bit #(16), Bool))) ehr_pending_straddle <- mkEhr(tagged Invalid);
+   Ehr #(2, MStraddle) ehr_pending_straddle <- mkEhr(tagged Invalid);
    // Reg to hold extra instructions from Fetch3 to send to decode the next cycle
    Reg #(Vector #(SupSizeX2S1, Inst_Item)) rg_pending_decode <- mkReg(replicate(defaultValue));
    Reg #(SupCntX2S1) rg_pending_n_items <- mkRegU;
@@ -494,21 +498,21 @@ module mkFetchStage(FetchStage);
    // Predict the next fetch-PC based only on current PC (without
    // knowing the instructions).
 
-   function ActionValue #(Tuple2 #(Integer, Maybe #(Addr))) fav_pred_next_pc (Addr pc);
+   function ActionValue #(Tuple2 #(Integer, Maybe #(CapMem))) fav_pred_next_pc (CapMem pc);
       actionvalue
-         Addr    prev_PC      = pc;
-         Maybe #(Addr) pred_next_pc = nextAddrPred.predPc (prev_PC);
+         CapMem    prev_PC      = pc;
+         Maybe #(CapMem) pred_next_pc = nextAddrPred.predPc (prev_PC);
          Integer posLastSupX2 = 0;
          Bool    done         = False;
          for (Integer i = 0; i < valueOf (SupSizeX2); i = i + 1) begin
             if (! done) begin
-               Bool isLastX2 = (i == (valueOf (SupSizeX2) - 1)) || ((pc[1:0] != 2'b00) && (i == (valueOf (SupSizeX2) - 2)));
-               Bool lastInstInCacheLine = (getLineInstOffset (prev_PC) == maxBound) && (prev_PC[1:0] != 2'b00);
+               Bool isLastX2 = (i == (valueOf (SupSizeX2) - 1)) || ((getAddr(pc)[1:0] != 2'b00) && (i == (valueOf (SupSizeX2) - 2)));
+               Bool lastInstInCacheLine = (getLineInstOffset (getAddr(prev_PC)) == maxBound) && (getAddr(prev_PC)[1:0] != 2'b00);
                Bool isJump   = isValid(pred_next_pc);
                done = isLastX2 || lastInstInCacheLine || isJump;
                posLastSupX2 = i;
                if (! done) begin
-                  prev_PC      = prev_PC + 2;
+                  prev_PC      = addPc(prev_PC, 2);
                   pred_next_pc = nextAddrPred.predPc (prev_PC);
                end
             end
@@ -548,7 +552,7 @@ module mkFetchStage(FetchStage);
        */
 
         match { .posLastSupX2, .pred_next_pc } <- fav_pred_next_pc (pc);
-        let next_fetch_pc = fromMaybe(pc + 2 * (fromInteger(posLastSupX2) + 1), pred_next_pc);
+        let next_fetch_pc = fromMaybe(addPc(pc, 2 * (fromInteger(posLastSupX2) + 1)), pred_next_pc);
         pc_reg[pc_fetch1_port] <= next_fetch_pc;
 
 `ifdef RVFI_DII
@@ -564,7 +568,7 @@ module mkFetchStage(FetchStage);
         // Send TLB request.
         // Mask to 32-bit alignment, even if 'C' is supported (where we may discard first 2 bytes)
         Addr align32b_mask = 'h3;
-        tlb_server.request.put (pc & (~ align32b_mask));
+        tlb_server.request.put (getAddr(pc) & (~ align32b_mask));
 
         let out = Fetch1ToFetch2 {
             pc: pc,
@@ -572,7 +576,7 @@ module mkFetchStage(FetchStage);
             fetch3_epoch: fetch3_epoch,
             decode_epoch: decode_epoch[0],
             main_epoch: f_main_epoch};
-        let nbSupX2 = fromInteger(posLastSupX2) + (pc[1:0] == 2'b00 ? 0 : 1);
+        let nbSupX2 = fromInteger(posLastSupX2) + (getAddr(pc)[1:0] == 2'b00 ? 0 : 1);
 `ifdef RVFI_DII
         nbSupX2 = 3;
 `endif
@@ -657,7 +661,7 @@ module mkFetchStage(FetchStage);
 
         SupCntX2S1 pending_n_items = rg_pending_n_items;
         let out = rg_pending_f32d;
-        Maybe #(Tuple3 #(Addr, Bit #(16), Bool)) pending_straddle = ehr_pending_straddle[0];
+        MStraddle pending_straddle = ehr_pending_straddle[0];
 
         if (pending_n_items > 0) begin
             if (rg_pending_f32d.main_epoch != f_main_epoch || rg_pending_f32d.decode_epoch != decode_epoch[1]) begin
@@ -751,7 +755,7 @@ module mkFetchStage(FetchStage);
                 n_x16s = extend(nbSupX2In) + 1;
 
             // Parse v_x16 into 32-bit and 16-bit instructions
-            Addr pred_next_pc;
+            CapMem pred_next_pc;
             {parsed_n_items, parsed_v_items, pred_next_pc, pending_straddle} <-
                 fav_parse_insts (verbose, fetch3In.pc, fetch3In.pred_next_pc, pending_straddle, n_x16s, v_x16);
 
@@ -775,7 +779,7 @@ module mkFetchStage(FetchStage);
             // to retrain when we issue the full instruction next time.
             if (pending_straddle matches tagged Valid {.s_pc, .s_lsbs, .s_mispred}
                 &&& s_mispred) begin
-                pc_reg[pc_fetch3_port] <= s_pc + 2;
+                pc_reg[pc_fetch3_port] <= addPc(s_pc, 2);
                 fetch3_epoch <= ! fetch3_epoch;
             end
         end
@@ -859,7 +863,7 @@ module mkFetchStage(FetchStage);
       // redirect the PC if a later stage already redirected the PC.
       if (decodeIn.main_epoch == f_main_epoch) begin
          Bool decode_epoch_local = decode_epoch[0]; // next value for decode epoch
-         Maybe#(Addr) redirectPc = Invalid; // next pc redirect by branch predictor
+         Maybe#(CapMem) redirectPc = Invalid; // next pc redirect by branch predictor
          Maybe#(TrainNAP) trainNAP = Invalid; // training data sent to next addr pred
 `ifdef PERF_COUNT
          // performance counter: inst being redirect by decode stage
@@ -914,7 +918,7 @@ module mkFetchStage(FetchStage);
                         pred_taken = pred_res.taken;
                         dp_train = pred_res.train;
                      end
-                     Maybe#(Addr) nextPc = decodeBrPred(in.pc, dInst, pred_taken, (inst_data[i].inst_kind == Inst_32b));
+                     Maybe#(CapMem) nextPc = decodeBrPred(in.pc, dInst, pred_taken, (inst_data[i].inst_kind == Inst_32b));
 
                      // return address stack link reg is x1 or x5
                      function Bool linkedR(Maybe#(ArchRIndx) register);
@@ -926,9 +930,9 @@ module mkFetchStage(FetchStage);
                      endfunction
                      Bool dst_link = linkedR(regs.dst);
                      Bool src1_link = linkedR(regs.src1);
-                     Addr push_addr = in.pc + ((inst_data[i].inst_kind == Inst_32b) ? 4 : 2);
+                     CapMem push_addr = addPc(in.pc, ((inst_data[i].inst_kind == Inst_32b) ? 4 : 2));
 
-                     Addr pop_addr = ras.ras[i].first;
+                     CapMem pop_addr = ras.ras[i].first;
                      if (dInst.iType == J && dst_link) begin
                         // rs1 is invalid, i.e., not link: push
                         ras.ras[i].popPush(False, Valid (push_addr));
@@ -966,7 +970,7 @@ module mkFetchStage(FetchStage);
                         // We predicted a taken branch for PC, but this is an
                         // uncompressed instruction, so we train it to fetch
                         // the other half in future.
-                        trainNAP = Valid (TrainNAP {pc: in.pc, nextPc: in.pc + 2});
+                        trainNAP = Valid (TrainNAP {pc: in.pc, nextPc: addPc(in.pc, 2)});
                      end
 
                      // check previous mispred
@@ -976,7 +980,7 @@ module mkFetchStage(FetchStage);
                         redirectPc = Valid (decode_pred_next_pc); // record redirect next pc
                         in.ppc = decode_pred_next_pc;
                         // train next addr pred when mispredict
-                        let last_x16_pc = in.pc + ((inst_data[i].inst_kind == Inst_32b) ? 2 : 0);
+                        let last_x16_pc = addPc(in.pc, ((inst_data[i].inst_kind == Inst_32b) ? 2 : 0));
                         if (!decodeIn.mispred_first_half)
                            trainNAP = Valid (TrainNAP {pc: last_x16_pc, nextPc: decode_pred_next_pc});
 `ifdef RVFI_DII
@@ -1068,7 +1072,7 @@ module mkFetchStage(FetchStage);
         // only when misprediction happens, i.e., train by dec is already at
         // wrong path.
         TrainNAP train = fromMaybe(validValue(napTrainByDec.wget), napTrainByExe.wget);
-        nextAddrPred.update(train.pc, train.nextPc, train.nextPc != train.pc + 2);
+        nextAddrPred.update(train.pc, train.nextPc, train.nextPc != addPc(train.pc, 2));
     endrule
 
     // Security: we can flush when front end is empty, i.e.
@@ -1085,7 +1089,7 @@ module mkFetchStage(FetchStage);
     interface mmioIfc = mmio.toCore;
 
     method Action start(
-        Addr start_pc
+        CapMem start_pc
 `ifdef RVFI_DII
         , Dii_Id id
 `endif
@@ -1107,7 +1111,7 @@ module mkFetchStage(FetchStage);
         setWaitRedirect_redirect_conflict.wset(?); // conflict with redirect
     endmethod
     method Action redirect(
-        Addr new_pc
+        CapMem new_pc
 `ifdef RVFI_DII
         , Dii_Id id
 `endif
@@ -1148,7 +1152,7 @@ module mkFetchStage(FetchStage);
     endmethod
 
     method Action train_predictors(
-        Addr pc, Addr next_pc, IType iType, Bool taken,
+        CapMem pc, CapMem next_pc, IType iType, Bool taken,
         DirPredTrainInfo dpTrain, Bool mispred, Bool isCompressed
     );
         //if (iType == J || (iType == Br && next_pc < pc)) begin
@@ -1162,7 +1166,7 @@ module mkFetchStage(FetchStage);
         end
         // train next addr pred when mispred
         if(mispred) begin
-            let last_x16_pc = pc + (isCompressed ? 0 : 2);
+            let last_x16_pc = addPc(pc, (isCompressed ? 0 : 2));
             napTrainByExe.wset(TrainNAP {pc: last_x16_pc, nextPc: next_pc});
         end
     endmethod
@@ -1184,7 +1188,7 @@ module mkFetchStage(FetchStage);
 
     method FetchDebugState getFetchState;
         return FetchDebugState {
-            pc: pc_reg[0],
+            pc: getAddr(pc_reg[0]),
             waitForRedirect: waitForRedirect,
             waitForFlush: waitForFlush,
             mainEp: f_main_epoch

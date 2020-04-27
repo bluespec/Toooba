@@ -56,12 +56,12 @@ import SoC_Map::*;
 // Information returned on traps and mret/sret/uret
 
 typedef struct {
-    Bit#(0) nothing_now;
+    CapMem new_pcc;
   } Scr_Trap_Updates
 deriving (Bits, FShow);
 
 typedef struct {
-    Addr      new_pc;
+    CapMem new_pcc;
   } Scr_RET_Updates
 deriving (Bits, FShow);
 
@@ -197,15 +197,15 @@ module mkScrFile (ScrFile);
     method ActionValue#(Scr_Trap_Updates) trap(CapPipe pc, Bit#(2) prv);
         mepcc_reg[0] <= cast(pc);
         pcc_reg[0] <= mtcc_reg;
-        return ?;
+        return Scr_Trap_Updates{new_pcc: cast(mtcc_reg)};
     endmethod
 
     method ActionValue#(Scr_RET_Updates) mret;
-        return ?;
+        return Scr_RET_Updates{new_pcc: cast(mepcc_reg[0])};
     endmethod
 
     method ActionValue#(Scr_RET_Updates) sret;
-        return ?;
+        return Scr_RET_Updates{new_pcc: cast(mepcc_reg[0])};
     endmethod
 
     method ScrVMInfo pccCheck;

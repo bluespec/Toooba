@@ -1,6 +1,6 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +8,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -26,6 +26,8 @@ import ProcTypes::*;
 import RegFile::*;
 import Vector::*;
 import BrPred::*;
+import CHERICC_Fat::*;
+import CHERICap::*;
 
 export BhtTrainInfo;
 export mkBht;
@@ -42,14 +44,14 @@ module mkBht(DirPredictor#(BhtTrainInfo));
     // mkRegFileWCF is the RegFile version of mkConfigReg
     RegFile#(BhtIndex, Bit#(2)) hist <- mkRegFileWCF(0,fromInteger(valueOf(BhtEntries)-1));
 
-    function BhtIndex getIndex(Addr pc);
-        return truncate(pc >> 2);
+    function BhtIndex getIndex(CapMem pc);
+        return truncate(getAddr(pc) >> 2);
     endfunction
 
     Vector#(SupSize, DirPred#(BhtTrainInfo)) predIfc;
     for(Integer i = 0; i < valueof(SupSize); i = i+1) begin
         predIfc[i] = (interface DirPred;
-            method ActionValue#(DirPredResult#(BhtTrainInfo)) pred(Addr pc);
+            method ActionValue#(DirPredResult#(BhtTrainInfo)) pred(CapMem pc);
                 let index = getIndex(pc);
                 Bit#(2) cnt = hist.sub(index);
                 Bool taken = cnt[1] == 1;
@@ -63,7 +65,7 @@ module mkBht(DirPredictor#(BhtTrainInfo));
 
     interface pred = predIfc;
 
-    method Action update(Addr pc, Bool taken, BhtTrainInfo train, Bool mispred);
+    method Action update(CapMem pc, Bool taken, BhtTrainInfo train, Bool mispred);
         let index = getIndex(pc);
         let current_hist = hist.sub(index);
         Bit#(2) next_hist;
@@ -78,4 +80,3 @@ module mkBht(DirPredictor#(BhtTrainInfo));
     method flush = noAction;
     method flush_done = True;
 endmodule
-

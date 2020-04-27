@@ -313,7 +313,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
     // Machine level CSRs
     // mstatus
     Reg#(Bit#(2)) xs_reg   <- mkReadOnlyReg(0); // XXX no extension
-    Reg#(Bit#(2)) fs_reg   <- (isa.f || isa.d) ? mkCsrReg(2'b01) : mkReadOnlyReg(0);
+    Reg#(Bit#(2)) fs_reg   <- (isa.f || isa.d) ? mkCsrReg(2'b00) : mkReadOnlyReg(0);
     Reg#(Bit#(1)) sd_reg   =  readOnlyReg(
         ((xs_reg == 2'b11) || (fs_reg == 2'b11)) ? 1 : 0
     );
@@ -643,7 +643,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
    Reg #(Data) rg_tdata2  <- mkConfigRegU;
    Reg #(Data) rg_tdata3  <- mkConfigRegU;
    // Capability cause register
-   Reg #(CSR_XCapCause) mccsr_reg <- mkCsrReg(unpack(0));
+   Reg #(CapException) mccsr_reg <- mkCsrReg(unpack(0));
 
 `ifdef INCLUDE_GDB_CONTROL
    // DCSR is 32b even in RV64

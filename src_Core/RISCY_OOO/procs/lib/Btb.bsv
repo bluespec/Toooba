@@ -1,6 +1,6 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +8,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -26,13 +26,15 @@ import ProcTypes::*;
 import ConfigReg::*;
 import RegFile::*;
 import Vector::*;
+import CHERICC_Fat::*;
+import CHERICap::*;
 
 export NextAddrPred(..);
 export mkBtb;
 
 interface NextAddrPred;
-    method Maybe#(Addr) predPc(Addr pc);
-    method Action update(Addr pc, Addr brTarget, Bool taken);
+    method Maybe#(CapMem) predPc(CapMem pc);
+    method Action update(CapMem pc, CapMem brTarget, Bool taken);
     // security
     method Action flush;
     method Bool flush_done;
@@ -45,8 +47,8 @@ typedef Bit#(TLog#(BtbEntries)) BtbIndex;
 typedef Bit#(TSub#(TSub#(AddrSz, TLog#(BtbEntries)), PcLsbsIgnore)) BtbTag;
 
 typedef struct {
-    Addr pc;
-    Addr nextPc;
+    CapMem pc;
+    CapMem nextPc;
     Bool taken;
 } BtbUpdate deriving(Bits, Eq, FShow);
 
@@ -54,7 +56,7 @@ typedef struct {
 module mkBtb(NextAddrPred);
     // Read and Write ordering doesn't matter since this is a predictor
     // mkRegFileWCF is the RegFile version of mkConfigReg
-    RegFile#(BtbIndex, Addr) next_addrs <- mkRegFileWCF(0,fromInteger(valueOf(BtbEntries)-1));
+    RegFile#(BtbIndex, CapMem) next_addrs <- mkRegFileWCF(0,fromInteger(valueOf(BtbEntries)-1));
     RegFile#(BtbIndex, BtbTag) tags <- mkRegFileWCF(0,fromInteger(valueOf(BtbEntries)-1));
     Vector#(BtbEntries, Reg#(Bool)) valid <- replicateM(mkConfigReg(False));
 
@@ -66,8 +68,8 @@ module mkBtb(NextAddrPred);
     Bool flushDone = True;
 `endif
 
-    function BtbIndex getIndex(Addr pc) = truncate(pc >> valueof(PcLsbsIgnore));
-    function BtbTag getTag(Addr pc) = truncateLSB(pc);
+    function BtbIndex getIndex(CapMem pc) = truncate(getAddr(pc) >> valueof(PcLsbsIgnore));
+    function BtbTag getTag(CapMem pc) = truncateLSB(getAddr(pc));
 
     // no flush, accept update
     (* fire_when_enabled, no_implicit_conditions *)
@@ -96,7 +98,7 @@ module mkBtb(NextAddrPred);
     endrule
 `endif
 
-    method Maybe#(Addr) predPc(Addr pc);
+    method Maybe#(CapMem) predPc(CapMem pc);
         BtbIndex index = getIndex(pc);
         BtbTag tag = getTag(pc);
         if(valid[index] && tag == tags.sub(index))
@@ -105,7 +107,7 @@ module mkBtb(NextAddrPred);
             return tagged Invalid;
     endmethod
 
-    method Action update(Addr pc, Addr nextPc, Bool taken);
+    method Action update(CapMem pc, CapMem nextPc, Bool taken);
         updateEn.wset(BtbUpdate {pc: pc, nextPc: nextPc, taken: taken});
     endmethod
 
@@ -119,4 +121,3 @@ module mkBtb(NextAddrPred);
     method flush_done = True;
 `endif
 endmodule
-
