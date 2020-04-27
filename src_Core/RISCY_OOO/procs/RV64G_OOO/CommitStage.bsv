@@ -729,7 +729,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                                        : 1));
              csrf.dcsr_cause_write (dcsr_cause);
              csrf.dpc_write (trap.pc);
-             scaprfIfc.trap(trap.pc,?);
+             scaprfIfc.trap (trap.pc,?);
 
              // Tell fetch stage to wait for redirect
              // Note: rule doCommitTrap_flush may have done this already; redundant call is ok.
@@ -746,7 +746,8 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
        if (! debugger_halt) begin
           // trap handling & redirect
-          let trap_updates <- csrf.trap(trap.trap, getAddr(trap.pc), trap.addr, trap.orig_inst);
+          CapPipe cp = cast(trap.pc);
+          let trap_updates <- csrf.trap(trap.trap, getOffset(cp), trap.addr, trap.orig_inst);
           let cap_trap_updates <- scaprf.trap(cast(trap.pc), ?);
           CapPipe new_pc = setOffset(cast(cap_trap_updates.new_pcc), trap_updates.new_pc).value;
           inIfc.redirectPc(cast(new_pc)
@@ -1095,9 +1096,6 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                     // every inst here should have been renamed, commit renaming
                     regRenamingTable.commit[i].commit;
                     doAssert(x.claimed_phy_reg, "should have renamed");
-
-                    if (x.ppc_vaddr_csrData matches tagged PPC .ppc)
-                        scaprf.pccWr[i].put(cast(ppc));
 
 `ifdef RENAME_DEBUG
                     // send debug msg for rename error

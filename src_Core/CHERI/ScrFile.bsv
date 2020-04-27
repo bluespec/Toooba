@@ -85,7 +85,6 @@ interface ScrFile;
     // normal write by RWSpecialCap inst to any SCR
     method Action scrInstWr(SCR csr, CapReg x);
 
-    interface Vector#(SupSize, Put#(CapReg)) pccWr;
     // The WARL transform performed during CSRRx writes to a CSR
     method CapReg warl_xform (SCR csr, CapReg x);
 
@@ -95,9 +94,7 @@ interface ScrFile;
     method ActionValue#(Scr_RET_Updates) mret;
 
     // Outputs for CSRs that the rest of the processor needs to know about
-    method ScrVMInfo pccCheck;
     method ScrVMInfo ddcCheck;
-    method ScrDecodeInfo decodeInfo;
 
     // terminate
     method ActionValue#(void) terminate;
@@ -136,7 +133,7 @@ module mkScrFile (ScrFile);
     let mkCsrEhr = mkConfigEhr;
 
     // User level SCRs
-    Ehr#(SupSize, CapReg) pcc_reg <- mkConfigEhr(defaultValue);
+    // PCC is implemented in the pipeline.
     Reg#(CapReg) ddc_reg          <- mkCsrReg(defaultValue);
 
     // User level SCRs with accessSysRegs
@@ -161,7 +158,7 @@ module mkScrFile (ScrFile);
     function Reg#(CapReg) get_scr(SCR scr);
         return (case (scr)
             // User SCRs
-            SCR_PCC:       pcc_reg[0];
+            //SCR_PCC:       $error("PCC does not actually live in the Special Capability Register File!");
             SCR_DDC:       ddc_reg;
             // User CSRs with accessSysRegs
             // SCR_UTCC:      utcc_reg;
@@ -192,11 +189,8 @@ module mkScrFile (ScrFile);
         get_scr(csr)._write(x);
     endmethod
 
-    interface pccWr = map(toPut,pcc_reg);
-
     method ActionValue#(Scr_Trap_Updates) trap(CapPipe pc, Bit#(2) prv);
         mepcc_reg[0] <= cast(pc);
-        pcc_reg[0] <= mtcc_reg;
         return Scr_Trap_Updates{new_pcc: cast(mtcc_reg)};
     endmethod
 
@@ -208,14 +202,6 @@ module mkScrFile (ScrFile);
         return Scr_RET_Updates{new_pcc: cast(mepcc_reg[0])};
     endmethod
 
-    method ScrVMInfo pccCheck;
-        return ScrVMInfo {
-            top: truncate(getTop(pcc_reg[0])),
-            base: truncate(getBase(pcc_reg[0])),
-            perms: getHardPerms(pcc_reg[0])
-        };
-    endmethod
-
     method ScrVMInfo ddcCheck;
         // for load/store, need to consider MPRV
         return ScrVMInfo {
@@ -224,8 +210,5 @@ module mkScrFile (ScrFile);
             perms: getHardPerms(ddc_reg)
         };
     endmethod
-
-    method ScrDecodeInfo decodeInfo =
-      ScrDecodeInfo{cap_mode: getFlags(pcc_reg[0])==1'b1};
 
 endmodule
