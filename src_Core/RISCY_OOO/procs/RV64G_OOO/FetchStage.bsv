@@ -311,16 +311,16 @@ function ActionValue #(Tuple4 #(SupCntX2,
          Addr      next_pc   = pc;
          if (j < n_x16s) begin
             if (i == 0 &&& pending_straddle matches tagged Valid {.s_pc, .s_lsbs, .s_mispred}) begin
-               if (pc != s_pc + 2) begin
+               if (pc != getAddr(s_pc) + 2) begin
                   $display ("FetchStage.fav_parse_insts: straddle: pc mismatch: pc = 0x%0h but s_pc = 0x%0h", pc, s_pc);
                   dynamicAssert (False, "FetchStage.fav_parse_insts: straddle: pc mismatch");
                end
-               pc        = s_pc;
+               pc        = getAddr(s_pc);
                inst_kind = Inst_32b;
                orig_inst = { v_x16[0], s_lsbs };
                inst      = orig_inst;
                j         = 1;
-               next_pc   = s_pc + 4;
+               next_pc   = getAddr(s_pc) + 4;
                n_items   = 1;
             end
             else if (is_16b_inst (v_x16 [j])) begin
@@ -359,7 +359,7 @@ function ActionValue #(Tuple4 #(SupCntX2,
                dynamicAssert (False, "FetchStage.fav_parse_insts: instuction is not 16b or 32b?");
             end
          end
-         v_items [i] = Inst_Item {pc: pc, inst_kind: inst_kind, orig_inst: orig_inst, inst: inst};
+         v_items [i] = Inst_Item {pc: setAddrUnsafe(pc_start, pc), inst_kind: inst_kind, orig_inst: orig_inst, inst: inst};
          pc = next_pc;
       end
 `else
@@ -617,7 +617,7 @@ module mkFetchStage(FetchStage);
                     //     Addr align32b_mask = 'h3;
                     //     tval = (in.pc & (~ align32b_mask));
                     Addr align16b_mask = 'h1;
-                    tval = (in.pc & (~ align16b_mask));
+                    tval = (getAddr(in.pc) & (~ align16b_mask));
                 end
             endcase
         end
@@ -627,7 +627,7 @@ module mkFetchStage(FetchStage);
            //     Addr align32b_mask = 'h3;
            //     tval = (in.pc & (~ align32b_mask));
            Addr align16b_mask = 'h1;
-           tval = (in.pc & (~ align16b_mask));
+           tval = (getAddr(in.pc) & (~ align16b_mask));
         end
 `endif
 
@@ -709,11 +709,11 @@ module mkFetchStage(FetchStage);
             f22f3.deq();
             if (!isValid(fetch3In.cause)) begin
                 if(fetch3In.access_mmio) begin
-                    if(verbose) $display("get answer from MMIO %d", fetch3In.pc);
+                    if(verbose) $display("get answer from MMIO 0x%0x", getAddr(fetch3In.pc));
                     inst_d <- mmio.bootRomResp;
                 end
                 else begin
-                    if(verbose) $display("get answer from memory %d", fetch3In.pc);
+                    if(verbose) $display("get answer from memory 0x%0x", getAddr(fetch3In.pc));
                     inst_d <- mem_server.response.get;
                 end
             end
