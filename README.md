@@ -126,6 +126,12 @@ Inc. for more information.
 ----------------------------------------------------------------
 ## Build Instructions
 
+First clone this repository and then inside the repository initialize the submodules:
+
+       $ git clone git@github.com:CTSRD-CHERI/Toooba.git
+       $ cd Toooba
+       $ git submodule update --init --recursive
+
 ### Dependencies
 
 Build the Bluespec Compiler `bsc` from [this repository](https://github.com/B-Lang-org/bsc)
