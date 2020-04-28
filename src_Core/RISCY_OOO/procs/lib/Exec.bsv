@@ -284,6 +284,13 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
     AluFunc alu_f = dInst.execFunc matches tagged Alu .alu_f ? alu_f : Add;
     Data alu_result = alu(getAddr(rVal1), getAddr(aluVal2), alu_f);
 
+    // Default branch function is not taken
+    BrFunc br_f = dInst.execFunc matches tagged Br .br_f ? br_f : NT;
+    cf.taken = aluBr(getAddr(rVal1), getAddr(rVal2), br_f);
+    cf.nextPc = brAddrCalc(pcc, rVal1, dInst.iType, fromMaybe(0,getDInstImm(dInst)), cf.taken, orig_inst, (ccall || cjalr));
+    if (dInst.execFunc matches tagged Br .br_f) rVal1 = cf.nextPc;
+    cf.mispredict = cf.nextPc != ppc;
+
     Data inspect_result = capInspect(rVal1, aluVal2, dInst.execFunc.CapInspect);
     CapModifyFunc modFunc = ccall ? (Unseal (Src2)):dInst.execFunc.CapModify;
     CapPipe modify_result = capModify(rVal1, aluVal2, modFunc);
@@ -296,12 +303,6 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
                                                            tagged Br .x: modify_result;
                                                            default: nullWithAddr(alu_result);
                              endcase;
-
-    // Default branch function is not taken
-    BrFunc br_f = dInst.execFunc matches tagged Br .br_f ? br_f : NT;
-    cf.taken = aluBr(getAddr(rVal1), getAddr(rVal2), br_f);
-    cf.nextPc = brAddrCalc(pcc, rVal1, dInst.iType, fromMaybe(0,getDInstImm(dInst)), cf.taken, orig_inst, (ccall || cjalr));
-    cf.mispredict = cf.nextPc != ppc;
 
     data = (case (dInst.iType) matches
             St          : rVal2;

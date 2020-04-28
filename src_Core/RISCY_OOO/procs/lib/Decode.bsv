@@ -371,6 +371,11 @@ function DecodeResult decode(Instruction inst);
             dInst.imm = Valid(immJ);
             dInst.csr = tagged Invalid;
             dInst.execFunc = tagged Br AT;
+            dInst.capChecks.check_enable = True;
+            dInst.capChecks.check_authority_src = Src1;
+            dInst.capChecks.check_low_src = Src1Addr;
+            dInst.capChecks.check_high_src = Src1AddrPlus2;
+            dInst.capChecks.check_inclusive = False;
         end
 
         Jalr: begin
@@ -381,6 +386,11 @@ function DecodeResult decode(Instruction inst);
             dInst.imm = Valid(immI);
             dInst.csr = tagged Invalid;
             dInst.execFunc = tagged Br AT;
+            dInst.capChecks.check_enable = True;
+            dInst.capChecks.check_authority_src = Src1;
+            dInst.capChecks.check_low_src = Src1Addr;
+            dInst.capChecks.check_high_src = Src1AddrPlus2;
+            dInst.capChecks.check_inclusive = False;
         end
 
         Branch: begin
@@ -398,6 +408,11 @@ function DecodeResult decode(Instruction inst);
             regs.src2 = Valid(tagged Gpr rs2);
             dInst.imm = Valid(immB);
             dInst.csr = tagged Invalid;
+            dInst.capChecks.check_enable = True;
+            dInst.capChecks.check_authority_src = Src1;
+            dInst.capChecks.check_low_src = Src1Addr;
+            dInst.capChecks.check_high_src = Src1AddrPlus2;
+            dInst.capChecks.check_inclusive = False;
         end
 
         Load: begin
