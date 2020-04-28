@@ -391,14 +391,10 @@ typedef 12 InterruptNum;    // Without debugger
 
 // Traps are either an exception or an interrupt
 typedef union tagged {
+    CapException CapException;
     Exception Exception;
     Interrupt Interrupt;
 } Trap deriving(Bits, Eq, FShow);
-
-typedef struct {
-    Trap trap;
-    CSR_XCapCause capExp;
-} TrapWithCap deriving(Bits, FShow);
 
 // privilege modes
 Bit#(2) prvU = 0;

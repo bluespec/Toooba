@@ -30,13 +30,11 @@ import CHERICC_Fat::*;
 import ISA_Decls_CHERI::*;
 
 (* noinline *)
-function Maybe#(CapException) capChecks(CapPipe a, CapPipe b, CapChecks toCheck, CapPipe pcc_end);
-    function Maybe#(CapException) e1(CHERIException e) = Valid(CapException{cheri_exc_reg: toCheck.rn1, cheri_exc_code: e});
-    function Maybe#(CapException) e2(CHERIException e) = Valid(CapException{cheri_exc_reg: toCheck.rn2, cheri_exc_code: e});
-    Maybe#(CapException) result = Invalid;
-    if      (!isInBounds(pcc_end, True))
-        result = Valid(CapException{cheri_exc_reg: {1'b1,pack(SCR_PCC)}, cheri_exc_code: LengthViolation});
-    else if (toCheck.src1_tag                 && !isValidCap(a))
+function Maybe#(CSR_XCapCause) capChecks(CapPipe a, CapPipe b, CapChecks toCheck);
+    function Maybe#(CSR_XCapCause) e1(CHERIException e) = Valid(CSR_XCapCause{cheri_exc_reg: toCheck.rn1, cheri_exc_code: e});
+    function Maybe#(CSR_XCapCause) e2(CHERIException e) = Valid(CSR_XCapCause{cheri_exc_reg: toCheck.rn2, cheri_exc_code: e});
+    Maybe#(CSR_XCapCause) result = Invalid;
+    if (toCheck.src1_tag                      && !isValidCap(a))
         result = e1(TagViolation);
     else if (toCheck.src2_tag                 && !isValidCap(b))
         result = e2(TagViolation);
@@ -288,14 +286,14 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
     BrFunc br_f = dInst.execFunc matches tagged Br .br_f ? br_f : NT;
     cf.taken = aluBr(getAddr(rVal1), getAddr(rVal2), br_f);
     cf.nextPc = brAddrCalc(pcc, rVal1, dInst.iType, fromMaybe(0,getDInstImm(dInst)), cf.taken, orig_inst, (ccall || cjalr));
-    if (dInst.execFunc matches tagged Br .br_f) rVal1 = cf.nextPc;
+    if (dInst.execFunc matches tagged Br .unused) rVal1 = cf.nextPc;
     cf.mispredict = cf.nextPc != ppc;
 
     Data inspect_result = capInspect(rVal1, aluVal2, dInst.execFunc.CapInspect);
     CapModifyFunc modFunc = ccall ? (Unseal (Src2)):dInst.execFunc.CapModify;
     CapPipe modify_result = capModify(rVal1, aluVal2, modFunc);
     CapPipe link_pcc = addPc(pcc, ((orig_inst [1:0] == 2'b11) ? 4 : 2));
-    Maybe#(CapException) capException = capChecks(rVal1, aluVal2, dInst.capChecks, link_pcc);
+    Maybe#(CSR_XCapCause) capException = capChecks(rVal1, aluVal2, dInst.capChecks);
     Maybe#(BoundsCheck) boundsCheck = prepareBoundsCheck(rVal1, aluVal2, dInst.capChecks);
 
     CapPipe cap_alu_result = case (dInst.execFunc) matches tagged CapInspect .x: nullWithAddr(inspect_result);
@@ -327,10 +325,11 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
 endfunction
 
 (* noinline *)
-function Maybe#(Exception) checkForException(
+function Maybe#(Trap) checkForException(
     DecodedInst dInst,
     ArchRegs regs,
-    CsrDecodeInfo csrState
+    CsrDecodeInfo csrState,
+    CapMem pcc
 ); // regs needed to check if x0 is a src
     Maybe#(Exception) exception = Invalid;
     let prv = csrState.prv;
@@ -392,7 +391,16 @@ function Maybe#(Exception) checkForException(
         end
     end
 
-    return exception;
+    // Check that the end of the instruction is in bounds of PCC.
+    CapPipe pcc_end = cast(addPc(pcc, 2));
+    Maybe#(CSR_XCapCause) capException = Invalid;
+    if (!isInBounds(pcc_end, True)) capException = Valid(CSR_XCapCause{cheri_exc_reg: {1'b1,pack(SCR_PCC)}, cheri_exc_code: LengthViolation});
+
+    Maybe#(Trap) retval = Invalid;
+    if (capException matches tagged Valid .ce) retval = Valid(CapException(ce));
+    else if (exception matches tagged Valid .e) retval = Valid(Exception(e));
+
+    return retval;
 endfunction
 
 // check mem access misaligned: byteEn is unshifted (just from Decode)
