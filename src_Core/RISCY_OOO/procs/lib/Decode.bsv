@@ -375,7 +375,7 @@ function DecodeResult decode(Instruction inst);
             dInst.capChecks.check_authority_src = Src1;
             dInst.capChecks.check_low_src = Src1Addr;
             dInst.capChecks.check_high_src = Src1AddrPlus2;
-            dInst.capChecks.check_inclusive = False;
+            dInst.capChecks.check_inclusive = True;
         end
 
         Jalr: begin
@@ -390,7 +390,7 @@ function DecodeResult decode(Instruction inst);
             dInst.capChecks.check_authority_src = Src1;
             dInst.capChecks.check_low_src = Src1Addr;
             dInst.capChecks.check_high_src = Src1AddrPlus2;
-            dInst.capChecks.check_inclusive = False;
+            dInst.capChecks.check_inclusive = True;
         end
 
         Branch: begin
@@ -412,7 +412,7 @@ function DecodeResult decode(Instruction inst);
             dInst.capChecks.check_authority_src = Src1;
             dInst.capChecks.check_low_src = Src1Addr;
             dInst.capChecks.check_high_src = Src1AddrPlus2;
-            dInst.capChecks.check_inclusive = False;
+            dInst.capChecks.check_inclusive = True;
         end
 
         Load: begin
@@ -1143,7 +1143,7 @@ function DecodeResult decode(Instruction inst);
                                     dInst.capChecks.check_authority_src = Src1;
                                     dInst.capChecks.check_low_src = Src1Addr;
                                     dInst.capChecks.check_high_src = Src1AddrPlus2;
-                                    dInst.capChecks.check_inclusive = False;
+                                    dInst.capChecks.check_inclusive = True;
 
                                     dInst.iType = Jr;
                                     dInst.execFunc = tagged Br AT;

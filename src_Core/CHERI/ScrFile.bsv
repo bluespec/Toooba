@@ -146,7 +146,7 @@ module mkScrFile (ScrFile);
     Reg#(CapReg) stcc_reg      <- mkCsrReg(defaultValue);
     Reg#(CapReg) stdc_reg      <- mkCsrReg(nullCap);
     Reg#(CapReg) sScratchC_reg <- mkCsrReg(nullCap);
-    Reg#(CapReg) sepcc_reg     <- mkCsrReg(defaultValue);
+    Ehr#(2, CapReg) sepcc_reg  <- mkConfigEhr(defaultValue);
 
     // Machine level SCRs with accessSysRegs
     Reg#(CapReg) mtcc_reg      <- mkCsrReg(defaultValue);
@@ -169,7 +169,7 @@ module mkScrFile (ScrFile);
             SCR_STCC:      stcc_reg;
             SCR_STDC:      stdc_reg;
             SCR_SScratchC: sScratchC_reg;
-            SCR_SEPCC:     sepcc_reg;
+            SCR_SEPCC:     sepcc_reg[1];
             // Machine CSRs with accessSysRegs
             SCR_MTCC:      mtcc_reg;
             SCR_MTDC:      mtdc_reg;
@@ -190,7 +190,11 @@ module mkScrFile (ScrFile);
     endmethod
 
     method ActionValue#(Scr_Trap_Updates) trap(CapPipe pc, Bit#(2) prv);
-        mepcc_reg[0] <= cast(pc);
+        case (prv)
+            prvM: mepcc_reg[0] <= cast(pc);
+            prvS: mepcc_reg[0] <= cast(pc);
+            prvU: mepcc_reg[0] <= cast(pc);
+        endcase
         return Scr_Trap_Updates{new_pcc: cast(mtcc_reg)};
     endmethod
 
@@ -199,7 +203,7 @@ module mkScrFile (ScrFile);
     endmethod
 
     method ActionValue#(Scr_RET_Updates) sret;
-        return Scr_RET_Updates{new_pcc: cast(mepcc_reg[0])};
+        return Scr_RET_Updates{new_pcc: cast(sepcc_reg[0])};
     endmethod
 
     method ScrVMInfo ddcCheck;
