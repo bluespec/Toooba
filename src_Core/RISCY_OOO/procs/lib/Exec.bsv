@@ -286,7 +286,10 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
     BrFunc br_f = dInst.execFunc matches tagged Br .br_f ? br_f : NT;
     cf.taken = aluBr(getAddr(rVal1), getAddr(rVal2), br_f);
     cf.nextPc = brAddrCalc(pcc, rVal1, dInst.iType, fromMaybe(0,getDInstImm(dInst)), cf.taken, orig_inst, (ccall || cjalr));
-    if (dInst.execFunc matches tagged Br .unused) rVal1 = cf.nextPc;
+    if (dInst.execFunc matches tagged Br .unused) begin
+        rVal1 = cf.nextPc;
+        if (!cf.taken) dInst.capChecks.check_enable = False;
+    end
     cf.mispredict = cf.nextPc != ppc;
 
     Data inspect_result = capInspect(rVal1, aluVal2, dInst.execFunc.CapInspect);
