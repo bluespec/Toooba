@@ -729,7 +729,6 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                                        : 1));
              csrf.dcsr_cause_write (dcsr_cause);
              csrf.dpc_write (trap.pc);
-             scaprfIfc.trap (trap.pc,?);
 
              // Tell fetch stage to wait for redirect
              // Note: rule doCommitTrap_flush may have done this already; redundant call is ok.
@@ -748,7 +747,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
           // trap handling & redirect
           CapPipe cp = cast(trap.pc);
           let trap_updates <- csrf.trap(trap.trap, getOffset(cp), trap.addr, trap.orig_inst);
-          let cap_trap_updates <- scaprf.trap(cast(trap.pc), ?);
+          let cap_trap_updates <- scaprf.trap(cast(trap.pc), csrf.decodeInfo.prv);
           CapPipe new_pc = setOffset(cast(cap_trap_updates.new_pcc), trap_updates.new_pc).value;
           inIfc.redirectPc(cast(new_pc)
 `ifdef RVFI_DII
@@ -897,7 +896,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         end
         else if(x.iType == Mret) begin
            RET_Updates ret_updates <- csrf.mret;
-           Scr_RET_Updates scr_ret_updates <- scaprf.sret;
+           Scr_RET_Updates scr_ret_updates <- scaprf.mret;
            CapPipe tc = setOffset(cast(scr_ret_updates.new_pcc), ret_updates.new_pc).value;
            next_pc = cast(tc);
 `ifdef INCLUDE_TANDEM_VERIF
