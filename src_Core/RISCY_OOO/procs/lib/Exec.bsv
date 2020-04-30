@@ -332,7 +332,8 @@ function Maybe#(Trap) checkForException(
     DecodedInst dInst,
     ArchRegs regs,
     CsrDecodeInfo csrState,
-    CapMem pcc
+    CapMem pcc,
+    Bool fourByteInst
 ); // regs needed to check if x0 is a src
     Maybe#(Exception) exception = Invalid;
     let prv = csrState.prv;
@@ -395,7 +396,7 @@ function Maybe#(Trap) checkForException(
     end
 
     // Check that the end of the instruction is in bounds of PCC.
-    CapPipe pcc_end = cast(addPc(pcc, 2));
+    CapPipe pcc_end = cast(addPc(pcc, (fourByteInst?4:2)));
     Maybe#(CSR_XCapCause) capException = Invalid;
     if (!isInBounds(pcc_end, True)) capException = Valid(CSR_XCapCause{cheri_exc_reg: {1'b1,pack(SCR_PCC)}, cheri_exc_code: LengthViolation});
 
