@@ -74,7 +74,7 @@ function Maybe#(CSR_XCapCause) capChecks(CapPipe a, CapPipe b, CapChecks toCheck
 endfunction
 
 (* noinline *)
-function Maybe#(BoundsCheck) prepareBoundsCheck(CapPipe a, CapPipe b, CapChecks toCheck);
+function Maybe#(BoundsCheck) prepareBoundsCheck(CapPipe a, CapPipe b, CapPipe pcc, CapChecks toCheck);
     BoundsCheck ret = ?;
     CapPipe authority = ?;
     case(toCheck.check_authority_src)
@@ -85,6 +85,10 @@ function Maybe#(BoundsCheck) prepareBoundsCheck(CapPipe a, CapPipe b, CapChecks 
         Src2: begin
             authority = b;
             ret.authority_idx = toCheck.rn2;
+        end
+        Pcc: begin
+            authority = pcc;
+            ret.authority_idx = 6'b100000;
         end
     endcase
     ret.authority_base = getBase(authority);
@@ -297,7 +301,7 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
     CapPipe modify_result = capModify(rVal1, aluVal2, modFunc);
     CapPipe link_pcc = addPc(pcc, ((orig_inst [1:0] == 2'b11) ? 4 : 2));
     Maybe#(CSR_XCapCause) capException = capChecks(rVal1, aluVal2, dInst.capChecks);
-    Maybe#(BoundsCheck) boundsCheck = prepareBoundsCheck(rVal1, aluVal2, dInst.capChecks);
+    Maybe#(BoundsCheck) boundsCheck = prepareBoundsCheck(rVal1, aluVal2, pcc, dInst.capChecks);
 
     CapPipe cap_alu_result = case (dInst.execFunc) matches tagged CapInspect .x: nullWithAddr(inspect_result);
                                                            tagged CapModify .x: modify_result;

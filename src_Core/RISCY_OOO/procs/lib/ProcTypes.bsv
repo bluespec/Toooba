@@ -499,7 +499,8 @@ typedef struct {
 
 typedef enum {
     Src1,
-    Src2
+    Src2,
+    Pcc
 } CheckAuthoritySrc deriving(Bits, Eq, FShow);
 
 typedef enum {
