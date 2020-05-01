@@ -48,7 +48,7 @@ function Maybe#(MemInst) decodeMemInst(Instruction inst);
     // mem_func + amo_func
     MemFunc mem_func = Ld;
     AmoFunc amo_func = None;
-    if (opcode == Load || opcode == LoadFp) begin
+    if (opcode == Load || opcode == LoadFp || opcode == MemMisc) begin
         mem_func = Ld;
     end else if (opcode == Store || opcode == StoreFp) begin
         mem_func = St;
@@ -100,34 +100,39 @@ function Maybe#(MemInst) decodeMemInst(Instruction inst);
         unsignedLd = True;
     end
 
+    Bool capWidth = (mem_func == St      && funct3 == 3'b100)
+                 || (opcode   == MemMisc && funct3 == 3'b010);
+
     // byteEn
     // TODO: Some combinations of operations and byteEn's are illegal.
     // They should be detected here.
-    MemDataByteEn byteEn = replicate(False);
-    case (funct3)
-        memB, memBU : byteEn[0] = True;
-        memH, memHU : begin
-                          byteEn[0] = True;
-                          byteEn[1] = True;
-                      end
-        memW, memWU : begin
-                          byteEn[0] = True;
-                          byteEn[1] = True;
-                          byteEn[2] = True;
-                          byteEn[3] = True;
-                      end
-        memD        : begin
-                          byteEn[0] = True;
-                          byteEn[1] = True;
-                          byteEn[2] = True;
-                          byteEn[3] = True;
-                          byteEn[4] = True;
-                          byteEn[5] = True;
-                          byteEn[6] = True;
-                          byteEn[7] = True;
-                      end
-        default     : illegalInst = True;
-    endcase
+    MemDataByteEn byteEn = (capWidth) ? replicate(True):replicate(False);
+    if (!capWidth) begin
+        case (funct3)
+            memB, memBU : byteEn[0] = True;
+            memH, memHU : begin
+                              byteEn[0] = True;
+                              byteEn[1] = True;
+                          end
+            memW, memWU : begin
+                              byteEn[0] = True;
+                              byteEn[1] = True;
+                              byteEn[2] = True;
+                              byteEn[3] = True;
+                          end
+            memD        : begin
+                              byteEn[0] = True;
+                              byteEn[1] = True;
+                              byteEn[2] = True;
+                              byteEn[3] = True;
+                              byteEn[4] = True;
+                              byteEn[5] = True;
+                              byteEn[6] = True;
+                              byteEn[7] = True;
+                          end
+            default     : illegalInst = True;
+        endcase
+    end
 
     // aq + rl
     Bool aq = False;
@@ -424,7 +429,7 @@ function DecodeResult decode(Instruction inst);
             dInst.capChecks.check_inclusive = True;
         end
 
-        Load: begin
+        Load, MemMisc: begin
             dInst.iType = Ld;
             if (isValid(mem_inst)) begin
                 dInst.execFunc = tagged Mem fromMaybe(?, mem_inst);

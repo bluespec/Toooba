@@ -20,3 +20,4 @@
 `OPCODE(Jalr   , 7'b1100111)
 `OPCODE(Jal    , 7'b1101111)
 `OPCODE(System , 7'b1110011)
+`OPCODE(MemMisc, 7'b1111111)

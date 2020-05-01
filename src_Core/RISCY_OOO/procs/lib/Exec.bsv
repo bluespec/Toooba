@@ -246,7 +246,7 @@ function CapPipe brAddrCalc(CapPipe pc, CapPipe val, IType iType, Data imm, Bool
             Br      : (taken? branchTarget : pcPlusN);
             default : pcPlusN;
         endcase);
-    return targetAddr;
+    return setType(targetAddr, -1);
 endfunction
 /*
 (* noinline *)
@@ -286,6 +286,12 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
     AluFunc alu_f = dInst.execFunc matches tagged Alu .alu_f ? alu_f : Add;
     Data alu_result = alu(getAddr(rVal1), getAddr(aluVal2), alu_f);
 
+    Data inspect_result = capInspect(rVal1, aluVal2, dInst.execFunc.CapInspect);
+    CapModifyFunc modFunc = ccall ? (Unseal (Src2)):dInst.execFunc.CapModify;
+    CapPipe modify_result = capModify(rVal1, aluVal2, modFunc);
+    CapPipe link_pcc = addPc(pcc, ((orig_inst [1:0] == 2'b11) ? 4 : 2));
+    Maybe#(CSR_XCapCause) capException = capChecks(rVal1, aluVal2, dInst.capChecks);
+
     // Default branch function is not taken
     BrFunc br_f = dInst.execFunc matches tagged Br .br_f ? br_f : NT;
     cf.taken = aluBr(getAddr(rVal1), getAddr(rVal2), br_f);
@@ -296,11 +302,6 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
     end
     cf.mispredict = cf.nextPc != ppc;
 
-    Data inspect_result = capInspect(rVal1, aluVal2, dInst.execFunc.CapInspect);
-    CapModifyFunc modFunc = ccall ? (Unseal (Src2)):dInst.execFunc.CapModify;
-    CapPipe modify_result = capModify(rVal1, aluVal2, modFunc);
-    CapPipe link_pcc = addPc(pcc, ((orig_inst [1:0] == 2'b11) ? 4 : 2));
-    Maybe#(CSR_XCapCause) capException = capChecks(rVal1, aluVal2, dInst.capChecks);
     Maybe#(BoundsCheck) boundsCheck = prepareBoundsCheck(rVal1, aluVal2, pcc, dInst.capChecks);
 
     CapPipe cap_alu_result = case (dInst.execFunc) matches tagged CapInspect .x: nullWithAddr(inspect_result);
