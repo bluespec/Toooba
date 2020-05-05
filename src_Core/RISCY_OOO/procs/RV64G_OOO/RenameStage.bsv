@@ -697,7 +697,8 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                         data: MemRSData {
                             mem_func: mem_inst.mem_func,
                             imm: validValue(dInst.imm),
-                            ldstq_tag: lsqTag
+                            ldstq_tag: lsqTag,
+                            cap_checks: dInst.capChecks
                         },
                         regs: phy_regs,
                         tag: inst_tag,

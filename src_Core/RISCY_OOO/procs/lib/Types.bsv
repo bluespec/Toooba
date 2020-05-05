@@ -124,6 +124,7 @@ typedef struct {
     MemDataByteEn  byteEn; // takes place of double word
     Bool           aq;
     Bool           rl;
+    Bool           ddc_bounds;
 } MemInst deriving(Bits, Eq, FShow);
 
 `ifdef BSIM

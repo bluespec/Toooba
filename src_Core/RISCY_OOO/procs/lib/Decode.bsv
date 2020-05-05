@@ -34,12 +34,6 @@ Bit#(3) memWU   = 3'b110;
 
 // Smaller decode functions
 function Maybe#(MemInst) decodeMemInst(Instruction inst);
-    MemInst mem_inst = MemInst{ mem_func: ?,
-                                amo_func: None,
-                                unsignedLd: False,
-                                byteEn: replicate(False),
-                                aq: False,
-                                rl: False };
     Bool illegalInst = False;
     Opcode opcode = unpackOpcode(inst[6:0]);
     let funct5 = inst[31:27];
@@ -152,7 +146,8 @@ function Maybe#(MemInst) decodeMemInst(Instruction inst);
                                 unsignedLd: unsignedLd,
                                 byteEn: byteEn,
                                 aq: aq,
-                                rl: rl } );
+                                rl: rl,
+                                ddc_bounds: True } );
     end
 endfunction
 
@@ -230,7 +225,8 @@ function Maybe#(MemInst) decodeCapMemInst(Instruction inst);
                                 unsignedLd: unsignedLd,
                                 byteEn: byteEn,
                                 aq: aq,
-                                rl: rl } );
+                                rl: rl,
+                                ddc_bounds: ddc} );
     end
 endfunction
 
@@ -1133,23 +1129,49 @@ function DecodeResult decode(Instruction inst);
                         end
                         f7_cap_Loads: begin
                             dInst.iType = Ld;
-                            if (cap_mem_inst matches tagged Valid .ci) dInst.execFunc = tagged Mem ci;
+                            MemInst mi = cap_mem_inst.Valid;
+                            if (isValid(cap_mem_inst)) dInst.execFunc = tagged Mem mi;
                             else illegalInst = True;
                             regs.dst  = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs1);
                             regs.src2 = Invalid;
                             dInst.imm = Valid (0);
                             dInst.csr = tagged Invalid;
+
+                            dInst.capChecks.check_enable = True;
+                            dInst.capChecks.check_low_src = Src1Addr;
+                            dInst.capChecks.check_high_src = Src1AddrPlus2; // Should add the access size somehow...
+                            dInst.capChecks.check_inclusive = True;
+                            if (mi.ddc_bounds) begin
+                                dInst.capChecks.check_authority_src = Ddc;
+                            end else begin
+                                dInst.capChecks.check_authority_src = Src1;
+                                dInst.capChecks.src1_tag = True;
+                                dInst.capChecks.src1_unsealed = True;
+                            end
                         end
                         f7_cap_Stores: begin
                             dInst.iType = St;
-                            if (cap_mem_inst matches tagged Valid .ci) dInst.execFunc = tagged Mem ci;
+                            MemInst mi = cap_mem_inst.Valid;
+                            if (isValid(cap_mem_inst)) dInst.execFunc = tagged Mem mi;
                             else illegalInst = True;
                             regs.dst  = Invalid;
                             regs.src1 = Valid(tagged Gpr rs1);
                             regs.src2 = Valid(tagged Gpr rs2);
                             dInst.imm = Valid (0);
                             dInst.csr = tagged Invalid;
+
+                            dInst.capChecks.check_enable = True;
+                            dInst.capChecks.check_low_src = Src1Addr;
+                            dInst.capChecks.check_high_src = Src1AddrPlus2; // Should add the access size somehow...
+                            dInst.capChecks.check_inclusive = True;
+                            if (mi.ddc_bounds) begin
+                                dInst.capChecks.check_authority_src = Ddc;
+                            end else begin
+                                dInst.capChecks.check_authority_src = Src1;
+                                dInst.capChecks.src1_tag = True;
+                                dInst.capChecks.src1_unsealed = True;
+                            end
                         end
                         f7_cap_TwoOp: begin
                             case (funct5rs2)

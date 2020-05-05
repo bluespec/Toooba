@@ -157,7 +157,7 @@ interface ReorderBufferRowEhr#(numeric type aluExeNum, numeric type fpuMulDivExe
     method Action setExecuted_doFinishMem(CapPipe vaddr,
                                           Data store_data, ByteEn store_data_BE,
                                           Bool access_at_commit, Bool non_mmio_st_done,
-                                          Maybe#(Exception) cause
+                                          Maybe#(CSR_XCapCause) cause
 `ifdef RVFI
                                           , ExtraTraceBundle tb
 `endif
@@ -357,7 +357,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     method Action setExecuted_doFinishMem(CapPipe vaddr,
                                           Data   store_data, ByteEn store_data_BE,
                                           Bool   access_at_commit, Bool non_mmio_st_done,
-                                          Maybe#(Exception) cause
+                                          Maybe#(CSR_XCapCause) cause
 `ifdef RVFI
                                           , ExtraTraceBundle tb
 `endif
@@ -385,7 +385,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         // udpate non mmio st
         nonMMIOStDone[nonMMIOSt_finishMem_port] <= non_mmio_st_done;
         if (cause matches tagged Valid .exp) begin
-            mem_early_trap[0] <= Valid ( Exception (exp));
+            mem_early_trap[0] <= Valid ( CapException (exp));
             tval[trap_finishMem_port] <= tval[trap_finishMem_port];
         end
     endmethod
@@ -626,7 +626,7 @@ interface SupReorderBuffer#(numeric type aluExeNum, numeric type fpuMulDivExeNum
                                           CapPipe vaddr,
                                           Data store_data, ByteEn store_data_BE,
                                           Bool access_at_commit, Bool non_mmio_st_done,
-                                          Maybe#(Exception) cause
+                                          Maybe#(CSR_XCapCause) cause
 `ifdef RVFI
                                           , ExtraTraceBundle tb
 `endif
@@ -1239,7 +1239,7 @@ module mkSupReorderBuffer#(
 
     method Action setExecuted_doFinishMem(
         InstTag x, CapPipe vaddr, Data store_data, ByteEn store_data_BE, Bool access_at_commit,
-        Bool non_mmio_st_done, Maybe#(Exception) cause
+        Bool non_mmio_st_done, Maybe#(CSR_XCapCause) cause
 `ifdef RVFI
         , tb
 `endif

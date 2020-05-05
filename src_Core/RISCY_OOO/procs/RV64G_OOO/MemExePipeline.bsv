@@ -63,6 +63,7 @@ typedef struct {
     PhyRegs regs;
     InstTag tag;
     LdStQTag ldstq_tag;
+    CapChecks cap_checks;
 } MemDispatchToRegRead deriving(Bits, Eq, FShow);
 
 typedef struct {
@@ -74,6 +75,7 @@ typedef struct {
     // src reg vals
     CapPipe rVal1;
     CapPipe rVal2;
+    CapChecks cap_checks;
 } MemRegReadToExe deriving(Bits, FShow);
 
 typedef struct {
@@ -90,6 +92,8 @@ typedef struct {
     ByteEn  store_data_BE;
 `endif
     Bool misaligned;
+    Maybe#(CSR_XCapCause) capException;
+    Maybe#(BoundsCheck) check;
 } MemExeToFinish deriving(Bits, FShow);
 
 // bookkeeping when waiting for MMIO resp which may cause exception
@@ -161,7 +165,7 @@ interface MemExeInput;
                                               CapPipe vaddr,
                                               Data store_data, ByteEn store_data_BE,
                                               Bool access_at_commit, Bool non_mmio_st_done,
-                                              Maybe#(Exception) cause
+                                              Maybe#(CSR_XCapCause) cause
 `ifdef RVFI
                                               , ExtraTraceBundle tb
 `endif
@@ -207,7 +211,7 @@ interface MemExePipeline;
 endinterface
 
 module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
-    Bool verbose = False;
+    Bool verbose = True;
 
     // we change cache request in case of single core, becaues our MSI protocol
     // is not good with single core
@@ -396,7 +400,8 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
                 imm: x.data.imm,
                 regs: x.regs,
                 tag: x.tag,
-                ldstq_tag: x.data.ldstq_tag
+                ldstq_tag: x.data.ldstq_tag,
+                cap_checks: x.data.cap_checks
             },
             spec_bits: x.spec_bits
         });
@@ -438,7 +443,8 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
                 tag: x.tag,
                 ldstq_tag: x.ldstq_tag,
                 rVal1: rVal1,
-                rVal2: rVal2
+                rVal2: rVal2,
+                cap_checks: x.cap_checks
             },
             spec_bits: dispToReg.spec_bits
         });
@@ -482,6 +488,8 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             lsq.updateData(stTag, d);
         end
 
+        CapPipe ddc = cast(inIfc.scaprf_rd(SCR_DDC)); // ToDo: feed DDC into the prepareBoundsCheck function below somehow.
+
         // go to next stage by sending to TLB
         dTlb.procReq(DTlbReq {
             inst: MemExeToFinish {
@@ -494,7 +502,9 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
                 store_data: data,
                 store_data_BE: origBE,
 `endif
-                misaligned: memAddrMisaligned(getAddr(vaddr), origBE)
+                misaligned: memAddrMisaligned(getAddr(vaddr), origBE),
+                capException: capChecks(x.rVal1, x.rVal2, x.cap_checks),
+                check: prepareBoundsCheck(x.rVal1, vaddr, almightyCap, x.cap_checks)
             },
             specBits: regToExe.spec_bits
         });
@@ -564,13 +574,15 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         endcase);
         Bool access_at_commit = !isValid(cause) && (isMMIO || isLrScAmo);
         Bool non_mmio_st_done = !isValid(cause) && !isMMIO && x.mem_func == St;
-        CapPipe pcc = cast(inIfc.rob_getPC(x.tag));
-        CapPipe ddc = cast(inIfc.scaprf_rd(SCR_DDC));
-        Bool ddc_out_of_bounds = !isInBounds(modifyOffset(ddc,getAddr(x.vaddr),True).value,True);
-        Bool out_of_bounds = (getFlags(pcc) == 1'b1) ? isInBounds(x.vaddr, False):ddc_out_of_bounds;
+        if (x.check matches tagged Valid .check &&& x.capException matches tagged Invalid) begin
+            if (!(                         (check.check_low  >= check.authority_base) &&
+                  (check.check_inclusive ? (check.check_high <= check.authority_top )
+                                         : (check.check_high <  check.authority_top ))))
+                x.capException = Valid(CSR_XCapCause{cheri_exc_reg: check.authority_idx, cheri_exc_code: LengthViolation});
+        end
         inIfc.rob_setExecuted_doFinishMem(x.tag, x.vaddr, store_data, store_data_BE,
                                           access_at_commit, non_mmio_st_done,
-                                          (out_of_bounds) ? Valid(CHERIFault):Invalid
+                                          x.capException
 `ifdef RVFI
                                           , ExtraTraceBundle{
                                               regWriteData: memData[pack(x.ldstq_tag)],
