@@ -508,7 +508,8 @@ typedef enum {
     Src1Addr,
     Src2Addr,
     Src2Type,
-    Src1Base
+    Src1Base,
+    Vaddr    // Memory Pipe
 } CheckLowSrc deriving(Bits, Eq, FShow);
 
 typedef enum {
@@ -516,7 +517,8 @@ typedef enum {
     Src1Top,
     Src2Addr,
     Src2Type,
-    ResultTop
+    ResultTop,
+    VaddrPlusSize // Memory Pipe
 } CheckHighSrc deriving(Bits, Eq, FShow);
 
 typedef struct {
@@ -744,6 +746,7 @@ Bit#(5) opFCVT_FW = 5'b11010;
 //MiscMem
 Bit#(3) fnFENCE  = 3'b000;
 Bit#(3) fnFENCEI = 3'b001;
+Bit#(3) fnLC     = 3'b010;
 
 // System
 Bit#(3) fnPRIV   = 3'b000;

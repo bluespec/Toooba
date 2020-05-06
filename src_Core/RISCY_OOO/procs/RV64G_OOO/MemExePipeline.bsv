@@ -503,8 +503,9 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
                 store_data_BE: origBE,
 `endif
                 misaligned: memAddrMisaligned(getAddr(vaddr), origBE),
-                capException: capChecks(x.rVal1, x.rVal2, x.cap_checks),
-                check: prepareBoundsCheck(x.rVal1, vaddr, almightyCap, x.cap_checks)
+                capException: capChecks(x.rVal1, x.rVal2, ddc, x.cap_checks),
+                check: prepareBoundsCheck(x.rVal1, x.rVal2, almightyCap/*ToDo: pcc*/,
+                                          ddc, getAddr(vaddr), pack(countOnes(pack(origBE))), x.cap_checks)
             },
             specBits: regToExe.spec_bits
         });
