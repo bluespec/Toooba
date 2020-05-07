@@ -82,7 +82,6 @@ interface CommitInput;
     interface ReorderBufferSynth robIfc;
     interface RegRenamingTable rtIfc;
     interface CsrFile csrfIfc;
-    interface ScrFile scaprfIfc;
     // no stores
     method Bool stbEmpty;
     method Bool stqEmpty;
@@ -344,7 +343,6 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
     ReorderBufferSynth rob = inIfc.robIfc;
     RegRenamingTable regRenamingTable = inIfc.rtIfc;
     CsrFile csrf = inIfc.csrfIfc;
-    ScrFile scaprf = inIfc.scaprfIfc;
 
     // FIXME FIXME FIXME wires to set atCommit in LSQ: avoid scheduling cycle.
     // Using wire should be fine, because LSQ does not need to see atCommit
@@ -729,7 +727,6 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                                        : 1));
              csrf.dcsr_cause_write (dcsr_cause);
              csrf.dpc_write (trap.pc);
-             scaprfIfc.trap(trap.pc,?);
 
              // Tell fetch stage to wait for redirect
              // Note: rule doCommitTrap_flush may have done this already; redundant call is ok.
@@ -746,9 +743,8 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
        if (! debugger_halt) begin
           // trap handling & redirect
-          let trap_updates <- csrf.trap(trap.trap, getAddr(trap.pc), trap.addr, trap.orig_inst);
-          let cap_trap_updates <- scaprf.trap(cast(trap.pc), ?);
-          CapPipe new_pc = setOffset(cast(cap_trap_updates.new_pcc), trap_updates.new_pc).value;
+          let trap_updates <- csrf.trap(trap.trap, cast(trap.pc), trap.addr, trap.orig_inst);
+          CapPipe new_pc = cast(trap_updates.new_pcc);
           inIfc.redirectPc(cast(new_pc)
 `ifdef RVFI_DII
                            , trap.x.diid + 1
@@ -756,7 +752,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 );
 `ifdef RVFI
           Rvfi_Traces rvfis = replicate(tagged Invalid);
-          rvfis[0] = genRVFI(trap.x, traceCnt, getTSB(), trap_updates.new_pc);
+          rvfis[0] = genRVFI(trap.x, traceCnt, getTSB(), getAddr(new_pc));
           rvfiQ.enq(rvfis);
           traceCnt <= traceCnt + 1;
 `endif
@@ -878,6 +874,19 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
             flush_security = csr_idx == CSRmflush;
 `endif
         end
+        if(x.iType == Scr) begin
+            // inIfc.commitCsrInstOrInterrupt; // TODO Will there be statcounter for SCRs?
+            // write CSR
+            let scr_idx = validValue(x.scr);
+            CapPipe scr_data = ?;
+            if(x.ppc_vaddr_csrData matches tagged SCRData .d) begin
+                scr_data = d;
+            end
+            else begin
+                doAssert(False, "must have scr data");
+            end
+            csrf.scrInstWr(scr_idx, cast(scr_data)); // TODO only needs a CapReg so we could avoid generating the CapPipe in the first place
+        end
 
         // redirect (Sret and Mret redirect pc is got from CSRF)
         CapMem next_pc = x.ppc_vaddr_csrData matches tagged PPC .ppc ? ppc : addPc(x.pc, 4);
@@ -887,18 +896,14 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 `endif
         if(x.iType == Sret) begin
            RET_Updates ret_updates <- csrf.sret;
-           Scr_RET_Updates scr_ret_updates <- scaprf.sret;
-           CapPipe tc = setOffset(cast(scr_ret_updates.new_pcc), ret_updates.new_pc).value;
-           next_pc = cast(tc);
+           next_pc = cast(ret_updates.new_pcc);
 `ifdef INCLUDE_TANDEM_VERIF
-                 m_ret_updates = tagged Valid ret_updates;
+           m_ret_updates = tagged Valid ret_updates;
 `endif
         end
         else if(x.iType == Mret) begin
            RET_Updates ret_updates <- csrf.mret;
-           Scr_RET_Updates scr_ret_updates <- scaprf.sret;
-           CapPipe tc = setOffset(cast(scr_ret_updates.new_pcc), ret_updates.new_pc).value;
-           next_pc = cast(tc);
+           next_pc = cast(ret_updates.new_pcc);
 `ifdef INCLUDE_TANDEM_VERIF
            m_ret_updates = tagged Valid ret_updates;
 `endif
@@ -1095,9 +1100,6 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                     // every inst here should have been renamed, commit renaming
                     regRenamingTable.commit[i].commit;
                     doAssert(x.claimed_phy_reg, "should have renamed");
-
-                    if (x.ppc_vaddr_csrData matches tagged PPC .ppc)
-                        scaprf.pccWr[i].put(cast(ppc));
 
 `ifdef RENAME_DEBUG
                     // send debug msg for rename error

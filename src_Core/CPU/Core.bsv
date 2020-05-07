@@ -255,8 +255,6 @@ module mkCore#(CoreId coreId)(Core);
 
     // Bluespec: CsrFile including external interrupt request methods
     CsrFile csrf <- mkCsrFile(zeroExtend(coreId)); // hartid in CSRF should be core id
-    // Special Capability register file
-    ScrFile scaprf <- mkScrFile();
 
     RegRenamingTable regRenamingTable <- mkRegRenamingTable;
     EpochManager epochManager <- mkEpochManager;
@@ -358,7 +356,7 @@ module mkCore#(CoreId coreId)(Core);
                 method rf_rd1 = cast(rf.read[aluRdPort(i)].rd1);
                 method rf_rd2 = cast(rf.read[aluRdPort(i)].rd2);
                 method csrf_rd = csrf.rd;
-                method scaprf_rd = scaprf.rd;
+                method scaprf_rd = csrf.scrRd;
                 method rob_getPC = rob.getOrigPC[i].get;
                 method rob_getPredPC = rob.getOrigPredPC[i].get;
                 method rob_getOrig_Inst = rob.getOrig_Inst[i].get;
@@ -402,7 +400,7 @@ module mkCore#(CoreId coreId)(Core);
                 method rf_rd2 = cast(rf.read[fpuMulDivRdPort(i)].rd2);
                 method rf_rd3 = cast(rf.read[fpuMulDivRdPort(i)].rd3);
                 method csrf_rd = csrf.rd;
-                method scaprf_rd = scaprf.rd;
+                method scaprf_rd = csrf.scrRd;
                 method rob_setExecuted = rob.setExecuted_doFinishFpuMulDiv[i].set;
                 method Action writeRegFile(PhyRIndx dst, CapPipe data);
                     writeAggr(fpuMulDivWrAggrPort(i), dst);
@@ -419,7 +417,7 @@ module mkCore#(CoreId coreId)(Core);
             method rf_rd1 = cast(rf.read[memRdPort].rd1);
             method rf_rd2 = cast(rf.read[memRdPort].rd2);
             method csrf_rd = csrf.rd;
-            method scaprf_rd = scaprf.rd;
+            method scaprf_rd = csrf.scrRd;
             method rob_getPC = rob.getOrigPC[valueof(AluExeNum)].get; // last getPC port
             method rob_setExecuted_doFinishMem = rob.setExecuted_doFinishMem;
 `ifdef INCLUDE_TANDEM_VERIF
@@ -548,7 +546,6 @@ module mkCore#(CoreId coreId)(Core);
         interface sbConsIfc = sbCons;
         interface sbAggrIfc = sbAggr;
         interface csrfIfc = csrf;
-        interface scaprfIfc = scaprf;
         interface emIfc = epochManager;
         interface smIfc = specTagManager;
         interface rsAluIfc = reservationStationAlu;
@@ -576,7 +573,6 @@ module mkCore#(CoreId coreId)(Core);
         interface robIfc = rob;
         interface rtIfc = regRenamingTable;
         interface csrfIfc = csrf;
-        interface scaprfIfc = scaprf;
         method stbEmpty = stb.isEmpty;
         method stqEmpty = lsq.stqEmpty;
         method lsqSetAtCommit = lsq.setAtCommit;

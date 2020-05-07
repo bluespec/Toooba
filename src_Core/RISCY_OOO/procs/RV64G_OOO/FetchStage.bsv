@@ -937,7 +937,9 @@ module mkFetchStage(FetchStage);
                         // rs1 is invalid, i.e., not link: push
                         ras.ras[i].popPush(False, Valid (push_addr));
                      end
-                     else if (dInst.iType == Jr) begin // jalr
+                     else if (dInst.iType == Jr || dInst.iType == CJALR) begin // jalr TODO CCALL could be push
+                                                                               //           pop or nop (if to trampoline)
+                                                                               //           Add hint to architecture?
                         if (!dst_link && src1_link) begin
                            // rd is link while rs1 is not: pop
                            nextPc = Valid (pop_addr);
