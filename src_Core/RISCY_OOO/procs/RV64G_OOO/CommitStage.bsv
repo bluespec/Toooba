@@ -242,7 +242,7 @@ deriving (Eq, FShow, Bits);
 module mkCommitStage#(CommitInput inIfc)(CommitStage);
     Bool verbose = False;
 
-    Integer verbosity = 2;   // Bluespec: for lightweight verbosity trace
+    Integer verbosity = 1;   // Bluespec: for lightweight verbosity trace
 
     // Used to inform tandem-verifier about program order.
     // 0 is used to indicate we've just come out of reset
@@ -1061,7 +1061,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                     stop = True;
                 end
                 else begin
-                    if (verbose) $display("[doCommitNormalInst - %d] ", i, fshow(inst_tag), " ; ", fshow(x));
+                    if (verbose) $display("%t : [doCommitNormalInst - %d] ", $time(), i, fshow(inst_tag), " ; ", fshow(x));
 `ifdef RVFI
                     CapPipe pipePc = cast(x.pc);
                     rvfis[i] = genRVFI(x, traceCnt + zeroExtend(whichTrace), getTSB(), getOffset(pipePc) + (is_16b_inst(x.orig_inst) ? 2:4));

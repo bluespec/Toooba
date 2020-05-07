@@ -140,7 +140,7 @@ interface ReorderBufferRowEhr#(numeric type aluExeNum, numeric type fpuMulDivExe
     method ToReorderBuffer read_deq;
     method Action setLSQAtCommitNotified;
     // deqLSQ rules set ROB state: set execeptions, load mispeculation, and becomes Executed
-    method Action setExecuted_deqLSQ(Maybe#(Exception) cause, Maybe#(LdKilledBy) ld_killed
+    method Action setExecuted_deqLSQ(Maybe#(Trap) cause, Maybe#(LdKilledBy) ld_killed
 `ifdef RVFI
     , ExtraTraceBundle tb
 `endif
@@ -156,8 +156,7 @@ interface ReorderBufferRowEhr#(numeric type aluExeNum, numeric type fpuMulDivExe
 
     method Action setExecuted_doFinishMem(CapPipe vaddr,
                                           Data store_data, ByteEn store_data_BE,
-                                          Bool access_at_commit, Bool non_mmio_st_done,
-                                          Maybe#(CSR_XCapCause) cause
+                                          Bool access_at_commit, Bool non_mmio_st_done
 `ifdef RVFI
                                           , ExtraTraceBundle tb
 `endif
@@ -187,9 +186,8 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     Integer trap_deq_port = 0;
     function Integer trap_finishAlu_port(Integer i) = i;
     function Integer trap_finishFpuMulDiv_port(Integer i) = valueof(aluExeNum) + i;
-    Integer trap_deqLSQ_port = valueof(TAdd#(aluExeNum, TDiv#(aluExeNum,2)));
-    Integer trap_finishMem_port = valueof(TAdd#(aluExeNum, TDiv#(aluExeNum,2))); // write trap
-    Integer trap_enq_port = 1 + valueof(TAdd#(aluExeNum, TDiv#(aluExeNum,2)));
+    Integer trap_enq_port = valueof(TAdd#(aluExeNum, TDiv#(aluExeNum,2)));
+    Integer trap_deqLSQ_port = valueof(TAdd#(aluExeNum, TDiv#(aluExeNum,2))) - 1;
 
     Integer pc_deq_port = 0;
     function Integer pc_finishAlu_port(Integer i) = i;
@@ -250,8 +248,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
 `endif
     Reg#(Maybe#(CSR))                                               csr                  <- mkRegU;
     Reg#(Bool)                                                      claimed_phy_reg      <- mkRegU;
-    Ehr#(TAdd#(TAdd#(2, TDiv#(aluExeNum,2)), aluExeNum), Maybe#(Trap)) trap       <- mkEhr(?);
-    Ehr#(3, Maybe#(Trap))                                           mem_early_trap       <- mkEhr(?);
+    Ehr#(TAdd#(TAdd#(2, TDiv#(aluExeNum,2)), aluExeNum), Maybe#(Trap)) trap              <- mkEhr(?);
     Ehr#(TAdd#(TAdd#(2, TDiv#(aluExeNum,2)), aluExeNum), Addr)      tval                 <- mkEhr(?);
     Ehr#(TAdd#(2, aluExeNum), PPCVAddrCSRData)                      ppc_vaddr_csrData    <- mkEhr(?);
     Ehr#(TAdd#(1, fpuMulDivExeNum), Bit#(5))                        fflags               <- mkEhr(?);
@@ -356,8 +353,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
 
     method Action setExecuted_doFinishMem(CapPipe vaddr,
                                           Data   store_data, ByteEn store_data_BE,
-                                          Bool   access_at_commit, Bool non_mmio_st_done,
-                                          Maybe#(CSR_XCapCause) cause
+                                          Bool   access_at_commit, Bool non_mmio_st_done
 `ifdef RVFI
                                           , ExtraTraceBundle tb
 `endif
@@ -373,7 +369,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         ppc_vaddr_csrData[pvc_finishMem_port] <= VAddr (vaddr);
 `ifdef RVFI
         //$display("%t : traceBundle = ", $time(), fshow(tb), " in setExecuted_doFinishMem for %x", pc);
-        traceBundle[trap_finishMem_port] <= tb;
+        traceBundle[trap_deqLSQ_port] <= tb;
 `endif
 `ifdef INCLUDE_TANDEM_VERIF
         // Store-data (for mem instrs that store data)
@@ -384,10 +380,6 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         memAccessAtCommit[accessCom_finishMem_port] <= access_at_commit;
         // udpate non mmio st
         nonMMIOStDone[nonMMIOSt_finishMem_port] <= non_mmio_st_done;
-        if (cause matches tagged Valid .exp) begin
-            mem_early_trap[0] <= Valid ( CapException (exp));
-            tval[trap_finishMem_port] <= tval[trap_finishMem_port];
-        end
     endmethod
 
 `ifdef INCLUDE_TANDEM_VERIF
@@ -423,7 +415,6 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         rob_inst_state[state_enq_port] <= x.rob_inst_state;
         epochIncremented <= x.epochIncremented;
         spec_bits[sb_enq_port] <= x.spec_bits;
-        mem_early_trap[1] <= Invalid;
 `ifdef INORDER_CORE
         // in-order core enqs to LSQ later, so don't set LSQ tag; and other
         // flags should default to false
@@ -497,7 +488,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     endmethod
 
     method Action setExecuted_deqLSQ(
-        Maybe#(Exception) cause,
+        Maybe#(Trap) cause,
         Maybe#(LdKilledBy) ld_killed
 `ifdef RVFI
         , ExtraTraceBundle tb
@@ -511,8 +502,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
 `endif
         // record trap
         //doAssert(!isValid(trap[trap_deqLSQ_port]), "cannot have trap");
-        if (isValid(mem_early_trap[0])) trap[trap_deqLSQ_port] <= mem_early_trap[0];
-        else if(cause matches tagged Valid .e) trap[trap_deqLSQ_port] <= Valid(Exception(e));
+        if(isValid(cause)) trap[trap_deqLSQ_port] <= cause;
         // TODO: shouldn't we record tval here as well?
         // record ld misspeculation
         ldKilled[ldKill_deqLSQ_port] <= ld_killed;
@@ -613,7 +603,7 @@ interface SupReorderBuffer#(numeric type aluExeNum, numeric type fpuMulDivExeNum
     // record that we have notified LSQ about inst reaching commit
     method Action setLSQAtCommitNotified(InstTag x);
     // deqLSQ rules set ROB state
-    method Action setExecuted_deqLSQ(InstTag x, Maybe#(Exception) cause, Maybe#(LdKilledBy) ld_killed
+    method Action setExecuted_deqLSQ(InstTag x, Maybe#(Trap) cause, Maybe#(LdKilledBy) ld_killed
 `ifdef RVFI
     , ExtraTraceBundle tb
 `endif
@@ -625,8 +615,7 @@ interface SupReorderBuffer#(numeric type aluExeNum, numeric type fpuMulDivExeNum
     method Action setExecuted_doFinishMem(InstTag x,
                                           CapPipe vaddr,
                                           Data store_data, ByteEn store_data_BE,
-                                          Bool access_at_commit, Bool non_mmio_st_done,
-                                          Maybe#(CSR_XCapCause) cause
+                                          Bool access_at_commit, Bool non_mmio_st_done
 `ifdef RVFI
                                           , ExtraTraceBundle tb
 `endif
@@ -1219,7 +1208,7 @@ module mkSupReorderBuffer#(
         row[x.way][x.ptr].setLSQAtCommitNotified;
     endmethod
 
-    method Action setExecuted_deqLSQ(InstTag x, Maybe#(Exception) cause, Maybe#(LdKilledBy) ld_killed
+    method Action setExecuted_deqLSQ(InstTag x, Maybe#(Trap) cause, Maybe#(LdKilledBy) ld_killed
 `ifdef RVFI
     , ExtraTraceBundle tb
 `endif
@@ -1239,7 +1228,7 @@ module mkSupReorderBuffer#(
 
     method Action setExecuted_doFinishMem(
         InstTag x, CapPipe vaddr, Data store_data, ByteEn store_data_BE, Bool access_at_commit,
-        Bool non_mmio_st_done, Maybe#(CSR_XCapCause) cause
+        Bool non_mmio_st_done
 `ifdef RVFI
         , tb
 `endif
@@ -1248,8 +1237,7 @@ module mkSupReorderBuffer#(
     );
         row[x.way][x.ptr].setExecuted_doFinishMem(vaddr,
                                                   store_data, store_data_BE,
-                                                  access_at_commit, non_mmio_st_done,
-                                                  cause
+                                                  access_at_commit, non_mmio_st_done
 `ifdef RVFI
                                                   , tb
 `endif

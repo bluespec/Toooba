@@ -137,7 +137,7 @@ typedef struct {
     // if the Ld finds itself stalled by something.
 
     // fault after addr translation
-    Maybe#(Exception)  fault;
+    Maybe#(Trap)       fault;
     // paddr/isMMIO/data have been computed (can be true only when no fault)
     Bool               computed;
     // Ld is in issueQ, can be true only when computed = True and excutiong =
@@ -157,7 +157,7 @@ typedef struct {
     // When the Ld allocates the LQ entry, we record the tag of the youngest SQ
     // entry, i.e., the youngest store that is older than the Ld. This is used
     // for searching older stores for bypass or stall. If the SQ entry is not
-    // valid, then the search is not needed. 
+    // valid, then the search is not needed.
     Maybe#(StQTag)   olderSt;
     // We can deq a LQ entry when older SQ entries have been dequeued or
     // verified. The olderSt field can indication if the immeidate older SQ
@@ -231,7 +231,7 @@ typedef struct {
     // status bits of St/Sc/Amo
 
     // fault after addr translation
-    Maybe#(Exception) fault;
+    Maybe#(Trap)      fault;
     // paddr/isMMIO/data have been computed (can be true only when no fault)
     Bool              computed;
     // entry is verified, see comments above
@@ -303,7 +303,7 @@ typedef struct {
     Addr               paddr;
     Bool               isMMIO;
     MemDataByteEn      shiftedBE;
-    Maybe#(Exception)  fault;
+    Maybe#(Trap)       fault;
     Maybe#(LdKilledBy) killed;
 } LdQDeqEntry deriving (Bits, Eq, FShow);
 
@@ -318,7 +318,7 @@ typedef struct {
     Bool              isMMIO;
     MemDataByteEn     shiftedBE;
     MemTaggedData     stData;
-    Maybe#(Exception) fault;
+    Maybe#(Trap)      fault;
 } StQDeqEntry deriving (Bits, Eq, FShow);
 
 interface SplitLSQ;
@@ -347,7 +347,7 @@ interface SplitLSQ;
     // younger load to kill. Return if the entry is waiting for wrong path
     // resp, so Ld can be issued immediately.
     method ActionValue#(LSQUpdateAddrResult) updateAddr(
-        LdStQTag lsqTag, Maybe#(Exception) fault,
+        LdStQTag lsqTag, Maybe#(Trap) fault,
         // below are only meaningful wen fault is Invalid
         Addr paddr, Bool isMMIO, MemDataByteEn shiftedBE
     );
@@ -623,7 +623,7 @@ module mkSplitLSQ(SplitLSQ);
     Vector#(LdQSize, Ehr#(2, Addr))                 ld_paddr           <- replicateM(mkEhr(?));
     Vector#(LdQSize, Ehr#(2, Bool))                 ld_isMMIO          <- replicateM(mkEhr(?));
     Vector#(LdQSize, Ehr#(2, MemDataByteEn))        ld_shiftedBE       <- replicateM(mkEhr(?));
-    Vector#(LdQSize, Ehr#(2, Maybe#(Exception)))    ld_fault           <- replicateM(mkEhr(?));
+    Vector#(LdQSize, Ehr#(2, Maybe#(Trap)))         ld_fault           <- replicateM(mkEhr(?));
     Vector#(LdQSize, Ehr#(2, Bool))                 ld_computed        <- replicateM(mkEhr(?));
     Vector#(LdQSize, Ehr#(3, Bool))                 ld_inIssueQ        <- replicateM(mkEhr(?));
     Vector#(LdQSize, Ehr#(2, Bool))                 ld_executing       <- replicateM(mkEhr(?));
@@ -813,7 +813,7 @@ module mkSplitLSQ(SplitLSQ);
     Vector#(StQSize, Ehr#(2, Bool))                 st_isMMIO    <- replicateM(mkEhr(?));
     Vector#(StQSize, Ehr#(2, MemDataByteEn))        st_shiftedBE <- replicateM(mkEhr(?));
     Vector#(StQSize, Ehr#(1, MemTaggedData))        st_stData    <- replicateM(mkEhr(?));
-    Vector#(StQSize, Ehr#(2, Maybe#(Exception)))    st_fault     <- replicateM(mkEhr(?));
+    Vector#(StQSize, Ehr#(2, Maybe#(Trap)))         st_fault     <- replicateM(mkEhr(?));
     Vector#(StQSize, Ehr#(2, Bool))                 st_computed  <- replicateM(mkEhr(?));
     Vector#(StQSize, Ehr#(2, Bool))                 st_verified  <- replicateM(mkEhr(?));
     Vector#(StQSize, Ehr#(2, SpecBits))             st_specBits  <- replicateM(mkEhr(?));
@@ -844,7 +844,7 @@ module mkSplitLSQ(SplitLSQ);
     let st_shiftedBE_updAddr = getVEhrPort(st_shiftedBE, 0); // write
     let st_shiftedBE_issue   = getVEhrPort(st_shiftedBE, 1);
     let st_shiftedBE_deqSt   = getVEhrPort(st_shiftedBE, 1);
-    
+
     let st_stData_issue   = getVEhrPort(st_stData, 0);
     let st_stData_deqSt   = getVEhrPort(st_stData, 0);
     let st_stData_updData = getVEhrPort(st_stData, 0); // write
@@ -1056,7 +1056,7 @@ module mkSplitLSQ(SplitLSQ);
     // Since this rule does not block any other rule, we can let it fire even
     // when it may do nothing
     rule findIssue;
-        // find all can issue loads 
+        // find all can issue loads
         function Bool canIssue(LdQTag i);
             return (
                 ld_valid_findIss[i] && ld_memFunc[i] == Ld && // (1) valid load
@@ -1510,7 +1510,7 @@ module mkSplitLSQ(SplitLSQ);
     endmethod
 
     method ActionValue#(LSQUpdateAddrResult) updateAddr(
-        LdStQTag lsqTag, Maybe#(Exception) fault,
+        LdStQTag lsqTag, Maybe#(Trap) fault,
         Addr pa, Bool mmio, MemDataByteEn shift_be
     );
         // index vec for vector functions
@@ -1854,7 +1854,7 @@ module mkSplitLSQ(SplitLSQ);
         StQTag stTag = validValue(matchStTag);
         StQVirTag stVTag = stVirTags[stTag];
         if(isValid(matchLdTag) && (!isValid(matchStTag) ||
-                                   (isValid(ldTagOlderSt) && 
+                                   (isValid(ldTagOlderSt) &&
                                     validValue(ldTagOlderSt) >= stVTag))) begin
             // stalled by Ld, Lr or acquire in LQ
             issRes = Stall (LdQ);
@@ -1869,7 +1869,7 @@ module mkSplitLSQ(SplitLSQ);
                 endcase
             end
         end
-        else if(isValid(matchStTag) && 
+        else if(isValid(matchStTag) &&
                 (!isValid(matchLdTag) ||
                  !isValid(ldTagOlderSt) ||
                  validValue(ldTagOlderSt) < stVTag)) begin

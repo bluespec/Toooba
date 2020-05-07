@@ -164,8 +164,7 @@ interface MemExeInput;
     method Action rob_setExecuted_doFinishMem(InstTag t,
                                               CapPipe vaddr,
                                               Data store_data, ByteEn store_data_BE,
-                                              Bool access_at_commit, Bool non_mmio_st_done,
-                                              Maybe#(CSR_XCapCause) cause
+                                              Bool access_at_commit, Bool non_mmio_st_done
 `ifdef RVFI
                                               , ExtraTraceBundle tb
 `endif
@@ -173,7 +172,7 @@ interface MemExeInput;
 `ifdef INCLUDE_TANDEM_VERIF
     method Action rob_setExecuted_doFinishMem_RegData (InstTag t, Data dst_data);
 `endif
-    method Action rob_setExecuted_deqLSQ(InstTag t, Maybe#(Exception) cause, Maybe#(LdKilledBy) ld_killed
+    method Action rob_setExecuted_deqLSQ(InstTag t, Maybe#(Trap) cause, Maybe#(LdKilledBy) ld_killed
 `ifdef RVFI
                                          , ExtraTraceBundle tb
 `endif
@@ -515,17 +514,19 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         dTlb.deqProcResp;
         let dTlbResp = dTlb.procResp;
         let x = dTlbResp.inst;
-        let {paddr, cause} = dTlbResp.resp;
+        let {paddr, expCause} = dTlbResp.resp;
+        Maybe#(Trap) cause = Invalid;
+        if (expCause matches tagged Valid .c) cause = Valid(Exception(c));
 
 `ifdef RVFI_DII
         // TestRIG expects us throw an access fault for any memory access outside of a 8 MiB memory at 0x8000000.
         if (!isValid(cause) && (paddr < 'h80000000 || paddr >= 'h80800000)) begin
             case(x.mem_func)
                 Ld, Lr: begin
-                    cause = Valid (LoadAccessFault);
+                    cause = Valid(Exception(LoadAccessFault));
                 end
                 default: begin
-                    cause = Valid (StoreAccessFault);
+                    cause = Valid(Exception(StoreAccessFault));
                 end
             endcase
         end
@@ -545,10 +546,10 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         if(!isValid(cause) && x.misaligned) begin
             case(x.mem_func)
                 Ld, Lr: begin
-                    cause = Valid (LoadAddrMisaligned);
+                    cause = Valid(Exception(LoadAddrMisaligned));
                 end
                 default: begin
-                    cause = Valid (StoreAddrMisaligned);
+                    cause = Valid(Exception(StoreAddrMisaligned));
                 end
             endcase
         end
@@ -559,10 +560,10 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         if(!isValid(cause) && isMMIO) begin
             case(x.mem_func)
                 Lr: begin
-                    cause = Valid (LoadAccessFault);
+                    cause = Valid(Exception(LoadAccessFault));
                 end
                 Sc: begin
-                    cause = Valid (StoreAccessFault);
+                    cause = Valid(Exception(StoreAccessFault));
                 end
             endcase
         end
@@ -573,17 +574,17 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             Lr, Sc, Amo: True;
             default: False;
         endcase);
-        Bool access_at_commit = !isValid(cause) && (isMMIO || isLrScAmo);
-        Bool non_mmio_st_done = !isValid(cause) && !isMMIO && x.mem_func == St;
         if (x.check matches tagged Valid .check &&& x.capException matches tagged Invalid) begin
             if (!(                         (check.check_low  >= check.authority_base) &&
                   (check.check_inclusive ? (check.check_high <= check.authority_top )
                                          : (check.check_high <  check.authority_top ))))
                 x.capException = Valid(CSR_XCapCause{cheri_exc_reg: check.authority_idx, cheri_exc_code: LengthViolation});
         end
+        if (x.capException matches tagged Valid .c) cause = Valid(CapException(c));
+        Bool access_at_commit = !isValid(cause) && (isMMIO || isLrScAmo);
+        Bool non_mmio_st_done = !isValid(cause) && !isMMIO && x.mem_func == St;
         inIfc.rob_setExecuted_doFinishMem(x.tag, x.vaddr, store_data, store_data_BE,
-                                          access_at_commit, non_mmio_st_done,
-                                          x.capException
+                                          access_at_commit, non_mmio_st_done
 `ifdef RVFI
                                           , ExtraTraceBundle{
                                               regWriteData: memData[pack(x.ldstq_tag)],
@@ -1008,7 +1009,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         lsq.deqLd;
         waitLrScAmoMMIOResp <= Invalid;
         // set ROB to raise access fault
-        inIfc.rob_setExecuted_deqLSQ(lsqDeqLd.instTag, Valid (LoadAccessFault), Invalid
+        inIfc.rob_setExecuted_deqLSQ(lsqDeqLd.instTag, Valid(Exception(LoadAccessFault)), Invalid
 `ifdef RVFI
             , ExtraTraceBundle{
                 regWriteData: memData[pack(lsqDeqIdx)],
@@ -1367,7 +1368,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         lsq.deqSt;
         waitLrScAmoMMIOResp <= Invalid;
         // set ROB to raise access fault
-        inIfc.rob_setExecuted_deqLSQ(lsqDeqSt.instTag, Valid (StoreAccessFault), Invalid
+        inIfc.rob_setExecuted_deqLSQ(lsqDeqSt.instTag, Valid(Exception(StoreAccessFault)), Invalid
 `ifdef RVFI
             , ExtraTraceBundle{
                 regWriteData: fromMemTaggedData(lsqDeqSt.stData),
