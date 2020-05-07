@@ -451,21 +451,19 @@ function MemTaggedData gatherLoad( Addr addr, MemDataByteEn byteEn
     function extend = unsignedLd ? zeroExtend : signExtend;
     Bit#(IndxShamt) offset = truncate(addr);
 
-    function MemTaggedData data2taggedData (Data d) = MemTaggedData{ tag: False, data: unpack({64'b0, d})};
-
     if(pack(byteEn) == ~0) return data;
     else if(byteEn[7]) begin
         Vector#(2, Bit#(64)) dataVec = unpack(pack(data.data));
-        return data2taggedData(extend(dataVec[offset[3]]));
+        return dataToMemTaggedData(extend(dataVec[offset[3]]));
     end else if(byteEn[3]) begin
         Vector#(4, Bit#(32)) dataVec = unpack(pack(data.data));
-        return data2taggedData(extend(dataVec[offset[3:2]]));
+        return dataToMemTaggedData(extend(dataVec[offset[3:2]]));
     end else if(byteEn[1]) begin
         Vector#(8, Bit#(16)) dataVec = unpack(pack(data.data));
-        return data2taggedData(extend(dataVec[offset[3:1]]));
+        return dataToMemTaggedData(extend(dataVec[offset[3:1]]));
     end else begin
         Vector#(16, Bit#(8)) dataVec = unpack(pack(data.data));
-        return data2taggedData(extend(dataVec[offset]));
+        return dataToMemTaggedData(extend(dataVec[offset]));
     end
 endfunction
 

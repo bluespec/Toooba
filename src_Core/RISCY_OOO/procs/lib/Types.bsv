@@ -83,6 +83,7 @@ function MemTaggedData toMemTaggedData(t x)
   tag: False,
   data: unpack(zeroExtend(pack(x)))
 };
+function MemTaggedData dataToMemTaggedData(Data x) = toMemTaggedData(x);
 function t fromMemTaggedData(MemTaggedData x)
   provisos (Bits#(t, sz), Add#(sz, smthg, MemDataSz)) =
   unpack(truncate(pack(x.data)));
