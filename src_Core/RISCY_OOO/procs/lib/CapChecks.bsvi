@@ -16,5 +16,6 @@
 `CAP_CHECK_FIELD(src2_permit_seal,"src2_permit_seal")
 `CAP_CHECK_FIELD(src2_points_to_src1_type,"src2_points_to_src1_type")
 `CAP_CHECK_FIELD(src2_addr_valid_type,"src2_addr_valid_type")
+`CAP_CHECK_FIELD(src2_type_not_reserved,"src2_type_not_reserved")
 `CAP_CHECK_FIELD(src1_perm_subset_src2,"src1_perm_subset_src2")
 `CAP_CHECK_FIELD(src1_derivable,"src1_derivable")
