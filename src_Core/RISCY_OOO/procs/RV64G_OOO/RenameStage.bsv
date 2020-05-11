@@ -486,7 +486,9 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
 
         // CSR inst will be sent to ALU exe pipeline
         Bool to_exec = False;
-        if (dInst.execFunc matches tagged Alu .alu) begin
+        if ((dInst.execFunc matches tagged Alu .alu ? True : False) ||
+            (dInst.capFunc matches tagged CapModify .cap ? True : False) ||
+            (dInst.capFunc matches tagged CapInspect .cap ? True : False)) begin
             to_exec = True;
             doAssert(dInst.iType == Csr || dInst.iType == Scr, "only CSR or SCR inst send to exe");
         end
