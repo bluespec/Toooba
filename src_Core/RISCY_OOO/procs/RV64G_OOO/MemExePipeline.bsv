@@ -423,14 +423,14 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         let regsReady = inIfc.sbCons_lazyLookup(x.regs);
 
         // get rVal1 (check bypass)
-        CapPipe rVal1 = ?;
-        if(x.regs.src1 matches tagged Valid .src1) begin
+        CapPipe rVal1 = nullCap;
+        if(x.regs.src1 matches tagged Valid .src1 &&& src1 != 0) begin
             rVal1 <- readRFBypass(src1, regsReady.src1, inIfc.rf_rd1(src1), bypassWire);
         end
 
         // get rVal2 (check bypass)
-        CapPipe rVal2 = ?;
-        if(x.regs.src2 matches tagged Valid .src2) begin
+        CapPipe rVal2 = nullCap;
+        if(x.regs.src2 matches tagged Valid .src2 &&& src2 != 0) begin
             rVal2 <- readRFBypass(src2, regsReady.src2, inIfc.rf_rd2(src2), bypassWire);
         end
 
