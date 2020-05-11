@@ -900,7 +900,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                 f3_cap_ThreeOp: begin
                     case (funct7)
                         f7_cap_CSpecialRW: begin
-                            dInst.iType = Scr;
+                            dInst.iType = rs1 == 0 ? Cap : Scr;
                             regs.dst = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs1);
                             regs.src2 = Invalid;

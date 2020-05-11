@@ -332,7 +332,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
                 // The above case will never be valid due to assertions above, but the below one will be in the case of CJALR.
                 // This means that we will have instructions that both write SCR registers and also get mispredictions, unlike
                 // the CSR file.  Given the assertions above, this seems dangerous...
-                scrData: isValid(x.dInst.scr) ? Valid (exec_result.scrData) : tagged Invalid,
+                scrData: isValid(x.dInst.scr) && x.dInst.iType == Scr ? Valid (exec_result.scrData) : tagged Invalid,
                 capException: exec_result.capException,
                 check: exec_result.boundsCheck,
 `ifdef RVFI
