@@ -451,8 +451,13 @@ function Maybe#(Trap) checkForException(
 
     // Check that the end of the instruction is in bounds of PCC.
     CapPipe pcc_end = cast(addPc(pcc, (fourByteInst?4:2)));
+    CapPipe pcc_start = cast(pcc);
     Maybe#(CSR_XCapCause) capException = Invalid;
+    if (!isValidCap(pcc_start)) capException = Valid(CSR_XCapCause{cheri_exc_reg: {1'b1,pack(SCR_PCC)}, cheri_exc_code: TagViolation});
+    if (isSealed(pcc_start)) capException = Valid(CSR_XCapCause{cheri_exc_reg: {1'b1,pack(SCR_PCC)}, cheri_exc_code: SealViolation});
+    if (!getHardPerms(pcc_start).permitExecute) capException = Valid(CSR_XCapCause{cheri_exc_reg: {1'b1,pack(SCR_PCC)}, cheri_exc_code: PermitXViolation});
     if (!isInBounds(pcc_end, True)) capException = Valid(CSR_XCapCause{cheri_exc_reg: {1'b1,pack(SCR_PCC)}, cheri_exc_code: LengthViolation});
+    if (!isInBounds(pcc_start, True)) capException = Valid(CSR_XCapCause{cheri_exc_reg: {1'b1,pack(SCR_PCC)}, cheri_exc_code: LengthViolation});
 
     Maybe#(Trap) retval = Invalid;
     if (capException matches tagged Valid .ce) retval = Valid(CapException(ce));
