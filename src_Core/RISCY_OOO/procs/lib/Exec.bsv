@@ -77,6 +77,8 @@ function Maybe#(CSR_XCapCause) capChecks(CapPipe a, CapPipe b, CapPipe ddc, CapC
         result = e2(SoftwarePermViolation);
     else if (toCheck.src1_derivable           && !isDerivable(a))
         result = e1(LengthViolation);
+    else if (toCheck.scr_read_only            && (toCheck.rn1 != 0))
+        result = Valid(CSR_XCapCause{cheri_exc_reg: {1,pack(SCR_PCC)}, cheri_exc_code: PermitASRViolation});
     return result;
 endfunction
 
@@ -159,11 +161,22 @@ endfunction
 function CapPipe setBoundsALU(CapPipe cap, Data len, SetBoundsFunc boundsOp);
     let combinedResult = setBoundsCombined(cap, len);
     CapPipe res = (case (boundsOp) matches
-            SetBounds: combinedResult.cap;
-            CRRL: nullWithAddr(combinedResult.length);
-            CRAM: nullWithAddr(combinedResult.mask);
-        endcase);
+        SetBounds: combinedResult.cap;
+        CRRL: nullWithAddr(combinedResult.length);
+        CRAM: nullWithAddr(combinedResult.mask);
+    endcase);
     // TODO exfiltrate exact somehow...
+    return res;
+endfunction
+
+(* noinline *)
+function CapPipe specialRWALU(CapPipe cap, SpecialRWFunc scrType);
+    let offset = getOffset(cap);
+    CapPipe res = (case (scrType) matches
+        TCC: update_scr_via_csr(cap, offset & ~64'h2); // Mask out bit 1
+        EPCC: update_scr_via_csr(cap, offset & ~64'h1); // Mask out bit 0 TODO factor out update_scr_via_csr
+        Normal: cap;
+    endcase);
     return res;
 endfunction
 
@@ -175,7 +188,7 @@ function CapPipe capModify(CapPipe a, CapPipe b, CapModifyFunc func);
             tagged SetBounds .boundsOp    :
                 setBoundsALU(a, getAddr(b), boundsOp);
             tagged SpecialRW .scrType     :
-                a; //TODO masking of various bits
+                b;
             tagged SetAddr .addrSource    :
                 if (addrSource == Src2Type && !isSealed(b)) return nullWithAddr(-1);
                 else return setAddr(a, (addrSource == Src2Type) ? zeroExtend(getType(b)) : getAddr(b) ).value;
@@ -232,6 +245,16 @@ function Data capInspect(CapPipe a, CapPipe b, CapInspectFunc func);
     return res;
 endfunction
 
+function CapPipe capALU(CapPipe a, CapPipe b, CapFunc func);
+    CapPipe res = (case (func) matches
+                   tagged CapInspect .x:
+                       nullWithAddr(capInspect(a,b,func.CapInspect));
+                   default:
+                       capModify(a,b,func.CapModify);
+        endcase);
+    return res;
+endfunction
+
 (* noinline *)
 function Bool aluBr(Data a, Data b, BrFunc brFunc);
     Bool brTaken = (case(brFunc)
@@ -257,7 +280,7 @@ function CapPipe brAddrCalc(CapPipe pc, CapPipe val, IType iType, Data imm, Bool
     jumpTarget = setAddrUnsafe(jumpTarget, {truncateLSB(getAddr(jumpTarget)), 1'b0});
     CapPipe targetAddr = (case (iType)
             J       : branchTarget;
-            Jr      : jumpTarget;
+            Jr,CCall,CJALR      : jumpTarget;
             Br      : (taken? branchTarget : pcPlusN);
             default : pcPlusN;
         endcase);
@@ -286,14 +309,9 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
     CapPipe data = nullCap;
     Data csr_data = 0;
     CapPipe addr = nullCap;
-    Bool cjalr = False;
-    Bool ccall = False;
-    if (dInst.iType == Jr) begin
-        if (dInst.capChecks.src1_src2_types_match) ccall = True;
-        else if (dInst.capChecks.src1_tag) cjalr = True;
-    end
 
-    ControlFlow cf = ControlFlow{pc: pcc, nextPc: nullCap, taken: False, newPcc: cjalr, mispredict: False};
+    Bool newPcc = dInst.iType == CJALR || dInst.iType == CCall;
+    ControlFlow cf = ControlFlow{pc: pcc, nextPc: nullCap, taken: False, newPcc: newPcc, mispredict: False};
 
     CapPipe aluVal2 = rVal2;
     if (getDInstImm(dInst) matches tagged Valid .imm) aluVal2 = nullWithAddr(imm); //isValid(dInst.imm) ? fromMaybe(?, dInst.imm) : rVal2;
@@ -301,50 +319,46 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
     AluFunc alu_f = dInst.execFunc matches tagged Alu .alu_f ? alu_f : Add;
     Data alu_result = alu(getAddr(rVal1), getAddr(aluVal2), alu_f);
 
-    Data inspect_result = capInspect(rVal1, aluVal2, dInst.execFunc.CapInspect);
-    CapModifyFunc modFunc = ccall ? (Unseal (Src2)):dInst.execFunc.CapModify;
-    CapPipe modify_result = capModify(rVal1, aluVal2, modFunc);
+    CapPipe cap_alu_result = capALU(rVal1, aluVal2, dInst.capFunc);
     CapPipe link_pcc = addPc(pcc, ((orig_inst [1:0] == 2'b11) ? 4 : 2));
-    Maybe#(CSR_XCapCause) capException = capChecks(rVal1, aluVal2, nullCap, dInst.capChecks);
 
     // Default branch function is not taken
     BrFunc br_f = dInst.execFunc matches tagged Br .br_f ? br_f : NT;
     cf.taken = aluBr(getAddr(rVal1), getAddr(rVal2), br_f);
-    cf.nextPc = brAddrCalc(pcc, rVal1, dInst.iType, fromMaybe(0,getDInstImm(dInst)), cf.taken, orig_inst, (ccall || cjalr));
+    cf.nextPc = brAddrCalc(pcc, rVal1, dInst.iType, fromMaybe(0,getDInstImm(dInst)), cf.taken, orig_inst, newPcc);
     if (dInst.execFunc matches tagged Br .unused) begin
         rVal1 = cf.nextPc;
         if (!cf.taken) dInst.capChecks.check_enable = False;
     end
     cf.mispredict = cf.nextPc != ppc;
 
+    Maybe#(CSR_XCapCause) capException = capChecks(rVal1, aluVal2, nullCap, dInst.capChecks);
     Maybe#(BoundsCheck) boundsCheck = prepareBoundsCheck(rVal1, aluVal2, pcc,
                                                          nullCap, 0, 0, // These three are only used in the memory pipe
                                                          dInst.capChecks);
-
-    CapPipe cap_alu_result = case (dInst.execFunc) matches tagged CapInspect .x: nullWithAddr(inspect_result);
-                                                           tagged CapModify .x: modify_result;
-                                                           tagged Br .x: modify_result;
-                                                           default: nullWithAddr(alu_result);
-                             endcase;
 
     data = (case (dInst.iType) matches
             St          : rVal2;
             Sc          : rVal2;
             Amo         : rVal2;
             J           : nullWithAddr(getAddr(link_pcc));
-            Jr &&& (ccall): cap_alu_result; // Depending on defaults falling through!
-            Jr &&& (cjalr): link_pcc;
+            CCall       : cap_alu_result;
+            CJALR       : link_pcc;
             Jr          : nullWithAddr(getOffset(link_pcc));
-            Auipc       : (getFlags(pcc)[0] == 1'b0 ? nullWithAddr(getOffset(pcc) + fromMaybe(?, getDInstImm(dInst))) : incOffset(pcc, fromMaybe(?, getDInstImm(dInst))).value); // could be computed with alu
+            Auipc       : nullWithAddr(getOffset(pcc) + fromMaybe(?, getDInstImm(dInst)));
+            Auipcc      : incOffset(pcc, fromMaybe(?, getDInstImm(dInst))).value; // could be computed with alu
             Csr         : rVal1;
-            default     : cap_alu_result;
+            Scr         : rVal2;
+            Cap         : cap_alu_result;
+            default     : nullWithAddr(alu_result);
         endcase);
     csr_data = alu_result;
     addr = (case (dInst.iType)
             Ld, St, Lr, Sc, Amo : nullWithAddr(alu_result);
-            default             : cf.nextPc;
+            default             : cf.nextPc; //TODO should this be nullified?
         endcase);
-    CapPipe scr_data = modify_result;
+
+    CapPipe scr_data = specialRWALU(rVal1, dInst.capFunc.CapModify.SpecialRW);
 
     return ExecResult{data: data, csrData: csr_data, scrData: scr_data, addr: addr, controlFlow: cf, capException: capException, boundsCheck: boundsCheck};
 endfunction
@@ -390,7 +404,7 @@ function Maybe#(Trap) checkForException(
         end
     end
     else if(dInst.iType == Csr) begin
-        let csr = pack(fromMaybe(?, dInst.csr));
+        let csr = pack(fromMaybe(CSRnone, dInst.csr));
         Bool csr_has_priv = (prv >= csr[9:8]);
         if(!csr_has_priv) begin
             exception = Valid (IllegalInst);
@@ -399,8 +413,29 @@ function Maybe#(Trap) checkForException(
                 validValue(dInst.csr) == CSRsatp) begin
             exception = Valid (IllegalInst);
         end
-        // TODO check permission for accessing cycle/inst/time, and check
-        // read-only CSRs being written
+        let rs1 = case (regs.src2) matches
+                     tagged Valid (tagged Gpr .r) : r;
+                     default: 0;
+                  endcase;
+        let imm = case (dInst.imm) matches
+                     tagged Valid .n: n;
+                     default: 0;
+                  endcase;
+        Bool writes_csr = ((dInst.execFunc == tagged Alu Csrw) || (rs1 != 0) || (imm != 0));
+        Bool read_only  = (csr [11:10] == 2'b11);
+        Bool write_deny = (writes_csr && read_only);
+        Bool unimplemented = (csr == pack(CSRnone));    // Added by Bluespec
+        if (write_deny || !csr_has_priv || unimplemented) begin
+            exception = Valid (IllegalInst);
+        end
+    end
+    else if(dInst.iType == Scr) begin
+        let scr = pack(fromMaybe(SCR_None, dInst.scr));
+        Bool scr_has_priv = (prv >= scr[4:3]);
+        Bool unimplemented = (scr == pack(SCR_None));    // Added by Bluespec
+        if(!scr_has_priv || unimplemented) begin // Writes to PCC checked in capChecks
+            exception = Valid (IllegalInst);
+        end
     end
     else if(dInst.iType == Fpu) begin
         if(dInst.execFunc matches tagged Fpu .fpu_f) begin
@@ -419,8 +454,13 @@ function Maybe#(Trap) checkForException(
 
     // Check that the end of the instruction is in bounds of PCC.
     CapPipe pcc_end = cast(addPc(pcc, (fourByteInst?4:2)));
+    CapPipe pcc_start = cast(pcc);
     Maybe#(CSR_XCapCause) capException = Invalid;
+    if (!isValidCap(pcc_start)) capException = Valid(CSR_XCapCause{cheri_exc_reg: {1'b1,pack(SCR_PCC)}, cheri_exc_code: TagViolation});
+    if (isSealed(pcc_start)) capException = Valid(CSR_XCapCause{cheri_exc_reg: {1'b1,pack(SCR_PCC)}, cheri_exc_code: SealViolation});
+    if (!getHardPerms(pcc_start).permitExecute) capException = Valid(CSR_XCapCause{cheri_exc_reg: {1'b1,pack(SCR_PCC)}, cheri_exc_code: PermitXViolation});
     if (!isInBounds(pcc_end, True)) capException = Valid(CSR_XCapCause{cheri_exc_reg: {1'b1,pack(SCR_PCC)}, cheri_exc_code: LengthViolation});
+    if (!isInBounds(pcc_start, True)) capException = Valid(CSR_XCapCause{cheri_exc_reg: {1'b1,pack(SCR_PCC)}, cheri_exc_code: LengthViolation});
 
     Maybe#(Trap) retval = Invalid;
     if (capException matches tagged Valid .ce) retval = Valid(CapException(ce));

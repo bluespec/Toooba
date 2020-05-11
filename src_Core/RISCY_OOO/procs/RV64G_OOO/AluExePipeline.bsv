@@ -307,6 +307,12 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
             doAssert(!exec_result.controlFlow.mispredict, "Csr inst cannot mispredict");
             doAssert(cast(exec_result.controlFlow.nextPc) == x.ppc && x.ppc == addPc(x.pc, 4), "Csr inst ppc = pc+4");
         end
+        // when inst needs to store scrData in ROB, it must have iType = Scr, cannot mispredict
+        if(isValid(x.dInst.scr)) begin
+            // doAssert(x.dInst.iType == Scr, "Only Scr inst needs to update scrData in ROB"); // Removed because normal instructions can read SCRs
+            doAssert(!exec_result.controlFlow.mispredict, "Scr inst cannot mispredict");
+            doAssert(cast(exec_result.controlFlow.nextPc) == x.ppc && x.ppc == addPc(x.pc, 4), "Scr inst ppc = pc+4");
+        end
 
         // send bypass
         if(x.dst matches tagged Valid .dst) begin
@@ -326,7 +332,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
                 // The above case will never be valid due to assertions above, but the below one will be in the case of CJALR.
                 // This means that we will have instructions that both write SCR registers and also get mispredictions, unlike
                 // the CSR file.  Given the assertions above, this seems dangerous...
-                scrData: isValid(x.dInst.scr) ? Valid (exec_result.scrData) : tagged Invalid,
+                scrData: isValid(x.dInst.scr) && x.dInst.iType == Scr ? Valid (exec_result.scrData) : tagged Invalid,
                 capException: exec_result.capException,
                 check: exec_result.boundsCheck,
 `ifdef RVFI
@@ -382,7 +388,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
             doAssert(isValid(x.spec_tag), "mispredicted branch must have spec tag");
             inIfc.redirect(cast(x.controlFlow.nextPc), validValue(x.spec_tag), x.tag);
             // must be a branch, train branch predictor
-            doAssert(x.iType == Jr || x.iType == Br, "only jr and br can mispredict");
+            doAssert(x.iType == Jr || x.iType == CJALR || x.iType == CCall || x.iType == Br, "only jr, br, cjalr, and ccall can mispredict");
             inIfc.fetch_train_predictors(FetchTrainBP {
                 pc: cast(x.controlFlow.pc),
                 nextPc: cast(x.controlFlow.nextPc),
@@ -411,7 +417,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
             // train branch predictor if needed
             // since we can only do 1 training in a cycle, split the rule
             // XXX not training JAL, reduce chance of conflicts
-            if(x.iType == Jr || x.iType == Br) begin
+            if(x.iType == Jr || x.iType == CJALR || x.iType == CCall || x.iType == Br) begin
                 inIfc.fetch_train_predictors(FetchTrainBP {
                     pc: cast(x.controlFlow.pc),
                     nextPc: cast(x.controlFlow.nextPc),

@@ -71,6 +71,7 @@ typedef struct {
     Data               store_data;
     ByteEn             store_data_BE;
 `endif
+    Maybe#(SCR)        scr;
     Maybe#(CSR)        csr;
     Bool               claimed_phy_reg; // whether we need to commmit renaming
     Maybe#(Trap)       trap;
@@ -247,6 +248,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     Reg #(ByteEn)                                                   rg_store_data_BE     <- mkRegU;
 `endif
     Reg#(Maybe#(CSR))                                               csr                  <- mkRegU;
+    Reg#(Maybe#(SCR))                                               scr                  <- mkRegU;
     Reg#(Bool)                                                      claimed_phy_reg      <- mkRegU;
     Ehr#(TAdd#(TAdd#(2, TDiv#(aluExeNum,2)), aluExeNum), Maybe#(Trap)) trap              <- mkEhr(?);
     Ehr#(TAdd#(TAdd#(2, TDiv#(aluExeNum,2)), aluExeNum), Addr)      tval                 <- mkEhr(?);
@@ -406,6 +408,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         // rg_store_data will be written in Mem pipeline
         // rg_store_data_BE will be written in Mem pipeline
         csr <= x.csr;
+        scr <= x.scr;
         claimed_phy_reg <= x.claimed_phy_reg;
         trap[trap_enq_port] <= x.trap;
         tval[trap_enq_port] <= x.tval;
@@ -452,6 +455,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
             store_data_BE: rg_store_data_BE,
 `endif
             csr: csr,
+            scr: scr,
             claimed_phy_reg: claimed_phy_reg,
             trap: trap[trap_deq_port],
             tval: tval[trap_deq_port],

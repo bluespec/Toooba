@@ -2,6 +2,16 @@
 // Copyright (c) 2017 Massachusetts Institute of Technology
 // Portions Copyright (c) 2019-2020 Bluespec, Inc.
 //
+// CHERI modifications:
+//     Copyright (c) 2020 Jonathan Woodruff
+//     Copyright (c) 2020 Peter Rugg
+//     All rights reserved.
+//
+//     This software was developed by SRI International and the University of
+//     Cambridge Computer Laboratory (Department of Computer Science and
+//     Technology) under DARPA contract HR0011-18-C-0016 ("ECATS"), as part of the
+//     DARPA SSITH research programme.
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -34,6 +44,8 @@ import Vector::*;
 import FIFO::*;
 import GetPut::*;
 import BuildVector::*;
+import CHERICap::*;
+import CHERICC_Fat::*;
 import ISA_Decls_CHERI::*;
 
 // ================================================================
@@ -52,21 +64,21 @@ import SoC_Map :: *;
 typedef Bit#(SizeOf#(Exception)) Cause;
 
 typedef struct {
-   Addr      new_pc;
+   CapPipe   new_pcc;
 
 `ifdef INCLUDE_TANDEM_VERIF
    // The fields below are for tandem verification only
    Bit #(2)  prv;
    Data      status;
    Data      cause;
-   Data      epc;
+   CapPipe   epcc;
    Data      tval;
 `endif
    } Trap_Updates
 deriving (Bits, FShow);
 
 typedef struct {
-   Addr      new_pc;
+   CapPipe   new_pcc;
 
 `ifdef INCLUDE_TANDEM_VERIF
    // The fields below are for tandem verification only
@@ -81,8 +93,11 @@ deriving (Bits, FShow);
 interface CsrFile;
     // Read
     method Data rd(CSR csr);
+    method CapReg scrRd(SCR csr);
     // normal write by CSRXXX inst to any CSR
     method Action csrInstWr(CSR csr, Data x);
+    // normal write by RWSpecialCap inst to any SCR
+    method Action scrInstWr(SCR csr, CapReg x);
     // normal write by FPU inst to FPU CSR
     method Bool fpuInstNeedWr(Bit#(5) fflags, Bool fpu_dirty);
     method Action fpuInstWr(Bit#(5) fflags); // FPU must become dirty
@@ -100,7 +115,7 @@ interface CsrFile;
 
     // Methods for handling traps
     method Maybe#(Interrupt) pending_interrupt;
-    method ActionValue#(Trap_Updates) trap(Trap t, Addr pc, Addr faultAddr, Bit #(32) orig_inst);
+    method ActionValue#(Trap_Updates) trap(Trap t, CapPipe pcc, Addr faultAddr, Bit #(32) orig_inst);
     method ActionValue#(RET_Updates) sret;
     method ActionValue#(RET_Updates) mret;
 
@@ -421,12 +436,6 @@ module mkCsrFile #(Data hartid)(CsrFile);
         software_int_en_vec[prvM], readOnlyReg(1'b0),
         software_int_en_vec[prvS], readOnlyReg(1'b0)     // only if misa.N: software_int_en_vec[prvU]
     );
-    // mtvec
-    Reg#(Bit#(62)) mtvec_base_hi_reg <- mkCsrReg(0); // this is BASE[63:2]
-    Reg#(Bit#(1)) mtvec_mode_low_reg <- mkCsrReg(0); // this is MODE[0]
-    Reg#(Data) mtvec_csr = concatReg3(
-        mtvec_base_hi_reg, readOnlyReg(1'b0), mtvec_mode_low_reg
-    );
     // mcounteren
     Reg#(Bit#(1)) mcounteren_ir_reg <- mkCsrReg(0);
     Reg#(Bit#(1)) mcounteren_tm_reg <- mkCsrReg(0);
@@ -438,9 +447,6 @@ module mkCsrFile #(Data hartid)(CsrFile);
     );
     // mscratch
     Reg#(Data) mscratch_csr <- mkCsrReg(0);
-    // mepc: FIXME Since we don't have C extension, mepc should be 4-byte
-    // aligned. However, spike is not checking this, so we don't implement it.
-    Reg#(Data) mepc_csr <- mkCsrReg(0);
     // mcause
     Reg#(Bit#(1)) mcause_interrupt_reg <- mkCsrReg(0);
     Reg#(Cause) mcause_code_reg      <- mkCsrReg(0);
@@ -540,12 +546,6 @@ module mkCsrFile #(Data hartid)(CsrFile);
         readOnlyReg(2'b0),
         software_int_en_vec[prvS], readOnlyReg(1'b0)    // only if misa.N: software_int_en_vec[prvU]
     );
-    // stvec
-    Reg#(Bit#(62)) stvec_base_hi_reg <- mkCsrReg(0); // BASE[63:2]
-    Reg#(Bit#(1)) stvec_mode_low_reg <- mkCsrReg(0); // MODE[0]
-    Reg#(Data) stvec_csr = concatReg3(
-        stvec_base_hi_reg, readOnlyReg(1'b0), stvec_mode_low_reg
-    );
     // scounteren
     Reg#(Bit#(1)) scounteren_ir_reg <- mkCsrReg(0);
     Reg#(Bit#(1)) scounteren_tm_reg <- mkCsrReg(0);
@@ -557,9 +557,6 @@ module mkCsrFile #(Data hartid)(CsrFile);
     );
     // sscratch
     Reg#(Data) sscratch_csr <- mkCsrReg(0);
-    // sepc: FIXME Since we don't have C extension, sepc should be 4-byte
-    // aligned. However, spike is not checking this, so we don't implement it.
-    Reg#(Data) sepc_csr <- mkCsrReg(0);
     // scause
     Reg#(Bit#(1)) scause_interrupt_reg <- mkCsrReg(0);
     Reg#(Cause) scause_code_reg <- mkCsrReg(0);
@@ -717,6 +714,27 @@ module mkCsrFile #(Data hartid)(CsrFile);
     Reg#(Data) trng_csr <- mkReadOnlyReg(0); //mkTRNG;
 `endif
 
+    //SCRs
+    Reg#(CapReg) ddc_reg          <- mkCsrReg(defaultValue);
+
+    // User level SCRs with accessSysRegs
+    // Reg#(CapReg) utcc_reg      <- mkCsrReg(defaultValue);
+    // Reg#(CapReg) utdc_reg      <- mkCsrReg(nullCap);
+    // Reg#(CapReg) uScratchC_reg <- mkCsrReg(nullCap);
+    // Reg#(CapReg) uepcc_reg     <- mkCsrReg(defaultValue);
+
+    // System level SCRs with accessSysRegs
+    Reg#(CapReg) stcc_reg      <- mkCsrReg(defaultValue);
+    Reg#(CapReg) stdc_reg      <- mkCsrReg(nullCap);
+    Reg#(CapReg) sScratchC_reg <- mkCsrReg(nullCap);
+    Ehr#(2, CapReg) sepcc_reg  <- mkConfigEhr(defaultValue);
+
+    // Machine level SCRs with accessSysRegs
+    Reg#(CapReg) mtcc_reg      <- mkCsrReg(defaultValue);
+    Reg#(CapReg) mtdc_reg      <- mkCsrReg(nullCap);
+    Reg#(CapReg) mScratchC_reg <- mkCsrReg(nullCap);
+    Ehr#(2, CapReg) mepcc_reg  <- mkConfigEhr(defaultValue);
+
     rule incCycle;
         mcycle_ehr[1] <= mcycle_ehr[1] + 1;
     endrule
@@ -736,10 +754,8 @@ module mkCsrFile #(Data hartid)(CsrFile);
             // Supervisor CSRs
             CSRsstatus:    sstatus_csr;
             CSRsie:        sie_csr;
-            CSRstvec:      stvec_csr;
             CSRscounteren: scounteren_csr;
             CSRsscratch:   sscratch_csr;
-            CSRsepc:       sepc_csr;
             CSRscause:     scause_csr;
             CSRstval:      stval_csr;
             CSRsip:        sip_csr;
@@ -750,10 +766,8 @@ module mkCsrFile #(Data hartid)(CsrFile);
             CSRmedeleg:    medeleg_csr;
             CSRmideleg:    mideleg_csr;
             CSRmie:        mie_csr;
-            CSRmtvec:      mtvec_csr;
             CSRmcounteren: mcounteren_csr;
             CSRmscratch:   mscratch_csr;
-            CSRmepc:       mepc_csr;
             CSRmcause:     mcause_csr;
             CSRmtval:      mtval_csr;
             CSRmip:        mip_csr;
@@ -794,6 +808,29 @@ module mkCsrFile #(Data hartid)(CsrFile);
         endcase);
     endfunction
 
+    // Function for getting a csr given an index
+    function Reg#(CapReg) get_scr(SCR scr);
+        return (case (scr)
+            // User SCRs
+            SCR_DDC:       ddc_reg;
+            // User CSRs with accessSysRegs
+            // SCR_UTCC:      utcc_reg;
+            // SCR_UTDC:      utdc_reg;
+            // SCR_UScratchC: uScratchC_reg;
+            // SCR_UEPCC:     uepcc_reg;
+            // System CSRs with accessSysRegs
+            SCR_STCC:      stcc_reg;
+            SCR_STDC:      stdc_reg;
+            SCR_SScratchC: sScratchC_reg;
+            SCR_SEPCC:     sepcc_reg[1];
+            // Machine CSRs with accessSysRegs
+            SCR_MTCC:      mtcc_reg;
+            SCR_MTDC:      mtdc_reg;
+            SCR_MScratchC: mScratchC_reg;
+            SCR_MEPCC:     mepcc_reg[1];
+        endcase);
+    endfunction
+
    // ================================================================
    // This function is the WARL (Write Any Read Legal) transform
    // performed during CSR writes.  Currently it duplicates the logic
@@ -831,7 +868,6 @@ module mkCsrFile #(Data hartid)(CsrFile);
                                           x [3],        // ie_vec[prvM]
                                           x [1],        // ie_vec[prvS]
                                           x [0]);       // ie_vec[prvU]
-            CSRmtvec:      { x[63:2], 1'b0, x[0]};
             CSRmedeleg:    { 48'b0, x[15], 1'b0, x[13:12], x[11], 1'b0, x[9:0]};
             CSRmideleg:    { 52'b0, x[11], 1'b0, x[9:8], x[7], 1'b0, x[5:4], x[3], 1'b0, x[1:0]};
             CSRmip:        ((mip_csr & (~ mip_mie_warl_mask)) | (x & mip_mie_warl_mask));
@@ -852,7 +888,6 @@ module mkCsrFile #(Data hartid)(CsrFile);
                                           x [4],        // prev_ie_vec[prvU]
                                           x [1],        // ie_vec[prvS]
                                           x [0]);       // ie_vec[prvU]
-            CSRstvec:      { x[63:2], 1'b0, x[0]};
             CSRsip:        ((sip_csr & (~ sip_sie_warl_mask)) | (x & sip_sie_warl_mask));
             CSRsie:        (x & sip_sie_warl_mask);
             CSRscounteren: { 61'b0, x[2:0]};
@@ -880,6 +915,10 @@ module mkCsrFile #(Data hartid)(CsrFile);
         return get_csr(csr)._read;
     endmethod
 
+    method CapReg scrRd(SCR scr);
+        return get_scr(scr)._read;
+    endmethod
+
     method Action csrInstWr(CSR csr, Data x);
         get_csr(csr)._write(x);
 `ifdef INCLUDE_GDB_CONTROL
@@ -888,6 +927,10 @@ module mkCsrFile #(Data hartid)(CsrFile);
            prv_reg <= prv;
         end
 `endif
+    endmethod
+
+    method Action scrInstWr(SCR csr, CapReg x);
+        get_scr(csr)._write(x);
     endmethod
 
     method Bool fpuInstNeedWr(Bit#(5) fflags, Bool fpu_dirty);
@@ -962,7 +1005,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
         end
     endmethod
 
-    method ActionValue#(Trap_Updates) trap(Trap t, Addr pc, Addr addr, Bit #(32) orig_inst);
+    method ActionValue#(Trap_Updates) trap(Trap t, CapPipe pcc, Addr addr, Bit #(32) orig_inst);
         // figure out trap cause & trap val
         Bit#(1) cause_interrupt = 0;
         Cause cause_code = 0;
@@ -972,7 +1015,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
                 cause_code = pack(e);
                 trap_val = (case(e)
                     IllegalInst: zeroExtend (orig_inst);
-                    InstAddrMisaligned, Breakpoint: return pc;
+                    InstAddrMisaligned, Breakpoint: return getOffset(pcc); // TODO do we want getAddr?
 
                     InstAccessFault, InstPageFault,
                     LoadAddrMisaligned, LoadAccessFault,
@@ -992,14 +1035,18 @@ module mkCsrFile #(Data hartid)(CsrFile);
             end
         endcase
         // function to figure out next PC
-        function Addr getNextPc(Bit#(1) mode_low, Bit#(62) base_hi);
+        function CapPipe getNextPcc(CapPipe tcc);
+            let tvec = getAddr(tcc); // Note this is not actually mtcc: addr rather than offset
+            let mode_low = tvec[0]; // Valid because bottom 2 bits of base must be zero (enforced on write)
+            // tvec[1] must be 1 here.
+            let base_hi = tvec[63:2];
             Addr base = {base_hi, 2'b0};
             if(mode_low == 1 && cause_interrupt == 1) begin
                 // vector jump: only for interrupt
-                return base + zeroExtend({cause_code, 2'b0});
+                return setAddr(tcc, base + zeroExtend({cause_code, 2'b0})).value;
             end
             else begin // direct jump
-                return base;
+                return setAddr(tcc, base).value;
             end
         endfunction
         // check if trap is delegated
@@ -1016,12 +1063,11 @@ module mkCsrFile #(Data hartid)(CsrFile);
             prev_ie_vec[prvS] <= ie_vec[prvS];
             ie_vec[prvS] <= 0;
             // record trap info
-            sepc_csr <= pc;
+            sepcc_reg[0] <= cast(pcc);
             scause_interrupt_reg <= cause_interrupt;
             scause_code_reg <= cause_code;
             stval_csr <= trap_val;
             // return next pc
-            // return getNextPc(stvec_mode_low_reg, stvec_base_hi_reg);
             Data sstatus_val = fn_sstatus_val (uxl_reg,
                                                mxr_reg, sum_reg,
                                                xs_reg,  fs_reg,
@@ -1031,12 +1077,12 @@ module mkCsrFile #(Data hartid)(CsrFile);
                                                /* ie_vec [prvS] */ 0,
                                                ie_vec [prvU]);
             Data scause_val = fn_scause_val (cause_interrupt, cause_code);
-            return Trap_Updates {new_pc: getNextPc(stvec_mode_low_reg, stvec_base_hi_reg)
+            return Trap_Updates {new_pcc: getNextPcc(cast(stcc_reg))
 `ifdef INCLUDE_TANDEM_VERIF
                                  , prv:    prvS,
                                  status: sstatus_val,
                                  cause:  scause_val,
-                                 epc:    pc,
+                                 epcc:   pcc,
                                  tval:   trap_val
 `endif
                                  };
@@ -1048,12 +1094,11 @@ module mkCsrFile #(Data hartid)(CsrFile);
             prev_ie_vec[prvM] <= ie_vec[prvM];
             ie_vec[prvM] <= 0;
             // record trap info
-            mepc_csr <= pc;
+            mepcc_reg[0] <= cast(pcc);
             mcause_interrupt_reg <= cause_interrupt;
             mcause_code_reg <= cause_code;
             mtval_csr <= trap_val;
             // return next pc
-            // return getNextPc(mtvec_mode_low_reg, mtvec_base_hi_reg);
             Data mstatus_val = fn_mstatus_val (sxl_reg, uxl_reg,
                                                tsr_reg, tw_reg,  tvm_reg,
                                                mxr_reg, sum_reg, mprv_reg,
@@ -1066,12 +1111,12 @@ module mkCsrFile #(Data hartid)(CsrFile);
                                                ie_vec [prvS],
                                                ie_vec [prvU]);
             Data mcause_val = fn_mcause_val (cause_interrupt, cause_code);
-            return Trap_Updates {new_pc: getNextPc(mtvec_mode_low_reg, mtvec_base_hi_reg)
+            return Trap_Updates {new_pcc: getNextPcc(cast(mtcc_reg))
 `ifdef INCLUDE_TANDEM_VERIF
                                  , prv:    prvM,
                                  status: mstatus_val,
                                  cause:  mcause_val,
-                                 epc:    pc,
+                                 epcc:   pcc,
                                  tval:   trap_val
 `endif
                                  };
@@ -1097,7 +1142,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
                                           /* ie_vec [prvM] */ prev_ie_vec[prvM],
                                           ie_vec [prvS],
                                           ie_vec [prvU]);
-        return RET_Updates {new_pc: mepc_csr
+        return RET_Updates {new_pcc: cast(mepcc_reg[0])
 `ifdef INCLUDE_TANDEM_VERIF
                             , prv:    prev_prv_vec[prvM],
                             status: mstatus_val
@@ -1126,7 +1171,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
                                           ie_vec [prvM],
                                           /* ie_vec [prvS] */ prev_ie_vec[prvS],
                                           ie_vec [prvU]);
-        return RET_Updates {new_pc: sepc_csr
+        return RET_Updates {new_pcc: cast(sepcc_reg[0])
 `ifdef INCLUDE_TANDEM_VERIF
                             , prv:    prev_prv_vec[prvS],
                             status: mstatus_val

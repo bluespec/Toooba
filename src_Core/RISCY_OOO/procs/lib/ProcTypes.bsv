@@ -217,9 +217,12 @@ typedef enum {
     Alu,
     Ld, St, Lr, Sc,
     J, Jr, Br,
+    CCall, CJALR, Cap,
     Auipc,
+    Auipcc,
     Fpu,
     Csr,
+    Scr,
     Fence,
     FenceI, SFence,
     Ecall, Ebreak,
@@ -332,10 +335,14 @@ typedef union tagged {
     MemInst     Mem;
     MulDivInst  MulDiv;
     FpuInst     Fpu;
-    CapInspectFunc CapInspect;
-    CapModifyFunc CapModify;
     void        Other;
 } ExecFunc deriving(Bits, Eq, FShow);
+
+typedef union tagged {
+    CapInspectFunc CapInspect;
+    CapModifyFunc  CapModify;
+    void           Other;
+} CapFunc deriving(Bits, Eq, FShow);
 
 // Rounding Modes (encoding by risc-v, not general fpu)
 typedef enum {
@@ -574,6 +581,7 @@ typedef CSR_XCapCause CapException;
 typedef struct {
     IType           iType;
     ExecFunc        execFunc;
+    CapFunc         capFunc;
     CapChecks       capChecks;
     Maybe#(CSR)     csr;
     Maybe#(SCR)     scr; // Special Capability Register.
@@ -768,7 +776,7 @@ Bit#(7) privSFENCEVMA  = 7'h9;
 
 function Bool isSystem(IType iType) = (
     iType == Unsupported || iType == Interrupt ||
-    iType == Ecall || iType == Ebreak || iType == Csr ||
+    iType == Ecall || iType == Ebreak || iType == Csr || iType == Scr ||
     iType == SFence || iType == FenceI ||
     iType == Sret || iType == Mret
 );

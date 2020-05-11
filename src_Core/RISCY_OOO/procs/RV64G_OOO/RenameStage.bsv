@@ -41,7 +41,6 @@ import ReorderBufferSynth::*;
 import Scoreboard::*;
 import ScoreboardSynth::*;
 import CsrFile::*;
-import ScrFile::*;
 import SpecTagManager::*;
 import EpochManager::*;
 import ReservationStationEhr::*;
@@ -68,7 +67,6 @@ interface RenameInput;
     interface ScoreboardCons sbConsIfc;
     interface ScoreboardAggr sbAggrIfc;
     interface CsrFile csrfIfc;
-    interface ScrFile scaprfIfc;
     interface EpochManager emIfc;
     interface SpecTagManager smIfc;
     interface Vector#(AluExeNum, ReservationStationAlu) rsAluIfc;
@@ -112,7 +110,6 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
     ScoreboardCons sbCons = inIfc.sbConsIfc;
     ScoreboardAggr sbAggr = inIfc.sbAggrIfc;
     CsrFile csrf = inIfc.csrfIfc;
-    ScrFile scaprf = inIfc.scaprfIfc;
     EpochManager epochManager = inIfc.emIfc;
     SpecTagManager specTagManager = inIfc.smIfc;
     Vector#(AluExeNum, ReservationStationAlu) reservationStationAlu = inIfc.rsAluIfc;
@@ -241,31 +238,8 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         let mstatus   = csrf.rd (CSRmstatus);
 
         // Check CSR access permission
-        Bool csr_access_trap = False;
-        if (x.dInst.iType == Csr) begin
-           if (x.dInst.csr matches tagged Valid .c) begin
-              case (c)
-                 CSRfcsr: fpr_access = True;
-              endcase
-           end
-           Bit #(12) csr_addr  = case (x.dInst.csr) matches
-                                    tagged Valid .c: pack (c);
-                                    default:         12'hCFF;
-                                 endcase;
-           let rs1 = case (x.regs.src2) matches
-                        tagged Valid (tagged Gpr .r) : r;
-                        default: 0;
-                     endcase;
-           let imm = case (x.dInst.imm) matches
-                        tagged Valid .n: n;
-                        default: 0;
-                     endcase;
-           Bool writes_csr = ((x.dInst.execFunc == tagged Alu Csrw) || (rs1 != 0) || (imm != 0));
-           Bool read_only  = (csr_addr [11:10] == 2'b11);
-           Bool write_deny = (writes_csr && read_only);
-           Bool priv_deny  = (csrf.decodeInfo.prv < csr_addr [9:8]);
-           Bool unimplemented = (csr_addr == 12'h8ff);    // Added by Bluespec
-           csr_access_trap = (write_deny || priv_deny || unimplemented);
+        if (x.dInst.csr matches tagged Valid CSRfcsr &&& x.dInst.iType == Csr) begin
+             fpr_access = True;
         end
 
         Bool fs_trap = ((mstatus [14:13] == 2'b00) && fpr_access);
@@ -294,7 +268,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
             // newly found exception
             trap = new_exception;
         end
-        else if (fs_trap || csr_access_trap || wfi_trap) begin
+        else if (fs_trap || wfi_trap) begin
             trap = tagged Valid (tagged Exception IllegalInst);
         end
         return trap;
@@ -368,6 +342,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                 store_data_BE: ?,
 `endif
                                 csr: dInst.csr,
+                                scr: dInst.scr,
                                 claimed_phy_reg: False, // no renaming is done
                                 trap: firstTrap,
                                 tval: tval,
@@ -511,9 +486,11 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
 
         // CSR inst will be sent to ALU exe pipeline
         Bool to_exec = False;
-        if (dInst.execFunc matches tagged Alu .alu) begin
+        if ((dInst.execFunc matches tagged Alu .alu ? True : False) ||
+            (dInst.capFunc matches tagged CapModify .cap ? True : False) ||
+            (dInst.capFunc matches tagged CapInspect .cap ? True : False)) begin
             to_exec = True;
-            doAssert(dInst.iType == Csr, "only CSR inst send to exe");
+            doAssert(dInst.iType == Csr || dInst.iType == Scr, "only CSR or SCR inst send to exe");
         end
         else begin
             doAssert(dInst.iType == FenceI ||
@@ -566,6 +543,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                 store_data_BE: ?,
 `endif
                                 csr: dInst.csr,
+                                scr: dInst.scr,
                                 claimed_phy_reg: True, // XXX we always claim a free reg in rename
                                 trap: Invalid, // no trap
                                 tval: 0,
@@ -588,7 +566,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                };
         rob.enqPort[0].enq(y);
 
-        // record if we issue an CSR inst
+        // record if we issue an CSR inst. TODO also for SCRs?
         if(dInst.iType == Csr) begin
             inIfc.issueCsrInstOrInterrupt;
         end
@@ -963,10 +941,12 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                     Bool to_exec = False;
                     Bool to_mem = False;
                     Bool to_FpuMulDiv = False;
+                    case (dInst.capFunc) matches
+                        tagged CapInspect .ci:  to_exec = True;
+                        tagged CapModify  .cm:  to_exec = True;
+                    endcase
                     case (dInst.execFunc) matches
                         tagged Alu .alu:        to_exec = True;
-                        tagged CapInspect .ci:  to_exec = True;
-                        tagged CapModify .cm:   to_exec = True;
                         tagged Br .br:          to_exec = True;
                         tagged MulDiv .muldiv:  to_FpuMulDiv = True;
                         tagged Fpu .fpu:        to_FpuMulDiv = True;
@@ -1111,6 +1091,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                                 store_data_BE: ?,
 `endif
                                                 csr: dInst.csr,
+                                                scr: dInst.scr,
                                                 claimed_phy_reg: True, // XXX we always claim a free reg in rename
                                                 trap: Invalid, // no trap
                                                 tval: 0,
