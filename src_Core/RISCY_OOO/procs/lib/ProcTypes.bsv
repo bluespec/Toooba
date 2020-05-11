@@ -219,6 +219,7 @@ typedef enum {
     J, Jr, Br,
     CCall, CJALR, Cap,
     Auipc,
+    Auipcc,
     Fpu,
     Csr,
     Scr,

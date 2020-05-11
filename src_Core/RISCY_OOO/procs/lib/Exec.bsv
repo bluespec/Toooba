@@ -343,7 +343,8 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
             CCall       : cap_alu_result;
             CJALR       : link_pcc;
             Jr          : nullWithAddr(getOffset(link_pcc));
-            Auipc       : (getFlags(pcc)[0] == 1'b0 ? nullWithAddr(getOffset(pcc) + fromMaybe(?, getDInstImm(dInst))) : incOffset(pcc, fromMaybe(?, getDInstImm(dInst))).value); // could be computed with alu
+            Auipc       : nullWithAddr(getOffset(pcc) + fromMaybe(?, getDInstImm(dInst)));
+            Auipcc      : incOffset(pcc, fromMaybe(?, getDInstImm(dInst))).value; // could be computed with alu
             Csr         : rVal1;
             Scr         : rVal2;
             Cap         : cap_alu_result;
@@ -430,7 +431,7 @@ function Maybe#(Trap) checkForException(
         let scr = pack(fromMaybe(SCR_None, dInst.scr));
         Bool scr_has_priv = (prv >= scr[4:3]);
         Bool unimplemented = (scr == pack(SCR_None));    // Added by Bluespec
-        if(!scr_has_priv || unimplemented) begin // TODO only PCC read only, and decoded as AUIPCC
+        if(!scr_has_priv || unimplemented) begin // Writes to PCC checked in capChecks
             exception = Valid (IllegalInst);
         end
     end

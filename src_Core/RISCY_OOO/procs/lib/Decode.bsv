@@ -461,7 +461,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
         end
 
         Auipc: begin
-            dInst.iType = Auipc;
+            dInst.iType = cap_mode ? Auipcc : Auipc;
             dInst.execFunc = tagged Alu Add;
             regs.dst  = Valid(tagged Gpr rd);
             regs.src1 = Invalid;
@@ -912,7 +912,12 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                                               default: Normal;
                                           endcase;
 
+                            // Decode SCR read to PCC as AUIPCC 0
                             if (dInst.scr.Valid == SCR_PCC) begin
+                                dInst.iType = Auipcc;
+                                dInst.execFunc = tagged Alu Add;
+                                regs.src1 = Invalid;
+                                dInst.csr = tagged Invalid;
                                 dInst.capChecks.scr_read_only = True;
                             end
 
