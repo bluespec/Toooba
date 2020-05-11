@@ -65,7 +65,7 @@ typedef enum {
 typedef struct {
     Bit #(6) cheri_exc_reg;
     CHERIException cheri_exc_code;
-} CSR_XCapCause deriving(Bits, FShow);
+} CSR_XCapCause deriving(Bits, Eq, FShow);
 
 CSR_XCapCause noCapCause = CSR_XCapCause {cheri_exc_code: None,
                                           cheri_exc_reg: unpack(0)};

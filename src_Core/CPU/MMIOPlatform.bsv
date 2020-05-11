@@ -1,7 +1,7 @@
 
 // Copyright (c) 2018 Massachusetts Institute of Technology
 // Portions (c) 2019-2020 Bluespec, Inc.
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -9,10 +9,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -171,7 +171,6 @@ function Bit #(64) fn_amo_op (Bit #(2)   sz,        // encodes data size (.W or 
    Bit #(64) w1     = fn_extract_and_extend_bytes (sz, addr, ld_val);
    Bit #(64) w2     = fn_extract_and_extend_bytes (sz, addr, st_val);
 
-   
    // Do AMO op
    Int #(64) i1     = unpack (w1);    // Signed, for signed ops
    Int #(64) i2     = unpack (w2);    // Signed, for signed ops
@@ -257,13 +256,13 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
    Reg #(CoreId)          reqCore    <- mkRegU;
    Reg #(MMIOFunc)        reqFunc    <- mkRegU;
    Reg #(AmoFunc)         reqAmofunc <- mkRegU;
-   Reg #(ByteEn)          reqBE      <- mkRegU;
+   Reg #(MemDataByteEn)   reqBE      <- mkRegU;
    Reg #(Bit #(2))        reqSz      <- mkRegU;
-   Reg #(Data)            reqData    <- mkRegU;
+   Reg #(MemTaggedData)   reqData    <- mkRegU;
 
    // For inst fetch, we need more bookkeepings
    // offset of the requested inst within a Data
-   Reg#(DataInstOffset) instSel <- mkRegU;
+   Reg#(MemDataInstOffset) instSel <- mkRegU;
    // the current superscaler way being fetched
    Reg#(SupWaySel) fetchingWay <- mkRegU;
    // the already fetched insts
@@ -280,7 +279,7 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
 
    // in case of AMO on mtime and mtimecmp, resp may be sent after waiting for
    // CRs, we record the AMO resp at processing time
-   Reg#(Data) amoResp <- mkRegU;
+   Reg#(MemTaggedData) amoResp <- mkRegU;
 
    // we increment mtime periodically
    Reg#(Bit#(TLog#(CyclesPerTimeInc))) cycle <- mkReg(0);
@@ -474,7 +473,7 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
             cores[lower_core].pRq.enq(MMIOPRq {
                target: MSIP,
                func: reqFunc,
-               data: truncate(reqData)
+               data: fromMemTaggedData(reqData)
                });
             waitLowerMSIPCRs <= Valid (lower_core);
             waitUpperMSIPCRs <= Invalid;
@@ -484,7 +483,7 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
             cores[upper_core].pRq.enq(MMIOPRq {
                target: MSIP,
                func: reqFunc,
-               data: truncate(reqData)
+               data: fromMemTaggedData(reqData)
                });
             waitLowerMSIPCRs <= Valid (upper_core);
             waitUpperMSIPCRs <= Invalid;
@@ -507,14 +506,14 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
             cores[lower_core].pRq.enq(MMIOPRq {
                target: MSIP,
                func: reqFunc,
-               data: zeroExtend(reqData[0])
+               data: zeroExtend(pack(reqData.data)[0])
                 });
          end
          if(upper_en) begin
             cores[upper_core].pRq.enq(MMIOPRq {
                target: MSIP,
                func: reqFunc,
-               data: zeroExtend(reqData[32]) 
+               data: zeroExtend(pack(reqData.data)[32])
                });
          end
          state <= WaitResp;
@@ -542,11 +541,11 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
       end
       state <= SelectReq;
       cores[reqCore].pRs.enq(DataAccess (MMIODataPRs {
-                                                      valid: True,
-         // for AMO, resp data should be signExtend(lower_data). However,
-         // lower_data is just 1 or 0, and upper_data is always 0, so we
-         // don't need to do signExtend.
-         data: {upper_data, lower_data}
+          valid: True,
+          // for AMO, resp data should be signExtend(lower_data). However,
+          // lower_data is just 1 or 0, and upper_data is always 0, so we
+          // don't need to do signExtend.
+          data: toMemTaggedData({upper_data, lower_data})
         }));
       if(verbosity > 0) begin
          $display("[Platform - msip done] lower %x, upper %x",
@@ -557,21 +556,21 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
    function Data getWriteData(Data orig);
       if(reqFunc matches tagged Amo .amoFunc) begin
          // amo
-         Bool doubleWord = reqBE[4] && reqBE[0];
-         Bool upper32 = reqBE[4] && !reqBE[0];
          let amoInst = AmoInst {
             func: amoFunc,
-            doubleWord: doubleWord,
+            width: reqBE[4] && reqBE[0] ? DWord : Word,
             aq: False,
             rl: False
             };
-         return amoExec(amoInst, orig, reqData, upper32);
+            let res = amoExec(amoInst, {0, pack(reqBE[4] && !reqBE[0])},
+                              toMemTaggedData(orig), reqData);
+            return res.data[0];
       end
       else begin
          // normal store
-         Vector#(NumBytes, Bit#(8)) data = unpack(orig);
-         Vector#(NumBytes, Bit#(8)) wrVec = unpack(reqData);
-         for(Integer i = 0; i < valueof(NumBytes); i = i+1) begin
+         Vector#(DataBytes, Bit#(8)) data = unpack(orig);
+         Vector#(DataBytes, Bit#(8)) wrVec = fromMemTaggedData(reqData);
+         for(Integer i = 0; i < valueof(DataBytes); i = i+1) begin
             if(reqBE[i]) begin
                data[i] = wrVec[i];
             end
@@ -621,7 +620,7 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
          if(reqFunc == Ld) begin
             cores[reqCore].pRs.enq(DataAccess (MMIODataPRs {
                valid: True,
-               data: oldMTimeCmp
+               data: toMemTaggedData(oldMTimeCmp)
                 }));
             state <= SelectReq;
             if(verbosity > 0) begin
@@ -634,7 +633,7 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
             let newData = getWriteData(oldMTimeCmp);
             mtimecmp[offset] <= newData;
             // get and record amo resp
-            let respData = getAmoResp(oldMTimeCmp);
+            let respData = toMemTaggedData(getAmoResp(oldMTimeCmp));
             amoResp <= respData;
             // check changes to MTIP
             if(newData <= mtime && !mtip[offset]) begin
@@ -707,7 +706,7 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
         end
         else if(reqFunc == Ld) begin
             cores[reqCore].pRs.enq(DataAccess (MMIODataPRs {
-                valid: True, data: mtime
+              valid: True, data: toMemTaggedData(mtime)
             }));
             state <= SelectReq;
             if(verbosity > 0) begin
@@ -720,7 +719,7 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
             let newData = getWriteData(mtime);
             mtime <= newData;
             // get and record AMO resp
-            let respData = getAmoResp(mtime);
+            let respData = toMemTaggedData(getAmoResp(mtime));
             amoResp <= respData;
             // check change in MTIP
             Vector#(CoreNum, Bool) changeMTIP = replicate(False);
@@ -809,7 +808,7 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
             else if(reqFunc == Ld) begin
                 resp.valid = True;
                 if(toHostQ.notEmpty) begin
-                    resp.data = toHostQ.first;
+                    resp.data = toMemTaggedData(toHostQ.first);
                 end
                 else begin
                     resp.data = 0;
@@ -860,7 +859,7 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
             else if(reqFunc == Ld) begin
                 resp.valid = True;
                 if(fromHostQ.notEmpty) begin
-                    resp.data = fromHostQ.first;
+                    resp.data = toMemTaggedData(fromHostQ.first);
                 end
                 else begin
                     resp.data = 0;
@@ -950,10 +949,12 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
       else begin
          // Do the AMO op on the loaded value and the store value
          let ld_val = dprs.data;
-         let new_st_val = fn_amo_op (reqSz, reqAmofunc, addr, ld_val, reqData);
+         let new_st_val = fn_amo_op ( reqSz, reqAmofunc, addr
+                                    , fromMemTaggedData(ld_val)
+                                    , fromMemTaggedData(reqData));
 
          // Write back new st_val to fabric
-         let req = MMIOCRq {addr:addr, func:tagged St, byteEn:reqBE, data:new_st_val};
+         let req = MMIOCRq {addr:addr, func:tagged St, byteEn:reqBE, data:toMemTaggedData(new_st_val)};
          mmio_fabric_adapter_core_side.request.put (req);
 
          let prs = tagged DataAccess (MMIODataPRs { valid: True, data: ld_val });
@@ -1020,7 +1021,6 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
 
       else begin
          // No access fault
-         let data = dprs.data;
 
          SupWaySel maxWay = 0;
          if(reqFunc matches tagged Inst .w) begin
@@ -1028,7 +1028,7 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
          end
 
          // View Data as a vector of instructions
-         Vector#(DataSzInst, Instruction) instVec = unpack(data);
+         Vector#(MemDataSzInst, Instruction) instVec = fromMemTaggedData(dprs.data);
          // extract inst from resp data
          Instruction inst = instVec[instSel];
          // check whether we are done or not

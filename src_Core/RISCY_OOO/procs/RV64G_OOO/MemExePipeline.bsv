@@ -63,6 +63,7 @@ typedef struct {
     PhyRegs regs;
     InstTag tag;
     LdStQTag ldstq_tag;
+    CapChecks cap_checks;
 } MemDispatchToRegRead deriving(Bits, Eq, FShow);
 
 typedef struct {
@@ -74,6 +75,7 @@ typedef struct {
     // src reg vals
     CapPipe rVal1;
     CapPipe rVal2;
+    CapChecks cap_checks;
 } MemRegReadToExe deriving(Bits, FShow);
 
 typedef struct {
@@ -82,7 +84,7 @@ typedef struct {
     InstTag tag;
     LdStQTag ldstq_tag;
     // result
-    ByteEn shiftedBE;
+    MemDataByteEn shiftedBE;
     CapPipe vaddr;         // virtual addr
 `ifdef INCLUDE_TANDEM_VERIF
     // for those mem instrs that store data
@@ -90,6 +92,8 @@ typedef struct {
     ByteEn  store_data_BE;
 `endif
     Bool misaligned;
+    Maybe#(CSR_XCapCause) capException;
+    Maybe#(BoundsCheck) check;
 } MemExeToFinish deriving(Bits, FShow);
 
 // bookkeeping when waiting for MMIO resp which may cause exception
@@ -161,7 +165,7 @@ interface MemExeInput;
                                               CapPipe vaddr,
                                               Data store_data, ByteEn store_data_BE,
                                               Bool access_at_commit, Bool non_mmio_st_done,
-                                              Maybe#(Exception) cause
+                                              Maybe#(CSR_XCapCause) cause
 `ifdef RVFI
                                               , ExtraTraceBundle tb
 `endif
@@ -207,7 +211,7 @@ interface MemExePipeline;
 endinterface
 
 module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
-    Bool verbose = False;
+    Bool verbose = True;
 
     // we change cache request in case of single core, becaues our MSI protocol
     // is not good with single core
@@ -288,7 +292,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
     Fifo#(1, MemResp) respLrScAmoQ <- mkCFFifo;
     // resp ifc to D$
     L1ProcResp#(DProcReqId) procRespIfc = (interface L1ProcResp;
-        method Action respLd(DProcReqId id, Data d);
+        method Action respLd(DProcReqId id, MemTaggedData d);
             LdQTag tag = truncate(id);
             memRespLdQ.enq(tuple2(tag, d));
             // early wake up RS and set SB
@@ -308,7 +312,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             end
 `endif
         endmethod
-        method Action respLrScAmo(DProcReqId id, Data d);
+        method Action respLrScAmo(DProcReqId id, MemTaggedData d);
             respLrScAmoQ.enq(d);
             if(verbose) begin
                 $display("[Lr/Sc/Amo resp] ", fshow(id), "; ", fshow(d));
@@ -349,7 +353,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
                 exeStMemLat.incr(zeroExtend(lat));
             end
 `endif
-            return tuple2(e.byteEn, unpack(e.data)); // return SB entry
+            return tuple2(unpack(pack(e.byteEn)), e.line); // return SB entry
         endmethod
 `endif
         method Action evict(LineAddr lineAddr);
@@ -396,7 +400,8 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
                 imm: x.data.imm,
                 regs: x.regs,
                 tag: x.tag,
-                ldstq_tag: x.data.ldstq_tag
+                ldstq_tag: x.data.ldstq_tag,
+                cap_checks: x.data.cap_checks
             },
             spec_bits: x.spec_bits
         });
@@ -438,7 +443,8 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
                 tag: x.tag,
                 ldstq_tag: x.ldstq_tag,
                 rVal1: rVal1,
-                rVal2: rVal2
+                rVal2: rVal2,
+                cap_checks: x.cap_checks
             },
             spec_bits: dispToReg.spec_bits
         });
@@ -457,6 +463,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         // get virtual addr & St/Sc/Amo data
         CapPipe vaddr = modifyOffset(x.rVal1, signExtend(x.imm), True).value;
         CapPipe data = x.rVal2;
+        MemTaggedData toMemData = unpack(pack(toMem(data)));
 
 `ifdef RVFI_DII
         memData[pack(x.ldstq_tag)] <= getAddr(data);
@@ -465,18 +472,23 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
 
         // get shifted data and BE
         // we can use virtual addr to shift, since page size > dword size
-        ByteEn origBE = lsq.getOrigBE(x.ldstq_tag);
-        function Tuple2#(ByteEn, Data) getShiftedBEData(Addr addr, ByteEn be, Data d);
-            Bit#(TLog#(NumBytes)) byteOffset = truncate(addr);
-            return tuple2(unpack(pack(be) << byteOffset), d << {byteOffset, 3'b0});
+        MemDataByteEn origBE = lsq.getOrigBE(x.ldstq_tag);
+        function Tuple2#(MemDataByteEn, MemTaggedData) getShiftedBEData(
+            Addr addr, MemDataByteEn be, MemTaggedData d);
+            Bit#(TLog#(MemDataBytes)) byteOffset = truncate(addr);
+            return tuple2(unpack(pack(be) << byteOffset), MemTaggedData {
+                           tag: (byteOffset == 0) ? d.tag : False
+                         , data: unpack(pack(d.data) << {byteOffset, 3'b0})});
         endfunction
-        let {shiftBE, shiftData} = getShiftedBEData(getAddr(vaddr), origBE, getAddr(data));
+        let {shiftBE, shiftData} = getShiftedBEData(getAddr(vaddr), origBE, toMemData);
 
         // update LSQ data now
         if(x.ldstq_tag matches tagged St .stTag) begin
-            Data d = x.mem_func == Amo ? getAddr(data) : shiftData; // XXX don't shift for AMO
+            MemTaggedData d = x.mem_func == Amo ? toMemData : shiftData; // XXX don't shift for AMO
             lsq.updateData(stTag, d);
         end
+
+        CapPipe ddc = cast(inIfc.scaprf_rd(SCR_DDC)); // ToDo: feed DDC into the prepareBoundsCheck function below somehow.
 
         // go to next stage by sending to TLB
         dTlb.procReq(DTlbReq {
@@ -490,7 +502,10 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
                 store_data: data,
                 store_data_BE: origBE,
 `endif
-                misaligned: memAddrMisaligned(getAddr(vaddr), origBE)
+                misaligned: memAddrMisaligned(getAddr(vaddr), origBE),
+                capException: capChecks(x.rVal1, x.rVal2, ddc, x.cap_checks),
+                check: prepareBoundsCheck(x.rVal1, x.rVal2, almightyCap/*ToDo: pcc*/,
+                                          ddc, getAddr(vaddr), pack(countOnes(pack(origBE))), x.cap_checks)
             },
             specBits: regToExe.spec_bits
         });
@@ -560,17 +575,19 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         endcase);
         Bool access_at_commit = !isValid(cause) && (isMMIO || isLrScAmo);
         Bool non_mmio_st_done = !isValid(cause) && !isMMIO && x.mem_func == St;
-        CapPipe pcc = cast(inIfc.rob_getPC(x.tag));
-        CapPipe ddc = cast(inIfc.scaprf_rd(SCR_DDC));
-        Bool ddc_out_of_bounds = !isInBounds(modifyOffset(ddc,getAddr(x.vaddr),True).value,True);
-        Bool out_of_bounds = (getFlags(pcc) == 1'b1) ? isInBounds(x.vaddr, False):ddc_out_of_bounds;
+        if (x.check matches tagged Valid .check &&& x.capException matches tagged Invalid) begin
+            if (!(                         (check.check_low  >= check.authority_base) &&
+                  (check.check_inclusive ? (check.check_high <= check.authority_top )
+                                         : (check.check_high <  check.authority_top ))))
+                x.capException = Valid(CSR_XCapCause{cheri_exc_reg: check.authority_idx, cheri_exc_code: LengthViolation});
+        end
         inIfc.rob_setExecuted_doFinishMem(x.tag, x.vaddr, store_data, store_data_BE,
                                           access_at_commit, non_mmio_st_done,
-                                          (out_of_bounds) ? Valid(CHERIFault):Invalid
+                                          x.capException
 `ifdef RVFI
                                           , ExtraTraceBundle{
                                               regWriteData: memData[pack(x.ldstq_tag)],
-                                              memByteEn: unpack(pack(x.shiftedBE) >> getAddr(x.vaddr)[2:0])
+                                              memByteEn: unpack(truncate(pack(x.shiftedBE) >> getAddr(x.vaddr)[3:0]))
                                           }
 `endif
                                          );
@@ -697,12 +714,12 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
     endrule
 
     // handle load resp
-    function Action doRespLd(LdQTag tag, Data data, String rule_name);
+    function Action doRespLd(LdQTag tag, MemTaggedData data, String rule_name);
     action
         LSQRespLdResult res <- lsq.respLd(tag, data);
         if(verbose) $display("%t : ", $time, rule_name, " ", fshow(tag), "; ", fshow(data), "; ", fshow(res));
         if(res.dst matches tagged Valid .dst) begin
-            inIfc.writeRegFile(dst.indx, nullWithAddr(res.data));
+            inIfc.writeRegFile(dst.indx, fromMem(unpack(pack(res.data))));
 
 `ifdef INCLUDE_TANDEM_VERIF
             inIfc.rob_setExecuted_doFinishMem_RegData (res.instTag, res.data);
@@ -718,7 +735,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
 `endif
 `ifdef RVFI
             LdStQTag idx = tagged Ld tag;
-            memData[pack(idx)] <= res.data;
+            memData[pack(idx)] <= truncate(pack(res.data)); // TODO use fromMem?
             $display("%t : memData[%x] <= %x", $time(), pack(idx), res.data);
 `endif
         end
@@ -862,10 +879,10 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         waitLrScAmoMMIOResp <= Invalid;
         // get resp data (need shifting)
         let d <- toGet(respLrScAmoQ).get;
-        Data resp = gatherLoad(lsqDeqLd.paddr, lsqDeqLd.byteEn, lsqDeqLd.unsignedLd, d);
+        MemTaggedData resp = gatherLoad(lsqDeqLd.paddr, lsqDeqLd.byteEn, lsqDeqLd.unsignedLd, d);
         // write reg file & set ROB as Executed & wakeup rs
         if(lsqDeqLd.dst matches tagged Valid .dst) begin
-            inIfc.writeRegFile(dst.indx, nullWithAddr(resp));
+            inIfc.writeRegFile(dst.indx, fromMem(unpack(pack(resp))));
             inIfc.setRegReadyAggr_mem(dst.indx);
 `ifdef INCLUDE_TANDEM_VERIF
             inIfc.rob_setExecuted_doFinishMem_RegData (lsqDeqLd.instTag, resp);
@@ -877,7 +894,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             Invalid
 `ifdef RVFI
             , ExtraTraceBundle{
-                regWriteData: resp,
+                regWriteData: truncate(pack(resp)), // TODO use fromMem?
                 memByteEn: replicate(False)
             }
 `endif
@@ -950,10 +967,10 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         waitLrScAmoMMIOResp <= Invalid;
         // get resp (need to shift data)
         let d = inIfc.mmioRespVal.data;
-        Data resp = gatherLoad(lsqDeqLd.paddr, lsqDeqLd.byteEn, lsqDeqLd.unsignedLd, d);
+        MemTaggedData resp = gatherLoad(lsqDeqLd.paddr, lsqDeqLd.byteEn, lsqDeqLd.unsignedLd, d);
         // write reg file & wakeup rs (this wakeup is late but MMIO is rare) & set ROB as Executed
         if(lsqDeqLd.dst matches tagged Valid .dst) begin
-            inIfc.writeRegFile(dst.indx, nullWithAddr(resp));
+            inIfc.writeRegFile(dst.indx, fromMem(tuple2(resp.tag,unpack(pack(resp.data)))));
             inIfc.setRegReadyAggr_mem(dst.indx);
 `ifdef INCLUDE_TANDEM_VERIF
             inIfc.rob_setExecuted_doFinishMem_RegData (lsqDeqLd.instTag, resp);
@@ -962,7 +979,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         inIfc.rob_setExecuted_deqLSQ(lsqDeqLd.instTag, Invalid, Invalid
 `ifdef RVFI
             , ExtraTraceBundle{
-                regWriteData: resp,
+                regWriteData: truncate(pack(resp)), // TODO use fromMem?
                 memByteEn: replicate(False)
             }
 `endif
@@ -1014,7 +1031,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         inIfc.rob_setExecuted_deqLSQ(lsqDeqSt.instTag, lsqDeqSt.fault, Invalid
 `ifdef RVFI
             , ExtraTraceBundle{
-                regWriteData: lsqDeqSt.stData,
+                regWriteData: truncate(pack(lsqDeqSt.stData)), // TODO use fromMem?
                 memByteEn: replicate(False)
             }
 `endif
@@ -1110,7 +1127,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         inIfc.rob_setExecuted_deqLSQ(lsqDeqSt.instTag, Invalid, Invalid
 `ifdef RVFI
             , ExtraTraceBundle{
-                regWriteData: lsqDeqSt.stData,
+                regWriteData: truncate(pack(lsqDeqSt.stData)), // TODO use fromMem ?
                 memByteEn: replicate(False)
             }
 `endif
@@ -1158,7 +1175,9 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             data: lsqDeqSt.stData,
             amoInst: AmoInst {
                 func: lsqDeqSt.amoFunc,
-                doubleWord: lsqDeqSt.shiftedBE == replicate(True),
+                width: (pack(lsqDeqSt.shiftedBE) == ~0) ? QWord :
+                       (pack(lsqDeqSt.shiftedBE)[15:8] == ~0) ? DWord :
+                       (pack(lsqDeqSt.shiftedBE)[7:0] == ~0) ? DWord : Word,
                 aq: lsqDeqSt.acq,
                 rl: lsqDeqSt.rel
             }
@@ -1201,10 +1220,10 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         lsq.deqSt;
         waitLrScAmoMMIOResp <= Invalid;
         // get resp data (no need to shift for Sc and Amo)
-        Data resp <- toGet(respLrScAmoQ).get;
+        MemTaggedData resp <- toGet(respLrScAmoQ).get;
         // write reg file & set ROB as Executed & wake up rs
         if(lsqDeqSt.dst matches tagged Valid .dst) begin
-            inIfc.writeRegFile(dst.indx, nullWithAddr(resp));
+            inIfc.writeRegFile(dst.indx, fromMem(tuple2(resp.tag, pack(resp.data))));
             inIfc.setRegReadyAggr_mem(dst.indx);
 `ifdef INCLUDE_TANDEM_VERIF
             inIfc.rob_setExecuted_doFinishMem_RegData (lsqDeqSt.instTag, resp);
@@ -1213,7 +1232,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         inIfc.rob_setExecuted_deqLSQ(lsqDeqSt.instTag, Invalid, Invalid
 `ifdef RVFI
             , ExtraTraceBundle{
-                regWriteData: resp,
+                regWriteData: fromMemTaggedData(resp),
                 memByteEn: replicate(False)
             }
 `endif
@@ -1307,10 +1326,10 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         lsq.deqSt;
         waitLrScAmoMMIOResp <= Invalid;
         // get resp (no need to shift for AMO)
-        Data resp = inIfc.mmioRespVal.data;
+        MemTaggedData resp = inIfc.mmioRespVal.data;
         // write reg file & wakeup rs (this wakeup is late but MMIO is rare) & set ROB as Executed
         if(lsqDeqSt.dst matches tagged Valid .dst) begin
-            inIfc.writeRegFile(dst.indx, nullWithAddr(resp));
+            inIfc.writeRegFile(dst.indx, fromMem(tuple2(resp.tag, pack(resp.data))));
             inIfc.setRegReadyAggr_mem(dst.indx);
 `ifdef INCLUDE_TANDEM_VERIF
             inIfc.rob_setExecuted_doFinishMem_RegData (lsqDeqSt.instTag, resp);
@@ -1319,7 +1338,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         inIfc.rob_setExecuted_deqLSQ(lsqDeqSt.instTag, Invalid, Invalid
 `ifdef RVFI
             , ExtraTraceBundle{
-                regWriteData: resp,
+                regWriteData: fromMemTaggedData(resp),
                 memByteEn: replicate(False)
             }
 `endif
@@ -1351,7 +1370,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         inIfc.rob_setExecuted_deqLSQ(lsqDeqSt.instTag, Valid (StoreAccessFault), Invalid
 `ifdef RVFI
             , ExtraTraceBundle{
-                regWriteData: lsqDeqSt.stData,
+                regWriteData: fromMemTaggedData(lsqDeqSt.stData),
                 memByteEn: replicate(False)
             }
 `endif

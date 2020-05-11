@@ -1,6 +1,5 @@
-
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +7,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -42,7 +41,7 @@ import RandomReplace::*;
 // this also ensures that cache pipeline is never blocked
 // so we do not need to buffer mem resp that needs to refill cache
 
-// XXX we need to maintain the invariant that 
+// XXX we need to maintain the invariant that
 // at most 1 pRq sent to a child for an addr
 // and we have to wait for resp before sending anthoer one
 
@@ -213,7 +212,7 @@ module mkSelfInvLLBank#(
     Count#(Data) upRespDataCnt <- mkCount(0);
     Count#(Data) dmaLdReqCnt <- mkCount(0);
     Count#(Data) dmaStReqCnt <- mkCount(0);
-    
+
     LatencyTimer#(cRqNum, 10) latTimer <- mkLatencyTimer; // max 1K cycle latency
 
     function Action incrMissCnt(cRqIndexT idx, Bool isDma);
@@ -295,8 +294,8 @@ module mkSelfInvLLBank#(
             addr: req.addr,
             mshrIdx: n
         }));
-        $display("%t LL %m cRqTransfer_retry: ", $time, 
-            fshow(n), " ; ", 
+        $display("%t LL %m cRqTransfer_retry: ", $time,
+            fshow(n), " ; ",
             fshow(req)
         );
     endrule
@@ -347,14 +346,14 @@ module mkSelfInvLLBank#(
         cRqIndexT n <- cRqMshr.transfer.getEmptyEntryInit(cRq, Invalid);
         // send to pipeline
         pipeline.send(CRq (SelfInvLLPipeCRqIn {
-            addr: cRq.addr, 
+            addr: cRq.addr,
             mshrIdx: n
         }));
         // change round robin
         flipPriorNewCRqSrc;
-        $display("%t LL %m cRqTransfer_new_child: ", $time, 
+        $display("%t LL %m cRqTransfer_new_child: ", $time,
             fshow(n), " ; ",
-            fshow(r), " ; ", 
+            fshow(r), " ; ",
             fshow(cRq)
         );
     endrule
@@ -384,7 +383,7 @@ module mkSelfInvLLBank#(
     rule cRqTransfer_new_dma(!cRqRetryIndexQ.notEmpty && newCRqSrc == Valid (Dma));
         rqFromDmaQ.deq;
         dmaRqT r = rqFromDmaQ.first;
-        Bool write = r.byteEn != replicate(False);
+        Bool write = r.byteEn != replicate(replicate(False));
         cRqT cRq = LLRq {
             addr: r.addr,
             fromState: I,
@@ -398,14 +397,14 @@ module mkSelfInvLLBank#(
         cRqIndexT n <- cRqMshr.transfer.getEmptyEntryInit(cRq, write ? Valid (r.data) : Invalid);
         // send to pipeline
         pipeline.send(CRq (SelfInvLLPipeCRqIn {
-            addr: cRq.addr, 
+            addr: cRq.addr,
             mshrIdx: n
         }));
         // change round robin
         flipPriorNewCRqSrc;
-        $display("%t LL %m cRqTransfer_new_dma: ", $time, 
+        $display("%t LL %m cRqTransfer_new_dma: ", $time,
             fshow(n), " ; ",
-            fshow(r), " ; ", 
+            fshow(r), " ; ",
             fshow(cRq)
         );
 `ifdef PERF_COUNT
@@ -457,7 +456,7 @@ module mkSelfInvLLBank#(
         end
 `endif
     endrule
-    
+
     // mem resp for child req, will refill cache, send it to pipeline
     (* descending_urgency = "mRsTransfer, cRsTransfer, cRqTransfer_retry, cRqTransfer_new_child, cRqTransfer_new_dma" *)
 `ifdef PERF_COUNT
@@ -520,7 +519,7 @@ module mkSelfInvLLBank#(
         cRqT cRq = cRqMshr.sendToM.getRq(n);
         cRqSlotT cSlot = cRqMshr.sendToM.getSlot(n);
         Maybe#(Line) data = cRqMshr.sendToM.getData(n);
-        $display("%t LL %m sendToM: ", $time, 
+        $display("%t LL %m sendToM: ", $time,
             fshow(toMInfoQ.first), " ; ",
             fshow(cRq), " ; ",
             fshow(cSlot), " ; ",
@@ -597,7 +596,7 @@ module mkSelfInvLLBank#(
             else begin // do write back part
                 toMemT msg = Wb (WbMemRs {
                     addr: {cSlot.repTag, truncate(cRq.addr)},
-                    byteEn: replicate(True),
+                    byteEn: replicate(replicate(True)),
                     data: validValue(data)
                 });
                 toMQ.enq(msg);
@@ -627,7 +626,7 @@ module mkSelfInvLLBank#(
         doAssert(isValid(data), "dma read req always has valid data");
         // send DMA resp
         doAssert(isRqFromDma(cRq.id), "cRq should be DMA req");
-        doAssert(cRq.byteEn == replicate(False) && cRq.toState == S,
+        doAssert(cRq.byteEn == replicate(replicate(False)) && cRq.toState == S,
             "cRq should be DMA read"
         );
         dmaRqIdT dmaId = getIdFromDma(cRq.id);
@@ -649,7 +648,7 @@ module mkSelfInvLLBank#(
         );
         // send DMA resp
         doAssert(isRqFromDma(cRq.id), "cRq should be DMA req");
-        doAssert(cRq.byteEn != replicate(False) && cRq.toState == M,
+        doAssert(cRq.byteEn != replicate(replicate(False)) && cRq.toState == M,
             "cRq should be DMA write"
         );
         dmaRqIdT dmaId = getIdFromDma(cRq.id);
@@ -666,9 +665,9 @@ module mkSelfInvLLBank#(
         Msi toState = rsToCIndexQ.first.toState;
         cRqT cRq = cRqMshr.sendRsToDmaC.getRq(n);
         Maybe#(Line) rsData = cRqMshr.sendRsToDmaC.getData(n);
-        $display("%t LL %m sendRsToC: ", $time, 
-            fshow(n), " ; ", 
-            fshow(cRq), " ; ", 
+        $display("%t LL %m sendRsToC: ", $time,
+            fshow(n), " ; ",
+            fshow(cRq), " ; ",
             fshow(rsData), " ; ",
             fshow(toState)
         );
@@ -698,7 +697,7 @@ module mkSelfInvLLBank#(
     // round robin select cRq to downgrade child
     // but downgrade must wait for all upgrade resp
     Reg#(cRqIndexT) whichCRq <- mkReg(0);
-    
+
     // we don't perform sending downgrade to child for a cRq processing by pipelineResp_cRs
     // otherwise atomicity issue may arise
     // for safety, we check cRq processed by all pipelineResp_xxx rules
@@ -736,7 +735,7 @@ module mkSelfInvLLBank#(
         cRqT cRq = cRqMshr.sendRqToC.getRq(n);
         cRqSlotT cSlot = cRqMshr.sendRqToC.getSlot(n);
         LLCRqState cState = cRqMshr.sendRqToC.getState(n);
-        doAssert(cState == WaitSt || cState == WaitOldTag, 
+        doAssert(cState == WaitSt || cState == WaitOldTag,
             "only WaitSt and WaitOldTag needs req child"
         );
         // find the child to downgrade
@@ -797,7 +796,7 @@ module mkSelfInvLLBank#(
     // function to process cRq hit (MSHR slot may have garbage)
     function Action cRqFromCHit(cRqIndexT n, cRqT cRq);
     action
-        $display("%t LL %m pipelineResp: cRq from child Hit func: ", $time, 
+        $display("%t LL %m pipelineResp: cRq from child Hit func: ", $time,
             fshow(n), " ; ",
             fshow(cRq)
         );
@@ -805,7 +804,7 @@ module mkSelfInvLLBank#(
         doAssert(isRqFromC(cRq.id), "should be cRq from child");
         doAssert(ram.info.tag == getTag(cRq.addr) && ram.info.cs > I,
             // this function is called by mRs, cRq, cRs
-            // tag should match even for mRs, because 
+            // tag should match even for mRs, because
             // tag has been written into cache before sending req to parent
             ("cRqHit but tag or cs incorrect")
         );
@@ -858,7 +857,7 @@ module mkSelfInvLLBank#(
     // function to process DMA req hit (MSHR slot may have garbage)
     function Action cRqFromDmaHit(cRqIndexT n, cRqT cRq);
     action
-        $display("%t LL %m pipelineResp: cRq from dma Hit func: ", $time, 
+        $display("%t LL %m pipelineResp: cRq from dma Hit func: ", $time,
             fshow(n), " ; ",
             fshow(cRq)
         );
@@ -867,7 +866,7 @@ module mkSelfInvLLBank#(
         doAssert(ram.info.tag == getTag(cRq.addr) && ram.info.cs > I,
             "cRqHit but tag or cs incorrect"
         );
-        doAssert((cRq.byteEn != replicate(False)) == (cRq.toState == M), "toState should match byteEn");
+        doAssert((cRq.byteEn != replicate(replicate(False))) == (cRq.toState == M), "toState should match byteEn");
         // update cs (may have E -> M)
         Msi newCs = ram.info.cs;
         if(cRq.toState == M) begin
@@ -875,7 +874,7 @@ module mkSelfInvLLBank#(
         end
         // update cache line
         Maybe#(Line) wrData = cRqMshr.pipelineResp.getData(n);
-        doAssert(isValid(wrData) == (cRq.byteEn != replicate(False)),
+        doAssert(isValid(wrData) == (cRq.byteEn != replicate(replicate(False))),
             "dma write should carry valid data"
         );
         Line newLine = getUpdatedLine(ram.line, cRq.byteEn, validValue(wrData));
@@ -969,7 +968,7 @@ module mkSelfInvLLBank#(
 
         cRqT cRq = pipeOutCRq;
         $display("%t LL %m pipelineResp: cRq: ", $time, fshow(n), " ; ", fshow(cRq));
-        
+
         // find end of dependency chain
         Maybe#(cRqIndexT) cRqEOC = cRqMshr.pipelineResp.searchEndOfChain(cRq.addr);
 
@@ -1112,7 +1111,7 @@ module mkSelfInvLLBank#(
             end
         endaction
         endfunction
-    
+
         // function to set cRq to Depend, and make no further change to cache
         function Action cRqSetDepNoCacheChange;
         action
@@ -1127,7 +1126,7 @@ module mkSelfInvLLBank#(
                 LLCRqState cState = pipeOutCState;
                 doAssert(cState == Init, "owner is other, must first time go through tag match");
                 // tag match must be hit (because replacement algo won't give a way with owner)
-                doAssert(ram.info.cs > I && ram.info.tag == getTag(cRq.addr), 
+                doAssert(ram.info.cs > I && ram.info.tag == getTag(cRq.addr),
                     ("cRq should hit in tag match")
                 );
                 // could be two cases:
@@ -1203,7 +1202,7 @@ module mkSelfInvLLBank#(
             // only check for cRqEOC to append to dependency chain when firt time go through tag match
             if(cRqEOC matches tagged Valid .m &&& cState == Init) begin
                 $display("%t LL %m pipelineResp: cRq: no owner, depend on cRq ", $time,
-                    fshow(cState), " ; ", 
+                    fshow(cState), " ; ",
                     fshow(cRqEOC)
                 );
                 cRqMshr.pipelineResp.setAddrSucc(m, Valid (n));
@@ -1408,7 +1407,7 @@ module mkSelfInvLLBank#(
 `else
         noAction;
 `endif
-    endmethod 
+    endmethod
 
     method Data getPerfData(LLCPerfType t);
         return (case(t)

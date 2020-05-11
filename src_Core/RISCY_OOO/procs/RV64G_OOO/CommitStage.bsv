@@ -204,6 +204,7 @@ function Maybe#(RVFI_DII_Execution#(DataSz,DataSz)) genRVFI(ToReorderBuffer rot,
             tagged CSRData .csrdata: data = csrdata;
         endcase
     end
+    CapPipe pipePc = cast(rot.pc);
     return tagged Valid RVFI_DII_Execution {
         rvfi_order: zeroExtend(pack(traceCnt)),
         rvfi_trap: isValid(rot.trap),
@@ -214,7 +215,7 @@ function Maybe#(RVFI_DII_Execution#(DataSz,DataSz)) genRVFI(ToReorderBuffer rot,
         rvfi_rs2_addr: rot.orig_inst[24:20],
         rvfi_rs1_data: ?,
         rvfi_rs2_data: ?,
-        rvfi_pc_rdata: getAddr(rot.pc),
+        rvfi_pc_rdata: getOffset(pipePc),
         rvfi_pc_wdata: next_pc,
         rvfi_mem_wdata: wdata,
         rvfi_rd_addr: rd,
@@ -238,7 +239,7 @@ deriving (Eq, FShow, Bits);
 `endif
 
 module mkCommitStage#(CommitInput inIfc)(CommitStage);
-    Bool verbose = True;
+    Bool verbose = False;
 
     Integer verbosity = 2;   // Bluespec: for lightweight verbosity trace
 
@@ -622,15 +623,15 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
         // record trap info
         Addr vaddr = ?;
-        if (   (trap.trap == tagged Exception InstAccessFault)
-            || (trap.trap == tagged Exception InstPageFault)) begin
+        if (   (trap == tagged Exception InstAccessFault)
+            || (trap == tagged Exception InstPageFault)) begin
             vaddr = x.tval;
         end
         else if(x.ppc_vaddr_csrData matches tagged VAddr .va) begin
             vaddr = getAddr(va);
         end
         let commitTrap_val = Valid (CommitTrap {
-            trap: trap.trap,
+            trap: trap,
             pc: x.pc,
             addr: vaddr,
             orig_inst: x.orig_inst
@@ -1067,7 +1068,8 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                 else begin
                     if (verbose) $display("[doCommitNormalInst - %d] ", i, fshow(inst_tag), " ; ", fshow(x));
 `ifdef RVFI
-                    rvfis[i] = genRVFI(x, traceCnt + zeroExtend(whichTrace), getTSB(), getAddr(x.pc) + (is_16b_inst(x.orig_inst) ? 2:4));
+                    CapPipe pipePc = cast(x.pc);
+                    rvfis[i] = genRVFI(x, traceCnt + zeroExtend(whichTrace), getTSB(), getOffset(pipePc) + (is_16b_inst(x.orig_inst) ? 2:4));
                     whichTrace = whichTrace + 1;
 `endif
 

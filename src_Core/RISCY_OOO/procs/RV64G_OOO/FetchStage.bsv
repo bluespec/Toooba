@@ -897,7 +897,7 @@ module mkFetchStage(FetchStage);
                if (in.decode_epoch == decode_epoch_local) begin
                   doAssert(in.main_epoch == f_main_epoch, "main epoch must match");
 
-                  let decode_result = decode(in.inst);    // Decode 32b inst, or 32b expansion of 16b inst
+                  let decode_result = decode(in.inst, getFlags(inst_data[i].pc)==1);    // Decode 32b inst, or 32b expansion of 16b inst
 
                   // update cause and tval if decode exception and no earlier (TLB) exception
                   if (!isValid(cause)) begin

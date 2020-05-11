@@ -1,6 +1,5 @@
-
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +7,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -189,7 +188,7 @@ module mkL1Bank#(
     Count#(Data) ldMissLat <- mkCount(0);
     Count#(Data) stMissLat <- mkCount(0);
     Count#(Data) amoMissLat <- mkCount(0);
-    
+
     LatencyTimer#(cRqNum, 10) latTimer <- mkLatencyTimer; // max 1K cycle latency
 
     function Action incrReqCnt(MemOp op);
@@ -244,8 +243,8 @@ module mkL1Bank#(
             mshrIdx: n
         }));
        if (verbose)
-        $display("%t L1 %m cRqTransfer_retry: ", $time, 
-            fshow(n), " ; ", 
+        $display("%t L1 %m cRqTransfer_retry: ", $time,
+            fshow(n), " ; ",
             fshow(req)
         );
     endrule
@@ -258,7 +257,7 @@ module mkL1Bank#(
         cRqIdxT n <- cRqMshr.cRqTransfer.getEmptyEntryInit(r);
         // send to pipeline
         pipeline.send(CRq (L1PipeRqIn {
-            addr: r.addr, 
+            addr: r.addr,
             mshrIdx: n
         }));
 `ifdef PERF_COUNT
@@ -266,7 +265,7 @@ module mkL1Bank#(
         incrReqCnt(r.op);
 `endif
        if (verbose)
-        $display("%t L1 %m cRqTransfer_new: ", $time, 
+        $display("%t L1 %m cRqTransfer_new: ", $time,
             fshow(n), " ; ",
             fshow(r)
         );
@@ -282,8 +281,8 @@ module mkL1Bank#(
             mshrIdx: n
         }));
        if (verbose)
-        $display("%t L1 %m pRqTransfer: ", $time, 
-            fshow(n), " ; ", 
+        $display("%t L1 %m pRqTransfer: ", $time,
+            fshow(n), " ; ",
             fshow(req)
         );
     endrule
@@ -348,8 +347,8 @@ module mkL1Bank#(
         cRqSlotT slot = cRqMshr.sendRsToP_cRq.getSlot(n);
         Maybe#(Line) data = cRqMshr.sendRsToP_cRq.getData(n);
         L1CRqState state = cRqMshr.sendRsToP_cRq.getState(n);
-        doAssert(state == WaitNewTag, 
-            "send replacement resp to parent, state should be WaitNewTag" 
+        doAssert(state == WaitNewTag,
+            "send replacement resp to parent, state should be WaitNewTag"
         );
         // send resp to parent
         cRsToPT resp = CRsMsg {
@@ -370,9 +369,9 @@ module mkL1Bank#(
         // inform processor of line eviction
         procResp.evict(getLineAddr(resp.addr));
        if (verbose)
-        $display("%t L1 %m sendRsToP: ", $time, 
-            fshow(rsToPIndexQ.first)," ; ", 
-            fshow(req), " ; ", 
+        $display("%t L1 %m sendRsToP: ", $time,
+            fshow(rsToPIndexQ.first)," ; ",
+            fshow(req), " ; ",
             fshow(resp)
         );
     endrule
@@ -393,9 +392,9 @@ module mkL1Bank#(
         // inform processor of line eviction
         procResp.evict(getLineAddr(resp.addr));
        if (verbose)
-        $display("%t L1 %m sendRsToP: ", $time, 
-            fshow(rsToPIndexQ.first), " ; ", 
-            fshow(req), " ; ", 
+        $display("%t L1 %m sendRsToP: ", $time,
+            fshow(rsToPIndexQ.first), " ; ",
+            fshow(req), " ; ",
             fshow(resp)
         );
     endrule
@@ -415,10 +414,10 @@ module mkL1Bank#(
         };
         rqToPQ.enq(cRqToP);
        if (verbose)
-        $display("%t L1 %m sendRqToP: ", $time, 
-            fshow(n), " ; ", 
-            fshow(req), " ; ", 
-            fshow(slot), " ; ", 
+        $display("%t L1 %m sendRqToP: ", $time,
+            fshow(n), " ; ",
+            fshow(req), " ; ",
+            fshow(slot), " ; ",
             fshow(cRqToP)
         );
 `ifdef PERF_COUNT
@@ -466,13 +465,13 @@ module mkL1Bank#(
         // TODO when we have MESI, cache state may also need update
         Line curLine = ram.line;
         Line newLine = curLine;
-        LineDataOffset dataSel = getLineDataOffset(req.addr);
+        LineMemDataOffset dataSel = getLineMemDataOffset(req.addr);
         case(req.op) matches
             Ld: begin
-                procResp.respLd(req.id, curLine[dataSel]);
+                procResp.respLd(req.id, getTaggedDataAt(curLine, dataSel));
             end
             Lr: begin
-                procResp.respLrScAmo(req.id, curLine[dataSel]);
+                procResp.respLrScAmo(req.id, getTaggedDataAt(curLine, dataSel));
                 // set link addr
                 linkAddr <= Valid (getLineAddr(req.addr));
             end
@@ -483,11 +482,14 @@ module mkL1Bank#(
                 // check Sc succeeds or not
                 Bool succeed = linkAddr == Valid (getLineAddr(req.addr));
                 // resp to proc
-                Data respVal = succeed ? fromInteger(valueof(ScSuccVal)) : fromInteger(valueof(ScFailVal));
+                MemTaggedData respVal = succeed ? fromInteger(valueof(ScSuccVal)) : fromInteger(valueof(ScFailVal));
                 procResp.respLrScAmo(req.id, respVal);
                 // calculate new data to write
                 if(succeed) begin
-                    newLine[dataSel] = getUpdatedData(curLine[dataSel], req.byteEn, req.data);
+                    let taggedData = getTaggedDataAt(curLine, dataSel);
+                    let newTaggedData =
+                      mergeMemTaggedDataBE(taggedData, req.data, zeroExtend(pack(req.byteEn)));
+                    newLine = setTaggedDataAt( newLine, dataSel, newTaggedData);
                 end
                 // reset link addr
                 linkAddr <= Invalid;
@@ -548,16 +550,28 @@ module mkL1Bank#(
         // get line and sel
         Line curLine = ram.line;
         Line newLine = curLine;
-        LineDataOffset dataSel = getLineDataOffset(req.addr);
-        Bool upper32 = req.addr[2] == 1;
-        Data curData = curLine[dataSel];
+        LineMemDataOffset dataSel = getLineMemDataOffset(req.addr);
+        MemTaggedData current = getTaggedDataAt(curLine, dataSel);
+        Vector#(2, Bit#(64)) dwordData = current.data;
+        Vector#(4, Bit#(32))  wordData = unpack(pack(current.data));
+        Bit#(1) dwordIdx = req.addr[3];
+        Bit#(2)  wordIdx = req.addr[3:2];
         // resp processor
-        Data resp = req.amoInst.doubleWord ? curData : signExtend(
-            upper32 ? curData[63:32] : curData[31:0]
-        );
+        MemTaggedData resp = case (req.amoInst.width)
+          QWord: current;
+          DWord: MemTaggedData {
+            tag: False,
+            data: unpack(signExtend(dwordData[dwordIdx]))
+          };
+          Word: MemTaggedData {
+            tag: False,
+            data: unpack(signExtend(wordData[wordIdx]))
+          };
+        endcase;
         procResp.respLrScAmo(req.id, resp);
         // calculate new data to write
-        newLine[dataSel] = amoExec(req.amoInst, curData, req.data, upper32);
+        let newData = amoExec(req.amoInst, wordIdx, current, req.data);
+        newLine = setTaggedDataAt(newLine, dataSel, newData);
         // deq pipeline or swap in successor
         pipeline.deqWrite(succ, RamData {
             info: CacheInfo {
@@ -588,7 +602,7 @@ module mkL1Bank#(
         procRqT procRq = pipeOutCRq;
        if (verbose)
         $display("%t L1 %m pipelineResp: cRq: ", $time, fshow(n), " ; ", fshow(procRq));
-        
+
         // find end of dependency chain
         Maybe#(cRqIdxT) cRqEOC = cRqMshr.pipelineResp.searchEndOfChain(procRq.addr);
 
@@ -634,10 +648,10 @@ module mkL1Bank#(
             // because cRq is not set to Depend when pRq invalidates it (pRq just directly resp)
             // and this func is only called when cs < toState (otherwise will hit)
             // because L1 has no children to wait for
-            doAssert(!cSlot.waitP && !enoughCacheState(ram.info.cs, procRq.toState), 
+            doAssert(!cSlot.waitP && !enoughCacheState(ram.info.cs, procRq.toState),
                 "waitP must be false and cs must not be enough"
             );
-            // Thus we must send req to parent 
+            // Thus we must send req to parent
             // XXX first send to a temp indexQ to avoid conflict, then merge to rqToPIndexQ later
             rqToPIndexQ_pipelineResp.enq(n);
             // update mshr
@@ -692,7 +706,7 @@ module mkL1Bank#(
             end
         endaction
         endfunction
-    
+
         // function to set cRq to Depend, and make no further change to cache
         function Action cRqSetDepNoCacheChange;
         action
@@ -1024,7 +1038,7 @@ module mkL1Bank#(
             };
         endmethod
     endinterface
-                
+
     interface pRqStuck = pRqMshr.stuck;
 
 `ifdef SECURITY
@@ -1043,7 +1057,7 @@ module mkL1Bank#(
 `else
         noAction;
 `endif
-    endmethod 
+    endmethod
 
     method Data getPerfData(L1DPerfType t);
         return (case(t)

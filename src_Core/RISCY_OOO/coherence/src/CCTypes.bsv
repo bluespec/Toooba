@@ -1,6 +1,6 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +8,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -32,9 +32,9 @@ import GetPut::*;
 import ClientServer::*;
 
 typedef enum {
-    I = 2'd0, 
-    S = 2'd1, 
-    E = 2'd2, 
+    I = 2'd0,
+    S = 2'd1,
+    E = 2'd2,
     M = 2'd3
 } MESI deriving(Bits, Eq, FShow);
 typedef MESI Msi;
@@ -79,25 +79,29 @@ typedef TDiv#(DataSz, 8) DataSzBytes;
 typedef TLog#(DataSzBytes) LgDataSzBytes;
 typedef Bit#(LgDataSzBytes) DataBytesOffset;
 
+typedef TDiv#(MemDataSz, 8) MemDataSzBytes;
+typedef TLog#(MemDataSzBytes) LgMemDataSzBytes;
+typedef Bit#(LgMemDataSzBytes) MemDataBytesOffset;
+
 typedef TDiv#(InstSz, 8) InstSzBytes;
 typedef TLog#(InstSzBytes) LgInstSzBytes;
 
 // 64B cache line -- XXX same with parameters in CacheUtils.bsv
-typedef CacheUtils::LogCLineNumData LgLineSzData;
-typedef CacheUtils::LogCLineNumBytes LgLineSzBytes;
+typedef CacheUtils::LogCLineNumMemTaggedData LgLineSzData;
+typedef CacheUtils::LogCLineNumMemDataBytes LgLineSzBytes;
 typedef CacheUtils::CLineAddrSz LineAddrSz;
 typedef CacheUtils::CLineAddr LineAddr;
 
-typedef CacheUtils::CLineNumData LineSzData;
+typedef CacheUtils::CLine Line;
 typedef CacheUtils::CLineDataSel LineDataOffset;
+typedef CacheUtils::CLineMemTaggedDataSel LineMemDataOffset;
 
-typedef CacheUtils::CLineNumBytes LineSzBytes;
-typedef CacheUtils::CLineByteEn LineByteEn;
+typedef CacheUtils::CLineDataNumBytes LineSzBytes;
+typedef CacheUtils::CLineMemDataByteEn LineByteEn;
+typedef CacheUtils::CLineDataByteEn LineDataByteEn;
 
 typedef TDiv#(LineSzBytes, InstSzBytes) LineSzInst;
 typedef Bit#(TLog#(LineSzInst)) LineInstOffset;
-
-typedef Vector#(LineSzData, Data) Line;
 
 function LineAddr getLineAddr(Addr addr) = truncateLSB(addr);
 
@@ -105,28 +109,29 @@ function LineDataOffset getLineDataOffset(Addr a);
     return truncate(a >> valueOf(LgDataSzBytes));
 endfunction
 
+function LineMemDataOffset getLineMemDataOffset(Addr a);
+    return truncate(a >> valueOf(LgMemDataSzBytes));
+endfunction
+
 function LineInstOffset getLineInstOffset(Addr a);
     return truncate(a >> valueof(LgInstSzBytes));
 endfunction
 
 function Line getUpdatedLine(Line curLine, LineByteEn wrBE, Line wrLine);
-    Vector#(LineSzBytes, Bit#(8)) curVec = unpack(pack(curLine));
-    Vector#(LineSzBytes, Bit#(8)) wrVec = unpack(pack(wrLine));
-    function Bit#(8) getNewByte(Integer i);
-        return wrBE[i] ? wrVec[i] : curVec[i];
+    // handle data merge
+    Vector#(LineSzBytes, Bit#(8)) newDataVec = mergeDataBE(curLine.data, wrLine.data, wrBE);
+    // handle tag merge
+    Vector#(CLineNumMemTaggedData, MemTag) curTagVec = curLine.tag;
+    Vector#(CLineNumMemTaggedData, MemTag) wrTagVec = wrLine.tag;
+    function MemTag getNewTag(Integer i);
+        let res = curTagVec[i];
+        if (pack(wrBE[i]) == ~0) res = wrTagVec[i];
+        return res;
     endfunction
-    Vector#(LineSzBytes, Bit#(8)) newVec = map(getNewByte, genVector);
-    return unpack(pack(newVec));
-endfunction
- 
-function Data getUpdatedData(Data curData, ByteEn wrBE, Data wrData);
-    Vector#(DataSzBytes, Bit#(8)) curVec = unpack(pack(curData));
-    Vector#(DataSzBytes, Bit#(8)) wrVec = unpack(pack(wrData));
-    function Bit#(8) getNewByte(Integer i);
-        return wrBE[i] ? wrVec[i] : curVec[i];
-    endfunction
-    Vector#(DataSzBytes, Bit#(8)) newVec = map(getNewByte, genVector);
-    return pack(newVec);
+    Vector#(CLineNumMemTaggedData, MemTag) newTagVec = genWith(getNewTag);
+    // compose updated line
+    return CLine { tag:  newTagVec
+                 , data: unpack(pack(newDataVec)) };
 endfunction
 
 // calculate tag
@@ -191,8 +196,8 @@ typedef struct {
     Msi toState;
     // below are detailed mem op
     MemOp op; // Ld, St, Lr, Sc, Amo
-    ByteEn byteEn; // valid when op == Sc
-    Data data; // valid when op == Sc/Amo
+    MemDataByteEn byteEn; // valid when op == Sc
+    MemTaggedData data; // valid when op == Sc/Amo
     AmoInst amoInst; // valid when op == Amo
 } ProcRq#(type idT) deriving(Bits, Eq, FShow);
 
@@ -201,8 +206,8 @@ interface L1ProcReq#(type idT);
 endinterface
 
 interface L1ProcResp#(type idT);
-    method Action respLd(idT id, Data resp);
-    method Action respLrScAmo(idT id, Data resp);
+    method Action respLd(idT id, MemTaggedData resp);
+    method Action respLrScAmo(idT id, MemTaggedData resp);
     method ActionValue#(Tuple2#(LineByteEn, Line)) respSt(idT id);
     method Action evict(LineAddr a); // called when cache line is evicted
 endinterface
@@ -371,7 +376,7 @@ endinterface
 
 instance Connectable#(MemFifoServer#(idT, childT), MemFifoClient#(idT, childT));
     module mkConnection#(
-        MemFifoServer#(idT, childT) server, 
+        MemFifoServer#(idT, childT) server,
         MemFifoClient#(idT, childT) client
     )(Empty);
         rule doCToM;

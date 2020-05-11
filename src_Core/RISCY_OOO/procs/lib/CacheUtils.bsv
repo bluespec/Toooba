@@ -1,6 +1,6 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +8,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -38,32 +38,66 @@ import FShow::*;
 import MsgFifo::*;
 
 // 64B cache line
-typedef 8 CLineNumData;
+typedef 4 CLineNumMemTaggedData;
+typedef TMul#(CLineNumMemTaggedData, 2) CLineNumData;
+typedef TLog#(CLineNumMemTaggedData) LogCLineNumMemTaggedData;
 typedef TLog#(CLineNumData) LogCLineNumData;
 typedef Bit#(LogCLineNumData) CLineDataSel;
-
-function CLineDataSel getCLineDataSel(Addr a);
-    return truncate(a >> valueOf(TLog#(NumBytes)));
+typedef Bit#(LogCLineNumMemTaggedData) CLineMemTaggedDataSel;
+function CLineMemTaggedDataSel getCLineMemTaggedDataSel(Addr a) =
+  truncate(a >> valueOf(TLog#(MemDataBytes)));
+function CLineDataSel getCLineDataSel(Addr a) =
+  truncate(a >> valueOf(TLog#(DataBytes)));
+typedef struct {
+  Vector#(CLineNumMemTaggedData, MemTag) tag;
+  Vector#(CLineNumMemTaggedData, MemData) data;
+} CLine deriving (Bits, Eq, FShow);
+function Data getDataAt(CLine line, CLineDataSel sel);
+  Vector#(CLineNumData, Data) data = unpack(pack(line.data));
+  return data[sel];
 endfunction
+function CLine setDataAt(CLine line, CLineDataSel sel, Data data);
+  Vector#(CLineNumData, Data) newData = unpack(pack(line.data));
+  newData[sel] = data;
+  CLineMemTaggedDataSel bigSel = truncateLSB(sel);
+  let newLine = line;
+  newLine.tag[bigSel] = False;
+  newLine.data = unpack(pack(newData));
+  return newLine;
+endfunction
+function CLine setDataAtBE(CLine line, CLineDataSel sel, Data data, ByteEn be);
+  let oldData = getDataAt(line, sel);
+  return setDataAt(line, sel, mergeDataBE(oldData, data, be));
+endfunction
+function MemTaggedData getTaggedDataAt(CLine line, CLineMemTaggedDataSel sel) =
+  MemTaggedData { tag: line.tag[sel], data: line.data[sel] };
+function CLine setTaggedDataAt(CLine line, CLineMemTaggedDataSel sel, MemTaggedData data);
+  let newLine = line;
+  newLine.tag[sel] = data.tag;
+  newLine.data[sel] = data.data;
+  return newLine;
+endfunction
+typedef TMul#(CLineNumMemTaggedData, MemDataSz) CLineDataSz;
+typedef TDiv#(CLineDataSz, 8) CLineDataNumBytes;
+typedef TLog#(CLineDataNumBytes) LogCLineDataNumBytes;
 
-typedef TMul#(CLineNumData, DataSz) CacheLineSz;
-typedef Bit#(CacheLineSz) CacheLine;
-
-typedef TMul#(CLineNumData, NumBytes) CLineNumBytes;
-typedef TLog#(CLineNumBytes) LogCLineNumBytes;
-typedef Vector#(CLineNumBytes, Bool) CLineByteEn;
+typedef TMul#(CLineNumMemTaggedData, MemDataSz) CLineMemDataSz;
+typedef TMul#(CLineNumMemTaggedData, MemDataBytes) CLineNumMemDataBytes;
+typedef TLog#(CLineNumMemDataBytes) LogCLineNumMemDataBytes;
+typedef Vector#(CLineNumMemTaggedData, Vector#(MemDataBytes, Bool)) CLineMemDataByteEn;
+typedef Vector#(CLineNumData, Vector#(DataBytes, Bool)) CLineDataByteEn;
 
 function Bool isCLineAlignAddr(Addr a);
-    Bit#(LogCLineNumBytes) offset = truncate(a);
+    Bit#(LogCLineNumMemDataBytes) offset = truncate(a);
     return offset == 0;
 endfunction
 
 // cache line addr (drop the offset within cache line)
-typedef TSub#(AddrSz, LogCLineNumBytes) CLineAddrSz;
+typedef TSub#(AddrSz, LogCLineNumMemDataBytes) CLineAddrSz;
 typedef Bit#(CLineAddrSz) CLineAddr;
 
 // cache line v.s. instruction
-typedef TDiv#(CacheLineSz, InstSz) CLineNumInst;
+typedef TDiv#(CLineMemDataSz, InstSz) CLineNumInst;
 typedef Bit#(TLog#(CLineNumInst)) CLineInstSel;
 
 function CLineInstSel getCLineInstSel(Addr a);

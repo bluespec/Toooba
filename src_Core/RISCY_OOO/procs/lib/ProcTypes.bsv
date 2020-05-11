@@ -397,14 +397,10 @@ typedef 12 InterruptNum;    // Without debugger
 
 // Traps are either an exception or an interrupt
 typedef union tagged {
+    CapException CapException;
     Exception Exception;
     Interrupt Interrupt;
 } Trap deriving(Bits, Eq, FShow);
-
-typedef struct {
-    Trap trap;
-    CSR_XCapCause capExp;
-} TrapWithCap deriving(Bits, FShow);
 
 // privilege modes
 Bit#(2) prvU = 0;
@@ -509,14 +505,17 @@ typedef struct {
 
 typedef enum {
     Src1,
-    Src2
+    Src2,
+    Pcc,
+    Ddc
 } CheckAuthoritySrc deriving(Bits, Eq, FShow);
 
 typedef enum {
     Src1Addr,
     Src2Addr,
     Src2Type,
-    Src1Base
+    Src1Base,
+    Vaddr    // Memory Pipe
 } CheckLowSrc deriving(Bits, Eq, FShow);
 
 typedef enum {
@@ -524,7 +523,8 @@ typedef enum {
     Src1Top,
     Src2Addr,
     Src2Type,
-    ResultTop
+    ResultTop,
+    VaddrPlusSize // Memory Pipe
 } CheckHighSrc deriving(Bits, Eq, FShow);
 
 typedef struct {
@@ -619,10 +619,10 @@ typedef struct {
     // this. We need this for to remove redundant MMIO accesses (for MSIP), and
     // to determine AMO access range (upper 32 bits, lower 32 bits, or full 64
     // bits). INST FETCH will not specify this field.
-    ByteEn byteEn;
+    MemDataByteEn byteEn;
     // For STORE: this is store data shifted to be 64-bit aligned
     // For AMO: this is UNshifted data (like normal mem req)
-    Data data;
+    MemTaggedData data;
 } MMIOCRq deriving(Bits, Eq, FShow);
 
 // resp from platform to core
@@ -634,7 +634,7 @@ typedef struct {
     // shift the result before writting back to reg).
     // For AMO: this is the result that can be directly written into reg, i.e.,
     // for 32-bit access, the result has been shifted and sign-extended.
-    Data data;
+    MemTaggedData data;
 } MMIODataPRs deriving(Bits, Eq, FShow);
 
 typedef union tagged {
@@ -666,7 +666,7 @@ typedef struct {
 
 // Boot rom: each block is 64-bit data
 typedef `LOG_BOOT_ROM_BYTES LgBootRomBytes;
-typedef TSub#(LgBootRomBytes, TLog#(NumBytes)) LgBootRomSzData;
+typedef TSub#(LgBootRomBytes, TLog#(MemDataBytes)) LgBootRomSzData;
 typedef Bit#(LgBootRomSzData) BootRomIndex;
 
 // mtime: we increment mtime by 50 every 5000 cycles, this simulates a
@@ -753,6 +753,7 @@ Bit#(5) opFCVT_FW = 5'b11010;
 //MiscMem
 Bit#(3) fnFENCE  = 3'b000;
 Bit#(3) fnFENCEI = 3'b001;
+Bit#(3) fnLC     = 3'b010;
 
 // System
 Bit#(3) fnPRIV   = 3'b000;

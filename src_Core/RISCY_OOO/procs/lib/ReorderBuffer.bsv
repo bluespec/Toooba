@@ -74,7 +74,7 @@ typedef struct {
     Maybe#(SCR)        scr;
     Maybe#(CSR)        csr;
     Bool               claimed_phy_reg; // whether we need to commmit renaming
-    Maybe#(TrapWithCap)trap;
+    Maybe#(Trap)       trap;
     Addr               tval;    // in case of trap
     PPCVAddrCSRData    ppc_vaddr_csrData;
     Bit#(5)            fflags;
@@ -158,7 +158,7 @@ interface ReorderBufferRowEhr#(numeric type aluExeNum, numeric type fpuMulDivExe
     method Action setExecuted_doFinishMem(CapPipe vaddr,
                                           Data store_data, ByteEn store_data_BE,
                                           Bool access_at_commit, Bool non_mmio_st_done,
-                                          Maybe#(Exception) cause
+                                          Maybe#(CSR_XCapCause) cause
 `ifdef RVFI
                                           , ExtraTraceBundle tb
 `endif
@@ -240,7 +240,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     Integer sb_enq_port = 1; // write spec_bits
     Integer sb_correctSpec_port = 2; // write spec_bits
 
-    Ehr#(TAdd#(2, aluExeNum), CapMem)                              pc                   <- mkEhr(?);
+    Ehr#(TAdd#(2, aluExeNum), CapMem)                               pc                   <- mkEhr(?);
     Reg #(Bit #(32))                                                orig_inst            <- mkRegU;
     Reg#(IType)                                                     iType                <- mkRegU;
     Reg #(Maybe #(ArchRIndx))                                       rg_dst_reg           <- mkRegU;
@@ -252,8 +252,8 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     Reg#(Maybe#(CSR))                                               csr                  <- mkRegU;
     Reg#(Maybe#(SCR))                                               scr                  <- mkRegU;
     Reg#(Bool)                                                      claimed_phy_reg      <- mkRegU;
-    Ehr#(TAdd#(TAdd#(2, TDiv#(aluExeNum,2)), aluExeNum), Maybe#(TrapWithCap)) trap       <- mkEhr(?);
-    Ehr#(3, Maybe#(TrapWithCap))                                    mem_early_trap       <- mkEhr(?);
+    Ehr#(TAdd#(TAdd#(2, TDiv#(aluExeNum,2)), aluExeNum), Maybe#(Trap)) trap       <- mkEhr(?);
+    Ehr#(3, Maybe#(Trap))                                           mem_early_trap       <- mkEhr(?);
     Ehr#(TAdd#(TAdd#(2, TDiv#(aluExeNum,2)), aluExeNum), Addr)      tval                 <- mkEhr(?);
     Ehr#(TAdd#(2, aluExeNum), PPCVAddrCSRData)                      ppc_vaddr_csrData    <- mkEhr(?);
     Ehr#(TAdd#(1, fpuMulDivExeNum), Bit#(5))                        fflags               <- mkEhr(?);
@@ -309,7 +309,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
                     ppc_vaddr_csrData[pvc_finishAlu_port(i)] <= PPC (cast(cf.nextPc));
                 end
                 if (cause matches tagged Valid .exp) begin
-                    trap[trap_finishAlu_port(i)] <= Valid (TrapWithCap{trap: tagged Exception CHERIFault, capExp: exp});
+                    trap[trap_finishAlu_port(i)] <= Valid (CapException (exp));
                     tval[trap_finishAlu_port(i)] <= tval[trap_finishAlu_port(i)];
                 end
 `ifdef RVFI
@@ -337,7 +337,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
                 // update fflags
                 fflags[fflags_finishFpuMulDiv_port(i)] <= new_fflags;
                 if (cause matches tagged Valid .exp) begin
-                    trap[trap_finishFpuMulDiv_port(i)] <= Valid (TrapWithCap{trap: tagged Exception exp, capExp: noCapCause});
+                    trap[trap_finishFpuMulDiv_port(i)] <= Valid (Exception (exp));
                     tval[trap_finishFpuMulDiv_port(i)] <= tval[trap_finishAlu_port(i)];
                 end
 `ifdef RVFI
@@ -359,7 +359,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     method Action setExecuted_doFinishMem(CapPipe vaddr,
                                           Data   store_data, ByteEn store_data_BE,
                                           Bool   access_at_commit, Bool non_mmio_st_done,
-                                          Maybe#(Exception) cause
+                                          Maybe#(CSR_XCapCause) cause
 `ifdef RVFI
                                           , ExtraTraceBundle tb
 `endif
@@ -387,7 +387,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         // udpate non mmio st
         nonMMIOStDone[nonMMIOSt_finishMem_port] <= non_mmio_st_done;
         if (cause matches tagged Valid .exp) begin
-            mem_early_trap[0] <= Valid (TrapWithCap{trap: tagged Exception exp, capExp: noCapCause});
+            mem_early_trap[0] <= Valid ( CapException (exp));
             tval[trap_finishMem_port] <= tval[trap_finishMem_port];
         end
     endmethod
@@ -516,7 +516,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         // record trap
         //doAssert(!isValid(trap[trap_deqLSQ_port]), "cannot have trap");
         if (isValid(mem_early_trap[0])) trap[trap_deqLSQ_port] <= mem_early_trap[0];
-        else if(cause matches tagged Valid .e) trap[trap_deqLSQ_port] <= Valid (TrapWithCap{trap: tagged Exception e, capExp: noCapCause});
+        else if(cause matches tagged Valid .e) trap[trap_deqLSQ_port] <= Valid(Exception(e));
         // TODO: shouldn't we record tval here as well?
         // record ld misspeculation
         ldKilled[ldKill_deqLSQ_port] <= ld_killed;
@@ -630,7 +630,7 @@ interface SupReorderBuffer#(numeric type aluExeNum, numeric type fpuMulDivExeNum
                                           CapPipe vaddr,
                                           Data store_data, ByteEn store_data_BE,
                                           Bool access_at_commit, Bool non_mmio_st_done,
-                                          Maybe#(Exception) cause
+                                          Maybe#(CSR_XCapCause) cause
 `ifdef RVFI
                                           , ExtraTraceBundle tb
 `endif
@@ -1243,7 +1243,7 @@ module mkSupReorderBuffer#(
 
     method Action setExecuted_doFinishMem(
         InstTag x, CapPipe vaddr, Data store_data, ByteEn store_data_BE, Bool access_at_commit,
-        Bool non_mmio_st_done, Maybe#(Exception) cause
+        Bool non_mmio_st_done, Maybe#(CSR_XCapCause) cause
 `ifdef RVFI
         , tb
 `endif

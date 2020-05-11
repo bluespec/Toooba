@@ -228,7 +228,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         Maybe#(Trap) trap = tagged Invalid;
         let csr_state = csrf.decodeInfo;
         let pending_interrupt = csrf.pending_interrupt;
-        let new_exception = checkForException(x.dInst, x.regs, csr_state);
+        let new_exception = checkForException(x.dInst, x.regs, csr_state, x.pc, x.orig_inst[1:0]==2'b11);
 
         // If Fpu regs are accessed, trap if mstatus_fs is "Off" (2'b00)
         Bool fpr_access = (   fn_ArchReg_is_FpuReg (x.regs.src1)
@@ -266,7 +266,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
             trap = tagged Valid (tagged Interrupt fromMaybe(?, pending_interrupt));
         end else if (isValid(new_exception)) begin
             // newly found exception
-            trap = tagged Valid (tagged Exception fromMaybe(?, new_exception));
+            trap = new_exception;
         end
         else if (fs_trap || wfi_trap) begin
             trap = tagged Valid (tagged Exception IllegalInst);
@@ -331,8 +331,6 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         // Flip epoch without redirecting
         // This avoids doing incorrect work
         incrEpochStallFetch;
-        Maybe#(TrapWithCap) trapWithCap = Invalid;
-        if (firstTrap matches tagged Valid .trap) trapWithCap = tagged Valid TrapWithCap{trap: trap, capExp: noCapCause};
         // just place it in the reorder buffer
         let y = ToReorderBuffer{pc: cast(pc),
                                 orig_inst: orig_inst,
@@ -346,7 +344,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                 csr: dInst.csr,
                                 scr: dInst.scr,
                                 claimed_phy_reg: False, // no renaming is done
-                                trap: trapWithCap,
+                                trap: firstTrap,
                                 tval: tval,
                                 // default values of FullResult
                                 ppc_vaddr_csrData: PPC (cast(pc)), // default use PPC
@@ -675,7 +673,8 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                         data: MemRSData {
                             mem_func: mem_inst.mem_func,
                             imm: validValue(dInst.imm),
-                            ldstq_tag: lsqTag
+                            ldstq_tag: lsqTag,
+                            cap_checks: dInst.capChecks
                         },
                         regs: phy_regs,
                         tag: inst_tag,
@@ -1013,7 +1012,8 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                         data: MemRSData {
                                             mem_func: mem_inst.mem_func,
                                             imm: validValue(dInst.imm),
-                                            ldstq_tag: lsqTag
+                                            ldstq_tag: lsqTag,
+                                            cap_checks: dInst.capChecks
                                         },
                                         regs: phy_regs,
                                         tag: inst_tag,

@@ -2,6 +2,7 @@
 // This package implements utility functions used by the floating point
 // related logic
 package FP_Utils;
+import Types::*;
 import FloatingPoint::*;
 
 function FloatingPoint#(e,m) canonicalNaN = FloatingPoint{sign: False, exp: '1, sfd: 1 << (valueof(m)-1)};
@@ -19,6 +20,9 @@ function Bit #(64) fv_nanbox (Bit #(64) x);
    Bit #(64) fill_mask = (fill_bits << 32);  // [63:32] all ones
    return (x | fill_mask);
 endfunction
+function MemTaggedData fv_nanbox_MemTaggedData (MemTaggedData x) =
+  MemTaggedData { tag: x.tag
+                , data: dataToMemData(fv_nanbox(memDataToData(x.data))) };
 
 // Take a 64-bit value and check if it is properly nanboxed if operating in a DP
 // capable environment. If not properly nanboxed, return canonicalNaN32
@@ -28,7 +32,7 @@ function Float fv_unbox (Bit #(64) x);
       return (unpack (x [31:0]));
    else
       return (canonicalNaN);
-//`else  
+//`else
 //   return (unpack (x [31:0]));
 //`endif
 endfunction

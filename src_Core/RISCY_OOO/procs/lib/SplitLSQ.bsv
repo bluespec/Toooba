@@ -1,6 +1,6 @@
 
 // Copyright (c) 2018 Massachusetts Institute of Technology
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +8,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -128,7 +128,7 @@ typedef struct {
     Bool              isMMIO;
     // byte enable after shift to align with dword boudary. This is valid
     // for all types of memory accesses.
-    ByteEn            shiftedBE;
+    MemDataByteEn     shiftedBE;
 
     // ===================
     // Status bits of the Ld. Typically we don't need to reset any bit as the
@@ -220,12 +220,12 @@ typedef struct {
     Bool              isMMIO;
     // byte enable after shift to align with dword boudary. This is valid
     // for all types of memory accesses.
-    ByteEn            shiftedBE;
+    MemDataByteEn     shiftedBE;
     // St/Sc/Amo data
     // for St/Sc: store data after shift to align with dword boudary
     // for Amo: data is **NOT** shifted, this doesn't affect forwarding to Ld,
     // because AMO never forwards data
-    Data              stData;
+    MemTaggedData     stData;
 
     // ===================
     // status bits of St/Sc/Amo
@@ -260,7 +260,7 @@ typedef struct {
 
 typedef struct {
     Maybe#(PhyDst) dst;
-    Data data; // align with dword, not final result written to reg file
+    MemTaggedData data; // align with dword, not final result written to reg file
 } LSQForwardResult deriving(Bits, Eq, FShow);
 
 typedef enum {LdQ, StQ, SB} LdStalledBy deriving(Bits, Eq, FShow);
@@ -274,7 +274,7 @@ typedef union tagged {
 typedef struct {
     LdQTag tag;
     Addr paddr;
-    ByteEn shiftedBE;
+    MemDataByteEn shiftedBE;
 } LSQIssueLdInfo deriving(Bits, Eq, FShow);
 
 typedef struct {
@@ -283,7 +283,7 @@ typedef struct {
 `ifdef INCLUDE_TANDEM_VERIF
     InstTag instTag;    // For recording Ld data in ROB
 `endif
-    Data data;
+    MemTaggedData data;
 } LSQRespLdResult deriving(Bits, Eq, FShow);
 
 typedef struct {
@@ -295,14 +295,14 @@ typedef struct {
     LdQTag             tag;
     InstTag            instTag;
     LdQMemFunc         memFunc;
-    ByteEn             byteEn;
+    MemDataByteEn      byteEn;
     Bool               unsignedLd;
     Bool               acq;
     Bool               rel;
     Maybe#(PhyDst)     dst;
     Addr               paddr;
     Bool               isMMIO;
-    ByteEn             shiftedBE;
+    MemDataByteEn      shiftedBE;
     Maybe#(Exception)  fault;
     Maybe#(LdKilledBy) killed;
 } LdQDeqEntry deriving (Bits, Eq, FShow);
@@ -316,8 +316,8 @@ typedef struct {
     Maybe#(PhyDst)    dst;
     Addr              paddr;
     Bool              isMMIO;
-    ByteEn            shiftedBE;
-    Data              stData;
+    MemDataByteEn     shiftedBE;
+    MemTaggedData     stData;
     Maybe#(Exception) fault;
 } StQDeqEntry deriving (Bits, Eq, FShow);
 
@@ -336,29 +336,29 @@ interface SplitLSQ;
                         Maybe#(PhyDst) dst,
                         SpecBits spec_bits);
     // A mem inst needs orignal BE (not shifted) at addr translation
-    method ByteEn getOrigBE(LdStQTag t);
+    method MemDataByteEn getOrigBE(LdStQTag t);
     // Retrieve information when we want to wakeup RS early in case
     // Ld/Lr/Sc/Amo hits in cache
     method ActionValue#(LSQHitInfo) getHit(LdStQTag t);
     // update store data (shifted for St and Sc, unshifted for AMO). XXX we
     // assume data is updated before addr is updated
-    method Action updateData(StQTag t, Data d);
+    method Action updateData(StQTag t, MemTaggedData d);
     // Update addr after address translation. Also search for the (oldest)
     // younger load to kill. Return if the entry is waiting for wrong path
     // resp, so Ld can be issued immediately.
     method ActionValue#(LSQUpdateAddrResult) updateAddr(
         LdStQTag lsqTag, Maybe#(Exception) fault,
         // below are only meaningful wen fault is Invalid
-        Addr paddr, Bool isMMIO, ByteEn shiftedBE
+        Addr paddr, Bool isMMIO, MemDataByteEn shiftedBE
     );
     // Issue a load, and remove dependence on this load issue.
     method ActionValue#(LSQIssueLdResult) issueLd(
-        LdQTag lsqTag, Addr paddr, ByteEn shiftedBE, SBSearchRes sbRes
+        LdQTag lsqTag, Addr paddr, MemDataByteEn shiftedBE, SBSearchRes sbRes
     );
     // Get the load to issue
     method ActionValue#(LSQIssueLdInfo) getIssueLd;
     // Get load resp
-    method ActionValue#(LSQRespLdResult) respLd(LdQTag t, Data alignedData);
+    method ActionValue#(LSQRespLdResult) respLd(LdQTag t, MemTaggedData alignedData);
     // Deq LQ entry, and wakeup stalled loads. The guard checks the following:
     // (1) valid
     // (2) one of the following is true:
@@ -444,7 +444,7 @@ endinterface
 typedef Bit#(TLog#(TMul#(2, LdQSize))) LdQVirTag;
 typedef Bit#(TLog#(TMul#(2, StQSize))) StQVirTag;
 
-typedef Bit#(TSub#(AddrSz, TLog#(NumBytes))) DataAlignedAddr;
+typedef Bit#(TSub#(AddrSz, TLog#(MemDataBytes))) DataAlignedAddr;
 function DataAlignedAddr getDataAlignedAddr(Addr a) = truncateLSB(a);
 
 // whether two memory accesses are to the same dword
@@ -453,28 +453,30 @@ function Bool sameAlignedAddr(Addr a, Addr b);
 endfunction
 
 // whether two memory accesses overlap
-function Bool overlapAddr(Addr addr_1, ByteEn shift_be_1,
-                          Addr addr_2, ByteEn shift_be_2);
+function Bool overlapAddr(Addr addr_1, MemDataByteEn shift_be_1,
+                          Addr addr_2, MemDataByteEn shift_be_2);
     Bool be_overlap = (pack(shift_be_1) & pack(shift_be_2)) != 0;
     return be_overlap && sameAlignedAddr(addr_1, addr_2);
 endfunction
 
 // check shiftBE1 covers shiftBE2
-function Bool be1CoverBe2(ByteEn shift_be_1, ByteEn shift_be_2);
+function Bool be1CoverBe2(MemDataByteEn shift_be_1, MemDataByteEn shift_be_2);
     return (pack(shift_be_1) & pack(shift_be_2)) == pack(shift_be_2);
 endfunction
 
 // check whether mem op addr is aligned w.r.t data size
-function Bool checkAddrAlign(Addr paddr, ByteEn be);
-    Bit#(TLog#(NumBytes)) byteOffset = truncate(paddr);
-    if(be[7]) begin
-        return byteOffset == 0;
+function Bool checkAddrAlign(Addr addr, MemDataByteEn byteEn);
+    if(byteEn[15]) begin
+        return addr[3:0] == 0;
     end
-    else if(be[3]) begin
-        return byteOffset[1:0] == 0;
+    else if(byteEn[7]) begin
+        return addr[2:0] == 0;
     end
-    else if(be[1]) begin
-        return byteOffset[0] == 0;
+    else if(byteEn[3]) begin
+        return addr[1:0] == 0;
+    end
+    else if(byteEn[1]) begin
+        return addr[0] == 0;
     end
     else begin
         return True;
@@ -614,13 +616,13 @@ module mkSplitLSQ(SplitLSQ);
     Vector#(LdQSize, Reg#(InstTag))                 ld_instTag         <- replicateM(mkRegU);
     Vector#(LdQSize, Reg#(LdQMemFunc))              ld_memFunc         <- replicateM(mkRegU);
     Vector#(LdQSize, Reg#(Bool))                    ld_unsigned        <- replicateM(mkRegU);
-    Vector#(LdQSize, Reg#(ByteEn))                  ld_byteEn          <- replicateM(mkRegU);
+    Vector#(LdQSize, Reg#(MemDataByteEn))           ld_byteEn          <- replicateM(mkRegU);
     Vector#(LdQSize, Reg#(Bool))                    ld_acq             <- replicateM(mkRegU);
     Vector#(LdQSize, Reg#(Bool))                    ld_rel             <- replicateM(mkRegU);
     Vector#(LdQSize, Reg#(Maybe#(PhyDst)))          ld_dst             <- replicateM(mkRegU);
     Vector#(LdQSize, Ehr#(2, Addr))                 ld_paddr           <- replicateM(mkEhr(?));
     Vector#(LdQSize, Ehr#(2, Bool))                 ld_isMMIO          <- replicateM(mkEhr(?));
-    Vector#(LdQSize, Ehr#(2, ByteEn))               ld_shiftedBE       <- replicateM(mkEhr(?));
+    Vector#(LdQSize, Ehr#(2, MemDataByteEn))        ld_shiftedBE       <- replicateM(mkEhr(?));
     Vector#(LdQSize, Ehr#(2, Maybe#(Exception)))    ld_fault           <- replicateM(mkEhr(?));
     Vector#(LdQSize, Ehr#(2, Bool))                 ld_computed        <- replicateM(mkEhr(?));
     Vector#(LdQSize, Ehr#(3, Bool))                 ld_inIssueQ        <- replicateM(mkEhr(?));
@@ -803,14 +805,14 @@ module mkSplitLSQ(SplitLSQ);
     Vector#(StQSize, Reg#(InstTag))                 st_instTag   <- replicateM(mkRegU);
     Vector#(StQSize, Reg#(StQMemFunc))              st_memFunc   <- replicateM(mkRegU);
     Vector#(StQSize, Reg#(AmoFunc))                 st_amoFunc   <- replicateM(mkRegU);
-    Vector#(StQSize, Reg#(ByteEn))                  st_byteEn    <- replicateM(mkRegU);
+    Vector#(StQSize, Reg#(MemDataByteEn))           st_byteEn    <- replicateM(mkRegU);
     Vector#(StQSize, Reg#(Bool))                    st_acq       <- replicateM(mkRegU);
     Vector#(StQSize, Reg#(Bool))                    st_rel       <- replicateM(mkRegU);
     Vector#(StQSize, Reg#(Maybe#(PhyDst)))          st_dst       <- replicateM(mkRegU);
     Vector#(StQSize, Ehr#(2, Addr))                 st_paddr     <- replicateM(mkEhr(?));
     Vector#(StQSize, Ehr#(2, Bool))                 st_isMMIO    <- replicateM(mkEhr(?));
-    Vector#(StQSize, Ehr#(2, ByteEn))               st_shiftedBE <- replicateM(mkEhr(?));
-    Vector#(StQSize, Ehr#(1, Data))                 st_stData    <- replicateM(mkEhr(?));
+    Vector#(StQSize, Ehr#(2, MemDataByteEn))        st_shiftedBE <- replicateM(mkEhr(?));
+    Vector#(StQSize, Ehr#(1, MemTaggedData))        st_stData    <- replicateM(mkEhr(?));
     Vector#(StQSize, Ehr#(2, Maybe#(Exception)))    st_fault     <- replicateM(mkEhr(?));
     Vector#(StQSize, Ehr#(2, Bool))                 st_computed  <- replicateM(mkEhr(?));
     Vector#(StQSize, Ehr#(2, Bool))                 st_verified  <- replicateM(mkEhr(?));
@@ -1373,7 +1375,7 @@ module mkSplitLSQ(SplitLSQ);
         endinterface);
     end
 
-    method ByteEn getOrigBE(LdStQTag t);
+    method MemDataByteEn getOrigBE(LdStQTag t);
         return (case(t) matches
             tagged Ld .tag: (ld_byteEn[tag]);
             tagged St .tag: (st_byteEn[tag]);
@@ -1498,7 +1500,7 @@ module mkSplitLSQ(SplitLSQ);
         wrongSpec_enq_conflict.wset(?);
     endmethod
 
-    method Action updateData(StQTag t, Data d);
+    method Action updateData(StQTag t, MemTaggedData d);
 `ifndef INORDER_CORE
         // in-order core allocates entry and write data in the same rule
         doAssert(st_valid_updData[t], "entry must be valid");
@@ -1509,7 +1511,7 @@ module mkSplitLSQ(SplitLSQ);
 
     method ActionValue#(LSQUpdateAddrResult) updateAddr(
         LdStQTag lsqTag, Maybe#(Exception) fault,
-        Addr pa, Bool mmio, ByteEn shift_be
+        Addr pa, Bool mmio, MemDataByteEn shift_be
     );
         // index vec for vector functions
         Vector#(LdQSize, LdQTag) idxVec = genWith(fromInteger);
@@ -1685,7 +1687,7 @@ module mkSplitLSQ(SplitLSQ);
 
     method ActionValue#(LSQIssueLdResult) issueLd(LdQTag tag,
                                                   Addr pa,
-                                                  ByteEn shift_be,
+                                                  MemDataByteEn shift_be,
                                                   SBSearchRes sbRes);
         if(verbose) begin
             $display("[LSQ - issueLd] ", fshow(tag), "; ", fshow(pa),
@@ -1974,7 +1976,7 @@ module mkSplitLSQ(SplitLSQ);
         return issueLdQ.first.data;
     endmethod
 
-    method ActionValue#(LSQRespLdResult) respLd(LdQTag t, Data alignedData);
+    method ActionValue#(LSQRespLdResult) respLd(LdQTag t, MemTaggedData alignedData);
         let res = LSQRespLdResult {
             wrongPath: False,
             dst: Invalid,
@@ -2009,8 +2011,9 @@ module mkSplitLSQ(SplitLSQ);
             let is32BitLd = (bEn[3] && !bEn[7]);
             res.dst = ld_dst[t];
             if (dst.Valid.isFpuReg && is32BitLd)
-               res.data = fv_nanbox (gatherLoad(ld_paddr_resp[t], ld_byteEn[t],
-                                                ld_unsigned[t], alignedData));
+               res.data = fv_nanbox_MemTaggedData(
+                 gatherLoad(ld_paddr_resp[t], ld_byteEn[t],
+                            ld_unsigned[t], alignedData));
             else
                res.data = gatherLoad(ld_paddr_resp[t], ld_byteEn[t],
                                      ld_unsigned[t], alignedData);

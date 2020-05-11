@@ -34,12 +34,6 @@ Bit#(3) memWU   = 3'b110;
 
 // Smaller decode functions
 function Maybe#(MemInst) decodeMemInst(Instruction inst);
-    MemInst mem_inst = MemInst{ mem_func: ?,
-                                amo_func: None,
-                                unsignedLd: False,
-                                byteEn: replicate(False),
-                                aq: False,
-                                rl: False };
     Bool illegalInst = False;
     Opcode opcode = unpackOpcode(inst[6:0]);
     let funct5 = inst[31:27];
@@ -48,7 +42,7 @@ function Maybe#(MemInst) decodeMemInst(Instruction inst);
     // mem_func + amo_func
     MemFunc mem_func = Ld;
     AmoFunc amo_func = None;
-    if (opcode == Load || opcode == LoadFp) begin
+    if (opcode == Load || opcode == LoadFp || opcode == MiscMem) begin
         mem_func = Ld;
     end else if (opcode == Store || opcode == StoreFp) begin
         mem_func = St;
@@ -100,25 +94,39 @@ function Maybe#(MemInst) decodeMemInst(Instruction inst);
         unsignedLd = True;
     end
 
+    Bool capWidth = (mem_func == St      && funct3 == 3'b100)
+                 || (opcode   == MiscMem && funct3 == 3'b010);
+
     // byteEn
     // TODO: Some combinations of operations and byteEn's are illegal.
     // They should be detected here.
-    ByteEn byteEn = replicate(False);
-    case (funct3)
-        memB, memBU : byteEn[0] = True;
-        memH, memHU : begin
-                          byteEn[0] = True;
-                          byteEn[1] = True;
-                      end
-        memW, memWU : begin
-                          byteEn[0] = True;
-                          byteEn[1] = True;
-                          byteEn[2] = True;
-                          byteEn[3] = True;
-                      end
-        memD        : byteEn = replicate(True);
-        default     : illegalInst = True;
-    endcase
+    MemDataByteEn byteEn = (capWidth) ? replicate(True):replicate(False);
+    if (!capWidth) begin
+        case (funct3)
+            memB, memBU : byteEn[0] = True;
+            memH, memHU : begin
+                              byteEn[0] = True;
+                              byteEn[1] = True;
+                          end
+            memW, memWU : begin
+                              byteEn[0] = True;
+                              byteEn[1] = True;
+                              byteEn[2] = True;
+                              byteEn[3] = True;
+                          end
+            memD        : begin
+                              byteEn[0] = True;
+                              byteEn[1] = True;
+                              byteEn[2] = True;
+                              byteEn[3] = True;
+                              byteEn[4] = True;
+                              byteEn[5] = True;
+                              byteEn[6] = True;
+                              byteEn[7] = True;
+                          end
+            default     : illegalInst = True;
+        endcase
+    end
 
     // aq + rl
     Bool aq = False;
@@ -138,12 +146,109 @@ function Maybe#(MemInst) decodeMemInst(Instruction inst);
                                 unsignedLd: unsignedLd,
                                 byteEn: byteEn,
                                 aq: aq,
-                                rl: rl } );
+                                rl: rl,
+                                reg_bounds: False } );
     end
 endfunction
 
+function Maybe#(MemInst) decodeCapMemInst(Instruction inst);
+    // This function trusts that its result will only be used by
+    // explicit capability instructions as identified by the primary
+    // decode case, and therefore does not attempt to return sensible
+    // defaults when the instruction is not a capability memory operation.
+    Bool illegalInst = False;
+    Bit#(7) funct7 = inst[31:25];
+    Bit#(5) mem_code = (funct7==f7_cap_Loads) ? inst[24:20]:inst[11:7];
+    Bool amo = unpack(mem_code[4]);
+    Bool bounds_from_register = unpack(mem_code[3]);
+    Bool unsind = unpack(mem_code[2]);
+    Bit#(2) width = mem_code[1:0];
+
+    Bool capWidth = (funct7 == f7_cap_Stores && unsind && width == 0);
+    if (funct7 == f7_cap_Loads && amo && width == 3) begin
+        capWidth = True;
+        amo = False;
+    end
+
+    // mem_func + amo_func
+    MemFunc mem_func = Ld;
+    AmoFunc amo_func = None;
+    if (funct7 == f7_cap_Loads) begin
+        mem_func = (amo) ? Lr:Ld;
+    end else if (funct7 == f7_cap_Stores) begin
+        mem_func = (amo) ? Sc:St;
+    end
+
+    // unsignedLd
+    // it doesn't matter if this is set to True for stores
+    Bool unsignedLd = unsind;
+
+    // byteEn
+    // TODO: Some combinations of operations and byteEn's are illegal.
+    // They should be detected here.
+    MemDataByteEn byteEn = (capWidth) ? replicate(True):replicate(False);
+    if (!capWidth) begin
+        case (width)
+            0 : byteEn[0] = True;
+            1 :   begin
+                      byteEn[0] = True;
+                      byteEn[1] = True;
+                  end
+            2 :   begin
+                      byteEn[0] = True;
+                      byteEn[1] = True;
+                      byteEn[2] = True;
+                      byteEn[3] = True;
+                  end
+            3 :   begin
+                      byteEn[0] = True;
+                      byteEn[1] = True;
+                      byteEn[2] = True;
+                      byteEn[3] = True;
+                      byteEn[4] = True;
+                      byteEn[5] = True;
+                      byteEn[6] = True;
+                      byteEn[7] = True;
+                      // In RV64 we don't allow unsigned double operations!
+                      if (unsind) illegalInst = True;
+                  end
+        endcase
+    end
+
+    if (illegalInst) begin
+        return tagged Invalid;
+    end else begin
+        return tagged Valid ( MemInst{
+                                mem_func: mem_func,
+                                amo_func: amo_func,
+                                unsignedLd: unsignedLd,
+                                byteEn: byteEn,
+                                aq: amo,
+                                rl: amo,
+                                reg_bounds: bounds_from_register} );
+    end
+endfunction
+
+function CapChecks memCapChecks(Bool cap_mode);
+    CapChecks capChecks = unpack(0);
+    capChecks.check_enable = True;
+    capChecks.check_low_src = Vaddr;
+    capChecks.check_high_src = VaddrPlusSize; // Should add the access size somehow...
+    capChecks.check_inclusive = True;
+    if (cap_mode) begin
+        capChecks.check_authority_src = Src1;
+        capChecks.src1_tag = True;
+        capChecks.src1_unsealed = True;
+    end else begin
+        capChecks.check_authority_src = Ddc;
+        capChecks.ddc_tag = True;
+        capChecks.ddc_unsealed = True;
+    end
+    return capChecks;
+endfunction
+
 (* noinline *)
-function DecodeResult decode(Instruction inst);
+function DecodeResult decode(Instruction inst, Bool cap_mode);
     RiscVISASubset isa = defaultValue;
 
     // initialize dInst with default values
@@ -190,6 +295,7 @@ function DecodeResult decode(Instruction inst);
 
     // Results of mini-decoders
     Maybe#(MemInst) mem_inst = decodeMemInst(inst);
+    Maybe#(MemInst) cap_mem_inst = decodeCapMemInst(inst);
 
     // TODO better detection of illegal insts
     case (opcode)
@@ -372,6 +478,11 @@ function DecodeResult decode(Instruction inst);
             dInst.imm = Valid(immJ);
             dInst.csr = tagged Invalid;
             dInst.execFunc = tagged Br AT;
+            dInst.capChecks.check_enable = True;
+            dInst.capChecks.check_authority_src = Pcc;
+            dInst.capChecks.check_low_src = Src1Addr;
+            dInst.capChecks.check_high_src = Src1AddrPlus2;
+            dInst.capChecks.check_inclusive = True;
         end
 
         Jalr: begin
@@ -382,6 +493,11 @@ function DecodeResult decode(Instruction inst);
             dInst.imm = Valid(immI);
             dInst.csr = tagged Invalid;
             dInst.execFunc = tagged Br AT;
+            dInst.capChecks.check_enable = True;
+            dInst.capChecks.check_authority_src = Pcc;
+            dInst.capChecks.check_low_src = Src1Addr;
+            dInst.capChecks.check_high_src = Src1AddrPlus2;
+            dInst.capChecks.check_inclusive = True;
         end
 
         Branch: begin
@@ -399,6 +515,11 @@ function DecodeResult decode(Instruction inst);
             regs.src2 = Valid(tagged Gpr rs2);
             dInst.imm = Valid(immB);
             dInst.csr = tagged Invalid;
+            dInst.capChecks.check_enable = True;
+            dInst.capChecks.check_authority_src = Pcc;
+            dInst.capChecks.check_low_src = Src1Addr;
+            dInst.capChecks.check_high_src = Src1AddrPlus2;
+            dInst.capChecks.check_inclusive = True;
         end
 
         Load: begin
@@ -413,6 +534,7 @@ function DecodeResult decode(Instruction inst);
             regs.src2 = Invalid;
             dInst.imm = Valid(immI);
             dInst.csr = tagged Invalid;
+            dInst.capChecks = memCapChecks(cap_mode);
         end
 
         Store: begin
@@ -427,6 +549,7 @@ function DecodeResult decode(Instruction inst);
             regs.src2 = Valid(tagged Gpr rs2);
             dInst.imm = Valid(immS);
             dInst.csr = tagged Invalid;
+            dInst.capChecks = memCapChecks(cap_mode);
         end
 
         Amo: begin
@@ -582,6 +705,7 @@ function DecodeResult decode(Instruction inst);
                 regs.src2 = Invalid;
                 dInst.imm = Valid(immI);
                 dInst.csr = tagged Invalid;
+                dInst.capChecks = memCapChecks(cap_mode);
             end
         end
         StoreFp: begin
@@ -602,6 +726,7 @@ function DecodeResult decode(Instruction inst);
                 regs.src2 = Valid(tagged Fpu rs2);
                 dInst.imm = Valid(immS);
                 dInst.csr = tagged Invalid;
+                dInst.capChecks = memCapChecks(cap_mode);
             end
         end
         Fmadd, Fmsub, Fnmsub, Fnmadd: begin
@@ -637,6 +762,11 @@ function DecodeResult decode(Instruction inst);
         end
 
         MiscMem: begin
+            regs.dst  = Invalid;
+            regs.src1 = Invalid;
+            regs.src2 = Invalid;
+            dInst.imm  = Invalid;
+            dInst.csr  = Invalid;
             case (funct3)
                 fnFENCEI: begin
                     dInst.iType = FenceI;
@@ -672,7 +802,8 @@ function DecodeResult decode(Instruction inst);
                             unsignedLd: False,
                             byteEn: replicate(False),
                             aq: reconcile,
-                            rl: commit
+                            rl: commit,
+                            reg_bounds: False // unused
                         });
                     end
                     else begin
@@ -680,13 +811,22 @@ function DecodeResult decode(Instruction inst);
                         dInst.execFunc = tagged Other;
                     end
                 end
+                fnLC: begin
+                    dInst.iType = Ld;
+                    if (isValid(mem_inst)) begin
+                        dInst.execFunc = tagged Mem fromMaybe(?, mem_inst);
+                    end else begin
+                        illegalInst = True;
+                    end
+                    regs.dst  = Valid(tagged Gpr rd);
+                    regs.src1 = Valid(tagged Gpr rs1);
+                    regs.src2 = Invalid;
+                    dInst.imm = Valid(immI);
+                    dInst.csr = tagged Invalid;
+                    dInst.capChecks = memCapChecks(cap_mode);
+                end
                 default: illegalInst = True;
             endcase
-            regs.dst  = Invalid;
-            regs.src1 = Invalid;
-            regs.src2 = Invalid;
-            dInst.imm  = Invalid;
-            dInst.csr  = Invalid;
         end
 
         System: begin
@@ -1029,12 +1169,28 @@ function DecodeResult decode(Instruction inst);
                             dInst.capFunc = CapModify (BuildCap);
                         end
                         f7_cap_Loads: begin
-                            illegalInst = True;
-                            //TODO
+                            dInst.iType = Ld;
+                            MemInst mi = cap_mem_inst.Valid;
+                            if (isValid(cap_mem_inst)) dInst.execFunc = tagged Mem mi;
+                            else illegalInst = True;
+                            regs.dst  = Valid(tagged Gpr rd);
+                            regs.src1 = Valid(tagged Gpr rs1);
+                            regs.src2 = Invalid;
+                            dInst.imm = Valid (0);
+                            dInst.csr = tagged Invalid;
+                            dInst.capChecks = memCapChecks(mi.reg_bounds);
                         end
                         f7_cap_Stores: begin
-                            illegalInst = True;
-                            //TODO
+                            dInst.iType = St;
+                            MemInst mi = cap_mem_inst.Valid;
+                            if (isValid(cap_mem_inst)) dInst.execFunc = tagged Mem mi;
+                            else illegalInst = True;
+                            regs.dst  = Invalid;
+                            regs.src1 = Valid(tagged Gpr rs1);
+                            regs.src2 = Valid(tagged Gpr rs2);
+                            dInst.imm = Valid (0);
+                            dInst.csr = tagged Invalid;
+                            dInst.capChecks = memCapChecks(mi.reg_bounds);
                         end
                         f7_cap_TwoOp: begin
                             case (funct5rs2)
@@ -1133,7 +1289,7 @@ function DecodeResult decode(Instruction inst);
                                     dInst.capChecks.check_authority_src = Src1;
                                     dInst.capChecks.check_low_src = Src1Addr;
                                     dInst.capChecks.check_high_src = Src1AddrPlus2;
-                                    dInst.capChecks.check_inclusive = False;
+                                    dInst.capChecks.check_inclusive = True;
 
                                     dInst.iType = CJALR;
                                     dInst.execFunc = tagged Br AT;
@@ -1163,13 +1319,14 @@ function DecodeResult decode(Instruction inst);
                     illegalInst = True;
                 end
             endcase
-            dInst.capChecks.rn1 = {1'b0, regs.src1.Valid.Gpr};
-            dInst.capChecks.rn2 = {1'b0, regs.src2.Valid.Gpr};
         end
         default: begin
             illegalInst = True;
         end
     endcase
+
+    dInst.capChecks.rn1 = {1'b0, regs.src1.Valid.Gpr};
+    dInst.capChecks.rn2 = {1'b0, regs.src2.Valid.Gpr};
 
     // XXX to ensure renaming + phy regs works correctly, must remove any write
     // to x0

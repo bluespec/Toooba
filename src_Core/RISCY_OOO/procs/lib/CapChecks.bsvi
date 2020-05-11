@@ -1,6 +1,8 @@
+`CAP_CHECK_FIELD(ddc_tag,"ddc_tag")
 `CAP_CHECK_FIELD(src1_tag,"src1_tag")
 `CAP_CHECK_FIELD(src2_tag,"src2_tag")
 `CAP_CHECK_FIELD(src1_sealed_with_type,"src1_sealed_with_type")
+`CAP_CHECK_FIELD(ddc_unsealed,"ddc_unsealed")
 `CAP_CHECK_FIELD(src1_unsealed,"src1_unsealed")
 `CAP_CHECK_FIELD(src2_unsealed,"src2_unsealed")
 `CAP_CHECK_FIELD(src1_sealed,"src1_sealed")

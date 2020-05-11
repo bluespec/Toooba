@@ -30,18 +30,21 @@ import CHERICC_Fat::*;
 import ISA_Decls_CHERI::*;
 
 (* noinline *)
-function Maybe#(CapException) capChecks(CapPipe a, CapPipe b, CapChecks toCheck, CapPipe pcc_end);
-    function Maybe#(CapException) e1(CHERIException e) = Valid(CapException{cheri_exc_reg: toCheck.rn1, cheri_exc_code: e});
-    function Maybe#(CapException) e2(CHERIException e) = Valid(CapException{cheri_exc_reg: toCheck.rn2, cheri_exc_code: e});
-    Maybe#(CapException) result = Invalid;
-    if      (!isInBounds(pcc_end, True))
-        result = Valid(CapException{cheri_exc_reg: {1'b1,pack(SCR_PCC)}, cheri_exc_code: LengthViolation});
+function Maybe#(CSR_XCapCause) capChecks(CapPipe a, CapPipe b, CapPipe ddc, CapChecks toCheck);
+    function Maybe#(CSR_XCapCause) e1(CHERIException e)   = Valid(CSR_XCapCause{cheri_exc_reg: toCheck.rn1, cheri_exc_code: e});
+    function Maybe#(CSR_XCapCause) e2(CHERIException e)   = Valid(CSR_XCapCause{cheri_exc_reg: toCheck.rn2, cheri_exc_code: e});
+    function Maybe#(CSR_XCapCause) eDDC(CHERIException e) = Valid(CSR_XCapCause{cheri_exc_reg: 6'b100001, cheri_exc_code: e}); // Not sure where the proper reg number of DDC is stored...
+    Maybe#(CSR_XCapCause) result = Invalid;
+    if (toCheck.ddc_tag                       && !isValidCap(ddc))
+        result = eDDC(TagViolation);
     else if (toCheck.src1_tag                 && !isValidCap(a))
         result = e1(TagViolation);
     else if (toCheck.src2_tag                 && !isValidCap(b))
         result = e2(TagViolation);
     else if (toCheck.src1_sealed_with_type    && getKind(a) != SEALED_WITH_TYPE)
         result = e1(SealViolation);
+    else if (toCheck.ddc_unsealed             && isValidCap(ddc) && isSealed(ddc))
+        result = eDDC(SealViolation);
     else if (toCheck.src1_unsealed            && isValidCap(a) && isSealed(a))
         result = e1(SealViolation);
     else if (toCheck.src2_unsealed            && isValidCap(b) && isSealed(b))
@@ -73,12 +76,14 @@ function Maybe#(CapException) capChecks(CapPipe a, CapPipe b, CapChecks toCheck,
     else if (toCheck.src1_derivable           && !isDerivable(a))
         result = e1(LengthViolation);
     else if (toCheck.scr_read_only            && (toCheck.rn1 != 0))
-        result = Valid(CapException{cheri_exc_reg: {1,pack(SCR_PCC)}, cheri_exc_code: PermitASRViolation});
+        result = Valid(CSR_XCapCause{cheri_exc_reg: {1,pack(SCR_PCC)}, cheri_exc_code: PermitASRViolation});
     return result;
 endfunction
 
 (* noinline *)
-function Maybe#(BoundsCheck) prepareBoundsCheck(CapPipe a, CapPipe b, CapChecks toCheck);
+function Maybe#(BoundsCheck) prepareBoundsCheck(CapPipe a, CapPipe b, CapPipe pcc,
+                                                CapPipe ddc, Data vaddr, Bit#(5) size, // These two are only used in the memory pipe. May factor into two functions later.
+                                                CapChecks toCheck);
     BoundsCheck ret = ?;
     CapPipe authority = ?;
     case(toCheck.check_authority_src)
@@ -90,6 +95,14 @@ function Maybe#(BoundsCheck) prepareBoundsCheck(CapPipe a, CapPipe b, CapChecks 
             authority = b;
             ret.authority_idx = toCheck.rn2;
         end
+        Pcc: begin
+            authority = pcc;
+            ret.authority_idx = 6'b100000; // Not sure where the register number of PCC is defined...
+        end
+        Ddc: begin
+            authority = ddc;
+            ret.authority_idx = 6'b100001; // Not sure where the register number of PCC is defined...
+        end
     endcase
     ret.authority_base = getBase(authority);
     ret.authority_top = getTop(authority);
@@ -99,6 +112,7 @@ function Maybe#(BoundsCheck) prepareBoundsCheck(CapPipe a, CapPipe b, CapChecks 
         Src1Base: ret.check_low = getBase(a);
         Src2Addr: ret.check_low = getAddr(b);
         Src2Type: ret.check_low = zeroExtend(getType(b));
+        Vaddr:    ret.check_low = vaddr;
     endcase
 
     case(toCheck.check_high_src)
@@ -107,6 +121,7 @@ function Maybe#(BoundsCheck) prepareBoundsCheck(CapPipe a, CapPipe b, CapChecks 
         Src2Addr: ret.check_high = {1'b0,getAddr(b)};
         Src2Type: ret.check_high = zeroExtend(getType(b));
         ResultTop: ret.check_high = {1'b0,getAddr(a)} + {1'b0,getAddr(b)};
+        VaddrPlusSize: ret.check_high = {1'b0,vaddr} + zeroExtend(size);
     endcase
 
     ret.check_inclusive = toCheck.check_inclusive;
@@ -267,7 +282,7 @@ function CapPipe brAddrCalc(CapPipe pc, CapPipe val, IType iType, Data imm, Bool
             Br      : (taken? branchTarget : pcPlusN);
             default : pcPlusN;
         endcase);
-    return targetAddr;
+    return setType(targetAddr, -1);
 endfunction
 /*
 (* noinline *)
@@ -304,14 +319,21 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
 
     CapPipe cap_alu_result = capALU(rVal1, aluVal2, dInst.capFunc);
     CapPipe link_pcc = addPc(pcc, ((orig_inst [1:0] == 2'b11) ? 4 : 2));
-    Maybe#(CapException) capException = capChecks(rVal1, aluVal2, dInst.capChecks, link_pcc);
-    Maybe#(BoundsCheck) boundsCheck = prepareBoundsCheck(rVal1, aluVal2, dInst.capChecks);
 
     // Default branch function is not taken
     BrFunc br_f = dInst.execFunc matches tagged Br .br_f ? br_f : NT;
     cf.taken = aluBr(getAddr(rVal1), getAddr(rVal2), br_f);
     cf.nextPc = brAddrCalc(pcc, rVal1, dInst.iType, fromMaybe(0,getDInstImm(dInst)), cf.taken, orig_inst, newPcc);
+    if (dInst.execFunc matches tagged Br .unused) begin
+        rVal1 = cf.nextPc;
+        if (!cf.taken) dInst.capChecks.check_enable = False;
+    end
     cf.mispredict = cf.nextPc != ppc;
+
+    Maybe#(CSR_XCapCause) capException = capChecks(rVal1, aluVal2, nullCap, dInst.capChecks);
+    Maybe#(BoundsCheck) boundsCheck = prepareBoundsCheck(rVal1, aluVal2, pcc,
+                                                         nullCap, 0, 0, // These three are only used in the memory pipe
+                                                         dInst.capChecks);
 
     data = (case (dInst.iType) matches
             St          : rVal2;
@@ -339,10 +361,12 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
 endfunction
 
 (* noinline *)
-function Maybe#(Exception) checkForException(
+function Maybe#(Trap) checkForException(
     DecodedInst dInst,
     ArchRegs regs,
-    CsrDecodeInfo csrState
+    CsrDecodeInfo csrState,
+    CapMem pcc,
+    Bool fourByteInst
 ); // regs needed to check if x0 is a src
     Maybe#(Exception) exception = Invalid;
     let prv = csrState.prv;
@@ -425,12 +449,24 @@ function Maybe#(Exception) checkForException(
         end
     end
 
-    return exception;
+    // Check that the end of the instruction is in bounds of PCC.
+    CapPipe pcc_end = cast(addPc(pcc, (fourByteInst?4:2)));
+    Maybe#(CSR_XCapCause) capException = Invalid;
+    if (!isInBounds(pcc_end, True)) capException = Valid(CSR_XCapCause{cheri_exc_reg: {1'b1,pack(SCR_PCC)}, cheri_exc_code: LengthViolation});
+
+    Maybe#(Trap) retval = Invalid;
+    if (capException matches tagged Valid .ce) retval = Valid(CapException(ce));
+    else if (exception matches tagged Valid .e) retval = Valid(Exception(e));
+
+    return retval;
 endfunction
 
 // check mem access misaligned: byteEn is unshifted (just from Decode)
-function Bool memAddrMisaligned(Addr addr, ByteEn byteEn);
-    if(byteEn[7]) begin
+function Bool memAddrMisaligned(Addr addr, MemDataByteEn byteEn);
+    if(byteEn[15]) begin
+        return addr[3:0] != 0;
+    end
+    else if(byteEn[7]) begin
         return addr[2:0] != 0;
     end
     else if(byteEn[3]) begin
@@ -444,21 +480,24 @@ function Bool memAddrMisaligned(Addr addr, ByteEn byteEn);
     end
 endfunction
 
-function Data gatherLoad(Addr addr, ByteEn byteEn, Bool unsignedLd, Data data);
+function MemTaggedData gatherLoad( Addr addr, MemDataByteEn byteEn
+                                 , Bool unsignedLd, MemTaggedData data);
     function extend = unsignedLd ? zeroExtend : signExtend;
     Bit#(IndxShamt) offset = truncate(addr);
 
-    if(byteEn[7]) begin
-        return extend(data);
+    if(pack(byteEn) == ~0) return data;
+    else if(byteEn[7]) begin
+        Vector#(2, Bit#(64)) dataVec = unpack(pack(data.data));
+        return dataToMemTaggedData(extend(dataVec[offset[3]]));
     end else if(byteEn[3]) begin
-        Vector#(2, Bit#(32)) dataVec = unpack(data);
-        return extend(dataVec[offset[2]]);
+        Vector#(4, Bit#(32)) dataVec = unpack(pack(data.data));
+        return dataToMemTaggedData(extend(dataVec[offset[3:2]]));
     end else if(byteEn[1]) begin
-        Vector#(4, Bit#(16)) dataVec = unpack(data);
-        return extend(dataVec[offset[2:1]]);
+        Vector#(8, Bit#(16)) dataVec = unpack(pack(data.data));
+        return dataToMemTaggedData(extend(dataVec[offset[3:1]]));
     end else begin
-        Vector#(8, Bit#(8)) dataVec = unpack(data);
-        return extend(dataVec[offset]);
+        Vector#(16, Bit#(8)) dataVec = unpack(pack(data.data));
+        return dataToMemTaggedData(extend(dataVec[offset]));
     end
 endfunction
 
