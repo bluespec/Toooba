@@ -309,9 +309,9 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
         end
         // when inst needs to store scrData in ROB, it must have iType = Scr, cannot mispredict
         if(isValid(x.dInst.scr)) begin
-            doAssert(x.dInst.iType == Scr, "Only Scr inst needs to update scrData in ROB");
+            // doAssert(x.dInst.iType == Scr, "Only Scr inst needs to update scrData in ROB"); // Removed because normal instructions can read SCRs
             doAssert(!exec_result.controlFlow.mispredict, "Scr inst cannot mispredict");
-            doAssert(cast(exec_result.controlFlow.nextPc) == x.ppc && x.ppc == addPc(x.pc, 4), "Csr inst ppc = pc+4");
+            doAssert(cast(exec_result.controlFlow.nextPc) == x.ppc && x.ppc == addPc(x.pc, 4), "Scr inst ppc = pc+4");
         end
 
         // send bypass
