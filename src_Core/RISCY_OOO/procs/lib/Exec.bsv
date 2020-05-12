@@ -429,10 +429,9 @@ function Maybe#(Trap) checkForException(
             exception = Valid (IllegalInst);
         end
     end
-    else if(dInst.iType == Scr) begin
-        let scr = pack(fromMaybe(SCR_None, dInst.scr));
-        Bool scr_has_priv = (prv >= scr[4:3]);
-        Bool unimplemented = (scr == pack(SCR_None));    // Added by Bluespec
+    else if(dInst.scr matches tagged Valid .scr) begin
+        Bool scr_has_priv = (prv >= pack(scr)[4:3]);
+        Bool unimplemented = (scr == SCR_None);
         if(!scr_has_priv || unimplemented) begin // Writes to PCC checked in capChecks
             exception = Valid (IllegalInst);
         end
