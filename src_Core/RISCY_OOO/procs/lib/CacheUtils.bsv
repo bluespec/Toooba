@@ -52,6 +52,12 @@ typedef struct {
   Vector#(CLineNumMemTaggedData, MemTag) tag;
   Vector#(CLineNumMemTaggedData, MemData) data;
 } CLine deriving (Bits, Eq, FShow);
+function Vector#(CLineNumMemTaggedData, MemTaggedData) clineToMemTaggedDataVector(CLine line);
+  function f(x,y) = MemTaggedData{tag: x, data: y};
+  return zipWith(f, line.tag, line.data);
+endfunction
+function CLine memTaggedDataVectorToCline(Vector#(CLineNumMemTaggedData, MemTaggedData) line) =
+  CLine{tag: map(getTag, line), data: map(getData, line)};
 function Data getDataAt(CLine line, CLineDataSel sel);
   Vector#(CLineNumData, Data) data = unpack(pack(line.data));
   return data[sel];
@@ -184,4 +190,3 @@ instance Connectable#(FifoDeq#(t), FifoEnq#(t));
         mkConnection(toGet(deq), toPut(enq));
     endmodule
 endinstance
-

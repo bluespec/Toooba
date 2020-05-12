@@ -118,20 +118,10 @@ function LineInstOffset getLineInstOffset(Addr a);
 endfunction
 
 function Line getUpdatedLine(Line curLine, LineByteEn wrBE, Line wrLine);
-    // handle data merge
-    Vector#(LineSzBytes, Bit#(8)) newDataVec = mergeDataBE(curLine.data, wrLine.data, wrBE);
-    // handle tag merge
-    Vector#(CLineNumMemTaggedData, MemTag) curTagVec = curLine.tag;
-    Vector#(CLineNumMemTaggedData, MemTag) wrTagVec = wrLine.tag;
-    function MemTag getNewTag(Integer i);
-        let res = curTagVec[i];
-        if (pack(wrBE[i]) == ~0) res = wrTagVec[i];
-        return res;
-    endfunction
-    Vector#(CLineNumMemTaggedData, MemTag) newTagVec = genWith(getNewTag);
-    // compose updated line
-    return CLine { tag:  newTagVec
-                 , data: unpack(pack(newDataVec)) };
+    let curLineMem = clineToMemTaggedDataVector(curLine);
+    let wrLineMem  = clineToMemTaggedDataVector(wrLine);
+    let newLineMem = zipWith3(mergeMemTaggedDataBE, curLineMem, wrLineMem, wrBE);
+    return memTaggedDataVectorToCline(newLineMem);
 endfunction
 
 // calculate tag

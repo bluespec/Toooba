@@ -53,6 +53,8 @@ function Maybe#(CSR_XCapCause) capChecks(CapPipe a, CapPipe b, CapPipe ddc, CapC
         result = e1(SealViolation);
     else if (toCheck.src2_sealed              && isValidCap(b) && !isSealed(b))
         result = e2(SealViolation);
+    else if (toCheck.src1_type_not_reserved   && !validAsType(a, zeroExtend(getType(a))))
+        result = e1(TypeViolation);
     else if (toCheck.src1_src2_types_match    && getType(a) != getType(b))
         result = e1(TypeViolation);
     else if (toCheck.src1_permit_ccall        && !getHardPerms(a).permitCCall)
@@ -71,8 +73,6 @@ function Maybe#(CSR_XCapCause) capChecks(CapPipe a, CapPipe b, CapPipe ddc, CapC
         result = e2(TypeViolation);
     else if (toCheck.src2_addr_valid_type     && !validAsType(b, truncate(getAddr(b))))
         result = e2(LengthViolation);
-    else if (toCheck.src1_type_not_reserved   && !validAsType(a, zeroExtend(getType(a))))
-        result = e1(TypeViolation);
     else if (toCheck.src1_perm_subset_src2    && (getPerms(a) & getPerms(b)) != getPerms(a))
         result = e2(SoftwarePermViolation);
     else if (toCheck.src1_derivable           && !isDerivable(a))

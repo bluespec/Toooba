@@ -476,7 +476,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             Addr addr, MemDataByteEn be, MemTaggedData d);
             Bit#(TLog#(MemDataBytes)) byteOffset = truncate(addr);
             return tuple2(unpack(pack(be) << byteOffset), MemTaggedData {
-                           tag: (byteOffset == 0) ? d.tag : False
+                           tag: (byteOffset == 0 && be == replicate(True)) ? d.tag : False
                          , data: unpack(pack(d.data) << {byteOffset, 3'b0})});
         endfunction
         let {shiftBE, shiftData} = getShiftedBEData(getAddr(vaddr), origBE, toMemData);
