@@ -237,7 +237,7 @@ function Data capInspect(CapPipe a, CapPipe b, CapInspectFunc func);
                tagged GetPerm                :
                    zeroExtend(getPerms(a));
                tagged GetType                :
-                   signExtend(getType(a));
+                   {(validAsType(a, zeroExtend(getType(a)))) ? 0:-1, getType(a)};
                tagged ToPtr                  :
                    (isValidCap(a) ? (getAddr(a) - getBase(b)) : 0);
                default: ?;
