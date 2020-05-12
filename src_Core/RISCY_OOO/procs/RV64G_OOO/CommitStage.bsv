@@ -37,7 +37,6 @@ import ReorderBuffer::*;
 import ReorderBufferSynth::*;
 import RenamingTable::*;
 import CsrFile::*;
-import ScrFile::*;
 import StoreBuffer::*;
 import VerificationPacket::*;
 import RenameDebugIF::*;

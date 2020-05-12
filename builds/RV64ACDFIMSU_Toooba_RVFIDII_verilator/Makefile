@@ -12,7 +12,7 @@ CONNECTAL_DIRS = $(RISCY_HOME)/connectal/bsv:$(RISCY_HOME)/connectal/tests/spi:$
 
 RVFI_DII_DIRS = $(RISCY_HOME)/../../src_Verifier:$(RISCY_HOME)/../../src_Verifier/BSV-RVFI-DII
 
-CHERI_DIRS = $(RISCY_HOME)/../CHERI:$(RISCY_HOME)/../../libs/cheri-cap-lib
+CHERI_DIRS = $(RISCY_HOME)/../../libs/cheri-cap-lib
 
 # ALL_RISCY_DIRS = $(RISCY_DIRS)
 ALL_RISCY_DIRS = $(RISCY_DIRS):$(CONNECTAL_DIRS):$(RVFI_DII_DIRS):$(CHERI_DIRS)

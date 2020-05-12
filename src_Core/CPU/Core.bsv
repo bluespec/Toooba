@@ -88,7 +88,6 @@ import Toooba_RVFI_DII_Bridge::*;
 `endif
 
 import CsrFile :: *;
-import ScrFile :: *;
 
 // ================================================================
 // Toooba
