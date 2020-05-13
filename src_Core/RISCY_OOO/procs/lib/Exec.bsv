@@ -288,7 +288,7 @@ function CapPipe brAddrCalc(CapPipe pc, CapPipe val, IType iType, Data imm, Bool
             Br      : (taken? branchTarget : pcPlusN);
             default : pcPlusN;
         endcase);
-    return setKind(targetAddr, UNSEALED);
+    return targetAddr;
 endfunction
 /*
 (* noinline *)
@@ -334,12 +334,13 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
         rVal1 = cf.nextPc;
         if (!cf.taken) dInst.capChecks.check_enable = False;
     end
-    cf.mispredict = cf.nextPc != ppc;
 
     Maybe#(CSR_XCapCause) capException = capChecks(rVal1, aluVal2, nullCap, dInst.capChecks);
     Maybe#(BoundsCheck) boundsCheck = prepareBoundsCheck(rVal1, aluVal2, pcc,
                                                          nullCap, 0, 0, // These three are only used in the memory pipe
                                                          dInst.capChecks);
+    cf.nextPc = setKind(cf.nextPc, UNSEALED);
+    cf.mispredict = cf.nextPc != ppc;
 
     data = (case (dInst.iType) matches
             St          : rVal2;
