@@ -104,7 +104,7 @@ endfunction
 function CapPipe update_scr_via_csr (CapPipe old_scr, WordXL new_csr);
     let new_scr = setOffset(old_scr, new_csr);
     let ret = new_scr.value;
-    if (!new_scr.exact || isSealed(old_scr)) begin
+    if (!new_scr.exact || (getKind(old_scr) != UNSEALED)) begin
         ret = setValidCap(ret, False);
     end
     return ret;
@@ -224,3 +224,9 @@ Bit #(3) w_SIZE_MAX = f3_SD;
 `endif
 
 Bit #(3) f3_AMO_CAP = w_SIZE_CAP;
+
+// Special cases of Otypes that are extended to XLEN
+Bit #(XLEN) otype_unsealed_ext = -1;
+Bit #(XLEN) otype_sentry_ext = -2;
+Bit #(XLEN) otype_res0_ext = -3;
+Bit #(XLEN) otype_res1_ext = -4;

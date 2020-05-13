@@ -41,21 +41,19 @@ function Maybe#(CSR_XCapCause) capChecks(CapPipe a, CapPipe b, CapPipe ddc, CapC
         result = e1(TagViolation);
     else if (toCheck.src2_tag                 && !isValidCap(b))
         result = e2(TagViolation);
-    else if (toCheck.src1_sealed_with_type    && getKind(a) != SEALED_WITH_TYPE)
-        result = e1(SealViolation);
-    else if (toCheck.ddc_unsealed             && isValidCap(ddc) && isSealed(ddc))
+    else if (toCheck.ddc_unsealed             && isValidCap(ddc) && (getKind(ddc) != UNSEALED))
         result = eDDC(SealViolation);
-    else if (toCheck.src1_unsealed            && isValidCap(a) && isSealed(a))
+    else if (toCheck.src1_unsealed            && isValidCap(a) && (getKind(a) != UNSEALED))
         result = e1(SealViolation);
-    else if (toCheck.src2_unsealed            && isValidCap(b) && isSealed(b))
+    else if (toCheck.src2_unsealed            && isValidCap(b) && (getKind(b) != UNSEALED))
         result = e2(SealViolation);
-    else if (toCheck.src1_sealed              && isValidCap(a) && !isSealed(a))
+    else if (toCheck.src1_sealed_with_type    && (getKind (a) matches tagged SEALED_WITH_TYPE .t ? False : True))
         result = e1(SealViolation);
-    else if (toCheck.src2_sealed              && isValidCap(b) && !isSealed(b))
+    else if (toCheck.src2_sealed_with_type    && (getKind (b) matches tagged SEALED_WITH_TYPE .t ? False : True))
         result = e2(SealViolation);
-    else if (toCheck.src1_type_not_reserved   && !validAsType(a, zeroExtend(getType(a))))
+    else if (toCheck.src1_type_not_reserved   && !validAsType(a, zeroExtend(getKind(a).SEALED_WITH_TYPE)))
         result = e1(TypeViolation);
-    else if (toCheck.src1_src2_types_match    && getType(a) != getType(b))
+    else if (toCheck.src1_src2_types_match    && getKind(a).SEALED_WITH_TYPE != getKind(b).SEALED_WITH_TYPE)
         result = e1(TypeViolation);
     else if (toCheck.src1_permit_ccall        && !getHardPerms(a).permitCCall)
         result = e1(PermitCCallViolation);
@@ -69,7 +67,7 @@ function Maybe#(CSR_XCapCause) capChecks(CapPipe a, CapPipe b, CapPipe ddc, CapC
         result = e2(PermitUnsealViolation);
     else if (toCheck.src2_permit_seal         && !getHardPerms(b).permitSeal)
         result = e2(PermitSealViolation);
-    else if (toCheck.src2_points_to_src1_type && getAddr(b) != zeroExtend(getType(a)))
+    else if (toCheck.src2_points_to_src1_type && getAddr(b) != zeroExtend(getKind(a).SEALED_WITH_TYPE))
         result = e2(TypeViolation);
     else if (toCheck.src2_addr_valid_type     && !validAsType(b, truncate(getAddr(b))))
         result = e2(LengthViolation);
@@ -113,7 +111,7 @@ function Maybe#(BoundsCheck) prepareBoundsCheck(CapPipe a, CapPipe b, CapPipe pc
         Src1Addr: ret.check_low = getAddr(a);
         Src1Base: ret.check_low = getBase(a);
         Src2Addr: ret.check_low = getAddr(b);
-        Src2Type: ret.check_low = zeroExtend(getType(b));
+        Src2Type: ret.check_low = zeroExtend(getKind(b).SEALED_WITH_TYPE);
         Vaddr:    ret.check_low = vaddr;
     endcase
 
@@ -121,7 +119,7 @@ function Maybe#(BoundsCheck) prepareBoundsCheck(CapPipe a, CapPipe b, CapPipe pc
         Src1AddrPlus2: ret.check_high = {1'b0,getAddr(a)+2};
         Src1Top: ret.check_high = getTop(a);
         Src2Addr: ret.check_high = {1'b0,getAddr(b)};
-        Src2Type: ret.check_high = zeroExtend(getType(b));
+        Src2Type: ret.check_high = zeroExtend(getKind(b).SEALED_WITH_TYPE);
         ResultTop: ret.check_high = {1'b0,getAddr(a)} + {1'b0,getAddr(b)};
         VaddrPlusSize: ret.check_high = {1'b0,vaddr} + zeroExtend(size);
     endcase
@@ -190,12 +188,12 @@ function CapPipe capModify(CapPipe a, CapPipe b, CapModifyFunc func);
             tagged SpecialRW .scrType     :
                 b;
             tagged SetAddr .addrSource    :
-                if (addrSource == Src2Type && !isSealed(b)) return nullWithAddr(-1);
-                else return setAddr(a, (addrSource == Src2Type) ? zeroExtend(getType(b)) : getAddr(b) ).value;
+                if (addrSource == Src2Type && (getKind(b) == UNSEALED)) return nullWithAddr(-1); // TODO correct behaviour around reserved types
+                else return setAddr(a, (addrSource == Src2Type) ? zeroExtend(getKind(b).SEALED_WITH_TYPE) : getAddr(b) ).value;
             tagged Seal                   :
-                setType(a, truncate(getAddr(b)));
+                setKind(a, SEALED_WITH_TYPE (truncate(getAddr(b))));
             tagged Unseal .src            :
-                setType(((src == Src1) ? a:b), -1);
+                setKind(((src == Src1) ? a:b), UNSEALED);
             tagged AndPerm                :
                 setPerms(a, pack(getPerms(a)) & truncate(getAddr(b)));
             tagged SetFlags               :
@@ -203,7 +201,7 @@ function CapPipe capModify(CapPipe a, CapPipe b, CapModifyFunc func);
             //tagged FromPtr                :
             //     error("FromPtr not yet implemented");
             tagged BuildCap               :
-                setType(setValidCap(a, True),-1);
+                setKind(setValidCap(a, True),UNSEALED); // TODO preserve sentries
             tagged Move                   :
                 a;
             tagged ClearTag               :
@@ -227,7 +225,7 @@ function Data capInspect(CapPipe a, CapPipe b, CapInspectFunc func);
                tagged GetTag                 :
                    zeroExtend(pack(isValidCap(a)));
                tagged GetSealed              :
-                   zeroExtend(pack(isSealed(a)));
+                   zeroExtend(pack(getKind(a) != UNSEALED));
                tagged GetAddr                :
                    getAddr(a);
                tagged GetOffset              :
@@ -237,7 +235,13 @@ function Data capInspect(CapPipe a, CapPipe b, CapInspectFunc func);
                tagged GetPerm                :
                    zeroExtend(getPerms(a));
                tagged GetType                :
-                   {(validAsType(a, zeroExtend(getType(a)))) ? 0:-1, getType(a)};
+                   case (getKind(a)) matches
+                       tagged UNSEALED: otype_unsealed_ext;
+                       tagged SENTRY: otype_sentry_ext;
+                       tagged RES0: otype_res0_ext;
+                       tagged RES1: otype_res1_ext;
+                       tagged SEALED_WITH_TYPE .t: zeroExtend(t);
+                   endcase
                tagged ToPtr                  :
                    (isValidCap(a) ? (getAddr(a) - getBase(b)) : 0);
                default: ?;
@@ -284,7 +288,7 @@ function CapPipe brAddrCalc(CapPipe pc, CapPipe val, IType iType, Data imm, Bool
             Br      : (taken? branchTarget : pcPlusN);
             default : pcPlusN;
         endcase);
-    return setType(targetAddr, -1);
+    return setKind(targetAddr, UNSEALED);
 endfunction
 /*
 (* noinline *)
@@ -456,7 +460,7 @@ function Maybe#(Trap) checkForException(
     CapPipe pcc_start = cast(pcc);
     Maybe#(CSR_XCapCause) capException = Invalid;
     if (!isValidCap(pcc_start)) capException = Valid(CSR_XCapCause{cheri_exc_reg: {1'b1,pack(SCR_PCC)}, cheri_exc_code: TagViolation});
-    if (isSealed(pcc_start)) capException = Valid(CSR_XCapCause{cheri_exc_reg: {1'b1,pack(SCR_PCC)}, cheri_exc_code: SealViolation});
+    if (getKind(pcc_start) != UNSEALED) capException = Valid(CSR_XCapCause{cheri_exc_reg: {1'b1,pack(SCR_PCC)}, cheri_exc_code: SealViolation});
     if (!getHardPerms(pcc_start).permitExecute) capException = Valid(CSR_XCapCause{cheri_exc_reg: {1'b1,pack(SCR_PCC)}, cheri_exc_code: PermitXViolation});
     if (!isInBounds(pcc_end, True)) capException = Valid(CSR_XCapCause{cheri_exc_reg: {1'b1,pack(SCR_PCC)}, cheri_exc_code: LengthViolation});
     if (!isInBounds(pcc_start, True)) capException = Valid(CSR_XCapCause{cheri_exc_reg: {1'b1,pack(SCR_PCC)}, cheri_exc_code: LengthViolation});

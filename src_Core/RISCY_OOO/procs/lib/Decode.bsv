@@ -1024,8 +1024,8 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                                 rd_cap_CCall: begin
                                     dInst.capChecks.src1_tag = True;
                                     dInst.capChecks.src2_tag = True;
-                                    dInst.capChecks.src1_sealed = True;
-                                    dInst.capChecks.src2_sealed = True;
+                                    dInst.capChecks.src1_sealed_with_type = True;
+                                    dInst.capChecks.src2_sealed_with_type = True;
                                     dInst.capChecks.src1_src2_types_match = True;
                                     dInst.capChecks.src1_type_not_reserved = True;
                                     dInst.capChecks.src1_permit_x = True;
