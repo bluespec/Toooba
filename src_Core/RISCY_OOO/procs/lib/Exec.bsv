@@ -168,12 +168,20 @@ function CapPipe setBoundsALU(CapPipe cap, Data len, SetBoundsFunc boundsOp);
 endfunction
 
 (* noinline *)
-function CapPipe specialRWALU(CapPipe cap, SpecialRWFunc scrType);
+function CapPipe specialRWALU(CapPipe cap, CapPipe oldCap, SpecialRWFunc scrType);
+    function csrOp (oldOffset, val, f) =
+        case (f)
+            Write: val;
+            Set: (oldOffset | val);
+            Clear: (oldOffset & ~val);
+        endcase;
     let offset = getOffset(cap);
     CapPipe res = (case (scrType) matches
-        TCC: update_scr_via_csr(cap, offset & ~64'h2); // Mask out bit 1
-        EPCC: update_scr_via_csr(cap, offset & ~64'h1); // Mask out bit 0 TODO factor out update_scr_via_csr
-        Normal: cap;
+        tagged TVEC .csrf: update_scr_via_csr(oldCap, csrOp(offset, getAddr(cap), csrf) & ~64'h2);
+        tagged EPC .csrf: update_scr_via_csr(oldCap, csrOp(offset, getAddr(cap), csrf) & ~64'h1);
+        tagged TCC: update_scr_via_csr(cap, offset & ~64'h2); // Mask out bit 1
+        tagged EPCC: update_scr_via_csr(cap, offset & ~64'h1); // Mask out bit 0 TODO factor out update_scr_via_csr
+        tagged Normal: cap;
     endcase);
     return res;
 endfunction
@@ -186,7 +194,13 @@ function CapPipe capModify(CapPipe a, CapPipe b, CapModifyFunc func);
             tagged SetBounds .boundsOp    :
                 setBoundsALU(a, getAddr(b), boundsOp);
             tagged SpecialRW .scrType     :
-                b;
+                case (scrType) matches
+                    tagged TCC: b;
+                    tagged EPCC: b;
+                    tagged Normal: b;
+                    tagged TVEC ._: nullWithAddr(getOffset(b));
+                    tagged EPC ._: nullWithAddr(getOffset(b));
+                 endcase
             tagged SetAddr .addrSource    :
                 if (addrSource == Src2Type && (getKind(b) == UNSEALED)) return nullWithAddr(-1); // TODO correct behaviour around reserved types
                 else return setAddr(a, (addrSource == Src2Type) ? zeroExtend(getKind(b).SEALED_WITH_TYPE) : getAddr(b) ).value;
@@ -317,8 +331,8 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
     Bool newPcc = dInst.iType == CJALR || dInst.iType == CCall;
     ControlFlow cf = ControlFlow{pc: pcc, nextPc: nullCap, taken: False, newPcc: newPcc, mispredict: False};
 
-    CapPipe aluVal2 = rVal2;
-    if (getDInstImm(dInst) matches tagged Valid .imm) aluVal2 = nullWithAddr(imm); //isValid(dInst.imm) ? fromMaybe(?, dInst.imm) : rVal2;
+    Maybe#(CapPipe) capImm = isValid(getDInstImm(dInst)) ? Valid (nullWithAddr(getDInstImm(dInst).Valid)) : Invalid;
+    let aluVal2 = fromMaybe(rVal2, capImm);
     // Get the alu function. By default, it adds. This is used by memory instructions
     AluFunc alu_f = dInst.execFunc matches tagged Alu .alu_f ? alu_f : Add;
     Data alu_result = alu(getAddr(rVal1), getAddr(aluVal2), alu_f);
@@ -350,8 +364,8 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
             CCall       : cap_alu_result;
             CJALR       : link_pcc;
             Jr          : nullWithAddr(getOffset(link_pcc));
-            Auipc       : nullWithAddr(getOffset(pcc) + fromMaybe(?, getDInstImm(dInst)));
-            Auipcc      : incOffset(pcc, fromMaybe(?, getDInstImm(dInst))).value; // could be computed with alu
+            Auipc       : nullWithAddr(getOffset(pcc) + getDInstImm(dInst).Valid);
+            Auipcc      : incOffset(pcc, getDInstImm(dInst).Valid).value; // could be computed with alu
             Csr         : rVal1;
             Scr         : rVal2;
             Cap         : cap_alu_result;
@@ -363,7 +377,7 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
             default             : cf.nextPc; //TODO should this be nullified?
         endcase);
 
-    CapPipe scr_data = specialRWALU(rVal1, dInst.capFunc.CapModify.SpecialRW);
+    CapPipe scr_data = specialRWALU(fromMaybe(rVal1, capImm), aluVal2, dInst.capFunc.CapModify.SpecialRW);
 
     return ExecResult{data: data, csrData: csr_data, scrData: scr_data, addr: addr, controlFlow: cf, capException: capException, boundsCheck: boundsCheck};
 endfunction

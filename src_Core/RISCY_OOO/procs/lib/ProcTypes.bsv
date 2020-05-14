@@ -252,7 +252,15 @@ typedef enum {
 } SetBoundsFunc deriving(Bits, Eq, FShow);
 
 typedef enum {
-    TCC, EPCC, Normal
+    Write, Set, Clear
+} CSRAccessFunc deriving(Bits, Eq, FShow);
+
+typedef union tagged {
+    CSRAccessFunc TVEC;
+    CSRAccessFunc EPC;
+    void TCC;
+    void EPCC;
+    void Normal;
 } SpecialRWFunc deriving(Bits, Eq, FShow);
 
 typedef enum {

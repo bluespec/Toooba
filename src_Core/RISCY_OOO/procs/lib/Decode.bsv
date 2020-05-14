@@ -858,19 +858,55 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                 dInst.imm = Invalid;
             end
             else begin // fnCSRRWI, fnCSRRW, fnCSRRSI, fnCSRRS, fnCSRRCI, fnCSRRC
-                // TODO change to SCR if r/w to x{epc,tvec}?
-                dInst.iType = Csr;
-                dInst.execFunc = (case (funct3)
-                    fnCSRRWI, fnCSRRW: tagged Alu Csrw;
-                    fnCSRRSI, fnCSRRS: tagged Alu Csrs;
-                    fnCSRRCI, fnCSRRC: tagged Alu Csrc;
-                endcase);
+                if (truncate(immI) == pack(CSRmtvec) || truncate(immI) == pack(CSRmepc) || truncate(immI) == pack(CSRstvec) || truncate(immI) == pack(CSRsepc)) begin
+                    Bool shouldWrite = (funct3 == fnCSRRWI || funct3 == fnCSRRW) || rs1 != 0;
+                    dInst.iType = shouldWrite ? Scr : Cap;
+                    regs.dst = Valid(tagged Gpr rd);
+                    regs.src1 = (funct3[2] == 0 ? Valid(tagged Gpr rs1) : Invalid);
+                    dInst.imm = (funct3[2] == 0 ? Invalid : Valid(zeroExtend(rs1)));
+                    regs.src2 = Invalid;
 
-                regs.dst = Valid(tagged Gpr rd);
-                regs.src1 = Invalid; // going to be CSR Reg
-                regs.src2 = (funct3[2] == 0 ? Valid(tagged Gpr rs1) : Invalid);
-                dInst.imm = (funct3[2] == 0 ? Invalid : Valid(zeroExtend(rs1)));
-                dInst.csr = Valid(unpackCSR(truncate(immI)));
+                    CSRAccessFunc accessFunc = (case (funct3)
+                        fnCSRRWI, fnCSRRW: Write;
+                        fnCSRRSI, fnCSRRS: Set;
+                        fnCSRRCI, fnCSRRC: Clear;
+                    endcase);
+
+                    let scrType = ?;
+                    case (truncate(immI))
+                        pack(CSRmepc): begin
+                            scrType = EPC (accessFunc);
+                            dInst.scr = Valid (SCR_MEPCC);
+                        end
+                        pack(CSRmtvec): begin
+                            scrType = TVEC (accessFunc);
+                            dInst.scr = Valid (SCR_MTCC);
+                        end
+                        pack(CSRsepc): begin
+                            scrType = EPC (accessFunc);
+                            dInst.scr = Valid (SCR_SEPCC);
+                        end
+                        pack(CSRstvec): begin
+                            scrType = TVEC (accessFunc);
+                            dInst.scr = Valid (SCR_STCC);
+                        end
+                    endcase
+
+                    dInst.capFunc = CapModify (SpecialRW (scrType));
+                end else begin
+                    dInst.iType = Csr;
+                    dInst.execFunc = (case (funct3)
+                        fnCSRRWI, fnCSRRW: tagged Alu Csrw;
+                        fnCSRRSI, fnCSRRS: tagged Alu Csrs;
+                        fnCSRRCI, fnCSRRC: tagged Alu Csrc;
+                    endcase);
+
+                    regs.dst = Valid(tagged Gpr rd);
+                    regs.src1 = Invalid; // going to be CSR Reg
+                    regs.src2 = (funct3[2] == 0 ? Valid(tagged Gpr rs1) : Invalid);
+                    dInst.imm = (funct3[2] == 0 ? Invalid : Valid(zeroExtend(rs1)));
+                    dInst.csr = Valid(unpackCSR(truncate(immI)));
+                end
             end
         end
 
