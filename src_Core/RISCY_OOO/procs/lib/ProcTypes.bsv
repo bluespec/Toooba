@@ -283,7 +283,7 @@ typedef union tagged {
     void BuildCap;
     void Move;
     void ClearTag;
-    void CJALR;
+    void FromPtr;
 } CapModifyFunc deriving(Bits, Eq, FShow);
 
 typedef union tagged {

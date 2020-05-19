@@ -190,7 +190,7 @@ endfunction
 function CapPipe capModify(CapPipe a, CapPipe b, CapModifyFunc func);
     CapPipe res = (case(func) matches
             tagged ModifyOffset .offsetOp :
-                modifyOffset(a, getAddr(b), offsetOp == IncOffset).value;
+                modifyOffset(a, getAddr(b), offsetOp == IncOffset).value; // TODO check for unrepresentability
             tagged SetBounds .boundsOp    :
                 setBoundsALU(a, getAddr(b), boundsOp);
             tagged SpecialRW .scrType     :
@@ -203,7 +203,7 @@ function CapPipe capModify(CapPipe a, CapPipe b, CapModifyFunc func);
                  endcase
             tagged SetAddr .addrSource    :
                 if (addrSource == Src1Type && (getKind(a) == UNSEALED)) return nullWithAddr(-1); // TODO correct behaviour around reserved types
-                else return setAddr(b, (addrSource == Src1Type) ? zeroExtend(getKind(a).SEALED_WITH_TYPE) : getAddr(a) ).value;
+                else return setAddr(b, (addrSource == Src1Type) ? zeroExtend(getKind(a).SEALED_WITH_TYPE) : getAddr(a) ).value; // TODO check for unrepresentability
             tagged Seal                   :
                 setKind(a, SEALED_WITH_TYPE (truncate(getAddr(b))));
             tagged Unseal .src            :
@@ -212,16 +212,14 @@ function CapPipe capModify(CapPipe a, CapPipe b, CapModifyFunc func);
                 setPerms(a, pack(getPerms(a)) & truncate(getAddr(b)));
             tagged SetFlags               :
                 setFlags(a, truncate(getAddr(b)));
-            //tagged FromPtr                :
-            //     error("FromPtr not yet implemented");
+            tagged FromPtr                :
+                (getAddr(a) == 0 ? nullCap : setOffset(b, getAddr(a)).value); // TODO check for unrepresentability
             tagged BuildCap               :
                 setKind(setValidCap(a, True),UNSEALED); // TODO preserve sentries
             tagged Move                   :
                 a;
             tagged ClearTag               :
                 setValidCap(a, False);
-            //tagged CJALR                  :
-            //    error("CJALR not yet implemented");
             default: ?;
         endcase);
     return res;
@@ -353,9 +351,8 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
     Maybe#(BoundsCheck) boundsCheck = prepareBoundsCheck(rVal1, aluVal2, pcc,
                                                          nullCap, 0, 0, // These three are only used in the memory pipe
                                                          dInst.capChecks);
-    if (dInst.capChecks.skip_if_src1_zero && getAddr(rVal1) == 0) begin
+    if (dInst.capChecks.cfromptr_bypass && getAddr(rVal1) == 0) begin
         capException = Invalid;
-        cap_alu_result = nullCap;
     end
 
     cf.nextPc = setKind(cf.nextPc, UNSEALED);

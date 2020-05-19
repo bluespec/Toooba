@@ -1179,7 +1179,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             // are zero in Exec
                             dInst.capChecks.src2_tag = True;
                             dInst.capChecks.src2_unsealed = True;
-                            dInst.capChecks.skip_if_src1_zero = True;
+                            dInst.capChecks.cfromptr_bypass = True;
 
                             dInst.iType = Cap;
                             regs.dst = Valid(tagged Gpr rd);
@@ -1187,7 +1187,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             regs.src2 = rs1 == 0 ? Invalid : Valid (tagged Gpr rs1);
                             dInst.scr = rs1 == 0 ? Valid(SCR_DDC) : Invalid;
                             dInst.imm = Invalid;
-                            dInst.capFunc = CapModify (SetAddr (Src1Addr));
+                            dInst.capFunc = CapModify (FromPtr);
                         end
                         f7_cap_CSub: begin
                             // CSub is just a riscv subtract
