@@ -1052,8 +1052,26 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             dInst.capFunc = CapModify (Seal);
                         end
                         f7_cap_CCSeal: begin
-                            illegalInst = True;
-                            // TODO problematic because checks depend on register value
+                            dInst.capChecks.src1_tag = True;
+
+                            dInst.capChecks.src1_unsealed = True;
+                            dInst.capChecks.src2_unsealed = True;
+                            dInst.capChecks.src2_addr_valid_type = True;
+                            dInst.capChecks.src2_permit_seal = True;
+                            dInst.capChecks.ccseal_bypass = True;
+
+                            dInst.capChecks.check_enable = True;
+                            dInst.capChecks.check_authority_src = Src2;
+                            dInst.capChecks.check_low_src = Src2Addr;
+                            dInst.capChecks.check_high_src = Src2Addr;
+                            dInst.capChecks.check_inclusive = False;
+
+                            dInst.iType = Cap;
+                            regs.dst = Valid(tagged Gpr rd);
+                            regs.src1 = Valid(tagged Gpr rs1);
+                            regs.src2 = Valid(tagged Gpr rs2);
+                            dInst.imm = Invalid;
+                            dInst.capFunc = CapModify (Seal);
                         end
                         f7_cap_TwoSrc: begin
                             case (rd)

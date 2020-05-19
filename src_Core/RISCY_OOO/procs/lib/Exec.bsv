@@ -205,7 +205,9 @@ function CapPipe capModify(CapPipe a, CapPipe b, CapModifyFunc func);
                 if (addrSource == Src1Type && (getKind(a) == UNSEALED)) return nullWithAddr(-1); // TODO correct behaviour around reserved types
                 else return setAddr(b, (addrSource == Src1Type) ? zeroExtend(getKind(a).SEALED_WITH_TYPE) : getAddr(a) ).value; // TODO check for unrepresentability
             tagged Seal                   :
-                setKind(a, SEALED_WITH_TYPE (truncate(getAddr(b))));
+                ((validAsType(b, getAddr(b)) && isValidCap(b)) ?
+                     setKind(a, SEALED_WITH_TYPE (truncate(getAddr(b))))
+                   : a);
             tagged Unseal .src            :
                 setKind(((src == Src1) ? a:b), UNSEALED);
             tagged AndPerm                :
@@ -353,6 +355,10 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
                                                          dInst.capChecks);
     if (dInst.capChecks.cfromptr_bypass && getAddr(rVal1) == 0) begin
         capException = Invalid;
+    end
+    if (dInst.capChecks.ccseal_bypass && (!isValidCap(rVal2) || getAddr(rVal2) == -1) && isValidCap(rVal1)) begin
+        capException = Invalid;
+        boundsCheck = Invalid;
     end
 
     cf.nextPc = setKind(cf.nextPc, UNSEALED);

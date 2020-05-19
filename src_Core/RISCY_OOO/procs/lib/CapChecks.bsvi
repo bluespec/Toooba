@@ -20,3 +20,4 @@
 `CAP_CHECK_FIELD(src1_derivable,"src1_derivable")
 `CAP_CHECK_FIELD(scr_read_only,"scr_read_only")
 `CAP_CHECK_FIELD(cfromptr_bypass,"cfromptr_bypass")
+`CAP_CHECK_FIELD(ccseal_bypass,"ccseal_bypass")
