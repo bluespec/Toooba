@@ -110,16 +110,16 @@ function Maybe#(BoundsCheck) prepareBoundsCheck(CapPipe a, CapPipe b, CapPipe pc
     case(toCheck.check_low_src)
         Src1Addr: ret.check_low = getAddr(a);
         Src1Base: ret.check_low = getBase(a);
+        Src1Type: ret.check_low = zeroExtend(getKind(a).SEALED_WITH_TYPE);
         Src2Addr: ret.check_low = getAddr(b);
-        Src2Type: ret.check_low = zeroExtend(getKind(b).SEALED_WITH_TYPE);
         Vaddr:    ret.check_low = vaddr;
     endcase
 
     case(toCheck.check_high_src)
         Src1AddrPlus2: ret.check_high = {1'b0,getAddr(a)+2};
         Src1Top: ret.check_high = getTop(a);
+        Src1Type: ret.check_high = zeroExtend(getKind(a).SEALED_WITH_TYPE);
         Src2Addr: ret.check_high = {1'b0,getAddr(b)};
-        Src2Type: ret.check_high = zeroExtend(getKind(b).SEALED_WITH_TYPE);
         ResultTop: ret.check_high = {1'b0,getAddr(a)} + {1'b0,getAddr(b)};
         VaddrPlusSize: ret.check_high = {1'b0,vaddr} + zeroExtend(size);
     endcase
@@ -202,8 +202,8 @@ function CapPipe capModify(CapPipe a, CapPipe b, CapModifyFunc func);
                     tagged EPC ._: nullWithAddr(getOffset(b));
                  endcase
             tagged SetAddr .addrSource    :
-                if (addrSource == Src2Type && (getKind(b) == UNSEALED)) return nullWithAddr(-1); // TODO correct behaviour around reserved types
-                else return setAddr(a, (addrSource == Src2Type) ? zeroExtend(getKind(b).SEALED_WITH_TYPE) : getAddr(b) ).value;
+                if (addrSource == Src1Type && (getKind(a) == UNSEALED)) return nullWithAddr(-1); // TODO correct behaviour around reserved types
+                else return setAddr(b, (addrSource == Src1Type) ? zeroExtend(getKind(a).SEALED_WITH_TYPE) : getAddr(a) ).value;
             tagged Seal                   :
                 setKind(a, SEALED_WITH_TYPE (truncate(getAddr(b))));
             tagged Unseal .src            :
@@ -353,6 +353,11 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
     Maybe#(BoundsCheck) boundsCheck = prepareBoundsCheck(rVal1, aluVal2, pcc,
                                                          nullCap, 0, 0, // These three are only used in the memory pipe
                                                          dInst.capChecks);
+    if (dInst.capChecks.skip_if_src1_zero && getAddr(rVal1) == 0) begin
+        capException = Invalid;
+        cap_alu_result = nullCap;
+    end
+
     cf.nextPc = setKind(cf.nextPc, UNSEALED);
     cf.mispredict = cf.nextPc != ppc;
 

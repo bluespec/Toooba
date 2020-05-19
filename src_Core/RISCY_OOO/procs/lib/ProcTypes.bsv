@@ -264,7 +264,7 @@ typedef union tagged {
 } SpecialRWFunc deriving(Bits, Eq, FShow);
 
 typedef enum {
-    Src2Type, Src2Addr
+    Src1Type, Src1Addr
 } AddrSource deriving(Bits, Eq, FShow);
 
 typedef enum {
@@ -521,17 +521,17 @@ typedef enum {
 
 typedef enum {
     Src1Addr,
-    Src2Addr,
-    Src2Type,
     Src1Base,
+    Src1Type,
+    Src2Addr,
     Vaddr    // Memory Pipe
 } CheckLowSrc deriving(Bits, Eq, FShow);
 
 typedef enum {
     Src1AddrPlus2,
     Src1Top,
+    Src1Type,
     Src2Addr,
-    Src2Type,
     ResultTop,
     VaddrPlusSize // Memory Pipe
 } CheckHighSrc deriving(Bits, Eq, FShow);

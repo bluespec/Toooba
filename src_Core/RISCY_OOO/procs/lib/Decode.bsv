@@ -1011,14 +1011,14 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             dInst.capFunc = CapModify (ModifyOffset (SetOffset));
                         end
                         f7_cap_CSetAddr: begin
-                            dInst.capChecks.src1_unsealed = True;
+                            dInst.capChecks.src2_unsealed = True;
 
                             dInst.iType = Cap;
                             regs.dst = Valid(tagged Gpr rd);
-                            regs.src1 = Valid(tagged Gpr rs1);
-                            regs.src2 = Valid(tagged Gpr rs2);
+                            regs.src1 = Valid(tagged Gpr rs2);
+                            regs.src2 = Valid(tagged Gpr rs1);
                             dInst.imm = Invalid;
-                            dInst.capFunc = CapModify (SetAddr (Src2Addr));
+                            dInst.capFunc = CapModify (SetAddr (Src1Addr));
                         end
                         f7_cap_CIncOffset: begin
                             dInst.capChecks.src1_unsealed = True;
@@ -1120,21 +1120,21 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             dInst.capFunc = CapInspect (TestSubset);
                         end
                         f7_cap_CCopyType: begin
-                            dInst.capChecks.src1_tag = True;
-                            dInst.capChecks.src1_unsealed = True;
+                            dInst.capChecks.src2_tag = True;
+                            dInst.capChecks.src2_unsealed = True;
 
                             dInst.capChecks.check_enable = True;
-                            dInst.capChecks.check_authority_src = Src1;
-                            dInst.capChecks.check_low_src = Src2Type;
-                            dInst.capChecks.check_high_src = Src2Type;
+                            dInst.capChecks.check_authority_src = Src2;
+                            dInst.capChecks.check_low_src = Src1Type;
+                            dInst.capChecks.check_high_src = Src1Type;
                             dInst.capChecks.check_inclusive = False;
 
                             dInst.iType = Cap;
                             regs.dst = Valid(tagged Gpr rd);
-                            regs.src1 = Valid(tagged Gpr rs1);
-                            regs.src2 = Valid(tagged Gpr rs2);
+                            regs.src1 = Valid(tagged Gpr rs2);
+                            regs.src2 = Valid(tagged Gpr rs1);
                             dInst.imm = Invalid;
-                            dInst.capFunc = CapModify (SetAddr (Src2Type));
+                            dInst.capFunc = CapModify (SetAddr (Src1Type));
                         end
                         f7_cap_CAndPerm: begin
                             dInst.capChecks.src1_tag = True;
@@ -1175,17 +1175,19 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             dInst.capFunc = CapInspect (ToPtr);
                         end
                         f7_cap_CFromPtr: begin
-                            illegalInst = True;
-                            //TODO these should only be checked when b non-zero
-                            dInst.capChecks.src1_tag = True;
-                            dInst.capChecks.src1_unsealed = True;
+                            // Note these will get overridden if the contents of rs2
+                            // are zero in Exec
+                            dInst.capChecks.src2_tag = True;
+                            dInst.capChecks.src2_unsealed = True;
+                            dInst.capChecks.skip_if_src1_zero = True;
 
                             dInst.iType = Cap;
                             regs.dst = Valid(tagged Gpr rd);
-                            regs.src1 = Valid(tagged Gpr rs1);
-                            regs.src2 = Valid(tagged Gpr rs2);
+                            regs.src1 = Valid(tagged Gpr rs2);
+                            regs.src2 = rs1 == 0 ? Invalid : Valid (tagged Gpr rs1);
+                            dInst.scr = rs1 == 0 ? Valid(SCR_DDC) : Invalid;
                             dInst.imm = Invalid;
-                            dInst.capFunc = CapModify (SetAddr (Src2Addr));
+                            dInst.capFunc = CapModify (SetAddr (Src1Addr));
                         end
                         f7_cap_CSub: begin
                             // CSub is just a riscv subtract
