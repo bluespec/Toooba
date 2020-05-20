@@ -676,7 +676,8 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                             mem_func: mem_inst.mem_func,
                             imm: validValue(dInst.imm),
                             ldstq_tag: lsqTag,
-                            cap_checks: dInst.capChecks
+                            cap_checks: dInst.capChecks,
+                            cap_mode: getFlags(pc)==1
                         },
                         regs: phy_regs,
                         tag: inst_tag,
@@ -1015,7 +1016,8 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                             mem_func: mem_inst.mem_func,
                                             imm: validValue(dInst.imm),
                                             ldstq_tag: lsqTag,
-                                            cap_checks: dInst.capChecks
+                                            cap_checks: dInst.capChecks,
+                                            cap_mode: getFlags(pc)==1
                                         },
                                         regs: phy_regs,
                                         tag: inst_tag,

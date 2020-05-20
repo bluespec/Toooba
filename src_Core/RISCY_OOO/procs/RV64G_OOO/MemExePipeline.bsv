@@ -64,6 +64,7 @@ typedef struct {
     InstTag tag;
     LdStQTag ldstq_tag;
     CapChecks cap_checks;
+    Bool cap_mode;
 } MemDispatchToRegRead deriving(Bits, Eq, FShow);
 
 typedef struct {
@@ -400,7 +401,8 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
                 regs: x.regs,
                 tag: x.tag,
                 ldstq_tag: x.data.ldstq_tag,
-                cap_checks: x.data.cap_checks
+                cap_checks: x.data.cap_checks,
+                cap_mode: x.data.cap_mode
             },
             spec_bits: x.spec_bits
         });
@@ -422,11 +424,14 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         // check conservative scoreboard
         let regsReady = inIfc.sbCons_lazyLookup(x.regs);
 
+        CapPipe ddc = cast(inIfc.scaprf_rd(SCR_DDC));
+
         // get rVal1 (check bypass)
         CapPipe rVal1 = nullCap;
         if(x.regs.src1 matches tagged Valid .src1 &&& src1 != 0) begin
             rVal1 <- readRFBypass(src1, regsReady.src1, inIfc.rf_rd1(src1), bypassWire);
         end
+        if (!x.cap_mode) rVal1 = nullWithAddr(getAddr(rVal1) + getAddr(ddc));
 
         // get rVal2 (check bypass)
         CapPipe rVal2 = nullCap;
@@ -487,7 +492,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             lsq.updateData(stTag, d);
         end
 
-        CapPipe ddc = cast(inIfc.scaprf_rd(SCR_DDC)); // ToDo: feed DDC into the prepareBoundsCheck function below somehow.
+        CapPipe ddc = cast(inIfc.scaprf_rd(SCR_DDC));
 
         // go to next stage by sending to TLB
         dTlb.procReq(DTlbReq {

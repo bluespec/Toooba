@@ -32,6 +32,7 @@ typedef struct {
     ImmData imm;
     LdStQTag ldstq_tag;
     CapChecks cap_checks;
+    Bool cap_mode;
 } MemRSData deriving(Bits, Eq, FShow);
 
 // MEM pipeline is aggressive, i.e. it recv bypass and early RS wakeup
