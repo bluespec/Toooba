@@ -74,7 +74,11 @@ function MemTaggedData mergeMemTaggedDataBE( MemTaggedData oldItem
                                            , MemTaggedData newItem
                                            , be_t be)
   provisos (Bits#(be_t, MemDataBytes)) =
-  MemTaggedData { tag : (pack(be) == ~0) ? newItem.tag : False
+  MemTaggedData { tag : case (pack(be))
+                            0: oldItem.tag;
+                            -1: newItem.tag;
+                            default: False;
+                        endcase
                 , data: mergeDataBE(oldItem.data, newItem.data, be)};
 function MemData dataToMemData(Data x) = unpack(zeroExtend(x));
 function MemDataByteEn dataBEToMemDataBE(ByteEn x) = unpack(zeroExtend(pack(x)));
