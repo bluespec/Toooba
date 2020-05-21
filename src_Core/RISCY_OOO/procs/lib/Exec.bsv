@@ -30,7 +30,7 @@ import CHERICC_Fat::*;
 import ISA_Decls_CHERI::*;
 
 (* noinline *)
-function Maybe#(CSR_XCapCause) capChecks(CapPipe a, CapPipe b, CapPipe ddc, CapChecks toCheck);
+function Maybe#(CSR_XCapCause) capChecks(CapPipe a, CapPipe b, CapPipe ddc, CapChecks toCheck, Bool cap_exact);
     function Maybe#(CSR_XCapCause) e1(CHERIException e)   = Valid(CSR_XCapCause{cheri_exc_reg: toCheck.rn1, cheri_exc_code: e});
     function Maybe#(CSR_XCapCause) e2(CHERIException e)   = Valid(CSR_XCapCause{cheri_exc_reg: toCheck.rn2, cheri_exc_code: e});
     function Maybe#(CSR_XCapCause) eDDC(CHERIException e) = Valid(CSR_XCapCause{cheri_exc_reg: 6'b100001, cheri_exc_code: e}); // Not sure where the proper reg number of DDC is stored...
@@ -77,6 +77,8 @@ function Maybe#(CSR_XCapCause) capChecks(CapPipe a, CapPipe b, CapPipe ddc, CapC
         result = e1(LengthViolation);
     else if (toCheck.scr_read_only            && (toCheck.rn1 != 0))
         result = Valid(CSR_XCapCause{cheri_exc_reg: {1,pack(SCR_PCC)}, cheri_exc_code: PermitASRViolation});
+    else if (toCheck.cap_exact                && !cap_exact)
+        result = e1(RepresentViolation);
     return result;
 endfunction
 
@@ -156,15 +158,14 @@ function Data alu(Data a, Data b, AluFunc func);
 endfunction
 
 (* noinline *)
-function CapPipe setBoundsALU(CapPipe cap, Data len, SetBoundsFunc boundsOp);
+function Tuple2#(CapPipe, Bool) setBoundsALU(CapPipe cap, Data len, SetBoundsFunc boundsOp);
     let combinedResult = setBoundsCombined(cap, len);
     CapPipe res = (case (boundsOp) matches
         SetBounds: combinedResult.cap;
         CRRL: nullWithAddr(combinedResult.length);
         CRAM: nullWithAddr(combinedResult.mask);
     endcase);
-    // TODO exfiltrate exact somehow...
-    return res;
+    return tuple2(res, combinedResult.exact);
 endfunction
 
 (* noinline *)
@@ -187,41 +188,42 @@ function CapPipe specialRWALU(CapPipe cap, CapPipe oldCap, SpecialRWFunc scrType
 endfunction
 
 (* noinline *)
-function CapPipe capModify(CapPipe a, CapPipe b, CapModifyFunc func);
-    CapPipe res = (case(func) matches
+function Tuple2#(CapPipe,Bool) capModify(CapPipe a, CapPipe b, CapModifyFunc func);
+    function t (x) = tuple2(x, ?);
+    Tuple2#(CapPipe, Bool) res = (case(func) matches
             tagged ModifyOffset .offsetOp :
-                modifyOffset(a, getAddr(b), offsetOp == IncOffset).value; // TODO check for unrepresentability
+                t(modifyOffset(a, getAddr(b), offsetOp == IncOffset).value);
             tagged SetBounds .boundsOp    :
                 setBoundsALU(a, getAddr(b), boundsOp);
             tagged SpecialRW .scrType     :
-                case (scrType) matches
-                    tagged TCC: b;
-                    tagged EPCC: b;
-                    tagged Normal: b;
-                    tagged TVEC ._: nullWithAddr(getOffset(b));
-                    tagged EPC ._: nullWithAddr(getOffset(b));
-                 endcase
+                t(case (scrType) matches
+                      tagged TCC: b;
+                      tagged EPCC: b;
+                      tagged Normal: b;
+                      tagged TVEC ._: nullWithAddr(getOffset(b));
+                      tagged EPC ._: nullWithAddr(getOffset(b));
+                   endcase);
             tagged SetAddr .addrSource    :
-                if (addrSource == Src1Type && (getKind(a) == UNSEALED)) return nullWithAddr(-1); // TODO correct behaviour around reserved types
-                else return setAddr(b, (addrSource == Src1Type) ? zeroExtend(getKind(a).SEALED_WITH_TYPE) : getAddr(a) ).value; // TODO check for unrepresentability
+                if (addrSource == Src1Type && (getKind(a) == UNSEALED)) return t(nullWithAddr(-1)); // TODO correct behaviour around reserved types
+                else return t(setAddr(b, (addrSource == Src1Type) ? zeroExtend(getKind(a).SEALED_WITH_TYPE) : getAddr(a) ).value);
             tagged Seal                   :
-                ((validAsType(b, getAddr(b)) && isValidCap(b)) ?
+                t((validAsType(b, getAddr(b)) && isValidCap(b)) ?
                      setKind(a, SEALED_WITH_TYPE (truncate(getAddr(b))))
                    : a);
             tagged Unseal .src            :
-                setKind(((src == Src1) ? a:b), UNSEALED);
+                t(setKind(((src == Src1) ? a:b), UNSEALED));
             tagged AndPerm                :
-                setPerms(a, pack(getPerms(a)) & truncate(getAddr(b)));
+                t(setPerms(a, pack(getPerms(a)) & truncate(getAddr(b))));
             tagged SetFlags               :
-                setFlags(a, truncate(getAddr(b)));
+                t(setFlags(a, truncate(getAddr(b))));
             tagged FromPtr                :
-                (getAddr(a) == 0 ? nullCap : setOffset(b, getAddr(a)).value); // TODO check for unrepresentability
+                t(getAddr(a) == 0 ? nullCap : setOffset(b, getAddr(a)).value);
             tagged BuildCap               :
-                setKind(setValidCap(a, True),UNSEALED); // TODO preserve sentries
+                t(setKind(setValidCap(a, True),UNSEALED)); // TODO preserve sentries
             tagged Move                   :
-                a;
+                t(a);
             tagged ClearTag               :
-                setValidCap(a, False);
+                t(setValidCap(a, False));
             default: ?;
         endcase);
     return res;
@@ -267,10 +269,10 @@ function Data capInspect(CapPipe a, CapPipe b, CapInspectFunc func);
     return res;
 endfunction
 
-function CapPipe capALU(CapPipe a, CapPipe b, CapFunc func);
-    CapPipe res = (case (func) matches
+function Tuple2#(CapPipe, Bool) capALU(CapPipe a, CapPipe b, CapFunc func);
+    Tuple2#(CapPipe, Bool) res = (case (func) matches
                    tagged CapInspect .x:
-                       nullWithAddr(capInspect(a,b,func.CapInspect));
+                       tuple2(nullWithAddr(capInspect(a,b,func.CapInspect)),?);
                    default:
                        capModify(a,b,func.CapModify);
         endcase);
@@ -341,7 +343,9 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
     AluFunc alu_f = dInst.execFunc matches tagged Alu .alu_f ? alu_f : Add;
     Data alu_result = alu(getAddr(rVal1), getAddr(aluVal2), alu_f);
 
-    CapPipe cap_alu_result = capALU(rVal1, aluVal2, dInst.capFunc);
+    Tuple2#(CapPipe,Bool) cap_alu_result_with_exact = capALU(rVal1, aluVal2, dInst.capFunc);
+    CapPipe cap_alu_result = tpl_1(cap_alu_result_with_exact);
+    Bool cap_exact = tpl_2(cap_alu_result_with_exact);
     CapPipe link_pcc = addPc(pcc, ((orig_inst [1:0] == 2'b11) ? 4 : 2));
 
     // Default branch function is not taken
@@ -353,7 +357,7 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
         if (!cf.taken) dInst.capChecks.check_enable = False;
     end
 
-    Maybe#(CSR_XCapCause) capException = capChecks(rVal1, aluVal2, nullCap, dInst.capChecks);
+    Maybe#(CSR_XCapCause) capException = capChecks(rVal1, aluVal2, nullCap, dInst.capChecks, cap_exact);
     Maybe#(BoundsCheck) boundsCheck = prepareBoundsCheck(rVal1, aluVal2, pcc,
                                                          nullCap, 0, 0, // These three are only used in the memory pipe
                                                          dInst.capChecks);

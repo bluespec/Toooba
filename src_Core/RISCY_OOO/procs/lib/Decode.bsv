@@ -982,10 +982,9 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             dInst.capFunc = CapModify (SetBounds (SetBounds));
                         end
                         f7_cap_CSetBoundsExact: begin
-                            illegalInst = True;
                             dInst.capChecks.src1_tag = True;
                             dInst.capChecks.src1_unsealed = True;
-                            // TODO assert exact
+                            dInst.capChecks.cap_exact = True;
 
                             dInst.capChecks.check_enable = True;
                             dInst.capChecks.check_authority_src = Src1;
