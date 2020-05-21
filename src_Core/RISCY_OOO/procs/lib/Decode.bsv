@@ -1128,13 +1128,11 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             dInst.capFunc = CapModify (Unseal (Src1));
                         end
                         f7_cap_CTestSubset: begin
-                            illegalInst = True;
-                            // TODO
                             dInst.iType = Cap;
                             regs.dst = Valid(tagged Gpr rd);
-                            regs.src1 = Valid(tagged Gpr rs1);
-                            regs.src2 = Valid(tagged Gpr rs2);
-                            dInst.imm = Invalid;
+                            regs.src1 = Valid(tagged Gpr rs2);
+                            regs.src2 = rs1 == 0 ? Invalid : Valid(tagged Gpr rs1);
+                            dInst.scr = rs1 == 0 ? Valid (SCR_DDC) : Invalid;
                             dInst.capFunc = CapInspect (TestSubset);
                         end
                         f7_cap_CCopyType: begin
