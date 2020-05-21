@@ -934,7 +934,6 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                     dInst.iType = Cap;
                     regs.dst = Valid(tagged Gpr rd);
                     regs.src1 = Valid(tagged Gpr rs1);
-                    regs.src2 = Invalid;
                     dInst.imm = Valid (immIunsigned);
                     dInst.capFunc = CapModify (SetBounds (SetBounds));
                 end
@@ -944,7 +943,6 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             dInst.iType = rs1 == 0 ? Cap : Scr;
                             regs.dst = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs1);
-                            regs.src2 = Invalid;
                             dInst.scr = Valid (unpackSCR(rs2));
 
                             let scrType = case (rs2[1:0])
@@ -978,7 +976,6 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             regs.dst = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs1);
                             regs.src2 = Valid(tagged Gpr rs2);
-                            dInst.imm = Invalid;
                             dInst.capFunc = CapModify (SetBounds (SetBounds));
                         end
                         f7_cap_CSetBoundsExact: begin
@@ -996,7 +993,6 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             regs.dst = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs1);
                             regs.src2 = Valid(tagged Gpr rs2);
-                            dInst.imm = Invalid;
                             dInst.capFunc = CapModify (SetBounds (SetBounds));
                         end
                         f7_cap_CSetOffset: begin
@@ -1006,7 +1002,6 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             regs.dst = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs1);
                             regs.src2 = Valid(tagged Gpr rs2);
-                            dInst.imm = Invalid;
                             dInst.capFunc = CapModify (ModifyOffset (SetOffset));
                         end
                         f7_cap_CSetAddr: begin
@@ -1016,7 +1011,6 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             regs.dst = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs2);
                             regs.src2 = Valid(tagged Gpr rs1);
-                            dInst.imm = Invalid;
                             dInst.capFunc = CapModify (SetAddr (Src1Addr));
                         end
                         f7_cap_CIncOffset: begin
@@ -1026,7 +1020,6 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             regs.dst = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs1);
                             regs.src2 = Valid(tagged Gpr rs2);
-                            dInst.imm = Invalid;
                             dInst.capFunc = CapModify (ModifyOffset (IncOffset));
                         end
                         f7_cap_CSeal: begin
@@ -1047,7 +1040,6 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             regs.dst = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs1);
                             regs.src2 = Valid(tagged Gpr rs2);
-                            dInst.imm = Invalid;
                             dInst.capFunc = CapModify (Seal);
                         end
                         f7_cap_CCSeal: begin
@@ -1069,7 +1061,6 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             regs.dst = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs1);
                             regs.src2 = Valid(tagged Gpr rs2);
-                            dInst.imm = Invalid;
                             dInst.capFunc = CapModify (Seal);
                         end
                         f7_cap_TwoSrc: begin
@@ -1098,7 +1089,6 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                                     regs.dst = Valid(tagged Gpr 31);
                                     regs.src1 = Valid(tagged Gpr rs1);
                                     regs.src2 = Valid(tagged Gpr rs2);
-                                    dInst.imm = Invalid;
                                 end
                                 default: begin
                                     illegalInst = True;
@@ -1123,7 +1113,6 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             regs.dst = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs1);
                             regs.src2 = Valid(tagged Gpr rs2);
-                            dInst.imm = Invalid;
                             dInst.capFunc = CapModify (Unseal (Src1));
                         end
                         f7_cap_CTestSubset: begin
@@ -1148,7 +1137,6 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             regs.dst = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs2);
                             regs.src2 = Valid(tagged Gpr rs1);
-                            dInst.imm = Invalid;
                             dInst.capFunc = CapModify (SetAddr (Src1Type));
                         end
                         f7_cap_CAndPerm: begin
@@ -1159,7 +1147,6 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             regs.dst = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs1);
                             regs.src2 = Valid(tagged Gpr rs2);
-                            dInst.imm = Invalid;
                             dInst.capFunc = CapModify (AndPerm);
                         end
                         f7_cap_CSetFlags: begin
@@ -1169,7 +1156,6 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             regs.dst = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs1);
                             regs.src2 = Valid(tagged Gpr rs2);
-                            dInst.imm = Invalid;
                             dInst.capFunc = CapModify (SetFlags);
                         end
                         f7_cap_CToPtr: begin
@@ -1186,12 +1172,9 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                                 regs.src2 = Valid (tagged Gpr rs2);
                                 dInst.scr = Invalid;
                             end
-                            dInst.imm = Invalid;
                             dInst.capFunc = CapInspect (ToPtr);
                         end
                         f7_cap_CFromPtr: begin
-                            // Note these will get overridden if the contents of rs2
-                            // are zero in Exec
                             dInst.capChecks.src2_tag = True;
                             dInst.capChecks.src2_unsealed = True;
                             dInst.capChecks.cfromptr_bypass = True;
@@ -1201,7 +1184,6 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             regs.src1 = Valid(tagged Gpr rs2);
                             regs.src2 = rs1 == 0 ? Invalid : Valid (tagged Gpr rs1);
                             dInst.scr = rs1 == 0 ? Valid(SCR_DDC) : Invalid;
-                            dInst.imm = Invalid;
                             dInst.capFunc = CapModify (FromPtr);
                         end
                         f7_cap_CSub: begin
@@ -1210,8 +1192,6 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             regs.dst  = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs1);
                             regs.src2 = Valid(tagged Gpr rs2);
-                            dInst.imm = Invalid;
-                            dInst.csr = Invalid;
                             dInst.execFunc = Alu (Sub);
                         end
                         f7_cap_CBuildCap: begin
@@ -1235,7 +1215,6 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             end else begin
                                 regs.src2 = Valid(tagged Gpr rs1);
                             end
-                            dInst.imm = Invalid;
                             dInst.capFunc = CapModify (BuildCap);
                         end
                         f7_cap_Loads: begin
@@ -1245,9 +1224,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             else illegalInst = True;
                             regs.dst  = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs1);
-                            regs.src2 = Invalid;
                             dInst.imm = Valid (0);
-                            dInst.csr = tagged Invalid;
                             dInst.capChecks = memCapChecks(mi.reg_bounds);
                         end
                         f7_cap_Stores: begin
@@ -1255,11 +1232,9 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             MemInst mi = exp_bnds_mem_inst.Valid;
                             if (isValid(exp_bnds_mem_inst)) dInst.execFunc = tagged Mem mi;
                             else illegalInst = True;
-                            regs.dst  = Invalid;
                             regs.src1 = Valid(tagged Gpr rs1);
                             regs.src2 = Valid(tagged Gpr rs2);
                             dInst.imm = Valid (0);
-                            dInst.csr = tagged Invalid;
                             dInst.capChecks = memCapChecks(mi.reg_bounds);
                         end
                         f7_cap_TwoOp: begin
@@ -1268,28 +1243,24 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                                     dInst.iType = Cap;
                                     regs.dst = Valid(tagged Gpr rd);
                                     regs.src1 = Valid(tagged Gpr rs1);
-                                    dInst.imm = Invalid;
                                     dInst.capFunc = CapInspect (GetLen);
                                 end
                                 f5rs2_cap_CGetBase: begin
                                     dInst.iType = Cap;
                                     regs.dst = Valid(tagged Gpr rd);
                                     regs.src1 = Valid(tagged Gpr rs1);
-                                    dInst.imm = Invalid;
                                     dInst.capFunc = CapInspect (GetBase);
                                 end
                                 f5rs2_cap_CGetTag: begin
                                     dInst.iType = Cap;
                                     regs.dst = Valid(tagged Gpr rd);
                                     regs.src1 = Valid(tagged Gpr rs1);
-                                    dInst.imm = Invalid;
                                     dInst.capFunc = CapInspect (GetTag);
                                 end
                                 f5rs2_cap_CGetSealed: begin
                                     dInst.iType = Cap;
                                     regs.dst = Valid(tagged Gpr rd);
                                     regs.src1 = Valid(tagged Gpr rs1);
-                                    dInst.imm = Invalid;
                                     dInst.capFunc = CapInspect (GetSealed);
                                 end
                                 f5rs2_cap_CRRL: begin
@@ -1297,7 +1268,6 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                                      regs.dst = Valid(tagged Gpr rd);
                                      regs.src1 = Valid(tagged Gpr 0); // Operate on nullcap
                                      regs.src2 = Valid(tagged Gpr rs1);
-                                     dInst.imm = Invalid;
                                      dInst.capFunc = CapModify (SetBounds (CRRL));
                                 end
                                 f5rs2_cap_CRAM: begin
@@ -1305,49 +1275,42 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                                     regs.dst = Valid(tagged Gpr rd);
                                     regs.src1 = Valid(tagged Gpr 0); // Operate on nullcap
                                     regs.src2 = Valid(tagged Gpr rs1);
-                                    dInst.imm = Invalid;
                                     dInst.capFunc = CapModify (SetBounds (CRAM));
                                 end
                                 f5rs2_cap_CMove: begin
                                     dInst.iType = Cap;
                                     regs.dst = Valid(tagged Gpr rd);
                                     regs.src1 = Valid(tagged Gpr rs1);
-                                    dInst.imm = Invalid;
                                     dInst.capFunc = CapModify (Move);
                                 end
                                 f5rs2_cap_CClearTag: begin
                                     dInst.iType = Cap;
                                     regs.dst = Valid(tagged Gpr rd);
                                     regs.src1 = Valid(tagged Gpr rs1);
-                                    dInst.imm = Invalid;
                                     dInst.capFunc = CapModify (ClearTag);
                                 end
                                 f5rs2_cap_CGetAddr: begin
                                     dInst.iType = Cap;
                                     regs.dst = Valid(tagged Gpr rd);
                                     regs.src1 = Valid(tagged Gpr rs1);
-                                    dInst.imm = Invalid;
                                     dInst.capFunc = CapInspect (GetAddr);
                                 end
                                 f5rs2_cap_CGetOffset: begin
                                     dInst.iType = Cap;
                                     regs.dst = Valid(tagged Gpr rd);
                                     regs.src1 = Valid(tagged Gpr rs1);
-                                    dInst.imm = Invalid;
                                     dInst.capFunc = CapInspect (GetOffset);
                                 end
                                 f5rs2_cap_CGetFlags: begin
                                     dInst.iType = Cap;
                                     regs.dst = Valid(tagged Gpr rd);
                                     regs.src1 = Valid(tagged Gpr rs1);
-                                    dInst.imm = Invalid;
                                     dInst.capFunc = CapInspect (GetFlags);
                                 end
                                 f5rs2_cap_CGetPerm: begin
                                     dInst.iType = Cap;
                                     regs.dst = Valid(tagged Gpr rd);
                                     regs.src1 = Valid(tagged Gpr rs1);
-                                    dInst.imm = Invalid;
                                     dInst.capFunc = CapInspect (GetPerm);
                                 end
                                 f5rs2_cap_CJALR: begin
@@ -1365,14 +1328,11 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                                     dInst.execFunc = tagged Br AT;
                                     regs.dst  = Valid(tagged Gpr rd);
                                     regs.src1 = Valid(tagged Gpr rs1);
-                                    regs.src2 = Invalid;
-                                    dInst.imm = Invalid;
-                                end
+                                    end
                                 f5rs2_cap_CGetType: begin
                                     dInst.iType = Cap;
                                     regs.dst = Valid(tagged Gpr rd);
                                     regs.src1 = Valid(tagged Gpr rs1);
-                                    dInst.imm = Invalid;
                                     dInst.capFunc = CapInspect (GetType);
                                 end
                                 default: begin

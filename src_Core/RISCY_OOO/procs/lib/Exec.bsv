@@ -99,11 +99,11 @@ function Maybe#(BoundsCheck) prepareBoundsCheck(CapPipe a, CapPipe b, CapPipe pc
         end
         Pcc: begin
             authority = pcc;
-            ret.authority_idx = 6'b100000; // Not sure where the register number of PCC is defined...
+            ret.authority_idx = {1'b1, pack(SCR_PCC)};
         end
         Ddc: begin
             authority = ddc;
-            ret.authority_idx = 6'b100001; // Not sure where the register number of PCC is defined...
+            ret.authority_idx = {1'b1, pack(SCR_DDC)};
         end
     endcase
     ret.authority_base = getBase(authority);
