@@ -10,7 +10,7 @@ RISCY_DIRS = $(RISCY_HOME)/procs/RV64G_OOO:$(RISCY_HOME)/procs/lib:$(RISCY_HOME)
 
 CONNECTAL_DIRS = $(RISCY_HOME)/connectal/bsv:$(RISCY_HOME)/connectal/tests/spi:$(RISCY_HOME)/connectal/lib/bsv
 
-CHERI_DIRS = $(RISCY_HOME)/../CHERI:$(RISCY_HOME)/../../libs/cheri-cap-lib
+CHERI_DIRS = $(RISCY_HOME)/../../libs/cheri-cap-lib
 
 # ALL_RISCY_DIRS = $(RISCY_DIRS)
 ALL_RISCY_DIRS = $(RISCY_DIRS):$(CONNECTAL_DIRS):$(CHERI_DIRS)

@@ -1,6 +1,6 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +8,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -89,6 +89,18 @@
 //
 // ==== CACHE SIZE ====
 //
+
+`ifdef CACHE_TEST
+
+    // L1
+    `define LOG_L1_LINES 6 // 2KB
+    `define LOG_L1_WAYS 1 // 2 ways
+
+    // LLC
+    `define LOG_LLC_LINES 8 // 8KB
+    `define LOG_LLC_WAYS 1 // 2 ways
+
+`endif
 
 `ifdef CACHE_SMALL
 
@@ -323,5 +335,3 @@
 //
 // ==== derived parameters ====
 //
-
-
