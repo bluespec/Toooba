@@ -406,47 +406,53 @@ function Maybe#(Trap) checkForException(
     CapMem pcc,
     Bool fourByteInst
 ); // regs needed to check if x0 is a src
-    Maybe#(Exception) exception = Invalid;
+    Maybe#(Trap) exception = Invalid;
     let prv = csrState.prv;
 
     if(dInst.iType == Ecall) begin
-        exception = Valid (case(prv)
+        exception = Valid (Exception (case(prv)
             prvU: EnvCallU;
             prvS: EnvCallS;
             prvM: EnvCallM;
             default: IllegalInst;
-        endcase);
+        endcase));
     end
     else if(dInst.iType == Ebreak) begin
-        exception = Valid (Breakpoint);
+        exception = Valid (Exception (Breakpoint));
     end
     else if(dInst.iType == Mret) begin
         if(prv < prvM) begin
-            exception = Valid (IllegalInst);
+            exception = Valid (Exception (IllegalInst));
+        end
+        else if (!getHardPerms(pcc).accessSysRegs) begin
+            exception = Valid (CapException (CSR_XCapCause {cheri_exc_reg: {1'b1, pack(SCR_PCC)}, cheri_exc_code: PermitASRViolation}));
         end
     end
     else if(dInst.iType == Sret) begin
         if(prv < prvS) begin
-            exception = Valid (IllegalInst);
+            exception = Valid (Exception (IllegalInst));
         end
         else if(prv == prvS && csrState.trapSret) begin
-            exception = Valid (IllegalInst);
+            exception = Valid (Exception (IllegalInst));
+        end
+        else if (!getHardPerms(pcc).accessSysRegs) begin
+            exception = Valid (CapException (CSR_XCapCause {cheri_exc_reg: {1'b1, pack(SCR_PCC)}, cheri_exc_code: PermitASRViolation}));
         end
     end
     else if(dInst.iType == SFence) begin
         if(prv == prvS && csrState.trapVM) begin
-            exception = Valid (IllegalInst);
+            exception = Valid (Exception (IllegalInst));
         end
     end
     else if(dInst.iType == Csr) begin
         let csr = pack(fromMaybe(CSRnone, dInst.csr));
         Bool csr_has_priv = (prv >= csr[9:8]);
         if(!csr_has_priv) begin
-            exception = Valid (IllegalInst);
+            exception = Valid (Exception (IllegalInst));
         end
         else if(prv == prvS && csrState.trapVM &&
                 validValue(dInst.csr) == CSRsatp) begin
-            exception = Valid (IllegalInst);
+            exception = Valid (Exception (IllegalInst));
         end
         let rs1 = case (regs.src2) matches
                      tagged Valid (tagged Gpr .r) : r;
@@ -459,16 +465,29 @@ function Maybe#(Trap) checkForException(
         Bool writes_csr = ((dInst.execFunc == tagged Alu Csrw) || (rs1 != 0) || (imm != 0));
         Bool read_only  = (csr [11:10] == 2'b11);
         Bool write_deny = (writes_csr && read_only);
+        Bool asr_deny = !getHardPerms(pcc).accessSysRegs && !(
+                        //((csr_addr_hpmcounter3 <= csr) && (csr <= csr_addr_hpmcounter31) && writes_csr) // TODO seems these aren't implemented?
+                        (csr == pack(CSRfflags))
+                     || (csr == pack(CSRfrm))
+                     || (csr == pack(CSRfcsr))
+                     || (csr == pack(CSRcycle) && writes_csr)
+                     || (csr == pack(CSRinstret) && writes_csr));
         Bool unimplemented = (csr == pack(CSRnone));    // Added by Bluespec
         if (write_deny || !csr_has_priv || unimplemented) begin
-            exception = Valid (IllegalInst);
+            exception = Valid (Exception (IllegalInst));
+        end else if (asr_deny) begin
+            exception = Valid (CapException (CSR_XCapCause {cheri_exc_reg: {1'b1, pack(SCR_PCC)}, cheri_exc_code: PermitASRViolation}));
         end
     end
     else if(dInst.scr matches tagged Valid .scr) begin
         Bool scr_has_priv = (prv >= pack(scr)[4:3]);
         Bool unimplemented = (scr == SCR_None);
+        Bool asr_deny = !getHardPerms(pcc).accessSysRegs && !(
+          scr == SCR_DDC);
         if(!scr_has_priv || unimplemented) begin // Writes to PCC checked in capChecks
-            exception = Valid (IllegalInst);
+            exception = Valid (Exception (IllegalInst));
+        end else if (asr_deny) begin
+            exception = Valid (CapException (CSR_XCapCause {cheri_exc_reg: {1'b1, pack(SCR_PCC)}, cheri_exc_code: PermitASRViolation}));
         end
     end
     else if(dInst.iType == Fpu) begin
@@ -477,12 +496,12 @@ function Maybe#(Trap) checkForException(
             let rm = (fpu_f.rm == RDyn) ? unpack(csrState.frm) : fpu_f.rm;
             case(rm)
                 RNE, RTZ, RDN, RUP, RMM: exception = exception; // legal modes
-                default                : exception = Valid (IllegalInst);
+                default                : exception = Valid ( Exception (IllegalInst));
             endcase
         end
         else begin
             // Fpu instruction without FPU execFunc
-            exception = Valid (IllegalInst);
+            exception = Valid (Exception (IllegalInst));
         end
     end
 
@@ -498,7 +517,7 @@ function Maybe#(Trap) checkForException(
 
     Maybe#(Trap) retval = Invalid;
     if (capException matches tagged Valid .ce) retval = Valid(CapException(ce));
-    else if (exception matches tagged Valid .e) retval = Valid(Exception(e));
+    else retval = exception;
 
     return retval;
 endfunction
