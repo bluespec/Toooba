@@ -95,43 +95,6 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
       endaction
    endfunction
 
-   // Send a write-request into the fabric
-   function Action fa_fabric_send_write_req (Fabric_Addr  addr, Fabric_Strb  strb, Bit #(64)  st_val);
-      action
-         AXI4_Size  size = 8;
-         let mem_req_wr_addr = AXI4_AWFlit {awid:     fabric_default_mid,
-                                            awaddr:   addr,
-                                            awlen:    0,           // burst len = awlen+1
-                                            awsize:   size,
-                                            awburst:  fabric_default_burst,
-                                            awlock:   fabric_default_lock,
-                                            awcache:  fabric_default_awcache,
-                                            awprot:   fabric_default_prot,
-                                            awqos:    fabric_default_qos,
-                                            awregion: fabric_default_region,
-                                            awuser:   0};
-
-         let mem_req_wr_data = AXI4_WFlit {wdata:  st_val,
-                                           wstrb:  strb,
-                                           wlast:  True,
-                                           wuser:  0};
-
-   master_xactor.slave.aw.put (mem_req_wr_addr);
-   master_xactor.slave.w.put (mem_req_wr_data);
-
-         // Expect a fabric response
-         ctr_wr_rsps_pending.incr;
-
-         // Debugging
-         /*
-         if (cfg_verbosity > 1) begin
-            $display ("            To fabric: ", fshow (mem_req_wr_addr));
-            $display ("                       ", fshow (mem_req_wr_data));
-         end
-         */
-      endaction
-   endfunction
-
    // ================================================================
    // Handle read requests and responses
    // Don't do reads while writes are outstanding.
@@ -206,9 +169,6 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
 
    // Each 512b cache line takes 8 beats, each handling 64 bits
    Reg #(Bit #(3)) rg_wr_req_beat <- mkReg (0);
-   Reg #(Bit #(3)) rg_wr_rsp_beat <- mkReg (0);
-
-   FIFOF #(WbMemRs) f_pending_writes <- mkFIFOF;
 
    rule rl_handle_write_req (llc.toM.first matches tagged Wb .wb);
       if ((cfg_verbosity > 0) && (rg_wr_req_beat == 0)) begin
@@ -216,22 +176,44 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
          $display ("    ", fshow (wb));
       end
 
-      Addr       line_addr = { wb.addr [63:6], 6'h0 };    // Addr of containing cache line
-      Vector #(8, Bit #(8)) line_bes = unpack (pack (wb.byteEn));
-      Vector #(8, Bit #(64)) line_data = unpack(pack(wb.data.data));
+      // on first flit...
+      // ================
+      if (rg_wr_req_beat == 0) begin
+         // send AXI4 AW flit
+         master_xactor.slave.aw.put (AXI4_AWFlit {
+           awid:     fabric_default_mid,
+           awaddr:   { wb.addr [63:6], 6'h0 },
+           awlen:    7, // burst len = awlen+1
+           awsize:   8,
+           awburst:  INCR,
+           awlock:   fabric_default_lock,
+           awcache:  fabric_default_awcache,
+           awprot:   fabric_default_prot,
+           awqos:    fabric_default_qos,
+           awregion: fabric_default_region,
+           awuser:   0});
+         // Expect a fabric response
+         ctr_wr_rsps_pending.incr;
+      end
 
-      Addr  offset = zeroExtend ( { rg_wr_req_beat, 3'b_000 } );    // Addr offset of 64b word for this beat
-      Bit #(64)  data64 =  line_data[rg_wr_req_beat];
-      Bit #(8)   strb8  = line_bes  [rg_wr_req_beat];
-      fa_fabric_send_write_req (line_addr | offset, strb8, data64);
-
-      if (rg_wr_req_beat == 0)
-         f_pending_writes.enq (wb);
-
+      // on last flit...
+      // ===============
       if (rg_wr_req_beat == 7)
          llc.toM.deq;
 
+      // on each flit ...
+      // ================
+      Vector #(8, Bit #(8)) line_strb = unpack(pack(wb.byteEn));
+      Vector #(4, MemTaggedData) line_data = clineToMemTaggedDataVector(wb.data);
+      // send AXI4 W flit
+      master_xactor.slave.w.put(AXI4_WFlit {
+        wdata:  line_data[rg_wr_req_beat[2:1]].data[rg_wr_req_beat[0]],
+        wstrb:  line_strb[rg_wr_req_beat],
+        wlast:  rg_wr_req_beat == 7,
+        wuser:  pack(line_data[rg_wr_req_beat[2:1]].tag)});
+      // increment flit counter
       rg_wr_req_beat <= rg_wr_req_beat + 1;
+
    endrule
 
    // ----------------
@@ -239,11 +221,6 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
 
    rule rl_discard_write_rsp;
       let wr_resp <- get(master_xactor.slave.b);
-
-      if (cfg_verbosity > 1) begin
-         $display ("%0d: LLC_AXI4_Adapter.rl_discard_write_rsp: beat %0d ", cur_cycle, rg_wr_rsp_beat);
-         $display ("    ", fshow (wr_resp));
-      end
 
       if (ctr_wr_rsps_pending.value == 0) begin
          $display ("%0d: ERROR: LLC_AXI4_Adapter.rl_discard_write_rsp: unexpected Wr response (ctr_wr_rsps_pending.value == 0)",
@@ -260,13 +237,6 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
          $display ("    ", fshow (wr_resp));
          $finish (1);
       end
-
-      if (rg_wr_rsp_beat == 7) begin
-         let wrreq <- pop (f_pending_writes);
-         // LLC does not expect any response for writes
-      end
-
-      rg_wr_rsp_beat <= rg_wr_rsp_beat + 1;
    endrule
 
    // ================================================================
