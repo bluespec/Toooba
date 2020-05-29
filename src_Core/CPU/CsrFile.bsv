@@ -1027,7 +1027,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
             end
             tagged CapException .ce: begin
                 cause_code = pack(CHERIFault);
-                // populate CHERI cause register.
+                trap_val = zeroExtend({pack(ce.cheri_exc_reg), pack(ce.cheri_exc_code)});
             end
             tagged Interrupt .i: begin
                 cause_code = zeroExtend(pack(i));
