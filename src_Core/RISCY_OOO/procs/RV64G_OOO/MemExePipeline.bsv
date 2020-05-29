@@ -64,7 +64,7 @@ typedef struct {
     InstTag tag;
     LdStQTag ldstq_tag;
     CapChecks cap_checks;
-    Bool cap_mode;
+    Bool ddc_offset;
 } MemDispatchToRegRead deriving(Bits, Eq, FShow);
 
 typedef struct {
@@ -402,7 +402,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
                 tag: x.tag,
                 ldstq_tag: x.data.ldstq_tag,
                 cap_checks: x.data.cap_checks,
-                cap_mode: x.data.cap_mode
+                ddc_offset: x.data.ddc_offset
             },
             spec_bits: x.spec_bits
         });
@@ -431,7 +431,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         if(x.regs.src1 matches tagged Valid .src1 &&& src1 != 0) begin
             rVal1 <- readRFBypass(src1, regsReady.src1, inIfc.rf_rd1(src1), bypassWire);
         end
-        if (!x.cap_mode) rVal1 = nullWithAddr(getAddr(rVal1) + getAddr(ddc));
+        if (x.ddc_offset) rVal1 = nullWithAddr(getAddr(rVal1) + getAddr(ddc));
 
         // get rVal2 (check bypass)
         CapPipe rVal2 = nullCap;
