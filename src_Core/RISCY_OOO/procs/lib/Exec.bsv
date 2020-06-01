@@ -238,7 +238,7 @@ function Data capInspect(CapPipe a, CapPipe b, CapInspectFunc func);
                    zeroExtend(pack(   (isValidCap(b) == isValidCap(a))
                                    && ((getPerms(a) & getPerms(b)) == getPerms(a))
                                    && (getBase(a) >= getBase(b))
-                                   && (getTop(a) >= getTop(b))));
+                                   && (getTop(a) <= getTop(b))));
                tagged GetLen                 :
                    truncate(getLength(a));
                tagged GetBase                :
