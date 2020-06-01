@@ -377,7 +377,7 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
             St          : rVal2;
             Sc          : rVal2;
             Amo         : rVal2;
-            J           : nullWithAddr(getAddr(link_pcc));
+            J           : nullWithAddr(getOffset(link_pcc));
             CCall       : cap_alu_result;
             CJALR       : link_pcc;
             Jr          : nullWithAddr(getOffset(link_pcc));
