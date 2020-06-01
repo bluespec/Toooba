@@ -177,9 +177,10 @@ function CapPipe specialRWALU(CapPipe cap, CapPipe oldCap, SpecialRWFunc scrType
             Clear: (oldOffset & ~val);
         endcase;
     let offset = getOffset(cap);
+    let oldOffset = getOffset(oldCap);
     CapPipe res = (case (scrType) matches
-        tagged TVEC .csrf: update_scr_via_csr(oldCap, csrOp(offset, getAddr(cap), csrf) & ~64'h2);
-        tagged EPC .csrf: update_scr_via_csr(oldCap, csrOp(offset, getAddr(cap), csrf) & ~64'h1);
+        tagged TVEC .csrf: update_scr_via_csr(oldCap, csrOp(oldOffset, getAddr(cap), csrf) & ~64'h2);
+        tagged EPC .csrf: update_scr_via_csr(oldCap, csrOp(oldOffset, getAddr(cap), csrf) & ~64'h1);
         tagged TCC: update_scr_via_csr(cap, offset & ~64'h2); // Mask out bit 1
         tagged EPCC: update_scr_via_csr(cap, offset & ~64'h1); // Mask out bit 0 TODO factor out update_scr_via_csr
         tagged Normal: cap;
@@ -393,7 +394,7 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
             default             : cf.nextPc; //TODO should this be nullified?
         endcase);
 
-    CapPipe scr_data = specialRWALU(fromMaybe(rVal1, capImm), aluVal2, dInst.capFunc.CapModify.SpecialRW);
+    CapPipe scr_data = specialRWALU(fromMaybe(rVal1, capImm), rVal2, dInst.capFunc.CapModify.SpecialRW);
 
     return ExecResult{data: data, csrData: csr_data, scrData: scr_data, addr: addr, controlFlow: cf, capException: capException, boundsCheck: boundsCheck};
 endfunction
