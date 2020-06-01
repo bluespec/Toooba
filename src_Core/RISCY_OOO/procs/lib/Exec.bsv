@@ -338,8 +338,8 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
     Bool newPcc = dInst.iType == CJALR || dInst.iType == CCall;
     ControlFlow cf = ControlFlow{pc: pcc, nextPc: nullCap, taken: False, newPcc: newPcc, mispredict: False};
 
-    Maybe#(CapPipe) capImm = isValid(getDInstImm(dInst)) && dInst.iType != Scr ? Valid (nullWithAddr(getDInstImm(dInst).Valid)) : Invalid;
-    let aluVal2 = fromMaybe(rVal2, capImm);
+    Maybe#(CapPipe) capImm = isValid(getDInstImm(dInst)) ? Valid (nullWithAddr(getDInstImm(dInst).Valid)) : Invalid;
+    let aluVal2 = dInst.iType == Scr ? rVal2 : fromMaybe(rVal2, capImm);
     // Get the alu function. By default, it adds. This is used by memory instructions
     AluFunc alu_f = dInst.execFunc matches tagged Alu .alu_f ? alu_f : Add;
     Data alu_result = alu(getAddr(rVal1), getAddr(aluVal2), alu_f);
