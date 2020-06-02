@@ -64,24 +64,12 @@ typedef struct {
 deriving (FShow);
 
 SoC_Map_Struct soc_map_struct =
-`ifndef RVFI_DII
 SoC_Map_Struct {
    near_mem_io_addr_base: 'h_0200_0000,
-
    main_mem_addr_base:    'h_8000_0000,
-   main_mem_addr_size:    'h_1000_0000,
-   pc_reset_value:        'h_0000_1000
-   };
-`else
-SoC_Map_Struct {
-   near_mem_io_addr_base: 'h_0200_0000,
-
-   main_mem_addr_base:    'h_8000_0000,
-   main_mem_addr_size:    'h_0080_0000,
+   main_mem_addr_size:    'h_4000_0000,
    pc_reset_value:        'h_8000_0000
    };
-`endif
-
 
 // ================================================================
 // Interface and module for the address map
@@ -150,7 +138,7 @@ module mkSoC_Map (SoC_Map_IFC);
 
    let mem0_controller_addr_range = Range {
       base: 'h_8000_0000,
-      size: 'h_1000_0000    // 256 MB
+      size: 'h_4000_0000    // 1 GB
    };
 
    // ----------------------------------------------------------------

@@ -51,16 +51,15 @@ endinterface
 typedef 'h4000_0000 Bytes_Per_Mem;
 `ifdef RVFI_DII
 typedef 'h0000_0000 Zeroed_0_start;
-typedef RVFI_DII_Mem_Size Zeroed_0_end;
+typedef 'h0080_0000 Zeroed_0_end;
+typedef 'h3f00_0000 Zeroed_1_start;
+typedef 'h3fff_ff00 Zeroed_1_end;
 typedef TLog#(TDiv#(Bits_per_Raw_Mem_Word,8)) ByteOffsetInWord;
 typedef 8192 ZeroMemWidth;
 typedef TLog#(ZeroMemWidth) LogZMWidth;
-Integer wordOffsetWidth = valueOf(ByteOffsetInWord);
-Integer lineInZeroesOffsetWidth = valueOf(LogZMWidth) + valueOf(ByteOffsetInWord);
-typedef Bit#(TSub#(TLog#(TSub#(Zeroed_0_end, Zeroed_0_start)), TAdd#(LogZMWidth,ByteOffsetInWord))) Offset_Zeroes_0;
-typedef Bit#(TSub#(TLog#(TSub#(Zeroed_1_end, Zeroed_1_start)), TAdd#(LogZMWidth,ByteOffsetInWord))) Offset_Zeroes_1;
-typedef 'h3f00_0000 Zeroed_1_start;
-typedef 'h3fff_ff00 Zeroed_1_end;
+Integer lineInZeroesOffsetWidth = valueOf(LogZMWidth);
+typedef Bit#(TSub#(TSub#(TLog#(TSub#(Zeroed_0_end, Zeroed_0_start)), LogZMWidth), ByteOffsetInWord)) Offset_Zeroes_0;
+typedef Bit#(TSub#(TSub#(TLog#(TSub#(Zeroed_1_end, Zeroed_1_start)), LogZMWidth), ByteOffsetInWord)) Offset_Zeroes_1;
 `endif
 
 // ================================================================
@@ -69,7 +68,7 @@ typedef 'h3fff_ff00 Zeroed_1_end;
 (* synthesize *)
 module mkMem_Model (Mem_Model_IFC);
 
-    Integer verbosity = 0;    // 0 = quiet; 1 = verbose
+    Integer verbosity = 1;    // 0 = quiet; 1 = verbose
 
     Raw_Mem_Addr alloc_size = fromInteger(valueOf(TDiv#(TMul#(Bytes_Per_Mem,8), Bits_per_Raw_Mem_Word))); //(raw mem words)
 
@@ -89,9 +88,9 @@ module mkMem_Model (Mem_Model_IFC);
     Reg#(Offset_Zeroes_1) reset_count_1 <- mkReg(~0);
     rule doZeroesReset(!reset_done);
         zeroes_0.upd(reset_count_0, 0);
-        reset_count_0 <= reset_count_0 - 1;
         zeroes_1.upd(reset_count_1, 0);
-        reset_count_1 <= reset_count_1 - 1;
+        if (reset_count_0 != 0) reset_count_0 <= reset_count_0 - 1;
+        if (reset_count_1 != 0) reset_count_1 <= reset_count_1 - 1;
         if (reset_count_0 == 0 && reset_count_1 == 0) reset_done <= True;
     endrule
 `else
@@ -108,7 +107,7 @@ module mkMem_Model (Mem_Model_IFC);
    interface Put request;
      method Action put (MemoryRequest  #(Bits_per_Raw_Mem_Addr, Bits_per_Raw_Mem_Word) req) if (reset_done);
 `ifdef RVFI_DII
-        Bit#(LogZMWidth) offsetLo = truncate((req.address - zeroed_0_start)>>wordOffsetWidth);
+        Bit#(LogZMWidth) offsetLo = truncate((req.address - zeroed_0_start));
         Offset_Zeroes_0 word0 = truncate((req.address - zeroed_0_start)>>lineInZeroesOffsetWidth);
         Bit#(ZeroMemWidth) zeroes_0_word = zeroes_0.sub(word0);
         Offset_Zeroes_1 word1 = truncate((req.address - zeroed_1_start)>>lineInZeroesOffsetWidth);
@@ -137,7 +136,8 @@ module mkMem_Model (Mem_Model_IFC);
         else begin
            let x = rf.sub (req.address);
 `ifdef RVFI_DII
-           $display("req addr: ", fshow(req.address), ", zeroed_0_start: ", fshow(zeroed_0_start), ", zeroed_1_start: ", fshow(zeroed_1_start));
+           $display("req addr: ", fshow(req.address), ", zeroed_0_start: ", fshow(zeroed_0_start), "-", fshow(zeroed_0_end),
+                    ", zeroed_1_start: ", fshow(zeroed_1_start), "-", fshow(zeroed_1_end));
            if (req.address < zeroed_0_end && req.address >= zeroed_0_start && zeroes_0.sub(word0)[offsetLo] == 0) x = 0;
            if (req.address < zeroed_1_end && req.address >= zeroed_1_start && zeroes_1.sub(word1)[offsetLo] == 0) x = 0;
 `endif
