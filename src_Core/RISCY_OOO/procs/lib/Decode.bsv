@@ -33,7 +33,7 @@ import ISA_Decls_CHERI::*;
 Bit#(3) memWU   = 3'b110;
 
 // Smaller decode functions
-function Maybe#(MemInst) decodeMemInst(Instruction inst);
+function Maybe#(MemInst) decodeMemInst(Instruction inst, Bool cap_mode);
     Bool illegalInst = False;
     Opcode opcode = unpackOpcode(inst[6:0]);
     let funct5 = inst[31:27];
@@ -147,7 +147,7 @@ function Maybe#(MemInst) decodeMemInst(Instruction inst);
                                 byteEn: byteEn,
                                 aq: aq,
                                 rl: rl,
-                                reg_bounds: False } );
+                                reg_bounds: cap_mode } );
     end
 endfunction
 
@@ -299,7 +299,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
     ImmData immIunsigned = zeroExtend(inst[31:20]);
 
     // Results of mini-decoders
-    Maybe#(MemInst) mem_inst = decodeMemInst(inst);
+    Maybe#(MemInst) mem_inst = decodeMemInst(inst, cap_mode);
     Maybe#(MemInst) exp_bnds_mem_inst = decodeExplicitBoundsMemInst(inst);
 
     // TODO better detection of illegal insts
