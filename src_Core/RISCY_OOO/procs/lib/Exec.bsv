@@ -339,7 +339,7 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
     ControlFlow cf = ControlFlow{pc: pcc, nextPc: nullCap, taken: False, newPcc: newPcc, mispredict: False};
 
     Maybe#(CapPipe) capImm = isValid(getDInstImm(dInst)) ? Valid (nullWithAddr(getDInstImm(dInst).Valid)) : Invalid;
-    let aluVal2 = dInst.iType == Scr ? rVal2 : fromMaybe(rVal2, capImm);
+    let aluVal2 = dInst.capFunc matches tagged CapModify .cm &&& cm matches tagged SpecialRW ._ ? rVal2 : fromMaybe(rVal2, capImm);
     // Get the alu function. By default, it adds. This is used by memory instructions
     AluFunc alu_f = dInst.execFunc matches tagged Alu .alu_f ? alu_f : Add;
     Data alu_result = alu(getAddr(rVal1), getAddr(aluVal2), alu_f);
