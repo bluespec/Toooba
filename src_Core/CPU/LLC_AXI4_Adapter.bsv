@@ -76,9 +76,9 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
          AXI4_Size size = 8;
          let mem_req_rd_addr = AXI4_ARFlit {arid:     fabric_default_mid,
                                             araddr:   addr,
-                                            arlen:    0,           // burst len = arlen+1
-                                            arsize:   size,
-                                            arburst:  fabric_default_burst,
+                                            arlen:    7,           // burst len = arlen+1
+                                            arsize:   8,
+                                            arburst:  INCR,
                                             arlock:   fabric_default_lock,
                                             arcache:  fabric_default_arcache,
                                             arprot:   fabric_default_prot,
@@ -115,16 +115,16 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
       end
 
       Addr  line_addr = { ld.addr [63:6], 6'h0 };                      // Addr of containing cache line
-      Addr  offset    = zeroExtend ( { rg_rd_req_beat, 3'b_000 } );    // Addr offset of 64b word for this beat
-      fa_fabric_send_read_req (line_addr | offset);
+      //Addr  offset    = zeroExtend ( { rg_rd_req_beat, 3'b_000 } );    // Addr offset of 64b word for this beat
+      fa_fabric_send_read_req (line_addr);
 
-      if (rg_rd_req_beat == 0)
+      //if (rg_rd_req_beat == 0)
          f_pending_reads.enq (ld);
 
-      if (rg_rd_req_beat == 7)
+      //if (rg_rd_req_beat == 7)
          llc.toM.deq;
 
-      rg_rd_req_beat <= rg_rd_req_beat + 1;
+      //rg_rd_req_beat <= rg_rd_req_beat + 1;
    endrule
 
    rule rl_handle_read_rsps;
