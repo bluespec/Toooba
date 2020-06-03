@@ -239,10 +239,9 @@ function Tuple2 #(Bool, Instr) fv_decode_C_FLWSP (MISA  misa, Bit #(2)  xl, Inst
       Bit #(8) offset = { imm_at_6_2 [1:0], imm_at_12, imm_at_6_2 [4:2], 2'b0 };
 
       Bool is_legal = ((misa.c == 1'b1)
-                       && (op == opcode_C2)
-                       && (rd != 0)
-                       && (funct3 == funct3_C_FLWSP)
-                       && (misa.f == 1'b1));
+		       && (op == opcode_C2)
+		       && (funct3 == funct3_C_FLWSP)
+		       && (misa.f == 1'b1));
 
       RegName rs1   = reg_sp;
       let     instr = mkInstr_I_type (zeroExtend (offset),  rs1,  f3_FLW,  rd,  op_LOAD_FP);
@@ -261,12 +260,11 @@ function Tuple2 #(Bool, Instr) fv_decode_C_FLDSP (MISA  misa,  Bit #(2) xl, Inst
       Bit #(9) offset = { imm_at_6_2 [2:0], imm_at_12, imm_at_6_2 [4:3], 3'b0 };
 
       Bool is_legal = ((misa.c == 1'b1)
-                       && (op == opcode_C2)
-                       && (rd != 0)
-                       && (funct3 == funct3_C_FLDSP)
-                       && (misa.d == 1'b1)
-                       && (   (xl == misa_mxl_64)
-                           || (xl == misa_mxl_128)));
+		       && (op == opcode_C2)
+		       && (funct3 == funct3_C_FLDSP)
+		       && (misa.d == 1'b1)
+		       && (   (xl == misa_mxl_64)
+			   || (xl == misa_mxl_128)));
 
       RegName rs1   = reg_sp;
       let     instr = mkInstr_I_type (zeroExtend (offset),  rs1,  f3_FLD,  rd,  op_LOAD_FP);
