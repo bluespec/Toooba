@@ -1077,11 +1077,11 @@ module mkCore#(CoreId coreId)(Core);
       let phy_rindx     = fromMaybe (?, rename_result.phy_regs.src1);
       let data_out      = rf.read [debuggerPort].rd1 (phy_rindx);
 
-      let rsp = DM_CPU_Rsp {ok: True, data: data_out};
+      let rsp = DM_CPU_Rsp {ok: True, data: getAddr(data_out)};
       f_gpr_rsps.enq (rsp);
 
       if (show_DM_interactions)
-         $display ("%0d: %m.rl_debug_read_gpr: reg %0d => 0x%0h", cur_cycle, regnum, data_out);
+         $display ("%0d: %m.rl_debug_read_gpr: reg %0d => 0x%0h", cur_cycle, regnum, getAddr(data_out));
    endrule
 
    rule rl_debug_gpr_write (   (rg_core_run_state == CORE_HALTED)
@@ -1097,7 +1097,7 @@ module mkCore#(CoreId coreId)(Core);
                                 dst:  tagged Invalid};
       let rename_result = regRenamingTable.rename[0].getRename (arch_regs);
       let phy_rindx     = fromMaybe (?, rename_result.phy_regs.src1);
-      rf.write [debuggerPort].wr (phy_rindx, data_in);
+      rf.write [debuggerPort].wr (phy_rindx, setAddrUnsafe(almightyCap, data_in));
 
       let rsp = DM_CPU_Rsp {ok: True, data: ?};
       f_gpr_rsps.enq (rsp);
@@ -1137,11 +1137,11 @@ module mkCore#(CoreId coreId)(Core);
       let phy_rindx     = fromMaybe (?, rename_result.phy_regs.src1);
       let data_out      = rf.read [debuggerPort].rd1 (phy_rindx);
 
-      let rsp = DM_CPU_Rsp {ok: True, data: data_out};
+      let rsp = DM_CPU_Rsp {ok: True, data: getAddr(data_out)};
       f_fpr_rsps.enq (rsp);
 
       if (show_DM_interactions)
-         $display ("%0d: %m.rl_debug_read_fpr: reg %0d => 0x%0h", cur_cycle, regnum, data_out);
+         $display ("%0d: %m.rl_debug_read_fpr: reg %0d => 0x%0h", cur_cycle, regnum, getAddr(data_out));
    endrule
 
    rule rl_debug_fpr_write (   (rg_core_run_state == CORE_HALTED)
@@ -1157,7 +1157,7 @@ module mkCore#(CoreId coreId)(Core);
                                 dst:  tagged Invalid};
       let rename_result = regRenamingTable.rename[0].getRename (arch_regs);
       let phy_rindx     = fromMaybe (?, rename_result.phy_regs.src1);
-      rf.write [debuggerPort].wr (phy_rindx, data_in);
+      rf.write [debuggerPort].wr (phy_rindx, nullWithAddr(data_in));
 
       let rsp = DM_CPU_Rsp {ok: True, data: ?};
       f_fpr_rsps.enq (rsp);
@@ -1293,7 +1293,7 @@ module mkCore#(CoreId coreId)(Core);
       l2Tlb.updateVMInfo(vmI, vmD);
 
       let startpc = csrf.dpc_read;
-      fetchStage.redirect (startpc);
+      fetchStage.redirect (cast(startpc));
       renameStage.debug_resume;
       commitStage.debug_resume;
 

@@ -157,10 +157,10 @@ interface CsrFile;
 
 `ifdef INCLUDE_GDB_CONTROL
    // Read dpc
-   method Addr dpc_read ();
+   method CapReg dpc_read ();
 
    // Update dpc
-   method Action dpc_write (Addr pc);
+   method Action dpc_write (CapReg pc);
 
    // Check whether to enter Debug Mode based on dcsr.{ebreakm, ebreaks, ebreaku}
    method Bit #(1) dcsr_break_bit;
@@ -662,7 +662,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
 
    // RV64: dcsr's upper 32b zeroExtended/ignored
    Reg #(Data) rg_dcsr      <- mkConfigReg (zeroExtend (dcsr_reset_value));
-   Reg #(Data) rg_dpc       <- mkConfigReg (truncate (soc_map_struct.pc_reset_value));
+   Reg #(CapReg) rg_dpc     <- mkConfigReg (setAddrUnsafe(almightyCap,soc_map_struct.pc_reset_value));
    Reg #(Data) rg_dscratch0 <- mkConfigRegU;
    Reg #(Data) rg_dscratch1 <- mkConfigRegU;
 `endif
@@ -799,7 +799,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
 
 `ifdef INCLUDE_GDB_CONTROL
            CSRdcsr:       rg_dcsr;    // TODO: take NMI into account (cf. Piccolo/Flute)
-           CSRdpc:        rg_dpc;
+           // CSRdpc:        rg_dpc; // TODO: currently invisible to software due to it being a cap register
            CSRdscratch0:  rg_dscratch0;
            CSRdscratch1:  rg_dscratch1;
 `endif
@@ -1286,12 +1286,12 @@ module mkCsrFile #(Data hartid)(CsrFile);
 
 `ifdef INCLUDE_GDB_CONTROL
    // Read dpc
-   method Addr dpc_read ();
+   method CapReg dpc_read ();
       return rg_dpc;
    endmethod
 
    // Update dpc
-   method Action dpc_write (Addr pc);
+   method Action dpc_write (CapReg pc);
       rg_dpc <= pc;
    endmethod
 

@@ -25,11 +25,14 @@ import ClientServer  :: *;
 import Connectable   :: *;
 import Bus           :: *;
 import Clocks        :: *;
+import Vector        :: *;
 
 // ----------------
 // BSV additional libs
 
 import GetPut_Aux :: *;
+import Routable   :: *;
+import AXI4       :: *;
 import Semi_FIFOF :: *;
 import Cur_Cycle  :: *;
 
@@ -37,6 +40,7 @@ import Cur_Cycle  :: *;
 // Project imports
 
 import SoC_Map  :: *;
+import Fabric_Defs :: *;
 
 // The basic core
 import CoreW_IFC :: *;
@@ -44,11 +48,6 @@ import CoreW     :: *;
 
 // External interrupt request interface
 import PLIC :: *;    // for PLIC_Source_IFC type which is exposed at P3_Core interface
-
-// Main Fabric
-import AXI4_Types   :: *;
-import AXI4_Fabric  :: *;
-import Fabric_Defs  :: *;
 
 `ifdef INCLUDE_TANDEM_VERIF
 import TV_Info :: *;
@@ -70,10 +69,11 @@ interface P3_Core_IFC;
    // Core CPU interfaces
 
    // CPU IMem to Fabric master interface
-   interface AXI4_Master_IFC #(Wd_Id, Wd_Addr, Wd_Data, Wd_User) master0;
+   interface AXI4_Master_Synth#(TAdd#(Wd_MId,1), Wd_Addr, Wd_Data,
+                                0, 0, 0, 0, 0)  master0;
 
-   // CPU DMem (incl. I/O) to Fabric master interface
-   interface AXI4_Master_IFC #(Wd_Id, Wd_Addr, Wd_Data, Wd_User) master1;
+   interface AXI4_Master_Synth#(TAdd#(Wd_MId,1), Wd_Addr, Wd_Data,
+                                0, 0, 0, 0, 0)  master1;
 
    // External interrupt sources
    (* always_ready, always_enabled, prefix="" *)
@@ -277,10 +277,10 @@ module mkP3_Core (P3_Core_IFC);
    // Core CPU interfaces
 
    // CPU IMem to Fabric master interface
-   interface AXI4_Master_IFC master0 = corew.cpu_imem_master;
+   interface AXI4_Master_Synth master0 = corew.cpu_imem_master;
 
    // CPU DMem to Fabric master interface
-   interface AXI4_Master_IFC master1 = corew.cpu_dmem_master;
+   interface AXI4_Master_Synth master1 = corew.cpu_dmem_master;
 
    // External interrupts
    method  Action interrupt_reqs (Bit #(N_External_Interrupt_Sources) reqs);

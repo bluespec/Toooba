@@ -21,18 +21,23 @@ ARCH ?= RV64ACDFIMSU
 # ================================================================
 # RISC-V config macros passed into Bluespec 'bsc' compiler
 
-BSC_COMPILATION_FLAGS += \
-	-D RV64 \
-	-D ISA_PRIV_M  -D ISA_PRIV_S  -D ISA_PRIV_U  \
-	-D SV39 \
-	-D ISA_I  -D ISA_M  -D ISA_A  -D ISA_F  -D ISA_D  -D ISA_FD_DIV  -D ISA_C  \
-	-D SHIFT_BARREL    \
-	-D MULT_SERIAL    \
-	-D Near_Mem_Caches    \
-	-D FABRIC64    \
-	-D INCLUDE_GDB_CONTROL \
-	-D BRVF_TRACE \
-	-D JTAG_TAP \
+MORE_DEFINES = \
+	 RV64 \
+	 ISA_PRIV_M  ISA_PRIV_S  ISA_PRIV_U  \
+	 SV39 \
+	 ISA_I  ISA_M  ISA_A  ISA_F  ISA_D  ISA_FD_DIV  ISA_C  \
+	 SHIFT_BARREL    \
+	 MULT_SERIAL    \
+	 Near_Mem_Caches    \
+	 FABRIC64    \
+         CAP128 \
+         MEM64 \
+         RISCV \
+	 INCLUDE_GDB_CONTROL \
+	 BRVF_TRACE \
+	 JTAG_TAP
+BSC_DEFINES += $(MORE_DEFINES)
+BSC_COMPILATION_FLAGS += $(addprefix -D , $(MORE_DEFINES))
 
 # Synth only BSC_COMPILATION_FLAGS
 SYNTH_BSC_OPTIONS = -D XILINX_BSCAN -D XILINX_XCVU9P  
@@ -54,17 +59,21 @@ RISCY_DIRS = $(RISCY_HOME)/procs/RV64G_OOO:$(RISCY_HOME)/procs/lib:$(RISCY_HOME)
 
 CONNECTAL_DIRS = $(RISCY_HOME)/connectal/bsv:$(RISCY_HOME)/connectal/tests/spi:$(RISCY_HOME)/connectal/lib/bsv
 
+CHERI_DIRS = $(RISCY_HOME)/../../libs/cheri-cap-lib
+
 # ALL_RISCY_DIRS = $(RISCY_DIRS)
-ALL_RISCY_DIRS = $(RISCY_DIRS):$(CONNECTAL_DIRS)
+ALL_RISCY_DIRS = $(RISCY_DIRS):$(CONNECTAL_DIRS):$(CHERI_DIRS)
 
 # ================================================================
 # Search path for bsc for .bsv files
 
 CORE_DIRS = $(REPO)/src_Core/CPU:$(REPO)/src_Core/ISA:$(REPO)/src_Core/Core:$(REPO)/src_Core/PLIC:$(REPO)/src_Core/Debug_Module:$(REPO)/src_Core/BSV_Additional_Libs
 
-TESTBENCH_DIRS  = $(REPO)/src_Testbench/Fabrics/AXI4
+BLUESTUFF_DIRS = $(REPO)/libs/BlueStuff:$(REPO)/libs/BlueStuff/AXI:$(REPO)/libs/BlueStuff/BlueUtils:$(REPO)/libs/BlueStuff/BlueBasics
 
-BSC_PATH = -p $(ALL_RISCY_DIRS):$(CORE_DIRS):src_BSV:$(TESTBENCH_DIRS):+:%/Libraries/TLM3:%/Libraries/Axi:%/Libraries/Axi4
+TAGCONTROLLER_DIRS = $(REPO)/libs/TagController/TagController:$(REPO)/libs/TagController/TagController/CacheCore
+
+BSC_PATH = -p $(ALL_RISCY_DIRS):$(CORE_DIRS):src_BSV:$(BLUESTUFF_DIRS):$(TAGCONTROLLER_DIRS):+:%/Libraries/TLM3:%/Libraries/Axi:%/Libraries/Axi4
 
 # ----------------
 # Top-level file and module
@@ -76,9 +85,10 @@ TOPMODULE = mkP3_Core
 # More bsc compilation flags
 BSC_COMPILATION_FLAGS += \
 	-keep-fires -aggressive-conditions \
-	-no-warn-action-shadowing -no-show-timestamps \
+	-no-warn-action-shadowing \
 	-suppress-warnings G0020    \
-	+RTS -K128M -RTS  -show-range-conflict
+	+RTS -K128M -RTS  -show-range-conflict \
+        -steps-max-intervals 10000000
 
 # ================================================================
 # Generate Verilog RTL from BSV sources (needs Bluespec 'bsc' compiler)
