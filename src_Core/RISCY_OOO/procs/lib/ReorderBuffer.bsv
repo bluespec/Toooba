@@ -305,7 +305,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
                 else begin
                     ppc_vaddr_csrData[pvc_finishAlu_port(i)] <= PPC (cast(cf.nextPc));
                 end
-                if (cause matches tagged Valid .exp) begin
+                if (cause matches tagged Valid .exp &&& !isValid(trap[trap_finishAlu_port(i)])) begin
                     trap[trap_finishAlu_port(i)] <= Valid (CapException (exp));
                     tval[trap_finishAlu_port(i)] <= tval[trap_finishAlu_port(i)];
                 end
@@ -333,7 +333,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
                 rg_dst_data <= nullWithAddr(dst_data);
                 // update fflags
                 fflags[fflags_finishFpuMulDiv_port(i)] <= new_fflags;
-                if (cause matches tagged Valid .exp) begin
+                if (cause matches tagged Valid .exp  &&& !isValid(trap[trap_finishFpuMulDiv_port(i)])) begin
                     trap[trap_finishFpuMulDiv_port(i)] <= Valid (Exception (exp));
                     tval[trap_finishFpuMulDiv_port(i)] <= tval[trap_finishAlu_port(i)];
                 end
