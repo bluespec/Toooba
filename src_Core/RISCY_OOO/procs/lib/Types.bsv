@@ -90,6 +90,19 @@ function MemTaggedData toMemTaggedData(t x)
   data: unpack(zeroExtend(pack(x)))
 };
 function MemTaggedData dataToMemTaggedData(Data x) = toMemTaggedData(x);
+function MemTaggedData toMemTaggedDataSelect(t x, Addr addr)
+  provisos (Bits#(t, sz), Add#(sz, smthg, MemDataSz),
+  Mul#(ts_in_memdata, sz, 128), Div#(128, sz, ts_in_memdata),
+  Add#(a__, TLog#(ts_in_memdata), TSub#(64, TLog#(sz))));
+  Bit#(TSub#(AddrSz,TLog#(sz))) alignedAddr = truncateLSB(addr);
+  Bit#(TLog#(ts_in_memdata)) select = truncate(alignedAddr);
+  Vector#(ts_in_memdata, t) vec = unpack(0);
+  vec[select] = x;
+  return MemTaggedData {
+    tag: False,
+    data: unpack(pack(vec))
+  };
+endfunction
 function t fromMemTaggedData(MemTaggedData x)
   provisos (Bits#(t, sz), Add#(sz, smthg, MemDataSz)) =
   unpack(truncate(pack(x.data)));

@@ -236,7 +236,7 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
 
    provisos (Bits #(Data, 64)); // this module assumes Data is 64-bit wide
 
-   Integer verbosity = 0;
+   Integer verbosity = 1;
 
    // mtimecmp
    Vector#(CoreNum, Reg#(Data)) mtimecmp <- replicateM(mkReg(0));
@@ -545,7 +545,7 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
           // for AMO, resp data should be signExtend(lower_data). However,
           // lower_data is just 1 or 0, and upper_data is always 0, so we
           // don't need to do signExtend.
-          data: toMemTaggedData({upper_data, lower_data})
+          data: toMemTaggedDataSelect({upper_data, lower_data}, {msipBoundAddr,0})
         }));
       if(verbosity > 0) begin
          $display("[Platform - msip done] lower %x, upper %x",
@@ -562,9 +562,10 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
             aq: False,
             rl: False
             };
-            let res = amoExec(amoInst, {0, pack(reqBE[4] && !reqBE[0])},
+        let res = amoExec(amoInst, {0, pack(reqBE[4] && !reqBE[0])},
                               toMemTaggedData(orig), reqData);
-            return res.data[0];
+
+        return res.data[0];
       end
       else begin
          // normal store
@@ -598,6 +599,7 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
    rule processMTimeCmp(
                         curReq matches tagged MTimeCmp .offset &&& state == ProcessReq
       );
+      Addr addr = {mtimecmpBaseAddr,0};
       if(isInstFetch) begin
          state <= SelectReq;
          cores[reqCore].pRs.enq(InstFetch (replicate(Invalid)));
@@ -620,7 +622,7 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
          if(reqFunc == Ld) begin
             cores[reqCore].pRs.enq(DataAccess (MMIODataPRs {
                valid: True,
-               data: toMemTaggedData(oldMTimeCmp)
+               data: toMemTaggedDataSelect(oldMTimeCmp, addr)
                 }));
             state <= SelectReq;
             if(verbosity > 0) begin
@@ -633,7 +635,7 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
             let newData = getWriteData(oldMTimeCmp);
             mtimecmp[offset] <= newData;
             // get and record amo resp
-            let respData = toMemTaggedData(getAmoResp(oldMTimeCmp));
+            let respData = toMemTaggedDataSelect(getAmoResp(oldMTimeCmp), addr);
             amoResp <= respData;
             // check changes to MTIP
             if(newData <= mtime && !mtip[offset]) begin
@@ -697,6 +699,7 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
 
    // handle mtime access
    rule processMTime(state == ProcessReq && curReq == MTime);
+        Addr addr = {mtimeBaseAddr,0};
         if(isInstFetch) begin
             state <= SelectReq;
             cores[reqCore].pRs.enq(InstFetch (replicate(Invalid)));
@@ -706,7 +709,7 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
         end
         else if(reqFunc == Ld) begin
             cores[reqCore].pRs.enq(DataAccess (MMIODataPRs {
-              valid: True, data: toMemTaggedData(mtime)
+              valid: True, data: toMemTaggedDataSelect(mtime, addr)
             }));
             state <= SelectReq;
             if(verbosity > 0) begin
@@ -719,7 +722,7 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
             let newData = getWriteData(mtime);
             mtime <= newData;
             // get and record AMO resp
-            let respData = toMemTaggedData(getAmoResp(mtime));
+            let respData = toMemTaggedDataSelect(getAmoResp(mtime), addr);
             amoResp <= respData;
             // check change in MTIP
             Vector#(CoreNum, Bool) changeMTIP = replicate(False);
@@ -808,7 +811,7 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
             else if(reqFunc == Ld) begin
                 resp.valid = True;
                 if(toHostQ.notEmpty) begin
-                    resp.data = toMemTaggedData(toHostQ.first);
+                    resp.data = toMemTaggedDataSelect(toHostQ.first, {toHostAddr,0});
                 end
                 else begin
                     resp.data = 0;
@@ -859,7 +862,7 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
             else if(reqFunc == Ld) begin
                 resp.valid = True;
                 if(fromHostQ.notEmpty) begin
-                    resp.data = toMemTaggedData(fromHostQ.first);
+                    resp.data = toMemTaggedDataSelect(fromHostQ.first, {fromHostAddr,0});
                 end
                 else begin
                     resp.data = 0;
@@ -954,7 +957,7 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
                                     , fromMemTaggedData(reqData));
 
          // Write back new st_val to fabric
-         let req = MMIOCRq {addr:addr, func:tagged St, byteEn:reqBE, data:toMemTaggedData(new_st_val)};
+         let req = MMIOCRq {addr:addr, func:tagged St, byteEn:reqBE, data:toMemTaggedDataSelect(new_st_val, addr)};
          mmio_fabric_adapter_core_side.request.put (req);
 
          let prs = tagged DataAccess (MMIODataPRs { valid: True, data: ld_val });
