@@ -91,13 +91,16 @@ function MemTaggedData toMemTaggedData(t x)
 };
 function MemTaggedData dataToMemTaggedData(Data x) = toMemTaggedData(x);
 function MemTaggedData toMemTaggedDataSelect(t x, Addr addr)
-  provisos (Bits#(t, sz), Add#(sz, smthg, MemDataSz),
-  Mul#(ts_in_memdata, sz, 128), Div#(128, sz, ts_in_memdata),
-  Add#(a__, TLog#(ts_in_memdata), TSub#(64, TLog#(sz))));
-  Bit#(TSub#(AddrSz,TLog#(sz))) alignedAddr = truncateLSB(addr);
-  Bit#(TLog#(ts_in_memdata)) select = truncate(alignedAddr);
-  Vector#(ts_in_memdata, t) vec = unpack(0);
-  vec[select] = x;
+  provisos (Literal#(t), Bits#(t, sz), Add#(sz, smthg, MemDataSz),
+  Mul#(ts_in_memdata, sz, SizeOf#(MemData)),
+  Div#(SizeOf#(MemData), sz, ts_in_memdata),
+  Add#(TLog#(TDiv#(sz,8)), aligned_addr_sz, SizeOf#(Addr)),
+  Add#(a__, TLog#(ts_in_memdata), aligned_addr_sz));
+
+  Bit#(aligned_addr_sz) alignedAddr = truncateLSB(addr);
+  Bit#(TLog#(ts_in_memdata)) t_index = truncate(alignedAddr);
+  Vector#(ts_in_memdata, t) vec = replicate(0);
+  vec[t_index] = x;
   return MemTaggedData {
     tag: False,
     data: unpack(pack(vec))
@@ -106,6 +109,14 @@ endfunction
 function t fromMemTaggedData(MemTaggedData x)
   provisos (Bits#(t, sz), Add#(sz, smthg, MemDataSz)) =
   unpack(truncate(pack(x.data)));
+function Tuple2#(t, be_t) fromMemTaggedDataSelect(MemTaggedData x, Bit#(MemDataBytes) be)
+  provisos (Bits#(t, sz), Bits#(be_t, be_t_sz), Mul#(be_t_sz, 8, sz),
+            Mul#(be_t_sz, elems, MemDataBytes), Add#(sz, smthg, MemDataSz));
+  Vector#(elems,be_t) be_vec = unpack(be);
+  Vector#(elems,t) x_vec = unpack(pack(x.data));
+  function Bool pred(Tuple2#(t, be_t) el) = pack(tpl_2(el)) != 0;
+  return fromMaybe(unpack(0), find (pred, zip(x_vec, be_vec)));
+endfunction
 
 typedef 32 InstSz;
 typedef Bit#(InstSz) Instruction;
