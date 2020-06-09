@@ -111,94 +111,6 @@ function Bit #(64) fn_extract_and_extend_bytes (Bit #(2) sz, Bit #(64) byte_addr
 endfunction
 
 // ================================================================
-// Update relevant bytes of store-value.
-// The bytes of interest are offset according to LSBs of addr.
-// Arguments:
-//  - a RISC-V LD/ST size (encoding B, H, W, or D)
-//  - a byte-address
-//  - an amo result (relevant bytes are in lower-order bits)
-//  - original store-val
-// result:
-//  - store-val with relevant byte(s) updated
-
-function Bit #(64) fn_update_bytes (Bit #(2) sz, Bit #(64) byte_addr, Bit #(64) value, Bit #(64) st_val);
-   Bit #(64) result    = 0;
-   Bit #(3)  addr_lsbs = byte_addr [2:0];
-
-   case (sz)
-      sz_B: case (addr_lsbs)
-               'h0: result = { st_val [63:8],  value [7:0] };
-               'h1: result = { st_val [63:16], value [7:0], st_val [7:0] };
-               'h2: result = { st_val [63:24], value [7:0], st_val [15:0] };
-               'h3: result = { st_val [63:32], value [7:0], st_val [23:0] };
-               'h4: result = { st_val [63:40], value [7:0], st_val [31:0] };
-               'h5: result = { st_val [63:48], value [7:0], st_val [39:0] };
-               'h6: result = { st_val [63:56], value [7:0], st_val [47:0] };
-               'h7: result = {                 value [7:0], st_val [55:0] };
-            endcase
-
-      sz_H: case (addr_lsbs)
-               'h0: result = { st_val [63:16], value [15:0] };
-               'h2: result = { st_val [63:32], value [15:0], st_val [15:0] };
-               'h4: result = { st_val [63:48], value [15:0], st_val [31:0] };
-               'h6: result = {                 value [15:0], st_val [47:0] };
-            endcase
-
-      sz_W: case (addr_lsbs)
-               'h0: result = { st_val [63:32], value [31:0] };
-               'h4: result = {                 value [31:0], st_val [31:0] };
-            endcase
-
-      sz_D: case (addr_lsbs)    // D
-               'h0: result = st_val;
-            endcase
-   endcase
-   return result;
-endfunction
-
-// ================================================================
-// AMO op function
-// Extracts the relevant bytes from ld_val and st_val,
-// Performs the AMO op,
-// Updates the relevant bytes of st_val.
-
-function Bit #(64) fn_amo_op (Bit #(2)   sz,        // encodes data size (.W or .D)
-                              AmoFunc    amofunc,   // encodes the AMO op
-                              Bit #(64)  addr,      // lsbs indicate which 32b W in 64b D (.W)
-                              Bit #(64)  ld_val,    // 64b value loaded from mem
-                              Bit #(64)  st_val);   // 64b value from CPU reg Rs2
-   // Extract relevant bytes of ld_val and st_val
-   Bit #(64) w1     = fn_extract_and_extend_bytes (sz, addr, ld_val);
-   Bit #(64) w2     = fn_extract_and_extend_bytes (sz, addr, st_val);
-
-   // Do AMO op
-   Int #(64) i1     = unpack (w1);    // Signed, for signed ops
-   Int #(64) i2     = unpack (w2);    // Signed, for signed ops
-   if (sz == 2'b10) begin
-      // 32-bit word
-      w1 = zeroExtend (w1 [31:0]);
-      w2 = zeroExtend (w2 [31:0]);
-      i1 = unpack (signExtend (w1 [31:0]));
-      i2 = unpack (signExtend (w2 [31:0]));
-   end
-   Bit #(64) op_result = ?;
-   case (amofunc)
-      Swap: op_result = w2;
-      Add:  op_result = pack (i1 + i2);
-      Xor:  op_result = w1 ^ w2;
-      And:  op_result = w1 & w2;
-      Or:   op_result = w1 | w2;
-      Minu: op_result = ((w1 < w2) ? w1 : w2);
-      Maxu: op_result = ((w1 > w2) ? w1 : w2);
-      Min:  op_result = ((i1 < i2) ? w1 : w2);
-      Max:  op_result = ((i1 > i2) ? w1 : w2);
-   endcase
-
-   // Update relevant bytes of st_val
-   return fn_update_bytes (sz, addr, op_result, st_val);
-endfunction: fn_amo_op
-
-// ================================================================
 // MMIO logic at platform (MMIOPlatform)
 // XXX Currently all MMIO requests and posts of timer interrupts are handled
 // one by one in a blocking manner. This is extremely conservative. Hopefully
@@ -455,10 +367,12 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
          end
       end
       else if(reqFunc matches tagged Amo .amoFunc) begin
+         Tuple2#(Bit#(32), Bit#(4)) amo_req = fromMemTaggedDataSelect(reqData, pack(reqBE));
+         match {.amo_req_data, .amo_req_be} = amo_req;
          // AMO req: should only access MSIP of one core. Thus, we always
          // treat the accessed core as the lower core to save the shift (AMO
          // resp is different from load that valid data is already shifted
-         // to LSBs). Besides, we only use the lower 32 bits of reqData.
+         // to LSBs). Besides, we only use 32 bits reqData.
          if(lower_en && upper_en) begin
             state <= SelectReq;
             cores[reqCore].pRs.enq(DataAccess (MMIODataPRs {
@@ -473,7 +387,7 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
             cores[lower_core].pRq.enq(MMIOPRq {
                target: MSIP,
                func: reqFunc,
-               data: fromMemTaggedData(reqData)
+               data: amo_req_data
                });
             waitLowerMSIPCRs <= Valid (lower_core);
             waitUpperMSIPCRs <= Invalid;
@@ -483,7 +397,7 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
             cores[upper_core].pRq.enq(MMIOPRq {
                target: MSIP,
                func: reqFunc,
-               data: fromMemTaggedData(reqData)
+               data: amo_req_data
                });
             waitLowerMSIPCRs <= Valid (upper_core);
             waitUpperMSIPCRs <= Invalid;
@@ -554,30 +468,22 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
    endrule
 
    function Data getWriteData(Data orig);
+      Tuple2#(Data, Bit#(DataBytes)) wr = fromMemTaggedDataSelect(reqData, pack(reqBE));
+      match {.wr_data, .wr_be} = wr;
       if(reqFunc matches tagged Amo .amoFunc) begin
          // amo
          let amoInst = AmoInst {
             func: amoFunc,
-            width: reqBE[4] && reqBE[0] ? DWord : Word,
+            width: wr_be[4]==1 && wr_be[0]==1 ? DWord : Word,
             aq: False,
             rl: False
             };
-        let res = amoExec(amoInst, {0, pack(reqBE[4] && !reqBE[0])},
-                              toMemTaggedData(orig), reqData);
+        let res = amoExec(amoInst, {0, pack(wr_be[4]==1 && wr_be[0]!=1)},
+                              toMemTaggedData(orig), toMemTaggedData(wr_data));
 
         return res.data[0];
       end
-      else begin
-         // normal store
-         Vector#(DataBytes, Bit#(8)) data = unpack(orig);
-         Vector#(DataBytes, Bit#(8)) wrVec = fromMemTaggedData(reqData);
-         for(Integer i = 0; i < valueof(DataBytes); i = i+1) begin
-            if(reqBE[i]) begin
-               data[i] = wrVec[i];
-            end
-         end
-         return pack(data);
-      end
+      else return mergeDataBE(orig, wr_data, wr_be);
    endfunction
 
    function Data getAmoResp(Data orig);
@@ -950,14 +856,21 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
          state <= SelectReq;
       end
       else begin
+         MemTaggedData ld_val = dprs.data;
          // Do the AMO op on the loaded value and the store value
-         let ld_val = dprs.data;
-         let new_st_val = fn_amo_op ( reqSz, reqAmofunc, addr
-                                    , fromMemTaggedData(ld_val)
-                                    , fromMemTaggedData(reqData));
+         function Bool pred(Bool b) = b;
+         let set_bes = countIf(pred, reqBE);
+         let amoInst = AmoInst {
+            func: reqAmofunc,
+            width: (set_bes > 4) ? DWord : Word,
+            aq: False,
+            rl: False
+            };
+         let new_st_val = amoExec(amoInst, addr[3:2],
+                                  ld_val, reqData);
 
          // Write back new st_val to fabric
-         let req = MMIOCRq {addr:addr, func:tagged St, byteEn:reqBE, data:toMemTaggedDataSelect(new_st_val, addr)};
+         let req = MMIOCRq {addr:addr, func:tagged St, byteEn:reqBE, data: new_st_val};
          mmio_fabric_adapter_core_side.request.put (req);
 
          let prs = tagged DataAccess (MMIODataPRs { valid: True, data: ld_val });
@@ -1031,7 +944,7 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
          end
 
          // View Data as a vector of instructions
-         Vector#(MemDataSzInst, Instruction) instVec = fromMemTaggedData(dprs.data);
+         Vector#(MemDataSzInst, Instruction) instVec = unpack(pack(dprs.data.data));
          // extract inst from resp data
          Instruction inst = instVec[instSel];
          // check whether we are done or not
