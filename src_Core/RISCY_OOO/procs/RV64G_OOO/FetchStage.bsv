@@ -726,6 +726,11 @@ module mkFetchStage(FetchStage);
         if (verbosity > 0) $display("Got from DII: ", fshow (ii));
         if(verbose) $display("PC is %x", fetch3In.pc);
 `endif
+        if (verbosity >= 2) begin
+            $display ("----------------");
+            $display ("Fetch3: f22f3.first: ", fshow (f22f3.first));
+            $display ("Fetch3: inst_d:      ", fshow (inst_d));
+        end
         if (drop_f22f3) begin
             // Drop any pending straddle if this is for a different main or
             // decode epoch since that invalidates our Fetch3 redirect, but
@@ -735,10 +740,7 @@ module mkFetchStage(FetchStage);
                 pending_straddle = tagged Invalid;
             end
             if (verbosity >= 2) begin
-                $display ("----------------");
                 $display ("Fetch3: Drop: main_epoch: %d decode epoch: %d fetch3 epoch %d", f_main_epoch, decode_epoch[1], fetch3_epoch);
-                $display ("Fetch3: f22f3.first: ", fshow (f22f3.first));
-                $display ("Fetch3: inst_d:      ", fshow (inst_d));
             end
         end
         else if (parse_f22f3) begin
