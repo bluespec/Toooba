@@ -36,7 +36,7 @@ MORE_DEFINES = RV64 \
                CAP128 \
                MEM64 \
                RVFI_DII \
-               RVFI \
+               RVFI BLUESIM\
                RISCV
 BSC_DEFINES += $(MORE_DEFINES)
 BSC_COMPILATION_FLAGS += $(addprefix -D , $(MORE_DEFINES))
