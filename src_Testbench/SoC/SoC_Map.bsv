@@ -67,8 +67,12 @@ SoC_Map_Struct soc_map_struct =
 SoC_Map_Struct {
    near_mem_io_addr_base: 'h_0200_0000,
    main_mem_addr_base:    'h_8000_0000,
+`ifdef RVFI_DII
    main_mem_addr_size:    'h_4000_0000,
-   pc_reset_value:        'h_8000_0000
+`else
+   main_mem_addr_size:    'h_1000_0000,
+`endif
+   pc_reset_value:        'h_0000_1000
    };
 
 // ================================================================

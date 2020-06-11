@@ -254,20 +254,8 @@ module mkSoC_Top #(Reset dm_power_on_reset)
    // ================================================================
    // MODULE INITIALIZATIONS
 
-   function Action fa_reset_start_actions;
-      action
-	 mem0_controller.server_reset.request.put (?);
-	 uart0.server_reset.request.put (?);
-         boot_rom_axi4_deburster.clear;
-         mem0_controller_axi4_deburster.clear;
-      endaction
-   endfunction
-
    function Action fa_reset_complete_actions;
       action
-	 let mem0_controller_rsp <- mem0_controller.server_reset.response.get;
-	 let uart0_rsp           <- uart0.server_reset.response.get;
-
 	 // Initialize address maps of slave IPs
 	 boot_rom.set_addr_map (rangeBase(soc_map.m_boot_rom_addr_range),
 				rangeTop(soc_map.m_boot_rom_addr_range));
@@ -303,7 +291,6 @@ module mkSoC_Top #(Reset dm_power_on_reset)
    // Initial reset
 
    rule rl_reset_start_initial (rg_state == SOC_START);
-      fa_reset_start_actions;
       rg_state <= SOC_RESETTING;
 
       $display ("%0d: %m.rl_reset_start_initial ...", cur_cycle);
@@ -358,7 +345,7 @@ module mkSoC_Top #(Reset dm_power_on_reset)
       mem0_controller.set_watch_tohost (watch_tohost, tohost_addr);
       corew.start (tohost_addr, fromhost_addr);
       $display ("%0d: %m.method start (tohost %0h, fromhost %0h)",
-		cur_cycle, tohost_addr, fromhost_addr);
+                cur_cycle, tohost_addr, fromhost_addr);
    endmethod
 endmodule: mkSoC_Top
 
