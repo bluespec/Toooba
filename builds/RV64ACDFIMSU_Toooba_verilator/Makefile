@@ -31,6 +31,9 @@ MORE_DEFINES = RV64 \
                MULT_SYNTH \
                Near_Mem_Caches \
                FABRIC64 \
+               CheriBusBytes=8 \
+               CheriMasterIDWidth=1 \
+               CheriTransactionIDWidth=5 \
                CAP128 BLUESIM\
                MEM64 \
                RISCV

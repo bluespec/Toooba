@@ -157,8 +157,9 @@ module mkCoreW #(Reset dm_power_on_reset)
 
    // handle cached interface
    // AXI4 tagController
-   let tagController <- mkTagControllerAXI(reset_by hart0_reset); // TODO double check if reseting like this is good enough
-   AXI4_Master#(5, 64, 64, 0, 1, 0, 0, 1) tmp2 <- fromAXI4_Master_Synth(proc.master0, reset_by hart0_reset);
+   TagControllerAXI#(Wd_MId, Wd_Addr, Wd_Data) tagController <- mkTagControllerAXI(reset_by hart0_reset); // TODO double check if reseting like this is good enough
+   AXI4_Master#(Wd_MId, Wd_Addr, Wd_Data, Wd_AW_User, Wd_W_User, Wd_B_User, Wd_AR_User, Wd_R_User)
+                tmp2 <- fromAXI4_Master_Synth(proc.master0, reset_by hart0_reset);
    mkConnection(tmp2, tagController.slave, reset_by hart0_reset);
 
    // PLIC (Platform-Level Interrupt Controller)
