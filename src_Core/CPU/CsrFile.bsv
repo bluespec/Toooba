@@ -799,7 +799,10 @@ module mkCsrFile #(Data hartid)(CsrFile);
 
 `ifdef INCLUDE_GDB_CONTROL
            CSRdcsr:       rg_dcsr;    // TODO: take NMI into account (cf. Piccolo/Flute)
-           // CSRdpc:        rg_dpc; // TODO: currently invisible to software due to it being a cap register
+           CSRdpc:        interface Reg;
+                              method _write (x) = action rg_dpc <= setAddrUnsafe(rg_dpc, x); endaction;
+                              method _read = getAddr(rg_dpc);
+                          endinterface
            CSRdscratch0:  rg_dscratch0;
            CSRdscratch1:  rg_dscratch1;
 `endif
