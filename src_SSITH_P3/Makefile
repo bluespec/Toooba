@@ -26,6 +26,9 @@ MORE_DEFINES = \
 	 ISA_PRIV_M  ISA_PRIV_S  ISA_PRIV_U  \
 	 SV39 \
 	 ISA_I  ISA_M  ISA_A  ISA_F  ISA_D  ISA_FD_DIV  ISA_C  \
+         CheriBusBytes=8 \
+         CheriMasterIDWidth=1 \
+         CheriTransactionIDWidth=5 \
 	 SHIFT_BARREL    \
 	 MULT_SERIAL    \
 	 Near_Mem_Caches    \
