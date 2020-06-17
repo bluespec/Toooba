@@ -114,6 +114,7 @@ import Trace_Data2 :: *;
 
 interface CoreReq;
     method Action start(
+        Bool running,
         Addr startpc,
         Addr toHostAddr, Addr fromHostAddr
     );
@@ -1237,7 +1238,9 @@ module mkCore#(CoreId coreId)(Core);
 
       // Debugger 'halt' request (e.g., GDB '^C' command)
       // This is initiated just like an interrupt.
+`ifdef INCLUDE_GDB_CONTROL
       renameStage.debug_halt_req;
+`endif
 
       if (show_DM_interactions)
          $display ("%0d: %m.rl_debug_halt_req", cur_cycle);
@@ -1327,9 +1330,13 @@ module mkCore#(CoreId coreId)(Core);
 
     interface CoreReq coreReq;
         method Action start(
+            Bool running,
             Bit#(64) startpc,
             Addr toHostAddr, Addr fromHostAddr
         );
+`ifdef INCLUDE_GDB_CONTROL
+            if (!running) renameStage.debug_halt_req;
+`endif
             fetchStage.start(setAddrUnsafe(almightyCap, startpc)
 `ifdef RVFI_DII
                 , 0

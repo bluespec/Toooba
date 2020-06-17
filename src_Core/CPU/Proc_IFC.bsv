@@ -43,7 +43,7 @@ interface Proc_IFC;
    // ----------------
    // Start the cores running
    // Use toHostAddr = 0 if not monitoring tohost
-   method Action start (Addr startpc, Addr tohostAddr, Addr fromhostAddr);
+   method Action start (Bool running, Addr startpc, Addr tohostAddr, Addr fromhostAddr);
 
    // ----------------
    // SoC fabric connections

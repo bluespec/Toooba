@@ -850,13 +850,6 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
 
                 CapMem fallthrough_pc = addPc(pc, ((orig_inst[1:0] == 2'b11) ? 4 : 2));
 
-`ifdef INCLUDE_GDB_CONTROL
-                if ((i != 0) && (csrf.dcsr_step_bit == 1'b1)) begin
-                   stop       = True;
-                   debug_step = True;
-                end
-`endif
-
                 // check for wrong path, if wrong path, don't process it, leave to the other rule in next cycle
                 if(!epochManager.checkEpoch[i].check(main_epoch)) begin
                     stop = True;
@@ -1124,6 +1117,13 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                         if(spec_tag matches tagged Valid .t) begin
                             spec_bits = spec_bits | (1 << t);
                         end
+
+`ifdef INCLUDE_GDB_CONTROL
+                        if ((i == 0) && (csrf.dcsr_step_bit == 1'b1)) begin
+                            stop       = True;
+                            debug_step = True;
+                        end
+`endif
                     end
                 end
             end

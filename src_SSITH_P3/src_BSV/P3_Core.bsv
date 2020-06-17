@@ -41,6 +41,7 @@ import Cur_Cycle  :: *;
 
 import SoC_Map  :: *;
 import Fabric_Defs :: *;
+import PowerOnReset :: *;
 
 // The basic core
 import CoreW_IFC :: *;
@@ -123,8 +124,11 @@ module mkP3_Core (P3_Core_IFC);
    // its reset down from here.
 
    // (power-on reset) and the Debug Module's 'hart_reset' control.
+   let default_reset <- exposeCurrentReset();
 
-   let power_on_reset <- exposeCurrentReset;
+   let por_ifc <- mkPowerOnReset();
+   let power_on_reset = por_ifc.gen_rst;  // This line and the next
+   //let power_on_reset <- default_reset; //are alternatives.
    let dm_power_on_reset = power_on_reset;
 
    // The rest of the system (corew minus the Debug Module) are reset:
@@ -133,13 +137,24 @@ module mkP3_Core (P3_Core_IFC);
 
 `ifdef INCLUDE_GDB_CONTROL
    let clk <- exposeCurrentClock;
-   Bool    initial_reset_val  = False;
+   // Setting initial_reset_val to True ensures that if the mkReset is itself in
+   // reset (controlled by mkP3_Core's default reset), its output reset will be
+   // asserted.  Thus ndm_reset will be asserted if any of
+   //    power_on_reset, default_reset, ndm_reset from debug module
+   // is asserted.
+
+   // Currently initial_reset_val=False -- thus ndm_reset will be asserted only
+   // if any of
+   //   power_on_reset, ndm_reset from debug module
+   // is asserted.
+   Bool    initial_reset_val  = False; // was True;
    Integer ndm_reset_duration = 10;    // NOTE: assuming 10 cycle reset enough for NDM
    let ndm_reset_controller <- mkReset(ndm_reset_duration, initial_reset_val, clk);
 
    let ndm_reset <- mkResetEither (power_on_reset, ndm_reset_controller.new_rst);
 `else
-   let ndm_reset = power_on_reset;
+   let rstn <- exposeCurrentReset;
+   let ndm_reset <- mkResetEither (power_on_reset, rstn);
 `endif
 
    // ================================================================
@@ -167,11 +182,13 @@ module mkP3_Core (P3_Core_IFC);
    // NDM reset (reset for non-DebugModule)
 
    Reg #(Bit #(8))  rg_ndm_reset_delay <- mkReg (0);
+   Reg #(Bool)      rg_running         <- mkRegU;
 
    // Get an NDM-reset request from the Debug Module, assert ndm-reset,
    // and then wait for a suitable delay.
    rule rl_ndm_reset (rg_ndm_reset_delay == 0);
       let x <- corew.ndm_reset_client.request.get;
+      rg_running <= x;
       ndm_reset_controller.assertReset;
       rg_ndm_reset_delay <= fromInteger (ndm_reset_duration + 100);    // NOTE: heuristic
 
@@ -182,9 +199,9 @@ module mkP3_Core (P3_Core_IFC);
    // Wait for suitable delay, then send ack response to Debug Module for NDM-reset request
    rule rl_ndm_reset_wait (rg_ndm_reset_delay != 0);
       if (rg_ndm_reset_delay == 1) begin
-	 Bool is_running = True;
+	 Bool is_running = rg_running;
          // Restart the corew
-         corew.start (0, 0);
+         corew.start (rg_running, 0, 0);
 	 corew.ndm_reset_client.response.put (is_running);
 	 $display ("%0d: %m.rl_ndm_reset_wait: sent NDM reset ack (for non-DebugModule) to Debug Module",
 		   cur_cycle);
@@ -193,11 +210,13 @@ module mkP3_Core (P3_Core_IFC);
    endrule
 
    // ================================================================
-   // Start the corew after a PoR
-   Reg #(Bool) rg_corew_start_after_por <- mkReg(False);
-   rule rl_step_0 (!rg_corew_start_after_por);
-      corew.start (0, 0);
-      rg_corew_start_after_por <= True;
+   // Start the corew a suitable time after a PoR
+   UInt#(8) initial_wait = 100; // heuristic -- better to wait till "all out of reset" received from corew
+   Reg #(UInt#(8)) rg_corew_start_after_por <- mkReg(initial_wait);
+   rule rl_step_0 (rg_corew_start_after_por != 0);
+      let n = rg_corew_start_after_por - 1;
+      rg_corew_start_after_por <= n;
+      if (n==0) corew.start (True, 0, 0); // initial start leaves proc running
    endrule
    // ================================================================
 
@@ -219,7 +238,7 @@ module mkP3_Core (P3_Core_IFC);
    BusSender#(Tuple2#(Bit#(32),Bit#(2))) bus_dmi_rsp <- mkBusSender(unpack(0));
 
 `ifdef JTAG_TAP
-   let jtagtap <- mkJtagTap;
+   let jtagtap <- mkJtagTap(reset_by power_on_reset);
 
    mkConnection(jtagtap.dmi.req_ready, pack(bus_dmi_req.in.ready));
    mkConnection(jtagtap.dmi.req_valid, compose(bus_dmi_req.in.valid, unpack));

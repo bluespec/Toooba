@@ -61,7 +61,7 @@ interface CoreW_IFC #(numeric type t_n_interrupt_sources);
    // ----------------------------------------------------------------
    // Start
 
-   method Action start (Bit #(64) tohost_addr, Bit #(64) fromhost_addr);
+   method Action start (Bool is_running, Bit #(64) tohost_addr, Bit #(64) fromhost_addr);
 
    // ----------------------------------------------------------------
    // AXI4 Fabric interfaces

@@ -193,6 +193,10 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
    // CRs, we record the AMO resp at processing time
    Reg#(MemTaggedData) amoResp <- mkRegU;
 
+   // For AMOs to the fabric, we end up with read and write responses, and need
+   // to discard the latter. This tracks which of the two we're waiting for.
+   Reg#(Bool) amoWaitWriteResp <- mkRegU;
+
    // we increment mtime periodically
    Reg#(Bit#(TLog#(CyclesPerTimeInc))) cycle <- mkReg(0);
 
@@ -836,6 +840,7 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
       let req = MMIOCRq {addr:addr, func:tagged Ld, byteEn:?, data:?};
       mmio_fabric_adapter_core_side.request.put (req);
       state <= WaitResp;
+      amoWaitWriteResp <= False;
 
       if (verbosity > 0) begin
          $display ("MMIOPlatform.rl_mmio_to_fabric_amo_req: addr 0x%0h", addr);
@@ -849,7 +854,11 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
                                      &&& isAmo);
       MMIODataPRs dprs <- mmio_fabric_adapter_core_side.response.get;
 
-      if (! dprs.valid) begin
+      if (amoWaitWriteResp) begin
+	 // Discard the write response; we're now ready for another request
+	 state <= SelectReq;
+      end
+      else if (! dprs.valid) begin
          // Access fault
          let prs = tagged DataAccess dprs;
          cores[reqCore].pRs.enq (prs);
@@ -875,7 +884,8 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
 
          let prs = tagged DataAccess (MMIODataPRs { valid: True, data: ld_val });
          cores[reqCore].pRs.enq (prs);
-         state <= SelectReq;
+	 // Stay in WaitResp but wait to discard the write response
+	 amoWaitWriteResp <= True;
 
          if (verbosity > 1) begin
             $display ("MMIO_Platform.rl_mmio_from_fabric_amo_rsp: addr 0x%0h, size %0d, amofunc %0d",
