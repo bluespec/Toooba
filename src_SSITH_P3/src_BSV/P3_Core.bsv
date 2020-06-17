@@ -83,8 +83,10 @@ interface P3_Core_IFC;
    // ----------------
    // External interrupt [14] to go into Debug Mode
 
+`ifndef BSIM
    (* always_ready, always_enabled *)
    method Action  debug_external_interrupt_req (Bool set_not_clear);
+`endif
 
 `ifdef INCLUDE_GDB_CONTROL
    // ----------------
