@@ -165,7 +165,7 @@ module mkLLCDmaConnect #(
 
       // Send response to external client
       axi4_slave_xactor.master.b.put(AXI4_BFlit{
-        bid:   0,    // TODO: change uniformly to Fabric_id
+        bid:   wr_addr.awid,    // TODO: change uniformly to Fabric_id
         bresp: OKAY,
         buser: ?
       });
@@ -192,7 +192,7 @@ module mkLLCDmaConnect #(
 
       // Send response to external client
       axi4_slave_xactor.master.r.put(AXI4_RFlit{
-        rid: 0,        // TODO: fixup
+        rid: rd_addr.arid,
         rdata: dword,
         rresp: OKAY,
         rlast: True,
