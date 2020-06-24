@@ -100,7 +100,6 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
    // Don't do reads while writes are outstanding.
 
    // Each 512b cache line takes 8 beats, each handling 64 bits
-   Reg #(Bit #(3)) rg_rd_req_beat <- mkReg (0);
    Reg #(Bit #(3)) rg_rd_rsp_beat <- mkReg (0);
 
    FIFOF #(LdMemRq #(idT, childT)) f_pending_reads <- mkFIFOF;
@@ -108,23 +107,16 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
 
    rule rl_handle_read_req (llc.toM.first matches tagged Ld .ld
                             &&& (ctr_wr_rsps_pending.value == 0));
-      if ((cfg_verbosity > 0) && (rg_rd_req_beat == 0)) begin
-         $display ("%0d: LLC_AXI4_Adapter.rl_handle_read_req: Ld request from LLC to memory: beat %0d",
-                   cur_cycle, rg_rd_req_beat);
+      if ((cfg_verbosity > 0)) begin
+         $display ("%0d: LLC_AXI4_Adapter.rl_handle_read_req: Ld request from LLC to memory",
+                   cur_cycle);
          $display ("    ", fshow (ld));
       end
 
-      Addr  line_addr = { ld.addr [63:6], 6'h0 };                      // Addr of containing cache line
-      //Addr  offset    = zeroExtend ( { rg_rd_req_beat, 3'b_000 } );    // Addr offset of 64b word for this beat
+      Addr  line_addr = {ld.addr [63:6], 6'h0 };                      // Addr of containing cache line
       fa_fabric_send_read_req (line_addr);
-
-      //if (rg_rd_req_beat == 0)
-         f_pending_reads.enq (ld);
-
-      //if (rg_rd_req_beat == 7)
-         llc.toM.deq;
-
-      //rg_rd_req_beat <= rg_rd_req_beat + 1;
+      f_pending_reads.enq (ld);
+      llc.toM.deq;
    endrule
 
    rule rl_handle_read_rsps;
