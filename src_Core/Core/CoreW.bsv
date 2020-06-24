@@ -149,11 +149,10 @@ module mkCoreW #(Reset dm_power_on_reset)
    Proc_IFC proc <- mkProc (reset_by hart0_reset);
 
    // handle uncached interface
-   let tmp0 <- fromAXI4_Master_Synth(proc.master1, reset_by hart0_reset);
-   let proc_uncached = toAXI4_Master_Synth(extendIDFields(zeroMasterUserFields(tmp0), 0));
+   let proc_uncached <- toAXI4_Master_Synth(extendIDFields(zeroMasterUserFields(proc.master1), 0));
    // Bridge for uncached expernal bus transactions.
    let uncached_mem_shim <- mkAXI4ShimFF(reset_by hart0_reset);
-   let ug_uncached_mem_shim_master <- toUnguarded_AXI4_Master(zeroMasterUserFields(extendIDFields(uncached_mem_shim.master,0)), reset_by hart0_reset);
+   let uncached_mem_master <- toAXI4_Master_Synth(extendIDFields(zeroMasterUserFields(uncached_mem_shim.master), 0), reset_by hart0_reset);
 
    // handle cached interface
    // AXI4 tagController
@@ -351,7 +350,7 @@ module mkCoreW #(Reset dm_power_on_reset)
                               Wd_AR_User, Wd_R_User))
                               slave_vector = newVector;
    //let slave_vector = newVector;
-   slave_vector[default_slave_num] = toAXI4_Slave_Synth(uncached_mem_shim.slave);
+   slave_vector[default_slave_num] <- toAXI4_Slave_Synth(uncached_mem_shim.slave);
    slave_vector[llc_slave_num]     = proc.debug_module_mem_server;
    slave_vector[plic_slave_num]    = plic.axi4_slave;
 
@@ -369,6 +368,8 @@ module mkCoreW #(Reset dm_power_on_reset)
    endfunction
 
    mkAXI4Bus_Synth (route_2x3, master_vector, slave_vector);
+
+   let cached_mem_master <- toAXI4_Master_Synth(tagController.master);
 
    // ================================================================
    // Connect external interrupt lines from PLIC to CPU
@@ -418,10 +419,10 @@ module mkCoreW #(Reset dm_power_on_reset)
    // AXI4 Fabric interfaces
 
    // Cached master to Fabric master interface
-   interface cpu_imem_master = toAXI4_Master_Synth(tagController.master);
+   interface cpu_imem_master = cached_mem_master;
 
    // Uncached master to Fabric master interface
-   interface cpu_dmem_master = toAXI4_Master_Synth(ug_uncached_mem_shim_master);
+   interface cpu_dmem_master = uncached_mem_master;
 
    // ----------------------------------------------------------------
    // External interrupt sources

@@ -17,6 +17,7 @@ import ConfigReg    :: *;
 import FIFOF        :: *;
 import GetPut       :: *;
 import ClientServer :: *;
+import Vector       :: *;
 
 // ----------------
 // BSV additional libs
@@ -51,9 +52,9 @@ interface MMIO_AXI4_Adapter_IFC;
    interface Server #(MMIOCRq, MMIODataPRs) core_side;
 
    // Fabric master interface for IO
-   interface AXI4_Master_Synth #(Wd_MId_2x3, Wd_Addr, Wd_Data,
-                                 Wd_AW_User, Wd_W_User, Wd_B_User,
-                                 Wd_AR_User, Wd_R_User) mmio_master;
+   interface AXI4_Master #(Wd_MId_2x3, Wd_Addr, Wd_Data,
+                           Wd_AW_User, Wd_W_User, Wd_B_User,
+                           Wd_AR_User, Wd_R_User) mmio_master;
 endinterface
 
 // ================================================================
@@ -76,7 +77,7 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
    // ================================================================
    // Fabric request/response
 
-   let master_xactor <- mkAXI4_Master_Xactor;
+   let master_shim <- mkAXI4ShimFF;
 
    // For discarding write-responses
    CreditCounter_IFC #(4) ctr_wr_rsps_pending <- mkCreditCounter; // Max 15 writes outstanding
@@ -100,7 +101,7 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
                                              arregion: fabric_default_region,
                                              aruser:   fabric_default_aruser};
 
-         master_xactor.slave.ar.put(mem_req_rd_addr);
+         master_shim.slave.ar.put(mem_req_rd_addr);
          read_req_addr <= addr;
 
          // Debugging
@@ -146,8 +147,8 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
          end
 `endif
 
-   master_xactor.slave.aw.put (mem_req_wr_addr);
-   master_xactor.slave.w.put (mem_req_wr_data);
+   master_shim.slave.aw.put (mem_req_wr_addr);
+   master_shim.slave.w.put (mem_req_wr_data);
 
          // Expect a fabric response
          ctr_wr_rsps_pending.incr;
@@ -196,7 +197,7 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
    // ----------------
 
    rule rl_handle_read_rsps;
-      let mem_rsp <- get(master_xactor.slave.r);
+      let mem_rsp <- get(master_shim.slave.r);
       dynamicAssert(mem_rsp.rlast, "TODO, implement multi-flit transactions");
 
       if (cfg_verbosity > 0) begin
@@ -222,8 +223,11 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
    // ================================================================
    // Handle write requests and responses
 
+   // Each 128b word takes 2 beats, each handling 64 bits
+   Reg #(Bit #(1)) rg_wr_req_beat <- mkReg (0);
+
    rule rl_handle_write_req (f_reqs_from_core.first.func matches St);
-      let req <- pop (f_reqs_from_core);
+      let req =  f_reqs_from_core.first;
 
       if (cfg_verbosity > 0) begin
          $display ("%d: %m.rl_handle_write_req: St request:", cur_cycle);
@@ -234,9 +238,55 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
       // necessary; the AXI4 fabric should return a DECERR for illegal
       // addrs; but not all AXI4 fabrics do the right thing.
       dynamicAssert(pack(req.byteEn)[15:8] == 0, "TODO, handle multiflit transactions");
-      if (soc_map.m_is_IO_addr (req.addr))
-         fa_fabric_send_write_req (req.addr, truncate(pack(req.byteEn)), fromMemTaggedData(req.data));
-      else begin
+      if (soc_map.m_is_IO_addr (req.addr)) begin
+         //fa_fabric_send_write_req (req.addr, truncate(pack(req.byteEn)), fromMemTaggedData(req.data));
+         // on first flit...
+         // ================
+         if (rg_wr_req_beat == 0) begin
+            AXI4_Size  size = 8;
+            let mem_req_wr_addr = AXI4_AWFlit {awid:     fabric_2x3_default_mid,
+                                               awaddr:   req.addr,
+                                               awlen:    0,           // burst len = awlen+1
+                                               awsize:   size,
+                                               awburst:  fabric_default_burst,
+                                               awlock:   fabric_default_lock,
+                                               awcache:  fabric_default_awcache,
+                                               awprot:   fabric_default_prot,
+                                               awqos:    fabric_default_qos,
+                                               awregion: fabric_default_region,
+                                               awuser:   0};
+`ifdef FABRIC64
+            // Work-around for a misbehavior on Xilinx UART and its
+            // Xilinx AXI4 adapter. On 64-bit fabrics, for a write where
+            // axsize says '8 bytes' but wstrb is for <= 4 bytes, the
+            // adapter converts it two 32-bit writes, one of which has
+            // wstrb=4'b0000. The Xilinx UART, in turn ignores wstrb and
+            // therefore performs a spurious write.  This workaround
+            // changes axsize for such writes to '4 bytes', avoiding this
+            // problem.
+
+            if (countOnes(pack(req.byteEn)) <= 4)
+               mem_req_wr_addr.awsize = 4;
+`endif
+            master_shim.slave.aw.put (mem_req_wr_addr);
+            // Expect a fabric response
+            ctr_wr_rsps_pending.incr;
+         end
+
+         // on last flit...
+         // ===============
+         if (rg_wr_req_beat == 1) f_reqs_from_core.deq;
+
+         // on each flit...
+         // ===============
+         Vector #(2, Bit #(8)) line_strb = unpack(pack(req.byteEn));
+         master_shim.slave.w.put (AXI4_WFlit {wdata:  req.data.data[rg_wr_req_beat],
+                                                wstrb:  line_strb[rg_wr_req_beat],
+                                                wlast:  True,
+                                                wuser:  0});
+         // increment flit counter
+         rg_wr_req_beat <= rg_wr_req_beat + 1;
+      end else begin
          let rsp = MMIODataPRs {valid: False,
                                 data: toMemTaggedData(req.addr)};    // For debugging convenience only
          f_rsps_to_core.enq (rsp);
@@ -252,7 +302,7 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
    // Discard write-responses from the fabric
 
    rule rl_discard_write_rsp;
-      let wr_resp <- get(master_xactor.slave.b);
+      let wr_resp <- get(master_shim.slave.b);
 
       if (cfg_verbosity > 0) begin
          $display ("%0d: %m.rl_discard_write_rsp", cur_cycle);
@@ -309,7 +359,7 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
    interface Server core_side = toGPServer (f_reqs_from_core, f_rsps_to_core);
 
    // Fabric master interface for IO
-   interface mmio_master = master_xactor.masterSynth;
+   interface mmio_master = master_shim.master;
 endmodule
 
 // ================================================================
