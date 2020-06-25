@@ -158,15 +158,14 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
                              data: newData };
       if (mem_rsp.rlast) begin
         f_rsps_to_core.enq (rsp);
+        if (cfg_verbosity > 0)
+           $display ("    Response MMIO to core: ", fshow (rsp));
         rg_rd_rsp_beat <= 0;
         rspData <= unpack(0);
       end else begin
         rg_rd_rsp_beat <= rg_rd_rsp_beat + 1;
         rspData <= newData;
       end
-
-      if (cfg_verbosity > 0)
-         $display ("    Response MMIO to core: ", fshow (rsp));
    endrule
 
    // ================================================================
@@ -256,6 +255,7 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
       end else begin
          let rsp = MMIODataPRs {valid: False,
                                 data: toMemTaggedData(req.addr)};    // For debugging convenience only
+         f_reqs_from_core.deq;
          f_rsps_to_core.enq (rsp);
          if (cfg_verbosity > 0) begin
             $display ("%0d: %m.rl_handle_write_req: unmapped IO address; returning error response",
