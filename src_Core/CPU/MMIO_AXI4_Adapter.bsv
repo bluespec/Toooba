@@ -291,10 +291,7 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
          $display ("    ", fshow (wr_resp));
          $finish (1);
       end
-      else begin
-         let rsp = MMIODataPRs {valid: True, data: 0};
-         f_rsps_to_core.enq (rsp);
-      end
+      f_rsps_to_core.enq (MMIODataPRs {valid: wr_resp.bresp == OKAY, data: 0});
    endrule
 
    // ================================================================
