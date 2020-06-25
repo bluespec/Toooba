@@ -116,9 +116,7 @@ interface UART_IFC;
    method Action set_addr_map (Fabric_Addr addr_base, Fabric_Addr addr_lim);
 
    // Main Fabric Reqs/Rsps
-   interface AXI4_Slave_Synth #(Wd_SId, Wd_Addr, Wd_Data,
-                                Wd_AW_User, Wd_W_User, Wd_B_User,
-                                Wd_AR_User, Wd_R_User) slave;
+   interface AXI4_Slave #(Wd_SId, Wd_Addr, Wd_Data, 0, 0, 0, 0, 0) slave;
 
    // To external console
    interface Get #(Bit #(8))  get_to_console;
@@ -134,7 +132,7 @@ endinterface
 
 // Module state
 typedef enum {STATE_START,
-	      STATE_READY
+              STATE_READY
    } Module_State
 deriving (Bits, Eq, FShow);
 
@@ -207,9 +205,7 @@ module mkUART (UART_IFC);
    // ----------------
    // Connector to AXI4 fabric
 
-   AXI4_Slave_Width_Xactor#(Wd_SId, Wd_Addr, Wd_Data_Periph, Wd_Data,
-                              Wd_AW_User_Periph, Wd_W_User_Periph, Wd_B_User_Periph, Wd_AR_User_Periph, Wd_R_User_Periph,
-                              Wd_AW_User, Wd_W_User, Wd_B_User, Wd_AR_User, Wd_R_User) slave_xactor <- mkAXI4_Slave_Zeroing_Xactor;
+   let slave_shim <- mkAXI4Shim;
 
    // ----------------
    // character queues to and from external circuitry for the console
@@ -244,11 +240,11 @@ module mkUART (UART_IFC);
       Bit #(8) iir = 0;
 
       if (   ((rg_ier & uart_ier_erbfi) != 0)    // Rx interrupt enabled
-	  && ((rg_lsr & uart_lsr_dr)    != 0))   // data ready
-	 iir = uart_iir_rda;
+          && ((rg_lsr & uart_lsr_dr)    != 0))   // data ready
+         iir = uart_iir_rda;
 
       else if ((rg_ier & uart_ier_etbei) != 0)   // Tx Holding Reg Empty intr enabled
-	 iir = uart_iir_thre;
+         iir = uart_iir_thre;
 
       return iir;
    endfunction
@@ -281,20 +277,20 @@ module mkUART (UART_IFC);
       rg_msr <= 0;
       rg_scr <= 0;
 
-      slave_xactor.clear;
+      slave_shim.clear;
       rg_state <= STATE_READY;
 
       f_reset_rsps.enq (?);
 
       if (cfg_verbosity != 0)
-	 $display ("%0d: UART.rl_reset", cur_cycle);
+         $display ("%0d: UART.rl_reset", cur_cycle);
    endrule
 
    // ----------------------------------------------------------------
    // Handle fabric read requests
 
    rule rl_process_rd_req (rg_state == STATE_READY);
-      let rda <- get(slave_xactor.master.ar);
+      let rda <- get(slave_shim.master.ar);
 
       let byte_addr = rda.araddr - rg_addr_base;
       match { .offset, .lsbs } = split_addr (zeroExtend (byte_addr));
@@ -303,38 +299,38 @@ module mkUART (UART_IFC);
       AXI4_Resp rresp      = OKAY;
 
       if ((rda.araddr < rg_addr_base) || (rda.araddr >= rg_addr_lim)) begin
-	 $display ("%0d: %m.rl_process_rd_req: ERROR: UART addr out of bounds", cur_cycle);
-	 $display ("    UART base addr 0x%0h  limit addr 0x%0h", rg_addr_base, rg_addr_lim);
-	 $display ("    AXI4 request: ", fshow (rda));
-	 rresp = DECERR;
+         $display ("%0d: %m.rl_process_rd_req: ERROR: UART addr out of bounds", cur_cycle);
+         $display ("    UART base addr 0x%0h  limit addr 0x%0h", rg_addr_base, rg_addr_lim);
+         $display ("    AXI4 request: ", fshow (rda));
+         rresp = DECERR;
       end
       else if (lsbs != 0) begin
-	 $display ("%0d: %m.rl_process_rd_req: ERROR: UART misaligned addr", cur_cycle);
-	 $display ("            ", fshow (rda));
-	 rresp = SLVERR;
+         $display ("%0d: %m.rl_process_rd_req: ERROR: UART misaligned addr", cur_cycle);
+         $display ("            ", fshow (rda));
+         rresp = SLVERR;
       end
       else if (offset [63:3] != 0) begin
-	 $display ("%0d: %m.rl_process_rd_req: ERROR: UART unsupported addr", cur_cycle);
-	 $display ("            ", fshow (rda));
-	 rresp = DECERR;
+         $display ("%0d: %m.rl_process_rd_req: ERROR: UART unsupported addr", cur_cycle);
+         $display ("            ", fshow (rda));
+         rresp = DECERR;
       end
 
       // offset 0: RBR
       else if ((offset [2:0] == addr_UART_rbr) && ((rg_lcr & uart_lcr_dlab) == 0)) begin
-	 // Read an input char
-	 rg_lsr <= (rg_lsr & (~ uart_lsr_dr));    // Reset data-ready
-	 rdata_byte = rg_rbr;
+         // Read an input char
+         rg_lsr <= (rg_lsr & (~ uart_lsr_dr));    // Reset data-ready
+         rdata_byte = rg_rbr;
       end
       // offset 0: DLL
       else if ((offset [2:0] == addr_UART_dll) && ((rg_lcr & uart_lcr_dlab) != 0))
-	 rdata_byte = rg_dll;
+         rdata_byte = rg_dll;
 
       // offset 1: IER
       else if ((offset [2:0] == addr_UART_ier) && ((rg_lcr & uart_lcr_dlab) == 0))
-	 rdata_byte = rg_ier;
+         rdata_byte = rg_ier;
       // offset 1: DLM
       else if ((offset [2:0] == addr_UART_dlm) && ((rg_lcr & uart_lcr_dlab) != 0))
-	 rdata_byte = rg_dlm;
+         rdata_byte = rg_dlm;
 
       // offset 2: IIR (read-only)
       else if (offset [2:0] == addr_UART_iir) rdata_byte  = fn_iir();
@@ -351,28 +347,28 @@ module mkUART (UART_IFC);
       else if (offset [2:0] == addr_UART_scr) rdata_byte  = { 0, rg_scr };
 
       else begin
-	 $display ("%0d: %m.rl_process_rd_req: ERROR: UART unsupported addr", cur_cycle);
-	 $display ("            ", fshow (rda));
-	 rresp = DECERR;
+         $display ("%0d: %m.rl_process_rd_req: ERROR: UART unsupported addr", cur_cycle);
+         $display ("            ", fshow (rda));
+         rresp = DECERR;
       end
 
       // Align data byte for AXI4 data bus based on fabric-width
       Fabric_Data rdata = zeroExtend (rdata_byte);
       if ((valueOf (Wd_Data) == 64) && (byte_addr [2:0] == 3'b100))
-	 rdata = rdata << 32;
+         rdata = rdata << 32;
 
       // Send read-response to bus
       let rdr = AXI4_RFlit {rid:   rda.arid,
-			    rdata: rdata,
-			    rresp: rresp,
-			    rlast: True,
-			    ruser: rda.aruser}; // XXX This requires that Wd_AR_User == Wd_R_User
-      slave_xactor.master.r.put(rdr);
+                            rdata: rdata,
+                            rresp: rresp,
+                            rlast: True,
+                            ruser: rda.aruser}; // XXX This requires that Wd_AR_User == Wd_R_User
+      slave_shim.master.r.put(rdr);
 
       if (cfg_verbosity > 1) begin
-	 $display ("%0d: %m.rl_process_rd_req", cur_cycle);
-	 $display ("            ", fshow (rda));
-	 $display ("            ", fshow (rdr));
+         $display ("%0d: %m.rl_process_rd_req", cur_cycle);
+         $display ("            ", fshow (rda));
+         $display ("            ", fshow (rdr));
       end
    endrule
 
@@ -380,8 +376,8 @@ module mkUART (UART_IFC);
    // Handle fabric write requests
 
    rule rl_process_wr_req (rg_state == STATE_READY);
-      let wra <- get(slave_xactor.master.aw);
-      let wrd <- get(slave_xactor.master.w);
+      let wra <- get(slave_shim.master.aw);
+      let wrd <- get(slave_shim.master.w);
 
       Bit #(64) wdata     = zeroExtend (wrd.wdata);
       Bit #(8)  wstrb     = zeroExtend (wrd.wstrb);
@@ -393,40 +389,40 @@ module mkUART (UART_IFC);
       AXI4_Resp bresp = OKAY;
 
       if ((wra.awaddr < rg_addr_base) || (wra.awaddr >= rg_addr_lim)) begin
-	 $display ("%0d: %m.rl_process_rd_req: ERROR: UART addr out of bounds", cur_cycle);
-	 $display ("    UART base addr 0x%0h  limit addr 0x%0h", rg_addr_base, rg_addr_lim);
-	 $display ("    AXI4 request: ", fshow (wra));
-	 bresp = DECERR;
+         $display ("%0d: %m.rl_process_rd_req: ERROR: UART addr out of bounds", cur_cycle);
+         $display ("    UART base addr 0x%0h  limit addr 0x%0h", rg_addr_base, rg_addr_lim);
+         $display ("    AXI4 request: ", fshow (wra));
+         bresp = DECERR;
       end
       else if (lsbs != 0) begin
-	 $display ("%0d: %m.rl_process_wr_req: ERROR: UART misaligned addr", cur_cycle);
-	 $display ("            ", fshow (wra));
-	 $display ("            ", fshow (wrd));
-	 bresp = SLVERR;
+         $display ("%0d: %m.rl_process_wr_req: ERROR: UART misaligned addr", cur_cycle);
+         $display ("            ", fshow (wra));
+         $display ("            ", fshow (wrd));
+         bresp = SLVERR;
       end
       else if (offset [63:3] != 0) begin
-	 $display ("%0d: %m.rl_process_wr_req: ERROR: UART unsupported addr", cur_cycle);
-	 $display ("            ", fshow (wra));
-	 $display ("            ", fshow (wrd));
-	 bresp = DECERR;
+         $display ("%0d: %m.rl_process_wr_req: ERROR: UART unsupported addr", cur_cycle);
+         $display ("            ", fshow (wra));
+         $display ("            ", fshow (wrd));
+         bresp = DECERR;
       end
 
       // offset 0: THR
       else if ((offset [2:0] == addr_UART_thr) && ((rg_lcr & uart_lcr_dlab) == 0)) begin
-	 // Write a char to the serial line
-	 rg_thr <= data_byte;
-	 f_to_console.enq (data_byte);
+         // Write a char to the serial line
+         rg_thr <= data_byte;
+         f_to_console.enq (data_byte);
       end
       // offset 0: DLL
       else if ((offset [2:0] == addr_UART_dll) && ((rg_lcr & uart_lcr_dlab) != 0))
-	 rg_dll <= data_byte;
+         rg_dll <= data_byte;
 
       // offset 1: IER
       else if ((offset [2:0] == addr_UART_ier) && ((rg_lcr & uart_lcr_dlab) == 0))
-	 rg_ier <= data_byte;
+         rg_ier <= data_byte;
       // offset 1: DLM
       else if ((offset [2:0] == addr_UART_dlm) && ((rg_lcr & uart_lcr_dlab) != 0))
-	 rg_dlm <= data_byte;
+         rg_dlm <= data_byte;
 
       // offset 2: FCR (write-only)
       else if (offset [2:0] == addr_UART_fcr) rg_fcr <= data_byte;
@@ -443,23 +439,23 @@ module mkUART (UART_IFC);
       else if (offset [2:0] == addr_UART_scr) rg_scr <= data_byte;
 
       else begin
-	 $display ("%0d: %m.rl_process_wr_req: ERROR: UART unsupported addr", cur_cycle);
-	 $display ("            ", fshow (wra));
-	 $display ("            ", fshow (wrd));
-	 bresp = DECERR;
+         $display ("%0d: %m.rl_process_wr_req: ERROR: UART unsupported addr", cur_cycle);
+         $display ("            ", fshow (wra));
+         $display ("            ", fshow (wrd));
+         bresp = DECERR;
       end
 
       // Send write-response to bus
       let wrr = AXI4_BFlit {bid:   wra.awid,
-			    bresp: bresp,
-			    buser: wra.awuser}; // XXX This requires that Wd_AW_User == Wd_B_User
-      slave_xactor.master.b.put(wrr);
+                            bresp: bresp,
+                            buser: wra.awuser}; // XXX This requires that Wd_AW_User == Wd_B_User
+      slave_shim.master.b.put(wrr);
 
       if (cfg_verbosity > 1) begin
-	 $display ("%0d: %m.rl_process_wr_req", cur_cycle);
-	 $display ("            ", fshow (wra));
-	 $display ("            ", fshow (wrd));
-	 $display ("            ", fshow (wrr));
+         $display ("%0d: %m.rl_process_wr_req", cur_cycle);
+         $display ("            ", fshow (wra));
+         $display ("            ", fshow (wrd));
+         $display ("            ", fshow (wrr));
       end
    endrule
 
@@ -478,8 +474,8 @@ module mkUART (UART_IFC);
       rg_lsr <= new_lsr;
 
       if (cfg_verbosity > 1)
-	 $display ("UART_Model.rl_receive: received char 0x%0h; new_lsr = 0x%0h",
-		   ch, new_lsr);
+         $display ("UART_Model.rl_receive: received char 0x%0h; new_lsr = 0x%0h",
+                   ch, new_lsr);
    endrule
 
    // ================================================================
@@ -491,19 +487,19 @@ module mkUART (UART_IFC);
    // set_addr_map should be called after this module's reset
    method Action  set_addr_map (Fabric_Addr addr_base, Fabric_Addr addr_lim);
       if (addr_base [2:0] != 0)
-	 $display ("%0d: WARNING: UART.set_addr_map: addr_base 0x%0h is not 8-Byte-aligned",
-		   cur_cycle, addr_base);
+         $display ("%0d: WARNING: UART.set_addr_map: addr_base 0x%0h is not 8-Byte-aligned",
+                   cur_cycle, addr_base);
 
       if (addr_lim [2:0] != 0)
-	 $display ("%0d: WARNING: UART.set_addr_map: addr_lim 0x%0h is not 8-Byte-aligned",
-		   cur_cycle, addr_lim);
+         $display ("%0d: WARNING: UART.set_addr_map: addr_lim 0x%0h is not 8-Byte-aligned",
+                   cur_cycle, addr_lim);
 
       rg_addr_base <= addr_base;
       rg_addr_lim  <= addr_lim;
    endmethod
 
    // Main Fabric Reqs/Rsps
-   interface  slave = slave_xactor.slaveSynth;
+   interface  slave = slave_shim.slave;
 
    // To external console
    interface  put_from_console = toPut (f_from_console);

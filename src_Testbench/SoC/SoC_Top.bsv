@@ -122,8 +122,8 @@ endinterface
 // Local types and constants
 
 typedef enum {SOC_START,
-	      SOC_RESETTING,
-	      SOC_IDLE} SoC_State
+              SOC_RESETTING,
+              SOC_IDLE} SoC_State
 deriving (Bits, Eq, FShow);
 
 // ================================================================
@@ -132,7 +132,7 @@ deriving (Bits, Eq, FShow);
 (* synthesize *)
 module mkSoC_Top #(Reset dm_power_on_reset)
                  (SoC_Top_IFC);
-   Integer verbosity = 0;    // Normally 0; non-zero for debugging
+   Integer verbosity = 2;    // Normally 0; non-zero for debugging
 
    Reg #(SoC_State) rg_state <- mkReg (SOC_START);
 
@@ -202,7 +202,7 @@ module mkSoC_Top #(Reset dm_power_on_reset)
    route_vector[mem0_controller_slave_num] = soc_map.m_mem0_controller_addr_range;
 
    // Fabric to UART0
-   slave_vector[uart0_slave_num] <- liftAXI4_Slave_Synth(zeroSlaveUserFields, uart0.slave);
+   slave_vector[uart0_slave_num] <- toAXI4_Slave_Synth(zeroSlaveUserFields(uart0.slave));
    route_vector[uart0_slave_num] = soc_map.m_uart0_addr_range;
 
 `ifdef INCLUDE_ACCEL0
@@ -241,7 +241,7 @@ module mkSoC_Top #(Reset dm_power_on_reset)
 
       // Tie off remaining interrupt request lines (1..N)
       for (Integer j = last_irq_num + 1; j < valueOf (N_External_Interrupt_Sources); j = j + 1)
-	 corew.core_external_interrupt_sources [j].m_interrupt_req (False);
+         corew.core_external_interrupt_sources [j].m_interrupt_req (False);
 
       // Non-maskable interrupt request. [Tie-off; TODO: connect to genuine sources]
       corew.nmi_req (False);
@@ -250,36 +250,45 @@ module mkSoC_Top #(Reset dm_power_on_reset)
    // ================================================================
    // MODULE INITIALIZATIONS
 
+   function Action fa_reset_start_actions;
+      action
+         mem0_controller.server_reset.request.put (?);
+         uart0.server_reset.request.put (?);
+      endaction
+   endfunction
+
    function Action fa_reset_complete_actions;
       action
-	 // Initialize address maps of slave IPs
-	 boot_rom.set_addr_map (rangeBase(soc_map.m_boot_rom_addr_range),
-				rangeTop(soc_map.m_boot_rom_addr_range));
+         let mem0_controller_rsp <- mem0_controller.server_reset.response.get;
+         let uart0_rsp           <- uart0.server_reset.response.get;
+         // Initialize address maps of slave IPs
+         boot_rom.set_addr_map (rangeBase(soc_map.m_boot_rom_addr_range),
+                                rangeTop(soc_map.m_boot_rom_addr_range));
 
-	 mem0_controller.set_addr_map (rangeBase(soc_map.m_mem0_controller_addr_range),
-				       rangeTop(soc_map.m_mem0_controller_addr_range));
+         mem0_controller.set_addr_map (rangeBase(soc_map.m_mem0_controller_addr_range),
+                                       rangeTop(soc_map.m_mem0_controller_addr_range));
 
-	 uart0.set_addr_map (rangeBase(soc_map.m_uart0_addr_range),
+         uart0.set_addr_map (rangeBase(soc_map.m_uart0_addr_range),
                              rangeTop(soc_map.m_uart0_addr_range));
 
 `ifdef INCLUDE_ACCEL0
-	 accel0.init (fabric_default_id,
-		      soc_map.m_accel0_addr_range.base,
-		      rangeTop(soc_map.m_accel0_addr_range));
+         accel0.init (fabric_default_id,
+                      soc_map.m_accel0_addr_range.base,
+                      rangeTop(soc_map.m_accel0_addr_range));
 `endif
 
-	 if (verbosity != 0) begin
-	    $display ("  SoC address map:");
-	    $display ("  Boot ROM:        0x%0h .. 0x%0h",
-		      rangeBase(soc_map.m_boot_rom_addr_range),
-		      rangeTop(soc_map.m_boot_rom_addr_range));
-	    $display ("  Mem0 Controller: 0x%0h .. 0x%0h",
-		      rangeBase(soc_map.m_mem0_controller_addr_range),
-		      rangeTop(soc_map.m_mem0_controller_addr_range));
-	    $display ("  UART0:           0x%0h .. 0x%0h",
-		      rangeBase(soc_map.m_uart0_addr_range),
-		      rangeTop(soc_map.m_uart0_addr_range));
-	 end
+         if (verbosity != 0) begin
+            $display ("  SoC address map:");
+            $display ("  Boot ROM:        0x%0h .. 0x%0h",
+                      rangeBase(soc_map.m_boot_rom_addr_range),
+                      rangeTop(soc_map.m_boot_rom_addr_range));
+            $display ("  Mem0 Controller: 0x%0h .. 0x%0h",
+                      rangeBase(soc_map.m_mem0_controller_addr_range),
+                      rangeTop(soc_map.m_mem0_controller_addr_range));
+            $display ("  UART0:           0x%0h .. 0x%0h",
+                      rangeBase(soc_map.m_uart0_addr_range),
+                      rangeTop(soc_map.m_uart0_addr_range));
+         end
       endaction
    endfunction
 
@@ -287,6 +296,7 @@ module mkSoC_Top #(Reset dm_power_on_reset)
    // Initial reset
 
    rule rl_reset_start_initial (rg_state == SOC_START);
+      fa_reset_start_actions;
       rg_state <= SOC_RESETTING;
 
       $display ("%0d: %m.rl_reset_start_initial ...", cur_cycle);
