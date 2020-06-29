@@ -290,6 +290,14 @@ module mkStatsCsr(StatsCsr);
     endmethod
 endmodule
 
+function Reg#(Data) scrToCsr(Reg#(CapReg) scr) = interface Reg
+        method _write (x) = action CapPipe scr_pipe = cast(scr); scr <= cast(setOffset(scr_pipe, x).value); endaction;
+        method Data _read;
+          CapPipe scr_pipe = cast(scr);
+          return getOffset(scr_pipe);
+        endmethod
+    endinterface;
+
 // same as EHR except that read port 0 is not ordered with other methods. Read
 // port 1 will still get bypassing from write port 0.
 module mkConfigEhr#(t init)(Ehr#(n, t)) provisos(Bits#(t, w));
@@ -754,8 +762,10 @@ module mkCsrFile #(Data hartid)(CsrFile);
             // Supervisor CSRs
             CSRsstatus:    sstatus_csr;
             CSRsie:        sie_csr;
+            CSRstvec:      scrToCsr(stcc_reg); // Only accessed by debugger. CPU accesses decoded into cspecialrw
             CSRscounteren: scounteren_csr;
             CSRsscratch:   sscratch_csr;
+            CSRsepc:       scrToCsr(sepcc_reg[1]); // Only accessed by debugger. CPU accesses decoded into cspecialrw
             CSRscause:     scause_csr;
             CSRstval:      stval_csr;
             CSRsip:        sip_csr;
@@ -766,8 +776,10 @@ module mkCsrFile #(Data hartid)(CsrFile);
             CSRmedeleg:    medeleg_csr;
             CSRmideleg:    mideleg_csr;
             CSRmie:        mie_csr;
+            CSRmtvec:      scrToCsr(mtcc_reg); // Only accessed by debugger. CPU accesses decoded into cspecialrw
             CSRmcounteren: mcounteren_csr;
             CSRmscratch:   mscratch_csr;
+            CSRmepc:       scrToCsr(mepcc_reg[1]); // Only accessed by debugger. CPU accesses decoded into cspecialrw
             CSRmcause:     mcause_csr;
             CSRmtval:      mtval_csr;
             CSRmip:        mip_csr;
@@ -799,10 +811,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
 
 `ifdef INCLUDE_GDB_CONTROL
            CSRdcsr:       rg_dcsr;    // TODO: take NMI into account (cf. Piccolo/Flute)
-           CSRdpc:        interface Reg;
-                              method _write (x) = action rg_dpc <= setAddrUnsafe(rg_dpc, x); endaction;
-                              method _read = getAddr(rg_dpc);
-                          endinterface
+           CSRdpc:        scrToCsr(rg_dpc);
            CSRdscratch0:  rg_dscratch0;
            CSRdscratch1:  rg_dscratch1;
 `endif
