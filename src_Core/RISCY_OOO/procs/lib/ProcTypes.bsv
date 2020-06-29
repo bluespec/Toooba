@@ -277,6 +277,7 @@ typedef union tagged {
     SpecialRWFunc SpecialRW;
     AddrSource SetAddr;
     void Seal;
+    void SealEntry;
     SrcSelector Unseal;
     void AndPerm;
     void SetFlags;

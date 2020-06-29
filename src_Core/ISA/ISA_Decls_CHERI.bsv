@@ -101,10 +101,10 @@ function SCR unpackSCR(Bit#(5) x);
     endcase);
 endfunction
 
-function CapPipe update_scr_via_csr (CapPipe old_scr, WordXL new_csr);
+function CapPipe update_scr_via_csr (CapPipe old_scr, WordXL new_csr, Bool allow_sealed);
     let new_scr = setOffset(old_scr, new_csr);
     let ret = new_scr.value;
-    if (!new_scr.exact || (getKind(old_scr) != UNSEALED)) begin
+    if (!new_scr.exact || (getKind(old_scr) != UNSEALED && !allow_sealed)) begin
         ret = setValidCap(ret, False);
     end
     return ret;
@@ -191,7 +191,8 @@ Bit #(5) f5rs2_cap_CClearReg   = 5'h0d;
 // 5'h0e unused
 Bit #(5) f5rs2_cap_CGetAddr    = 5'h0f;
 Bit #(5) f5rs2_cap_CClearFPReg = 5'h10;
-// 5'h11-5'h1f unused (5'h1f reserved for 1-reg instructions
+Bit #(5) f5rs2_cap_CSealEntry  = 5'h11;
+// 5'h12-5'h1f unused (5'h1f reserved for 1-reg instructions
 
 // ================================================================
 // f7_cap_{Load, Store} opcode subdivision
