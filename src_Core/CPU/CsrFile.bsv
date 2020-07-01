@@ -403,11 +403,13 @@ module mkCsrFile #(Data hartid)(CsrFile);
     // misa
     Reg#(Data) misa_csr = readOnlyReg({getXLBits, 36'b0, getExtensionBits(isa)});
     // medeleg: some exceptions don't exist, fix corresponding bits to 0
+    Reg#(Bit#(3)) medeleg_28_26_reg <- mkCsrReg(0); // CHERI causes 0x1a-0x1c
     Reg#(Bit#(1)) medeleg_15_reg <- mkCsrReg(0); // cause 15
     Reg#(Bit#(3)) medeleg_13_11_reg <- mkCsrReg(0); // case 13-11
     Reg#(Bit#(10)) medeleg_9_0_reg <- mkCsrReg(0); // cause 9-0
-    Reg#(Data) medeleg_csr = concatReg6(
-        readOnlyReg(48'b0), medeleg_15_reg,
+    Reg#(Data) medeleg_csr = concatReg8(
+        readOnlyReg(35'b0), medeleg_28_26_reg,
+        readOnlyReg(10'b0), medeleg_15_reg,
         readOnlyReg(1'b0), medeleg_13_11_reg,
         readOnlyReg(1'b0), medeleg_9_0_reg
     );
@@ -880,7 +882,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
                                           x [3],        // ie_vec[prvM]
                                           x [1],        // ie_vec[prvS]
                                           x [0]);       // ie_vec[prvU]
-            CSRmedeleg:    { 48'b0, x[15], 1'b0, x[13:12], x[11], 1'b0, x[9:0]};
+            CSRmedeleg:    { 35'b0, x[28:26], 10'b0, x[15], 1'b0, x[13:12], x[11], 1'b0, x[9:0]};
             CSRmideleg:    { 52'b0, x[11], 1'b0, x[9:8], x[7], 1'b0, x[5:4], x[3], 1'b0, x[1:0]};
             CSRmip:        ((mip_csr & (~ mip_mie_warl_mask)) | (x & mip_mie_warl_mask));
             CSRmie:        (x & mip_mie_warl_mask);
