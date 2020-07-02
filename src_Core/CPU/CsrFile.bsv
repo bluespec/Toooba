@@ -1066,8 +1066,8 @@ module mkCsrFile #(Data hartid)(CsrFile);
         // check if trap is delegated
         Bool deleg = prv_reg <= prvS && (case(t) matches
             tagged Exception .e: return medeleg_csr[pack(e)] == 1;
+            tagged CapException .ce: return medeleg_csr[pack(CHERIFault)] == 1;
             tagged Interrupt .i: return mideleg_csr[pack(i)] == 1;
-            default: return False;
         endcase);
         // handle the trap
         if(deleg) begin // handle in S mode
