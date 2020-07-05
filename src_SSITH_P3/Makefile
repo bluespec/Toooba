@@ -21,31 +21,29 @@ ARCH ?= RV64ACDFIMSU
 # ================================================================
 # RISC-V config macros passed into Bluespec 'bsc' compiler
 
-MORE_DEFINES = \
-	 RV64 \
-	 ISA_PRIV_M  ISA_PRIV_S  ISA_PRIV_U  \
-	 SV39 \
-	 ISA_I  ISA_M  ISA_A  ISA_F  ISA_D  ISA_FD_DIV  ISA_C  \
-         CheriBusBytes=8 \
-         CheriMasterIDWidth=1 \
-         CheriTransactionIDWidth=5 \
-	 SHIFT_BARREL    \
-	 MULT_SERIAL    \
-	 Near_Mem_Caches    \
-	 FABRIC64    \
-         CAP128 \
-         MEM64 \
-         RISCV \
-	 INCLUDE_GDB_CONTROL \
-	 BRVF_TRACE \
-	 XILINX_BSCAN JTAG_TAP
-BSC_DEFINES += $(MORE_DEFINES)
-BSC_COMPILATION_FLAGS += $(addprefix -D , $(MORE_DEFINES))
+BSC_COMPILATION_FLAGS += \
+	-D RV64 \
+	-D ISA_PRIV_M  -D ISA_PRIV_S  -D ISA_PRIV_U  \
+	-D SV39 \
+	-D ISA_I  -D ISA_M  -D ISA_A  -D ISA_F  -D ISA_D  -D ISA_FD_DIV  -D ISA_C  \
+	-D CheriBusBytes=8 \
+	-D CheriMasterIDWidth=1 \
+	-D CheriTransactionIDWidth=5 \
+	-D SHIFT_BARREL    \
+	-D MULT_SERIAL    \
+	-D Near_Mem_Caches    \
+	-D FABRIC64    \
+	-D CAP128 \
+	-D MEM64 \
+	-D RISCV \
+	-D INCLUDE_GDB_CONTROL \
+	-D BRVF_TRACE \
+	-D XILINX_BSCAN  -D JTAG_TAP
 
 # Synth only BSC_COMPILATION_FLAGS
 SYNTH_BSC_OPTIONS = -D XILINX_XCVU9P
 
-# Sim only BSC_COMPILATION_FLAGS 
+# Sim only BSC_COMPILATION_FLAGS
 SIM_BSC_OPTIONS = -D BSIM
 
 # Only used if we don't have INCLUDE_GDB_CONTROL

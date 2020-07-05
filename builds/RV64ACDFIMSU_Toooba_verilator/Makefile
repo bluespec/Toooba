@@ -23,22 +23,21 @@ ARCH ?= RV64ACDFIMSU
 # ================================================================
 # RISC-V config macros passed into Bluespec 'bsc' compiler
 
-MORE_DEFINES = RV64 \
-               ISA_PRIV_M ISA_PRIV_U ISA_PRIV_S \
-               SV39 \
-               ISA_I ISA_M ISA_A ISA_F ISA_D ISA_FD_DIV ISA_C \
-               SHIFT_BARREL \
-               MULT_SYNTH \
-               Near_Mem_Caches \
-               FABRIC64 \
-               CheriBusBytes=8 \
-               CheriMasterIDWidth=1 \
-               CheriTransactionIDWidth=5 \
-               CAP128 BLUESIM\
-               MEM64 \
-               RISCV
-BSC_DEFINES += $(MORE_DEFINES)
-BSC_COMPILATION_FLAGS += $(addprefix -D , $(MORE_DEFINES))
+BSC_COMPILATION_FLAGS += \
+	-D RV64 \
+	-D ISA_PRIV_M  -D ISA_PRIV_U  -D ISA_PRIV_S  \
+	-D SV39  \
+	-D ISA_I  -D ISA_M  -D ISA_A  -D ISA_F  -D ISA_D  -D ISA_FD_DIV  -D ISA_C  \
+	-D SHIFT_BARREL    \
+	-D MULT_SYNTH    \
+	-D Near_Mem_Caches    \
+	-D FABRIC64    \
+	-D CheriBusBytes=8 \
+	-D CheriMasterIDWidth=1 \
+	-D CheriTransactionIDWidth=5 \
+	-D CAP128 -D BLUESIM \
+	-D MEM64 \
+	-D RISCV \
 
 
 # Default ISA test
