@@ -10,15 +10,17 @@ RISCY_DIRS = $(RISCY_HOME)/procs/RV64G_OOO:$(RISCY_HOME)/procs/lib:$(RISCY_HOME)
 
 CONNECTAL_DIRS = $(RISCY_HOME)/connectal/bsv:$(RISCY_HOME)/connectal/tests/spi:$(RISCY_HOME)/connectal/lib/bsv
 
+RVFI_DII_DIRS = $(RISCY_HOME)/../../src_Verifier:$(RISCY_HOME)/../../src_Verifier/BSV-RVFI-DII
+
 CHERI_DIRS = $(RISCY_HOME)/../../libs/cheri-cap-lib
 
 # ALL_RISCY_DIRS = $(RISCY_DIRS)
-ALL_RISCY_DIRS = $(RISCY_DIRS):$(CONNECTAL_DIRS):$(CHERI_DIRS)
+ALL_RISCY_DIRS = $(RISCY_DIRS):$(CONNECTAL_DIRS):$(RVFI_DII_DIRS):$(CHERI_DIRS)
 
 # ================================================================
 
 REPO ?= ../..
-ARCH ?= RV64ACDFIMSU
+ARCH ?= RV64ACDFIMSUxCHERI
 
 # ================================================================
 # RISC-V config macros passed into Bluespec 'bsc' compiler
@@ -38,6 +40,8 @@ BSC_COMPILATION_FLAGS += \
 	-D CAP128 -D BLUESIM \
 	-D MEM64 \
 	-D RISCV \
+	-D RVFI_DII \
+	-D RVFI \
 
 
 # Default ISA test
@@ -50,6 +54,8 @@ TEST ?= rv64ui-p-add
 BSC_COMPILATION_FLAGS += -D BSIM \
 
 
+CACHE_SIZE ?= TEST
+
 include $(REPO)/builds/Resources/Include_RISCY_Config.mk
 
 #================================================================
@@ -58,6 +64,6 @@ include $(REPO)/builds/Resources/Include_RISCY_Config.mk
 include $(REPO)/builds/Resources/Include_Common.mk
 
 #================================================================
-# Makefile rules for building for specific simulator: bluesim
+# Makefile rules for building for specific simulator: verilator
 
-include $(REPO)/builds/Resources/Include_bluesim.mk
+include $(REPO)/builds/Resources/Include_verilator.mk
