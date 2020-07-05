@@ -53,6 +53,7 @@ TEST ?= rv64ui-p-add
 
 BSC_COMPILATION_FLAGS += -D BSIM \
 
+
 CACHE_SIZE ?= TEST
 
 include $(REPO)/builds/Resources/Include_RISCY_Config.mk
