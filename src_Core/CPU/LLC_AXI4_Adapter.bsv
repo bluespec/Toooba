@@ -154,7 +154,7 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
       let new_cline = CLine { tag: rg_rd_rsp_beat[0] == 0 ? unpack(new_cline_tag) : rg_cline.tag
                             , data: unpack(new_cline_data) };
 
-      if (rg_rd_rsp_beat == 7) begin
+      if (mem_rsp.rlast) begin
          let ldreq <- pop (f_pending_reads);
          MemRsMsg #(idT, childT) resp = MemRsMsg {data:  new_cline,
                                                   child: ldreq.child,
@@ -164,10 +164,13 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
 
          if (cfg_verbosity > 1)
             $display ("    Response to LLC: ", fshow (resp));
-      end
 
-      rg_cline <= new_cline;
-      rg_rd_rsp_beat <= rg_rd_rsp_beat + 1;
+         rg_rd_rsp_beat <= 0;
+         rg_cline <= unpack(0);
+      end else begin
+         rg_rd_rsp_beat <= rg_rd_rsp_beat + 1;
+         rg_cline <= new_cline;
+      end
    endrule
 
    // ================================================================
@@ -204,8 +207,11 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
 
       // on last flit...
       // ===============
-      if (rg_wr_req_beat == 7)
+      if (rg_wr_req_beat == 7) begin
          llc.toM.deq;
+         rg_wr_req_beat <= 0;
+      end else // increment flit counter
+         rg_wr_req_beat <= rg_wr_req_beat + 1;
 
       // on each flit ...
       // ================
@@ -217,9 +223,6 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
         wstrb:  line_strb[rg_wr_req_beat],
         wlast:  rg_wr_req_beat == 7,
         wuser:  pack(line_data[rg_wr_req_beat[2:1]].tag)});
-      // increment flit counter
-      rg_wr_req_beat <= rg_wr_req_beat + 1;
-
    endrule
 
    // ----------------
