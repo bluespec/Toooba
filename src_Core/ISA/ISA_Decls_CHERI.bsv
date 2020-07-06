@@ -1,11 +1,14 @@
 /*
- * Copyright (c) 2019 Peter Rugg
+ * Copyright (c) 2020 Peter Rugg
+ * Copyright (c) 2020 Jonathan Woodruff
  * All rights reserved.
- *
+
  * This software was developed by SRI International and the University of
  * Cambridge Computer Laboratory (Department of Computer Science and
  * Technology) under DARPA contract HR0011-18-C-0016 ("ECATS"), as part of the
  * DARPA SSITH research programme.
+
+ * This work was supported by NCSC programme grant 4212611/RFA 15971 ("SafeBet").
  *
  * @BERI_LICENSE_HEADER_START@
  *
