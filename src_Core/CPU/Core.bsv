@@ -201,6 +201,13 @@ interface Core;
    interface Vector #(SupSize, Get #(Trace_Data2)) v_to_TV;
 `endif
 
+`ifdef DEBUG_WEDGE
+    (* always_enabled *)
+    method Tuple2#(CapMem, Bit#(32)) debugLastInst;
+    (* always_enabled *)
+    method Tuple2#(CapMem, Bit#(32)) debugNextInst;
+`endif
+
 endinterface
 
 // fixpoint to instantiate modules
@@ -1444,6 +1451,11 @@ module mkCore#(CoreId coreId)(Core);
 
 `ifdef INCLUDE_TANDEM_VERIF
    interface v_to_TV = map (toGet, v_f_to_TV);
+`endif
+
+`ifdef DEBUG_WEDGE
+    method Tuple2#(CapMem, Bit#(32)) debugLastInst = commitStage.debugLastInst;
+    method Tuple2#(CapMem, Bit#(32)) debugNextInst = rob.debugNextInst;
 `endif
 
 endmodule

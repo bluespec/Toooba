@@ -91,6 +91,12 @@ import DM_Run_Control       :: *;
 import DM_Abstract_Commands :: *;
 import DM_System_Bus        :: *;
 
+`ifdef DEBUG_WEDGE
+import ConfigReg   :: *;
+import CHERICap    :: *;
+import CHERICC_Fat :: *;
+`endif
+
 // ================================================================
 
 export DM_Common :: *;
@@ -126,6 +132,15 @@ interface Debug_Module_IFC;
    // CSR access
    interface Client #(DM_CPU_Req #(12, XLEN), DM_CPU_Rsp #(XLEN)) hart0_csr_mem_client;
 
+   // Optional debug from commit stage and ROB
+`ifdef DEBUG_WEDGE
+   (* always_enabled *)
+   method Action hart0_last_inst (Tuple2 #(CapMem, Bit #(32)) pcc_inst);
+
+   (* always_enabled *)
+   method Action hart0_next_inst (Tuple2 #(CapMem, Bit #(32)) pcc_inst);
+`endif
+
    // ----------------
    // Facing Platform
 
@@ -153,6 +168,13 @@ module mkDebug_Module (Debug_Module_IFC);
    DM_System_Bus_IFC         dm_system_bus        <- mkDM_System_Bus;
 
    FIFO#(DM_Addr) f_read_addr <- mkFIFO1;
+
+`ifdef DEBUG_WEDGE
+   Reg #(CapMem)             rg_last_pcc          <- mkConfigReg (unpack (0));
+   Reg #(Bit #(32))          rg_last_inst         <- mkConfigReg (0);
+   Reg #(CapMem)             rg_next_pcc          <- mkConfigReg (unpack (0));
+   Reg #(Bit #(32))          rg_next_inst         <- mkConfigReg (0);
+`endif
 
    // ================================================================
    // Reset all three parts when dm_run_control.dmactive is low
@@ -227,6 +249,32 @@ module mkDebug_Module (Debug_Module_IFC);
 		  || (dm_addr == dm_addr_sbdata3))
 
 	    dm_word <- dm_system_bus.av_read (dm_addr);
+
+`ifdef DEBUG_WEDGE
+	 else if (dm_addr == dm_addr_custom0)
+
+	    dm_word = getAddr (rg_last_pcc) [31:0];
+
+	 else if (dm_addr == dm_addr_custom1)
+
+	    dm_word = getAddr (rg_last_pcc) [63:32];
+
+	 else if (dm_addr == dm_addr_custom2)
+
+	    dm_word = rg_last_inst;
+
+	 else if (dm_addr == dm_addr_custom3)
+
+	    dm_word = getAddr (rg_next_pcc) [31:0];
+
+	 else if (dm_addr == dm_addr_custom4)
+
+	    dm_word = getAddr (rg_next_pcc) [63:32];
+
+	 else if (dm_addr == dm_addr_custom5)
+
+	    dm_word = rg_next_inst;
+`endif
 
 	 else begin
 	    // TODO: set error status?
@@ -314,6 +362,19 @@ module mkDebug_Module (Debug_Module_IFC);
 
    // CSR access
    interface Client hart0_csr_mem_client = dm_abstract_commands.hart0_csr_mem_client;
+
+   // Optional debug from commit stage
+`ifdef DEBUG_WEDGE
+   method Action hart0_last_inst (Tuple2 #(CapMem, Bit #(32)) pcc_inst);
+      rg_last_pcc  <= tpl_1 (pcc_inst);
+      rg_last_inst <= tpl_2 (pcc_inst);
+   endmethod
+
+   method Action hart0_next_inst (Tuple2 #(CapMem, Bit #(32)) pcc_inst);
+      rg_next_pcc  <= tpl_1 (pcc_inst);
+      rg_next_inst <= tpl_2 (pcc_inst);
+   endmethod
+`endif
 
    // ----------------
    // Facing Platform

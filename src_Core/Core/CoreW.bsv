@@ -231,6 +231,11 @@ module mkCoreW #(Reset dm_power_on_reset)
 
    mkConnection (debug_module.hart0_client_run_halt, proc.hart0_run_halt_server);
    mkConnection (debug_module.hart0_get_other_req,   proc.hart0_put_other_req);
+
+`ifdef DEBUG_WEDGE
+   mkConnection (proc.hart0_last_inst, debug_module.hart0_last_inst);
+   mkConnection (proc.hart0_next_inst, debug_module.hart0_next_inst);
+`endif
 `endif
 
 `ifdef INCLUDE_TANDEM_VERIF
