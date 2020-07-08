@@ -1,6 +1,6 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +8,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -27,6 +27,8 @@ import Vector::*;
 import Ehr::*;
 import Types::*;
 import SpecFifo::*;
+import ConfigReg::*;
+import FIFOF::*;
 
 interface SpecPoisonFifo#(numeric type size, type t);
     method Action enq(ToSpecFifo#(t) x);
@@ -45,22 +47,21 @@ module mkSpecPoisonFifo#(Bool lazyEnq)(
     // deq < enq < correctSpec
     // deq read poison, wrongSpec write poison, can use same EHR port
     // wrongSpec conflict enq
-    Integer valid_deq_port = 0;
-    Integer valid_enq_port = 1;
-    Integer poisoned_deq_port = 0;
-    Integer poisoned_wrongSpec_port = 0;
-    Integer poisoned_enq_port = 1;
-    Integer sb_deq_port = 0;
-    Integer sb_wrongSpec_port = 0;
-    Integer sb_enq_port = 0;
-    Integer sb_correctSpec_port = 1;
+    Integer valid_deq_port = 1;
+    Integer valid_enq_port = 2;
+    Integer poisoned_deq_port = 1;
+    Integer poisoned_wrongSpec_port = 1;
+    Integer poisoned_enq_port = 2;
+    Integer sb_deq_port = 1;
+    Integer sb_enq_port = 1;
 
-    Vector#(size, Ehr#(2, Bool)) valid <- replicateM(mkEhr(False));
-    Vector#(size, Ehr#(2, Bool)) poisoned <- replicateM(mkEhr(?));
-    Vector#(size, Reg#(t)) row <- replicateM(mkRegU);
-    Vector#(size, Ehr#(2, SpecBits)) specBits <- replicateM(mkEhr(?));
+    Ehr#(3, Vector#(size, Bool)) valid <- mkEhr(replicate(False));
+    Ehr#(3, Vector#(size, Bool)) poisoned <- mkEhr(?);
+    Vector#(size, Reg#(t)) row <- replicateM(mkConfigRegU);
+    Ehr#(3, Vector#(size, SpecBits)) specBits <- mkEhr(?);
 
-    RWire#(void) wrongSpec_enq_conflict <- mkRWire;
+    FIFOF#(SpecBits) correctSpecF <- mkUGFIFOF;
+    FIFOF#(IncorrectSpeculation) incorrectSpecF <- mkUGFIFOF;
 
     Reg#(idxT) enqP <- mkReg(0);
     Reg#(idxT) deqP <- mkReg(0);
@@ -75,58 +76,67 @@ module mkSpecPoisonFifo#(Bool lazyEnq)(
         Wire#(Bool) valid_for_enq_wire <- mkBypassWire;
         (* fire_when_enabled, no_implicit_conditions *)
         rule setEnqWire;
-            valid_for_enq_wire <= valid[enqP][0];
+            valid_for_enq_wire <= valid[1][enqP];
         endrule
         valid_for_enq = valid_for_enq_wire;
     end
     else begin
-        valid_for_enq = valid[enqP][valid_enq_port];
+        valid_for_enq = valid[valid_enq_port][enqP];
     end
 
+    (* fire_when_enabled, no_implicit_conditions *)
+    rule canon_speculation;
+        Vector#(size, SpecBits) newSpecBits = specBits[0];
+        Vector#(size, Bool) newPoisened = poisoned[0];
+        // Fold in CorrectSpec update:
+        if (correctSpecF.notEmpty) begin
+            SpecBits mask = correctSpecF.first();
+            correctSpecF.deq();
+            // clear spec bits for all entries
+            for (Integer i=0; i<valueOf(size); i=i+1)
+                newSpecBits[i] = newSpecBits[i] & mask;
+        end
+        // Fold in IncorrectSpec update:
+        if (incorrectSpecF.notEmpty) begin
+            IncorrectSpeculation incSpec = incorrectSpecF.first();
+            incorrectSpecF.deq();
+            // clear entries
+            for(Integer i = 0 ; i < valueOf(size) ; i = i+1)
+                if(incSpec.kill_all || newSpecBits[i][incSpec.specTag] == 1)
+                    newPoisened[i] = True;
+        end
+        specBits[0] <= newSpecBits;
+        poisoned[0] <= newPoisened;
+    endrule
+
     method Action enq(ToSpecFifo#(t) x) if(!valid_for_enq);
-        valid[enqP][valid_enq_port] <= True;
-        poisoned[enqP][poisoned_enq_port] <= False;
+        valid[valid_enq_port][enqP] <= True;
+        poisoned[poisoned_enq_port][enqP] <= False;
         row[enqP] <= x.data;
-        specBits[enqP][sb_enq_port] <= x.spec_bits;
+        specBits[sb_enq_port][enqP] <= x.spec_bits;
         enqP <= getNextPtr(enqP);
-        // make conflict with wrongSpec
-        wrongSpec_enq_conflict.wset(?);
     endmethod
 
-    method Action deq if(valid[deqP][valid_deq_port]);
-        valid[deqP][valid_deq_port] <= False;
+    method Action deq if(valid[valid_deq_port][deqP]);
+        valid[valid_deq_port][deqP] <= False;
         // poison bit does not need reset
         deqP <= getNextPtr(deqP);
     endmethod
-    
-    method ToSpecFifo#(t) first_data if(valid[deqP][valid_deq_port]);
+
+    method ToSpecFifo#(t) first_data if(valid[valid_deq_port][deqP]);
         return ToSpecFifo {
             data: row[deqP],
-            spec_bits: specBits[deqP][sb_deq_port]
+            spec_bits: specBits[sb_deq_port][deqP]
         };
     endmethod
-    
-    method Bool first_poisoned if(valid[deqP][valid_deq_port]);
-        return poisoned[deqP][poisoned_deq_port];
+
+    method Bool first_poisoned if(valid[valid_deq_port][deqP]);
+        return poisoned[poisoned_deq_port][deqP];
     endmethod
-    
+
     interface SpeculationUpdate specUpdate;
-        method Action incorrectSpeculation(Bool kill_all, SpecTag x);
-            // poison entries
-            for(Integer i = 0 ; i < valueOf(size) ; i = i+1) begin
-                if(kill_all || specBits[i][sb_wrongSpec_port][x] == 1) begin
-                    poisoned[i][poisoned_wrongSpec_port] <= True;
-                end
-            end
-            // make conflicts with enq
-            wrongSpec_enq_conflict.wset(?);
-        endmethod
-        method Action correctSpeculation(SpecBits mask);
-            // clear spec bits for all entries
-            for(Integer i = 0 ; i < valueOf(size) ; i = i+1) begin
-                let new_spec_bits = specBits[i][sb_correctSpec_port] & mask;
-                specBits[i][sb_correctSpec_port] <= new_spec_bits;
-            end
-        endmethod
+        //method correctSpeculation = correctSpecF.enq;
+        //method incorrectSpeculation(kill_all, specTag) =
+        //    incorrectSpecF.enq(IncorrectSpeculation{kill_all: kill_all, specTag: specTag});
     endinterface
 endmodule
