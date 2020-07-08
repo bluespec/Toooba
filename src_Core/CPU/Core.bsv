@@ -2,6 +2,21 @@
 // Copyright (c) 2017 Massachusetts Institute of Technology
 // Portions Copyright (c) 2019-2020 Bluespec, Inc.
 //
+//-
+// RVFI_DII + CHERI modifications:
+//     Copyright (c) 2020 Jessica Clarke
+//     Copyright (c) 2020 Peter Rugg
+//     Copyright (c) 2020 Jonathan Woodruff
+//     All rights reserved.
+//
+//     This software was developed by SRI International and the University of
+//     Cambridge Computer Laboratory (Department of Computer Science and
+//     Technology) under DARPA contract HR0011-18-C-0016 ("ECATS"), as part of the
+//     DARPA SSITH research programme.
+//
+//     This work was supported by NCSC programme grant 4212611/RFA 15971 ("SafeBet").
+//-
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -184,6 +199,13 @@ interface Core;
    // appears exactly once in exactly one of the streams. Thus, the
    // channels can easily be merged into a single program-order stream.
    interface Vector #(SupSize, Get #(Trace_Data2)) v_to_TV;
+`endif
+
+`ifdef DEBUG_WEDGE
+    (* always_enabled *)
+    method Tuple2#(CapMem, Bit#(32)) debugLastInst;
+    (* always_enabled *)
+    method Tuple2#(CapMem, Bit#(32)) debugNextInst;
 `endif
 
 endinterface
@@ -1429,6 +1451,11 @@ module mkCore#(CoreId coreId)(Core);
 
 `ifdef INCLUDE_TANDEM_VERIF
    interface v_to_TV = map (toGet, v_f_to_TV);
+`endif
+
+`ifdef DEBUG_WEDGE
+    method Tuple2#(CapMem, Bit#(32)) debugLastInst = commitStage.debugLastInst;
+    method Tuple2#(CapMem, Bit#(32)) debugNextInst = rob.debugNextInst;
 `endif
 
 endmodule

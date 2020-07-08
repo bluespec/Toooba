@@ -12,11 +12,22 @@ TMP_DIRS  = -bdir build_dir  -simdir build_dir  -info-dir build_dir
 build_dir:
 	mkdir -p $@
 
+ifeq (,$(filter clean full_clean,$(MAKECMDGOALS)))
+include .depends.mk
+
+.depends.mk: build_dir
+	bluetcl -exec makedepend -elab -sim  $(TMP_DIRS)  $(RTL_GEN_DIRS)  $(BSC_COMPILATION_FLAGS)  -p $(BSC_PATH) -o $@ $(TOPFILE)
+endif
+
+%.bo:
+	$(info building $@)
+	bsc -elab -sim  $(TMP_DIRS)  $(RTL_GEN_DIRS)  $(BSC_COMPILATION_FLAGS)  -p $(BSC_PATH) $<
+
 .PHONY: compile
-compile: build_dir
-	@echo "INFO: Re-compiling Core (CPU, Caches)"
-	bsc -u -elab -sim  $(TMP_DIRS)  $(BSC_COMPILATION_FLAGS)  -p $(BSC_PATH)  $(TOPFILE)
-	@echo "INFO: Re-compiled  Core (CPU, Caches)"
+compile: build_dir build_dir/Top_HW_Side.bo
+#	@echo "INFO: Re-compiling Core (CPU, Caches)"
+#	bsc -u -elab -sim  $(TMP_DIRS)  $(BSC_COMPILATION_FLAGS)  -p $(BSC_PATH)  $(TOPFILE)
+#	@echo "INFO: Re-compiled  Core (CPU, Caches)"
 
 # ================================================================
 # Compile and link Bluesim intermediate files into a Bluesim executable
@@ -33,7 +44,7 @@ BSC_C_FLAGS += \
 # you may have to remove the line: -Xc++ -D_GLIBCXX_USE_CXX11_ABI=0
 
 .PHONY: simulator
-simulator:
+simulator: build_dir/Top_HW_Side.bo
 	@echo "INFO: linking bsc-compiled objects into Bluesim executable"
 	bsc -sim -parallel-sim-link 8 +RTS -K128M -RTS \
 		$(TMP_DIRS) \

@@ -10,39 +10,35 @@ RISCY_DIRS = $(RISCY_HOME)/procs/RV64G_OOO:$(RISCY_HOME)/procs/lib:$(RISCY_HOME)
 
 CONNECTAL_DIRS = $(RISCY_HOME)/connectal/bsv:$(RISCY_HOME)/connectal/tests/spi:$(RISCY_HOME)/connectal/lib/bsv
 
-RVFI_DII_DIRS = $(RISCY_HOME)/../../src_Verifier:$(RISCY_HOME)/../../src_Verifier/BSV-RVFI-DII
-
 CHERI_DIRS = $(RISCY_HOME)/../../libs/cheri-cap-lib
 
 # ALL_RISCY_DIRS = $(RISCY_DIRS)
-ALL_RISCY_DIRS = $(RISCY_DIRS):$(CONNECTAL_DIRS):$(RVFI_DII_DIRS):$(CHERI_DIRS)
+ALL_RISCY_DIRS = $(RISCY_DIRS):$(CONNECTAL_DIRS):$(CHERI_DIRS)
 
 # ================================================================
 
 REPO ?= ../..
-ARCH ?= RV64ACDFIMSU
+ARCH ?= RV64ACDFIMSUxCHERI
 
 # ================================================================
 # RISC-V config macros passed into Bluespec 'bsc' compiler
 
-MORE_DEFINES = RV64 \
-               ISA_PRIV_M ISA_PRIV_U ISA_PRIV_S \
-               SV39 \
-               ISA_I ISA_M ISA_A ISA_F ISA_D ISA_FD_DIV ISA_C \
-               SHIFT_BARREL \
-               MULT_SYNTH \
-               Near_Mem_Caches \
-               FABRIC64 \
-               CheriBusBytes=8 \
-               CheriMasterIDWidth=1 \
-               CheriTransactionIDWidth=5 \
-               CAP128 \
-               MEM64 \
-               RVFI_DII \
-               RVFI BLUESIM\
-               RISCV
-BSC_DEFINES += $(MORE_DEFINES)
-BSC_COMPILATION_FLAGS += $(addprefix -D , $(MORE_DEFINES))
+BSC_COMPILATION_FLAGS += \
+	-D RV64 \
+	-D ISA_PRIV_M  -D ISA_PRIV_U  -D ISA_PRIV_S  \
+	-D SV39  \
+	-D ISA_I  -D ISA_M  -D ISA_A  -D ISA_F  -D ISA_D  -D ISA_FD_DIV  -D ISA_C  \
+	-D SHIFT_BARREL    \
+	-D MULT_SYNTH    \
+	-D Near_Mem_Caches    \
+	-D FABRIC64    \
+	-D CheriBusBytes=8 \
+	-D CheriMasterIDWidth=1 \
+	-D CheriTransactionIDWidth=5 \
+	-D CAP128 -D BLUESIM \
+	-D MEM64 \
+	-D RISCV \
+
 
 # Default ISA test
 
@@ -53,7 +49,6 @@ TEST ?= rv64ui-p-add
 
 BSC_COMPILATION_FLAGS += -D BSIM \
 
-CACHE_SIZE ?= TEST
 
 include $(REPO)/builds/Resources/Include_RISCY_Config.mk
 

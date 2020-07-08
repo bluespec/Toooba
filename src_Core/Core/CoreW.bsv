@@ -1,4 +1,19 @@
 // Copyright (c) 2018-2020 Bluespec, Inc. All Rights Reserved.
+//
+//-
+// RVFI_DII + CHERI modifications:
+//     Copyright (c) 2020 Alexandre Joannou
+//     Copyright (c) 2020 Peter Rugg
+//     Copyright (c) 2020 Jonathan Woodruff
+//     All rights reserved.
+//
+//     This software was developed by SRI International and the University of
+//     Cambridge Computer Laboratory (Department of Computer Science and
+//     Technology) under DARPA contract HR0011-18-C-0016 ("ECATS"), as part of the
+//     DARPA SSITH research programme.
+//
+//     This work was supported by NCSC programme grant 4212611/RFA 15971 ("SafeBet").
+//-
 
 package CoreW;
 
@@ -216,6 +231,11 @@ module mkCoreW #(Reset dm_power_on_reset)
 
    mkConnection (debug_module.hart0_client_run_halt, proc.hart0_run_halt_server);
    mkConnection (debug_module.hart0_get_other_req,   proc.hart0_put_other_req);
+
+`ifdef DEBUG_WEDGE
+   mkConnection (proc.hart0_last_inst, debug_module.hart0_last_inst);
+   mkConnection (proc.hart0_next_inst, debug_module.hart0_next_inst);
+`endif
 `endif
 
 `ifdef INCLUDE_TANDEM_VERIF

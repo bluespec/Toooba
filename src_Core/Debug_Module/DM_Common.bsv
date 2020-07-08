@@ -22,7 +22,7 @@ package DM_Common;
 
 typedef Bit #(7)  DM_Addr;
 
-DM_Addr max_DM_Addr = 'h5F;
+DM_Addr max_DM_Addr = 'h7F;
 
 typedef Bit #(32) DM_Word;
 
@@ -78,6 +78,26 @@ DM_Addr dm_addr_sbdata0      = 'h3c;
 DM_Addr dm_addr_sbdata1      = 'h3d;
 DM_Addr dm_addr_sbdata2      = 'h3e;
 DM_Addr dm_addr_sbdata3      = 'h3f;
+
+// ----------------
+// Custom registers
+
+DM_Addr dm_addr_custom0      = 'h70;
+DM_Addr dm_addr_custom1      = 'h71;
+DM_Addr dm_addr_custom2      = 'h72;
+DM_Addr dm_addr_custom3      = 'h73;
+DM_Addr dm_addr_custom4      = 'h74;
+DM_Addr dm_addr_custom5      = 'h75;
+DM_Addr dm_addr_custom6      = 'h76;
+DM_Addr dm_addr_custom7      = 'h77;
+DM_Addr dm_addr_custom8      = 'h78;
+DM_Addr dm_addr_custom9      = 'h79;
+DM_Addr dm_addr_custom10     = 'h7a;
+DM_Addr dm_addr_custom11     = 'h7b;
+DM_Addr dm_addr_custom12     = 'h7c;
+DM_Addr dm_addr_custom13     = 'h7d;
+DM_Addr dm_addr_custom14     = 'h7e;
+DM_Addr dm_addr_custom15     = 'h7f;
 
 // ================================================================
 

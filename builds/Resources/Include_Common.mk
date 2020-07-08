@@ -63,7 +63,6 @@ BSC_COMPILATION_FLAGS += \
 
 EXAMPLE ?= PLEASE_DEFINE_EXAMPLE_PATH_TO_ELF
 
-
 .PHONY: run_example
 run_example:
 	make -C  $(TESTS_DIR)/elf_to_hex

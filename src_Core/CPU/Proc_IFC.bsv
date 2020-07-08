@@ -1,4 +1,19 @@
 // Copyright (c) 2016-2020 Bluespec, Inc. All Rights Reserved
+//
+//-
+// RVFI_DII + CHERI modifications:
+//     Copyright (c) 2020 Alexandre Joannou
+//     Copyright (c) 2020 Peter Rugg
+//     Copyright (c) 2020 Jonathan Woodruff
+//     All rights reserved.
+//
+//     This software was developed by SRI International and the University of
+//     Cambridge Computer Laboratory (Department of Computer Science and
+//     Technology) under DARPA contract HR0011-18-C-0016 ("ECATS"), as part of the
+//     DARPA SSITH research programme.
+//
+//     This work was supported by NCSC programme grant 4212611/RFA 15971 ("SafeBet").
+//-
 
 package Proc_IFC;
 
@@ -29,6 +44,11 @@ import Trace_Data2 :: *;
 
 `ifdef RVFI_DII
 import Types :: *;
+`endif
+
+`ifdef DEBUG_WEDGE
+import CHERICap    :: *;
+import CHERICC_Fat :: *;
 `endif
 
 // ================================================================
@@ -111,6 +131,13 @@ interface Proc_IFC;
    // appears exactly once in exactly one of the streams. Thus, the
    // channels can easily be merged into a single program-order stream.
    interface Vector #(SupSize, Get #(Trace_Data2)) v_to_TV;
+`endif
+
+`ifdef DEBUG_WEDGE
+    (* always_enabled *)
+    method Tuple2#(CapMem, Bit#(32)) hart0_last_inst;
+    (* always_enabled *)
+    method Tuple2#(CapMem, Bit#(32)) hart0_next_inst;
 `endif
 
 endinterface

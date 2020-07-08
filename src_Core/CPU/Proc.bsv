@@ -5,6 +5,22 @@ package Proc;
 // Copyright (c) 2018 Massachusetts Institute of Technology
 // Portions Copyright (c) 2019-2020 Bluespec, Inc.
 //
+//-
+// RVFI_DII + CHERI modifications:
+//     Copyright (c) 2020 Jessica Clarke
+//     Copyright (c) 2020 Alexandre Joannou
+//     Copyright (c) 2020 Peter Rugg
+//     Copyright (c) 2020 Jonathan Woodruff
+//     All rights reserved.
+//
+//     This software was developed by SRI International and the University of
+//     Cambridge Computer Laboratory (Department of Computer Science and
+//     Technology) under DARPA contract HR0011-18-C-0016 ("ECATS"), as part of the
+//     DARPA SSITH research programme.
+//
+//     This work was supported by NCSC programme grant 4212611/RFA 15971 ("SafeBet").
+//-
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -85,6 +101,11 @@ import DM_CPU_Req_Rsp  :: *;
 `ifdef INCLUDE_TANDEM_VERIF
 import ProcTypes   :: *;
 import Trace_Data2 :: *;
+`endif
+
+`ifdef DEBUG_WEDGE
+import CHERICap    :: *;
+import CHERICC_Fat :: *;
 `endif
 
 // ================================================================
@@ -310,6 +331,11 @@ module mkProc (Proc_IFC);
 
 `ifdef INCLUDE_TANDEM_VERIF
    interface v_to_TV = core [0].v_to_TV;
+`endif
+
+`ifdef DEBUG_WEDGE
+    method Tuple2#(CapMem, Bit#(32)) hart0_last_inst = core[0].debugLastInst;
+    method Tuple2#(CapMem, Bit#(32)) hart0_next_inst = core[0].debugNextInst;
 `endif
 
 endmodule: mkProc

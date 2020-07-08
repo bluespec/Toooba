@@ -1,5 +1,20 @@
 // Copyright (c) 2017 Massachusetts Institute of Technology
 //
+//-
+// RVFI_DII + CHERI modifications:
+//     Copyright (c) 2020 Alexandre Joannou
+//     Copyright (c) 2020 Peter Rugg
+//     Copyright (c) 2020 Jonathan Woodruff
+//     All rights reserved.
+//
+//     This software was developed by SRI International and the University of
+//     Cambridge Computer Laboratory (Department of Computer Science and
+//     Technology) under DARPA contract HR0011-18-C-0016 ("ECATS"), as part of the
+//     DARPA SSITH research programme.
+//
+//     This work was supported by NCSC programme grant 4212611/RFA 15971 ("SafeBet").
+//-
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -44,6 +59,8 @@ function Maybe#(CSR_XCapCause) capChecks(CapPipe a, CapPipe b, CapPipe ddc, CapC
     else if (toCheck.ddc_unsealed             && isValidCap(ddc) && (getKind(ddc) != UNSEALED))
         result = eDDC(SealViolation);
     else if (toCheck.src1_unsealed            && isValidCap(a) && (getKind(a) != UNSEALED))
+        result = e1(SealViolation);
+    else if (toCheck.src1_unsealed_or_sentry  && isValidCap(a) && (getKind(a) != UNSEALED) && (getKind(a) != SENTRY))
         result = e1(SealViolation);
     else if (toCheck.src2_unsealed            && isValidCap(b) && (getKind(b) != UNSEALED))
         result = e2(SealViolation);
@@ -179,10 +196,10 @@ function CapPipe specialRWALU(CapPipe cap, CapPipe oldCap, SpecialRWFunc scrType
     let offset = getOffset(cap);
     let oldOffset = getOffset(oldCap);
     CapPipe res = (case (scrType) matches
-        tagged TVEC .csrf: update_scr_via_csr(oldCap, csrOp(oldOffset, getAddr(cap), csrf) & ~64'h2);
-        tagged EPC .csrf: update_scr_via_csr(oldCap, csrOp(oldOffset, getAddr(cap), csrf) & ~64'h1);
-        tagged TCC: update_scr_via_csr(cap, offset & ~64'h2); // Mask out bit 1
-        tagged EPCC: update_scr_via_csr(cap, offset & ~64'h1); // Mask out bit 0 TODO factor out update_scr_via_csr
+        tagged TVEC .csrf: update_scr_via_csr(oldCap, csrOp(oldOffset, getAddr(cap), csrf) & ~64'h2, False);
+        tagged EPC .csrf: update_scr_via_csr(oldCap, csrOp(oldOffset, getAddr(cap), csrf) & ~64'h1, False);
+        tagged TCC: update_scr_via_csr(cap, offset & ~64'h2, False); // Mask out bit 1
+        tagged EPCC: update_scr_via_csr(cap, offset & ~64'h1, offset[0] == 1'b0); // Mask out bit 0
         tagged Normal: cap;
     endcase);
     return res;
@@ -205,8 +222,13 @@ function Tuple2#(CapPipe,Bool) capModify(CapPipe a, CapPipe b, CapModifyFunc fun
                       tagged EPC ._: nullWithAddr(getOffset(b));
                    endcase);
             tagged SetAddr .addrSource    :
-                if (addrSource == Src1Type && (getKind(a) == UNSEALED)) return t(nullWithAddr(-1)); // TODO correct behaviour around reserved types
+                if      (addrSource == Src1Type && (getKind(a) == UNSEALED)) return t(nullWithAddr(otype_unsealed_ext));
+                else if (addrSource == Src1Type && (getKind(a) == SENTRY  )) return t(nullWithAddr(otype_sentry_ext));
+                else if (addrSource == Src1Type && (getKind(a) == RES0    )) return t(nullWithAddr(otype_res0_ext));
+                else if (addrSource == Src1Type && (getKind(a) == RES1    )) return t(nullWithAddr(otype_res1_ext));
                 else return t(setAddr(b, (addrSource == Src1Type) ? zeroExtend(getKind(a).SEALED_WITH_TYPE) : getAddr(a) ).value);
+            tagged SealEntry              :
+                t(setKind(a, SENTRY));
             tagged Seal                   :
                 t((validAsType(b, getAddr(b)) && isValidCap(b)) ?
                      setKind(a, SEALED_WITH_TYPE (truncate(getAddr(b))))
@@ -220,7 +242,7 @@ function Tuple2#(CapPipe,Bool) capModify(CapPipe a, CapPipe b, CapModifyFunc fun
             tagged FromPtr                :
                 t(getAddr(a) == 0 ? nullCap : setOffset(b, getAddr(a)).value);
             tagged BuildCap               :
-                t(setKind(setValidCap(a, True),UNSEALED)); // TODO preserve sentries
+                t(setKind(setValidCap(a, True), getKind(a)==SENTRY ? SENTRY : UNSEALED));
             tagged Move                   :
                 t(a);
             tagged ClearTag               :
@@ -303,6 +325,7 @@ function CapPipe brAddrCalc(CapPipe pc, CapPipe val, IType iType, Data imm, Bool
     CapPipe branchTarget = incOffset(pc, imm).value;
     CapPipe jumpTarget = incOffset(val, imm).value;
     jumpTarget = setAddrUnsafe(jumpTarget, {truncateLSB(getAddr(jumpTarget)), 1'b0});
+    jumpTarget = setKind(jumpTarget, UNSEALED); // It is checked elsewhere that we have an unsealed cap already, or sentry if permitted
     CapPipe targetAddr = (case (iType)
             J       : branchTarget;
             Jr,CCall,CJALR      : jumpTarget;
@@ -365,7 +388,7 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
     if (dInst.capChecks.cfromptr_bypass && getAddr(rVal1) == 0) begin
         capException = Invalid;
     end
-    if (dInst.capChecks.ccseal_bypass && (!isValidCap(rVal2) || getAddr(rVal2) == -1) && isValidCap(rVal1)) begin
+    if (dInst.capChecks.ccseal_bypass && (!isValidCap(rVal2) || getAddr(rVal2) == -1 || getKind(rVal1) != UNSEALED) && isValidCap(rVal1)) begin
         capException = Invalid;
         boundsCheck = Invalid;
     end
@@ -379,7 +402,7 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
             Amo         : rVal2;
             J           : nullWithAddr(getOffset(link_pcc));
             CCall       : cap_alu_result;
-            CJALR       : link_pcc;
+            CJALR       : setKind(link_pcc, SENTRY);
             Jr          : nullWithAddr(getOffset(link_pcc));
             Auipc       : nullWithAddr(getOffset(pcc) + getDInstImm(dInst).Valid);
             Auipcc      : incOffset(pcc, getDInstImm(dInst).Valid).value; // could be computed with alu

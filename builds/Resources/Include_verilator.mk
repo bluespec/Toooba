@@ -9,29 +9,25 @@
 
 RTL_GEN_DIRS = -vdir Verilog_RTL  -bdir build_dir  -info-dir build_dir
 
-.depends.mk: $(REPO)/builds/Resources/genDependencies.tcl build_dir
-	$(info generating bsv dependency graph)
-	BSC_PATH=$(BSC_PATH) \
-	BSC_DEFINES="$(BSC_DEFINES)" \
-	BSC_BUILDDIR=build_dir \
-	BSC_TOPFILE=$(REPO)/src_Testbench/Top/Top_HW_Side.bsv \
-	OUTPUTFILE=$@ \
-	$<
-
 build_dir:
 	mkdir -p $@
 
 Verilog_RTL:
 	mkdir -p $@
 
+ifeq (,$(filter clean full_clean,$(MAKECMDGOALS)))
 include .depends.mk
+
+.depends.mk: build_dir Verilog_RTL
+	bluetcl -exec makedepend -verilog -elab  $(RTL_GEN_DIRS)  $(BSC_COMPILATION_FLAGS) -p $(BSC_PATH) -o $@ $(TOPFILE)
+endif
 
 %.bo:
 	$(info building $@)
-	bsc -verilog -elab -bdir build_dir -vdir Verilog_RTL $(BSC_COMPILATION_FLAGS) -p $(BSC_PATH) $<
+	bsc -verilog -elab  $(RTL_GEN_DIRS)  $(BSC_COMPILATION_FLAGS) -p $(BSC_PATH) $<
 
 .PHONY: compile
-compile: .depends.mk build_dir Verilog_RTL build_dir/Top_HW_Side.bo
+compile: build_dir Verilog_RTL build_dir/Top_HW_Side.bo
 #Verilog_RTL/mkTop_HW_Side.v:  build_dir Verilog_RTL /tmp/src_dir $(VERILOG_SUB_MODULES)
 #Verilog_RTL/mkTop_HW_Side.v: $(TOPFILE) build_dir/Top_HW_Side.bo build_dir Verilog_RTL
 #	@echo  "INFO: Verilog RTL generation ..."

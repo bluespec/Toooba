@@ -2,15 +2,20 @@
 // Copyright (c) 2017 Massachusetts Institute of Technology
 // Portions Copyright (c) 2019-2020 Bluespec, Inc.
 //
-// CHERI modifications:
-//     Copyright (c) 2020 Jonathan Woodruff
+//-
+// RVFI_DII + CHERI modifications:
+//     Copyright (c) 2020 Jessica Clarke
 //     Copyright (c) 2020 Peter Rugg
+//     Copyright (c) 2020 Jonathan Woodruff
 //     All rights reserved.
 //
 //     This software was developed by SRI International and the University of
 //     Cambridge Computer Laboratory (Department of Computer Science and
 //     Technology) under DARPA contract HR0011-18-C-0016 ("ECATS"), as part of the
 //     DARPA SSITH research programme.
+//
+//     This work was supported by NCSC programme grant 4212611/RFA 15971 ("SafeBet").
+//-
 //
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
@@ -290,6 +295,14 @@ module mkStatsCsr(StatsCsr);
     endmethod
 endmodule
 
+function Reg#(Data) scrToCsr(Reg#(CapReg) scr) = interface Reg
+        method _write (x) = action CapPipe scr_pipe = cast(scr); scr <= cast(setOffset(scr_pipe, x).value); endaction;
+        method Data _read;
+          CapPipe scr_pipe = cast(scr);
+          return getOffset(scr_pipe);
+        endmethod
+    endinterface;
+
 // same as EHR except that read port 0 is not ordered with other methods. Read
 // port 1 will still get bypassing from write port 0.
 module mkConfigEhr#(t init)(Ehr#(n, t)) provisos(Bits#(t, w));
@@ -395,11 +408,13 @@ module mkCsrFile #(Data hartid)(CsrFile);
     // misa
     Reg#(Data) misa_csr = readOnlyReg({getXLBits, 36'b0, getExtensionBits(isa)});
     // medeleg: some exceptions don't exist, fix corresponding bits to 0
+    Reg#(Bit#(3)) medeleg_28_26_reg <- mkCsrReg(0); // CHERI causes 0x1a-0x1c
     Reg#(Bit#(1)) medeleg_15_reg <- mkCsrReg(0); // cause 15
     Reg#(Bit#(3)) medeleg_13_11_reg <- mkCsrReg(0); // case 13-11
     Reg#(Bit#(10)) medeleg_9_0_reg <- mkCsrReg(0); // cause 9-0
-    Reg#(Data) medeleg_csr = concatReg6(
-        readOnlyReg(48'b0), medeleg_15_reg,
+    Reg#(Data) medeleg_csr = concatReg8(
+        readOnlyReg(35'b0), medeleg_28_26_reg,
+        readOnlyReg(10'b0), medeleg_15_reg,
         readOnlyReg(1'b0), medeleg_13_11_reg,
         readOnlyReg(1'b0), medeleg_9_0_reg
     );
@@ -754,8 +769,10 @@ module mkCsrFile #(Data hartid)(CsrFile);
             // Supervisor CSRs
             CSRsstatus:    sstatus_csr;
             CSRsie:        sie_csr;
+            CSRstvec:      scrToCsr(stcc_reg); // Only accessed by debugger. CPU accesses decoded into cspecialrw
             CSRscounteren: scounteren_csr;
             CSRsscratch:   sscratch_csr;
+            CSRsepc:       scrToCsr(sepcc_reg[1]); // Only accessed by debugger. CPU accesses decoded into cspecialrw
             CSRscause:     scause_csr;
             CSRstval:      stval_csr;
             CSRsip:        sip_csr;
@@ -766,8 +783,10 @@ module mkCsrFile #(Data hartid)(CsrFile);
             CSRmedeleg:    medeleg_csr;
             CSRmideleg:    mideleg_csr;
             CSRmie:        mie_csr;
+            CSRmtvec:      scrToCsr(mtcc_reg); // Only accessed by debugger. CPU accesses decoded into cspecialrw
             CSRmcounteren: mcounteren_csr;
             CSRmscratch:   mscratch_csr;
+            CSRmepc:       scrToCsr(mepcc_reg[1]); // Only accessed by debugger. CPU accesses decoded into cspecialrw
             CSRmcause:     mcause_csr;
             CSRmtval:      mtval_csr;
             CSRmip:        mip_csr;
@@ -799,10 +818,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
 
 `ifdef INCLUDE_GDB_CONTROL
            CSRdcsr:       rg_dcsr;    // TODO: take NMI into account (cf. Piccolo/Flute)
-           CSRdpc:        interface Reg;
-                              method _write (x) = action rg_dpc <= setAddrUnsafe(rg_dpc, x); endaction;
-                              method _read = getAddr(rg_dpc);
-                          endinterface
+           CSRdpc:        scrToCsr(rg_dpc);
            CSRdscratch0:  rg_dscratch0;
            CSRdscratch1:  rg_dscratch1;
 `endif
@@ -871,7 +887,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
                                           x [3],        // ie_vec[prvM]
                                           x [1],        // ie_vec[prvS]
                                           x [0]);       // ie_vec[prvU]
-            CSRmedeleg:    { 48'b0, x[15], 1'b0, x[13:12], x[11], 1'b0, x[9:0]};
+            CSRmedeleg:    { 35'b0, x[28:26], 10'b0, x[15], 1'b0, x[13:12], x[11], 1'b0, x[9:0]};
             CSRmideleg:    { 52'b0, x[11], 1'b0, x[9:8], x[7], 1'b0, x[5:4], x[3], 1'b0, x[1:0]};
             CSRmip:        ((mip_csr & (~ mip_mie_warl_mask)) | (x & mip_mie_warl_mask));
             CSRmie:        (x & mip_mie_warl_mask);
@@ -1055,8 +1071,8 @@ module mkCsrFile #(Data hartid)(CsrFile);
         // check if trap is delegated
         Bool deleg = prv_reg <= prvS && (case(t) matches
             tagged Exception .e: return medeleg_csr[pack(e)] == 1;
+            tagged CapException .ce: return medeleg_csr[pack(CHERIFault)] == 1;
             tagged Interrupt .i: return mideleg_csr[pack(i)] == 1;
-            default: return False;
         endcase);
         // handle the trap
         if(deleg) begin // handle in S mode
@@ -1145,7 +1161,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
                                           /* ie_vec [prvM] */ prev_ie_vec[prvM],
                                           ie_vec [prvS],
                                           ie_vec [prvU]);
-        return RET_Updates {new_pcc: cast(mepcc_reg[0])
+        return RET_Updates {new_pcc: cast(setKind(mepcc_reg[0], getKind(mepcc_reg[0]) == SENTRY ? UNSEALED : getKind(mepcc_reg[0])))
 `ifdef INCLUDE_TANDEM_VERIF
                             , prv:    prev_prv_vec[prvM],
                             status: mstatus_val
@@ -1174,7 +1190,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
                                           ie_vec [prvM],
                                           /* ie_vec [prvS] */ prev_ie_vec[prvS],
                                           ie_vec [prvU]);
-        return RET_Updates {new_pcc: cast(sepcc_reg[0])
+        return RET_Updates {new_pcc: cast(setKind(sepcc_reg[0], getKind(sepcc_reg[0]) == SENTRY ? UNSEALED : getKind(sepcc_reg[0])))
 `ifdef INCLUDE_TANDEM_VERIF
                             , prv:    prev_prv_vec[prvS],
                             status: mstatus_val
