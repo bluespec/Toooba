@@ -19,7 +19,7 @@ ifeq (,$(filter clean full_clean,$(MAKECMDGOALS)))
 include .depends.mk
 
 .depends.mk: build_dir Verilog_RTL
-	bluetcl -exec makedepend -verilog -elab  $(RTL_GEN_DIRS)  $(BSC_COMPILATION_FLAGS) -p $(BSC_PATH) -o $@ $(TOPFILE)
+	if ! bluetcl -exec makedepend -verilog -elab  $(RTL_GEN_DIRS)  $(BSC_COMPILATION_FLAGS) -p $(BSC_PATH) -o $@ $(TOPFILE); then rm -f $@ && false; fi
 endif
 
 %.bo:
