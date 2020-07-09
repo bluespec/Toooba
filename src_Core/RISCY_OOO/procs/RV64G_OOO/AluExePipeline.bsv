@@ -169,7 +169,9 @@ interface AluExeInput;
     method Bit #(32) rob_getOrig_Inst (InstTag t);
     method Action rob_setExecuted(
         InstTag t,
+`ifdef INCLUDE_TANDEM_VERIF
         CapPipe dst_data,
+`endif
         Maybe#(Data) csrData,
         Maybe#(CapPipe) scrData,
         ControlFlow cf,
@@ -385,7 +387,9 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
         // update the instruction in the reorder buffer.
         inIfc.rob_setExecuted(
             x.tag,
+`ifdef INCLUDE_TANDEM_VERIF
             x.data,
+`endif
             x.csrData,
             x.scrData,
             x.controlFlow,

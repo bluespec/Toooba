@@ -79,9 +79,9 @@ typedef struct {
     Bit #(32)          orig_inst;    // original 16b or 32b instruction ([1:0] will distinguish 16b or 32b)
     IType              iType;
     Maybe#(ArchRIndx)  dst;          // Invalid, GPR or FPR destination ("Rd")
-    CapPipe            dst_data;     // Output of instruction into destination register
 `ifdef INCLUDE_TANDEM_VERIF
     // Store-data, for those mem instrs that store data
+    Data               dst_data;     // Output of instruction into destination register
     Data               store_data;
     ByteEn             store_data_BE;
 `endif
@@ -128,7 +128,9 @@ typedef enum {
 
 interface Row_setExecuted_doFinishAlu;
     method Action set(
+`ifdef INCLUDE_TANDEM_VERIF
         CapPipe dst_data,
+`endif
         Maybe#(Data) csrData,
         Maybe#(CapPipe) scrData,
         ControlFlow cf,
@@ -141,7 +143,9 @@ endinterface
 
 interface Row_setExecuted_doFinishFpuMulDiv;
     method Action set(
+`ifdef INCLUDE_TANDEM_VERIF
         Data dst_data,
+`endif
         Bit#(5) fflags,
         Maybe#(Exception) cause
 `ifdef RVFI
@@ -256,8 +260,8 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     Reg #(Bit #(32))                                                orig_inst            <- mkRegU;
     Reg#(IType)                                                     iType                <- mkRegU;
     Reg #(Maybe #(ArchRIndx))                                       rg_dst_reg           <- mkRegU;
-    Reg #(CapPipe)                                                  rg_dst_data          <- mkRegU;
 `ifdef INCLUDE_TANDEM_VERIF
+    Reg #(Data)                                                     rg_dst_data          <- mkRegU;
     Reg #(Data)                                                     rg_store_data        <- mkRegU;
     Reg #(ByteEn)                                                   rg_store_data_BE     <- mkRegU;
 `endif
@@ -295,7 +299,9 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     for(Integer i = 0; i < valueof(aluExeNum); i = i+1) begin
         aluSetExe[i] = (interface Row_setExecuted_doFinishAlu;
             method Action set(
+`ifdef INCLUDE_TANDEM_VERIF
                 CapPipe dst_data,
+`endif
                 Maybe#(Data) csrData,
                 Maybe#(CapPipe) scrData,
                 ControlFlow cf,
@@ -307,7 +313,9 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
                 // inst is done
                 rob_inst_state[state_finishAlu_port(i)] <= Executed;
                 // Destination register data, for Tandem Verification
+`ifdef INCLUDE_TANDEM_VERIF
                 rg_dst_data <= dst_data;
+`endif
 
                 // update PPC or csrData (vaddr is always useless for ALU results)
                 if(csrData matches tagged Valid .d) begin
@@ -335,16 +343,21 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     Vector#(fpuMulDivExeNum, Row_setExecuted_doFinishFpuMulDiv) fpuMulDivExe;
     for(Integer i = 0; i < valueof(fpuMulDivExeNum); i = i+1) begin
         fpuMulDivExe[i] = (interface Row_setExecuted_doFinishFpuMulDiv;
-            method Action set(Data dst_data,
+            method Action set(
+`ifdef INCLUDE_TANDEM_VERIF
+                              Data dst_data,
+`endif
                               Bit#(5) new_fflags,
                               Maybe#(Exception) cause
-            `ifdef RVFI
+`ifdef RVFI
                             , ExtraTraceBundle tb
-            `endif
+`endif
                              );
                 // inst is done
                 rob_inst_state[state_finishFpuMulDiv_port(i)] <= Executed;
-                rg_dst_data <= nullWithAddr(dst_data);
+`ifdef INCLUDE_TANDEM_VERIF
+                rg_dst_data <= dst_data;
+`endif
                 // update fflags
                 fflags[fflags_finishFpuMulDiv_port(i)] <= new_fflags;
                 if (cause matches tagged Valid .exp  &&& !isValid(trap[trap_finishFpuMulDiv_port(i)])) begin
@@ -463,8 +476,8 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
             orig_inst: orig_inst,
             iType: iType,
             dst: rg_dst_reg,
-            dst_data: rg_dst_data,
 `ifdef INCLUDE_TANDEM_VERIF
+            dst_data: rg_dst_data,
             store_data: rg_store_data,
             store_data_BE: rg_store_data_BE,
 `endif
@@ -578,7 +591,9 @@ endinterface
 
 interface ROB_setExecuted_doFinishAlu;
     method Action set(InstTag x,
-                      CapPipe dst_data,
+`ifdef INCLUDE_TANDEM_VERIF
+                      Data dst_data,
+`endif
                       Maybe#(Data) csrData,
                       Maybe#(CapPipe) scrData,
                       ControlFlow cf,
@@ -591,7 +606,9 @@ endinterface
 
 interface ROB_setExecuted_doFinishFpuMulDiv;
     method Action set(InstTag x,
+`ifdef INCLUDE_TANDEM_VERIF
                       Data dst_data,
+`endif
                       Bit#(5) fflags,
                       Maybe#(Exception) cause
 `ifdef RVFI
@@ -1128,7 +1145,9 @@ module mkSupReorderBuffer#(
         aluSetExeIfc[i] = (interface ROB_setExecuted_doFinishAlu;
             method Action set(
                 InstTag x,
-                CapPipe dst_data,
+`ifdef INCLUDE_TANDEM_VERIF
+                Data dst_data,
+`endif
                 Maybe#(Data) csrData,
                 Maybe#(CapPipe) scrData,
                 ControlFlow cf,
@@ -1140,7 +1159,9 @@ module mkSupReorderBuffer#(
                 all(id, readVReg(setExeAlu_SB_enq)) // ordering: < enq
             );
                 row[x.way][x.ptr].setExecuted_doFinishAlu[i].set(
+`ifdef INCLUDE_TANDEM_VERIF
                     dst_data,
+`endif
                     csrData,
                     scrData,
                     cf,
@@ -1158,7 +1179,9 @@ module mkSupReorderBuffer#(
         fpuMulDivSetExeIfc[i] = (interface ROB_setExecuted_doFinishFpuMulDiv;
             method Action set(
                 InstTag x,
+`ifdef INCLUDE_TANDEM_VERIF
                 Data dst_data,
+`endif
                 Bit#(5) fflags,
                 Maybe#(Exception) cause
 `ifdef RVFI
@@ -1168,7 +1191,9 @@ module mkSupReorderBuffer#(
                 all(id, readVReg(setExeFpuMulDiv_SB_enq)) // ordering: < enq
             );
                 row[x.way][x.ptr].setExecuted_doFinishFpuMulDiv[i].set(
+`ifdef INCLUDE_TANDEM_VERIF
                     dst_data,
+`endif
                     fflags,
                     cause
 `ifdef RVFI

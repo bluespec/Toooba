@@ -111,7 +111,9 @@ interface FpuMulDivExeInput;
     // ROB
     method Action rob_setExecuted(
         InstTag t,
+`ifdef INCLUDE_TANDEM_VERIF
         Data dst_data,
+`endif
         Bit#(5) fflags,
         Maybe#(Exception) cast
 `ifdef RVFI
@@ -254,7 +256,12 @@ module mkFpuMulDivExePipeline#(FpuMulDivExeInput inIfc)(FpuMulDivExePipeline);
             inIfc.writeRegFile(valid_dst.indx, nullWithAddr(data));
         end
         // update the instruction in the reorder buffer.
-        inIfc.rob_setExecuted(tag, data, fflags, tagged Invalid
+        inIfc.rob_setExecuted(tag,
+`ifdef INCLUDE_TANDEM_VERIF
+                              data,
+`endif
+                              fflags,
+                              tagged Invalid
 `ifdef RVFI_DII
                               , ExtraTraceBundle{regWriteData: data, memByteEn: ?}
 `endif

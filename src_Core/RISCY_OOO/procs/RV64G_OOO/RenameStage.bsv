@@ -351,8 +351,8 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                 orig_inst: orig_inst,
                                 iType: dInst.iType,
                                 dst: arch_regs.dst,
-                                dst_data: ?,    // Available only after execution
 `ifdef INCLUDE_TANDEM_VERIF
+                                dst_data: ?,    // Available only after execution
                                 store_data: ?,
                                 store_data_BE: ?,
 `endif
@@ -552,8 +552,8 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                 orig_inst: orig_inst,
                                 iType: dInst.iType,
                                 dst: arch_regs.dst,
-                                dst_data: ?,    // Available only after execution
 `ifdef INCLUDE_TANDEM_VERIF
+                                dst_data: ?,    // Available only after execution
                                 store_data: ?,
                                 store_data_BE: ?,
 `endif
@@ -1095,8 +1095,8 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                                 orig_inst: orig_inst,
                                                 iType: dInst.iType,
                                                 dst: arch_regs.dst,
-                                                dst_data: ?,    // Available only after execution
 `ifdef INCLUDE_TANDEM_VERIF
+                                                dst_data: ?,    // Available only after execution
                                                 store_data: ?,
                                                 store_data_BE: ?,
 `endif
