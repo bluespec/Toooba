@@ -205,7 +205,7 @@ interface Core;
     (* always_enabled *)
     method Tuple2#(CapMem, Bit#(32)) debugLastInst;
     (* always_enabled *)
-    method Tuple2#(CapMem, Bit#(32)) debugNextInst;
+    method Tuple4#(Tuple3#(Bit#(32), Bit#(32), Bit#(32)), Tuple4#(CapMem, Bit#(32), CapMem, Bit#(32)), Tuple4#(CapMem, Bit#(32), CapMem, Bit#(32)), void) debugRob;
 `endif
 
 endinterface
@@ -1455,7 +1455,7 @@ module mkCore#(CoreId coreId)(Core);
 
 `ifdef DEBUG_WEDGE
     method Tuple2#(CapMem, Bit#(32)) debugLastInst = commitStage.debugLastInst;
-    method Tuple2#(CapMem, Bit#(32)) debugNextInst = rob.debugNextInst;
+    method Tuple4#(Tuple3#(Bit#(32), Bit#(32), Bit#(32)), Tuple4#(CapMem, Bit#(32), CapMem, Bit#(32)), Tuple4#(CapMem, Bit#(32), CapMem, Bit#(32)), void) debugRob = rob.debugRob;
 `endif
 
 endmodule

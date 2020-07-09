@@ -681,7 +681,7 @@ interface SupReorderBuffer#(numeric type aluExeNum, numeric type fpuMulDivExeNum
 
 `ifdef DEBUG_WEDGE
     (* always_enabled *)
-    method Tuple2#(CapMem, Bit#(32)) debugNextInst;
+    method Tuple4#(Tuple3#(Bit#(32), Bit#(32), Bit#(32)), Tuple4#(CapMem, Bit#(32), CapMem, Bit#(32)), Tuple4#(CapMem, Bit#(32), CapMem, Bit#(32)), void) debugRob;
 `endif
 endinterface
 
@@ -1337,8 +1337,32 @@ module mkSupReorderBuffer#(
     endinterface
 
 `ifdef DEBUG_WEDGE
-    method Tuple2#(CapMem, Bit#(32)) debugNextInst;
-        return tuple2(fifo_first[0].pc, fifo_first[0].orig_inst);
+    // See Debug_Module.bsv for why this "pointless" void tuple component is
+    // added at the end (bsc bug).
+    method Tuple4#(Tuple3#(Bit#(32), Bit#(32), Bit#(32)), Tuple4#(CapMem, Bit#(32), CapMem, Bit#(32)), Tuple4#(CapMem, Bit#(32), CapMem, Bit#(32)), void) debugRob;
+        Bit#(8) enqP0 = zeroExtend(enqP[0]);
+        Bit#(7) enqP1 = zeroExtend(enqP[1]);
+        Bit#(16) enqPsAndWay = {firstEnqWay, enqP1, enqP0};
+
+        Bit#(8) deqP0 = zeroExtend(deqP[0]);
+        Bit#(7) deqP1 = zeroExtend(deqP[1]);
+        Bit#(16) deqPsAndWay = {firstDeqWay, deqP1, deqP0};
+
+        Bit#(32) bothPsAndWays = {deqPsAndWay, enqPsAndWay};
+
+        let first0 = row[0][deqP0].read_deq;
+        let first1 = row[1][deqP1].read_deq;
+
+        let last0 = row[0][enqP0 - 1].read_deq;
+        let last1 = row[1][enqP1 - 1].read_deq;
+
+        function a readReg(Reg#(a) r) provisos(Bits#(a, aSz)) = r;
+        function Vector#(n, a) readVector(Vector#(n, Reg#(a)) vr) provisos(Bits#(a, aSz)) = map(readReg, vr);
+
+        Bit#(32) valid0 = pack(readVector(getVEhrPort(valid[0], 0)));
+        Bit#(32) valid1 = pack(readVector(getVEhrPort(valid[1], 0)));
+
+        return tuple4(tuple3(bothPsAndWays, valid0, valid1), tuple4(first0.pc, first0.orig_inst, first1.pc, first1.orig_inst), tuple4(last0.pc, last0.orig_inst, last1.pc, last1.orig_inst), ?);
     endmethod
 `endif
 endmodule
