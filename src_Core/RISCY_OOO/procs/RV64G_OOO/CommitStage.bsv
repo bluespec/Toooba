@@ -220,7 +220,7 @@ function Maybe#(RVFI_DII_Execution#(DataSz,DataSz)) genRVFI(ToReorderBuffer rot,
                 CapPipe cp = cast(ppc);
                 next_pc = getOffset(cp);
             end
-            tagged CSRData .csrdata: data = csrdata;
+            tagged CSRData .csrdata: if (rot.iType == Csr) data = getAddr(csrdata);
         endcase
     end
     CapPipe pipePc = cast(rot.pc);
@@ -883,7 +883,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
             let csr_idx = validValue(x.csr);
             Data csr_data = ?;
             if(x.ppc_vaddr_csrData matches tagged CSRData .d) begin
-                csr_data = d;
+                csr_data = getAddr(d);
             end
             else begin
                 doAssert(False, "must have csr data");
@@ -910,8 +910,8 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
             // inIfc.commitCsrInstOrInterrupt; // TODO Will there be statcounter for SCRs?
             // write CSR
             let scr_idx = validValue(x.scr);
-            CapPipe scr_data = ?;
-            if(x.ppc_vaddr_csrData matches tagged SCRData .d) begin
+            CapMem scr_data = ?;
+            if(x.ppc_vaddr_csrData matches tagged CSRData .d) begin
                 scr_data = d;
             end
             else begin

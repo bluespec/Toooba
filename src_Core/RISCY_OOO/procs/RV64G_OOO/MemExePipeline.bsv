@@ -178,7 +178,7 @@ interface MemExeInput;
     // ROB
     method CapMem rob_getPC(InstTag t);
     method Action rob_setExecuted_doFinishMem(InstTag t,
-                                              CapPipe vaddr,
+                                              CapMem vaddr,
                                               Data store_data, ByteEn store_data_BE,
                                               Bool access_at_commit, Bool non_mmio_st_done
 `ifdef RVFI
@@ -603,7 +603,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         if (x.capException matches tagged Valid .c) cause = Valid(CapException(c));
         Bool access_at_commit = !isValid(cause) && (isMMIO || isLrScAmo);
         Bool non_mmio_st_done = !isValid(cause) && !isMMIO && x.mem_func == St;
-        inIfc.rob_setExecuted_doFinishMem(x.tag, x.vaddr, store_data, store_data_BE,
+        inIfc.rob_setExecuted_doFinishMem(x.tag, cast(x.vaddr), store_data, store_data_BE,
                                           access_at_commit, non_mmio_st_done
 `ifdef RVFI
                                           , ExtraTraceBundle{

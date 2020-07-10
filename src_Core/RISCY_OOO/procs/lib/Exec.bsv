@@ -355,7 +355,6 @@ endfunction
 function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, CapPipe pcc, CapPipe ppc, Bit #(32) orig_inst);
     // just data, addr, and control flow
     CapPipe data = nullCap;
-    Data csr_data = 0;
     CapPipe addr = nullCap;
 
     Bool newPcc = dInst.iType == CJALR || dInst.iType == CCall;
@@ -396,7 +395,7 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
     cf.nextPc = setKind(cf.nextPc, UNSEALED);
     cf.mispredict = cf.nextPc != ppc;
 
-    data = (case (dInst.iType) matches
+    data = (case (dInst.iType)
             St          : rVal2;
             Sc          : rVal2;
             Amo         : rVal2;
@@ -411,15 +410,16 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
             Cap         : cap_alu_result;
             default     : nullWithAddr(alu_result);
         endcase);
-    csr_data = alu_result;
+    CapMem csr_data = (case (dInst.iType)
+                       Scr: cast(specialRWALU(fromMaybe(rVal1, capImm), rVal2, dInst.capFunc.CapModify.SpecialRW));
+                       default: nullWithAddr(alu_result);
+                    endcase);
     addr = (case (dInst.iType)
             Ld, St, Lr, Sc, Amo : nullWithAddr(alu_result);
             default             : cf.nextPc; //TODO should this be nullified?
         endcase);
 
-    CapPipe scr_data = specialRWALU(fromMaybe(rVal1, capImm), rVal2, dInst.capFunc.CapModify.SpecialRW);
-
-    return ExecResult{data: data, csrData: csr_data, scrData: scr_data, addr: addr, controlFlow: cf, capException: capException, boundsCheck: boundsCheck};
+    return ExecResult{data: data, csrData: csr_data, addr: addr, controlFlow: cf, capException: capException, boundsCheck: boundsCheck};
 endfunction
 
 (* noinline *)

@@ -101,8 +101,7 @@ typedef struct {
     Bool isCompressed;
     // result
     CapPipe data; // alu compute result
-    Maybe#(Data) csrData; // data to write CSR file
-    Maybe#(CapPipe) scrData; // datat to write to special capability register file.
+    Maybe#(CapMem) csrData; // data to write CSR file
     ControlFlow controlFlow;
     Maybe#(CSR_XCapCause) capException;
     Maybe#(BoundsCheck) check;
@@ -172,8 +171,7 @@ interface AluExeInput;
 `ifdef INCLUDE_TANDEM_VERIF
         CapPipe dst_data,
 `endif
-        Maybe#(Data) csrData,
-        Maybe#(CapPipe) scrData,
+        Maybe#(CapMem) csrData,
         ControlFlow cf,
         Maybe#(CSR_XCapCause) capCause
 `ifdef RVFI
@@ -208,8 +206,8 @@ interface AluExePipeline;
 endinterface
 
 module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
-    Bool verbose = False;
-    Integer verbosity = 0;
+    Bool verbose = True;
+    Integer verbosity = 2;
 
     // alu reservation station
     ReservationStationAlu rsAlu <- mkReservationStationAlu;
@@ -336,6 +334,8 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
             inIfc.sendBypass[exeSendBypassPort].send(dst.indx, exec_result.data);
         end
 
+        Bool is_scr_or_csr = (isValid(x.dInst.scr) && x.dInst.iType == Scr) || isValid(x.dInst.csr);
+
         // go to next stage
         exeToFinQ.enq(ToSpecFifo {
             data: AluExeToFinish {
@@ -345,11 +345,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
                 dpTrain: x.dpTrain,
                 isCompressed: x.orig_inst[1:0] != 2'b11,
                 data: exec_result.data,
-                csrData: isValid(x.dInst.csr) ? Valid (exec_result.csrData) : tagged Invalid,
-                // The above case will never be valid due to assertions above, but the below one will be in the case of CJALR.
-                // This means that we will have instructions that both write SCR registers and also get mispredictions, unlike
-                // the CSR file.  Given the assertions above, this seems dangerous...
-                scrData: isValid(x.dInst.scr) && x.dInst.iType == Scr ? Valid (exec_result.scrData) : tagged Invalid,
+                csrData: is_scr_or_csr ? Valid (exec_result.csrData) : tagged Invalid,
                 capException: exec_result.capException,
                 check: exec_result.boundsCheck,
 `ifdef RVFI
@@ -391,7 +387,6 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
             x.data,
 `endif
             x.csrData,
-            x.scrData,
             x.controlFlow,
             x.capException
 `ifdef RVFI

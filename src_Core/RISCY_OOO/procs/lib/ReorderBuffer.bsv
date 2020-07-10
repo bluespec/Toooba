@@ -62,9 +62,8 @@ import Cur_Cycle :: *;
 // vaddr is only used by mem inst in page fault
 typedef union tagged {
     CapMem PPC; // at default store ppc
-    CapPipe VAddr; // for mem inst, store vaddr
-    Data CSRData; // for Csr inst, store csr_data
-    CapPipe SCRData; // for special capability register store
+    CapMem VAddr; // for mem inst, store vaddr
+    CapMem CSRData; // for Csr inst, store csr_data
 } PPCVAddrCSRData deriving(Bits, FShow);
 
 `ifdef RVFI
@@ -131,8 +130,7 @@ interface Row_setExecuted_doFinishAlu;
 `ifdef INCLUDE_TANDEM_VERIF
         CapPipe dst_data,
 `endif
-        Maybe#(Data) csrData,
-        Maybe#(CapPipe) scrData,
+        Maybe#(CapMem) csrData,
         ControlFlow cf,
         Maybe#(CSR_XCapCause) cause
 `ifdef RVFI
@@ -173,7 +171,7 @@ interface ReorderBufferRowEhr#(numeric type aluExeNum, numeric type fpuMulDivExe
     // perform), and non-MMIO St can become Executed (NOTE faulting
     // instructions are not Executed, they are set at deqLSQ time)
 
-    method Action setExecuted_doFinishMem(CapPipe vaddr,
+    method Action setExecuted_doFinishMem(CapMem vaddr,
                                           Data store_data, ByteEn store_data_BE,
                                           Bool access_at_commit, Bool non_mmio_st_done
 `ifdef RVFI
@@ -302,8 +300,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
 `ifdef INCLUDE_TANDEM_VERIF
                 CapPipe dst_data,
 `endif
-                Maybe#(Data) csrData,
-                Maybe#(CapPipe) scrData,
+                Maybe#(CapMem) csrData,
                 ControlFlow cf,
                 Maybe#(CSR_XCapCause) cause
 `ifdef RVFI
@@ -320,11 +317,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
                 // update PPC or csrData (vaddr is always useless for ALU results)
                 if(csrData matches tagged Valid .d) begin
                     ppc_vaddr_csrData[pvc_finishAlu_port(i)] <= CSRData (d);
-                end
-                else if(scrData matches tagged Valid .d) begin
-                    ppc_vaddr_csrData[pvc_finishAlu_port(i)] <= SCRData (d);
-                end
-                else begin
+                end else begin
                     ppc_vaddr_csrData[pvc_finishAlu_port(i)] <= PPC (cast(cf.nextPc));
                 end
                 if (cause matches tagged Valid .exp &&& !isValid(trap[trap_finishAlu_port(i)])) begin
@@ -335,7 +328,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
                 //$display("%t : traceBundle = ", $time(), fshow(tb), " in Row_setExecuted_doFinishAlu for %x", pc);
                 traceBundle[trap_finishAlu_port(i)] <= tb;
 `endif
-                doAssert(isValid(csr) == isValid(csrData), "csr valid should match");
+                doAssert((isValid(csr) || isValid(scr)) == isValid(csrData), "csr valid should match");
             endmethod
         endinterface);
     end
@@ -380,7 +373,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
 
     interface setExecuted_doFinishFpuMulDiv = fpuMulDivExe;
 
-    method Action setExecuted_doFinishMem(CapPipe vaddr,
+    method Action setExecuted_doFinishMem(CapMem vaddr,
                                           Data   store_data, ByteEn store_data_BE,
                                           Bool   access_at_commit, Bool non_mmio_st_done
 `ifdef RVFI
@@ -594,8 +587,7 @@ interface ROB_setExecuted_doFinishAlu;
 `ifdef INCLUDE_TANDEM_VERIF
                       Data dst_data,
 `endif
-                      Maybe#(Data) csrData,
-                      Maybe#(CapPipe) scrData,
+                      Maybe#(CapMem) csrData,
                       ControlFlow cf,
                       Maybe#(CSR_XCapCause) cause
 `ifdef RVFI
@@ -648,7 +640,7 @@ interface SupReorderBuffer#(numeric type aluExeNum, numeric type fpuMulDivExeNum
     interface Vector#(fpuMulDivExeNum, ROB_setExecuted_doFinishFpuMulDiv) setExecuted_doFinishFpuMulDiv;
     // doFinishMem, after addr translation
     method Action setExecuted_doFinishMem(InstTag x,
-                                          CapPipe vaddr,
+                                          CapMem vaddr,
                                           Data store_data, ByteEn store_data_BE,
                                           Bool access_at_commit, Bool non_mmio_st_done
 `ifdef RVFI
@@ -1148,8 +1140,7 @@ module mkSupReorderBuffer#(
 `ifdef INCLUDE_TANDEM_VERIF
                 Data dst_data,
 `endif
-                Maybe#(Data) csrData,
-                Maybe#(CapPipe) scrData,
+                Maybe#(CapMem) csrData,
                 ControlFlow cf,
                 Maybe#(CSR_XCapCause) cause
 `ifdef RVFI
@@ -1163,7 +1154,6 @@ module mkSupReorderBuffer#(
                     dst_data,
 `endif
                     csrData,
-                    scrData,
                     cf,
                     cause
 `ifdef RVFI
@@ -1275,7 +1265,7 @@ module mkSupReorderBuffer#(
     interface setExecuted_doFinishFpuMulDiv = fpuMulDivSetExeIfc;
 
     method Action setExecuted_doFinishMem(
-        InstTag x, CapPipe vaddr, Data store_data, ByteEn store_data_BE, Bool access_at_commit,
+        InstTag x, CapMem vaddr, Data store_data, ByteEn store_data_BE, Bool access_at_commit,
         Bool non_mmio_st_done
 `ifdef RVFI
         , tb

@@ -618,8 +618,7 @@ endfunction
 
 typedef struct {
     CapPipe     data;
-    Data        csrData;
-    CapPipe     scrData;
+    CapMem      csrData;
     CapPipe     addr;
     ControlFlow controlFlow;
     Maybe#(CapException) capException;
