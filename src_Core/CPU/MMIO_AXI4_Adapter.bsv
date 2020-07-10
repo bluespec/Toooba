@@ -118,7 +118,7 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
       // Technically the following check for legal IO addrs is not
       // necessary; the AXI4 fabric should return a DECERR for illegal
       // addrs; but not all AXI4 fabrics do the right thing.
-      if (soc_map.m_is_IO_addr (req.addr)) begin
+      if (soc_map.m_is_IO_addr (req.addr, False)) begin
          AXI4_Size size = 8;
          let mem_req_rd_addr = AXI4_ARFlit {arid:     fabric_2x3_default_mid,
                                             araddr:   req.addr,
@@ -206,7 +206,7 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
       // Technically the following check for legal IO addrs is not
       // necessary; the AXI4 fabric should return a DECERR for illegal
       // addrs; but not all AXI4 fabrics do the right thing.
-      if (soc_map.m_is_IO_addr (req.addr)) begin
+      if (soc_map.m_is_IO_addr (req.addr, False)) begin
          //fa_fabric_send_write_req (req.addr, truncate(pack(req.byteEn)), fromMemTaggedData(req.data));
          // on first flit...
          // ================
