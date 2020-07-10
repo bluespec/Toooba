@@ -129,6 +129,10 @@ interface FetchStage;
     method Action lastTraceId(Dii_Id in);
 `endif
 
+`ifdef DEBUG_WEDGE
+    method Tuple3#(Bit#(32), Addr, Addr) debugFetch;
+`endif
+
     // performance
     interface Perf#(DecStagePerfType) perf;
 endinterface
@@ -510,6 +514,11 @@ module mkFetchStage(FetchStage);
     Reg#(Dii_Id) last_trace_id <- mkRegU;
 `endif
 
+`ifdef DEBUG_WEDGE
+    Reg#(Addr) lastItlbReq <- mkConfigReg(0);
+    Reg#(Addr) lastImemReq <- mkConfigReg(0);
+`endif
+
    // Predict the next fetch-PC based only on current PC (without
    // knowing the instructions).
 
@@ -584,6 +593,9 @@ module mkFetchStage(FetchStage);
         // Mask to 32-bit alignment, even if 'C' is supported (where we may discard first 2 bytes)
         Addr align32b_mask = 'h3;
         tlb_server.request.put (getAddr(pc) & (~ align32b_mask));
+`ifdef DEBUG_WEDGE
+        lastItlbReq <= getAddr(pc) & (~ align32b_mask);
+`endif
 
         let out = Fetch1ToFetch2 {
             pc: pc,
@@ -615,6 +627,9 @@ module mkFetchStage(FetchStage);
                 MainMem: begin
                     // Send ICache request
                     mem_server.request.put(phys_pc);
+`ifdef DEBUG_WEDGE
+                    lastImemReq <= phys_pc;
+`endif
                 end
                 IODevice: begin
                     // Send MMIO req. Luckily boot rom is also aligned with
@@ -624,6 +639,9 @@ module mkFetchStage(FetchStage);
                     Bit #(TLog #(SupSize)) nbSup = truncate(nbSupX2 >> 1);
                     mmio.bootRomReq(phys_pc, nbSup);
                     access_mmio = True;
+`ifdef DEBUG_WEDGE
+                    lastImemReq <= phys_pc;
+`endif
                 end
                 default: begin
                     // Access fault
@@ -633,6 +651,9 @@ module mkFetchStage(FetchStage);
                     //     tval = (in.pc & (~ align32b_mask));
                     Addr align16b_mask = 'h1;
                     tval = (getAddr(in.pc) & (~ align16b_mask));
+`ifdef DEBUG_WEDGE
+                    lastImemReq <= 'hafafafafafafafaf;
+`endif
                 end
             endcase
         end
@@ -643,6 +664,9 @@ module mkFetchStage(FetchStage);
            //     tval = (in.pc & (~ align32b_mask));
            Addr align16b_mask = 'h1;
            tval = (getAddr(in.pc) & (~ align16b_mask));
+`ifdef DEBUG_WEDGE
+           lastImemReq <= 'heeeeeeeeeeeeeeee;
+`endif
         end
 `endif
 
@@ -1252,6 +1276,15 @@ module mkFetchStage(FetchStage);
     endinterface
     method Action lastTraceId(Dii_Id in);
         last_trace_id <= in;
+    endmethod
+`endif
+
+`ifdef DEBUG_WEDGE
+    method Tuple3#(Bit#(32), Addr, Addr) debugFetch;
+        Bit#(7) flags = {pack(out_fifo.deqS[1].canDeq), pack(out_fifo.deqS[0].canDeq), pack(f32d.notEmpty), pack(f22f3.notEmpty), pack(f12f2.notEmpty), pack(waitForFlush), pack(waitForRedirect)};
+        Bit #(16) epoch = zeroExtend(f_main_epoch);
+        Bit #(32) flagsEpoch = {8'b0, epoch, 1'b0, flags};
+        return tuple3(flagsEpoch, lastItlbReq, lastImemReq);
     endmethod
 `endif
 endmodule

@@ -206,6 +206,10 @@ interface Core;
     method Tuple2#(CapMem, Bit#(32)) debugLastInst;
     (* always_enabled *)
     method Tuple4#(Tuple3#(Bit#(32), Bit#(32), Bit#(32)), Tuple4#(CapMem, Bit#(32), CapMem, Bit#(32)), Tuple4#(CapMem, Bit#(32), CapMem, Bit#(32)), void) debugRob;
+    (* always_enabled *)
+    method Tuple3#(Bit#(32), Addr, Addr) debugFetch;
+    (* always_enabled *)
+    method Bit#(32) debugRename;
 `endif
 
 endinterface
@@ -1456,6 +1460,14 @@ module mkCore#(CoreId coreId)(Core);
 `ifdef DEBUG_WEDGE
     method Tuple2#(CapMem, Bit#(32)) debugLastInst = commitStage.debugLastInst;
     method Tuple4#(Tuple3#(Bit#(32), Bit#(32), Bit#(32)), Tuple4#(CapMem, Bit#(32), CapMem, Bit#(32)), Tuple4#(CapMem, Bit#(32), CapMem, Bit#(32)), void) debugRob = rob.debugRob;
+    method Tuple3#(Bit#(32), Addr, Addr) debugFetch = fetchStage.debugFetch;
+    method Bit#(32) debugRename;
+        let epochState = epochManager.getEpochState;
+        Bit#(8) curEp = zeroExtend(epochState.curEp);
+        Bit#(8) checkedEp = zeroExtend(epochState.checkedEp);
+        Bit#(1) pendingMMIOPRq = pack(mmio.hasPendingPRq);
+        return {15'b0, pendingMMIOPRq, checkedEp, curEp};
+    endmethod
 `endif
 
 endmodule

@@ -334,8 +334,10 @@ module mkProc (Proc_IFC);
 `endif
 
 `ifdef DEBUG_WEDGE
-    method Tuple2#(CapMem, Bit#(32)) hart0_last_inst = core[0].debugLastInst;
-    method Tuple4#(Tuple3#(Bit#(32), Bit#(32), Bit#(32)), Tuple4#(CapMem, Bit#(32), CapMem, Bit#(32)), Tuple4#(CapMem, Bit#(32), CapMem, Bit#(32)), void) hart0_debug_rob = core[0].debugRob;
+    method Tuple2 #(CapMem, Bit #(32)) hart0_last_inst = core [0].debugLastInst;
+    method Tuple4 #(Tuple3 #(Bit #(32), Bit #(32), Bit #(32)), Tuple4 #(CapMem, Bit #(32), CapMem, Bit #(32)), Tuple4 #(CapMem, Bit #(32), CapMem, Bit #(32)), void) hart0_debug_rob = core [0].debugRob;
+    method Tuple3 #(Bit #(32), Addr, Addr) hart0_debug_fetch = core [0].debugFetch;
+    method Bit #(32) hart0_debug_rename = core [0].debugRename;
 `endif
 
 endmodule: mkProc
