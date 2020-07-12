@@ -50,6 +50,7 @@ simulator: build_dir/Top_HW_Side.bo
 		$(TMP_DIRS) \
 		-e $(TOPMODULE) -o ./$(SIM_EXE_FILE) \
 		$(BSC_C_FLAGS) \
+		$(REPO)/src_Verifier/BSV-RVFI-DII/SocketPacketUtils/socket_packet_utils.c \
 		$(REPO)/src_Testbench/Top/C_Imported_Functions.c
 	@echo "INFO: linked bsc-compiled objects into Bluesim executable"
 
