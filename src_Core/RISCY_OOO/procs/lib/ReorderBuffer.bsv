@@ -130,8 +130,7 @@ interface Row_setExecuted_doFinishAlu;
 `ifdef INCLUDE_TANDEM_VERIF
         CapPipe dst_data,
 `endif
-        Maybe#(CapMem) csrData,
-        ControlFlow cf,
+        PPCVAddrCSRData csrData,
         Maybe#(CSR_XCapCause) cause
 `ifdef RVFI
         , ExtraTraceBundle tb
@@ -300,8 +299,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
 `ifdef INCLUDE_TANDEM_VERIF
                 CapPipe dst_data,
 `endif
-                Maybe#(CapMem) csrData,
-                ControlFlow cf,
+                PPCVAddrCSRData csrDataOrPPC,
                 Maybe#(CSR_XCapCause) cause
 `ifdef RVFI
                 , ExtraTraceBundle tb
@@ -315,11 +313,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
 `endif
 
                 // update PPC or csrData (vaddr is always useless for ALU results)
-                if(csrData matches tagged Valid .d) begin
-                    ppc_vaddr_csrData[pvc_finishAlu_port(i)] <= CSRData (d);
-                end else begin
-                    ppc_vaddr_csrData[pvc_finishAlu_port(i)] <= PPC (cast(cf.nextPc));
-                end
+                ppc_vaddr_csrData[pvc_finishAlu_port(i)] <= csrDataOrPPC;
                 if (cause matches tagged Valid .exp &&& !isValid(trap[trap_finishAlu_port(i)])) begin
                     trap[trap_finishAlu_port(i)] <= Valid (CapException (exp));
                     tval[trap_finishAlu_port(i)] <= tval[trap_finishAlu_port(i)];
@@ -328,7 +322,9 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
                 //$display("%t : traceBundle = ", $time(), fshow(tb), " in Row_setExecuted_doFinishAlu for %x", pc);
                 traceBundle[trap_finishAlu_port(i)] <= tb;
 `endif
-                doAssert((isValid(csr) || isValid(scr)) == isValid(csrData), "csr valid should match");
+                Bool isCsrData = False;
+                if (csrDataOrPPC matches tagged CSRData .unused) isCsrData = True;
+                doAssert((isValid(csr) || isValid(scr)) == isCsrData, "csr valid should match");
             endmethod
         endinterface);
     end
@@ -587,8 +583,7 @@ interface ROB_setExecuted_doFinishAlu;
 `ifdef INCLUDE_TANDEM_VERIF
                       Data dst_data,
 `endif
-                      Maybe#(CapMem) csrData,
-                      ControlFlow cf,
+                      PPCVAddrCSRData csrData,
                       Maybe#(CSR_XCapCause) cause
 `ifdef RVFI
                       , ExtraTraceBundle tb
@@ -1140,8 +1135,7 @@ module mkSupReorderBuffer#(
 `ifdef INCLUDE_TANDEM_VERIF
                 Data dst_data,
 `endif
-                Maybe#(CapMem) csrData,
-                ControlFlow cf,
+                PPCVAddrCSRData csrData,
                 Maybe#(CSR_XCapCause) cause
 `ifdef RVFI
                 , ExtraTraceBundle tb
@@ -1154,7 +1148,6 @@ module mkSupReorderBuffer#(
                     dst_data,
 `endif
                     csrData,
-                    cf,
                     cause
 `ifdef RVFI
                     , tb

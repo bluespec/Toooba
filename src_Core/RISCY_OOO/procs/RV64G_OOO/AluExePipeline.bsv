@@ -101,7 +101,7 @@ typedef struct {
     Bool isCompressed;
     // result
     CapPipe data; // alu compute result
-    Maybe#(CapMem) csrData; // data to write CSR file
+    PPCVAddrCSRData csrData; // data to write CSR file, or predicted next PC if not. (For reorder buffer)
     ControlFlow controlFlow;
     Maybe#(CSR_XCapCause) capException;
     Maybe#(BoundsCheck) check;
@@ -171,8 +171,7 @@ interface AluExeInput;
 `ifdef INCLUDE_TANDEM_VERIF
         CapPipe dst_data,
 `endif
-        Maybe#(CapMem) csrData,
-        ControlFlow cf,
+        PPCVAddrCSRData csrData,
         Maybe#(CSR_XCapCause) capCause
 `ifdef RVFI
         , ExtraTraceBundle tb
@@ -345,7 +344,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
                 dpTrain: x.dpTrain,
                 isCompressed: x.orig_inst[1:0] != 2'b11,
                 data: exec_result.data,
-                csrData: is_scr_or_csr ? Valid (exec_result.csrData) : tagged Invalid,
+                csrData: is_scr_or_csr ? CSRData (exec_result.csrData) : PPC (cast(exec_result.controlFlow.nextPc)),
                 capException: exec_result.capException,
                 check: exec_result.boundsCheck,
 `ifdef RVFI
@@ -387,7 +386,6 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
             x.data,
 `endif
             x.csrData,
-            x.controlFlow,
             x.capException
 `ifdef RVFI
             , x.traceBundle
