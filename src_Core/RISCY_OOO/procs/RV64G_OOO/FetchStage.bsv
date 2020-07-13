@@ -645,10 +645,6 @@ module mkFetchStage(FetchStage);
                 default: begin
                     // Access fault
                     cause = Valid (InstAccessFault);
-                    // Without 'C' extension:
-                    //     Addr align32b_mask = 'h3;
-                    // Addr align16b_mask = 'h1;
-                    // tval = (getAddr(in.pc) & (~ align16b_mask));
 `ifdef DEBUG_WEDGE
                     lastImemReq <= 'hafafafafafafafaf;
 `endif
@@ -657,11 +653,6 @@ module mkFetchStage(FetchStage);
         end
         else begin
            // TLB exception: record the request address
-           // Without 'C' extension:
-           //     Addr align32b_mask = 'h3;
-           //     tval = (in.pc & (~ align32b_mask));
-           // Addr align16b_mask = 'h1;
-           // tval = (getAddr(in.pc) & (~ align16b_mask));
 `ifdef DEBUG_WEDGE
            lastImemReq <= 'heeeeeeeeeeeeeeee;
 `endif
