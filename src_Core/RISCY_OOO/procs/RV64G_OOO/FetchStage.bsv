@@ -651,12 +651,12 @@ module mkFetchStage(FetchStage);
                 end
             endcase
         end
-        else begin
-           // TLB exception: record the request address
 `ifdef DEBUG_WEDGE
+        else begin
+           // TLB exception
            lastImemReq <= 'heeeeeeeeeeeeeeee;
-`endif
         end
+`endif
 `endif
 
         let out = Fetch2ToFetch3 {
