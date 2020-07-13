@@ -101,9 +101,9 @@ interface FpuMulDivExeInput;
     // conservative scoreboard check in reg read stage
     method RegsReady sbCons_lazyLookup(PhyRegs r);
     // Phys reg file
-    method CapPipe rf_rd1(PhyRIndx rindx);
-    method CapPipe rf_rd2(PhyRIndx rindx);
-    method CapPipe rf_rd3(PhyRIndx rindx);
+    method Data rf_rd1(PhyRIndx rindx);
+    method Data rf_rd2(PhyRIndx rindx);
+    method Data rf_rd3(PhyRIndx rindx);
     // CSR file
     method Data csrf_rd(CSR csr);
     // Special Capability Register file.
@@ -123,7 +123,7 @@ interface FpuMulDivExeInput;
 
     // global broadcast methods
     // write reg file & set both conservative and aggressive sb & wake up inst
-    method Action writeRegFile(PhyRIndx dst, CapPipe data);
+    method Action writeRegFile(PhyRIndx dst, Data data);
     // spec update
     method Action conflictWrongSpec;
     // performance
@@ -196,19 +196,19 @@ module mkFpuMulDivExePipeline#(FpuMulDivExeInput inIfc)(FpuMulDivExePipeline);
         // get rVal1 (check bypass)
         Data rVal1 = ?;
         if(x.regs.src1 matches tagged Valid .src1) begin
-            rVal1 <- readRFBypass(src1, regsReady.src1, getAddr(inIfc.rf_rd1(src1)), bypassWire);
+            rVal1 <- readRFBypass(src1, regsReady.src1, inIfc.rf_rd1(src1), bypassWire);
         end
 
         // get rVal2 (check bypass)
         Data rVal2 = ?;
         if(x.regs.src2 matches tagged Valid .src2) begin
-            rVal2 <- readRFBypass(src2, regsReady.src2, getAddr(inIfc.rf_rd2(src2)), bypassWire);
+            rVal2 <- readRFBypass(src2, regsReady.src2, inIfc.rf_rd2(src2), bypassWire);
         end
 
         // get rVal3 (check bypass)
         Data rVal3 = ?;
         if(x.regs.src3 matches tagged Valid .src3) begin
-            rVal3 <- readRFBypass(src3, regsReady.src3, getAddr(inIfc.rf_rd3(src3)), bypassWire);
+            rVal3 <- readRFBypass(src3, regsReady.src3, inIfc.rf_rd3(src3), bypassWire);
         end
 
         // go to next stage
@@ -253,7 +253,7 @@ module mkFpuMulDivExePipeline#(FpuMulDivExeInput inIfc)(FpuMulDivExePipeline);
     action
         // write to register file
         if(dst matches tagged Valid .valid_dst) begin
-            inIfc.writeRegFile(valid_dst.indx, nullWithAddr(data));
+            inIfc.writeRegFile(valid_dst.indx, data);
         end
         // update the instruction in the reorder buffer.
         inIfc.rob_setExecuted(tag,

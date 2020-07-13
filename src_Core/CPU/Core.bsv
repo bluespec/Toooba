@@ -422,15 +422,15 @@ module mkCore#(CoreId coreId)(Core);
         for(Integer i = 0; i < valueof(FpuMulDivExeNum); i = i+1) begin
             let fpuMulDivExeInput = (interface FpuMulDivExeInput;
                 method sbCons_lazyLookup = sbCons.lazyLookup[fpuMulDivRdPort(i)].get;
-                method rf_rd1 = cast(rf.read[fpuMulDivRdPort(i)].rd1);
-                method rf_rd2 = cast(rf.read[fpuMulDivRdPort(i)].rd2);
-                method rf_rd3 = cast(rf.read[fpuMulDivRdPort(i)].rd3);
+                method rf_rd1 = compose(getAddr, rf.read[fpuMulDivRdPort(i)].rd1);
+                method rf_rd2 = compose(getAddr, rf.read[fpuMulDivRdPort(i)].rd2);
+                method rf_rd3 = compose(getAddr, rf.read[fpuMulDivRdPort(i)].rd3);
                 method csrf_rd = csrf.rd;
                 method scaprf_rd = csrf.scrRd;
                 method rob_setExecuted = rob.setExecuted_doFinishFpuMulDiv[i].set;
-                method Action writeRegFile(PhyRIndx dst, CapPipe data);
+                method Action writeRegFile(PhyRIndx dst, Data data);
                     writeAggr(fpuMulDivWrAggrPort(i), dst);
-                    writeCons(fpuMulDivWrConsPort(i), dst, data);
+                    writeCons(fpuMulDivWrConsPort(i), dst, nullWithAddr(data));
                 endmethod
                 method conflictWrongSpec = globalSpecUpdate.conflictWrongSpec[finishFpuMulDivConflictWrongSpecPort(i)].put(?);
                 method doStats = doStatsReg._read;
