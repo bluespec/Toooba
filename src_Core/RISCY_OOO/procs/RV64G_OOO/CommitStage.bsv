@@ -646,10 +646,10 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         if(verbose) $display("[doCommitTrap] ", fshow(x));
 
         // record trap info
-        Addr vaddr = ?;
+        Addr vaddr = 0;
         if (   (trap == tagged Exception InstAccessFault)
             || (trap == tagged Exception InstPageFault)) begin
-            vaddr = x.tval;
+            vaddr = getAddr(x.pc);
         end
         else if(x.ppc_vaddr_csrData matches tagged VAddr .va) begin
             vaddr = getAddr(va);

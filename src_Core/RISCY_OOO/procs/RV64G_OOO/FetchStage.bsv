@@ -156,7 +156,6 @@ typedef struct {
     CapMem pc;
     Maybe#(CapMem) pred_next_pc;
     Maybe#(Exception) cause;
-    Addr tval;                 // in case of exception
     Bool access_mmio; // inst fetch from MMIO
     Bool fetch3_epoch;
     Bool decode_epoch;
@@ -167,7 +166,6 @@ typedef struct {
     CapMem pred_next_pc;
     Bool mispred_first_half;
     Maybe#(Exception) cause;
-    Addr tval;                 // in case of exception
     Bool decode_epoch;
     Epoch main_epoch;
 } Fetch3ToDecode deriving(Bits, Eq, FShow);
@@ -192,7 +190,6 @@ typedef struct {
   Bit #(32) orig_inst;    // original 16b or 32b instruction ([1:0] will distinguish 16b or 32b)
   ArchRegs regs;
   Maybe#(Exception) cause;
-  Addr              tval;    // in case of exception
 `ifdef RVFI_DII
   Dii_Id diid;
 `endif
@@ -382,13 +379,16 @@ function ActionValue #(Tuple4 #(SupCntX2,
          pc = next_pc;
       end
 `else
+      Addr increment = 0;
       for (Integer i = 0; i < valueOf(SupSize); i = i + 1) begin
          Bit #(32) inst = { v_x16 [(2*i)+1], v_x16 [2*i] };
-         v_items[i].inst_kind = Inst_32b;
+         Bool compressed = is_16b_inst (v_x16 [2*i]);
+         v_items[i].inst_kind = compressed ? Inst_16b:Inst_32b;
+         increment = increment + (compressed ? 2:4);
          v_items[i].orig_inst = inst;
-         v_items[i].inst = inst;
+         v_items[i].inst = (compressed) ? fv_decode_C (misa, misa_mxl_64, v_x16 [2*i]):inst;
       end
-      pc = getAddr(pc_start) + 8;
+      pc = getAddr(pc_start) + increment;
       n_items = 2;
 `endif
 
@@ -617,7 +617,6 @@ module mkFetchStage(FetchStage);
 
         // Get TLB response
         match {.phys_pc, .cause} <- tlb_server.response.get;
-        Addr tval =  0;
 
         // Access main mem or boot rom if no TLB exception
         Bool access_mmio = False;
@@ -648,9 +647,8 @@ module mkFetchStage(FetchStage);
                     cause = Valid (InstAccessFault);
                     // Without 'C' extension:
                     //     Addr align32b_mask = 'h3;
-                    //     tval = (in.pc & (~ align32b_mask));
-                    Addr align16b_mask = 'h1;
-                    tval = (getAddr(in.pc) & (~ align16b_mask));
+                    // Addr align16b_mask = 'h1;
+                    // tval = (getAddr(in.pc) & (~ align16b_mask));
 `ifdef DEBUG_WEDGE
                     lastImemReq <= 'hafafafafafafafaf;
 `endif
@@ -662,8 +660,8 @@ module mkFetchStage(FetchStage);
            // Without 'C' extension:
            //     Addr align32b_mask = 'h3;
            //     tval = (in.pc & (~ align32b_mask));
-           Addr align16b_mask = 'h1;
-           tval = (getAddr(in.pc) & (~ align16b_mask));
+           // Addr align16b_mask = 'h1;
+           // tval = (getAddr(in.pc) & (~ align16b_mask));
 `ifdef DEBUG_WEDGE
            lastImemReq <= 'heeeeeeeeeeeeeeee;
 `endif
@@ -674,7 +672,6 @@ module mkFetchStage(FetchStage);
             pc: in.pc,
             pred_next_pc: in.pred_next_pc,
             cause: cause,
-            tval: tval,
             access_mmio: access_mmio,
             fetch3_epoch: in.fetch3_epoch,
             decode_epoch: in.decode_epoch,
@@ -805,7 +802,6 @@ module mkFetchStage(FetchStage);
                     pred_next_pc: pred_next_pc,
                     mispred_first_half: mispred_first_half,
                     cause: fetch3In.cause,
-                    tval: fetch3In.tval,
                     decode_epoch: fetch3In.decode_epoch,
                     main_epoch: fetch3In.main_epoch
                 };
@@ -854,7 +850,6 @@ module mkFetchStage(FetchStage);
                         pred_next_pc: out.pred_next_pc,
                         mispred_first_half: False,
                         cause: tagged Invalid,
-                        tval: 0,
                         decode_epoch: out.decode_epoch,
                         main_epoch: out.main_epoch
                     };
@@ -927,7 +922,6 @@ module mkFetchStage(FetchStage);
                   cause: decodeIn.cause
                   };
                let cause = in.cause;
-               Addr tval = decodeIn.tval;
                if (verbose)
                   $display("Decode: %0d in = ", i, fshow (in));
 
@@ -938,10 +932,9 @@ module mkFetchStage(FetchStage);
 
                   let decode_result = decode(in.inst, getFlags(inst_data[i].pc)==1);    // Decode 32b inst, or 32b expansion of 16b inst
 
-                  // update cause and tval if decode exception and no earlier (TLB) exception
+                  // update cause if decode exception and no earlier (TLB) exception
                   if (!isValid(cause)) begin
                      cause = decode_result.illegalInst ? tagged Valid IllegalInst : tagged Invalid;
-                     tval  = decodeIn.tval;
                   end
 
                   let dInst = decode_result.dInst;
@@ -1042,11 +1035,11 @@ module mkFetchStage(FetchStage);
                                            dInst: dInst,
                                            orig_inst: inst_data[i].orig_inst,
                                            regs: decode_result.regs,
-                                           cause: cause,
+                                           cause: cause
 `ifdef RVFI_DII
-                                           diid: fromMaybe(?,ids[i]),
+                                           , diid: fromMaybe(?,ids[i])
 `endif
-                                           tval:  tval};
+                                           };
                   out_fifo.enqS[i].enq(out);
                   if (verbosity >= 1) begin
                      $write ("%0d: %m.rule doDecode: out_fifo.enqS[%0d].enq", cur_cycle, i);

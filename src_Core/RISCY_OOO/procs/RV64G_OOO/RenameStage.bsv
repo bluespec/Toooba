@@ -337,7 +337,6 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         let dInst = x.dInst;
         let arch_regs = x.regs;
         let cause = x.cause;
-        let tval  = x.tval;
 
         if(verbose) $display("[doRenaming] trap: ", fshow(x));
 
@@ -360,7 +359,6 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                 scr: dInst.scr,
                                 claimed_phy_reg: False, // no renaming is done
                                 trap: firstTrap,
-                                tval: tval,
                                 // default values of FullResult
                                 ppc_vaddr_csrData: PPC (cast(pc)), // default use PPC
                                 fflags: 0,
@@ -561,7 +559,6 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                 scr: dInst.scr,
                                 claimed_phy_reg: True, // XXX we always claim a free reg in rename
                                 trap: Invalid, // no trap
-                                tval: 0,
                                 // default values of FullResult
                                 ppc_vaddr_csrData: PPC (cast(ppc)), // default use PPC
                                 fflags: 0,
@@ -1104,7 +1101,6 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                                 scr: dInst.scr,
                                                 claimed_phy_reg: True, // XXX we always claim a free reg in rename
                                                 trap: Invalid, // no trap
-                                                tval: 0,
                                                 // default values of FullResult
                                                 ppc_vaddr_csrData: PPC (cast(ppc)), // default use PPC
                                                 fflags: 0,

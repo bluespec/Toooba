@@ -88,7 +88,6 @@ typedef struct {
     Maybe#(CSR)        csr;
     Bool               claimed_phy_reg; // whether we need to commmit renaming
     Maybe#(Trap)       trap;
-    Addr               tval;    // in case of trap
     PPCVAddrCSRData    ppc_vaddr_csrData;
     Bit#(5)            fflags;
     Bool               will_dirty_fpu_state; // True means 2'b11 will be written to FS
@@ -266,7 +265,6 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     Reg#(Maybe#(SCR))                                               scr                  <- mkRegU;
     Reg#(Bool)                                                      claimed_phy_reg      <- mkRegU;
     Ehr#(TAdd#(TAdd#(2, TDiv#(aluExeNum,2)), aluExeNum), Maybe#(Trap)) trap              <- mkEhr(?);
-    Ehr#(TAdd#(TAdd#(2, TDiv#(aluExeNum,2)), aluExeNum), Addr)      tval                 <- mkEhr(?);
     Ehr#(TAdd#(2, aluExeNum), PPCVAddrCSRData)                      ppc_vaddr_csrData    <- mkEhr(?);
     Ehr#(TAdd#(1, fpuMulDivExeNum), Bit#(5))                        fflags               <- mkEhr(?);
     Reg#(Bool)                                                      will_dirty_fpu_state <- mkRegU;
@@ -314,17 +312,14 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
 
                 // update PPC or csrData (vaddr is always useless for ALU results)
                 ppc_vaddr_csrData[pvc_finishAlu_port(i)] <= csrDataOrPPC;
-                if (cause matches tagged Valid .exp &&& !isValid(trap[trap_finishAlu_port(i)])) begin
+                if (cause matches tagged Valid .exp &&& !isValid(trap[trap_finishAlu_port(i)]))
                     trap[trap_finishAlu_port(i)] <= Valid (CapException (exp));
-                    tval[trap_finishAlu_port(i)] <= tval[trap_finishAlu_port(i)];
-                end
 `ifdef RVFI
                 //$display("%t : traceBundle = ", $time(), fshow(tb), " in Row_setExecuted_doFinishAlu for %x", pc);
                 traceBundle[trap_finishAlu_port(i)] <= tb;
 `endif
-                Bool isCsrData = False;
-                if (csrDataOrPPC matches tagged CSRData .unused) isCsrData = True;
-                doAssert((isValid(csr) || isValid(scr)) == isCsrData, "csr valid should match");
+                if (csrDataOrPPC matches tagged CSRData .unused)
+                    doAssert((isValid(csr) || isValid(scr)), "Either a csr write or an scr write is expected if we receive valid CSRData");
             endmethod
         endinterface);
     end
@@ -349,10 +344,8 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
 `endif
                 // update fflags
                 fflags[fflags_finishFpuMulDiv_port(i)] <= new_fflags;
-                if (cause matches tagged Valid .exp  &&& !isValid(trap[trap_finishFpuMulDiv_port(i)])) begin
+                if (cause matches tagged Valid .exp  &&& !isValid(trap[trap_finishFpuMulDiv_port(i)]))
                     trap[trap_finishFpuMulDiv_port(i)] <= Valid (Exception (exp));
-                    tval[trap_finishFpuMulDiv_port(i)] <= tval[trap_finishAlu_port(i)];
-                end
 `ifdef RVFI
                 //$display("%t : traceBundle = ", $time(), fshow(tb), " in Row_setExecuted_doFinishAlu for %x", pc);
                 traceBundle[trap_finishFpuMulDiv_port(i)] <= tb;
@@ -427,7 +420,6 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         scr <= x.scr;
         claimed_phy_reg <= x.claimed_phy_reg;
         trap[trap_enq_port] <= x.trap;
-        tval[trap_enq_port] <= x.tval;
         ppc_vaddr_csrData[pvc_enq_port] <= x.ppc_vaddr_csrData;
         fflags[fflags_enq_port] <= x.fflags;
         will_dirty_fpu_state <= x.will_dirty_fpu_state;
@@ -474,7 +466,6 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
             scr: scr,
             claimed_phy_reg: claimed_phy_reg,
             trap: trap[trap_deq_port],
-            tval: tval[trap_deq_port],
             ppc_vaddr_csrData: ppc_vaddr_csrData[pvc_deq_port],
             fflags: fflags[fflags_deq_port],
             will_dirty_fpu_state: will_dirty_fpu_state,
@@ -523,7 +514,6 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         // record trap
         //doAssert(!isValid(trap[trap_deqLSQ_port]), "cannot have trap");
         if(isValid(cause)) trap[trap_deqLSQ_port] <= cause;
-        // TODO: shouldn't we record tval here as well?
         // record ld misspeculation
         ldKilled[ldKill_deqLSQ_port] <= ld_killed;
     endmethod
