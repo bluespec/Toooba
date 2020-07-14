@@ -142,8 +142,7 @@ interface Row_setExecuted_doFinishFpuMulDiv;
 `ifdef INCLUDE_TANDEM_VERIF
         Data dst_data,
 `endif
-        Bit#(5) fflags,
-        Maybe#(Exception) cause
+        Bit#(5) fflags
 `ifdef RVFI
         , ExtraTraceBundle tb
 `endif
@@ -202,9 +201,8 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
 );
     Integer trap_deq_port = 0;
     function Integer trap_finishAlu_port(Integer i) = i;
-    function Integer trap_finishFpuMulDiv_port(Integer i) = valueof(aluExeNum) + i;
-    Integer trap_enq_port = valueof(TAdd#(aluExeNum, TDiv#(aluExeNum,2)));
-    Integer trap_deqLSQ_port = valueof(TAdd#(aluExeNum, TDiv#(aluExeNum,2))) - 1;
+    Integer trap_deqLSQ_port = valueof(aluExeNum);
+    Integer trap_enq_port = 1 + valueof(aluExeNum);
 
     Integer pvc_deq_port = 0;
     function Integer pvc_finishAlu_port(Integer i) = i; // write ppc_vaddr_csrData
@@ -248,6 +246,12 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     Integer sb_enq_port = 1; // write spec_bits
     Integer sb_correctSpec_port = 2; // write spec_bits
 
+    Integer traceBundle_deq_port = 0;
+    function Integer traceBundle_finishAlu_port(Integer i) = i;
+    function Integer traceBundle_finishFpuMulDiv_port(Integer i) = valueof(aluExeNum) + i;
+    Integer traceBundle_deqLSQ_port = valueof(fpuMulDivExeNum) + valueof(aluExeNum);
+    Integer traceBundle_enq_port = 1 + traceBundle_deqLSQ_port;
+
     Reg#(CapMem)                                                    pc                   <- mkRegU;
     Reg #(Bit #(32))                                                orig_inst            <- mkRegU;
     Reg#(IType)                                                     iType                <- mkRegU;
@@ -260,7 +264,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     Reg#(Maybe#(CSR))                                               csr                  <- mkRegU;
     Reg#(Maybe#(SCR))                                               scr                  <- mkRegU;
     Reg#(Bool)                                                      claimed_phy_reg      <- mkRegU;
-    Ehr#(TAdd#(TAdd#(2, TDiv#(aluExeNum,2)), aluExeNum), Maybe#(Trap)) trap              <- mkEhr(?);
+    Ehr#(TAdd#(2, aluExeNum), Maybe#(Trap))                         trap                 <- mkEhr(?);
     Ehr#(TAdd#(2, aluExeNum), PPCVAddrCSRData)                      ppc_vaddr_csrData    <- mkEhr(?);
     Ehr#(TAdd#(1, fpuMulDivExeNum), Bit#(5))                        fflags               <- mkEhr(?);
     Reg#(Bool)                                                      will_dirty_fpu_state <- mkRegU;
@@ -276,7 +280,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     Reg#(Dii_Id)                                                    diid                 <- mkRegU;
 `endif
 `ifdef RVFI
-    Ehr#(TAdd#(TAdd#(2, TDiv#(aluExeNum,2)), aluExeNum), (ExtraTraceBundle)) traceBundle <- mkEhr(?);
+    Ehr#(TAdd#(2, TAdd#(fpuMulDivExeNum, aluExeNum)), ExtraTraceBundle) traceBundle      <- mkEhr(?);
 `endif
 
     // wires to get stale (EHR port 0) values of PPC
@@ -312,7 +316,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
                     trap[trap_finishAlu_port(i)] <= Valid (CapException (exp));
 `ifdef RVFI
                 //$display("%t : traceBundle = ", $time(), fshow(tb), " in Row_setExecuted_doFinishAlu for %x", pc);
-                traceBundle[trap_finishAlu_port(i)] <= tb;
+                traceBundle[traceBundle_finishAlu_port(i)] <= tb;
 `endif
                 if (csrDataOrPPC matches tagged CSRData .unused)
                     doAssert((isValid(csr) || isValid(scr)), "Either a csr write or an scr write is expected if we receive valid CSRData");
@@ -327,8 +331,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
 `ifdef INCLUDE_TANDEM_VERIF
                               Data dst_data,
 `endif
-                              Bit#(5) new_fflags,
-                              Maybe#(Exception) cause
+                              Bit#(5) new_fflags
 `ifdef RVFI
                             , ExtraTraceBundle tb
 `endif
@@ -340,11 +343,9 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
 `endif
                 // update fflags
                 fflags[fflags_finishFpuMulDiv_port(i)] <= new_fflags;
-                if (cause matches tagged Valid .exp  &&& !isValid(trap[trap_finishFpuMulDiv_port(i)]))
-                    trap[trap_finishFpuMulDiv_port(i)] <= Valid (Exception (exp));
 `ifdef RVFI
                 //$display("%t : traceBundle = ", $time(), fshow(tb), " in Row_setExecuted_doFinishAlu for %x", pc);
-                traceBundle[trap_finishFpuMulDiv_port(i)] <= tb;
+                traceBundle[traceBundle_finishFpuMulDiv_port(i)] <= tb;
 `endif
             endmethod
         endinterface);
@@ -378,7 +379,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         ppc_vaddr_csrData[pvc_finishMem_port] <= VAddr (vaddr);
 `ifdef RVFI
         //$display("%t : traceBundle = ", $time(), fshow(tb), " in setExecuted_doFinishMem for %x", pc);
-        traceBundle[trap_deqLSQ_port] <= tb;
+        traceBundle[traceBundle_deqLSQ_port] <= tb;
 `endif
 `ifdef INCLUDE_TANDEM_VERIF
         // Store-data (for mem instrs that store data)
@@ -440,7 +441,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
 `endif
 `ifdef RVFI
         //$display("%t : traceBundle = ", $time(), fshow(x.traceBundle), " in write_enq for %x", pc);
-        traceBundle[trap_enq_port] <= x.traceBundle;
+        traceBundle[traceBundle_enq_port] <= x.traceBundle;
 `endif
         // check
         doAssert(!isValid(x.ldKilled), "ld killed must be false");
@@ -481,11 +482,11 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
             traceBundle: case (ppc_vaddr_csrData[pvc_deq_port]) matches
                             tagged VAddr .v: begin
                                 case (lsqTag) matches
-                                    tagged Ld .l: return traceBundle[trap_deq_port];
-                                    default: return traceBundle[trap_deq_port];
+                                    tagged Ld .l: return traceBundle[traceBundle_deq_port];
+                                    default: return traceBundle[traceBundle_deq_port];
                                 endcase
                             end
-                            default: return traceBundle[trap_deq_port];
+                            default: return traceBundle[traceBundle_deq_port];
                         endcase,
 `endif
             spec_bits: spec_bits[sb_deq_port]
@@ -506,7 +507,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         // inst becomes Executed
         rob_inst_state[state_deqLSQ_port] <= Executed;
 `ifdef RVFI
-        traceBundle[trap_deqLSQ_port] <= tb;
+        traceBundle[traceBundle_deqLSQ_port] <= tb;
         //$display("%t: Wrote tb for deqLSQ ", $time(), fshow(tb));
 `endif
         // record trap
@@ -584,8 +585,7 @@ interface ROB_setExecuted_doFinishFpuMulDiv;
 `ifdef INCLUDE_TANDEM_VERIF
                       Data dst_data,
 `endif
-                      Bit#(5) fflags,
-                      Maybe#(Exception) cause
+                      Bit#(5) fflags
 `ifdef RVFI
                     , ExtraTraceBundle tb
 `endif
@@ -1155,8 +1155,7 @@ module mkSupReorderBuffer#(
 `ifdef INCLUDE_TANDEM_VERIF
                 Data dst_data,
 `endif
-                Bit#(5) fflags,
-                Maybe#(Exception) cause
+                Bit#(5) fflags
 `ifdef RVFI
                 , ExtraTraceBundle tb
 `endif
@@ -1167,8 +1166,7 @@ module mkSupReorderBuffer#(
 `ifdef INCLUDE_TANDEM_VERIF
                     dst_data,
 `endif
-                    fflags,
-                    cause
+                    fflags
 `ifdef RVFI
                     , tb
 `endif

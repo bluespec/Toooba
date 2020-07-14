@@ -114,8 +114,7 @@ interface FpuMulDivExeInput;
 `ifdef INCLUDE_TANDEM_VERIF
         Data dst_data,
 `endif
-        Bit#(5) fflags,
-        Maybe#(Exception) cast
+        Bit#(5) fflags
 `ifdef RVFI
         , ExtraTraceBundle tb
 `endif
@@ -260,8 +259,7 @@ module mkFpuMulDivExePipeline#(FpuMulDivExeInput inIfc)(FpuMulDivExePipeline);
 `ifdef INCLUDE_TANDEM_VERIF
                               data,
 `endif
-                              fflags,
-                              tagged Invalid
+                              fflags
 `ifdef RVFI_DII
                               , ExtraTraceBundle{regWriteData: data, memByteEn: ?}
 `endif
