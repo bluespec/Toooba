@@ -207,7 +207,7 @@ function Maybe#(RVFI_DII_Execution#(DataSz,DataSz)) genRVFI(ToReorderBuffer rot,
         end
         case (rot.ppc_vaddr_csrData) matches
             tagged VAddr .vaddr: begin
-                addr = getAddr(vaddr);
+                addr = vaddr;
                 case (rot.lsqTag) matches
                     tagged Ld .l: rmask = rot.traceBundle.memByteEn;
                     tagged St .s: begin
@@ -652,7 +652,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
             vaddr = getAddr(x.pc);
         end
         else if(x.ppc_vaddr_csrData matches tagged VAddr .va) begin
-            vaddr = getAddr(va);
+            vaddr = va;
         end
         let commitTrap_val = Valid (CommitTrap {
             trap: trap,

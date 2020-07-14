@@ -62,7 +62,7 @@ import Cur_Cycle :: *;
 // vaddr is only used by mem inst in page fault
 typedef union tagged {
     CapMem PPC; // at default store ppc
-    CapMem VAddr; // for mem inst, store vaddr
+    Addr   VAddr; // for mem inst, store vaddr
     CapMem CSRData; // for Csr inst, store csr_data
 } PPCVAddrCSRData deriving(Bits, FShow);
 
@@ -169,7 +169,7 @@ interface ReorderBufferRowEhr#(numeric type aluExeNum, numeric type fpuMulDivExe
     // perform), and non-MMIO St can become Executed (NOTE faulting
     // instructions are not Executed, they are set at deqLSQ time)
 
-    method Action setExecuted_doFinishMem(CapMem vaddr,
+    method Action setExecuted_doFinishMem(Addr vaddr,
                                           Data store_data, ByteEn store_data_BE,
                                           Bool access_at_commit, Bool non_mmio_st_done
 `ifdef RVFI
@@ -362,9 +362,9 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
 
     interface setExecuted_doFinishFpuMulDiv = fpuMulDivExe;
 
-    method Action setExecuted_doFinishMem(CapMem vaddr,
-                                          Data   store_data, ByteEn store_data_BE,
-                                          Bool   access_at_commit, Bool non_mmio_st_done
+    method Action setExecuted_doFinishMem(Addr vaddr,
+                                          Data store_data, ByteEn store_data_BE,
+                                          Bool access_at_commit, Bool non_mmio_st_done
 `ifdef RVFI
                                           , ExtraTraceBundle tb
 `endif
@@ -625,7 +625,7 @@ interface SupReorderBuffer#(numeric type aluExeNum, numeric type fpuMulDivExeNum
     interface Vector#(fpuMulDivExeNum, ROB_setExecuted_doFinishFpuMulDiv) setExecuted_doFinishFpuMulDiv;
     // doFinishMem, after addr translation
     method Action setExecuted_doFinishMem(InstTag x,
-                                          CapMem vaddr,
+                                          Addr vaddr,
                                           Data store_data, ByteEn store_data_BE,
                                           Bool access_at_commit, Bool non_mmio_st_done
 `ifdef RVFI
@@ -1248,7 +1248,7 @@ module mkSupReorderBuffer#(
     interface setExecuted_doFinishFpuMulDiv = fpuMulDivSetExeIfc;
 
     method Action setExecuted_doFinishMem(
-        InstTag x, CapMem vaddr, Data store_data, ByteEn store_data_BE, Bool access_at_commit,
+        InstTag x, Addr vaddr, Data store_data, ByteEn store_data_BE, Bool access_at_commit,
         Bool non_mmio_st_done
 `ifdef RVFI
         , tb
