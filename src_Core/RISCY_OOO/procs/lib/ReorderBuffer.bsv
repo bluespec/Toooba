@@ -170,7 +170,9 @@ interface ReorderBufferRowEhr#(numeric type aluExeNum, numeric type fpuMulDivExe
     // instructions are not Executed, they are set at deqLSQ time)
 
     method Action setExecuted_doFinishMem(Addr vaddr,
+`ifdef INCLUDE_TANDEM_VERIF
                                           Data store_data, ByteEn store_data_BE,
+`endif
                                           Bool access_at_commit, Bool non_mmio_st_done
 `ifdef RVFI
                                           , ExtraTraceBundle tb
@@ -357,7 +359,9 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     interface setExecuted_doFinishFpuMulDiv = fpuMulDivExe;
 
     method Action setExecuted_doFinishMem(Addr vaddr,
+`ifdef INCLUDE_TANDEM_VERIF
                                           Data store_data, ByteEn store_data_BE,
+`endif
                                           Bool access_at_commit, Bool non_mmio_st_done
 `ifdef RVFI
                                           , ExtraTraceBundle tb
@@ -620,7 +624,9 @@ interface SupReorderBuffer#(numeric type aluExeNum, numeric type fpuMulDivExeNum
     // doFinishMem, after addr translation
     method Action setExecuted_doFinishMem(InstTag x,
                                           Addr vaddr,
+`ifdef INCLUDE_TANDEM_VERIF
                                           Data store_data, ByteEn store_data_BE,
+`endif
                                           Bool access_at_commit, Bool non_mmio_st_done
 `ifdef RVFI
                                           , ExtraTraceBundle tb
@@ -1242,8 +1248,12 @@ module mkSupReorderBuffer#(
     interface setExecuted_doFinishFpuMulDiv = fpuMulDivSetExeIfc;
 
     method Action setExecuted_doFinishMem(
-        InstTag x, Addr vaddr, Data store_data, ByteEn store_data_BE, Bool access_at_commit,
-        Bool non_mmio_st_done
+        InstTag x,
+        Addr vaddr,
+`ifdef INCLUDE_TANDEM_VERIF
+        Data store_data, ByteEn store_data_BE,
+`endif
+        Bool access_at_commit, Bool non_mmio_st_done
 `ifdef RVFI
         , tb
 `endif
@@ -1251,7 +1261,9 @@ module mkSupReorderBuffer#(
         all(id, readVReg(setExeMem_SB_enq)) // ordering: < enq
     );
         row[x.way][x.ptr].setExecuted_doFinishMem(vaddr,
+`ifdef INCLUDE_TANDEM_VERIF
                                                   store_data, store_data_BE,
+`endif
                                                   access_at_commit, non_mmio_st_done
 `ifdef RVFI
                                                   , tb
