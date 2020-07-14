@@ -204,12 +204,6 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     Integer trap_enq_port = valueof(TAdd#(aluExeNum, TDiv#(aluExeNum,2)));
     Integer trap_deqLSQ_port = valueof(TAdd#(aluExeNum, TDiv#(aluExeNum,2))) - 1;
 
-    Integer pc_deq_port = 0;
-    function Integer pc_finishAlu_port(Integer i) = i;
-    Integer pc_deqLSQ_port = valueof(aluExeNum);
-    Integer pc_finishMem_port = valueof(aluExeNum);
-    Integer pc_enq_port = 1 + valueof(aluExeNum);
-
     Integer pvc_deq_port = 0;
     function Integer pvc_finishAlu_port(Integer i) = i; // write ppc_vaddr_csrData
     Integer pvc_finishMem_port = valueof(aluExeNum); // write ppc_vaddr_csrData
@@ -252,7 +246,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     Integer sb_enq_port = 1; // write spec_bits
     Integer sb_correctSpec_port = 2; // write spec_bits
 
-    Ehr#(TAdd#(2, aluExeNum), CapMem)                               pc                   <- mkEhr(?);
+    Reg#(CapMem)                                                    pc                   <- mkRegU;
     Reg #(Bit #(32))                                                orig_inst            <- mkRegU;
     Reg#(IType)                                                     iType                <- mkRegU;
     Reg #(Maybe #(ArchRIndx))                                       rg_dst_reg           <- mkRegU;
@@ -354,7 +348,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         endinterface);
     end
 
-    method CapMem getOrigPC = pc[0];
+    method CapMem getOrigPC = pc;
     method CapMem getOrigPredPC = predPcWire;
     method Bit #(32) getOrig_Inst = orig_inst;
 
@@ -409,7 +403,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
 `endif
 
     method Action write_enq(ToReorderBuffer x);
-        pc[pc_enq_port] <= x.pc;
+        pc <= x.pc;
         orig_inst <= x.orig_inst;
         iType <= x.iType;
         rg_dst_reg <= x.dst;
@@ -453,7 +447,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
 
     method ToReorderBuffer read_deq;
         return ToReorderBuffer {
-            pc: pc[pc_deq_port],
+            pc: pc,
             orig_inst: orig_inst,
             iType: iType,
             dst: rg_dst_reg,
