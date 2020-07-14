@@ -954,7 +954,8 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             dInst.iType = rs1 == 0 ? Cap : Scr;
                             regs.dst = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs1);
-                            dInst.scr = Valid (unpackSCR(rs2));
+
+                            let scr = unpackSCR(rs2);
 
                             let scrType = case (rs2[1:0])
                                               0: TCC;
@@ -963,12 +964,14 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                                           endcase;
 
                             // Decode SCR read to PCC as AUIPCC 0
-                            if (dInst.scr.Valid == SCR_PCC) begin
+                            if (scr == SCR_PCC) begin
                                 dInst.iType = Auipcc;
                                 dInst.execFunc = tagged Alu Add;
                                 regs.src1 = Invalid;
                                 dInst.csr = tagged Invalid;
                                 dInst.capChecks.scr_read_only = True;
+                            end else begin
+                                dInst.scr = Valid (scr);
                             end
 
                             dInst.capFunc = CapModify (SpecialRW (scrType));
