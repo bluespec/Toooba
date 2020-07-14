@@ -312,7 +312,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
 
                 // update PPC or csrData (vaddr is always useless for ALU results)
                 ppc_vaddr_csrData[pvc_finishAlu_port(i)] <= csrDataOrPPC;
-                if (cause matches tagged Valid .exp &&& !isValid(trap[trap_finishAlu_port(i)]))
+                if (cause matches tagged Valid .exp)
                     trap[trap_finishAlu_port(i)] <= Valid (CapException (exp));
 `ifdef RVFI
                 //$display("%t : traceBundle = ", $time(), fshow(tb), " in Row_setExecuted_doFinishAlu for %x", pc);
