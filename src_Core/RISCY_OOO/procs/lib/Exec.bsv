@@ -45,10 +45,10 @@ import CHERICC_Fat::*;
 import ISA_Decls_CHERI::*;
 
 (* noinline *)
-function Maybe#(CSR_XCapCause) capChecks(CapPipe a, CapPipe b, CapPipe ddc, CapChecks toCheck, Bool cap_exact);
+function Maybe#(CSR_XCapCause) capChecksExec(CapPipe a, CapPipe b, CapPipe ddc, CapChecks toCheck, Bool cap_exact);
     function Maybe#(CSR_XCapCause) e1(CHERIException e)   = Valid(CSR_XCapCause{cheri_exc_reg: toCheck.rn1, cheri_exc_code: e});
     function Maybe#(CSR_XCapCause) e2(CHERIException e)   = Valid(CSR_XCapCause{cheri_exc_reg: toCheck.rn2, cheri_exc_code: e});
-    function Maybe#(CSR_XCapCause) eDDC(CHERIException e) = Valid(CSR_XCapCause{cheri_exc_reg: 6'b100001, cheri_exc_code: e}); // Not sure where the proper reg number of DDC is stored...
+    function Maybe#(CSR_XCapCause) eDDC(CHERIException e) = Valid(CSR_XCapCause{cheri_exc_reg: {1'b1, pack(SCR_DDC)}, cheri_exc_code: e});
     Maybe#(CSR_XCapCause) result = Invalid;
     if (toCheck.ddc_tag                       && !isValidCap(ddc))
         result = eDDC(TagViolation);
@@ -96,6 +96,34 @@ function Maybe#(CSR_XCapCause) capChecks(CapPipe a, CapPipe b, CapPipe ddc, CapC
         result = Valid(CSR_XCapCause{cheri_exc_reg: {1,pack(SCR_PCC)}, cheri_exc_code: PermitASRViolation});
     else if (toCheck.cap_exact                && !cap_exact)
         result = e1(RepresentViolation);
+    return result;
+endfunction
+
+(* noinline *)
+function Maybe#(CSR_XCapCause) capChecksMem(CapPipe auth, CapPipe data, CapChecks toCheck, MemFunc mem_func, MemDataByteEn byteEn);
+    function Maybe#(CSR_XCapCause) eAuth(CHERIException e)   = Valid(CSR_XCapCause{cheri_exc_reg: case (toCheck.check_authority_src) matches Src1: toCheck.rn1;
+                                                                                                                                       Ddc: {1'b1, pack(SCR_DDC)};
+                                                                                              endcase
+                                                                             , cheri_exc_code: e});
+    Maybe#(CSR_XCapCause) result = Invalid;
+    if      (!isValidCap(auth))
+        result = eAuth(TagViolation);
+    else if (getKind(auth) != UNSEALED)
+        result = eAuth(SealViolation);
+    else if (mem_func == Ld || mem_func == Lr || mem_func == Amo) begin
+        if (!getHardPerms(auth).permitLoad)
+            result = eAuth(PermitRViolation);
+    end
+    else if (mem_func == St || mem_func == Sc || mem_func == Amo) begin
+        if (!getHardPerms(auth).permitStore)
+            result = eAuth(PermitWViolation);
+        if (isValidCap(data) && byteEn == replicate(True)) begin
+            if (!getHardPerms(auth).permitStoreCap)
+                result = eAuth(PermitWCapViolation);
+            if (!getHardPerms(auth).permitStoreLocalCap && getHardPerms(data).global)
+                result = eAuth(PermitWLocalCapViolation);
+        end
+    end
     return result;
 endfunction
 
@@ -380,7 +408,7 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
         if (!cf.taken) dInst.capChecks.check_enable = False;
     end
 
-    Maybe#(CSR_XCapCause) capException = capChecks(rVal1, aluVal2, nullCap, dInst.capChecks, cap_exact);
+    Maybe#(CSR_XCapCause) capException = capChecksExec(rVal1, aluVal2, nullCap, dInst.capChecks, cap_exact);
     Maybe#(BoundsCheck) boundsCheck = prepareBoundsCheck(rVal1, aluVal2, pcc,
                                                          nullCap, 0, 0, // These three are only used in the memory pipe
                                                          dInst.capChecks);

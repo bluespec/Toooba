@@ -446,7 +446,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         if(x.regs.src1 matches tagged Valid .src1 &&& src1 != 0) begin
             rVal1 <- readRFBypass(src1, regsReady.src1, inIfc.rf_rd1(src1), bypassWire);
         end
-        if (x.ddc_offset) rVal1 = nullWithAddr(getAddr(rVal1) + getAddr(ddc));
+        if (x.ddc_offset) rVal1 = incOffset(ddc, getAddr(rVal1)).value;
 
         // get rVal2 (check bypass)
         CapPipe rVal2 = nullCap;
@@ -522,7 +522,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
                 store_data_BE: origBE,
 `endif
                 misaligned: memAddrMisaligned(getAddr(vaddr), origBE),
-                capException: capChecks(x.rVal1, x.rVal2, ddc, x.cap_checks, ?),
+                capException: capChecksMem(x.rVal1, x.rVal2, x.cap_checks, x.mem_func, origBE),
                 check: prepareBoundsCheck(x.rVal1, x.rVal2, almightyCap/*ToDo: pcc*/,
                                           ddc, getAddr(vaddr), pack(countOnes(pack(origBE))), x.cap_checks)
             },

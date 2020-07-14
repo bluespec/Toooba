@@ -257,12 +257,8 @@ function CapChecks memCapChecks(Bool cap_mode);
     capChecks.check_inclusive = True;
     if (cap_mode) begin
         capChecks.check_authority_src = Src1;
-        capChecks.src1_tag = True;
-        capChecks.src1_unsealed = True;
     end else begin
         capChecks.check_authority_src = Ddc;
-        capChecks.ddc_tag = True;
-        capChecks.ddc_unsealed = True;
     end
     return capChecks;
 endfunction
