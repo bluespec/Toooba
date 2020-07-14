@@ -92,7 +92,8 @@ BSC_COMPILATION_FLAGS += \
 	-no-warn-action-shadowing \
 	-suppress-warnings G0020    \
 	+RTS -K128M -RTS  -show-range-conflict \
-        -steps-max-intervals 10000000
+	-unspecified-to X -opt-undetermined-vals \
+	-steps-max-intervals 10000000
 
 # ================================================================
 # Generate Verilog RTL from BSV sources (needs Bluespec 'bsc' compiler)
