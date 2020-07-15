@@ -190,7 +190,7 @@ module mkITlb(ITlb::ITlb);
             end
             else begin
                 // page fault
-                hitQ.enq(tuple2(?, Valid (InstPageFault)));
+                hitQ.enq(tuple2(?, Valid (excInstPageFault)));
                 if(verbose) begin
                     $display("ITLB %m refill no permission: ", fshow(vaddr));
                 end
@@ -198,7 +198,7 @@ module mkITlb(ITlb::ITlb);
         end
         else begin
             // page fault
-            hitQ.enq(tuple2(?, Valid (InstPageFault)));
+            hitQ.enq(tuple2(?, Valid (excInstPageFault)));
             if(verbose) $display("ITLB %m refill page fault: ", fshow(vaddr));
         end
         // miss resolved
@@ -268,7 +268,7 @@ module mkITlb(ITlb::ITlb);
                 eparvm_info.sanctum_evbase = maxBound;
                 eparvm_info.sanctum_evmask = 0;
                 if ((vm_info.prv == prvM ? (outOfProtectionDomain(parvm_info,vaddr) && outOfProtectionDomain(eparvm_info,vaddr)) : outOfProtectionDomain(vm_info, vaddr))) begin
-                    hitQ.enq(tuple2(?, Valid (InstAccessFault)));
+                    hitQ.enq(tuple2(?, Valid (excInstAccessFault)));
                 end
 `else
                 // No security check
@@ -302,7 +302,7 @@ module mkITlb(ITlb::ITlb);
                         end
                         else begin
                             // page fault
-                            hitQ.enq(tuple2(?, Valid (InstPageFault)));
+                            hitQ.enq(tuple2(?, Valid (excInstPageFault)));
                             if(verbose) begin
                                 $display("ITLB %m req no permission: ",
                                          fshow(vaddr));

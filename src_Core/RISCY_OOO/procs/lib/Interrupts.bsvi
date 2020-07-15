@@ -1,0 +1,14 @@
+`Interrupt(UserSoftware,       4'd0)
+`Interrupt(SupervisorSoftware, 4'd1)
+`Interrupt(MachineSoftware,    4'd3)
+`Interrupt(UserTimer,          4'd4)
+`Interrupt(SupervisorTimer,    4'd5)
+`Interrupt(MachineTimer,       4'd7)
+`Interrupt(UserExternal,       4'd8)
+`Interrupt(SupervisorExternel, 4'd9)
+`Interrupt(MachineExternal,    4'd11)
+
+`ifdef INCLUDE_GDB_CONTROL
+`Interrupt(DebugHalt,          4'd14)        // Debugger halt command (^C in GDB)
+`Interrupt(DebugStep,          4'd15)        // dcsr.step is set and 1 instr has been processed)
+`endif

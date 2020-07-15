@@ -36,41 +36,29 @@ typedef TMul#(XLEN, 2) CLEN;
 
 // Exception codes
 
-typedef enum {
-    None                     = 5'd0,
-    LengthViolation          = 5'd1,
-    TagViolation             = 5'd2,
-    SealViolation            = 5'd3,
-    TypeViolation            = 5'd4,
-    CallTrap                 = 5'd5,
-    ReturnTrap               = 5'd6,
-    StackUnderflow           = 5'd7,
-    SoftwarePermViolation    = 5'd8,
-    MMUStoreCapProhibit      = 5'd9,
-    RepresentViolation       = 5'd10,
-    UnalignedBase            = 5'd11,
-    // 5'd12 - 5'd15 reserved
-    GlobalViolation          = 5'd16,
-    PermitXViolation         = 5'd17,
-    PermitRViolation         = 5'd18,
-    PermitWViolation         = 5'd19,
-    PermitRCapViolation      = 5'd20,
-    PermitWCapViolation      = 5'd21,
-    PermitWLocalCapViolation = 5'd22,
-    PermitSealViolation      = 5'd23,
-    PermitASRViolation       = 5'd24,
-    PermitCCallViolation     = 5'd25,
-    PermitUnsealViolation    = 5'd26,
-    PermitSetCIDViolation    = 5'd27
-    // 5'd28 - 5'd31 reserved
-} CHERIException  deriving(Bits, Eq, FShow);
+typedef struct { Bit#(5) code; } CHERIException deriving(Bits, Eq);
+
+`define CHERIException(n, v) CHERIException cheriExc``n = CHERIException { code: v };
+`include "CHERIExceptions.bsvi"
+`undef CHERIException
+
+instance FShow#(CHERIException);
+    function Fmt fshow(CHERIException exc);
+        return (case(exc.code)
+`define CHERIException(n, v) v: $format(`"``cheriExc``n```");
+`include "CHERIExceptions.bsvi"
+`undef CHERIException
+            default: $format("cheriExcUnknown");
+        endcase);
+    endfunction
+endinstance
 
 typedef struct {
     Bit #(6) cheri_exc_reg;
     CHERIException cheri_exc_code;
 } CSR_XCapCause deriving(Bits, Eq, FShow);
 
-CSR_XCapCause noCapCause = CSR_XCapCause {cheri_exc_code: None,
+CSR_XCapCause noCapCause = CSR_XCapCause {cheri_exc_code: cheriExcNone,
                                           cheri_exc_reg: unpack(0)};
 
 function Bit#(64) xccsr_to_word(CSR_XCapCause xccsr);
@@ -87,20 +75,31 @@ endfunction
 
 // SCR map
 
-typedef enum {
-`define SCR(s,v) s = v,
-`include "SCRs.bsvi"
-`undef SCR
-    // As with CSRs, SCR that catches all unimplemented SCRs
-    SCR_None      = 5'd10
-} SCR deriving(Bits, Eq, FShow, Bounded);
+typedef struct { Bit#(5) addr; } SCR deriving(Bits, Eq);
 
-function SCR unpackSCR(Bit#(5) x);
-    return (case(x)
-`define SCR(s,v) pack(SCR'(s)): (s);
+`define SCR(n, v) SCR scrAddr``n = SCR { addr: v };
+`include "SCRs.bsvi"
+// As with CSRs, SCR that catches all unimplemented SCRs
+`SCR(None, 5'd10)
+`undef SCR
+
+instance FShow#(SCR);
+    function Fmt fshow(SCR scr);
+        return (case(scr.addr)
+`define SCR(n, v) v: $format(`"``scrAddr``n```");
 `include "SCRs.bsvi"
 `undef SCR
-        default : (SCR_None);
+            default: $format("scrAddrNone");
+        endcase);
+    endfunction
+endinstance
+
+function SCR unpackSCR(Bit#(5) addr);
+    return (case(addr)
+`define SCR(n, v) v: scrAddr``n;
+`include "SCRs.bsvi"
+`undef SCR
+        default: scrAddrNone;
     endcase);
 endfunction
 

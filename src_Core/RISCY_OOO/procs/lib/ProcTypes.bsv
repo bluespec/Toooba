@@ -185,42 +185,64 @@ function Bool allRegsReady(RegsReady x);
     return x.src1 && x.src2 && x.src3 && x.dst;
 endfunction
 
-typedef enum {
-`define OPCODE(o,v) o = v,
-`include "Opcodes.bsvi"
-`undef OPCODE
-    Invalid = 7'b0
-} Opcode deriving(Bits, Eq, FShow);
+typedef struct { Bit#(7) opc; } Opcode deriving(Bits, Eq);
 
-function Opcode unpackOpcode(Bit#(7) x);
-    return (case(x)
-`define OPCODE(o,v) pack(Opcode'(o)): (o);
+`define Opcode(n, v) Opcode opc``n = Opcode { opc: v };
 `include "Opcodes.bsvi"
-`undef OPCODE
-        default : Invalid;
+`Opcode(Invalid, 7'b0)
+`undef Opcode
+
+instance FShow#(Opcode);
+    function Fmt fshow(Opcode scr);
+        return (case(scr.opc)
+`define Opcode(n, v) v: $format(`"``opc``n```");
+`include "Opcodes.bsvi"
+`undef Opcode
+            default: $format("opcInvalid");
+        endcase);
+    endfunction
+endinstance
+
+function Opcode unpackOpcode(Bit#(7) opc);
+    return (case(opc)
+`define Opcode(n, v) v: opc``n;
+`include "Opcodes.bsvi"
+`undef Opcode
+        default: opcInvalid;
     endcase);
 endfunction
 
-typedef enum {
-`define CSR(c,v) c = v,
-`include "CSRs.bsvi"
-`undef CSR
-    // CSR that catches all the unimplemented CSRs. To avoid exception on this,
-    // make it a user non-standard read/write CSR.
-    // Bluespec: in RenameStage.getTrap(), we force this to be a csr_access_trap
-    CSRnone = 12'h8ff
-} CSR deriving(Bits, Eq, FShow);
+typedef struct { Bit#(12) addr; } CSR deriving(Bits, Eq);
 
-function CSR unpackCSR(Bit#(12) x);
-    return (case(x)
-`define CSR(c,v) pack(CSR'(c)): (c);
+`define CSR(n, v) CSR csrAddr``n = CSR { addr: v };
+`include "CSRs.bsvi"
+// CSR that catches all the unimplemented CSRs. To avoid exception on this,
+// make it a user non-standard read/write CSR.
+// Bluespec: in RenameStage.getTrap(), we force this to be a csr_access_trap
+`CSR(None, 12'h8ff)
+`undef CSR
+
+instance FShow#(CSR);
+    function Fmt fshow(CSR csr);
+        return (case(csr.addr)
+`define CSR(n, v) v: $format(`"``csrAddr``n```");
 `include "CSRs.bsvi"
 `undef CSR
-        default : (CSRnone      );
+            default: $format("csrAddrNone");
+        endcase);
+    endfunction
+endinstance
+
+function CSR unpackCSR(Bit#(12) addr);
+    return (case(addr)
+`define CSR(n, v) v: csrAddr``n;
+`include "CSRs.bsvi"
+`undef CSR
+        default: csrAddrNone;
     endcase);
 endfunction
 
-// values for CSRmspec
+// values for MSPEC CSR
 Bit#(2) mSpecAll    = 0; // every inst can speculate
 Bit#(2) mSpecNonMem = 1; // only non-memory inst can speculate
 Bit#(2) mSpecNone   = 2; // no inst can speculate
@@ -369,50 +391,61 @@ typedef union tagged {
 } CapFunc deriving(Bits, Eq, FShow);
 
 // Rounding Modes (encoding by risc-v, not general fpu)
-typedef enum {
-    RNE  = 3'b000,
-    RTZ  = 3'b001,
-    RDN  = 3'b010,
-    RUP  = 3'b011,
-    RMM  = 3'b100,
-    RDyn = 3'b111
-} RVRoundMode deriving(Bits, Eq, FShow);
+typedef struct { Bit#(3) mode; } RVRoundMode deriving(Bits, Eq);
 
-typedef enum {
-    InstAddrMisaligned  = 5'd0,
-    InstAccessFault     = 5'd1,
-    IllegalInst         = 5'd2,
-    Breakpoint          = 5'd3,
-    LoadAddrMisaligned  = 5'd4,
-    LoadAccessFault     = 5'd5,
-    StoreAddrMisaligned = 5'd6,
-    StoreAccessFault    = 5'd7,
-    EnvCallU            = 5'd8,
-    EnvCallS            = 5'd9,
-    EnvCallM            = 5'd11,
-    InstPageFault       = 5'd12,
-    LoadPageFault       = 5'd13,
-    StorePageFault      = 5'd15,
-    CHERIFault          = 5'd28
-} Exception deriving(Bits, Eq, FShow);
+`define RVRoundMode(n, v) RVRoundMode rm``n = RVRoundMode { mode: v };
+`include "RVRoundModes.bsvi"
+`undef RVRoundMode
 
-typedef enum {
-    UserSoftware       = 4'd0,
-    SupervisorSoftware = 4'd1,
-    MachineSoftware    = 4'd3,
-    UserTimer          = 4'd4,
-    SupervisorTimer    = 4'd5,
-    MachineTimer       = 4'd7,
-    UserExternal       = 4'd8,
-    SupervisorExternel = 4'd9,
-    MachineExternal    = 4'd11
+instance FShow#(RVRoundMode);
+    function Fmt fshow(RVRoundMode rm);
+        return (case(rm.mode)
+`define RVRoundMode(n, v) v: $format(`"``rm``n```");
+`include "RVRoundModes.bsvi"
+`undef RVRoundMode
+            default: $format("rmUnknown");
+        endcase);
+    endfunction
+endinstance
 
-`ifdef INCLUDE_GDB_CONTROL
-  , DebugHalt          = 4'd14,        // Debugger halt command (^C in GDB)
-    DebugStep          = 4'd15         // dcsr.step is set and 1 instr has been processed
-`endif
+// bsc doesn't like the name colliding with Trap's Exception
+typedef struct { Bit#(5) code; } ExceptionS deriving(Bits, Eq);
+typedef ExceptionS Exception;
 
-} Interrupt deriving(Bits, Eq, FShow);
+`define Exception(n, v) Exception exc``n = ExceptionS { code: v };
+`include "Exceptions.bsvi"
+`undef Exception
+
+instance FShow#(Exception);
+    function Fmt fshow(Exception exc);
+        return (case(exc.code)
+`define Exception(n, v) v: $format(`"``exc``n```");
+`include "Exceptions.bsvi"
+`undef Exception
+            default: $format("excUnknown");
+        endcase);
+    endfunction
+endinstance
+
+// bsc doesn't like the name colliding with Trap's Interrupt and IType's
+// Interrupt.
+typedef struct { Bit#(4) intr; } InterruptS deriving(Bits, Eq);
+typedef InterruptS Interrupt;
+
+`define Interrupt(n, v) Interrupt intr``n = InterruptS { intr: v };
+`include "Interrupts.bsvi"
+`undef Interrupt
+
+instance FShow#(Interrupt);
+    function Fmt fshow(Interrupt intr);
+        return (case(intr.intr)
+`define Interrupt(n, v) v: $format(`"``intr``n```");
+`include "Interrupts.bsvi"
+`undef Interrupt
+            default: $format("intrUnknown");
+        endcase);
+    endfunction
+endinstance
 
 `ifdef INCLUDE_GDB_CONTROL
 typedef 16 InterruptNum;    // With debugger
@@ -831,7 +864,7 @@ function Fmt showInst(Instruction inst);
   Bit#(32) immJ   = signExtend({ inst[31], inst[19:12], inst[20], inst[30:25], inst[24:21], 1'b0});
 
   case (opcode)
-    OpImm:
+    opcOpImm:
     begin
       ret = case (funct3)
         fnADD: fshow("addi");
@@ -850,7 +883,7 @@ function Fmt showInst(Instruction inst);
       endcase);
     end
 
-    OpImm32:
+    opcOpImm32:
     begin
       ret = case (funct3)
         fnADD: fshow("addiw");
@@ -864,7 +897,7 @@ function Fmt showInst(Instruction inst);
       endcase);
     end
 
-    Op:
+    opcOp:
     begin
       ret = case (funct3)
         fnADD: (immI[10] == 0 ? fshow("add") : fshow("sub"));
@@ -879,7 +912,7 @@ function Fmt showInst(Instruction inst);
       ret = ret + fshow(" ") + fshow(rd) + fshow(" = ") + fshow(rs1) + fshow(" ") + fshow(rs2);
     end
 
-    Op32:
+    opcOp32:
     begin
       ret = case (funct3)
         fnADD: (immI[10] == 0 ? fshow("addw") : fshow("subw"));
@@ -889,19 +922,19 @@ function Fmt showInst(Instruction inst);
       ret = ret + fshow(" ") + fshow(rd) + fshow(" = ") + fshow(rs1) + fshow(" ") + fshow(rs2);
     end
 
-    Lui:
+    opcLui:
       ret = fshow("lui ") + fshow(rd) + fshow(" ") + fshow(immU);
 
-    Auipc:
+    opcAuipc:
       ret = fshow("auipc ") + fshow(rd) + fshow(" ") + fshow(immU);
 
-    Jal:
+    opcJal:
       ret = fshow("jal ") + fshow(rd) + fshow(" ") + fshow(immJ);
 
-    Jalr:
+    opcJalr:
       ret = fshow("jalr ") + fshow(rd) + fshow(" ") + fshow(rs1) + fshow(" ") + fshow(immI);
 
-    Branch:
+    opcBranch:
     begin
       ret = case(funct3)
         fnBEQ: fshow("beq");
@@ -914,7 +947,7 @@ function Fmt showInst(Instruction inst);
       ret = ret + fshow(" ") + fshow(rs1) + fshow(" ") + fshow(rs2) + fshow(" ") + fshow(immB);
     end
 
-    Load:
+    opcLoad:
     begin
       ret = case(funct3)
         fnLB: fshow("lb");
@@ -928,7 +961,7 @@ function Fmt showInst(Instruction inst);
       ret = ret + fshow(" ") + fshow(rd) + fshow(" = ") + fshow(rs1) + fshow(" ") + fshow(immI);
     end
 
-    Store:
+    opcStore:
     begin
       ret = case(funct3)
         fnSB: fshow("sb");
@@ -939,7 +972,7 @@ function Fmt showInst(Instruction inst);
       ret = ret + fshow(" ") + fshow(rs1) + fshow(" ") + fshow(rs2) + fshow(" ") + fshow(immS);
     end
 
-    MiscMem:
+    opcMiscMem:
     begin
       ret = case (funct3)
         fnFENCE: fshow("fence");
@@ -947,7 +980,7 @@ function Fmt showInst(Instruction inst);
       endcase;
     end
 
-    System:
+    opcSystem:
     begin
       case (funct3)
         fnCSRRW, fnCSRRS, fnCSRRC, fnCSRRWI, fnCSRRSI, fnCSRRCI:

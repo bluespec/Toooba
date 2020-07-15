@@ -287,7 +287,7 @@ module mkDTlb#(
             end
             else begin
                 // page fault
-                Exception fault = r.write ? StorePageFault : LoadPageFault;
+                Exception fault = r.write ? excStorePageFault : excLoadPageFault;
                 pendResp[idx] <= tuple2(?, Valid (fault));
                 if(verbose) begin
                     $display("[DTLB] refill no permission: idx %d; ", idx, fshow(r));
@@ -296,7 +296,7 @@ module mkDTlb#(
         end
         else begin
             // page fault
-            Exception fault = r.write ? StorePageFault : LoadPageFault;
+            Exception fault = r.write ? excStorePageFault : excLoadPageFault;
             pendResp[idx] <= tuple2(?, Valid (fault));
             if(verbose) $display("[DTLB] refill page fault: idx %d; ", idx, fshow(r));
         end
@@ -433,7 +433,7 @@ module mkDTlb#(
         // (Because we are always non speculative in M mode)
         if (!vm_info.sanctum_authShared && outOfProtectionDomain(vm_info, r.addr))begin
             pendWait[idx] <= None;
-            pendResp[idx] <= tuple2(?, Valid (LoadAccessFault));
+            pendResp[idx] <= tuple2(?, Valid (excLoadAccessFault));
         end
 `else
         // No security check
@@ -472,7 +472,7 @@ module mkDTlb#(
                 end
                 else begin
                     // page fault
-                    Exception fault = r.write ? StorePageFault : LoadPageFault;
+                    Exception fault = r.write ? excStorePageFault : excLoadPageFault;
                     pendWait[idx] <= None;
                     pendResp[idx] <= tuple2(?, Valid (fault));
                     if(verbose) $display("[DTLB] req no permission: idx %d; ", idx, fshow(r));

@@ -1,72 +1,72 @@
-    // user standard CSRs
-    `CSR(CSRfflags     , 12'h001)
-    `CSR(CSRfrm        , 12'h002)
-    `CSR(CSRfcsr       , 12'h003)
-    `CSR(CSRcycle      , 12'hc00)
-    `CSR(CSRtime       , 12'hc01)
-    `CSR(CSRinstret    , 12'hc02)
-    // user non-standard CSRs (TODO)
-    `CSR(CSRterminate  , 12'h800) // terminate (used to exit Linux)
-    `CSR(CSRstats      , 12'h801) // turn on/off perf counters
-    // `CSR(CSRuccsr      , 12'h8c0)
-    // supervisor standard `CSR(CSRs
-    `CSR(CSRsstatus    , 12'h100)
-    // no user trap handler, so no se/ideleg
-    `CSR(CSRsie        , 12'h104)
-    `CSR(CSRstvec      , 12'h105)
-    `CSR(CSRscounteren , 12'h106)
-    `CSR(CSRsscratch   , 12'h140)
-    `CSR(CSRsepc       , 12'h141)
-    `CSR(CSRscause     , 12'h142)
-    `CSR(CSRstval      , 12'h143) // it's still called sbadaddr in spike
-    `CSR(CSRsip        , 12'h144)
-    `CSR(CSRsatp       , 12'h180) // it's still called sptbr in spike
-    `CSR(CSRsccsr      , 12'h9c0)
-    // machine standard CSRs
-    `CSR(CSRmstatus    , 12'h300)
-    `CSR(CSRmisa       , 12'h301)
-    `CSR(CSRmedeleg    , 12'h302)
-    `CSR(CSRmideleg    , 12'h303)
-    `CSR(CSRmie        , 12'h304)
-    `CSR(CSRmtvec      , 12'h305)
-    `CSR(CSRmcounteren , 12'h306)
-    `CSR(CSRmscratch   , 12'h340)
-    `CSR(CSRmepc       , 12'h341)
-    `CSR(CSRmcause     , 12'h342)
-    `CSR(CSRmtval      , 12'h343) // it's still called mbadaddr in spike
-    `CSR(CSRmip        , 12'h344)
-    `CSR(CSRmcycle     , 12'hb00)
-    `CSR(CSRminstret   , 12'hb02)
-    `CSR(CSRmvendorid  , 12'hf11)
-    `CSR(CSRmarchid    , 12'hf12)
-    `CSR(CSRmimpid     , 12'hf13)
-    `CSR(CSRmhartid    , 12'hf14)
-    `CSR(CSRmccsr      , 12'hbc0)
+// user standard CSRs
+`CSR(FFLAGS,     12'h001)
+`CSR(FRM,        12'h002)
+`CSR(FCSR,       12'h003)
+`CSR(CYCLE,      12'hc00)
+`CSR(TIME,       12'hc01)
+`CSR(INSTRET,    12'hc02)
+// user non-standard CSRs (TODO)
+`CSR(TERMINATE,  12'h800) // terminate (used to exit Linux)
+`CSR(STATS,      12'h801) // turn on/off perf counters
+// `CSR(UCCSR,      12'h8c0)
+// supervisor standard CSRs
+`CSR(SSTATUS,    12'h100)
+// no user trap handler, so no se/ideleg
+`CSR(SIE,        12'h104)
+`CSR(STVEC,      12'h105)
+`CSR(SCOUNTEREN, 12'h106)
+`CSR(SSCRATCH,   12'h140)
+`CSR(SEPC,       12'h141)
+`CSR(SCAUSE,     12'h142)
+`CSR(STVAL,      12'h143) // it's still called sbadaddr in spike
+`CSR(SIP,        12'h144)
+`CSR(SATP,       12'h180) // it's still called sptbr in spike
+`CSR(SCCSR,      12'h9c0)
+// machine standard CSRs
+`CSR(MSTATUS,    12'h300)
+`CSR(MISA,       12'h301)
+`CSR(MEDELEG,    12'h302)
+`CSR(MIDELEG,    12'h303)
+`CSR(MIE,        12'h304)
+`CSR(MTVEC,      12'h305)
+`CSR(MCOUNTEREN, 12'h306)
+`CSR(MSCRATCH,   12'h340)
+`CSR(MEPC,       12'h341)
+`CSR(MCAUSE,     12'h342)
+`CSR(MTVAL,      12'h343) // it's still called mbadaddr in spike
+`CSR(MIP,        12'h344)
+`CSR(MCYCLE,     12'hb00)
+`CSR(MINSTRET,   12'hb02)
+`CSR(MVENDORID,  12'hf11)
+`CSR(MARCHID,    12'hf12)
+`CSR(MIMPID,     12'hf13)
+`CSR(MHARTID,    12'hf14)
+`CSR(MCCSR,      12'hbc0)
 `ifdef SECURITY
-    // sanctum machine CSR
-    `CSR(CSRmevbase    , 12'h7c0)
-    `CSR(CSRmevmask    , 12'h7c1)
-    `CSR(CSRmeatp      , 12'h7c2)
-    `CSR(CSRmmrbm      , 12'h7c3)
-    `CSR(CSRmemrbm     , 12'h7c4)
-    `CSR(CSRmparbase   , 12'h7c5)
-    `CSR(CSRmparmask   , 12'h7c6)
-    `CSR(CSRmeparbase  , 12'h7c7)
-    `CSR(CSRmeparmask  , 12'h7c8)
-    `CSR(CSRmflush     , 12'h7c9) // flush pipeline + cache
-    `CSR(CSRmspec      , 12'h7ca) // control speculation
-    // sanctum user CSR
-    `CSR(CSRtrng       , 12'hcc0) // random number for secure boot
+// sanctum machine CSR
+`CSR(MEVBASE,    12'h7c0)
+`CSR(MEVMASK,    12'h7c1)
+`CSR(MEATP,      12'h7c2)
+`CSR(MMRBM,      12'h7c3)
+`CSR(MEMRBM,     12'h7c4)
+`CSR(MPARBASE,   12'h7c5)
+`CSR(MPARMASK,   12'h7c6)
+`CSR(MEPARBASE,  12'h7c7)
+`CSR(MEPARMASK,  12'h7c8)
+`CSR(MFLUSH,     12'h7c9) // flush pipeline + cache
+`CSR(MSPEC,      12'h7ca) // control speculation
+// sanctum user CSR
+`CSR(TRNG,       12'hcc0) // random number for secure boot
 `endif
 
-   `CSR(CSRtselect     , 12'h7A0)    // Debug/trace tselect
-   `CSR(CSRtdata1      , 12'h7A1)    // Debug/trace tdata1
-   `CSR(CSRtdata2      , 12'h7A2)    // Debug/trace tdata2
-   `CSR(CSRtdata3      , 12'h7A3)    // Debug/trace tdata3
+`CSR(TSELECT,     12'h7A0)    // Debug/trace tselect
+`CSR(TDATA1,      12'h7A1)    // Debug/trace tdata1
+`CSR(TDATA2,      12'h7A2)    // Debug/trace tdata2
+`CSR(TDATA3,      12'h7A3)    // Debug/trace tdata3
 
 `ifdef INCLUDE_GDB_CONTROL
-   `CSR(CSRdcsr        , 12'h7B0)    // Debug control and status
-   `CSR(CSRdpc         , 12'h7B1)    // Debug PC
-   `CSR(CSRdscratch0   , 12'h7B2)    // Debug scratch0
-   `CSR(CSRdscratch1   , 12'h7B3)    // Debug scratch1
+`CSR(DCSR,        12'h7B0)    // Debug control and status
+`CSR(DPC,         12'h7B1)    // Debug PC
+`CSR(DSCRATCH0,   12'h7B2)    // Debug scratch0
+`CSR(DSCRATCH1,   12'h7B3)    // Debug scratch1
 `endif

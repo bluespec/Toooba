@@ -441,7 +441,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         // check conservative scoreboard
         let regsReady = inIfc.sbCons_lazyLookup(x.regs);
 
-        CapPipe ddc = cast(inIfc.scaprf_rd(SCR_DDC));
+        CapPipe ddc = cast(inIfc.scaprf_rd(scrAddrDDC));
 
         // get rVal1 (check bypass)
         CapPipe rVal1 = nullCap;
@@ -509,7 +509,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             lsq.updateData(stTag, d);
         end
 
-        CapPipe ddc = cast(inIfc.scaprf_rd(SCR_DDC));
+        CapPipe ddc = cast(inIfc.scaprf_rd(scrAddrDDC));
 
         // go to next stage by sending to TLB
         dTlb.procReq(DTlbReq {
@@ -545,10 +545,10 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         if (!isValid(cause) && (paddr < 'h80000000 || paddr >= 'h80800000)) begin
             case(x.mem_func)
                 Ld, Lr: begin
-                    cause = Valid(Exception(LoadAccessFault));
+                    cause = Valid(Exception(excLoadAccessFault));
                 end
                 default: begin
-                    cause = Valid(Exception(StoreAccessFault));
+                    cause = Valid(Exception(excStoreAccessFault));
                 end
             endcase
         end
@@ -568,10 +568,10 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         if(!isValid(cause) && x.misaligned) begin
             case(x.mem_func)
                 Ld, Lr: begin
-                    cause = Valid(Exception(LoadAddrMisaligned));
+                    cause = Valid(Exception(excLoadAddrMisaligned));
                 end
                 default: begin
-                    cause = Valid(Exception(StoreAddrMisaligned));
+                    cause = Valid(Exception(excStoreAddrMisaligned));
                 end
             endcase
         end
@@ -582,10 +582,10 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         if(!isValid(cause) && isMMIO) begin
             case(x.mem_func)
                 Lr: begin
-                    cause = Valid(Exception(LoadAccessFault));
+                    cause = Valid(Exception(excLoadAccessFault));
                 end
                 Sc: begin
-                    cause = Valid(Exception(StoreAccessFault));
+                    cause = Valid(Exception(excStoreAccessFault));
                 end
             endcase
         end
@@ -600,7 +600,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             if (!(                         (check.check_low  >= check.authority_base) &&
                   (check.check_inclusive ? (check.check_high <= check.authority_top )
                                          : (check.check_high <  check.authority_top ))))
-                x.capException = Valid(CSR_XCapCause{cheri_exc_reg: check.authority_idx, cheri_exc_code: LengthViolation});
+                x.capException = Valid(CSR_XCapCause{cheri_exc_reg: check.authority_idx, cheri_exc_code: cheriExcLengthViolation});
         end
         if (x.capException matches tagged Valid .c) cause = Valid(CapException(c));
         Bool access_at_commit = !isValid(cause) && (isMMIO || isLrScAmo);
@@ -1034,7 +1034,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         lsq.deqLd;
         waitLrScAmoMMIOResp <= Invalid;
         // set ROB to raise access fault
-        inIfc.rob_setExecuted_deqLSQ(lsqDeqLd.instTag, Valid(Exception(LoadAccessFault)), Invalid
+        inIfc.rob_setExecuted_deqLSQ(lsqDeqLd.instTag, Valid(Exception(excLoadAccessFault)), Invalid
 `ifdef RVFI
             , ExtraTraceBundle{
                 regWriteData: memData[pack(lsqDeqIdx)],
@@ -1393,7 +1393,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         lsq.deqSt;
         waitLrScAmoMMIOResp <= Invalid;
         // set ROB to raise access fault
-        inIfc.rob_setExecuted_deqLSQ(lsqDeqSt.instTag, Valid(Exception(StoreAccessFault)), Invalid
+        inIfc.rob_setExecuted_deqLSQ(lsqDeqSt.instTag, Valid(Exception(excStoreAccessFault)), Invalid
 `ifdef RVFI
             , ExtraTraceBundle{
                 regWriteData: fromMemTaggedData(lsqDeqSt.stData),

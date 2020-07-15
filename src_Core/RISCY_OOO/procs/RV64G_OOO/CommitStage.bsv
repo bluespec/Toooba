@@ -350,7 +350,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
    rule rl_send_mip_csr_change_to_tv ((! rg_just_after_reset) && send_mip_csr_change_to_tv);
       fa_to_TV (way0, rg_serial_num,
-                tagged Valid (tuple2 (pack (CSRmip), new_mip_csr_val)),
+                tagged Valid (tuple2 (pack (csrAddrMIP), new_mip_csr_val)),
                 no_deq_data, no_fflags, no_mstatus, no_trap_updates, no_ret_updates);
       rg_old_mip_csr_val <= new_mip_csr_val;
       rg_serial_num <= rg_serial_num + 1;
@@ -417,10 +417,10 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
     function TraceStateBundle getTSB();
         return TraceStateBundle{
-            sepc:  csrf.rd(CSRsepc),
-            mepc:  csrf.rd(CSRmepc),
-            stvec: csrf.rd(CSRstvec),
-            mtvec: csrf.rd(CSRmtvec)
+            sepc:  csrf.rd(csrAddrSEPC),
+            mepc:  csrf.rd(csrAddrMEPC),
+            stvec: csrf.rd(csrAddrSTVEC),
+            mtvec: csrf.rd(csrAddrMTVEC)
         };
     endfunction
 `endif
@@ -458,7 +458,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
             stqEmpty: inIfc.stqEmpty,
             tlbNoPendingReq: inIfc.tlbNoPendingReq,
             prv: csrf.decodeInfo.prv,
-            instCount: csrf.rd(CSRinstret)
+            instCount: csrf.rd(csrAddrINSTRET)
         };
     endfunction
 
@@ -647,8 +647,8 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
         // record trap info
         Addr vaddr = 0;
-        if (   (trap == tagged Exception InstAccessFault)
-            || (trap == tagged Exception InstPageFault)) begin
+        if (   (trap == tagged Exception excInstAccessFault)
+            || (trap == tagged Exception excInstPageFault)) begin
             vaddr = getAddr(x.pc);
         end
         else if(x.ppc_vaddr_csrData matches tagged VAddr .va) begin
@@ -726,7 +726,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         end
 
 `ifdef INCLUDE_GDB_CONTROL
-        else if (trap.trap == tagged Exception Breakpoint) begin
+        else if (trap.trap == tagged Exception excBreakpoint) begin
             inIfc.commitCsrInstOrInterrupt;    // TODO: Why?
         end
 `endif
@@ -734,9 +734,9 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
        Bool debugger_halt = False;
 
 `ifdef INCLUDE_GDB_CONTROL
-       if ((trap.trap == tagged Interrupt DebugHalt)
-           || (trap.trap == tagged Interrupt DebugStep)
-           || ((trap.trap == tagged Exception Breakpoint) && (csrf.dcsr_break_bit == 1'b1)))
+       if ((trap.trap == tagged Interrupt intrDebugHalt)
+           || (trap.trap == tagged Interrupt intrDebugStep)
+           || ((trap.trap == tagged Exception excBreakpoint) && (csrf.dcsr_break_bit == 1'b1)))
           begin
              debugger_halt = True;
 
@@ -745,9 +745,9 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
              makeSystemConsistent_for_debug_mode;
 
              // Save values in debugger CSRs
-             Bit #(3) dcsr_cause = (  (trap.trap == tagged Interrupt DebugHalt)
+             Bit #(3) dcsr_cause = (  (trap.trap == tagged Interrupt intrDebugHalt)
                                     ? 3
-                                    : (  (trap.trap == tagged Interrupt DebugStep)
+                                    : (  (trap.trap == tagged Interrupt intrDebugStep)
                                        ? 4
                                        : 1));
              csrf.dcsr_cause_write (dcsr_cause);
@@ -895,15 +895,15 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
             x.ppc_vaddr_csrData = tagged CSRData data_warl_xformed;
 
             if (x.will_dirty_fpu_state) begin
-               Data old_mstatus = csrf.rd (CSRmstatus);
+               Data old_mstatus = csrf.rd (csrAddrMSTATUS);
                new_mstatus = { 1'b1, old_mstatus [62:15], 2'b11, old_mstatus [12:0] };
             end
 `endif
 
             // check if satp is modified or not
-            write_satp = csr_idx == CSRsatp;
+            write_satp = csr_idx == csrAddrSATP;
 `ifdef SECURITY
-            flush_security = csr_idx == CSRmflush;
+            flush_security = csr_idx == csrAddrMFLUSH;
 `endif
         end
         if(x.iType == Scr) begin

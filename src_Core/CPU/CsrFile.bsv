@@ -758,69 +758,69 @@ module mkCsrFile #(Data hartid)(CsrFile);
     function Reg#(Data) get_csr(CSR csr);
         return (case (csr)
             // User CSRs
-            CSRfflags:     fflags_csr;
-            CSRfrm:        frm_csr;
-            CSRfcsr:       fcsr_csr;
-            CSRcycle:      cycle_csr;
-            CSRtime:       time_csr;
-            CSRinstret:    instret_csr;
-            CSRterminate:  terminate_csr;
-            CSRstats:      stats_csr;
+            csrAddrFFLAGS:     fflags_csr;
+            csrAddrFRM:        frm_csr;
+            csrAddrFCSR:       fcsr_csr;
+            csrAddrCYCLE:      cycle_csr;
+            csrAddrTIME:       time_csr;
+            csrAddrINSTRET:    instret_csr;
+            csrAddrTERMINATE:  terminate_csr;
+            csrAddrSTATS:      stats_csr;
             // Supervisor CSRs
-            CSRsstatus:    sstatus_csr;
-            CSRsie:        sie_csr;
-            CSRstvec:      scrToCsr(stcc_reg); // Only accessed by debugger. CPU accesses decoded into cspecialrw
-            CSRscounteren: scounteren_csr;
-            CSRsscratch:   sscratch_csr;
-            CSRsepc:       scrToCsr(sepcc_reg[1]); // Only accessed by debugger. CPU accesses decoded into cspecialrw
-            CSRscause:     scause_csr;
-            CSRstval:      stval_csr;
-            CSRsip:        sip_csr;
-            CSRsatp:       satp_csr;
+            csrAddrSSTATUS:    sstatus_csr;
+            csrAddrSIE:        sie_csr;
+            csrAddrSTVEC:      scrToCsr(stcc_reg); // Only accessed by debugger. CPU accesses decoded into cspecialrw
+            csrAddrSCOUNTEREN: scounteren_csr;
+            csrAddrSSCRATCH:   sscratch_csr;
+            csrAddrSEPC:       scrToCsr(sepcc_reg[1]); // Only accessed by debugger. CPU accesses decoded into cspecialrw
+            csrAddrSCAUSE:     scause_csr;
+            csrAddrSTVAL:      stval_csr;
+            csrAddrSIP:        sip_csr;
+            csrAddrSATP:       satp_csr;
             // Machine CSRs
-            CSRmstatus:    mstatus_csr;
-            CSRmisa:       misa_csr;
-            CSRmedeleg:    medeleg_csr;
-            CSRmideleg:    mideleg_csr;
-            CSRmie:        mie_csr;
-            CSRmtvec:      scrToCsr(mtcc_reg); // Only accessed by debugger. CPU accesses decoded into cspecialrw
-            CSRmcounteren: mcounteren_csr;
-            CSRmscratch:   mscratch_csr;
-            CSRmepc:       scrToCsr(mepcc_reg[1]); // Only accessed by debugger. CPU accesses decoded into cspecialrw
-            CSRmcause:     mcause_csr;
-            CSRmtval:      mtval_csr;
-            CSRmip:        mip_csr;
-            CSRmcycle:     mcycle_csr;
-            CSRminstret:   minstret_csr;
-            CSRmvendorid:  mvendorid_csr;
-            CSRmarchid:    marchid_csr;
-            CSRmimpid:     mimpid_csr;
-            CSRmhartid:    mhartid_csr;
-            CSRmccsr:      csr_capcause(mccsr_reg);
+            csrAddrMSTATUS:    mstatus_csr;
+            csrAddrMISA:       misa_csr;
+            csrAddrMEDELEG:    medeleg_csr;
+            csrAddrMIDELEG:    mideleg_csr;
+            csrAddrMIE:        mie_csr;
+            csrAddrMTVEC:      scrToCsr(mtcc_reg); // Only accessed by debugger. CPU accesses decoded into cspecialrw
+            csrAddrMCOUNTEREN: mcounteren_csr;
+            csrAddrMSCRATCH:   mscratch_csr;
+            csrAddrMEPC:       scrToCsr(mepcc_reg[1]); // Only accessed by debugger. CPU accesses decoded into cspecialrw
+            csrAddrMCAUSE:     mcause_csr;
+            csrAddrMTVAL:      mtval_csr;
+            csrAddrMIP:        mip_csr;
+            csrAddrMCYCLE:     mcycle_csr;
+            csrAddrMINSTRET:   minstret_csr;
+            csrAddrMVENDORID:  mvendorid_csr;
+            csrAddrMARCHID:    marchid_csr;
+            csrAddrMIMPID:     mimpid_csr;
+            csrAddrMHARTID:    mhartid_csr;
+            csrAddrMCCSR:      csr_capcause(mccsr_reg);
 `ifdef SECURITY
-            CSRmevbase:    mevbase_csr;
-            CSRmevmask:    mevmask_csr;
-            CSRmeatp:      meatp_csr;
-            CSRmmrbm:      mmrbm_csr;
-            CSRmemrbm:     memrbm_csr;
-            CSRmparbase:   mparbase_csr;
-            CSRmparmask:   mparmask_csr;
-            CSRmeparbase:  meparbase_csr;
-            CSRmeparmask:  meparmask_csr;
-            CSRmspec:      mspec_csr;
-            CSRtrng:       trng_csr;
+            csrAddrMEVBASE:    mevbase_csr;
+            csrAddrMEVMASK:    mevmask_csr;
+            csrAddrMEATP:      meatp_csr;
+            csrAddrMMRBM:      mmrbm_csr;
+            csrAddrMEMRBM:     memrbm_csr;
+            csrAddrMPARBASE:   mparbase_csr;
+            csrAddrMPARMASK:   mparmask_csr;
+            csrAddrMEPARBASE:  meparbase_csr;
+            csrAddrMEPARMASK:  meparmask_csr;
+            csrAddrMSPEC:      mspec_csr;
+            csrAddrTRNG:       trng_csr;
 `endif
 
-           CSRtselect:    rg_tselect;
-           CSRtdata1:     rg_tdata1;
-           CSRtdata2:     rg_tdata2;
-           CSRtdata3:     rg_tdata3;
+           csrAddrTSELECT:    rg_tselect;
+           csrAddrTDATA1:     rg_tdata1;
+           csrAddrTDATA2:     rg_tdata2;
+           csrAddrTDATA3:     rg_tdata3;
 
 `ifdef INCLUDE_GDB_CONTROL
-           CSRdcsr:       rg_dcsr;    // TODO: take NMI into account (cf. Piccolo/Flute)
-           CSRdpc:        scrToCsr(rg_dpc);
-           CSRdscratch0:  rg_dscratch0;
-           CSRdscratch1:  rg_dscratch1;
+           csrAddrDCSR:       rg_dcsr;    // TODO: take NMI into account (cf. Piccolo/Flute)
+           csrAddrDPC:        scrToCsr(rg_dpc);
+           csrAddrDSCRATCH0:  rg_dscratch0;
+           csrAddrDSCRATCH1:  rg_dscratch1;
 `endif
 
             default:       readOnlyReg(64'b0);
@@ -831,22 +831,22 @@ module mkCsrFile #(Data hartid)(CsrFile);
     function Reg#(CapReg) get_scr(SCR scr);
         return (case (scr)
             // User SCRs
-            SCR_DDC:       ddc_reg;
+            scrAddrDDC:       ddc_reg;
             // User CSRs with accessSysRegs
-            // SCR_UTCC:      utcc_reg;
-            // SCR_UTDC:      utdc_reg;
-            // SCR_UScratchC: uScratchC_reg;
-            // SCR_UEPCC:     uepcc_reg;
+            // scrAddrUTCC:      utcc_reg;
+            // scrAddrUTDC:      utdc_reg;
+            // scrAddrUScratchC: uScratchC_reg;
+            // scrAddrUEPCC:     uepcc_reg;
             // System CSRs with accessSysRegs
-            SCR_STCC:      stcc_reg;
-            SCR_STDC:      stdc_reg;
-            SCR_SScratchC: sScratchC_reg;
-            SCR_SEPCC:     sepcc_reg[1];
+            scrAddrSTCC:      stcc_reg;
+            scrAddrSTDC:      stdc_reg;
+            scrAddrSScratchC: sScratchC_reg;
+            scrAddrSEPCC:     sepcc_reg[1];
             // Machine CSRs with accessSysRegs
-            SCR_MTCC:      mtcc_reg;
-            SCR_MTDC:      mtdc_reg;
-            SCR_MScratchC: mScratchC_reg;
-            SCR_MEPCC:     mepcc_reg[1];
+            scrAddrMTCC:      mtcc_reg;
+            scrAddrMTDC:      mtdc_reg;
+            scrAddrMScratchC: mScratchC_reg;
+            scrAddrMEPCC:     mepcc_reg[1];
         endcase);
     endfunction
 
@@ -864,12 +864,12 @@ module mkCsrFile #(Data hartid)(CsrFile);
       return (
          case (csr)
             // Machine CSRs
-            CSRmisa:      {getXLBits, 36'b0, getExtensionBits(isa)};
-            CSRmvendorid: 0;
-            CSRmarchid:   0;
-            CSRmimpid:    0;
-            CSRmhartid:   hartid;
-            CSRmstatus:   fn_mstatus_val (getXLBits,    // sxl
+            csrAddrMISA:      {getXLBits, 36'b0, getExtensionBits(isa)};
+            csrAddrMVENDORID: 0;
+            csrAddrMARCHID:   0;
+            csrAddrMIMPID:    0;
+            csrAddrMHARTID:   hartid;
+            csrAddrMSTATUS:   fn_mstatus_val (getXLBits,    // sxl
                                           getXLBits,    // uxl
                                           x [22],       // tsr
                                           x [21],       // tw
@@ -887,17 +887,17 @@ module mkCsrFile #(Data hartid)(CsrFile);
                                           x [3],        // ie_vec[prvM]
                                           x [1],        // ie_vec[prvS]
                                           x [0]);       // ie_vec[prvU]
-            CSRmedeleg:    { 35'b0, x[28:26], 10'b0, x[15], 1'b0, x[13:12], x[11], 1'b0, x[9:0]};
-            CSRmideleg:    { 52'b0, x[11], 1'b0, x[9:8], x[7], 1'b0, x[5:4], x[3], 1'b0, x[1:0]};
-            CSRmip:        ((mip_csr & (~ mip_mie_warl_mask)) | (x & mip_mie_warl_mask));
-            CSRmie:        (x & mip_mie_warl_mask);
-            CSRmcounteren: { 61'b0, x[2:0]};
-            CSRmcause:     { x[63], 59'b0, x[3:0] };
+            csrAddrMEDELEG:    { 35'b0, x[28:26], 10'b0, x[15], 1'b0, x[13:12], x[11], 1'b0, x[9:0]};
+            csrAddrMIDELEG:    { 52'b0, x[11], 1'b0, x[9:8], x[7], 1'b0, x[5:4], x[3], 1'b0, x[1:0]};
+            csrAddrMIP:        ((mip_csr & (~ mip_mie_warl_mask)) | (x & mip_mie_warl_mask));
+            csrAddrMIE:        (x & mip_mie_warl_mask);
+            csrAddrMCOUNTEREN: { 61'b0, x[2:0]};
+            csrAddrMCAUSE:     { x[63], 59'b0, x[3:0] };
 
-            CSRtdata1:     { 4'b0, x [59:0] };    // Force tdata.type == 0 ("no trigger at this tselect")
+            csrAddrTDATA1:     { 4'b0, x [59:0] };    // Force tdata.type == 0 ("no trigger at this tselect")
 
             // Supervisor level CSRs
-            CSRsstatus:   fn_sstatus_val (getXLBits,    // uxl
+            csrAddrSSTATUS:   fn_sstatus_val (getXLBits,    // uxl
                                           x [19],       // mxr
                                           x [18],       // sum
                                           2'b0,         // xs
@@ -907,23 +907,23 @@ module mkCsrFile #(Data hartid)(CsrFile);
                                           x [4],        // prev_ie_vec[prvU]
                                           x [1],        // ie_vec[prvS]
                                           x [0]);       // ie_vec[prvU]
-            CSRsip:        ((sip_csr & (~ sip_sie_warl_mask)) | (x & sip_sie_warl_mask));
-            CSRsie:        (x & sip_sie_warl_mask);
-            CSRscounteren: { 61'b0, x[2:0]};
-            CSRscause:     { x[63], 59'b0, x[3:0] };
-            CSRsatp:       { x[63], 3'b0, asid,  x [43:0] };
+            csrAddrSIP:        ((sip_csr & (~ sip_sie_warl_mask)) | (x & sip_sie_warl_mask));
+            csrAddrSIE:        (x & sip_sie_warl_mask);
+            csrAddrSCOUNTEREN: { 61'b0, x[2:0]};
+            csrAddrSCAUSE:     { x[63], 59'b0, x[3:0] };
+            csrAddrSATP:       { x[63], 3'b0, asid,  x [43:0] };
 
             // User level CSRs
-            CSRfflags:     { 59'b0, x [4:0] };
-            CSRfrm:        { 61'b0, x [2:0] };
-            CSRfcsr:       { 56'b0, x [7:0] };
+            csrAddrFFLAGS:     { 59'b0, x [4:0] };
+            csrAddrFRM:        { 61'b0, x [2:0] };
+            csrAddrFCSR:       { 56'b0, x [7:0] };
 
 `ifdef INCLUDE_GDB_CONTROL
             // Debug Mode CSRs
-            CSRdcsr:       { 32'b0, x[31:28], 12'b0, x[14], 1'b0, x[13:6], 1'b0, x[4:0] };
+            csrAddrDCSR:       { 32'b0, x[31:28], 12'b0, x[14], 1'b0, x[13:6], 1'b0, x[4:0] };
 `endif
 
-            default:       x;
+            default:           x;
          endcase);
    endfunction
 
@@ -941,7 +941,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
     method Action csrInstWr(CSR csr, Data x);
         get_csr(csr)._write(x);
 `ifdef INCLUDE_GDB_CONTROL
-        if (csr == CSRdcsr) begin
+        if (csr == csrAddrDCSR) begin
            let prv = x [1:0];
            prv_reg <= prv;
         end
@@ -1033,19 +1033,19 @@ module mkCsrFile #(Data hartid)(CsrFile);
             tagged Exception .e: begin
                 cause_code = pack(e);
                 trap_val = (case(e)
-                    IllegalInst: zeroExtend (orig_inst);
-                    InstAddrMisaligned, Breakpoint: return getOffset(pcc); // TODO do we want getAddr?
+                    excIllegalInst: zeroExtend (orig_inst);
+                    excInstAddrMisaligned, excBreakpoint: return getOffset(pcc); // TODO do we want getAddr?
 
-                    InstAccessFault, InstPageFault,
-                    LoadAddrMisaligned, LoadAccessFault,
-                    StoreAddrMisaligned, StoreAccessFault,
-                    LoadPageFault, StorePageFault: return addr;
+                    excInstAccessFault, excInstPageFault,
+                    excLoadAddrMisaligned, excLoadAccessFault,
+                    excStoreAddrMisaligned, excStoreAccessFault,
+                    excLoadPageFault, excStorePageFault: return addr;
 
                     default: return 0;
                 endcase);
             end
             tagged CapException .ce: begin
-                cause_code = pack(CHERIFault);
+                cause_code = pack(excCHERIFault);
                 trap_val = zeroExtend({pack(ce.cheri_exc_reg), pack(ce.cheri_exc_code)});
             end
             tagged Interrupt .i: begin
@@ -1071,7 +1071,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
         // check if trap is delegated
         Bool deleg = prv_reg <= prvS && (case(t) matches
             tagged Exception .e: return medeleg_csr[pack(e)] == 1;
-            tagged CapException .ce: return medeleg_csr[pack(CHERIFault)] == 1;
+            tagged CapException .ce: return medeleg_csr[pack(excCHERIFault)] == 1;
             tagged Interrupt .i: return mideleg_csr[pack(i)] == 1;
         endcase);
         // handle the trap

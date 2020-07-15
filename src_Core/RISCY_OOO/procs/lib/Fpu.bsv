@@ -452,12 +452,12 @@ function FpuResult execFpuSimple(FpuInst fpu_inst, Data rVal1, Data rVal2);
 
     // Convert the Risc-V RVRoundMode to FloatingPoint::RoundMode
     FpuRoundMode fpu_rm = (case (fpu_inst.rm)
-            RNE:      Rnd_Nearest_Even;
-            RTZ:      Rnd_Zero;
-            RDN:      Rnd_Minus_Inf;
-            RUP:      Rnd_Plus_Inf;
-            RMM:      Rnd_Nearest_Away_Zero;
-            RDyn:     Rnd_Nearest_Even;
+            rmRNE:    Rnd_Nearest_Even;
+            rmRTZ:    Rnd_Zero;
+            rmRDN:    Rnd_Minus_Inf;
+            rmRUP:    Rnd_Plus_Inf;
+            rmRMM:    Rnd_Nearest_Away_Zero;
+            rmRDyn:   Rnd_Nearest_Even;
             default:  Rnd_Nearest_Even;
         endcase);
 
@@ -835,12 +835,12 @@ module mkFpuExecPipeline(FpuExec);
                        Maybe#(PhyDst) dst, InstTag tag, SpecBits spec_bits);
         // Convert the Risc-V RVRoundMode to FloatingPoint::RoundMode
         FpuRoundMode fpu_rm = (case (fpu_inst.rm)
-                RNE:        Rnd_Nearest_Even;
-                RTZ:        Rnd_Zero;
-                RDN:        Rnd_Minus_Inf;
-                RUP:        Rnd_Plus_Inf;
-                RMM:        Rnd_Nearest_Away_Zero;
-                RDyn:       Rnd_Nearest_Even;
+                rmRNE:      Rnd_Nearest_Even;
+                rmRTZ:      Rnd_Zero;
+                rmRDN:      Rnd_Minus_Inf;
+                rmRUP:      Rnd_Plus_Inf;
+                rmRMM:      Rnd_Nearest_Away_Zero;
+                rmRDyn:     Rnd_Nearest_Even;
                 default:    Rnd_Nearest_Even;
             endcase);
 

@@ -51,51 +51,51 @@ function Maybe#(CSR_XCapCause) capChecks(CapPipe a, CapPipe b, CapPipe ddc, CapC
     function Maybe#(CSR_XCapCause) eDDC(CHERIException e) = Valid(CSR_XCapCause{cheri_exc_reg: 6'b100001, cheri_exc_code: e}); // Not sure where the proper reg number of DDC is stored...
     Maybe#(CSR_XCapCause) result = Invalid;
     if (toCheck.ddc_tag                       && !isValidCap(ddc))
-        result = eDDC(TagViolation);
+        result = eDDC(cheriExcTagViolation);
     else if (toCheck.src1_tag                 && !isValidCap(a))
-        result = e1(TagViolation);
+        result = e1(cheriExcTagViolation);
     else if (toCheck.src2_tag                 && !isValidCap(b))
-        result = e2(TagViolation);
+        result = e2(cheriExcTagViolation);
     else if (toCheck.ddc_unsealed             && isValidCap(ddc) && (getKind(ddc) != UNSEALED))
-        result = eDDC(SealViolation);
+        result = eDDC(cheriExcSealViolation);
     else if (toCheck.src1_unsealed            && isValidCap(a) && (getKind(a) != UNSEALED))
-        result = e1(SealViolation);
+        result = e1(cheriExcSealViolation);
     else if (toCheck.src1_unsealed_or_sentry  && isValidCap(a) && (getKind(a) != UNSEALED) && (getKind(a) != SENTRY))
-        result = e1(SealViolation);
+        result = e1(cheriExcSealViolation);
     else if (toCheck.src2_unsealed            && isValidCap(b) && (getKind(b) != UNSEALED))
-        result = e2(SealViolation);
+        result = e2(cheriExcSealViolation);
     else if (toCheck.src1_sealed_with_type    && (getKind (a) matches tagged SEALED_WITH_TYPE .t ? False : True))
-        result = e1(SealViolation);
+        result = e1(cheriExcSealViolation);
     else if (toCheck.src2_sealed_with_type    && (getKind (b) matches tagged SEALED_WITH_TYPE .t ? False : True))
-        result = e2(SealViolation);
+        result = e2(cheriExcSealViolation);
     else if (toCheck.src1_type_not_reserved   && !validAsType(a, zeroExtend(getKind(a).SEALED_WITH_TYPE)))
-        result = e1(TypeViolation);
+        result = e1(cheriExcTypeViolation);
     else if (toCheck.src1_src2_types_match    && getKind(a).SEALED_WITH_TYPE != getKind(b).SEALED_WITH_TYPE)
-        result = e1(TypeViolation);
+        result = e1(cheriExcTypeViolation);
     else if (toCheck.src1_permit_ccall        && !getHardPerms(a).permitCCall)
-        result = e1(PermitCCallViolation);
+        result = e1(cheriExcPermitCCallViolation);
     else if (toCheck.src2_permit_ccall        && !getHardPerms(b).permitCCall)
-        result = e2(PermitCCallViolation);
+        result = e2(cheriExcPermitCCallViolation);
     else if (toCheck.src1_permit_x            && !getHardPerms(a).permitExecute)
-        result = e1(PermitXViolation);
+        result = e1(cheriExcPermitXViolation);
     else if (toCheck.src2_no_permit_x         && getHardPerms(b).permitExecute)
-        result = e2(PermitXViolation);
+        result = e2(cheriExcPermitXViolation);
     else if (toCheck.src2_permit_unseal       && !getHardPerms(b).permitUnseal)
-        result = e2(PermitUnsealViolation);
+        result = e2(cheriExcPermitUnsealViolation);
     else if (toCheck.src2_permit_seal         && !getHardPerms(b).permitSeal)
-        result = e2(PermitSealViolation);
+        result = e2(cheriExcPermitSealViolation);
     else if (toCheck.src2_points_to_src1_type && getAddr(b) != zeroExtend(getKind(a).SEALED_WITH_TYPE))
-        result = e2(TypeViolation);
+        result = e2(cheriExcTypeViolation);
     else if (toCheck.src2_addr_valid_type     && !validAsType(b, truncate(getAddr(b))))
-        result = e2(LengthViolation);
+        result = e2(cheriExcLengthViolation);
     else if (toCheck.src1_perm_subset_src2    && (getPerms(a) & getPerms(b)) != getPerms(a))
-        result = e2(SoftwarePermViolation);
+        result = e2(cheriExcSoftwarePermViolation);
     else if (toCheck.src1_derivable           && !isDerivable(a))
-        result = e1(LengthViolation);
+        result = e1(cheriExcLengthViolation);
     else if (toCheck.scr_read_only            && (toCheck.rn1 != 0))
-        result = Valid(CSR_XCapCause{cheri_exc_reg: {1,pack(SCR_PCC)}, cheri_exc_code: PermitASRViolation});
+        result = Valid(CSR_XCapCause{cheri_exc_reg: {1,pack(scrAddrPCC)}, cheri_exc_code: cheriExcPermitASRViolation});
     else if (toCheck.cap_exact                && !cap_exact)
-        result = e1(RepresentViolation);
+        result = e1(cheriExcRepresentViolation);
     return result;
 endfunction
 
@@ -116,11 +116,11 @@ function Maybe#(BoundsCheck) prepareBoundsCheck(CapPipe a, CapPipe b, CapPipe pc
         end
         Pcc: begin
             authority = pcc;
-            ret.authority_idx = {1'b1, pack(SCR_PCC)};
+            ret.authority_idx = {1'b1, pack(scrAddrPCC)};
         end
         Ddc: begin
             authority = ddc;
-            ret.authority_idx = {1'b1, pack(SCR_DDC)};
+            ret.authority_idx = {1'b1, pack(scrAddrDDC)};
         end
     endcase
     ret.authority_base = getBase(authority);
@@ -435,48 +435,48 @@ function Maybe#(Trap) checkForException(
 
     if(dInst.iType == Ecall) begin
         exception = Valid (Exception (case(prv)
-            prvU: EnvCallU;
-            prvS: EnvCallS;
-            prvM: EnvCallM;
-            default: IllegalInst;
+            prvU: excEnvCallU;
+            prvS: excEnvCallS;
+            prvM: excEnvCallM;
+            default: excIllegalInst;
         endcase));
     end
     else if(dInst.iType == Ebreak) begin
-        exception = Valid (Exception (Breakpoint));
+        exception = Valid (Exception (excBreakpoint));
     end
     else if(dInst.iType == Mret) begin
         if(prv < prvM) begin
-            exception = Valid (Exception (IllegalInst));
+            exception = Valid (Exception (excIllegalInst));
         end
         else if (!getHardPerms(pcc).accessSysRegs) begin
-            exception = Valid (CapException (CSR_XCapCause {cheri_exc_reg: {1'b1, pack(SCR_PCC)}, cheri_exc_code: PermitASRViolation}));
+            exception = Valid (CapException (CSR_XCapCause {cheri_exc_reg: {1'b1, pack(scrAddrPCC)}, cheri_exc_code: cheriExcPermitASRViolation}));
         end
     end
     else if(dInst.iType == Sret) begin
         if(prv < prvS) begin
-            exception = Valid (Exception (IllegalInst));
+            exception = Valid (Exception (excIllegalInst));
         end
         else if(prv == prvS && csrState.trapSret) begin
-            exception = Valid (Exception (IllegalInst));
+            exception = Valid (Exception (excIllegalInst));
         end
         else if (!getHardPerms(pcc).accessSysRegs) begin
-            exception = Valid (CapException (CSR_XCapCause {cheri_exc_reg: {1'b1, pack(SCR_PCC)}, cheri_exc_code: PermitASRViolation}));
+            exception = Valid (CapException (CSR_XCapCause {cheri_exc_reg: {1'b1, pack(scrAddrPCC)}, cheri_exc_code: cheriExcPermitASRViolation}));
         end
     end
     else if(dInst.iType == SFence) begin
         if(prv == prvS && csrState.trapVM) begin
-            exception = Valid (Exception (IllegalInst));
+            exception = Valid (Exception (excIllegalInst));
         end
     end
     else if(dInst.iType == Csr) begin
-        let csr = pack(fromMaybe(CSRnone, dInst.csr));
+        let csr = pack(fromMaybe(csrAddrNone, dInst.csr));
         Bool csr_has_priv = (prv >= csr[9:8]);
         if(!csr_has_priv) begin
-            exception = Valid (Exception (IllegalInst));
+            exception = Valid (Exception (excIllegalInst));
         end
         else if(prv == prvS && csrState.trapVM &&
-                validValue(dInst.csr) == CSRsatp) begin
-            exception = Valid (Exception (IllegalInst));
+                validValue(dInst.csr) == csrAddrSATP) begin
+            exception = Valid (Exception (excIllegalInst));
         end
         let rs1 = case (regs.src2) matches
                      tagged Valid (tagged Gpr .r) : r;
@@ -491,41 +491,41 @@ function Maybe#(Trap) checkForException(
         Bool write_deny = (writes_csr && read_only);
         Bool asr_deny = !getHardPerms(pcc).accessSysRegs && !(
                         //((csr_addr_hpmcounter3 <= csr) && (csr <= csr_addr_hpmcounter31) && writes_csr) // TODO seems these aren't implemented?
-                        (csr == pack(CSRfflags))
-                     || (csr == pack(CSRfrm))
-                     || (csr == pack(CSRfcsr))
-                     || (csr == pack(CSRcycle) && writes_csr)
-                     || (csr == pack(CSRinstret) && writes_csr));
-        Bool unimplemented = (csr == pack(CSRnone));    // Added by Bluespec
+                        (csr == pack(csrAddrFFLAGS))
+                     || (csr == pack(csrAddrFRM))
+                     || (csr == pack(csrAddrFCSR))
+                     || (csr == pack(csrAddrCYCLE) && writes_csr)
+                     || (csr == pack(csrAddrINSTRET) && writes_csr));
+        Bool unimplemented = (csr == pack(csrAddrNone));    // Added by Bluespec
         if (write_deny || !csr_has_priv || unimplemented) begin
-            exception = Valid (Exception (IllegalInst));
+            exception = Valid (Exception (excIllegalInst));
         end else if (asr_deny) begin
-            exception = Valid (CapException (CSR_XCapCause {cheri_exc_reg: {1'b1, pack(SCR_PCC)}, cheri_exc_code: PermitASRViolation}));
+            exception = Valid (CapException (CSR_XCapCause {cheri_exc_reg: {1'b1, pack(scrAddrPCC)}, cheri_exc_code: cheriExcPermitASRViolation}));
         end
     end
     else if(dInst.scr matches tagged Valid .scr) begin
         Bool scr_has_priv = (prv >= pack(scr)[4:3]);
-        Bool unimplemented = (scr == SCR_None);
+        Bool unimplemented = (scr == scrAddrNone);
         Bool asr_deny = !getHardPerms(pcc).accessSysRegs && !(
-          scr == SCR_DDC);
+          scr == scrAddrDDC);
         if(!scr_has_priv || unimplemented) begin // Writes to PCC checked in capChecks
-            exception = Valid (Exception (IllegalInst));
+            exception = Valid (Exception (excIllegalInst));
         end else if (asr_deny) begin
-            exception = Valid (CapException (CSR_XCapCause {cheri_exc_reg: {1'b1, pack(SCR_PCC)}, cheri_exc_code: PermitASRViolation}));
+            exception = Valid (CapException (CSR_XCapCause {cheri_exc_reg: {1'b1, pack(scrAddrPCC)}, cheri_exc_code: cheriExcPermitASRViolation}));
         end
     end
     else if(dInst.iType == Fpu) begin
         if(dInst.execFunc matches tagged Fpu .fpu_f) begin
             // Get rounding mode
-            let rm = (fpu_f.rm == RDyn) ? unpack(csrState.frm) : fpu_f.rm;
+            let rm = (fpu_f.rm == rmRDyn) ? unpack(csrState.frm) : fpu_f.rm;
             case(rm)
-                RNE, RTZ, RDN, RUP, RMM: exception = exception; // legal modes
-                default                : exception = Valid ( Exception (IllegalInst));
+                rmRNE, rmRTZ, rmRDN, rmRUP, rmRMM: exception = exception; // legal modes
+                default                          : exception = Valid (Exception (excIllegalInst));
             endcase
         end
         else begin
             // Fpu instruction without FPU execFunc
-            exception = Valid (Exception (IllegalInst));
+            exception = Valid (Exception (excIllegalInst));
         end
     end
 
@@ -533,11 +533,11 @@ function Maybe#(Trap) checkForException(
     CapPipe pcc_end = cast(addPc(pcc, (fourByteInst?4:2)));
     CapPipe pcc_start = cast(pcc);
     Maybe#(CSR_XCapCause) capException = Invalid;
-    if (!isValidCap(pcc_start)) capException = Valid(CSR_XCapCause{cheri_exc_reg: {1'b1,pack(SCR_PCC)}, cheri_exc_code: TagViolation});
-    if (getKind(pcc_start) != UNSEALED) capException = Valid(CSR_XCapCause{cheri_exc_reg: {1'b1,pack(SCR_PCC)}, cheri_exc_code: SealViolation});
-    if (!getHardPerms(pcc_start).permitExecute) capException = Valid(CSR_XCapCause{cheri_exc_reg: {1'b1,pack(SCR_PCC)}, cheri_exc_code: PermitXViolation});
-    if (!isInBounds(pcc_end, True)) capException = Valid(CSR_XCapCause{cheri_exc_reg: {1'b1,pack(SCR_PCC)}, cheri_exc_code: LengthViolation});
-    if (!isInBounds(pcc_start, True)) capException = Valid(CSR_XCapCause{cheri_exc_reg: {1'b1,pack(SCR_PCC)}, cheri_exc_code: LengthViolation});
+    if (!isValidCap(pcc_start)) capException = Valid(CSR_XCapCause{cheri_exc_reg: {1'b1,pack(scrAddrPCC)}, cheri_exc_code: cheriExcTagViolation});
+    if (getKind(pcc_start) != UNSEALED) capException = Valid(CSR_XCapCause{cheri_exc_reg: {1'b1,pack(scrAddrPCC)}, cheri_exc_code: cheriExcSealViolation});
+    if (!getHardPerms(pcc_start).permitExecute) capException = Valid(CSR_XCapCause{cheri_exc_reg: {1'b1,pack(scrAddrPCC)}, cheri_exc_code: cheriExcPermitXViolation});
+    if (!isInBounds(pcc_end, True)) capException = Valid(CSR_XCapCause{cheri_exc_reg: {1'b1,pack(scrAddrPCC)}, cheri_exc_code: cheriExcLengthViolation});
+    if (!isInBounds(pcc_start, True)) capException = Valid(CSR_XCapCause{cheri_exc_reg: {1'b1,pack(scrAddrPCC)}, cheri_exc_code: cheriExcLengthViolation});
 
     Maybe#(Trap) retval = Invalid;
     if (capException matches tagged Valid .ce) retval = Valid(CapException(ce));

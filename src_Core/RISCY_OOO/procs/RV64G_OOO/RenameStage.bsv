@@ -184,8 +184,8 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
 `endif
 
 `ifdef INCLUDE_GDB_CONTROL
-   // Is set to Valid DebugHalt on debugger halt request
-   // Is set to Valid DebugStep on dcsr[stepbit]==1 and one instruction has been processed.
+   // Is set to Valid intrDebugHalt on debugger halt request
+   // Is set to Valid intrDebugStep on dcsr[stepbit]==1 and one instruction has been processed.
    //     Note (step): 1st instruction is guaranteed architectural, cannot possibly be speculative.
    //     Note (step): 1st instruction may trap; we halt pointing at the trap vector
    Reg #(Maybe #(Interrupt)) rg_m_halt_req <- mkReg (tagged Invalid);
@@ -193,9 +193,9 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
    function Action fa_step_check;
       action
          if (csrf.dcsr_step_bit == 1'b1) begin
-            rg_m_halt_req <= tagged Valid DebugStep;
+            rg_m_halt_req <= tagged Valid intrDebugStep;
             if (verbosity >= 2)
-               $display ("%0d: %m.renameStage.fa_step_check: rg_m_halt_req <= tagged Valid DebugStep", cur_cycle);
+               $display ("%0d: %m.renameStage.fa_step_check: rg_m_halt_req <= tagged Valid intrDebugStep", cur_cycle);
          end
       endaction
    endfunction
@@ -250,10 +250,10 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                            || fn_ArchReg_is_FpuReg (x.regs.src2)
                            || isValid (x.regs.src3)
                            || fn_ArchReg_is_FpuReg (x.regs.dst));
-        let mstatus   = csrf.rd (CSRmstatus);
+        let mstatus   = csrf.rd (csrAddrMSTATUS);
 
         // Check CSR access permission
-        if (x.dInst.csr matches tagged Valid CSRfcsr &&& x.dInst.iType == Csr) begin
+        if (x.dInst.csr == tagged Valid csrAddrFCSR && x.dInst.iType == Csr) begin
              fpr_access = True;
         end
 
@@ -284,7 +284,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
             trap = new_exception;
         end
         else if (fs_trap || wfi_trap) begin
-            trap = tagged Valid (tagged Exception IllegalInst);
+            trap = tagged Valid (tagged Exception excIllegalInst);
         end
         return trap;
     endfunction
@@ -319,12 +319,12 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         fa_step_check;
 
        if (verbosity >= 1) begin
-          if (firstTrap == tagged Valid (tagged Interrupt DebugHalt))
-             $display ("%0d: %m.renameStage.doRenaming_Trap: DebugHalt", cur_cycle);
-          else if (firstTrap == tagged Valid (tagged Interrupt DebugStep))
-             $display ("%0d: %m.renameStage.doRenaming_Trap: DebugStep", cur_cycle);
-          else if (firstTrap == tagged Valid (tagged Exception Breakpoint))
-             $display ("%0d: %m.renameStage.doRenaming_Trap: Breakpoint", cur_cycle);
+          if (firstTrap == tagged Valid (tagged Interrupt intrDebugHalt))
+             $display ("%0d: %m.renameStage.doRenaming_Trap: intrDebugHalt", cur_cycle);
+          else if (firstTrap == tagged Valid (tagged Interrupt intrDebugStep))
+             $display ("%0d: %m.renameStage.doRenaming_Trap: intrDebugStep", cur_cycle);
+          else if (firstTrap == tagged Valid (tagged Exception excBreakpoint))
+             $display ("%0d: %m.renameStage.doRenaming_Trap: excBreakpoint", cur_cycle);
        end
 `endif
         let x = fetchStage.pipelines[0].first;
@@ -382,7 +382,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
             inIfc.issueCsrInstOrInterrupt;
         end
 `ifdef INCLUDE_GDB_CONTROL
-        else if (firstTrap == tagged Valid (tagged Exception Breakpoint)) begin
+        else if (firstTrap == tagged Valid (tagged Exception excBreakpoint)) begin
             inIfc.issueCsrInstOrInterrupt;
         end
 `endif
@@ -537,7 +537,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         // CSR instrs that touch certain FP CSRs will dirty FP state.
         if (dInst.csr matches tagged Valid .csr
             &&& ((dInst.iType == Csr)
-                 && ((csr == CSRfflags) || (csr == CSRfrm) || (csr == CSRfcsr))))
+                 && ((csr == csrAddrFFLAGS) || (csr == csrAddrFRM) || (csr == csrAddrFCSR))))
            begin
               Bool is_CSRR_W = (dInst.execFunc == tagged Alu Csrw);
               Bool rs1_is_0 = ((arch_regs.src2 == tagged Valid (tagged Gpr 0))
@@ -593,8 +593,8 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
     // M mode: turn off speculation for mem inst only
     // non-M mode: controlled by mspec CSR
     Bool machineMode = csrf.decodeInfo.prv == prvM;
-    Bool specNone = !machineMode && csrf.rd(CSRmspec) == zeroExtend(mSpecNone);
-    Bool specNonMem = machineMode || csrf.rd(CSRmspec) == zeroExtend(mSpecNonMem);
+    Bool specNone = !machineMode && csrf.rd(csrAddrMSPEC) == zeroExtend(mSpecNone);
+    Bool specNonMem = machineMode || csrf.rd(csrAddrMSPEC) == zeroExtend(mSpecNonMem);
 
 `ifdef PERF_COUNT
     rule incSpecNoneCycles(inIfc.doStats && specNone);
@@ -1142,7 +1142,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
 
 `ifdef INCLUDE_GDB_CONTROL
         if (debug_step)
-           rg_m_halt_req <= tagged Valid DebugStep;
+           rg_m_halt_req <= tagged Valid intrDebugStep;
 `endif
 
         // only fire this rule if we make some progress
@@ -1188,7 +1188,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
 
 `ifdef INCLUDE_GDB_CONTROL
    method Action debug_halt_req () if (rg_m_halt_req == tagged Invalid);
-      rg_m_halt_req <= tagged Valid DebugHalt;
+      rg_m_halt_req <= tagged Valid intrDebugHalt;
       if (verbosity >= 1)
          $display ("%0d: %m.renameStage.renameStage.debug_halt_req", cur_cycle);
    endmethod

@@ -644,7 +644,7 @@ module mkFetchStage(FetchStage);
                 end
                 default: begin
                     // Access fault
-                    cause = Valid (InstAccessFault);
+                    cause = Valid (excInstAccessFault);
 `ifdef DEBUG_WEDGE
                     lastImemReq <= 'hafafafafafafafaf;
 `endif
@@ -925,7 +925,7 @@ module mkFetchStage(FetchStage);
 
                   // update cause if decode exception and no earlier (TLB) exception
                   if (!isValid(cause)) begin
-                     cause = decode_result.illegalInst ? tagged Valid IllegalInst : tagged Invalid;
+                     cause = decode_result.illegalInst ? tagged Valid excIllegalInst : tagged Invalid;
                   end
 
                   let dInst = decode_result.dInst;
