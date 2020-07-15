@@ -166,6 +166,7 @@ typedef struct {
     CapMem pred_next_pc;
     Bool mispred_first_half;
     Maybe#(Exception) cause;
+    Addr tval;                 // in case of exception
     Bool decode_epoch;
     Epoch main_epoch;
 } Fetch3ToDecode deriving(Bits, Eq, FShow);
@@ -190,6 +191,7 @@ typedef struct {
   Bit #(32) orig_inst;    // original 16b or 32b instruction ([1:0] will distinguish 16b or 32b)
   ArchRegs regs;
   Maybe#(Exception) cause;
+  Addr              tval;    // in case of exception
 `ifdef RVFI_DII
   Dii_Id diid;
 `endif
@@ -793,6 +795,7 @@ module mkFetchStage(FetchStage);
                     pred_next_pc: pred_next_pc,
                     mispred_first_half: mispred_first_half,
                     cause: fetch3In.cause,
+                    tval: getAddr(fetch3In.pc),
                     decode_epoch: fetch3In.decode_epoch,
                     main_epoch: fetch3In.main_epoch
                 };
@@ -841,6 +844,7 @@ module mkFetchStage(FetchStage);
                         pred_next_pc: out.pred_next_pc,
                         mispred_first_half: False,
                         cause: tagged Invalid,
+                        tval: 0,
                         decode_epoch: out.decode_epoch,
                         main_epoch: out.main_epoch
                     };
@@ -913,6 +917,7 @@ module mkFetchStage(FetchStage);
                   cause: decodeIn.cause
                   };
                let cause = in.cause;
+               Addr tval = decodeIn.tval;
                if (verbose)
                   $display("Decode: %0d in = ", i, fshow (in));
 
@@ -1026,7 +1031,8 @@ module mkFetchStage(FetchStage);
                                            dInst: dInst,
                                            orig_inst: inst_data[i].orig_inst,
                                            regs: decode_result.regs,
-                                           cause: cause
+                                           cause: cause,
+                                           tval: tval
 `ifdef RVFI_DII
                                            , diid: fromMaybe(?,ids[i])
 `endif

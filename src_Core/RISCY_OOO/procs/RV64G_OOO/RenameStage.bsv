@@ -337,6 +337,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         let dInst = x.dInst;
         let arch_regs = x.regs;
         let cause = x.cause;
+        let tval = x.tval;
 
         if(verbose) $display("[doRenaming] trap: ", fshow(x));
 
@@ -360,7 +361,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                 claimed_phy_reg: False, // no renaming is done
                                 trap: firstTrap,
                                 // default values of FullResult
-                                ppc_vaddr_csrData: PPC (cast(pc)), // default use PPC
+                                ppc_vaddr_csrData: VAddr (tval),
                                 fflags: 0,
                                 ////////
                                 will_dirty_fpu_state: False,

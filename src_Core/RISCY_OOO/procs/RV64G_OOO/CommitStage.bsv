@@ -647,11 +647,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
         // record trap info
         Addr vaddr = 0;
-        if (   (trap == tagged Exception excInstAccessFault)
-            || (trap == tagged Exception excInstPageFault)) begin
-            vaddr = getAddr(x.pc);
-        end
-        else if(x.ppc_vaddr_csrData matches tagged VAddr .va) begin
+        if(x.ppc_vaddr_csrData matches tagged VAddr .va) begin
             vaddr = va;
         end
         let commitTrap_val = Valid (CommitTrap {
