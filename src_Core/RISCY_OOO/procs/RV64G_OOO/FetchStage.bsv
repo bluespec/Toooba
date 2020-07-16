@@ -917,7 +917,6 @@ module mkFetchStage(FetchStage);
                   cause: decodeIn.cause
                   };
                let cause = in.cause;
-               Addr tval = decodeIn.tval;
                if (verbose)
                   $display("Decode: %0d in = ", i, fshow (in));
 
@@ -1032,7 +1031,7 @@ module mkFetchStage(FetchStage);
                                            orig_inst: inst_data[i].orig_inst,
                                            regs: decode_result.regs,
                                            cause: cause,
-                                           tval: tval
+                                           tval: decodeIn.tval
 `ifdef RVFI_DII
                                            , diid: fromMaybe(?,ids[i])
 `endif
