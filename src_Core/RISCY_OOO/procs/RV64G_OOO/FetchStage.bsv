@@ -579,6 +579,9 @@ module mkFetchStage(FetchStage);
        */
 
         match { .posLastSupX2, .pred_next_pc } <- fav_pred_next_pc (pc);
+        `ifdef RVFI_DII
+            posLastSupX2 = 3;
+        `endif
         let next_fetch_pc = fromMaybe(addPc(pc, 2 * (fromInteger(posLastSupX2) + 1)), pred_next_pc);
         pc_reg[pc_fetch1_port] <= next_fetch_pc;
 
