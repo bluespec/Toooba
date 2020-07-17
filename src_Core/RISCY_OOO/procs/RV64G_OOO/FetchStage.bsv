@@ -386,11 +386,12 @@ function ActionValue #(Tuple4 #(SupCntX2,
          Bit #(32) inst = { v_x16 [(2*i)+1], v_x16 [2*i] };
          Bool compressed = is_16b_inst (v_x16 [2*i]);
          v_items[i].inst_kind = compressed ? Inst_16b:Inst_32b;
-         increment = increment + (compressed ? 2:4);
+         increment = (compressed ? 2:4);
          v_items[i].orig_inst = inst;
          v_items[i].inst = (compressed) ? fv_decode_C (misa, misa_mxl_64, v_x16 [2*i]):inst;
+         v_items[i].pc = setAddrUnsafe(pc_start, pc);
+         pc = pc + increment;
       end
-      pc = getAddr(pc_start) + increment;
       n_items = 2;
 `endif
 
