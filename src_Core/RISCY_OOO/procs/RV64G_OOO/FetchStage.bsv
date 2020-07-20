@@ -316,9 +316,6 @@ function ActionValue #(Tuple4 #(SupCntX2,
       MStraddle next_straddle = tagged Invalid;
       // Start parse at parcel 0/1 depending on pc lsbs.
       SupCntX2 j  = (getAddr(pc_start) [1:0] == 2'b00 ? 0 : 1);
-`ifdef RVFI_DII
-      j  = 0;
-`endif
       Addr     pc = getAddr(pc_start);
       Integer n_items = 0;
 `ifndef RVFI_DII
@@ -451,6 +448,9 @@ module mkFetchStage(FetchStage);
    Reg #(Vector #(SupSizeX2S1, Inst_Item)) rg_pending_decode <- mkReg(replicate(defaultValue));
    Reg #(SupCntX2S1) rg_pending_n_items <- mkReg(0);
    Reg #(Fetch3ToDecode) rg_pending_f32d <- mkRegU;
+`ifdef RVFI_DII
+   Reg #(Maybe#(Tuple2#(Epoch,CapMem))) rg_f3_next_consecutive_pc <- mkReg(Invalid);
+`endif
 
     // Pipeline Stage FIFOs
     Fifo#(2, Tuple2#(Bit#(TLog#(SupSizeX2)),Fetch1ToFetch2)) f12f2 <- mkCFFifo;
@@ -535,6 +535,9 @@ module mkFetchStage(FetchStage);
             if (! done) begin
                Bool isLastX2 = (i == (valueOf (SupSizeX2) - 1)) || ((getAddr(pc)[1:0] != 2'b00) && (i == (valueOf (SupSizeX2) - 2)));
                Bool lastInstInCacheLine = (getLineInstOffset (getAddr(prev_PC)) == maxBound) && (getAddr(prev_PC)[1:0] != 2'b00);
+`ifdef RVFI_DII
+                lastInstInCacheLine = False;
+`endif
                Bool isJump   = isValid(pred_next_pc);
                done = isLastX2 || lastInstInCacheLine || isJump;
                posLastSupX2 = i;
@@ -579,9 +582,7 @@ module mkFetchStage(FetchStage);
        */
 
         match { .posLastSupX2, .pred_next_pc } <- fav_pred_next_pc (pc);
-        `ifdef RVFI_DII
-            posLastSupX2 = 3;
-        `endif
+
         let next_fetch_pc = fromMaybe(addPc(pc, 2 * (fromInteger(posLastSupX2) + 1)), pred_next_pc);
         pc_reg[pc_fetch1_port] <= next_fetch_pc;
 
@@ -610,9 +611,7 @@ module mkFetchStage(FetchStage);
             decode_epoch: decode_epoch[0],
             main_epoch: f_main_epoch};
         let nbSupX2 = fromInteger(posLastSupX2) + (getAddr(pc)[1:0] == 2'b00 ? 0 : 1);
-`ifdef RVFI_DII
-        nbSupX2 = 3;
-`endif
+
         f12f2.enq(tuple2(nbSupX2,out));
         if (verbose) $display("Fetch1: ", fshow(out), " posLastSupX2: %d", posLastSupX2, " nbSupX2: %d", nbSupX2);
     endrule
@@ -713,8 +712,9 @@ module mkFetchStage(FetchStage);
         end
 
         SupCntX2 parsed_n_items = 0;
-        Inst_Item inst_item_none = Inst_Item {pc: fetch3In.pc, inst_kind: Inst_None, orig_inst: 0, inst: 0};
-        Vector #(SupSizeX2, Inst_Item) parsed_v_items = replicate (inst_item_none);
+        CapMem pc = fetch3In.pc;
+        Inst_Item inst_item_none = ?;
+        Vector #(SupSizeX2, Inst_Item) parsed_v_items = ?;
 
         let mispred_first_half = pending_straddle matches tagged Valid {.s_pc, .s_lsbs, .s_mispred} &&& s_mispred ? True : False;
         let can_merge =    pending_n_items > 0
@@ -742,11 +742,11 @@ module mkFetchStage(FetchStage);
             f22f3.deq();
             if (!isValid(fetch3In.cause)) begin
                 if(fetch3In.access_mmio) begin
-                    if(verbose) $display("get answer from MMIO 0x%0x", getAddr(fetch3In.pc));
+                    if(verbose) $display("get answer from MMIO 0x%0x", getAddr(pc));
                     inst_d <- mmio.bootRomResp;
                 end
                 else begin
-                    if(verbose) $display("get answer from memory 0x%0x", getAddr(fetch3In.pc));
+                    if(verbose) $display("get answer from memory 0x%0x", getAddr(pc));
                     inst_d <- mem_server.response.get;
                 end
             end
@@ -757,7 +757,8 @@ module mkFetchStage(FetchStage);
         InstsAndIDs ii <- toGet(dii_insts).get();
         inst_d = ii.insts;
         if (verbosity > 0) $display("Got from DII: ", fshow (ii));
-        if(verbose) $display("PC is %x", fetch3In.pc);
+        if(verbose) $display("PC is %x", pc);
+        Maybe#(Tuple2#(Epoch, CapMem)) next_consecutive_pc = Invalid;
 `endif
         if (verbosity >= 2) begin
             $display ("----------------");
@@ -777,6 +778,12 @@ module mkFetchStage(FetchStage);
             end
         end
         else if (parse_f22f3) begin
+`ifdef RVFI_DII
+            if (rg_f3_next_consecutive_pc matches tagged Valid .epoch_pc &&& tpl_1(epoch_pc) == fetch3In.main_epoch)
+                pc = tpl_2(epoch_pc);
+`endif
+            inst_item_none = Inst_Item {pc: pc, inst_kind: Inst_None, orig_inst: 0, inst: 0};
+            parsed_v_items = replicate (inst_item_none);
             // Re-interpret fetched 32b parcels (inst_d) as 16b parcels
             let { n_x16s, v_x16 } <- fav_inst_d_to_x16s (inst_d);
             // Cap n_x16s, as otherwise we misattribute the bundle's PC
@@ -792,21 +799,22 @@ module mkFetchStage(FetchStage);
             // Parse v_x16 into 32-bit and 16-bit instructions
             CapMem pred_next_pc;
             {parsed_n_items, parsed_v_items, pred_next_pc, pending_straddle} <-
-                fav_parse_insts (verbose, fetch3In.pc, fetch3In.pred_next_pc, pending_straddle, n_x16s, v_x16);
+                fav_parse_insts (verbose, pc, fetch3In.pred_next_pc, pending_straddle, n_x16s, v_x16);
 
             if (pending_n_items == 0) begin
                 out = Fetch3ToDecode {
-                    pred_next_pc: pred_next_pc,
+                    pred_next_pc: out.pred_next_pc,
                     mispred_first_half: mispred_first_half,
                     cause: fetch3In.cause,
-                    tval: getAddr(fetch3In.pc),
+                    tval: getAddr(pc),
                     decode_epoch: fetch3In.decode_epoch,
                     main_epoch: fetch3In.main_epoch
                 };
             end
-            else begin
-                out.pred_next_pc = pred_next_pc;
-            end
+            out.pred_next_pc = pred_next_pc;
+`ifdef RVFI_DII
+            next_consecutive_pc = isValid(fetch3In.pred_next_pc) ? Invalid : Valid(tuple2(fetch3In.main_epoch, out.pred_next_pc));
+`endif
 
             // Redirect doFetch1 if we predicted a taken compressed branch
             // but this is an uncompressed instruction. We will tell decode
@@ -880,6 +888,9 @@ module mkFetchStage(FetchStage);
         end
         rg_pending_n_items <= next_pending_n_items;
         ehr_pending_straddle[0] <= pending_straddle;
+`ifdef RVFI_DII
+        rg_f3_next_consecutive_pc <= next_consecutive_pc;
+`endif
     endrule: doFetch3
 
    rule doDecode;
