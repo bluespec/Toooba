@@ -108,6 +108,7 @@ typedef struct {
     ByteEn  store_data_BE;
 `endif
     Bool misaligned;
+    Bool capStore;
     Maybe#(CSR_XCapCause) capException;
     Maybe#(BoundsCheck) check;
 } MemExeToFinish deriving(Bits, FShow);
@@ -158,7 +159,8 @@ module mkDTlbSynth(DTlbSynth);
             write: (case(x.mem_func)
                         St, Sc, Amo: True;
                         default: False;
-                    endcase)
+                    endcase),
+            cap: x.capStore
         };
     endfunction
     let m <- mkDTlb(getTlbReq);
@@ -522,6 +524,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
                 store_data_BE: origBE,
 `endif
                 misaligned: memAddrMisaligned(getAddr(vaddr), origBE),
+                capStore: isValidCap(data) && pack(origBE) == ~0,
                 capException: capChecksMem(x.rVal1, x.rVal2, x.cap_checks, x.mem_func, origBE),
                 check: prepareBoundsCheck(x.rVal1, x.rVal2, almightyCap/*ToDo: pcc*/,
                                           ddc, getAddr(vaddr), pack(countOnes(pack(origBE))), x.cap_checks)

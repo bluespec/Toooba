@@ -271,11 +271,14 @@ module mkDTlb#(
         end
         else if(pRs.entry matches tagged Valid .en) begin
             // check permission
-            if(hasVMPermission(vm_info,
-                               en.pteType,
-                               en.ppn,
-                               en.level,
-                               r.write ? DataStore : DataLoad)) begin
+            let permCheck = hasVMPermission(vm_info,
+                                            en.pteType,
+                                            en.pteUpperType,
+                                            en.ppn,
+                                            en.level,
+                                            r.write ? DataStore : DataLoad,
+                                            r.cap);
+            if (permCheck.allowed) begin
                 // fill TLB, and record resp
                 tlb.addEntry(en);
                 let trans_addr = translate(r.addr, en.ppn, en.level);
@@ -287,7 +290,7 @@ module mkDTlb#(
             end
             else begin
                 // page fault
-                Exception fault = r.write ? StorePageFault : LoadPageFault;
+                Exception fault = permCheck.excCode;
                 pendResp[idx] <= tuple2(?, Valid (fault));
                 if(verbose) begin
                     $display("[DTLB] refill no permission: idx %d; ", idx, fshow(r));
@@ -448,11 +451,14 @@ module mkDTlb#(
                 // TLB hit
                 let entry = trans_result.entry;
                 // check permission
-                if (hasVMPermission(vm_info,
-                                    entry.pteType,
-                                    entry.ppn,
-                                    entry.level,
-                                    r.write ? DataStore : DataLoad)) begin
+                let permCheck = hasVMPermission(vm_info,
+                                                entry.pteType,
+                                                entry.pteUpperType,
+                                                entry.ppn,
+                                                entry.level,
+                                                r.write ? DataStore : DataLoad,
+                                                r.cap);
+                if (permCheck.allowed) begin
                     // update TLB replacement info
                     tlb.updateRepByHit(trans_result.index);
                     // translate addr
@@ -472,7 +478,7 @@ module mkDTlb#(
                 end
                 else begin
                     // page fault
-                    Exception fault = r.write ? StorePageFault : LoadPageFault;
+                    Exception fault = permCheck.excCode;
                     pendWait[idx] <= None;
                     pendResp[idx] <= tuple2(?, Valid (fault));
                     if(verbose) $display("[DTLB] req no permission: idx %d; ", idx, fshow(r));

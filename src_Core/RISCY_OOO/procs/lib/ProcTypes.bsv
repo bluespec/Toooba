@@ -393,6 +393,8 @@ typedef enum {
     InstPageFault       = 5'd12,
     LoadPageFault       = 5'd13,
     StorePageFault      = 5'd15,
+    LoadCapPageFault    = 5'd26,
+    StoreCapPageFault   = 5'd27,
     CHERIFault          = 5'd28
 } Exception deriving(Bits, Eq, FShow);
 

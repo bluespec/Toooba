@@ -176,9 +176,11 @@ module mkITlb(ITlb::ITlb);
             // check permission
             if(hasVMPermission(vm_info,
                                en.pteType,
+                               en.pteUpperType,
                                en.ppn,
                                en.level,
-                               InstFetch)) begin
+                               InstFetch,
+                               False).allowed) begin
                 // fill TLB and resp to proc
                 tlb.addEntry(en);
                 let trans_addr = translate(vaddr, en.ppn, en.level);
@@ -285,9 +287,11 @@ module mkITlb(ITlb::ITlb);
                         // check permission
                         if(hasVMPermission(vm_info,
                                            entry.pteType,
+                                           entry.pteUpperType,
                                            entry.ppn,
                                            entry.level,
-                                           InstFetch)) begin
+                                           InstFetch,
+                                           False).allowed) begin
                             // update replacement info
                             tlb.updateRepByHit(trans_result.index);
                             // translate addr

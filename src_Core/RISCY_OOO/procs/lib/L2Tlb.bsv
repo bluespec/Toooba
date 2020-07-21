@@ -653,6 +653,7 @@ module mkL2Tlb(L2Tlb::L2Tlb);
                     vpn:     masked_vpn,
                     ppn:     masked_ppn,
                     pteType: pte.pteType,
+                    pteUpperType: pte.pteUpperType,
                     level:   walkLevel,
                     asid:    vm_info.asid
                 };
