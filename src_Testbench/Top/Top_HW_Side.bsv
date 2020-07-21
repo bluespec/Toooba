@@ -70,8 +70,9 @@ import Debug_Module     :: *;
 `endif
 
 `ifdef RVFI_DII
-import RVFI_DII :: *;
-import Types    :: *;
+import RVFI_DII  :: *;
+import Types     :: *;
+import ProcTypes :: *;
 `endif
 
 // ================================================================
@@ -458,14 +459,14 @@ module mkTop_HW_Side(Empty)
        rg_banner_printed <= True;
     endrule
 
-    RVFI_DII_Bridge #(DataSz, DataSz, `sizeSup) bridge <- mkRVFI_DII_Bridge("", 5001);
+    RVFI_DII_Bridge #(DataSz, DataSz, TMul#(SupSize, 2), SupSize) bridge <- mkRVFI_DII_Bridge("", 5001);
     let    dut <- mkPre_Top_HW_Side(reset_by bridge.new_rst);
     mkConnection(bridge.client.report, dut.trace_report);
 
     rule rl_provide_instr;
-        Dii_Ids reqs <- dut.seqReq.get;
-        Dii_Insts insts <- bridge.client.getInst(reqs);
-        dut.inst.put(InstsAndIDs{insts: insts, ids: reqs});
+        Dii_Parcel_Id req <- dut.seqReqFirst.get;
+        Dii_Parcel_Resps resps <- bridge.client.getParcels(req);
+        dut.parcelResps.put(resps);
     endrule
 endmodule
 

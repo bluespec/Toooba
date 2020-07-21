@@ -177,20 +177,3 @@ function Action doAssert(Bool b, String s) = action if(!b) $fdisplay(stderr, "\n
 `else
 function Action doAssert(Bool b, String s) = dynamicAssert(b, s);
 `endif
-
-`ifdef RVFI_DII
-typedef Vector#(`sizeSup, Maybe#(RVFI_DII_Execution #(64, 64))) Rvfi_Traces;
-typedef Vector#(`sizeSup, Maybe#(Dii_Id)) Dii_Ids;
-typedef Vector#(`sizeSup, Maybe#(Bit#(32))) Dii_Insts;
-
-typedef struct {
-  Dii_Insts insts;
-  Dii_Ids ids;
-} InstsAndIDs deriving(Bits, Eq, FShow);
-
-interface Toooba_RVFI_DII_Server;
-    interface Get#(Dii_Ids) seqReq;
-    interface Put#(InstsAndIDs) inst;
-    interface Get#(Rvfi_Traces) trace_report;
-endinterface
-`endif

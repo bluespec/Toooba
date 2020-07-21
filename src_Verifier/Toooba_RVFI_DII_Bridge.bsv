@@ -46,7 +46,7 @@ import ConfigReg    :: *;
 `include "ProcConfig.bsv"
 
 import Types::*;
-import ProcTypes::*; 
+import ProcTypes::*;
 
 //import Verifier  :: *;
 import RVFI_DII  :: *;
@@ -55,19 +55,17 @@ import RVFI_DII  :: *;
 
 interface Toooba_RVFI_DII_Bridge_IFC;
     interface Toooba_RVFI_DII_Server rvfi_dii_server;
-    interface Server#(Dii_Ids, InstsAndIDs) dii;
+    interface Server#(Dii_Parcel_Id, Dii_Parcels) dii;
     interface Put#(Rvfi_Traces) rvfi;
-    method Dii_Id lastId;
 endinterface
 
 module mkTooobaRVFIDIIBridge(Toooba_RVFI_DII_Bridge_IFC);
     // DII state
-    FIFOF#(InstsAndIDs) instrs <- mkSizedFIFOF(2048);
+    FIFOF#(Dii_Parcel_Resps) parcel_resps <- mkSizedFIFOF(2048);
     // RVFI state
     FIFO#(Rvfi_Traces) report_vectors <- mkSizedFIFO(2048);
     // Request ID
-    FIFO#(Dii_Ids) seq_req <- mkFIFO;
-    Reg#(Dii_Id) last_id <- mkReg(0);
+    FIFO#(Dii_Parcel_Id) seq_req_first <- mkFIFO;
 
     Bool verbose = False;
 
@@ -78,8 +76,11 @@ module mkTooobaRVFIDIIBridge(Toooba_RVFI_DII_Bridge_IFC);
     // These two functions convert beteween "Invalid" instructions and "nops".
     // This is because the pipeline currently isn't able to handle Invalid injections,
     // so we replace them with special nops in the bridge that we can filter out in the rvfi trace stream.
-    function Maybe#(Bit#(32)) maybeToNop(Maybe#(Bit#(32)) in);
-        return tagged Valid fromMaybe(dii_nop, in);
+    function Bit#(16) noParcelToNop(RVFI_DII_Parcel_Resp in);
+        case (in) matches
+            tagged DIIParcel .parcel: return parcel;
+            tagged DIINoParcel .is_second: return is_second ? dii_nop[31:16] : dii_nop[15:0];
+        endcase
     endfunction
 
     function Maybe#(RVFI_DII_Execution #(DataSz,DataSz)) nopToMaybe(Maybe#(RVFI_DII_Execution #(DataSz,DataSz)) in);
@@ -89,42 +90,32 @@ module mkTooobaRVFIDIIBridge(Toooba_RVFI_DII_Bridge_IFC);
     endfunction
 
     interface Toooba_RVFI_DII_Server rvfi_dii_server;
-        interface Get seqReq = toGet(seq_req);
-        interface Put inst = toPut(instrs);
+        interface Get seqReqFirst = toGet(seq_req_first);
+        interface Put parcelResps = toPut(parcel_resps);
         interface Get trace_report = toGet(report_vectors);
     endinterface
 
     interface Server dii;
-        interface Put request = toPut(seq_req);
+        interface Put request = toPut(seq_req_first);
         interface Get response;
-            method ActionValue#(InstsAndIDs) get;
-                InstsAndIDs insts = instrs.first();
-                insts.insts = map(maybeToNop, insts.insts);
-                instrs.deq();
+            method ActionValue#(Dii_Parcels) get;
+                let resps = parcel_resps.first;
+                parcel_resps.deq;
+                let parcels = map(noParcelToNop, resps);
                 if (verbose)
                     $display("%t DII injection: ", $time,
-                        fshow(insts)
+                        fshow(parcels)
                     );
-                return insts;
+                return parcels;
             endmethod
         endinterface
     endinterface
 
     interface Put rvfi;
         method Action put(Rvfi_Traces in);
-            Rvfi_Traces out = map(nopToMaybe,in);
-            report_vectors.enq(out);
-            Dii_Id next_id = last_id;
-            for (Integer i = 0; i < `sizeSup; i = i + 1) begin
-                if (out[i] matches tagged Valid .rpt) begin
-                  Dii_Id this_id = unpack(truncate(rpt.rvfi_order));
-                  if (this_id > next_id) next_id = this_id;
-                end
-            end
-            last_id <= next_id;
+            report_vectors.enq(map(nopToMaybe,in));
         endmethod
     endinterface
-    method Dii_Id lastId = last_id;
 endmodule
 
 endpackage

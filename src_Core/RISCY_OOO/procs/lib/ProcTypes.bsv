@@ -47,6 +47,7 @@ import CHERICap::*;
 import CHERICC_Fat::*;
 import ISA_Decls_CHERI::*;
 `ifdef RVFI_DII
+import GetPut::*;
 import RVFI_DII_Types::*;
 `endif
 import ISA_Decls_CHERI::*;
@@ -80,9 +81,21 @@ typedef struct {
     SingleScalarPtr ptr; // pointer within a way
     InstTime t; // inst time in ROB (for dispatch in reservation station)
 `ifdef RVFI_DII
-    Dii_Id diid;
+    Dii_Parcel_Id dii_next_pid;
 `endif
 } InstTag deriving(Bits, Eq, FShow);
+
+`ifdef RVFI_DII
+typedef Vector#(SupSize, Maybe#(RVFI_DII_Execution #(64, 64))) Rvfi_Traces;
+typedef Vector#(TMul#(SupSize, 2), RVFI_DII_Parcel_Resp) Dii_Parcel_Resps;
+typedef Vector#(TMul#(SupSize, 2), Bit#(16)) Dii_Parcels;
+
+interface Toooba_RVFI_DII_Server;
+    interface Get#(Dii_Parcel_Id) seqReqFirst;
+    interface Put#(Dii_Parcel_Resps) parcelResps;
+    interface Get#(Rvfi_Traces) trace_report;
+endinterface
+`endif
 
 typedef `SB_SIZE SBSize;
 typedef Bit#(TLog#(SBSize)) SBIndex;

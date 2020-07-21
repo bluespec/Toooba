@@ -84,6 +84,30 @@ import CPU_Decode_C     :: *;
 
 // ================================================================
 
+`ifdef RVFI_DII
+interface RvfiDiiServer;
+    interface Client#(Dii_Parcel_Id, Dii_Parcels) toCore;
+    interface Server#(Dii_Parcel_Id, Vector#(SupSize, Maybe#(Instruction))) fromDii;
+endinterface
+
+module mkRvfiDiiServer(RvfiDiiServer);
+    Fifo#(2, Dii_Parcel_Id) reqs <- mkCFFifo;
+    Fifo#(2, Vector#(SupSize, Maybe#(Instruction))) resps <- mkCFFifo;
+
+    interface Client toCore;
+        interface Get request = toGet(reqs);
+        interface Put response;
+            method Action put(Dii_Parcels parcels);
+                function Maybe#(a) toMaybe(a x) = tagged Valid x;
+                resps.enq(map(toMaybe, unpack(pack(parcels))));
+            endmethod
+        endinterface
+    endinterface
+
+    interface fromDii = toGPServer(reqs, resps);
+endmodule
+`endif
+
 interface FetchStage;
     // pipeline
     interface Vector#(SupSize, SupFifoDeq#(FromFetchStage)) pipelines;
@@ -92,11 +116,14 @@ interface FetchStage;
     interface ITlb iTlbIfc;
     interface ICoCache iMemIfc;
     interface MMIOInstToCore mmioIfc;
+`ifdef RVFI_DII
+    interface Client#(Dii_Parcel_Id, Dii_Parcels) diiIfc;
+`endif
 
     // starting and stopping
     method Action start(CapMem pc
 `ifdef RVFI_DII
-        , Dii_Id id
+        , Dii_Parcel_Id parcel_id
 `endif
     );
     method Action stop();
@@ -105,7 +132,7 @@ interface FetchStage;
     method Action setWaitRedirect;
     method Action redirect(CapMem pc
 `ifdef RVFI_DII
-        , Dii_Id id
+        , Dii_Parcel_Id parcel_id
 `endif
     );
 `ifdef INCLUDE_GDB_CONTROL
@@ -124,10 +151,6 @@ interface FetchStage;
 
     // debug
     method FetchDebugState getFetchState;
-`ifdef RVFI_DII
-    interface Client#(Dii_Ids, InstsAndIDs) dii;
-    method Action lastTraceId(Dii_Id in);
-`endif
 
 `ifdef DEBUG_WEDGE
     method Tuple3#(Bit#(32), Addr, Addr) debugFetch;
@@ -146,6 +169,9 @@ typedef struct {
 
 typedef struct {
     CapMem pc;
+`ifdef RVFI_DII
+    Dii_Parcel_Id dii_pid;
+`endif
     Maybe#(CapMem) pred_next_pc;
     Bool fetch3_epoch;
     Bool decode_epoch;
@@ -154,6 +180,9 @@ typedef struct {
 
 typedef struct {
     CapMem pc;
+`ifdef RVFI_DII
+    Dii_Parcel_Id dii_pid;
+`endif
     Maybe#(CapMem) pred_next_pc;
     Maybe#(Exception) cause;
     Bool access_mmio; // inst fetch from MMIO
@@ -174,6 +203,9 @@ typedef struct {
 // Used purely internally in doDecode.
 typedef struct {
   CapMem pc;
+`ifdef RVFI_DII
+  Dii_Parcel_Id dii_pid;
+`endif
   CapMem ppc;
   Bool decode_epoch;
   Epoch main_epoch;
@@ -183,6 +215,9 @@ typedef struct {
 
 typedef struct {
   CapMem pc;
+`ifdef RVFI_DII
+  Dii_Parcel_Id dii_pid;
+`endif
   CapMem ppc;
   Epoch main_epoch;
   DirPredTrainInfo dpTrain;
@@ -192,9 +227,6 @@ typedef struct {
   ArchRegs regs;
   Maybe#(Exception) cause;
   Addr              tval;    // in case of exception
-`ifdef RVFI_DII
-  Dii_Id diid;
-`endif
 } FromFetchStage deriving (Bits, Eq, FShow);
 
 // train next addr pred (BTB)
@@ -260,6 +292,9 @@ deriving (Bits, Eq, FShow);
 
 typedef struct {
    CapMem     pc;
+`ifdef RVFI_DII
+   Dii_Parcel_Id dii_pid;
+`endif
    Inst_Kind   inst_kind;
    Bit #(32)   orig_inst;    // inst_kind => 0, 16b or 32b relevant
    Bit #(32)   inst;         // Original 32b instruction, or expansion of 16b instruction
@@ -268,7 +303,11 @@ deriving (Bits, Eq, FShow);
 
 instance DefaultValue #(Inst_Item);
    function Inst_Item defaultValue = Inst_Item {
-      pc: nullCap, inst_kind: Inst_None, orig_inst: 0, inst: 0
+      pc: nullCap,
+`ifdef RVFI_DII
+      dii_pid: 0,
+`endif
+      inst_kind: Inst_None, orig_inst: 0, inst: 0
    };
 endinstance
 
@@ -293,7 +332,18 @@ function ActionValue #(Tuple2 #(SupCntX2,
    endactionvalue
 endfunction
 
-typedef Maybe #(Tuple3 #(CapMem, Bit #(16), Bool)) MStraddle;
+`ifdef RVFI_DII
+typedef Tuple4 #(CapMem, Dii_Parcel_Id, Bit #(16), Bool) Straddle;
+function Straddle fv_straddle (CapMem pc, Dii_Parcel_Id dii_pid, Bit #(16) lsbs, Bool mispred);
+    return tuple4 (pc, dii_pid, lsbs, mispred);
+endfunction
+`else
+typedef Tuple3 #(CapMem, Bit #(16), Bool) Straddle;
+function Straddle fv_straddle (CapMem pc, Bit #(16) lsbs, Bool mispred);
+    return tuple3 (pc, lsbs, mispred);
+endfunction
+`endif
+typedef Maybe #(Straddle) MStraddle;
 
 // Parse 16b parcels (v_x16) into a sequence of 16b or 32b instructions.
 // This is a pure function; ActionValue is used only to allow $displays for debugging.
@@ -303,6 +353,9 @@ function ActionValue #(Tuple4 #(SupCntX2,
                                 MStraddle))
          fav_parse_insts (Bool  verbose,
                           CapMem  pc_start,
+`ifdef RVFI_DII
+                          Dii_Parcel_Id dii_pid_start,
+`endif
                           Maybe #(CapMem) pred_next_pc,
                           MStraddle pending_straddle,
                           SupCntX2 n_x16s,
@@ -310,6 +363,9 @@ function ActionValue #(Tuple4 #(SupCntX2,
    actionvalue
       // Parse up to SupSizeX2 instructions (v_items) from fetched v_x16 parcels (v_x16).
       Vector #(SupSizeX2, Inst_Item) v_items = replicate (Inst_Item {pc: pc_start,
+`ifdef RVFI_DII
+                                                                     dii_pid: dii_pid_start,
+`endif
                                                                      inst_kind: Inst_None,
                                                                      orig_inst: 0,
                                                                      inst: 0});
@@ -317,15 +373,24 @@ function ActionValue #(Tuple4 #(SupCntX2,
       // Start parse at parcel 0/1 depending on pc lsbs.
       SupCntX2 j  = (getAddr(pc_start) [1:0] == 2'b00 ? 0 : 1);
       Addr     pc = getAddr(pc_start);
+`ifdef RVFI_DII
+      Dii_Parcel_Id dii_pid = dii_pid_start;
+`endif
       Integer n_items = 0;
-`ifndef RVFI_DII
       for (Integer i = 0; i < valueOf (SupSizeX2); i = i + 1) begin
          Inst_Kind inst_kind = Inst_None;
          Bit #(32) orig_inst = 0;
          Bit #(32) inst      = 0;
          Addr      next_pc   = pc;
+`ifdef RVFI_DII
+         Dii_Parcel_Id next_dii_pid = dii_pid;
+`endif
          if (j < n_x16s) begin
-            if (i == 0 &&& pending_straddle matches tagged Valid {.s_pc, .s_lsbs, .s_mispred}) begin
+            if (i == 0 &&& pending_straddle matches tagged Valid {.s_pc,
+`ifdef RVFI_DII
+                                                                  .s_dii_pid,
+`endif
+                                                                  .s_lsbs, .s_mispred}) begin
                if (pc != getAddr(s_pc) + 2) begin
                   $display ("FetchStage.fav_parse_insts: straddle: pc mismatch: pc = 0x%0h but s_pc = 0x%0h", pc, s_pc);
                   dynamicAssert (False, "FetchStage.fav_parse_insts: straddle: pc mismatch");
@@ -336,6 +401,14 @@ function ActionValue #(Tuple4 #(SupCntX2,
                inst      = orig_inst;
 	       j         = j + 1;
 	       next_pc   = getAddr(s_pc) + 4;
+`ifdef RVFI_DII
+               if (dii_pid != s_dii_pid + 1) begin
+                  $display ("FetchStage.fav_parse_insts: straddle: dii_pid mismatch: dii_pid = %d but s_dii_pid = %d", dii_pid, s_dii_pid);
+                  dynamicAssert (False, "FetchStage.fav_parse_insts: straddle: dii_pid mismatch");
+               end
+               dii_pid = s_dii_pid;
+               next_dii_pid = s_dii_pid + 2;
+`endif
                n_items   = 1;
             end
             else if (is_16b_inst (v_x16 [j])) begin
@@ -344,6 +417,9 @@ function ActionValue #(Tuple4 #(SupCntX2,
                inst      = fv_decode_C (misa, misa_mxl_64, v_x16 [j]);    // Expand 16b inst to 32b inst
                j         = j + 1;
                next_pc   = pc + 2;
+`ifdef RVFI_DII
+               next_dii_pid = dii_pid + 1;
+`endif
                n_items   = i + 1;
                if (verbose)
                   $display ("FetchStage.fav_parse_insts: C inst 0x%0h -> inst 0x%0h", orig_inst, inst);
@@ -355,10 +431,17 @@ function ActionValue #(Tuple4 #(SupCntX2,
                   inst      = orig_inst;
                   j = j + 2;
                   next_pc = pc + 4;
+`ifdef RVFI_DII
+                  next_dii_pid = dii_pid + 2;
+`endif
                   n_items   = i + 1;
                end
                else begin
-                  next_straddle = tagged Valid tuple3(setAddrUnsafe(pc_start, pc), v_x16[j], isValid(pred_next_pc));
+                  next_straddle = tagged Valid fv_straddle(setAddrUnsafe(pc_start, pc),
+`ifdef RVFI_DII
+                                                           dii_pid,
+`endif
+                                                           v_x16[j], isValid(pred_next_pc));
                   j = j + 1;
                   // Leave next_pc unchanged and clear pred_next_pc so we
                   // return the right predicted pc for the vector, which
@@ -374,23 +457,16 @@ function ActionValue #(Tuple4 #(SupCntX2,
                dynamicAssert (False, "FetchStage.fav_parse_insts: instuction is not 16b or 32b?");
             end
          end
-         v_items [i] = Inst_Item {pc: setAddrUnsafe(pc_start, pc), inst_kind: inst_kind, orig_inst: orig_inst, inst: inst};
-         pc = next_pc;
-      end
-`else
-      Addr increment = 0;
-      for (Integer i = 0; i < valueOf(SupSize); i = i + 1) begin
-         Bit #(32) inst = { v_x16 [(2*i)+1], v_x16 [2*i] };
-         Bool compressed = is_16b_inst (v_x16 [2*i]);
-         v_items[i].inst_kind = compressed ? Inst_16b:Inst_32b;
-         increment = (compressed ? 2:4);
-         v_items[i].orig_inst = inst;
-         v_items[i].inst = (compressed) ? fv_decode_C (misa, misa_mxl_64, v_x16 [2*i]):inst;
-         v_items[i].pc = setAddrUnsafe(pc_start, pc);
-         pc = pc + increment;
-      end
-      n_items = 2;
+         v_items [i] = Inst_Item {pc: setAddrUnsafe(pc_start, pc),
+`ifdef RVFI_DII
+                                  dii_pid: dii_pid,
 `endif
+                                  inst_kind: inst_kind, orig_inst: orig_inst, inst: inst};
+         pc = next_pc;
+`ifdef RVFI_DII
+         dii_pid = next_dii_pid;
+`endif
+      end
 
       if (verbose) begin
          $display ("FetchStage.fav_parse_insts:");
@@ -432,6 +508,9 @@ module mkFetchStage(FetchStage);
     Reg#(Bool) waitForFlush <- mkReg(False);
 
     Ehr#(4, CapMem) pc_reg <- mkEhr(nullCap);
+`ifdef RVFI_DII
+    Ehr#(4, Dii_Parcel_Id) dii_pid_reg <- mkEhr(0);
+`endif
     Integer pc_fetch1_port = 0;
     Integer pc_decode_port = 1;
     Integer pc_fetch3_port = 2;
@@ -448,9 +527,6 @@ module mkFetchStage(FetchStage);
    Reg #(Vector #(SupSizeX2S1, Inst_Item)) rg_pending_decode <- mkReg(replicate(defaultValue));
    Reg #(SupCntX2S1) rg_pending_n_items <- mkReg(0);
    Reg #(Fetch3ToDecode) rg_pending_f32d <- mkRegU;
-`ifdef RVFI_DII
-   Reg #(Maybe#(Tuple2#(Epoch,CapMem))) rg_f3_next_consecutive_pc <- mkReg(Invalid);
-`endif
 
     // Pipeline Stage FIFOs
     Fifo#(2, Tuple2#(Bit#(TLog#(SupSizeX2)),Fetch1ToFetch2)) f12f2 <- mkCFFifo;
@@ -477,6 +553,9 @@ module mkFetchStage(FetchStage);
     ITlb iTlb <- mkITlb;
     ICoCache iMem <- mkICoCache;
     MMIOInst mmio <- mkMMIOInst;
+`ifdef RVFI_DII
+    RvfiDiiServer dii <- mkRvfiDiiServer;
+`endif
     Server#(Addr, TlbResp) tlb_server = iTlb.to_proc;
     Server#(Addr, Vector#(SupSize, Maybe#(Instruction))) mem_server = iMem.to_proc;
 
@@ -508,15 +587,6 @@ module mkFetchStage(FetchStage);
     endrule
 `endif
 
-`ifdef RVFI_DII
-    Ehr#(4, Dii_Id) dii_id_next <- mkEhr(0);
-    Fifo#(2, Dii_Ids) dii_instIds <- mkCFFifo;
-    Fifo#(2, InstsAndIDs) dii_insts <- mkCFFifo;
-    Fifo#(2, Dii_Ids) dii_fetched_ids <- mkCFFifo;
-
-    Reg#(Dii_Id) last_trace_id <- mkRegU;
-`endif
-
 `ifdef DEBUG_WEDGE
     Reg#(Addr) lastItlbReq <- mkConfigReg(0);
     Reg#(Addr) lastImemReq <- mkConfigReg(0);
@@ -535,9 +605,6 @@ module mkFetchStage(FetchStage);
             if (! done) begin
                Bool isLastX2 = (i == (valueOf (SupSizeX2) - 1)) || ((getAddr(pc)[1:0] != 2'b00) && (i == (valueOf (SupSizeX2) - 2)));
                Bool lastInstInCacheLine = (getLineInstOffset (getAddr(prev_PC)) == maxBound) && (getAddr(prev_PC)[1:0] != 2'b00);
-`ifdef RVFI_DII
-                lastInstInCacheLine = False;
-`endif
                Bool isJump   = isValid(pred_next_pc);
                done = isLastX2 || lastInstInCacheLine || isJump;
                posLastSupX2 = i;
@@ -587,13 +654,8 @@ module mkFetchStage(FetchStage);
         pc_reg[pc_fetch1_port] <= next_fetch_pc;
 
 `ifdef RVFI_DII
-        Dii_Id next_id = dii_id_next[pc_fetch1_port];
-        Dii_Ids reqs = replicate(tagged Invalid);
-        for (Integer i = 0; i < valueOf(SupSize); i = i + 1)
-          reqs[i] = tagged Valid (next_id + fromInteger(i));
-        if (verbosity > 0) $display("Requested from DII", fshow(reqs));
-        dii_instIds.enq(reqs);
-        dii_id_next[pc_fetch1_port] <= next_id + fromInteger(valueOf(SupSize));
+        Dii_Parcel_Id dii_pid = dii_pid_reg[pc_fetch1_port];
+        dii_pid_reg[pc_fetch1_port] <= dii_pid + (fromInteger(posLastSupX2) + 1);
 `endif
 
         // Send TLB request.
@@ -606,6 +668,9 @@ module mkFetchStage(FetchStage);
 
         let out = Fetch1ToFetch2 {
             pc: pc,
+`ifdef RVFI_DII
+            dii_pid: dii_pid,
+`endif
             pred_next_pc: pred_next_pc,
             fetch3_epoch: fetch3_epoch,
             decode_epoch: decode_epoch[0],
@@ -625,7 +690,15 @@ module mkFetchStage(FetchStage);
 
         // Access main mem or boot rom if no TLB exception
         Bool access_mmio = False;
-`ifndef RVFI_DII
+`ifdef RVFI_DII
+        if (!isValid(cause)) begin
+            // We 32-bit align PC (and increment nbSupX2 accordingly) in
+            // doFetch1 for the real MMIO and ICache require 32-bit, so make
+            // DII look like that by decrementing pid if PC is "odd"; this
+            // extra parcel on the front will be discarded by fav_parse_insts.
+            dii.fromDii.request.put(in.dii_pid - (getAddr(in.pc)[1:0] == 2'b00 ? 0 : 1));
+        end
+`else
         if (!isValid(cause)) begin
             case(mmio.getFetchTarget(phys_pc))
                 MainMem: begin
@@ -666,6 +739,9 @@ module mkFetchStage(FetchStage);
 
         let out = Fetch2ToFetch3 {
             pc: in.pc,
+`ifdef RVFI_DII
+            dii_pid: in.dii_pid,
+`endif
             pred_next_pc: in.pred_next_pc,
             cause: cause,
             access_mmio: access_mmio,
@@ -713,10 +789,19 @@ module mkFetchStage(FetchStage);
 
         SupCntX2 parsed_n_items = 0;
         CapMem pc = fetch3In.pc;
+`ifdef RVFI_DII
+        Dii_Parcel_Id dii_pid = fetch3In.dii_pid;
+`endif
         Inst_Item inst_item_none = ?;
         Vector #(SupSizeX2, Inst_Item) parsed_v_items = ?;
 
-        let mispred_first_half = pending_straddle matches tagged Valid {.s_pc, .s_lsbs, .s_mispred} &&& s_mispred ? True : False;
+        let mispred_first_half = pending_straddle matches tagged Valid {.s_pc,
+`ifdef RVFI_DII
+                                                                        .s_dii_pid,
+`endif
+                                                                        .s_lsbs, .s_mispred}
+                                 &&& s_mispred ? True : False;
+
         let can_merge =    pending_n_items > 0
                         && pending_n_items < fromInteger(valueOf(SupSize))
                         && f22f3.notEmpty
@@ -732,7 +817,6 @@ module mkFetchStage(FetchStage);
 
         let parse_f22f3 = !drop_f22f3 && (pending_n_items == 0 || can_merge);
 
-`ifndef RVFI_DII
         // Get ICache/MMIO response if no exception
         // In case of exception, we still need to process at least inst_data[0]
         // (it will be turned to an exception later), so inst_data[0] must be
@@ -741,6 +825,9 @@ module mkFetchStage(FetchStage);
         if (drop_f22f3 || parse_f22f3) begin
             f22f3.deq();
             if (!isValid(fetch3In.cause)) begin
+`ifdef RVFI_DII
+                inst_d <- dii.fromDii.response.get;
+`else
                 if(fetch3In.access_mmio) begin
                     if(verbose) $display("get answer from MMIO 0x%0x", getAddr(pc));
                     inst_d <- mmio.bootRomResp;
@@ -749,17 +836,9 @@ module mkFetchStage(FetchStage);
                     if(verbose) $display("get answer from memory 0x%0x", getAddr(pc));
                     inst_d <- mem_server.response.get;
                 end
+`endif
             end
         end
-`else
-        f22f3.deq();
-        Vector#(SupSize,Maybe#(Instruction)) inst_d = replicate(tagged Valid dii_nop);
-        InstsAndIDs ii <- toGet(dii_insts).get();
-        inst_d = ii.insts;
-        if (verbosity > 0) $display("Got from DII: ", fshow (ii));
-        if(verbose) $display("PC is %x", pc);
-        Maybe#(Tuple2#(Epoch, CapMem)) next_consecutive_pc = Invalid;
-`endif
         if (verbosity >= 2) begin
             $display ("----------------");
             $display ("Fetch3: f22f3.first: ", fshow (f22f3.first));
@@ -778,11 +857,11 @@ module mkFetchStage(FetchStage);
             end
         end
         else if (parse_f22f3) begin
+            inst_item_none = Inst_Item {pc: pc,
 `ifdef RVFI_DII
-            if (rg_f3_next_consecutive_pc matches tagged Valid .epoch_pc &&& tpl_1(epoch_pc) == fetch3In.main_epoch)
-                pc = tpl_2(epoch_pc);
+                                        dii_pid: dii_pid,
 `endif
-            inst_item_none = Inst_Item {pc: pc, inst_kind: Inst_None, orig_inst: 0, inst: 0};
+                                        inst_kind: Inst_None, orig_inst: 0, inst: 0};
             parsed_v_items = replicate (inst_item_none);
             // Re-interpret fetched 32b parcels (inst_d) as 16b parcels
             let { n_x16s, v_x16 } <- fav_inst_d_to_x16s (inst_d);
@@ -799,7 +878,11 @@ module mkFetchStage(FetchStage);
             // Parse v_x16 into 32-bit and 16-bit instructions
             CapMem pred_next_pc;
             {parsed_n_items, parsed_v_items, pred_next_pc, pending_straddle} <-
-                fav_parse_insts (verbose, pc, fetch3In.pred_next_pc, pending_straddle, n_x16s, v_x16);
+                fav_parse_insts (verbose, pc,
+`ifdef RVFI_DII
+                                 dii_pid,
+`endif
+                                 fetch3In.pred_next_pc, pending_straddle, n_x16s, v_x16);
 
             if (pending_n_items == 0) begin
                 out = Fetch3ToDecode {
@@ -812,16 +895,20 @@ module mkFetchStage(FetchStage);
                 };
             end
             out.pred_next_pc = pred_next_pc;
-`ifdef RVFI_DII
-            next_consecutive_pc = isValid(fetch3In.pred_next_pc) ? Invalid : Valid(tuple2(fetch3In.main_epoch, out.pred_next_pc));
-`endif
 
             // Redirect doFetch1 if we predicted a taken compressed branch
             // but this is an uncompressed instruction. We will tell decode
             // to retrain when we issue the full instruction next time.
-            if (pending_straddle matches tagged Valid {.s_pc, .s_lsbs, .s_mispred}
+            if (pending_straddle matches tagged Valid {.s_pc,
+`ifdef RVFI_DII
+                                                       .s_dii_pid,
+`endif
+                                                       .s_lsbs, .s_mispred}
                 &&& s_mispred) begin
                 pc_reg[pc_fetch3_port] <= addPc(s_pc, 2);
+`ifdef RVFI_DII
+                dii_pid_reg[pc_fetch3_port] <= s_dii_pid + 1;
+`endif
                 fetch3_epoch <= ! fetch3_epoch;
             end
         end
@@ -866,9 +953,6 @@ module mkFetchStage(FetchStage);
             end
 
             if (n_items > 0) begin
-`ifdef RVFI_DII
-                dii_fetched_ids.enq(ii.ids);
-`endif
                 instdata.enq(take(v_items));
                 f32d.enq(tuple2(nbSupOut, out));
                 if (verbosity >= 2) begin
@@ -888,9 +972,6 @@ module mkFetchStage(FetchStage);
         end
         rg_pending_n_items <= next_pending_n_items;
         ehr_pending_straddle[0] <= pending_straddle;
-`ifdef RVFI_DII
-        rg_f3_next_consecutive_pc <= next_consecutive_pc;
-`endif
     endrule: doFetch3
 
    rule doDecode;
@@ -898,16 +979,14 @@ module mkFetchStage(FetchStage);
       f32d.deq();
       let inst_data = instdata.first();
       instdata.deq();
-`ifdef RVFI_DII
-      let ids = dii_fetched_ids.first();
-      dii_fetched_ids.deq();
-      Dii_Id nextId = dii_id_next[pc_decode_port];
-`endif
       // The main_epoch check is required to make sure this stage doesn't
       // redirect the PC if a later stage already redirected the PC.
       if (decodeIn.main_epoch == f_main_epoch) begin
          Bool decode_epoch_local = decode_epoch[0]; // next value for decode epoch
          Maybe#(CapMem) redirectPc = Invalid; // next pc redirect by branch predictor
+`ifdef RVFI_DII
+         Maybe#(Dii_Parcel_Id) redirectDiiPid = Invalid;
+`endif
          Maybe#(TrainNAP) trainNAP = Invalid; // training data sent to next addr pred
 `ifdef PERF_COUNT
          // performance counter: inst being redirect by decode stage
@@ -922,6 +1001,9 @@ module mkFetchStage(FetchStage);
                let inst_data_shifted = shiftInAtN (inst_data, ?);    // for predicted PCs
                let in = InstrFromFetch3 {
                   pc: inst_data[i].pc,
+`ifdef RVFI_DII
+                  dii_pid: inst_data[i].dii_pid,
+`endif
                   // last inst, next pc may not be pc+2/pc+4
                   ppc: ((fromInteger(i) == nbSup)
                         ? decodeIn.pred_next_pc
@@ -1022,14 +1104,14 @@ module mkFetchStage(FetchStage);
                         if (verbose) $display("ppc and decodeppc :  %h %h", in.ppc, decode_pred_next_pc);
                         decode_epoch_local = !decode_epoch_local;
                         redirectPc = Valid (decode_pred_next_pc); // record redirect next pc
+`ifdef RVFI_DII
+                        redirectDiiPid = Valid (in.dii_pid + ((inst_data[i].inst_kind == Inst_32b) ? 2 : 1));
+`endif
                         in.ppc = decode_pred_next_pc;
                         // train next addr pred when mispredict
                         let last_x16_pc = addPc(in.pc, ((inst_data[i].inst_kind == Inst_32b) ? 2 : 0));
                         if (!decodeIn.mispred_first_half)
                            trainNAP = Valid (TrainNAP {pc: last_x16_pc, nextPc: decode_pred_next_pc});
-`ifdef RVFI_DII
-                        nextId = fromMaybe(nextId,ids[i]) + 1;
-`endif
 `ifdef PERF_COUNT
                         // performance stats: record decode redirect
                         doAssert(redirectInst == Invalid, "at most 1 decode redirect per cycle");
@@ -1038,6 +1120,9 @@ module mkFetchStage(FetchStage);
                      end
                   end // if (!isValid(cause))
                   let out = FromFetchStage{pc: in.pc,
+`ifdef RVFI_DII
+                                           dii_pid: in.dii_pid,
+`endif
                                            ppc: in.ppc,
                                            main_epoch: in.main_epoch,
                                            dpTrain: dp_train,
@@ -1047,9 +1132,6 @@ module mkFetchStage(FetchStage);
                                            regs: decode_result.regs,
                                            cause: cause,
                                            tval: decodeIn.tval
-`ifdef RVFI_DII
-                                           , diid: fromMaybe(?,ids[i])
-`endif
                                            };
                   out_fifo.enqS[i].enq(out);
                   if (verbosity >= 1) begin
@@ -1076,10 +1158,13 @@ module mkFetchStage(FetchStage);
          // update PC and epoch
          if(redirectPc matches tagged Valid .nextPc) begin
             pc_reg[pc_decode_port] <= nextPc;
-`ifdef RVFI_DII
-            dii_id_next[pc_decode_port] <= nextId;
-`endif
          end
+`ifdef RVFI_DII
+         doAssert(isValid(redirectPc) == isValid(redirectDiiPid), "PC and DII redirections always happen together");
+         if(redirectDiiPid matches tagged Valid .nextDiiPid) begin
+            dii_pid_reg[pc_decode_port] <= nextDiiPid;
+         end
+`endif
          decode_epoch[0] <= decode_epoch_local;
          // send training data for next addr pred
          if (trainNAP matches tagged Valid .x) begin
@@ -1132,16 +1217,19 @@ module mkFetchStage(FetchStage);
     interface iTlbIfc = iTlb;
     interface iMemIfc = iMem;
     interface mmioIfc = mmio.toCore;
+`ifdef RVFI_DII
+    interface diiIfc = dii.toCore;
+`endif
 
     method Action start(
         CapMem start_pc
 `ifdef RVFI_DII
-        , Dii_Id id
+        , Dii_Parcel_Id dii_pid
 `endif
     );
         pc_reg[0] <= start_pc;
 `ifdef RVFI_DII
-        dii_id_next[0] <= id;
+        dii_pid_reg[0] <= dii_pid;
 `endif
         started <= True;
         waitForRedirect <= False;
@@ -1158,14 +1246,14 @@ module mkFetchStage(FetchStage);
     method Action redirect(
         CapMem new_pc
 `ifdef RVFI_DII
-        , Dii_Id id
+        , Dii_Parcel_Id dii_pid
 `endif
     );
         if (verbose) $display("Redirect: newpc %h, old f_main_epoch %d, new f_main_epoch %d",new_pc,f_main_epoch,f_main_epoch+1);
         pc_reg[pc_redirect_port] <= new_pc;
 `ifdef RVFI_DII
-        dii_id_next[pc_redirect_port] <= id;
-        if (verbose) $display("%t Redirect: dii_id_next %d", $time(), id);
+        dii_pid_reg[pc_redirect_port] <= dii_pid;
+        if (verbose) $display("%t Redirect: dii_pid_reg %d", $time(), dii_pid);
 `endif
         f_main_epoch <= (f_main_epoch == fromInteger(valueOf(NumEpochs)-1)) ? 0 : f_main_epoch + 1;
         ehr_pending_straddle[1] <= tagged Invalid;
@@ -1272,16 +1360,6 @@ module mkFetchStage(FetchStage);
         method Bool respValid = perfReqQ.notEmpty;
 `endif
     endinterface
-
-`ifdef RVFI_DII
-    interface Client dii;
-        interface Get request = toGet(dii_instIds);
-        interface Put response = toPut(dii_insts);
-    endinterface
-    method Action lastTraceId(Dii_Id in);
-        last_trace_id <= in;
-    endmethod
-`endif
 
 `ifdef DEBUG_WEDGE
     method Tuple3#(Bit#(32), Addr, Addr) debugFetch;

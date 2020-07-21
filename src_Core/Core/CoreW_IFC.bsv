@@ -54,7 +54,7 @@ import Debug_Module  :: *;
 `endif
 
 `ifdef RVFI_DII
-import Types :: *;
+import ProcTypes :: *;
 `endif
 
 `ifdef INCLUDE_TANDEM_VERIF

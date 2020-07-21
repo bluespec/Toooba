@@ -43,7 +43,7 @@ import Trace_Data2 :: *;
 `endif
 
 `ifdef RVFI_DII
-import Types :: *;
+import ProcTypes :: *;
 `endif
 
 `ifdef DEBUG_WEDGE

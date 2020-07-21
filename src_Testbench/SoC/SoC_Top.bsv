@@ -79,7 +79,7 @@ import TV_Info :: *;
 
 `ifdef RVFI_DII
 import RVFI_DII_Types :: *;
-import Types :: *;
+import ProcTypes :: *;
 `endif
 
 `ifdef INCLUDE_GDB_CONTROL

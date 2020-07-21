@@ -116,7 +116,7 @@ interface CommitInput;
     method Action killAll;
     method Action redirectPc(CapMem trap_pc
 `ifdef RVFI_DII
-        , Dii_Id diid
+        , Dii_Parcel_Id dii_pid
 `endif
     );
     method Action setFetchWaitRedirect;
@@ -768,9 +768,9 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
           CapPipe new_pc = cast(trap_updates.new_pcc);
           inIfc.redirectPc(cast(new_pc)
 `ifdef RVFI_DII
-                           , trap.x.diid + 1
+                           , trap.x.dii_pid + (is_16b_inst(trap.orig_inst) ? 1 : 2)
 `endif
-);
+          );
 `ifdef RVFI
           Rvfi_Traces rvfis = replicate(tagged Invalid);
           rvfis[0] = genRVFI(trap.x, traceCnt, getTSB(), getAddr(new_pc));
@@ -818,7 +818,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         inIfc.killAll;
         inIfc.redirectPc(x.pc
 `ifdef RVFI_DII
-            , x.diid
+            , x.dii_pid
 `endif
         );
         inIfc.incrementEpoch;
@@ -938,7 +938,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         end
         inIfc.redirectPc(next_pc
 `ifdef RVFI_DII
-            , x.diid + 1
+            , x.dii_pid + (is_16b_inst(x.orig_inst) ? 1 : 2)
 `endif
         );
 

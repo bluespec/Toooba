@@ -270,10 +270,7 @@ module mkCore#(CoreId coreId)(Core);
     // bridge that can insert instructions.
 `ifdef RVFI_DII
     Toooba_RVFI_DII_Bridge_IFC rvfi_bridge <- mkTooobaRVFIDIIBridge;
-    mkConnection(rvfi_bridge.dii, fetchStage.dii);
-    rule rl_passLastId;
-        fetchStage.lastTraceId(rvfi_bridge.lastId);
-    endrule
+    mkConnection(rvfi_bridge.dii, fetchStage.diiIfc);
 `endif
 
     // back end
@@ -399,7 +396,7 @@ module mkCore#(CoreId coreId)(Core);
                     epochManager.incrementEpoch;
                     fetchStage.redirect(new_pc
 `ifdef RVFI_DII
-                    , inst_tag.diid + 1
+                    , inst_tag.dii_next_pid
 `endif
                     );
                     globalSpecUpdate.incorrectSpec(False, spec_tag, inst_tag);

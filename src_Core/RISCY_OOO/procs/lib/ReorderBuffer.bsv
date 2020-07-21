@@ -112,7 +112,7 @@ typedef struct {
     // speculation
     SpecBits           spec_bits;
 `ifdef RVFI_DII
-    Dii_Id             diid;
+    Dii_Parcel_Id      dii_pid;
 `endif
 `ifdef RVFI
     ExtraTraceBundle   traceBundle;
@@ -277,7 +277,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
     Reg#(Bool)                                                      epochIncremented     <- mkRegU;
     Ehr#(3, SpecBits)                                               spec_bits            <- mkEhr(?);
 `ifdef RVFI_DII
-    Reg#(Dii_Id)                                                    diid                 <- mkRegU;
+    Reg#(Dii_Parcel_Id)                                             dii_pid              <- mkRegU;
 `endif
 `ifdef RVFI
     Ehr#(TAdd#(2, TAdd#(fpuMulDivExeNum, aluExeNum)), ExtraTraceBundle) traceBundle      <- mkEhr(?);
@@ -437,7 +437,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
         lsqAtCommitNotified[lsqNotified_enq_port] <= False;
         nonMMIOStDone[nonMMIOSt_enq_port] <= False;
 `ifdef RVFI_DII
-        diid <= x.diid;
+        dii_pid <= x.dii_pid;
 `endif
 `ifdef RVFI
         //$display("%t : traceBundle = ", $time(), fshow(x.traceBundle), " in write_enq for %x", pc);
@@ -476,7 +476,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
             nonMMIOStDone: nonMMIOStDone[nonMMIOSt_deq_port],
             epochIncremented: epochIncremented,
 `ifdef RVFI_DII
-            diid: diid,
+            dii_pid: dii_pid,
 `endif
 `ifdef RVFI
             traceBundle: case (ppc_vaddr_csrData[pvc_deq_port]) matches
