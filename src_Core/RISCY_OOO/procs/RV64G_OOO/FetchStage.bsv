@@ -788,12 +788,12 @@ module mkFetchStage(FetchStage);
         end
 
         SupCntX2 parsed_n_items = 0;
-        CapMem pc = fetch3In.pc;
+        Inst_Item inst_item_none = Inst_Item {pc: fetch3In.pc,
 `ifdef RVFI_DII
-        Dii_Parcel_Id dii_pid = fetch3In.dii_pid;
+                                              dii_pid: fetch3In.dii_pid,
 `endif
-        Inst_Item inst_item_none = ?;
-        Vector #(SupSizeX2, Inst_Item) parsed_v_items = ?;
+                                              inst_kind: Inst_None, orig_inst: 0, inst: 0};
+        Vector #(SupSizeX2, Inst_Item) parsed_v_items = replicate (inst_item_none);
 
         let mispred_first_half = pending_straddle matches tagged Valid {.s_pc,
 `ifdef RVFI_DII
@@ -829,20 +829,15 @@ module mkFetchStage(FetchStage);
                 inst_d <- dii.fromDii.response.get;
 `else
                 if(fetch3In.access_mmio) begin
-                    if(verbose) $display("get answer from MMIO 0x%0x", getAddr(pc));
+                    if(verbose) $display("get answer from MMIO 0x%0x", getAddr(fetch3In.pc));
                     inst_d <- mmio.bootRomResp;
                 end
                 else begin
-                    if(verbose) $display("get answer from memory 0x%0x", getAddr(pc));
+                    if(verbose) $display("get answer from memory 0x%0x", getAddr(fetch3In.pc));
                     inst_d <- mem_server.response.get;
                 end
 `endif
             end
-        end
-        if (verbosity >= 2) begin
-            $display ("----------------");
-            $display ("Fetch3: f22f3.first: ", fshow (f22f3.first));
-            $display ("Fetch3: inst_d:      ", fshow (inst_d));
         end
         if (drop_f22f3) begin
             // Drop any pending straddle if this is for a different main or
@@ -853,16 +848,13 @@ module mkFetchStage(FetchStage);
                 pending_straddle = tagged Invalid;
             end
             if (verbosity >= 2) begin
+                $display ("----------------");
                 $display ("Fetch3: Drop: main_epoch: %d decode epoch: %d fetch3 epoch %d", f_main_epoch, decode_epoch[1], fetch3_epoch);
+                $display ("Fetch3: f22f3.first: ", fshow (f22f3.first));
+                $display ("Fetch3: inst_d:      ", fshow (inst_d));
             end
         end
         else if (parse_f22f3) begin
-            inst_item_none = Inst_Item {pc: pc,
-`ifdef RVFI_DII
-                                        dii_pid: dii_pid,
-`endif
-                                        inst_kind: Inst_None, orig_inst: 0, inst: 0};
-            parsed_v_items = replicate (inst_item_none);
             // Re-interpret fetched 32b parcels (inst_d) as 16b parcels
             let { n_x16s, v_x16 } <- fav_inst_d_to_x16s (inst_d);
             // Cap n_x16s, as otherwise we misattribute the bundle's PC
@@ -878,23 +870,24 @@ module mkFetchStage(FetchStage);
             // Parse v_x16 into 32-bit and 16-bit instructions
             CapMem pred_next_pc;
             {parsed_n_items, parsed_v_items, pred_next_pc, pending_straddle} <-
-                fav_parse_insts (verbose, pc,
+                fav_parse_insts (verbose, fetch3In.pc,
 `ifdef RVFI_DII
-                                 dii_pid,
+                                 fetch3In.dii_pid,
 `endif
                                  fetch3In.pred_next_pc, pending_straddle, n_x16s, v_x16);
 
             if (pending_n_items == 0) begin
                 out = Fetch3ToDecode {
-                    pred_next_pc: out.pred_next_pc,
+                    pred_next_pc: pred_next_pc,
                     mispred_first_half: mispred_first_half,
                     cause: fetch3In.cause,
-                    tval: getAddr(pc),
+                    tval: getAddr(fetch3In.pc),
                     decode_epoch: fetch3In.decode_epoch,
                     main_epoch: fetch3In.main_epoch
                 };
+            end else begin
+                out.pred_next_pc = pred_next_pc;
             end
-            out.pred_next_pc = pred_next_pc;
 
             // Redirect doFetch1 if we predicted a taken compressed branch
             // but this is an uncompressed instruction. We will tell decode
