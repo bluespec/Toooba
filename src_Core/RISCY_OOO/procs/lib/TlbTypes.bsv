@@ -33,7 +33,7 @@ typedef struct{
     Bool  write;
     Bool  cap;
 } TlbReq deriving(Eq, Bits, FShow);
-typedef Tuple2#(Addr, Maybe#(Exception)) TlbResp;
+typedef Tuple3#(Addr, Maybe#(Exception), Bool) TlbResp;
 
 // non-blocking DTLB
 typedef `DTLB_REQ_NUM DTlbReqNum;
@@ -180,6 +180,7 @@ typedef enum {
 typedef struct {
     Bool allowed;
     Exception excCode; // Only defined if !allowed
+    Bool allowCap; // Whether we can load caps
 } TlbPermissionCheck deriving(Bits, Eq, FShow);
 
 function TlbPermissionCheck hasVMPermission(
@@ -244,8 +245,9 @@ function TlbPermissionCheck hasVMPermission(
     endcase
 
     TlbPermissionCheck ret = TlbPermissionCheck {
-        allowed: !fault,
-        excCode: access == DataStore ? StorePageFault : LoadPageFault};
+        allowed:  !fault,
+        excCode:  access == DataStore ? StorePageFault : LoadPageFault,
+        allowCap: pte_upper_type.cap_readable};
 
     if (!fault) begin
         if (cap && access == DataStore && !pte_upper_type.cap_writable) begin

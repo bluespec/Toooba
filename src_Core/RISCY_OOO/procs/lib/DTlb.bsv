@@ -282,7 +282,7 @@ module mkDTlb#(
                 // fill TLB, and record resp
                 tlb.addEntry(en);
                 let trans_addr = translate(r.addr, en.ppn, en.level);
-                pendResp[idx] <= tuple2(trans_addr, Invalid);
+                pendResp[idx] <= tuple3(trans_addr, Invalid, permCheck.allowCap);
                 if(verbose) begin
                     $display("[DTLB] refill: idx %d; ", idx, fshow(r),
                              "; ", fshow(trans_addr));
@@ -291,7 +291,7 @@ module mkDTlb#(
             else begin
                 // page fault
                 Exception fault = permCheck.excCode;
-                pendResp[idx] <= tuple2(?, Valid (fault));
+                pendResp[idx] <= tuple3(?, Valid (fault), False);
                 if(verbose) begin
                     $display("[DTLB] refill no permission: idx %d; ", idx, fshow(r));
                 end
@@ -300,7 +300,7 @@ module mkDTlb#(
         else begin
             // page fault
             Exception fault = r.write ? StorePageFault : LoadPageFault;
-            pendResp[idx] <= tuple2(?, Valid (fault));
+            pendResp[idx] <= tuple3(?, Valid (fault), False);
             if(verbose) $display("[DTLB] refill page fault: idx %d; ", idx, fshow(r));
         end
 
@@ -436,7 +436,7 @@ module mkDTlb#(
         // (Because we are always non speculative in M mode)
         if (!vm_info.sanctum_authShared && outOfProtectionDomain(vm_info, r.addr))begin
             pendWait[idx] <= None;
-            pendResp[idx] <= tuple2(?, Valid (LoadAccessFault));
+            pendResp[idx] <= tuple3(?, Valid (LoadAccessFault), False);
         end
 `else
         // No security check
@@ -458,13 +458,14 @@ module mkDTlb#(
                                                 entry.level,
                                                 r.write ? DataStore : DataLoad,
                                                 r.cap);
+                $display("Permission check output 2: ", fshow(permCheck));
                 if (permCheck.allowed) begin
                     // update TLB replacement info
                     tlb.updateRepByHit(trans_result.index);
                     // translate addr
                     Addr trans_addr = translate(r.addr, entry.ppn, entry.level);
                     pendWait[idx] <= None;
-                    pendResp[idx] <= tuple2(trans_addr, Invalid);
+                    pendResp[idx] <= tuple3(trans_addr, Invalid, permCheck.allowCap);
                     if(verbose) begin
                         $display("[DTLB] req (hit): idx %d; ", idx, fshow(r),
                                  "; ", fshow(trans_result));
@@ -480,7 +481,7 @@ module mkDTlb#(
                     // page fault
                     Exception fault = permCheck.excCode;
                     pendWait[idx] <= None;
-                    pendResp[idx] <= tuple2(?, Valid (fault));
+                    pendResp[idx] <= tuple3(?, Valid (fault), False);
                     if(verbose) $display("[DTLB] req no permission: idx %d; ", idx, fshow(r));
                 end
             end
@@ -524,7 +525,7 @@ module mkDTlb#(
         else begin
             // bare mode
             pendWait[idx] <= None;
-            pendResp[idx] <= tuple2(r.addr, Invalid);
+            pendResp[idx] <= tuple3(r.addr, Invalid, True);
             if(verbose) $display("DTLB %m req (bare): ", fshow(r));
         end
 
