@@ -258,7 +258,7 @@ function Tuple2#(CapPipe,Bool) capModify(CapPipe a, CapPipe b, CapModifyFunc fun
             tagged SealEntry              :
                 t(setKind(a, SENTRY));
             tagged Seal                   :
-                t((validAsType(b, getAddr(b)) && isValidCap(b)) ?
+                t((validAsType(b, getAddr(b)) && isValidCap(b) && getKind(a) == UNSEALED) ?
                      setKind(a, SEALED_WITH_TYPE (truncate(getAddr(b))))
                    : a);
             tagged Unseal .src            :
