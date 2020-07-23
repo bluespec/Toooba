@@ -45,10 +45,10 @@ import CHERICC_Fat::*;
 import ISA_Decls_CHERI::*;
 
 (* noinline *)
-function Maybe#(CSR_XCapCause) capChecks(CapPipe a, CapPipe b, CapPipe ddc, CapChecks toCheck, Bool cap_exact);
+function Maybe#(CSR_XCapCause) capChecksExec(CapPipe a, CapPipe b, CapPipe ddc, CapChecks toCheck, Bool cap_exact);
     function Maybe#(CSR_XCapCause) e1(CHERIException e)   = Valid(CSR_XCapCause{cheri_exc_reg: toCheck.rn1, cheri_exc_code: e});
     function Maybe#(CSR_XCapCause) e2(CHERIException e)   = Valid(CSR_XCapCause{cheri_exc_reg: toCheck.rn2, cheri_exc_code: e});
-    function Maybe#(CSR_XCapCause) eDDC(CHERIException e) = Valid(CSR_XCapCause{cheri_exc_reg: 6'b100001, cheri_exc_code: e}); // Not sure where the proper reg number of DDC is stored...
+    function Maybe#(CSR_XCapCause) eDDC(CHERIException e) = Valid(CSR_XCapCause{cheri_exc_reg: {1'b1, pack(scrAddrDDC)}, cheri_exc_code: e});
     Maybe#(CSR_XCapCause) result = Invalid;
     if (toCheck.ddc_tag                       && !isValidCap(ddc))
         result = eDDC(cheriExcTagViolation);
@@ -92,10 +92,36 @@ function Maybe#(CSR_XCapCause) capChecks(CapPipe a, CapPipe b, CapPipe ddc, CapC
         result = e2(cheriExcSoftwarePermViolation);
     else if (toCheck.src1_derivable           && !isDerivable(a))
         result = e1(cheriExcLengthViolation);
-    else if (toCheck.scr_read_only            && (toCheck.rn1 != 0))
-        result = Valid(CSR_XCapCause{cheri_exc_reg: {1,pack(scrAddrPCC)}, cheri_exc_code: cheriExcPermitASRViolation});
     else if (toCheck.cap_exact                && !cap_exact)
         result = e1(cheriExcRepresentViolation);
+    return result;
+endfunction
+
+(* noinline *)
+function Maybe#(CSR_XCapCause) capChecksMem(CapPipe auth, CapPipe data, CapChecks toCheck, MemFunc mem_func, MemDataByteEn byteEn);
+    function Maybe#(CSR_XCapCause) eAuth(CHERIException e)   = Valid(CSR_XCapCause{cheri_exc_reg: case (toCheck.check_authority_src) matches Src1: toCheck.rn1;
+                                                                                                                                       Ddc: {1'b1, pack(scrAddrDDC)};
+                                                                                              endcase
+                                                                             , cheri_exc_code: e});
+    Maybe#(CSR_XCapCause) result = Invalid;
+    if      (!isValidCap(auth))
+        result = eAuth(cheriExcTagViolation);
+    else if (getKind(auth) != UNSEALED)
+        result = eAuth(cheriExcSealViolation);
+    else if (mem_func == Ld || mem_func == Lr || mem_func == Amo) begin
+        if (!getHardPerms(auth).permitLoad)
+            result = eAuth(cheriExcPermitRViolation);
+    end
+    else if (mem_func == St || mem_func == Sc || mem_func == Amo) begin
+        if (!getHardPerms(auth).permitStore)
+            result = eAuth(cheriExcPermitWViolation);
+        if (isValidCap(data) && byteEn == replicate(True)) begin
+            if (!getHardPerms(auth).permitStoreCap)
+                result = eAuth(cheriExcPermitWCapViolation);
+            if (!getHardPerms(auth).permitStoreLocalCap && getHardPerms(data).global)
+                result = eAuth(cheriExcPermitWLocalCapViolation);
+        end
+    end
     return result;
 endfunction
 
@@ -230,7 +256,7 @@ function Tuple2#(CapPipe,Bool) capModify(CapPipe a, CapPipe b, CapModifyFunc fun
             tagged SealEntry              :
                 t(setKind(a, SENTRY));
             tagged Seal                   :
-                t((validAsType(b, getAddr(b)) && isValidCap(b)) ?
+                t((validAsType(b, getAddr(b)) && isValidCap(b) && getKind(a) == UNSEALED) ?
                      setKind(a, SEALED_WITH_TYPE (truncate(getAddr(b))))
                    : a);
             tagged Unseal .src            :
@@ -375,12 +401,12 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
     BrFunc br_f = dInst.execFunc matches tagged Br .br_f ? br_f : NT;
     cf.taken = aluBr(getAddr(rVal1), getAddr(rVal2), br_f);
     cf.nextPc = brAddrCalc(pcc, rVal1, dInst.iType, fromMaybe(0,getDInstImm(dInst)), cf.taken, orig_inst, newPcc);
+
+    Maybe#(CSR_XCapCause) capException = capChecksExec(rVal1, aluVal2, nullCap, dInst.capChecks, cap_exact);
     if (dInst.execFunc matches tagged Br .unused) begin
         rVal1 = cf.nextPc;
         if (!cf.taken) dInst.capChecks.check_enable = False;
     end
-
-    Maybe#(CSR_XCapCause) capException = capChecks(rVal1, aluVal2, nullCap, dInst.capChecks, cap_exact);
     Maybe#(BoundsCheck) boundsCheck = prepareBoundsCheck(rVal1, aluVal2, pcc,
                                                          nullCap, 0, 0, // These three are only used in the memory pipe
                                                          dInst.capChecks);
@@ -506,9 +532,12 @@ function Maybe#(Trap) checkForException(
     else if(dInst.scr matches tagged Valid .scr) begin
         Bool scr_has_priv = (prv >= pack(scr)[4:3]);
         Bool unimplemented = (scr == scrAddrNone);
+        Bool writes_scr = regs.src1 == Valid (tagged Gpr 0) ? False : True;
+        Bool read_only  = (scr == scrAddrPCC);
+        Bool write_deny = (writes_scr && read_only);
         Bool asr_deny = !getHardPerms(pcc).accessSysRegs && !(
-          scr == scrAddrDDC);
-        if(!scr_has_priv || unimplemented) begin // Writes to PCC checked in capChecks
+          scr == scrAddrDDC || scr == scrAddrPCC);
+        if(!scr_has_priv || unimplemented || write_deny) begin
             exception = Valid (Exception (excIllegalInst));
         end else if (asr_deny) begin
             exception = Valid (CapException (CSR_XCapCause {cheri_exc_reg: {1'b1, pack(scrAddrPCC)}, cheri_exc_code: cheriExcPermitASRViolation}));

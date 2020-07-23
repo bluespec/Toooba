@@ -31,8 +31,9 @@ import ProcTypes::*;
 typedef struct{
     Addr  addr;
     Bool  write;
+    Bool  cap;
 } TlbReq deriving(Eq, Bits, FShow);
-typedef Tuple2#(Addr, Maybe#(Exception)) TlbResp;
+typedef Tuple3#(Addr, Maybe#(Exception), Bool) TlbResp;
 
 // non-blocking DTLB
 typedef `DTLB_REQ_NUM DTlbReqNum;
@@ -66,7 +67,13 @@ typedef struct {
 } PTEType deriving (Bits, Eq, FShow);
 
 typedef struct {
-    Bit#(10) reserved;
+    Bool cap_writable;
+    Bool cap_readable;
+} PTEUpperType deriving (Bits, Eq, FShow);
+
+typedef struct {
+    PTEUpperType pteUpperType;
+    Bit#(8) reserved;
     Ppn ppn;
     Bit#(2) reserved_sw; // reserved for supervisor software
     PTEType pteType;
@@ -78,6 +85,7 @@ typedef struct {
     Vpn           vpn;
     Ppn           ppn;
     PTEType       pteType;
+    PTEUpperType  pteUpperType;
     PageWalkLevel level;
     Asid          asid;
 } TlbEntry deriving (Bits, Eq, FShow);
@@ -169,10 +177,17 @@ typedef enum {
     DataStore // also contain DataLoad
 } TlbAccessType deriving(Bits, Eq, FShow);
 
-function Bool hasVMPermission(
+typedef struct {
+    Bool allowed;
+    Exception excCode; // Only defined if !allowed
+    Bool allowCap; // Whether we can load caps
+} TlbPermissionCheck deriving(Bits, Eq, FShow);
+
+function TlbPermissionCheck hasVMPermission(
     VMInfo vm_info,
-    PTEType pte_type, Ppn ppn, PageWalkLevel level,
-    TlbAccessType access
+    PTEType pte_type, PTEUpperType pte_upper_type,
+     Ppn ppn, PageWalkLevel level,
+    TlbAccessType access, Bool cap
 );
     // try to find any page fault
     Bool fault = False;
@@ -229,13 +244,27 @@ function Bool hasVMPermission(
         end
     endcase
 
-    // check if accessed or dirty bit needs to be set
-    if(!pte_type.accessed) begin
-        fault = True;
-    end
-    if(access == DataStore && !pte_type.dirty) begin
-        fault = True;
+    TlbPermissionCheck ret = TlbPermissionCheck {
+        allowed:  !fault,
+        excCode:  access == DataStore ? excStorePageFault : excLoadPageFault,
+        allowCap: pte_upper_type.cap_readable};
+
+    if (!fault) begin
+        if (cap && access == DataStore && !pte_upper_type.cap_writable) begin
+            ret.allowed = False;
+            ret.excCode = excStoreCapPageFault;
+        end else begin
+            // check if accessed or dirty bit needs to be set
+            if(!pte_type.accessed) begin
+                ret.allowed = False;
+                ret.excCode = access == DataStore ? excStorePageFault : excLoadPageFault;
+            end
+            if(access == DataStore && !pte_type.dirty) begin
+                ret.allowed = False;
+                ret.excCode = access == DataStore ? excStorePageFault : excLoadPageFault;
+            end
+        end
     end
 
-    return !fault;
+    return ret;
 endfunction

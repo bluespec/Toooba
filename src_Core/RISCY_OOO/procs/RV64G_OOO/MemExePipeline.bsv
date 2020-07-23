@@ -108,6 +108,8 @@ typedef struct {
     ByteEn  store_data_BE;
 `endif
     Bool misaligned;
+    Bool capStore;
+    Bool allowCap;
     Maybe#(CSR_XCapCause) capException;
     Maybe#(BoundsCheck) check;
 } MemExeToFinish deriving(Bits, FShow);
@@ -158,7 +160,8 @@ module mkDTlbSynth(DTlbSynth);
             write: (case(x.mem_func)
                         St, Sc, Amo: True;
                         default: False;
-                    endcase)
+                    endcase),
+            cap: x.capStore
         };
     endfunction
     let m <- mkDTlb(getTlbReq);
@@ -448,7 +451,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         if(x.regs.src1 matches tagged Valid .src1 &&& src1 != 0) begin
             rVal1 <- readRFBypass(src1, regsReady.src1, inIfc.rf_rd1(src1), bypassWire);
         end
-        if (x.ddc_offset) rVal1 = nullWithAddr(getAddr(rVal1) + getAddr(ddc));
+        if (x.ddc_offset) rVal1 = incOffset(ddc, getAddr(rVal1)).value;
 
         // get rVal2 (check bypass)
         CapPipe rVal2 = nullCap;
@@ -524,7 +527,9 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
                 store_data_BE: origBE,
 `endif
                 misaligned: memAddrMisaligned(getAddr(vaddr), origBE),
-                capException: capChecks(x.rVal1, x.rVal2, ddc, x.cap_checks, ?),
+                capStore: isValidCap(data) && pack(origBE) == ~0,
+                allowCap: getHardPerms(x.rVal1).permitLoadCap,
+                capException: capChecksMem(x.rVal1, x.rVal2, x.cap_checks, x.mem_func, origBE),
                 check: prepareBoundsCheck(x.rVal1, x.rVal2, almightyCap/*ToDo: pcc*/,
                                           ddc, getAddr(vaddr), pack(countOnes(pack(origBE))), x.cap_checks)
             },
@@ -536,7 +541,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         dTlb.deqProcResp;
         let dTlbResp = dTlb.procResp;
         let x = dTlbResp.inst;
-        let {paddr, expCause} = dTlbResp.resp;
+        let {paddr, expCause, allowCapPTE} = dTlbResp.resp;
         Maybe#(Trap) cause = Invalid;
         if (expCause matches tagged Valid .c) cause = Valid(Exception(c));
 
@@ -620,7 +625,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
 
         // update LSQ
         LSQUpdateAddrResult updRes <- lsq.updateAddr(
-            x.ldstq_tag, cause, paddr, isMMIO, x.shiftedBE
+            x.ldstq_tag, cause, x.allowCap && allowCapPTE, paddr, isMMIO, x.shiftedBE
         );
 
         // issue non-MMIO Ld which has no exception and is not waiting for
@@ -745,7 +750,9 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         LSQRespLdResult res <- lsq.respLd(tag, data);
         if(verbose) $display("%t : ", $time, rule_name, " ", fshow(tag), "; ", fshow(data), "; ", fshow(res));
         if(res.dst matches tagged Valid .dst) begin
-            inIfc.writeRegFile(dst.indx, fromMem(unpack(pack(res.data))));
+            CapPipe dataUnpacked = fromMem(unpack(pack(res.data)));
+            dataUnpacked = setValidCap(dataUnpacked, res.allowCap && isValidCap(dataUnpacked));
+            inIfc.writeRegFile(dst.indx, dataUnpacked);
 
 `ifdef INCLUDE_TANDEM_VERIF
             inIfc.rob_setExecuted_doFinishMem_RegData (res.instTag, res.data);
@@ -908,7 +915,9 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         MemTaggedData resp = gatherLoad(lsqDeqLd.paddr, lsqDeqLd.byteEn, lsqDeqLd.unsignedLd, d);
         // write reg file & set ROB as Executed & wakeup rs
         if(lsqDeqLd.dst matches tagged Valid .dst) begin
-            inIfc.writeRegFile(dst.indx, fromMem(unpack(pack(resp))));
+            CapPipe dataUnpacked = fromMem(unpack(pack(resp)));
+            dataUnpacked = setValidCap(dataUnpacked, lsqDeqLd.allowCap && isValidCap(dataUnpacked));
+            inIfc.writeRegFile(dst.indx, dataUnpacked);
             inIfc.setRegReadyAggr_mem(dst.indx);
 `ifdef INCLUDE_TANDEM_VERIF
             inIfc.rob_setExecuted_doFinishMem_RegData (lsqDeqLd.instTag, resp);
@@ -996,7 +1005,9 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         MemTaggedData resp = gatherLoad(lsqDeqLd.paddr, lsqDeqLd.byteEn, lsqDeqLd.unsignedLd, d);
         // write reg file & wakeup rs (this wakeup is late but MMIO is rare) & set ROB as Executed
         if(lsqDeqLd.dst matches tagged Valid .dst) begin
-            inIfc.writeRegFile(dst.indx, fromMem(tuple2(resp.tag,unpack(pack(resp.data)))));
+            CapPipe dataUnpacked = fromMem(tuple2(resp.tag,unpack(pack(resp.data))));
+            dataUnpacked = setValidCap(dataUnpacked, lsqDeqLd.allowCap && isValidCap(dataUnpacked));
+            inIfc.writeRegFile(dst.indx, dataUnpacked);
             inIfc.setRegReadyAggr_mem(dst.indx);
 `ifdef INCLUDE_TANDEM_VERIF
             inIfc.rob_setExecuted_doFinishMem_RegData (lsqDeqLd.instTag, resp);
@@ -1249,7 +1260,9 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         MemTaggedData resp <- toGet(respLrScAmoQ).get;
         // write reg file & set ROB as Executed & wake up rs
         if(lsqDeqSt.dst matches tagged Valid .dst) begin
-            inIfc.writeRegFile(dst.indx, fromMem(tuple2(resp.tag, pack(resp.data))));
+            CapPipe dataUnpacked = fromMem(tuple2(resp.tag, pack(resp.data)));
+            dataUnpacked = setValidCap(dataUnpacked, False); // TODO no allowCap around. Can a cap be loaded this way (e.g. AMOSWAP?)
+            inIfc.writeRegFile(dst.indx, dataUnpacked);
             inIfc.setRegReadyAggr_mem(dst.indx);
 `ifdef INCLUDE_TANDEM_VERIF
             inIfc.rob_setExecuted_doFinishMem_RegData (lsqDeqSt.instTag, resp);
@@ -1355,7 +1368,9 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         MemTaggedData resp = inIfc.mmioRespVal.data;
         // write reg file & wakeup rs (this wakeup is late but MMIO is rare) & set ROB as Executed
         if(lsqDeqSt.dst matches tagged Valid .dst) begin
-            inIfc.writeRegFile(dst.indx, fromMem(tuple2(resp.tag, pack(resp.data))));
+            CapPipe dataUnpacked = fromMem(tuple2(resp.tag, pack(resp.data)));
+            dataUnpacked = setValidCap(dataUnpacked, False); // TODO no allowCap around. Can a cap be loaded this way (e.g. AMOSWAP?)
+            inIfc.writeRegFile(dst.indx, dataUnpacked);
             inIfc.setRegReadyAggr_mem(dst.indx);
 `ifdef INCLUDE_TANDEM_VERIF
             inIfc.rob_setExecuted_doFinishMem_RegData (lsqDeqSt.instTag, resp);

@@ -12,4 +12,6 @@
 `Exception(InstPageFault,       5'd12)
 `Exception(LoadPageFault,       5'd13)
 `Exception(StorePageFault,      5'd15)
+`Exception(LoadCapPageFault,    5'd26)
+`Exception(StoreCapPageFault,   5'd27)
 `Exception(CHERIFault,          5'd28)

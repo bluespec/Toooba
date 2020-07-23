@@ -1253,7 +1253,7 @@ module mkSupReorderBuffer#(
 `endif
         Bool access_at_commit, Bool non_mmio_st_done
 `ifdef RVFI
-        , tb
+        , ExtraTraceBundle tb
 `endif
     ) if(
         all(id, readVReg(setExeMem_SB_enq)) // ordering: < enq

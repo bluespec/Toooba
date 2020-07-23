@@ -686,7 +686,7 @@ module mkFetchStage(FetchStage);
         f12f2.deq;
 
         // Get TLB response
-        match {.phys_pc, .cause} <- tlb_server.response.get;
+        match {.phys_pc, .cause, .allow_cap} <- tlb_server.response.get;
 
         // Access main mem or boot rom if no TLB exception
         Bool access_mmio = False;

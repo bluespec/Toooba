@@ -294,6 +294,7 @@ typedef struct {
 typedef struct {
     Bool wrongPath;
     Maybe#(PhyDst) dst;
+    Bool allowCap;
 `ifdef INCLUDE_TANDEM_VERIF
     InstTag instTag;    // For recording Ld data in ROB
 `endif
@@ -318,6 +319,7 @@ typedef struct {
     Bool               isMMIO;
     MemDataByteEn      shiftedBE;
     Maybe#(Trap)       fault;
+    Bool               allowCap;
     Maybe#(LdKilledBy) killed;
 } LdQDeqEntry deriving (Bits, Eq, FShow);
 
@@ -332,6 +334,7 @@ typedef struct {
     Bool              isMMIO;
     MemDataByteEn     shiftedBE;
     MemTaggedData     stData;
+    Bool              allowCap;
     Maybe#(Trap)      fault;
 } StQDeqEntry deriving (Bits, Eq, FShow);
 
@@ -363,7 +366,7 @@ interface SplitLSQ;
     method ActionValue#(LSQUpdateAddrResult) updateAddr(
         LdStQTag lsqTag, Maybe#(Trap) fault,
         // below are only meaningful wen fault is Invalid
-        Addr paddr, Bool isMMIO, MemDataByteEn shiftedBE
+        Bool allowCap, Addr paddr, Bool isMMIO, MemDataByteEn shiftedBE
     );
     // Issue a load, and remove dependence on this load issue.
     method ActionValue#(LSQIssueLdResult) issueLd(
@@ -631,6 +634,7 @@ module mkSplitLSQ(SplitLSQ);
     Vector#(LdQSize, Reg#(LdQMemFunc))              ld_memFunc         <- replicateM(mkRegU);
     Vector#(LdQSize, Reg#(Bool))                    ld_unsigned        <- replicateM(mkRegU);
     Vector#(LdQSize, Reg#(MemDataByteEn))           ld_byteEn          <- replicateM(mkRegU);
+    Vector#(LdQSize, Reg#(Bool))                    ld_allowCap        <- replicateM(mkRegU);
     Vector#(LdQSize, Reg#(Bool))                    ld_acq             <- replicateM(mkRegU);
     Vector#(LdQSize, Reg#(Bool))                    ld_rel             <- replicateM(mkRegU);
     Vector#(LdQSize, Reg#(Maybe#(PhyDst)))          ld_dst             <- replicateM(mkRegU);
@@ -1525,7 +1529,7 @@ module mkSplitLSQ(SplitLSQ);
 
     method ActionValue#(LSQUpdateAddrResult) updateAddr(
         LdStQTag lsqTag, Maybe#(Trap) fault,
-        Addr pa, Bool mmio, MemDataByteEn shift_be
+        Bool allowCap, Addr pa, Bool mmio, MemDataByteEn shift_be
     );
         // index vec for vector functions
         Vector#(LdQSize, LdQTag) idxVec = genWith(fromInteger);
@@ -1566,6 +1570,7 @@ module mkSplitLSQ(SplitLSQ);
             ld_fault_updAddr[tag] <= fault;
             ld_computed_updAddr[tag] <= !isValid(fault);
             ld_paddr_updAddr[tag] <= pa;
+            ld_allowCap[tag] <= allowCap;
             ld_isMMIO_updAddr[tag] <= mmio;
             ld_shiftedBE_updAddr[tag] <= shift_be;
 
@@ -1994,6 +1999,7 @@ module mkSplitLSQ(SplitLSQ);
         let res = LSQRespLdResult {
             wrongPath: False,
             dst: Invalid,
+            allowCap: False,
 `ifdef INCLUDE_TANDEM_VERIF
             instTag: ld_instTag [t],    // For recording Ld data in ROB
 `endif
@@ -2021,8 +2027,10 @@ module mkSplitLSQ(SplitLSQ);
             // In that case, the data needs to be nanboxed before writing to
             // the register files as the Toooba FPR is 64-bit
             let bEn = ld_byteEn[t];
+            let allowCap = ld_allowCap[t];
             let dst = ld_dst[t];
             let is32BitLd = (bEn[3] && !bEn[7]);
+            res.allowCap = allowCap;
             res.dst = ld_dst[t];
             if (dst.Valid.isFpuReg && is32BitLd)
                res.data = fv_nanbox_MemTaggedData(
@@ -2057,6 +2065,7 @@ module mkSplitLSQ(SplitLSQ);
             isMMIO: ld_isMMIO_deqLd[deqP],
             shiftedBE: ld_shiftedBE_deqLd[deqP],
             fault: ld_fault_deqLd[deqP],
+            allowCap: ld_allowCap[deqP],
             killed: ld_killed_deqLd[deqP]
         };
     endmethod

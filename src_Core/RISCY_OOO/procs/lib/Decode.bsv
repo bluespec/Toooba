@@ -257,12 +257,8 @@ function CapChecks memCapChecks(Bool cap_mode);
     capChecks.check_inclusive = True;
     if (cap_mode) begin
         capChecks.check_authority_src = Src1;
-        capChecks.src1_tag = True;
-        capChecks.src1_unsealed = True;
     end else begin
         capChecks.check_authority_src = Ddc;
-        capChecks.ddc_tag = True;
-        capChecks.ddc_unsealed = True;
     end
     return capChecks;
 endfunction
@@ -958,7 +954,8 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             dInst.iType = rs1 == 0 ? Cap : Scr;
                             regs.dst = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs1);
-                            dInst.scr = Valid (unpackSCR(rs2));
+
+                            let scr = unpackSCR(rs2);
 
                             let scrType = case (rs2[1:0])
                                               0: TCC;
@@ -967,12 +964,13 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                                           endcase;
 
                             // Decode SCR read to PCC as AUIPCC 0
-                            if (dInst.scr.Valid == scrAddrPCC) begin
+                            if (scr == scrAddrPCC) begin
                                 dInst.iType = Auipcc;
                                 dInst.execFunc = tagged Alu Add;
                                 regs.src1 = Invalid;
                                 dInst.csr = tagged Invalid;
-                                dInst.capChecks.scr_read_only = True;
+                            end else begin
+                                dInst.scr = Valid (scr);
                             end
 
                             dInst.capFunc = CapModify (SpecialRW (scrType));

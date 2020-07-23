@@ -271,15 +271,18 @@ module mkDTlb#(
         end
         else if(pRs.entry matches tagged Valid .en) begin
             // check permission
-            if(hasVMPermission(vm_info,
-                               en.pteType,
-                               en.ppn,
-                               en.level,
-                               r.write ? DataStore : DataLoad)) begin
+            let permCheck = hasVMPermission(vm_info,
+                                            en.pteType,
+                                            en.pteUpperType,
+                                            en.ppn,
+                                            en.level,
+                                            r.write ? DataStore : DataLoad,
+                                            r.cap);
+            if (permCheck.allowed) begin
                 // fill TLB, and record resp
                 tlb.addEntry(en);
                 let trans_addr = translate(r.addr, en.ppn, en.level);
-                pendResp[idx] <= tuple2(trans_addr, Invalid);
+                pendResp[idx] <= tuple3(trans_addr, Invalid, permCheck.allowCap);
                 if(verbose) begin
                     $display("[DTLB] refill: idx %d; ", idx, fshow(r),
                              "; ", fshow(trans_addr));
@@ -287,8 +290,8 @@ module mkDTlb#(
             end
             else begin
                 // page fault
-                Exception fault = r.write ? excStorePageFault : excLoadPageFault;
-                pendResp[idx] <= tuple2(?, Valid (fault));
+                Exception fault = permCheck.excCode;
+                pendResp[idx] <= tuple3(?, Valid (fault), False);
                 if(verbose) begin
                     $display("[DTLB] refill no permission: idx %d; ", idx, fshow(r));
                 end
@@ -297,7 +300,7 @@ module mkDTlb#(
         else begin
             // page fault
             Exception fault = r.write ? excStorePageFault : excLoadPageFault;
-            pendResp[idx] <= tuple2(?, Valid (fault));
+            pendResp[idx] <= tuple3(?, Valid (fault), False);
             if(verbose) $display("[DTLB] refill page fault: idx %d; ", idx, fshow(r));
         end
 
@@ -433,7 +436,7 @@ module mkDTlb#(
         // (Because we are always non speculative in M mode)
         if (!vm_info.sanctum_authShared && outOfProtectionDomain(vm_info, r.addr))begin
             pendWait[idx] <= None;
-            pendResp[idx] <= tuple2(?, Valid (excLoadAccessFault));
+            pendResp[idx] <= tuple3(?, Valid (excLoadAccessFault), False);
         end
 `else
         // No security check
@@ -448,17 +451,21 @@ module mkDTlb#(
                 // TLB hit
                 let entry = trans_result.entry;
                 // check permission
-                if (hasVMPermission(vm_info,
-                                    entry.pteType,
-                                    entry.ppn,
-                                    entry.level,
-                                    r.write ? DataStore : DataLoad)) begin
+                let permCheck = hasVMPermission(vm_info,
+                                                entry.pteType,
+                                                entry.pteUpperType,
+                                                entry.ppn,
+                                                entry.level,
+                                                r.write ? DataStore : DataLoad,
+                                                r.cap);
+                $display("Permission check output 2: ", fshow(permCheck));
+                if (permCheck.allowed) begin
                     // update TLB replacement info
                     tlb.updateRepByHit(trans_result.index);
                     // translate addr
                     Addr trans_addr = translate(r.addr, entry.ppn, entry.level);
                     pendWait[idx] <= None;
-                    pendResp[idx] <= tuple2(trans_addr, Invalid);
+                    pendResp[idx] <= tuple3(trans_addr, Invalid, permCheck.allowCap);
                     if(verbose) begin
                         $display("[DTLB] req (hit): idx %d; ", idx, fshow(r),
                                  "; ", fshow(trans_result));
@@ -472,9 +479,9 @@ module mkDTlb#(
                 end
                 else begin
                     // page fault
-                    Exception fault = r.write ? excStorePageFault : excLoadPageFault;
+                    Exception fault = permCheck.excCode;
                     pendWait[idx] <= None;
-                    pendResp[idx] <= tuple2(?, Valid (fault));
+                    pendResp[idx] <= tuple3(?, Valid (fault), False);
                     if(verbose) $display("[DTLB] req no permission: idx %d; ", idx, fshow(r));
                 end
             end
@@ -518,7 +525,7 @@ module mkDTlb#(
         else begin
             // bare mode
             pendWait[idx] <= None;
-            pendResp[idx] <= tuple2(r.addr, Invalid);
+            pendResp[idx] <= tuple3(r.addr, Invalid, True);
             if(verbose) $display("DTLB %m req (bare): ", fshow(r));
         end
 

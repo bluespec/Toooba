@@ -176,13 +176,15 @@ module mkITlb(ITlb::ITlb);
             // check permission
             if(hasVMPermission(vm_info,
                                en.pteType,
+                               en.pteUpperType,
                                en.ppn,
                                en.level,
-                               InstFetch)) begin
+                               InstFetch,
+                               False).allowed) begin
                 // fill TLB and resp to proc
                 tlb.addEntry(en);
                 let trans_addr = translate(vaddr, en.ppn, en.level);
-                hitQ.enq(tuple2(trans_addr, Invalid));
+                hitQ.enq(tuple3(trans_addr, Invalid, False));
                 if(verbose) begin
                     $display("ITLB %m refill: ", fshow(vaddr),
                              " ; ", fshow(trans_addr));
@@ -190,7 +192,7 @@ module mkITlb(ITlb::ITlb);
             end
             else begin
                 // page fault
-                hitQ.enq(tuple2(?, Valid (excInstPageFault)));
+                hitQ.enq(tuple3(?, Valid (excInstPageFault), False));
                 if(verbose) begin
                     $display("ITLB %m refill no permission: ", fshow(vaddr));
                 end
@@ -198,7 +200,7 @@ module mkITlb(ITlb::ITlb);
         end
         else begin
             // page fault
-            hitQ.enq(tuple2(?, Valid (excInstPageFault)));
+            hitQ.enq(tuple3(?, Valid (excInstPageFault), False));
             if(verbose) $display("ITLB %m refill page fault: ", fshow(vaddr));
         end
         // miss resolved
@@ -285,16 +287,18 @@ module mkITlb(ITlb::ITlb);
                         // check permission
                         if(hasVMPermission(vm_info,
                                            entry.pteType,
+                                           entry.pteUpperType,
                                            entry.ppn,
                                            entry.level,
-                                           InstFetch)) begin
+                                           InstFetch,
+                                           False).allowed) begin
                             // update replacement info
                             tlb.updateRepByHit(trans_result.index);
                             // translate addr
                             Addr trans_addr = translate(
                                 vaddr, entry.ppn, entry.level
                             );
-                            hitQ.enq(tuple2(trans_addr, Invalid));
+                            hitQ.enq(tuple3(trans_addr, Invalid, False));
                             if(verbose) begin
                                 $display("ITLB %m req (hit): ", fshow(vaddr),
                                          " ; ", fshow(trans_result));
@@ -302,7 +306,7 @@ module mkITlb(ITlb::ITlb);
                         end
                         else begin
                             // page fault
-                            hitQ.enq(tuple2(?, Valid (excInstPageFault)));
+                            hitQ.enq(tuple3(?, Valid (excInstPageFault), False));
                             if(verbose) begin
                                 $display("ITLB %m req no permission: ",
                                          fshow(vaddr));
@@ -326,7 +330,7 @@ module mkITlb(ITlb::ITlb);
                 end
                 else begin
                     // bare mode, no translation
-                    hitQ.enq(tuple2(vaddr, Invalid));
+                    hitQ.enq(tuple3(vaddr, Invalid, False));
                     if (verbose) $display("ITLB %m req (bare): ", fshow(vaddr));
                 end
 
