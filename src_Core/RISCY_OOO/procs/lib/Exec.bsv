@@ -92,8 +92,6 @@ function Maybe#(CSR_XCapCause) capChecksExec(CapPipe a, CapPipe b, CapPipe ddc, 
         result = e2(SoftwarePermViolation);
     else if (toCheck.src1_derivable           && !isDerivable(a))
         result = e1(LengthViolation);
-    else if (toCheck.scr_read_only            && (toCheck.rn1 != 0))
-        result = Valid(CSR_XCapCause{cheri_exc_reg: {1,pack(SCR_PCC)}, cheri_exc_code: PermitASRViolation});
     else if (toCheck.cap_exact                && !cap_exact)
         result = e1(RepresentViolation);
     return result;
@@ -534,9 +532,12 @@ function Maybe#(Trap) checkForException(
     else if(dInst.scr matches tagged Valid .scr) begin
         Bool scr_has_priv = (prv >= pack(scr)[4:3]);
         Bool unimplemented = (scr == SCR_None);
+        Bool writes_scr = regs.src1 == Valid (tagged Gpr 0) ? False : True;
+        Bool read_only  = (scr == SCR_PCC);
+        Bool write_deny = (writes_scr && read_only);
         Bool asr_deny = !getHardPerms(pcc).accessSysRegs && !(
-          scr == SCR_DDC);
-        if(!scr_has_priv || unimplemented) begin // Writes to PCC checked in capChecks
+          scr == SCR_DDC || scr == SCR_PCC);
+        if(!scr_has_priv || unimplemented || write_deny) begin
             exception = Valid (Exception (IllegalInst));
         end else if (asr_deny) begin
             exception = Valid (CapException (CSR_XCapCause {cheri_exc_reg: {1'b1, pack(SCR_PCC)}, cheri_exc_code: PermitASRViolation}));

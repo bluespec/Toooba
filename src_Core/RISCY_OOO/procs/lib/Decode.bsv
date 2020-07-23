@@ -969,7 +969,6 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                                 dInst.execFunc = tagged Alu Add;
                                 regs.src1 = Invalid;
                                 dInst.csr = tagged Invalid;
-                                dInst.capChecks.scr_read_only = True;
                             end else begin
                                 dInst.scr = Valid (scr);
                             end
