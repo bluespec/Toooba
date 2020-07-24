@@ -97,7 +97,6 @@ library RTL can be found in the directory `src_bsc_lib_RTL`.
    - 'PLIC/': Platform-Level Interrupt Controller (standard RISC-V spec)
    - `BSV_Additional_Libs/`: generic utilities (not CPU-specific)
    - `Debug_Module/`: RISC-V Debug Module to debug the CPU from GDB or other debuggers
-   - `CHERI/`: contains source code for capability hardware
 
 - `src_Testbench/`, for the surrounding testbench, with sub-directories:
 
