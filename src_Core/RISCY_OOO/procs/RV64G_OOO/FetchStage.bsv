@@ -87,12 +87,12 @@ import CPU_Decode_C     :: *;
 `ifdef RVFI_DII
 interface RvfiDiiServer;
     interface Client#(Dii_Parcel_Id, Dii_Parcels) toCore;
-    interface Server#(Dii_Parcel_Id, Vector#(SupSize, Maybe#(Instruction))) fromDii;
+    interface Server#(Dii_Parcel_Id, Vector#(SupSizeX2, Maybe#(Instruction16))) fromDii;
 endinterface
 
 module mkRvfiDiiServer(RvfiDiiServer);
     Fifo#(2, Dii_Parcel_Id) reqs <- mkCFFifo;
-    Fifo#(2, Vector#(SupSize, Maybe#(Instruction))) resps <- mkCFFifo;
+    Fifo#(2, Vector#(SupSizeX2, Maybe#(Instruction16))) resps <- mkCFFifo;
 
     interface Client toCore;
         interface Get request = toGet(reqs);
@@ -601,7 +601,7 @@ module mkFetchStage(FetchStage);
 
 `ifdef RVFI_DII
         Dii_Parcel_Id dii_pid = dii_pid_reg[pc_fetch1_port];
-        dii_pid_reg[pc_fetch1_port] <= dii_pid + (fromInteger(posLastSupX2) + 1);
+        dii_pid_reg[pc_fetch1_port] <= dii_pid + (zeroExtend(posLastSupX2) + 1);
 `endif
 
         // Send TLB request.
