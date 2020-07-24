@@ -623,9 +623,8 @@ module mkFetchStage(FetchStage);
             end
         end
         else if (parse_f22f3) begin
-            Vector#(SupSizeX2,Instruction16) v_x16;
-            for (Integer i=0; i<valueOf(SupSizeX2); i=i+1) v_x16[i] = fromMaybe(?,inst_d[i]);
-            SupCntX2 n_x16s = min(zeroExtend(nbSupX2In)+1, pack(countIf(isValid,inst_d)));
+            Vector#(SupSizeX2, Instruction16) v_x16 = map(fromMaybe(?), inst_d);
+            SupCntX2 n_x16s = min(zeroExtend(nbSupX2In) + 1, pack(countIf(isValid, inst_d)));
 
             // Parse v_x16 into 32-bit and 16-bit instructions
             Addr pred_next_pc;
