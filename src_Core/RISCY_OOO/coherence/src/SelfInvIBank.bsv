@@ -122,7 +122,8 @@ module mkSelfInvIBank#(
     Alias#(cRqSlotT, ICRqSlot#(wayT, tagT)), // cRq MSHR slot
     Alias#(iCmdT, SelfInvICmd#(cRqIdxT)),
     Alias#(pipeOutT, PipeOut#(wayT, tagT, Msi, void, cacheOwnerT, otherT, RandRepInfo, Line, iCmdT)),
-    Alias#(resultT, Vector#(supSz, Maybe#(Instruction))),
+    Mul#(2, supSz, supSzX2),
+    Alias#(resultT, Vector#(supSzX2, Maybe#(Instruction16))),
     // requirements
     FShow#(pipeOutT),
     Add#(tagSz, a__, AddrSz),
@@ -146,7 +147,7 @@ module mkSelfInvIBank#(
 
     // index Q to order all in flight cRq for in-order resp
     FIFO#(cRqIdxT) cRqIndexQ <- mkSizedFIFO(valueof(cRqNum));
-   
+
     // Reconcile states
     Reg#(Bool) needReconcile <- mkReg(False);
     Reg#(Bool) waitReconcileDone <- mkReg(False);
@@ -156,7 +157,7 @@ module mkSelfInvIBank#(
     Reg#(Bit#(64)) cRqId <- mkReg(0);
     // FIFO to signal the id of cRq that is performed
     // FIFO has 0 cycle latency to match L1 D$ resp latency
-    Fifo#(1, DebugICacheResp) cRqDoneQ <- mkBypassFifo; 
+    Fifo#(1, DebugICacheResp) cRqDoneQ <- mkBypassFifo;
 `endif
 
 `ifdef PERF_COUNT
@@ -244,7 +245,7 @@ module mkSelfInvIBank#(
         $display("%t I %m pRsTransfer: ", $time, fshow(resp));
         doAssert(resp.toState == S && isValid(resp.data), "I$ must upgrade to S with data");
     endrule
-    
+
     rule sendRqToP;
         rqToPIndexQ.deq;
         cRqIdxT n = rqToPIndexQ.first;
@@ -260,10 +261,10 @@ module mkSelfInvIBank#(
         };
         rqToPQ.enq(cRqToP);
        if (verbose)
-        $display("%t I %m sendRqToP: ", $time, 
-            fshow(n), " ; ", 
-            fshow(req), " ; ", 
-            fshow(slot), " ; ", 
+        $display("%t I %m sendRqToP: ", $time,
+            fshow(n), " ; ",
+            fshow(req), " ; ",
+            fshow(slot), " ; ",
             fshow(cRqToP)
         );
 `ifdef PERF_COUNT
@@ -294,14 +295,14 @@ module mkSelfInvIBank#(
 
     // function to get superscaler inst read result
     function resultT readInst(Line line, Addr addr);
-        Vector#(LineSzInst, Instruction) instVec = unpack(pack(line.data));
+        Vector#(LineSzInst, Instruction16) instVec = unpack(pack(line.data));
         // the start offset for reading inst
         LineInstOffset startSel = getLineInstOffset(addr);
         // calculate the maximum inst count that could be read from line
         LineInstOffset maxCntMinusOne = maxBound - startSel;
         // read inst superscalaer
         resultT val = ?;
-        for(Integer i = 0; i < valueof(supSz); i = i+1) begin
+        for(Integer i = 0; i < valueof(supSzX2); i = i+1) begin
             if(fromInteger(i) <= maxCntMinusOne) begin
                 LineInstOffset sel = startSel + fromInteger(i);
                 val[i] = Valid (instVec[sel]);
@@ -364,7 +365,7 @@ module mkSelfInvIBank#(
         procRqT procRq = pipeOutCRq;
        if (verbose)
         $display("%t I %m pipelineResp: cRq: ", $time, fshow(n), " ; ", fshow(procRq));
-        
+
         // find end of dependency chain
         Maybe#(cRqIdxT) cRqEOC = cRqMshr.pipelineResp.searchEndOfChain(procRq.addr);
 
@@ -380,7 +381,7 @@ module mkSelfInvIBank#(
             doAssert(ram.info.cs <= S, "no exclusive in I$");
             // This cannot be a hit
             doAssert(ram.info.cs == I || ram.info.tag != getTag(procRq.addr), "cannot hit");
-            // Thus we must send req to parent 
+            // Thus we must send req to parent
             rqToPIndexQ.enq(n);
             // update mshr
             cRqMshr.pipelineResp.setStateSlot(n, WaitSt, ICRqSlot {
@@ -551,7 +552,7 @@ module mkSelfInvIBank#(
             };
         endmethod
     endinterface
-                
+
     interface pRqStuck = nullGet;
 
 `ifdef SECURITY
@@ -659,4 +660,3 @@ endmodule
 // unsafe version: all reads read the original reg value, except sendRsToC, which should bypass from pipelineResp
 // all writes are cononicalized. NOTE: writes of sendRsToC should be after pipelineResp
 // we maintain the logical ordering in safe version
-

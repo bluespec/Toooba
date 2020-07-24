@@ -97,7 +97,7 @@ typedef TDiv#(MemDataSz, 8) MemDataSzBytes;
 typedef TLog#(MemDataSzBytes) LgMemDataSzBytes;
 typedef Bit#(LgMemDataSzBytes) MemDataBytesOffset;
 
-typedef TDiv#(InstSz, 8) InstSzBytes;
+typedef TDiv#(Inst16_Sz, 8) InstSzBytes;
 typedef TLog#(InstSzBytes) LgInstSzBytes;
 
 // 64B cache line -- XXX same with parameters in CacheUtils.bsv
@@ -230,7 +230,7 @@ typedef struct {
 // I$ req/resp
 interface InstServer#(numeric type supSz);
     interface Put#(Addr) req;
-    interface Get#(Vector#(supSz, Maybe#(Instruction))) resp;
+    interface Get#(Vector#(TMul#(supSz,2), Maybe#(Instruction16))) resp;
 `ifdef DEBUG_ICACHE
     interface Get#(DebugICacheResp) done; // the id and cache line of the I$ req that truly performs
 `endif

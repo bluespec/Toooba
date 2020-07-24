@@ -163,7 +163,7 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
 
    provisos (Bits #(Data, 64)); // this module assumes Data is 64-bit wide
 
-   Integer verbosity = 1;
+   Integer verbosity = 2;
 
    // mtimecmp
    Vector#(CoreNum, Reg#(Data)) mtimecmp <- replicateM(mkReg(0));
@@ -191,10 +191,10 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
    // offset of the requested inst within a Data
    Reg#(MemDataInstOffset) instSel <- mkRegU;
    // the current superscaler way being fetched
-   Reg#(SupWaySel) fetchingWay <- mkRegU;
+   Reg#(SupWayX2Sel) fetchingWay <- mkRegU;
    // the already fetched insts
-   Vector#(TSub#(SupSize, 1),
-           Reg#(Instruction)) fetchedInsts <- replicateM(mkRegU);
+   Vector#(TSub#(SupSizeX2, 1),
+           Reg#(Instruction16)) fetchedInsts <- replicateM(mkRegU);
 
    // we need to wait for resp from cores when we need to change MTIP
    Reg#(Vector#(CoreNum, Bool)) waitMTIPCRs <- mkRegU;
@@ -937,21 +937,33 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
          $display ("    ", fshow (req));
       end
    endrule
-
+/*
+   function Vector #(SupSizeX2, Maybe #(Instruction16)) prepareFinalInstResp(Vector #(SupSize, Maybe #(Instruction)) respBigInsts, Bit#(1) addr_bit_1);
+       Vector #(SupSizeX2, Maybe #(Instruction16)) respSmallInsts = replicate (Invalid);
+       for (Integer i = 0; i < valueOf (SupSize); i = i+1) begin
+          if (respBigInsts[i] matches tagged Valid .inst) begin
+              respSmallInsts[i*2]       = tagged Valid (truncate(inst));
+              respSmallInsts[(i*2) + 1] = tagged Valid (truncateLSB(inst));
+          end
+       end
+       // This unconventional zero-extension of addr_bit_1 works around a type error in shiftOutFrom0.
+       return shiftOutFrom0(Invalid, respSmallInsts, {4'b0, addr_bit_1});
+   endfunction
+*/
    rule rl_mmio_from_fabric_ifetch_rsp (curReq matches tagged MMIO_Fabric_Adapter .addr
                                         &&& (state == WaitResp)
                                         &&& isInstFetch);
       MMIODataPRs dprs <- mmio_fabric_adapter_core_side.response.get;
       if (! dprs.valid) begin
          // Access fault
-         Vector #(SupSize, Maybe #(Instruction)) resp = replicate (Invalid);
-         for(Integer i = 0; i < valueof (SupSize); i = i+1) begin
+         Vector #(SupSizeX2, Maybe #(Instruction16)) resp = replicate (Invalid);
+         for(Integer i = 0; i < valueof (SupSizeX2); i = i+1) begin
             if (fromInteger (i) < fetchingWay)
                resp [i] = Valid (fetchedInsts [i]);
             else if (fromInteger (i) == fetchingWay)
                resp [i] = tagged Invalid;
          end
-         cores[reqCore].pRs.enq (tagged InstFetch (resp));
+         cores[reqCore].pRs.enq (tagged InstFetch resp);
          state <= SelectReq;
 
          if (verbosity > 0) begin
@@ -963,28 +975,26 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
       else begin
          // No access fault
 
-         SupWaySel maxWay = 0;
+         SupWayX2Sel maxWay = 0;
          if(reqFunc matches tagged Inst .w) begin
             maxWay = w;
          end
 
          // View Data as a vector of instructions
-         Vector#(MemDataSzInst, Instruction) instVec = unpack(pack(dprs.data.data));
+         Vector#(MemDataSzInst, Instruction16) instVec = unpack(pack(dprs.data.data));
          // extract inst from resp data
-         Instruction inst = instVec[instSel];
+         Instruction16 inst = instVec[instSel];
          // check whether we are done or not
          if (fetchingWay >= maxWay) begin
             // all 0..maxWay insts are fetched; we can resp now
-            Vector#(SupSize, Maybe#(Instruction)) resp = replicate(Invalid);
-            for(Integer i = 0; i < valueof(SupSize); i = i+1) begin
-               if(fromInteger(i) < fetchingWay) begin
+            Vector#(SupSizeX2, Maybe#(Instruction16)) resp = replicate(Invalid);
+            for(Integer i = 0; i < valueof(SupSizeX2); i = i+1) begin
+               if(fromInteger(i) < fetchingWay)
                   resp[i] = Valid (fetchedInsts[i]);
-               end
-               else if(fromInteger(i) == fetchingWay) begin
+               else if(fromInteger(i) == fetchingWay)
                   resp[i] = Valid (inst);
-                  end
-               end
-            cores[reqCore].pRs.enq (tagged InstFetch (resp));
+            end
+            cores[reqCore].pRs.enq (tagged InstFetch resp);
             state <= SelectReq;
 
             if (verbosity > 0) begin

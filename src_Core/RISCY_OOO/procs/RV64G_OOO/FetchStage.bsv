@@ -262,7 +262,6 @@ endfunction
 
 // Fetching instructions from mem returns up to superscalar-size 32b parcels, = twice that many 16b parcels
 
-typedef TMul #(SupSize, 2) SupSizeX2;
 typedef Bit #(TLog #(TAdd #(SupSizeX2, 1))) SupCntX2;
 
 // Merging up to SupSize-1 pending instructions with up to SupSizeX2 decoded
@@ -311,27 +310,6 @@ instance DefaultValue #(Inst_Item);
    };
 endinstance
 
-// Input 'inst_d' was fetched from memory: up to superscalar-size sequence of 32b parcels.
-// Convert this into 16b parcels, prior to re-parsing for possible mix of 32b and 16b instructions.
-// This is a pure function; ActionValue is used only to allow $displays for debugging.
-
-function ActionValue #(Tuple2 #(SupCntX2,
-                                Vector #(SupSizeX2, Bit #(16))))
-         fav_inst_d_to_x16s (Vector #(SupSize, Maybe #(Instruction))  inst_d);
-   actionvalue
-      // Convert inst_d into 16-bit parcels (v_x16)
-      function Bit #(32) fv_x32 (Integer i) = fromMaybe (0, inst_d [i]);
-      Vector #(SupSize,   Bit #(32)) v_x32 = genWith (fv_x32);
-      Vector #(SupSizeX2, Bit #(16)) v_x16 = unpack (pack (v_x32));
-
-      // Count the number of 16b parcels (n_x16s)
-      function Bit #(1)  fv_valid (Maybe #(Instruction) inst) = (isValid (inst) ? 1 : 0);
-      SupCntX2 n_x16s = 2 * extend (pack (countOnes (pack (map (fv_valid, inst_d)))));
-
-      return tuple2 (n_x16s, v_x16);
-   endactionvalue
-endfunction
-
 `ifdef RVFI_DII
 typedef Tuple4 #(CapMem, Dii_Parcel_Id, Bit #(16), Bool) Straddle;
 function Straddle fv_straddle (CapMem pc, Dii_Parcel_Id dii_pid, Bit #(16) lsbs, Bool mispred);
@@ -370,8 +348,7 @@ function ActionValue #(Tuple4 #(SupCntX2,
                                                                      orig_inst: 0,
                                                                      inst: 0});
       MStraddle next_straddle = tagged Invalid;
-      // Start parse at parcel 0/1 depending on pc lsbs.
-      SupCntX2 j  = (getAddr(pc_start) [1:0] == 2'b00 ? 0 : 1);
+      SupCntX2 j  = 0;
       Addr     pc = getAddr(pc_start);
 `ifdef RVFI_DII
       Dii_Parcel_Id dii_pid = dii_pid_start;
@@ -557,7 +534,7 @@ module mkFetchStage(FetchStage);
     RvfiDiiServer dii <- mkRvfiDiiServer;
 `endif
     Server#(Addr, TlbResp) tlb_server = iTlb.to_proc;
-    Server#(Addr, Vector#(SupSize, Maybe#(Instruction))) mem_server = iMem.to_proc;
+    Server#(Addr, Vector#(SupSizeX2, Maybe#(Instruction16))) mem_server = iMem.to_proc;
 
     // performance counters
     Fifo#(1, DecStagePerfType) perfReqQ <- mkCFFifo; // perf req FIFO
@@ -592,32 +569,6 @@ module mkFetchStage(FetchStage);
     Reg#(Addr) lastImemReq <- mkConfigReg(0);
 `endif
 
-   // Predict the next fetch-PC based only on current PC (without
-   // knowing the instructions).
-
-   function ActionValue #(Tuple2 #(Integer, Maybe #(CapMem))) fav_pred_next_pc (CapMem pc);
-      actionvalue
-         CapMem    prev_PC      = pc;
-         Maybe #(CapMem) pred_next_pc = nextAddrPred.predPc (prev_PC);
-         Integer posLastSupX2 = 0;
-         Bool    done         = False;
-         for (Integer i = 0; i < valueOf (SupSizeX2); i = i + 1) begin
-            if (! done) begin
-               Bool isLastX2 = (i == (valueOf (SupSizeX2) - 1)) || ((getAddr(pc)[1:0] != 2'b00) && (i == (valueOf (SupSizeX2) - 2)));
-               Bool lastInstInCacheLine = (getLineInstOffset (getAddr(prev_PC)) == maxBound) && (getAddr(prev_PC)[1:0] != 2'b00);
-               Bool isJump   = isValid(pred_next_pc);
-               done = isLastX2 || lastInstInCacheLine || isJump;
-               posLastSupX2 = i;
-               if (! done) begin
-                  prev_PC      = addPc(prev_PC, 2);
-                  pred_next_pc = nextAddrPred.predPc (prev_PC);
-               end
-            end
-         end
-         return tuple2 (posLastSupX2, pred_next_pc);
-      endactionvalue
-   endfunction
-
     // We don't send req to TLB when waiting for redirect or TLB flush. Since
     // there is no FIFO between doFetch1 and TLB, when OOO commit stage wait
     // TLB idle to change VM CSR / signal flush TLB, there is no wrong path
@@ -625,32 +576,27 @@ module mkFetchStage(FetchStage);
     rule doFetch1(started && !waitForRedirect && !waitForFlush);
         let pc = pc_reg[pc_fetch1_port];
 
-       /* ORIGINAL CODE
         // Chain of prediction for the next instructions
         // We need a BTB with a register file with enough ports!
         // Instead of cascading predictions, we can always feed pc+4*i into
         // predictor, because we will break superscaler fetch if nextpc != pc+4
-        Vector#(SupSize, Addr) pred_future_pc;
-        for(Integer i = 0; i < valueof(SupSize); i = i+1) begin
-            pred_future_pc[i] = nextAddrPred.predPc(pc + fromInteger(4 * i));
+        Vector#(SupSizeX2, Maybe#(CapMem)) pred_future_pc;
+        for(Integer i = 0; i < valueof(SupSizeX2); i = i+1) begin
+            pred_future_pc[i] = nextAddrPred.predPc(addPc(pc, fromInteger(2 * i)));
         end
 
         // Next pc is the first nextPc that breaks the chain of pc+4 or
         // that is at the end of a cacheline.
-        Vector#(SupSize,Integer) indexes = genVector;
-        function Bool findNextPc(Addr pc, Integer i);
-            Bool notLastInst = getLineInstOffset(pc + fromInteger(4*i)) != maxBound;
-            Bool noJump = pred_future_pc[i] == pc + fromInteger(4*(i+1));
+        Vector#(SupSizeX2,Integer) indexes = genVector;
+        function Bool findNextPc(CapMem pc, Integer i);
+            Bool notLastInst = getLineInstOffset(getAddr(pc) + fromInteger(2*i)) != maxBound;
+            Bool noJump = !isValid(pred_future_pc[i]);
             return (!(notLastInst && noJump));
         endfunction
-        Integer posLastSup = fromMaybe(valueof(SupSize) - 1, find(findNextPc(pc), indexes));
-        Addr pred_next_pc = pred_future_pc[posLastSup];
-        pc_reg[pc_fetch1_port] <= pred_next_pc;
-       */
+        Bit#(TLog#(SupSizeX2)) posLastSupX2 = fromInteger(fromMaybe(valueof(SupSizeX2) - 1, find(findNextPc(pc), indexes)));
+        Maybe#(CapMem) pred_next_pc = pred_future_pc[posLastSupX2];
 
-        match { .posLastSupX2, .pred_next_pc } <- fav_pred_next_pc (pc);
-
-        let next_fetch_pc = fromMaybe(addPc(pc, 2 * (fromInteger(posLastSupX2) + 1)), pred_next_pc);
+        let next_fetch_pc = fromMaybe(addPc(pc, 2 * (zeroExtend(posLastSupX2) + 1)), pred_next_pc);
         pc_reg[pc_fetch1_port] <= next_fetch_pc;
 
 `ifdef RVFI_DII
@@ -659,9 +605,7 @@ module mkFetchStage(FetchStage);
 `endif
 
         // Send TLB request.
-        // Mask to 32-bit alignment, even if 'C' is supported (where we may discard first 2 bytes)
-        Addr align32b_mask = 'h3;
-        tlb_server.request.put (getAddr(pc) & (~ align32b_mask));
+        tlb_server.request.put (getAddr(pc));
 `ifdef DEBUG_WEDGE
         lastItlbReq <= getAddr(pc) & (~ align32b_mask);
 `endif
@@ -675,10 +619,9 @@ module mkFetchStage(FetchStage);
             fetch3_epoch: fetch3_epoch,
             decode_epoch: decode_epoch[0],
             main_epoch: f_main_epoch};
-        let nbSupX2 = fromInteger(posLastSupX2) + (getAddr(pc)[1:0] == 2'b00 ? 0 : 1);
 
-        f12f2.enq(tuple2(nbSupX2,out));
-        if (verbose) $display("Fetch1: ", fshow(out), " posLastSupX2: %d", posLastSupX2, " nbSupX2: %d", nbSupX2);
+        f12f2.enq(tuple2(posLastSupX2,out));
+        if (verbose) $display("Fetch1: ", fshow(out), " posLastSupX2: %d", posLastSupX2);
     endrule
 
     rule doFetch2;
@@ -696,7 +639,7 @@ module mkFetchStage(FetchStage);
             // doFetch1 for the real MMIO and ICache require 32-bit, so make
             // DII look like that by decrementing pid if PC is "odd"; this
             // extra parcel on the front will be discarded by fav_parse_insts.
-            dii.fromDii.request.put(in.dii_pid - (getAddr(in.pc)[1:0] == 2'b00 ? 0 : 1));
+            dii.fromDii.request.put(in.dii_pid);
         end
 `else
         if (!isValid(cause)) begin
@@ -713,8 +656,7 @@ module mkFetchStage(FetchStage);
                     // cache line size, so all nbSup+1 insts can be fetched
                     // from boot rom. It won't happen that insts fetched from
                     // boot rom is less than requested.
-                    Bit #(TLog #(SupSize)) nbSup = truncate(nbSupX2 >> 1);
-                    mmio.bootRomReq(phys_pc, nbSup);
+                    mmio.bootRomReq(phys_pc, nbSupX2);
                     access_mmio = True;
 `ifdef DEBUG_WEDGE
                     lastImemReq <= phys_pc;
@@ -821,7 +763,7 @@ module mkFetchStage(FetchStage);
         // In case of exception, we still need to process at least inst_data[0]
         // (it will be turned to an exception later), so inst_data[0] must be
         // valid.
-        Vector#(SupSize,Maybe#(Instruction)) inst_d = replicate(tagged Valid (0));
+        Vector#(SupSizeX2,Maybe#(Instruction16)) inst_d = replicate(tagged Valid (0));
         if (drop_f22f3 || parse_f22f3) begin
             f22f3.deq();
             if (!isValid(fetch3In.cause)) begin
@@ -829,8 +771,8 @@ module mkFetchStage(FetchStage);
                 inst_d <- dii.fromDii.response.get;
 `else
                 if(fetch3In.access_mmio) begin
-                    if(verbose) $display("get answer from MMIO 0x%0x", getAddr(fetch3In.pc));
                     inst_d <- mmio.bootRomResp;
+                    if(verbose) $display("get answer from MMIO 0x%0x", getAddr(fetch3In.pc), " ", fshow(inst_d));
                 end
                 else begin
                     if(verbose) $display("get answer from memory 0x%0x", getAddr(fetch3In.pc));
@@ -855,17 +797,9 @@ module mkFetchStage(FetchStage);
             end
         end
         else if (parse_f22f3) begin
-            // Re-interpret fetched 32b parcels (inst_d) as 16b parcels
-            let { n_x16s, v_x16 } <- fav_inst_d_to_x16s (inst_d);
-            // Cap n_x16s, as otherwise we misattribute the bundle's PC
-            // prediction to a later instruction and erroneously think we
-            // took a branch miss. This condition is hit because the cache
-            // interface uses aligned 32b parcels and thus we can end up with
-            // an extra 16b parcel after the window we want. Note that
-            // nbSupX2In will still include the first 16b parcel even if our PC
-            // is misaligned, but this will be discarded by fav_parse_insts.
-            if (n_x16s > extend(nbSupX2In) + 1)
-                n_x16s = extend(nbSupX2In) + 1;
+            Vector#(SupSizeX2,Instruction16) v_x16;
+            for (Integer i=0; i<valueOf(SupSizeX2); i=i+1) v_x16[i] = fromMaybe(?,inst_d[i]);
+            SupCntX2 n_x16s = min(zeroExtend(nbSupX2In)+1, pack(countIf(isValid,inst_d)));
 
             // Parse v_x16 into 32-bit and 16-bit instructions
             CapMem pred_next_pc;

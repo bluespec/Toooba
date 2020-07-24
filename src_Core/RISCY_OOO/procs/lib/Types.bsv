@@ -145,10 +145,10 @@ typedef Bit#(AsidSz) Asid;
 typedef TLog#(MemDataBytes) IndxShamt;
 typedef Vector#(MemDataBytes, Bool) MemDataByteEn;
 
-typedef TDiv#(DataSz, InstSz) DataSzInst;
+typedef TDiv#(DataSz, Inst16_Sz) DataSzInst;
 typedef TLog#(DataSzInst) LgDataSzInst;
 typedef Bit#(LgDataSzInst) DataInstOffset;
-typedef TDiv#(MemDataSz, InstSz) MemDataSzInst;
+typedef TDiv#(MemDataSz, Inst16_Sz) MemDataSzInst;
 typedef TLog#(MemDataSzInst) LgMemDataSzInst;
 typedef Bit#(LgMemDataSzInst) MemDataInstOffset;
 
