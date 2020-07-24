@@ -137,7 +137,7 @@ First clone this repository and then inside the repository initialize the submod
 
 Build the Bluespec Compiler `bsc` from [this repository](https://github.com/B-Lang-org/bsc). You will also need set the `$BLUESPECDIR` to the `lib` folder of your `bsc` install. By default this is located in `inst/lib` directory inside your bsc repo. Also, make sure to add the `inst/bin` directory to your `$PATH` environment variable.
 
-If you wisth to use Verilator, you will need version 3.922 or later. You can build any version of Verilator from [this repository](https://github.com/verilator/verilator/releases) and follow the build instructions [on the official website](https://www.veripool.org/projects/verilator/wiki/Installing).
+If you wish to use Verilator, you will need version 3.922 or later. You can build any version of Verilator from [this repository](https://github.com/verilator/verilator/releases) and follow the build instructions [on the official website](https://www.veripool.org/projects/verilator/wiki/Installing).
 
         $ verilator --version
         Verilator 3.922 2018-03-17 rev verilator_3_920-32-gdf3d1a4
