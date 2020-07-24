@@ -30,13 +30,14 @@ adequate to boot a Linux kernel.
 The pre-generated synthesizable Verilog RTL source files in this
 repository are for one specific configuration:
 
-1. RV64ACDFIMSU    (a.k.a. RV64GC)
+1. RV64ACDFIMSUxCHERI    (a.k.a. RV64GCxCHERI)
     - RV64I: base RV64 integer instructions
     - 'A' extension: atomic memory ops
     - 'C' extension: compressed instructions
     - 'D' extension: double-precision floating point instructions
     - 'F' extension: single-precision floating point instructions
     - 'M' extension: integer multiply/divide instructions
+    - 'xCHERI' extension: capability-based security extensions
     - Privilege levels M (machine), S (Supervisor) and U (user)
     - Supports external, timer, software and non-maskable interrupts
     - Passes all riscv-isa tests for RV64ACDFIMSU
@@ -57,13 +58,14 @@ timer and a UART for console I/O.
 still working out robust mechanisms to import C code, which is used in
 parts of the testbench.]
 
-This repository contains one sample build directory, to build
-an RV64ACDFIMSU simulator, using Verilator Verilog simulation.
+This repository contains two sample build directories, to build
+an RV64ACDFIMSUxCHERI simulator, using Bluesim and Verilog simulation.
 The generated Verilog is synthesizable.
+There are also RVFI-DII variants of these to be used with [TestRIG](https://github.com/CTSRD-CHERI/TestRIG).
 
 #### Simulation
 
-We currently only support verilator simulation. There is also some code related to simulation on Bluespec's Bluesim and iVerilog, but these are currently not working and not being maintained.
+We currently only support Bluesim and Verilator simulation. There is also some code related to simulation on iVerilog, but this is currently not working and not being maintained.
 
 ----------------------------------------------------------------
 ## Source codes
@@ -135,25 +137,31 @@ First clone this repository and then inside the repository initialize the submod
 
 Build the Bluespec Compiler `bsc` from [this repository](https://github.com/B-Lang-org/bsc). You will also need set the `$BLUESPECDIR` to the `lib` folder of your `bsc` install. By default this is located in `inst/lib` directory inside your bsc repo. Also, make sure to add the `inst/bin` directory to your `$PATH` environment variable.
 
-You need Verilator with version 3.922 or later. You can build any version of Verilator from [this repository](https://github.com/verilator/verilator/releases) and follow the build instructions [on the official website](https://www.veripool.org/projects/verilator/wiki/Installing).
+If you wisth to use Verilator, you will need version 3.922 or later. You can build any version of Verilator from [this repository](https://github.com/verilator/verilator/releases) and follow the build instructions [on the official website](https://www.veripool.org/projects/verilator/wiki/Installing).
 
         $ verilator --version
         Verilator 3.922 2018-03-17 rev verilator_3_920-32-gdf3d1a4
 
-### Generating Verilog RTL from BSV
+### Building a simulator using Bluespec's Bluesim
 
-We currently only support the `RV64ACDFIMSU_Toooba_RVFIDII_verilator` build, so use the following commands to re-generate the Verilog RTL:
+To build a Bluesim-based simulator, use the following commands to generate the elaboration files and compile them:
 
-        $ cd  builds/RV64ACDFIMSU_Toooba_RVFIDII_verilator
+        $ cd builds/RV64ACDFIMSUxCHERI_Toooba_bluesim
         $ make compile
+        $ make simulator
 
-### Building and running from the Verilog sources
+### Building a simulator using Verilator
 
-You must follow the steps in the previous section to generate the Verilog before simulation. Simulation does not work out of the box. In the Verilog-build directory:
+To build a Verilator-based simulator, use the following commands to generate the Verilog RTL and compile it using Verilator:
 
-            builds/RV64ACDFIMSU_Toooba_verilator/
+        $ cd builds/RV64ACDFIMSUxCHERI_Toooba_verilator
+        $ make compile
+        $ make simulator
 
-  - `$ make simulator` will create a Verilog simulation executable using Verilator
+### Running a simulator
+
+You must have followed one of the steps above to build a simulator (with either Bluesim or Verilator).
+In the corresponding build directory:
 
   - `$ make test` will run the executable on the standard RISC-V ISA
         test `rv32ui-p-add` or `rv64ui-p-add`, which is one of the
