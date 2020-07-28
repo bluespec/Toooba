@@ -967,12 +967,10 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             if (scr == scrAddrPCC) begin
                                 dInst.iType = Auipcc;
                                 dInst.execFunc = tagged Alu Add;
-                                regs.src1 = Invalid;
                                 dInst.csr = tagged Invalid;
-                            end else begin
-                                dInst.scr = Valid (scr);
                             end
 
+                            dInst.scr = Valid (scr);
                             dInst.capFunc = CapModify (SpecialRW (scrType));
                         end
                         f7_cap_CSetBounds: begin
