@@ -357,6 +357,7 @@ function ActionValue #(Tuple4 #(SupCntX2,
          Bit #(32) orig_inst = 0;
          Bit #(32) inst      = 0;
          Addr      next_pc   = pc;
+         CapMem    pcc_bnds  = pc_start;
 `ifdef RVFI_DII
          Dii_Parcel_Id next_dii_pid = dii_pid;
 `endif
@@ -392,6 +393,9 @@ function ActionValue #(Tuple4 #(SupCntX2,
                    orig_inst = zeroExtend (s_lsbs);
                    inst      = orig_inst;    // Expand 16b inst to 32b inst
                    next_pc   = getAddr(pc_start);
+                   // This is utterly horrible, but works around the fact that the bounds of pc_start are not the same as s_pc stored in the straddle
+                   // if this straddle was predicted to be a jump, which it was.
+                   pcc_bnds  = s_pc;
 `ifdef RVFI_DII
                    dii_pid = s_dii_pid;
                    next_dii_pid = s_dii_pid + 1;
@@ -434,10 +438,6 @@ function ActionValue #(Tuple4 #(SupCntX2,
 `endif
                                                            v_x16[j], mispred_first_half);
                   j = j + 1;
-`ifdef RVFI_DII
-                  // If this is the case, we will flush this instruction but should keep the pid in sync in the mean time.
-                  //if (mispred_first_half) next_dii_pid = dii_pid + 2;
-`endif
                   // Leave next_pc unchanged and clear pred_next_pc so we
                   // return the right predicted pc for the vector, which
                   // excludes the pending straddle.
@@ -452,7 +452,7 @@ function ActionValue #(Tuple4 #(SupCntX2,
                dynamicAssert (False, "FetchStage.fav_parse_insts: instuction is not 16b or 32b?");
             end
          end
-         v_items [i] = Inst_Item {pc: setAddrUnsafe(pc_start, pc),
+         v_items [i] = Inst_Item {pc: setAddrUnsafe(pcc_bnds, pc),
 `ifdef RVFI_DII
                                   dii_pid: dii_pid,
 `endif
@@ -482,8 +482,8 @@ module mkFetchStage(FetchStage);
     // rule ordering: Fetch1 (BTB+TLB) < Fetch3 (decode & dir pred) < redirect method
     // Fetch1 < Fetch3 to avoid bypassing path on PC and epochs
 
-    Bool verbose = True;
-    Integer verbosity = 2;
+    Bool verbose = False;
+    Integer verbosity = 0;
 
     // Basic State Elements
     Reg#(Bool) started <- mkReg(False);
