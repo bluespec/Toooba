@@ -173,6 +173,7 @@ typedef struct {
     Dii_Parcel_Id dii_pid;
 `endif
     Maybe#(CapMem) pred_next_pc;
+    Bool fetch3_epoch;
     Bool decode_epoch;
     Epoch main_epoch;
 } Fetch1ToFetch2 deriving(Bits, Eq, FShow);
@@ -185,6 +186,7 @@ typedef struct {
     Maybe#(CapMem) pred_next_pc;
     Maybe#(Exception) cause;
     Bool access_mmio; // inst fetch from MMIO
+    Bool fetch3_epoch;
     Bool decode_epoch;
     Epoch main_epoch;
 } Fetch2ToFetch3 deriving(Bits, Eq, FShow);
@@ -366,40 +368,25 @@ function ActionValue #(Tuple4 #(SupCntX2,
                                                                   .s_dii_pid,
 `endif
                                                                   .s_lsbs, .s_mispred}) begin
-               if (!s_mispred) begin
-                   if (pc != getAddr(s_pc) + 2) begin
-                      $display ("FetchStage.fav_parse_insts: straddle: pc mismatch: pc = 0x%0h but s_pc = 0x%0h", pc, s_pc);
-                      dynamicAssert (False, "FetchStage.fav_parse_insts: straddle: pc mismatch");
-                   end
-                   pc        = getAddr(s_pc);
-                   inst_kind = Inst_32b;
-                   orig_inst = { v_x16[j], s_lsbs };
-                   inst      = orig_inst;
-                   j         = j + 1;
-                   next_pc   = getAddr(s_pc) + 4;
-`ifdef RVFI_DII
-                   if (dii_pid != s_dii_pid + 1) begin
-                      $display ("FetchStage.fav_parse_insts: straddle: dii_pid mismatch: dii_pid = %d but s_dii_pid = %d", dii_pid, s_dii_pid);
-                      dynamicAssert (False, "FetchStage.fav_parse_insts: straddle: dii_pid mismatch");
-                   end
-                   dii_pid = s_dii_pid;
-                   next_dii_pid = s_dii_pid + 2;
-`endif
-                   n_items   = 1;
-               end else begin // This is a mispredicted half of a 32-bit instruction.  We will flush, but just pretend it's a 16-bit instruction to keep things in sync.
-                   pc        = getAddr(s_pc);
-                   inst_kind = Inst_16b;
-                   orig_inst = zeroExtend (s_lsbs);
-                   inst      = orig_inst;    // Expand 16b inst to 32b inst
-                   next_pc   = getAddr(pc_start);
-`ifdef RVFI_DII
-                   dii_pid = s_dii_pid;
-                   next_dii_pid = s_dii_pid + 1;
-`endif
-                   n_items   = 1;
-                   if (verbose)
-                      $display ("FetchStage.fav_parse_insts: mispredicted 1/2 inst 0x%0h -> inst 0x%0h", orig_inst, inst);
+               if (pc != getAddr(s_pc) + 2) begin
+                  $display ("FetchStage.fav_parse_insts: straddle: pc mismatch: pc = 0x%0h but s_pc = 0x%0h", pc, s_pc);
+                  dynamicAssert (False, "FetchStage.fav_parse_insts: straddle: pc mismatch");
                end
+               pc        = getAddr(s_pc);
+               inst_kind = Inst_32b;
+	       orig_inst = { v_x16[j], s_lsbs };
+               inst      = orig_inst;
+	       j         = j + 1;
+	       next_pc   = getAddr(s_pc) + 4;
+`ifdef RVFI_DII
+               if (dii_pid != s_dii_pid + 1) begin
+                  $display ("FetchStage.fav_parse_insts: straddle: dii_pid mismatch: dii_pid = %d but s_dii_pid = %d", dii_pid, s_dii_pid);
+                  dynamicAssert (False, "FetchStage.fav_parse_insts: straddle: dii_pid mismatch");
+               end
+               dii_pid = s_dii_pid;
+               next_dii_pid = s_dii_pid + 2;
+`endif
+               n_items   = 1;
             end
             else if (is_16b_inst (v_x16 [j])) begin
                inst_kind = Inst_16b;
@@ -427,17 +414,12 @@ function ActionValue #(Tuple4 #(SupCntX2,
                   n_items   = i + 1;
                end
                else begin
-                  Bool mispred_first_half = isValid(pred_next_pc);
                   next_straddle = tagged Valid fv_straddle(setAddrUnsafe(pc_start, pc),
 `ifdef RVFI_DII
                                                            dii_pid,
 `endif
-                                                           v_x16[j], mispred_first_half);
+                                                           v_x16[j], isValid(pred_next_pc));
                   j = j + 1;
-`ifdef RVFI_DII
-                  // If this is the case, we will flush this instruction but should keep the pid in sync in the mean time.
-                  //if (mispred_first_half) next_dii_pid = dii_pid + 2;
-`endif
                   // Leave next_pc unchanged and clear pred_next_pc so we
                   // return the right predicted pc for the vector, which
                   // excludes the pending straddle.
@@ -482,8 +464,8 @@ module mkFetchStage(FetchStage);
     // rule ordering: Fetch1 (BTB+TLB) < Fetch3 (decode & dir pred) < redirect method
     // Fetch1 < Fetch3 to avoid bypassing path on PC and epochs
 
-    Bool verbose = True;
-    Integer verbosity = 2;
+    Bool verbose = False;
+    Integer verbosity = 0;
 
     // Basic State Elements
     Reg#(Bool) started <- mkReg(False);
@@ -512,6 +494,7 @@ module mkFetchStage(FetchStage);
     Integer pc_redirect_port = 3;
 
     // Epochs
+    Reg#(Bool) fetch3_epoch <- mkReg(False);
     Ehr#(2, Bool) decode_epoch <- mkEhr(False);
     Reg#(Epoch) f_main_epoch <- mkReg(0); // fetch estimate of main epoch
 
@@ -633,6 +616,7 @@ module mkFetchStage(FetchStage);
             dii_pid: dii_pid,
 `endif
             pred_next_pc: pred_next_pc,
+            fetch3_epoch: fetch3_epoch,
             decode_epoch: decode_epoch[0],
             main_epoch: f_main_epoch};
 
@@ -703,6 +687,7 @@ module mkFetchStage(FetchStage);
             pred_next_pc: in.pred_next_pc,
             cause: cause,
             access_mmio: access_mmio,
+            fetch3_epoch: in.fetch3_epoch,
             decode_epoch: in.decode_epoch,
             main_epoch: in.main_epoch };
         f22f3.enq(tuple2(nbSupX2,out));
@@ -769,7 +754,8 @@ module mkFetchStage(FetchStage);
 
         let drop_f22f3 =    f22f3.notEmpty
                          && (   fetch3In.main_epoch != f_main_epoch
-                             || fetch3In.decode_epoch != decode_epoch[1]);
+                             || fetch3In.decode_epoch != decode_epoch[1]
+                             || fetch3In.fetch3_epoch != fetch3_epoch);
 
         let parse_f22f3 = !drop_f22f3 && (pending_n_items == 0 || can_merge);
 
@@ -805,14 +791,14 @@ module mkFetchStage(FetchStage);
             end
             if (verbosity >= 2) begin
                 $display ("----------------");
-                $display ("Fetch3: Drop: main_epoch: %d decode epoch: %d", f_main_epoch, decode_epoch[1]);
+                $display ("Fetch3: Drop: main_epoch: %d decode epoch: %d fetch3 epoch %d", f_main_epoch, decode_epoch[1], fetch3_epoch);
                 $display ("Fetch3: f22f3.first: ", fshow (f22f3.first));
                 $display ("Fetch3: inst_d:      ", fshow (inst_d));
             end
         end
         else if (parse_f22f3) begin
             Vector#(SupSizeX2, Instruction16) v_x16 = map(fromMaybe(?), inst_d);
-            SupCntX2 n_x16s = zeroExtend(nbSupX2In) + 1;
+            SupCntX2 n_x16s = min(zeroExtend(nbSupX2In) + 1, pack(countIf(isValid, inst_d)));
 
             // Parse v_x16 into 32-bit and 16-bit instructions
             CapMem pred_next_pc;
@@ -834,6 +820,22 @@ module mkFetchStage(FetchStage);
                 };
             end else begin
                 out.pred_next_pc = pred_next_pc;
+            end
+
+            // Redirect doFetch1 if we predicted a taken compressed branch
+            // but this is an uncompressed instruction. We will tell decode
+            // to retrain when we issue the full instruction next time.
+            if (pending_straddle matches tagged Valid {.s_pc,
+`ifdef RVFI_DII
+                                                       .s_dii_pid,
+`endif
+                                                       .s_lsbs, .s_mispred}
+                &&& s_mispred) begin
+                pc_reg[pc_fetch3_port] <= addPc(s_pc, 2);
+`ifdef RVFI_DII
+                dii_pid_reg[pc_fetch3_port] <= s_dii_pid + 1;
+`endif
+                fetch3_epoch <= ! fetch3_epoch;
             end
         end
 
@@ -891,7 +893,6 @@ module mkFetchStage(FetchStage);
                 // This means we started fetching from a line straddling
                 // instruction; need another cycle to have something to
                 // issue.
-
                 dynamicAssert(isValid(pending_straddle), "Decoded no instructions and no straddle!");
             end
         end
@@ -944,19 +945,7 @@ module mkFetchStage(FetchStage);
 
                // do decode and branch prediction
                // Drop here if does not match the decode_epoch.
-
-               // We predicted a taken branch for PC, but this is an
-               // uncompressed instruction, so we redirect to this PC and
-               // train it to fetch the other half in future.
-               if (in.decode_epoch == decode_epoch_local && i==0 && decodeIn.mispred_first_half) begin
-                  if (verbose) $display("mispredicted first half in decode: pc :  %h", in.pc);
-                  decode_epoch_local = !decode_epoch_local;
-                  redirectPc = Valid (in.pc); // record redirect to the first PC in this bundle.
-                  trainNAP = Valid (TrainNAP {pc: in.pc, nextPc: addPc(in.pc, 2)});
-`ifdef RVFI_DII
-                  redirectDiiPid = Valid (in.dii_pid);
-`endif
-               end else if (in.decode_epoch == decode_epoch_local) begin
+               if (in.decode_epoch == decode_epoch_local) begin
                   doAssert(in.main_epoch == f_main_epoch, "main epoch must match");
 
                   let decode_result = decode(in.inst, getFlags(inst_data[i].pc)==1);    // Decode 32b inst, or 32b expansion of 16b inst
@@ -1022,15 +1011,22 @@ module mkFetchStage(FetchStage);
                               ras.ras[i].popPush(False, Valid (push_addr));
                            end
                         end
-                     end
+                    end
 
                      if(verbose) begin
                         $display("Branch prediction: ", fshow(dInst.iType), " ; ", fshow(in.pc), " ; ",
                                  fshow(in.ppc), " ; ", fshow(pred_taken), " ; ", fshow(nextPc));
                      end
 
+                     if (i == 0 && decodeIn.mispred_first_half) begin
+                        // We predicted a taken branch for PC, but this is an
+                        // uncompressed instruction, so we train it to fetch
+                        // the other half in future.
+                        trainNAP = Valid (TrainNAP {pc: in.pc, nextPc: addPc(in.pc, 2)});
+                     end
+
                      // check previous mispred
-                     if (nextPc matches tagged Valid .decode_pred_next_pc &&& (decode_pred_next_pc != in.ppc)) begin
+                     if (nextPc matches tagged Valid .decode_pred_next_pc &&& decode_pred_next_pc != in.ppc) begin
                         if (verbose) $display("ppc and decodeppc :  %h %h", in.ppc, decode_pred_next_pc);
                         decode_epoch_local = !decode_epoch_local;
                         redirectPc = Valid (decode_pred_next_pc); // record redirect next pc
@@ -1040,7 +1036,8 @@ module mkFetchStage(FetchStage);
                         in.ppc = decode_pred_next_pc;
                         // train next addr pred when mispredict
                         let last_x16_pc = addPc(in.pc, ((inst_data[i].inst_kind == Inst_32b) ? 2 : 0));
-                        trainNAP = Valid (TrainNAP {pc: last_x16_pc, nextPc: decode_pred_next_pc});
+                        if (!decodeIn.mispred_first_half)
+                           trainNAP = Valid (TrainNAP {pc: last_x16_pc, nextPc: decode_pred_next_pc});
 `ifdef PERF_COUNT
                         // performance stats: record decode redirect
                         doAssert(redirectInst == Invalid, "at most 1 decode redirect per cycle");
