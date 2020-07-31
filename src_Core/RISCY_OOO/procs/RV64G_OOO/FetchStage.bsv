@@ -608,18 +608,17 @@ module mkFetchStage(FetchStage);
       // Stop picking when we have SupSize instructions or when we have exhausted the ports on the instruction fragment FIFO.
       Maybe#(Bit#(TLog#(SupSizeX2))) m_used_frag_count = Invalid;
       Bit#(TLog#(SupSize)) pick_count = 0;
-      Bool last_frag_available = False;
+      Bool prev_frag_available = False;
       for (Integer i = 0; i < valueOf(SupSizeX2) && !isValid(decodeIn[valueOf(SupSize) - 1]); i = i + 1) begin
          Maybe#(InstrFromFetch3) new_pick = Invalid;
-         Bool frag_used = False;
          if (frags[i] matches tagged Valid .frag) begin
-            Fetch3ToDecode last_frag = (i != 0) ? validValue(frags[i-1]) : ?;
-            if (last_frag_available &&& !is_16b_inst(last_frag.inst_frag)) begin // 2nd half of 32-bit instruction
-               new_pick = tagged Valid fetch3s_2_inst(frag, last_frag);
+            Fetch3ToDecode prev_frag = (i != 0) ? validValue(frags[i-1]) : ?;
+            if (prev_frag_available &&& !is_16b_inst(prev_frag.inst_frag)) begin // 2nd half of 32-bit instruction
+               new_pick = tagged Valid fetch3s_2_inst(frag, prev_frag);
                if (!validValue(new_pick).mispred_first_half) begin
-                  doAssert(getAddr(last_frag.pc)+2 == getAddr(frag.pc), "Attached fragments with non-contigious PCs");
+                  doAssert(getAddr(prev_frag.pc)+2 == getAddr(frag.pc), "Attached fragments with non-contigious PCs");
 `ifdef RVFI_DII
-                  doAssert(last_frag.dii_pid+1 == frag.dii_pid, "Attached fragments with non-contigious DII IDs");
+                  doAssert(prev_frag.dii_pid+1 == frag.dii_pid, "Attached fragments with non-contigious DII IDs");
 `endif
                end
             end else if (is_16b_inst(frag.inst_frag)) begin // 16-bit instruction
@@ -634,8 +633,8 @@ module mkFetchStage(FetchStage);
                $display("Decode: picked instruction %d, next frag %d :", pick_count, i, fshow(decodeIn[pick_count]));
             pick_count = pick_count + 1;
             m_used_frag_count = tagged Valid fromInteger(i);
-            last_frag_available = False;
-         end else last_frag_available = isValid(frags[i]);
+            prev_frag_available = False;
+         end else prev_frag_available = isValid(frags[i]);
       end
       if (m_used_frag_count matches tagged Valid .used_frag_count) begin
          for (Integer i = 0; i < valueOf(SupSizeX2) && fromInteger(i) <= used_frag_count; i = i + 1) f32d.deqS[i].deq;
