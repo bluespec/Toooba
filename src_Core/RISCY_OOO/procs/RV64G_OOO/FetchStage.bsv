@@ -307,8 +307,8 @@ module mkFetchStage(FetchStage);
     // rule ordering: Fetch1 (BTB+TLB) < Fetch3 (decode & dir pred) < redirect method
     // Fetch1 < Fetch3 to avoid bypassing path on PC and epochs
 
-    Bool verbose = True;
-    Integer verbosity = 2;
+    Bool verbose = False;
+    Integer verbosity = 0;
 
     // Basic State Elements
     Reg#(Bool) started <- mkReg(False);
@@ -568,7 +568,7 @@ module mkFetchStage(FetchStage);
         if (drop_f22f3) begin
             if (verbosity >= 2) begin
                 $display ("----------------");
-                $display ("Fetch3: Drop: main_epoch: %d decode epoch: %d", f_main_epoch, decode_epoch[1]);
+                $display ("Fetch3: Drop: main_epoch: %d decode epoch: %d fetch3 epoch %d", f_main_epoch, decode_epoch[1]);
                 $display ("Fetch3: f22f3.first: ", fshow (f22f3.first));
                 $display ("Fetch3: inst_d:      ", fshow (inst_d));
             end
