@@ -13,7 +13,7 @@
 //
 //     This work was supported by NCSC programme grant 4212611/RFA 15971 ("SafeBet").
 //-
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -21,10 +21,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -141,7 +141,7 @@ endinstance
 //   function Get#(Vector#(k,Maybe#(t))) toGet(SupFifo#(k,n, t) f);
 //     return (interface Get;
 //       method ActionValue#(Vector#(k,Maybe#(t)) get;
-// //  
+// //
 //         f.deq;
 //         return f.first;
 //       endmethod
@@ -327,7 +327,7 @@ module mkCFFifo( Fifo#(n, t) ) provisos (Bits#(t,tSz));
 
   method Action deq if( !empty );
     // Tell later stages a dequeue was requested
-    deqReq[0] <= tagged Valid;
+    deqReq[0] <= tagged Valid (?);
   endmethod
 
   method t first if( !empty );
@@ -340,7 +340,7 @@ module mkCFFifo( Fifo#(n, t) ) provisos (Bits#(t,tSz));
     enqReq[1] <= tagged Invalid;
     deqReq[1] <= tagged Invalid;
     // Tell later stages a clear was requested
-    clearReq[0] <= tagged Valid;
+    clearReq[0] <= tagged Valid (?);
   endmethod
 endmodule
 
@@ -662,4 +662,3 @@ module mkCFSCountFifo#(function Bool isFound(t v, st k))(SCountFifo#(n, t, st)) 
     deqEn[1] <= False;
   endmethod
 endmodule
-
