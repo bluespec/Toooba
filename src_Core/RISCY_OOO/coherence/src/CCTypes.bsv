@@ -1,6 +1,6 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +8,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -32,9 +32,9 @@ import GetPut::*;
 import ClientServer::*;
 
 typedef enum {
-    I = 2'd0, 
-    S = 2'd1, 
-    E = 2'd2, 
+    I = 2'd0,
+    S = 2'd1,
+    E = 2'd2,
     M = 2'd3
 } MESI deriving(Bits, Eq, FShow);
 typedef MESI Msi;
@@ -79,7 +79,7 @@ typedef TDiv#(DataSz, 8) DataSzBytes;
 typedef TLog#(DataSzBytes) LgDataSzBytes;
 typedef Bit#(LgDataSzBytes) DataBytesOffset;
 
-typedef TDiv#(InstSz, 8) InstSzBytes;
+typedef TDiv#(Inst16_Sz, 8) InstSzBytes;
 typedef TLog#(InstSzBytes) LgInstSzBytes;
 
 // 64B cache line -- XXX same with parameters in CacheUtils.bsv
@@ -118,7 +118,7 @@ function Line getUpdatedLine(Line curLine, LineByteEn wrBE, Line wrLine);
     Vector#(LineSzBytes, Bit#(8)) newVec = map(getNewByte, genVector);
     return unpack(pack(newVec));
 endfunction
- 
+
 function Data getUpdatedData(Data curData, ByteEn wrBE, Data wrData);
     Vector#(DataSzBytes, Bit#(8)) curVec = unpack(pack(curData));
     Vector#(DataSzBytes, Bit#(8)) wrVec = unpack(pack(wrData));
@@ -221,7 +221,7 @@ typedef struct {
 // I$ req/resp
 interface InstServer#(numeric type supSz);
     interface Put#(Addr) req;
-    interface Get#(Vector#(supSz, Maybe#(Instruction))) resp;
+    interface Get#(Vector#(TMul#(supSz,2), Maybe#(Instruction16))) resp;
 `ifdef DEBUG_ICACHE
     interface Get#(DebugICacheResp) done; // the id and cache line of the I$ req that truly performs
 `endif
@@ -371,7 +371,7 @@ endinterface
 
 instance Connectable#(MemFifoServer#(idT, childT), MemFifoClient#(idT, childT));
     module mkConnection#(
-        MemFifoServer#(idT, childT) server, 
+        MemFifoServer#(idT, childT) server,
         MemFifoClient#(idT, childT) client
     )(Empty);
         rule doCToM;

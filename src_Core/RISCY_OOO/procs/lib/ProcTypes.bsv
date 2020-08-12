@@ -35,6 +35,8 @@ typedef Bit#(TLog#(CoreNum)) CoreId;
 typedef `sizeSup SupSize;
 typedef Bit#(TLog#(SupSize)) SupWaySel;
 typedef Bit#(TLog#(TAdd#(SupSize, 1))) SupCnt;
+typedef TMul#(SupSize, 2) SupSizeX2;
+typedef Bit#(TLog#(SupSizeX2)) SupWayX2Sel;
 
 typedef `NUM_EPOCHS NumEpochs;
 typedef Bit#(TLog#(NumEpochs)) Epoch;
@@ -618,7 +620,7 @@ typedef struct {
 // MMIO
 typedef union tagged {
     // inst fetch: contains the maximum superscaler way to fetch
-    SupWaySel Inst;
+    SupWayX2Sel Inst;
     // data access
     void Ld;
     void St;
@@ -654,7 +656,7 @@ typedef struct {
 typedef union tagged {
     // Resp for INST fetch. A vector entry can be invalid for two reasons: 1)
     // that entry is not requested, 2) that entry is access fault.
-    Vector#(SupSize, Maybe#(Instruction)) InstFetch;
+    Vector#(SupSizeX2, Maybe#(Instruction16)) InstFetch;
     // Resp for DATA access, i.e. LOAD, STORE and AMO
     MMIODataPRs DataAccess;
 } MMIOPRs deriving(Bits, Eq, FShow);
