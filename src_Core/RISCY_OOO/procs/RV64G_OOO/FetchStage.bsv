@@ -343,8 +343,9 @@ module mkFetchStage(FetchStage);
     // Pipeline Stage FIFOs
     Fifo#(2, Tuple2#(Bit#(TLog#(SupSizeX2)),Fetch1ToFetch2)) f12f2 <- mkCFFifo;
     Fifo#(4, Tuple2#(Bit#(TLog#(SupSizeX2)),Fetch2ToFetch3)) f22f3 <- mkCFFifo; // FIFO should match I$ latency
-    SupFifo#(SupSizeX2, 3, Fetch3ToDecode) f32d <- mkSupFifo; // This fifo needs a capacity of 3 for full throughput.  Unknown why.
-    SupFifo#(SupSize, 2, FromFetchStage) out_fifo <- mkSupFifo;
+    // These two fifos needs a capacity of 3 for full throughput if we fire only when we can enq on on channels.
+    SupFifo#(SupSizeX2, 3, Fetch3ToDecode) f32d <- mkUGSupFifo; // Unguarded to prevent the static analyser from exploding.
+    SupFifo#(SupSize, 3, FromFetchStage) out_fifo <- mkSupFifo;
        // Can the fifo size be smaller?
 
     // Branch Predictors

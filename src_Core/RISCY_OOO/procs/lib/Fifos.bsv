@@ -160,7 +160,7 @@ endinstance
 //   endfunction
 // endinstance
 
-module mkSupFifo(SupFifo#(k,n,t)) provisos (
+module mkUGSupFifo(SupFifo#(k,n,t)) provisos (
     Bits#(t,tSz),
     FShow#(t),
     Add#(TExp#(TLog#(k)), 0, k) // k must be power of 2
@@ -177,7 +177,7 @@ module mkSupFifo(SupFifo#(k,n,t)) provisos (
         Bool can_enq = internalFifos[fifoIdx].notFull;
         return (interface SupFifoEnq;
             method Bool canEnq = can_enq;
-            method Action enq(t x) if(can_enq);
+            method Action enq(t x);
                 enqueueElement[i][0] <= tagged Valid x;
             endmethod
         endinterface);
@@ -188,10 +188,10 @@ module mkSupFifo(SupFifo#(k,n,t)) provisos (
         Bool can_deq = internalFifos[fifoIdx].notEmpty;
         return (interface SupFifoDeq;
             method Bool canDeq = can_deq;
-            method t first if(can_deq);
+            method t first;
                 return internalFifos[fifoIdx].first;
             endmethod
-            method Action deq if(can_deq);
+            method Action deq;
                 willDequeue[i][0] <= True;
             endmethod
         endinterface);
@@ -229,6 +229,35 @@ module mkSupFifo(SupFifo#(k,n,t)) provisos (
         function Bool isEmpty(Integer i) = !internalFifos[i].notEmpty;
         return all(isEmpty, indexes);
     endmethod
+endmodule
+
+module mkSupFifo(SupFifo#(k,n,t)) provisos (
+    Bits#(t,tSz),
+    FShow#(t),
+    Add#(TExp#(TLog#(k)), 0, k) // k must be power of 2
+);
+    SupFifo#(k,n,t) ugf <- mkUGSupFifo;
+
+    function SupFifoEnq#(t) getEnqIfc(Integer i);
+        return (interface SupFifoEnq;
+            method Bool canEnq = ugf.enqS[i].canEnq;
+            method Action enq(t x) if(ugf.enqS[i].canEnq) = ugf.enqS[i].enq(x);
+        endinterface);
+    endfunction
+
+    function SupFifoDeq#(t) getDeqIfc(Integer i);
+        return (interface SupFifoDeq;
+            method Bool canDeq = ugf.deqS[i].canDeq;
+            method t first if(ugf.deqS[i].canDeq) = ugf.deqS[i].first;
+            method Action deq if(ugf.deqS[i].canDeq) = ugf.deqS[i].deq;
+        endinterface);
+    endfunction
+
+    Vector#(k,Integer) indexes = genVector;
+    interface Vector enqS = map(getEnqIfc, indexes);
+    interface Vector deqS = map(getDeqIfc, indexes);
+
+    method Bool internalEmpty = ugf.internalEmpty;
 endmodule
 
 
