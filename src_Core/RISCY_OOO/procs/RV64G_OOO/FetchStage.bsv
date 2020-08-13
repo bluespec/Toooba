@@ -116,7 +116,6 @@ typedef struct {
     Addr pc;
     Maybe#(Addr) pred_next_pc;
     Maybe#(Exception) cause;
-    Addr tval;                 // in case of exception
     Bool access_mmio; // inst fetch from MMIO
     Bool decode_epoch;
     Epoch main_epoch;
@@ -124,14 +123,11 @@ typedef struct {
 
 typedef struct {
     Addr pc;
-    Addr pred_next_pc;
+    Maybe#(Addr) ppc;
     Maybe#(Exception) cause;
     Bit#(16) inst_frag;
     Bool decode_epoch;
     Epoch main_epoch;
-`ifdef RVFI_DII
-    Dii_Parcel_Id dii_pid;
-`endif
 } Fetch3ToDecode deriving(Bits, Eq, FShow);
 
 // Used purely internally in doDecode.
@@ -150,9 +146,6 @@ typedef struct {
 function InstrFromFetch3 fetch3_2_instC(Fetch3ToDecode in, Instruction inst, Bit#(32) orig_inst) =
    InstrFromFetch3 {
       pc: in.pc,
-`ifdef RVFI_DII
-      dii_pid: in.dii_pid,
-`endif
       ppc: fromMaybe(in.pc + 2, in.ppc), // This assumes we will call this function on the last fragment of any instruction.
       decode_epoch: in.decode_epoch,
       main_epoch: in.main_epoch,
@@ -168,9 +161,6 @@ function InstrFromFetch3 fetch3s_2_inst(Fetch3ToDecode inHi, Fetch3ToDecode inLo
    InstrFromFetch3 ret = fetch3_2_instC(inHi, inst, inst);
    ret.inst_kind = Inst_32b;
    ret.pc = inLo.pc; // The PC comes from the 1st fragment.
-`ifdef RVFI_DII
-   ret.dii_pid = inLo.dii_pid; // The dii_pid comes from the 1st fragment.
-`endif
    ret.mispred_first_half = isValid(inLo.ppc); // If we predicted a jump on the first half of the 32-bit instruction, we have erred.
    return ret;
 endfunction
@@ -234,8 +224,8 @@ module mkFetchStage(FetchStage);
     // rule ordering: Fetch1 (BTB+TLB) < Fetch3 (decode & dir pred) < redirect method
     // Fetch1 < Fetch3 to avoid bypassing path on PC and epochs
 
-    Bool verbose = True;
-    Integer verbosity = 2;
+    Bool verbose = False;
+    Integer verbosity = 0;
 
     // Basic State Elements
     Reg#(Bool) started <- mkReg(False);
@@ -267,8 +257,9 @@ module mkFetchStage(FetchStage);
     // Pipeline Stage FIFOs
     Fifo#(2, Tuple2#(Bit#(TLog#(SupSizeX2)),Fetch1ToFetch2)) f12f2 <- mkCFFifo;
     Fifo#(4, Tuple2#(Bit#(TLog#(SupSizeX2)),Fetch2ToFetch3)) f22f3 <- mkCFFifo; // FIFO should match I$ latency
-    SupFifo#(SupSizeX2, 3, Fetch3ToDecode) f32d <- mkSupFifo; // This fifo needs a capacity of 3 for full throughput.  Unknown why.
-    SupFifo#(SupSize, 2, FromFetchStage) out_fifo <- mkSupFifo;
+    // These two fifos needs a capacity of 3 for full throughput if we fire only when we can enq on on channels.
+    SupFifo#(SupSizeX2, 3, Fetch3ToDecode) f32d <- mkUGSupFifo; // Unguarded to prevent the static analyser from exploding.
+    SupFifo#(SupSize, 3, FromFetchStage) out_fifo <- mkSupFifo;
        // Can the fifo size be smaller?
 
     // Branch Predictors
@@ -365,7 +356,6 @@ module mkFetchStage(FetchStage);
 
         // Get TLB response
         match {.phys_pc, .cause} <- tlb_server.response.get;
-        Addr tval =  0;
 
         // Access main mem or boot rom if no TLB exception
         Bool access_mmio = False;
@@ -386,28 +376,14 @@ module mkFetchStage(FetchStage);
                 default: begin
                     // Access fault
                     cause = Valid (InstAccessFault);
-		    // Without 'C' extension:
-		    //     Addr align32b_mask = 'h3;
-		    //     tval = (in.pc & (~ align32b_mask));
-		    Addr align16b_mask = 'h1;
-		    tval = (in.pc & (~ align16b_mask));
                 end
             endcase
         end
-        else begin
-	   // TLB exception: record the request address
-           // Without 'C' extension:
-           //     Addr align32b_mask = 'h3;
-           //     tval = (in.pc & (~ align32b_mask));
-           Addr align16b_mask = 'h1;
-           tval = (in.pc & (~ align16b_mask));
-	end
 
         let out = Fetch2ToFetch3 {
             pc: in.pc,
             pred_next_pc: in.pred_next_pc,
             cause: cause,
-	    tval: tval,
             access_mmio: access_mmio,
             decode_epoch: in.decode_epoch,
             main_epoch: in.main_epoch };
@@ -447,10 +423,10 @@ module mkFetchStage(FetchStage);
         if (!isValid(fetch3In.cause)) begin
            if(fetch3In.access_mmio) begin
               inst_d <- mmio.bootRomResp;
-              if(verbose) $display("get answer from MMIO 0x%0x", getAddr(fetch3In.pc), " ", fshow(inst_d));
+              if(verbose) $display("get answer from MMIO 0x%0x", fetch3In.pc, " ", fshow(inst_d));
            end
            else begin
-              if(verbose) $display("get answer from memory 0x%0x", getAddr(fetch3In.pc));
+              if(verbose) $display("get answer from memory 0x%0x", fetch3In.pc);
                  inst_d <- mem_server.response.get;
            end
         end
@@ -465,15 +441,14 @@ module mkFetchStage(FetchStage);
         end
         else begin
             for (Integer i = 0; i < valueOf(SupSizeX2) && fromInteger(i) <= nbSupX2In; i = i + 1) begin
-                if (inst_d[i] matches tagged Valid .inst_frag)
-                   f32d.enqS[i].enq (Fetch3ToDecode {
-                       pc: addPc(fetch3In.pc, (2 * fromInteger(i))),
-                       ppc: (fromInteger(i)==nbSupX2In) ? fetch3In.pred_next_pc : Invalid,
-                       inst_frag: inst_frag,
-                       cause: fetch3In.cause,
-                       decode_epoch: fetch3In.decode_epoch,
-                       main_epoch: fetch3In.main_epoch
-                   });
+               f32d.enqS[i].enq (Fetch3ToDecode {
+                   pc: fetch3In.pc + (2 * fromInteger(i)),
+                   ppc: (fromInteger(i)==nbSupX2In) ? fetch3In.pred_next_pc : Invalid,
+                   inst_frag: validValue(inst_d[i]),
+                   cause: fetch3In.cause,
+                   decode_epoch: fetch3In.decode_epoch,
+                   main_epoch: fetch3In.main_epoch
+               });
             end
         end
     endrule: doFetch3
@@ -495,19 +470,15 @@ module mkFetchStage(FetchStage);
       // Stop picking when we have SupSize instructions or when we have exhausted the ports on the instruction fragment FIFO.
       Maybe#(Bit#(TLog#(SupSizeX2))) m_used_frag_count = Invalid;
       Bit#(TLog#(SupSize)) pick_count = 0;
-      Bool last_frag_available = False;
+      Bool prev_frag_available = False;
       for (Integer i = 0; i < valueOf(SupSizeX2) && !isValid(decodeIn[valueOf(SupSize) - 1]); i = i + 1) begin
          Maybe#(InstrFromFetch3) new_pick = Invalid;
-         Bool frag_used = False;
          if (frags[i] matches tagged Valid .frag) begin
-            Fetch3ToDecode last_frag = (i != 0) ? validValue(frags[i-1]) : ?;
-            if (last_frag_available &&& !is_16b_inst(last_frag.inst_frag)) begin // 2nd half of 32-bit instruction
-               new_pick = tagged Valid fetch3s_2_inst(frag, last_frag);
+            Fetch3ToDecode prev_frag = (i != 0) ? validValue(frags[i-1]) : ?;
+            if (prev_frag_available &&& !is_16b_inst(prev_frag.inst_frag)) begin // 2nd half of 32-bit instruction
+               new_pick = tagged Valid fetch3s_2_inst(frag, prev_frag);
                if (!validValue(new_pick).mispred_first_half) begin
-                  doAssert(getAddr(last_frag.pc)+2 == getAddr(frag.pc), "Attached fragments with non-contigious PCs");
-`ifdef RVFI_DII
-                  doAssert(last_frag.dii_pid+1 == frag.dii_pid, "Attached fragments with non-contigious DII IDs");
-`endif
+                  doAssert(prev_frag.pc+2 == frag.pc, "Attached fragments with non-contigious PCs");
                end
             end else if (is_16b_inst(frag.inst_frag)) begin // 16-bit instruction
                new_pick = tagged Valid fetch3_2_instC(frag,
@@ -521,8 +492,8 @@ module mkFetchStage(FetchStage);
                $display("Decode: picked instruction %d, next frag %d :", pick_count, i, fshow(decodeIn[pick_count]));
             pick_count = pick_count + 1;
             m_used_frag_count = tagged Valid fromInteger(i);
-            last_frag_available = False;
-         end else last_frag_available = isValid(frags[i]);
+            prev_frag_available = False;
+         end else prev_frag_available = isValid(frags[i]);
       end
       if (m_used_frag_count matches tagged Valid .used_frag_count) begin
          for (Integer i = 0; i < valueOf(SupSizeX2) && fromInteger(i) <= used_frag_count; i = i + 1) f32d.deqS[i].deq;
@@ -530,7 +501,7 @@ module mkFetchStage(FetchStage);
             $display("Decode: dequed %d instruction fragments", used_frag_count);
       end
 
-      Address redirectPc = Invalid; // next pc redirect by branch predictor
+      Maybe#(Addr) redirectPc = Invalid; // next pc redirect by branch predictor
       Maybe#(TrainNAP) trainNAP = Invalid; // training data sent to next addr pred
       Bool decode_epoch_local = decode_epoch[0]; // next value for decode epoch
 `ifdef PERF_COUNT
@@ -556,15 +527,15 @@ module mkFetchStage(FetchStage);
                if (verbose) $display("mispredicted first half in decode: pc :  %h", in.pc);
                decode_epoch_local = !decode_epoch_local;
                redirectPc = Valid (in.pc); // record redirect to the first PC in this bundle.
-               trainNAP = Valid (TrainNAP {pc: in.pc, nextPc: addPc(in.pc, 2)});
+               trainNAP = Valid (TrainNAP {pc: in.pc, nextPc: in.pc + 2});
             end else if (in.decode_epoch == decode_epoch_local) begin
                doAssert(in.main_epoch == f_main_epoch, "main epoch must match");
 
-               let decode_result = decode(in.inst, getFlags(in.pc)==1);    // Decode 32b inst, or 32b expansion of 16b inst
+               let decode_result = decode(in.inst);    // Decode 32b inst, or 32b expansion of 16b inst
 
                // update cause if decode exception and no earlier (TLB) exception
                if (!isValid(cause)) begin
-                  cause = decode_result.illegalInst ? tagged Valid excIllegalInst : tagged Invalid;
+                  cause = decode_result.illegalInst ? tagged Valid IllegalInst : tagged Invalid;
                end
 
                let dInst = decode_result.dInst;
@@ -580,7 +551,7 @@ module mkFetchStage(FetchStage);
                      pred_taken = pred_res.taken;
                      dp_train = pred_res.train;
                   end
-                  Maybe#(CapMem) nextPc = decodeBrPred(in.pc, dInst, pred_taken, (in.inst_kind == Inst_32b));
+                  Maybe#(Addr) nextPc = decodeBrPred(in.pc, dInst, pred_taken, (in.inst_kind == Inst_32b));
 
                   // return address stack link reg is x1 or x5
                   function Bool linkedR(Maybe#(ArchRIndx) register);
@@ -592,16 +563,14 @@ module mkFetchStage(FetchStage);
                   endfunction
                   Bool dst_link = linkedR(regs.dst);
                   Bool src1_link = linkedR(regs.src1);
-                  CapMem push_addr = addPc(in.pc, ((in.inst_kind == Inst_32b) ? 4 : 2));
+                  Addr push_addr = in.pc + ((in.inst_kind == Inst_32b) ? 4 : 2);
 
-                  CapMem pop_addr = ras.ras[i].first;
+                  Addr pop_addr = ras.ras[i].first;
                   if (dInst.iType == J && dst_link) begin
                      // rs1 is invalid, i.e., not link: push
                      ras.ras[i].popPush(False, Valid (push_addr));
                   end
-                  else if (dInst.iType == Jr || dInst.iType == CJALR) begin // jalr TODO CCALL could be push
-                                                                            //           pop or nop (if to trampoline)
-                                                                            //           Add hint to architecture?
+                  else if (dInst.iType == Jr) begin // jalr
                      if (!dst_link && src1_link) begin
                         // rd is link while rs1 is not: pop
                         nextPc = Valid (pop_addr);
@@ -637,7 +606,7 @@ module mkFetchStage(FetchStage);
                      redirectPc = Valid (decode_pred_next_pc); // record redirect next pc
                      ppc = decode_pred_next_pc;
                      // train next addr pred when mispredict
-                     let last_x16_pc = addPc(in.pc, ((in.inst_kind == Inst_32b) ? 2 : 0));
+                     let last_x16_pc = in.pc + ((in.inst_kind == Inst_32b) ? 2 : 0);
                      trainNAP = Valid (TrainNAP {pc: last_x16_pc, nextPc: decode_pred_next_pc});
 `ifdef PERF_COUNT
                      // performance stats: record decode redirect
@@ -655,7 +624,7 @@ module mkFetchStage(FetchStage);
                                         orig_inst: in.orig_inst,
                                         regs: decode_result.regs,
                                         cause: cause,
-                                        tval: getAddr(in.pc)
+                                        tval: in.pc
                                         };
                out_fifo.enqS[i].enq(out);
                if (verbosity >= 1) begin
