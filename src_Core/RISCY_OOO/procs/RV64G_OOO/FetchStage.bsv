@@ -214,6 +214,7 @@ typedef struct {
   Bit#(32) orig_inst;
   Inst_Kind inst_kind;
   Maybe#(Exception) cause;
+  Bool cause_second_half;
   Bool mispred_first_half;
 } InstrFromFetch3 deriving(Bits, Eq, FShow);
 
@@ -230,12 +231,15 @@ function InstrFromFetch3 fetch3_2_instC(Fetch3ToDecode in, Instruction inst, Bit
       orig_inst: orig_inst,
       inst_kind: Inst_16b,
       cause: in.cause,
+      cause_second_half: False,
       mispred_first_half: False
    };
 
 function InstrFromFetch3 fetch3s_2_inst(Fetch3ToDecode inHi, Fetch3ToDecode inLo);
    Instruction inst = {inHi.inst_frag, inLo.inst_frag};
    InstrFromFetch3 ret = fetch3_2_instC(inHi, inst, inst);
+   if (isValid(inLo.cause)) ret.cause = inLo.cause;
+   else if (isValid(inHi.cause)) ret.cause_second_half = True;
    ret.inst_kind = Inst_32b;
    ret.pc = inLo.pc; // The PC comes from the 1st fragment.
 `ifdef RVFI_DII
@@ -780,7 +784,7 @@ module mkFetchStage(FetchStage);
                                         orig_inst: in.orig_inst,
                                         regs: decode_result.regs,
                                         cause: cause,
-                                        tval: getAddr(in.pc)
+                                        tval: getAddr(in.pc) + ((in.cause_second_half) ? 2:0)
                                         };
                out_fifo.enqS[i].enq(out);
                if (verbosity >= 1) begin
