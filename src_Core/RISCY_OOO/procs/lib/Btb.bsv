@@ -43,11 +43,16 @@ import Vector::*;
 import CHERICC_Fat::*;
 import CHERICap::*;
 
+export PredPcIfc(..);
 export NextAddrPred(..);
 export mkBtb;
 
-interface NextAddrPred;
+interface PredPcIfc;
     method Maybe#(CapMem) predPc(CapMem pc);
+endinterface
+
+interface NextAddrPred;
+    interface Vector#(SupSizeX2, PredPcIfc) pred;
     method Action update(CapMem pc, CapMem brTarget, Bool taken);
     // security
     method Action flush;
@@ -66,12 +71,12 @@ typedef struct {
     Bool taken;
 } BtbUpdate deriving(Bits, Eq, FShow);
 
-// No synthesize boundary because we need to call predPC several times
+(* synthesize *)
 module mkBtb(NextAddrPred);
     // Read and Write ordering doesn't matter since this is a predictor
     // mkRegFileWCF is the RegFile version of mkConfigReg
-    RegFile#(BtbIndex, CapMem) next_addrs <- mkRegFileWCF(0,fromInteger(valueOf(BtbEntries)-1));
-    RegFile#(BtbIndex, BtbTag) tags <- mkRegFileWCF(0,fromInteger(valueOf(BtbEntries)-1));
+    Vector#(SupSizeX2, RegFile#(BtbIndex, CapMem)) next_addrs <- replicateM(mkRegFileWCF(0,fromInteger(valueOf(BtbEntries)-1)));
+    Vector#(SupSizeX2, RegFile#(BtbIndex, BtbTag)) tags <- replicateM(mkRegFileWCF(0,fromInteger(valueOf(BtbEntries)-1)));
     Vector#(BtbEntries, Reg#(Bool)) valid <- replicateM(mkConfigReg(False));
 
     RWire#(BtbUpdate) updateEn <- mkRWire;
@@ -96,9 +101,11 @@ module mkBtb(NextAddrPred);
         let tag = getTag(pc);
         if(taken) begin
             valid[index] <= True;
-            tags.upd(index, tag);
-            next_addrs.upd(index, nextPc);
-        end else if( tags.sub(index) == tag ) begin
+            for (Integer i = 0; i < valueOf(SupSizeX2); i = i + 1) begin
+                tags[i].upd(index, tag);
+                next_addrs[i].upd(index, nextPc);
+            end
+        end else if( tags[0].sub(index) == tag ) begin
             // current instruction has target in btb, so clear it
             valid[index] <= False;
         end
@@ -112,14 +119,21 @@ module mkBtb(NextAddrPred);
     endrule
 `endif
 
-    method Maybe#(CapMem) predPc(CapMem pc);
-        BtbIndex index = getIndex(pc);
-        BtbTag tag = getTag(pc);
-        if(valid[index] && tag == tags.sub(index))
-            return tagged Valid next_addrs.sub(index);
-        else
-            return tagged Invalid;
-    endmethod
+    Vector#(SupSizeX2, PredPcIfc) predPcs;
+    for (Integer i = 0; i < valueOf(SupSizeX2); i = i + 1) begin
+        predPcs[i] = interface PredPcIfc;
+            method Maybe#(CapMem) predPc(CapMem pc);
+                BtbIndex index = getIndex(pc);
+                BtbTag tag = getTag(pc);
+                if(valid[index] && tag == tags[i].sub(index))
+                    return tagged Valid next_addrs[i].sub(index);
+                else
+                    return tagged Invalid;
+            endmethod
+        endinterface;
+    end
+
+    method pred = predPcs;
 
     method Action update(CapMem pc, CapMem nextPc, Bool taken);
         updateEn.wset(BtbUpdate {pc: pc, nextPc: nextPc, taken: taken});

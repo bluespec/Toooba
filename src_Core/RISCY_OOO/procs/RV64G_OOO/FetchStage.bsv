@@ -413,7 +413,7 @@ module mkFetchStage(FetchStage);
         // predictor, because we will break superscaler fetch if nextpc != pc+4
         Vector#(SupSizeX2, Maybe#(CapMem)) pred_future_pc;
         for(Integer i = 0; i < valueof(SupSizeX2); i = i+1) begin
-            pred_future_pc[i] = nextAddrPred.predPc(addPc(pc, fromInteger(2 * i)));
+            pred_future_pc[i] = nextAddrPred.pred[i].predPc(addPc(pc, fromInteger(2 * i)));
         end
 
         // Next pc is the first nextPc that breaks the chain of pc+4 or
