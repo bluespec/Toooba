@@ -632,7 +632,7 @@ module mkFetchStage(FetchStage);
          if (isValid(new_pick)) begin
             if (verbose)
                $display("Decode: picked instruction %d, next frag %d :", pick_count, i, fshow(decodeIn[pick_count]));
-            pick_count = pick_count + 1;
+            pick_count = pick_count + truncate(8'b1);
             m_used_frag_count = tagged Valid fromInteger(i);
             prev_frag_available = False;
          end else prev_frag_available = isValid(frags[i]);
