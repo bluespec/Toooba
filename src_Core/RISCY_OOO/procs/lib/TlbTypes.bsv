@@ -69,11 +69,12 @@ typedef struct {
 typedef struct {
     Bool cap_writable;
     Bool cap_readable;
+    Bool cap_dirty;
 } PTEUpperType deriving (Bits, Eq, FShow);
 
 typedef struct {
     PTEUpperType pteUpperType;
-    Bit#(8) reserved;
+    Bit#(7) reserved;
     Ppn ppn;
     Bit#(2) reserved_sw; // reserved for supervisor software
     PTEType pteType;
@@ -183,6 +184,14 @@ typedef struct {
     Bool allowCap; // Whether we can load caps
 } TlbPermissionCheck deriving(Bits, Eq, FShow);
 
+function Exception tlbExcCode(TlbAccessType access, Bool cap);
+    if (access == DataStore) begin
+        return cap ? excStoreCapPageFault : excStorePageFault;
+    end else begin
+        return excLoadPageFault;
+    end
+endfunction
+
 function TlbPermissionCheck hasVMPermission(
     VMInfo vm_info,
     PTEType pte_type, PTEUpperType pte_upper_type,
@@ -241,28 +250,30 @@ function TlbPermissionCheck hasVMPermission(
             if(!(pte_type.readable && pte_type.writable)) begin
                 fault = True;
             end
+            if(cap && !pte_upper_type.cap_writable) begin
+                fault = True;
+            end
         end
     endcase
 
     TlbPermissionCheck ret = TlbPermissionCheck {
         allowed:  !fault,
-        excCode:  access == DataStore ? excStorePageFault : excLoadPageFault,
+        excCode:  tlbExcCode(access, cap),
         allowCap: pte_upper_type.cap_readable};
 
     if (!fault) begin
-        if (cap && access == DataStore && !pte_upper_type.cap_writable) begin
+        // check if accessed or dirty bit needs to be set
+        if(cap && access == DataStore && !pte_upper_type.cap_dirty) begin
             ret.allowed = False;
             ret.excCode = excStoreCapPageFault;
-        end else begin
-            // check if accessed or dirty bit needs to be set
-            if(!pte_type.accessed) begin
-                ret.allowed = False;
-                ret.excCode = access == DataStore ? excStorePageFault : excLoadPageFault;
-            end
-            if(access == DataStore && !pte_type.dirty) begin
-                ret.allowed = False;
-                ret.excCode = access == DataStore ? excStorePageFault : excLoadPageFault;
-            end
+        end
+        if(access == DataStore && !pte_type.dirty) begin
+            ret.allowed = False;
+            ret.excCode = excStorePageFault;
+        end
+        if(!pte_type.accessed) begin
+            ret.allowed = False;
+            ret.excCode = access == DataStore ? excStorePageFault : excLoadPageFault;
         end
     end
 
