@@ -93,10 +93,10 @@ library RTL can be found in the directory `src_bsc_lib_RTL`.
 
 - `src_Core/`, for the CPU core, with sub-directories:
    - `Core/`: the top-level of the CPU Core (specifically, the files CoreW_IFC.bsv and CoreW.bsv)
-   - 'CPU/': more CPU core sources
-   - 'RISCY_OOO': the bulk of the code, taken from MIT's riscy-ooo design, with local modifications.
+   - `CPU/`: more CPU core sources
+   - `RISCY_OOO`: the bulk of the code, taken from MIT's riscy-ooo design, with local modifications.
    - `ISA/`:  generic types/constants/functions for the RISC-V ISA (not CPU-implementation-specific)
-   - 'PLIC/': Platform-Level Interrupt Controller (standard RISC-V spec)
+   - `PLIC/`: Platform-Level Interrupt Controller (standard RISC-V spec)
    - `BSV_Additional_Libs/`: generic utilities (not CPU-specific)
    - `Debug_Module/`: RISC-V Debug Module to debug the CPU from GDB or other debuggers
 
