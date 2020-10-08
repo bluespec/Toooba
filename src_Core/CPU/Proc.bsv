@@ -313,7 +313,22 @@ module mkProc (Proc_IFC);
 
 `ifdef INCLUDE_GDB_CONTROL
    // run/halt, gpr, mem and csr control goes to core
-   interface Server  hart0_run_halt_server = core [0].hart0_run_halt_server;
+   interface Server  hart0_run_halt_server;
+      interface Put#(Bool) request;
+         method Action Put#(Bool x) put;
+            for(Integer i = 0; i < valueof(CoreNum); i = i+1)
+               core[i].hart0_run_halt_server.request.put(x);
+         endmethod
+      endinterface
+      interface Get#(Bool) response;
+         method ActionValue#(Bool) get;
+            Vector#(Bool,i) resp;
+            for(Integer i = 0; i < valueof(CoreNum); i = i+1)
+               resp[i] = core[i].hart0_run_halt_server.response.get(x);
+            return resp[0];
+         endmethod
+      endinterface
+   endinterface
 
    interface Put  hart0_put_other_req;
       method Action  put (Bit #(4) req);
