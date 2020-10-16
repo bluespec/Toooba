@@ -37,7 +37,7 @@ package CoreW;
 //
 // mkCoreW instantiates:
 //     - mkProc (the RISC-V CPU, a version of MIT's RISCY-OOO)
-//     - mkPLIC_16_2_7
+//     - mkPLIC_16_CoreNumX2_7
 //     - mkTV_Encode          (Tandem-Verification logic, optional: INCLUDE_TANDEM_VERIF)
 //     - mkDebug_Module       (RISC-V Debug Module, optional: INCLUDE_GDB_CONTROL)
 // and connects them all up.
@@ -81,10 +81,11 @@ import Debug_Module  :: *;
 `endif
 
 import CoreW_IFC    :: *;
-import PLIC         :: *;
-import PLIC_16_2_7  :: *;
 import Proc_IFC     :: *;
 import Proc         :: *;
+
+import PLIC                :: *;
+import PLIC_16_CoreNumX2_7 :: *;
 
 `ifdef INCLUDE_TANDEM_VERIF
 import TV_Info                   :: *;
@@ -190,7 +191,7 @@ module mkCoreW #(Reset dm_power_on_reset)
 `endif
 
    // PLIC (Platform-Level Interrupt Controller)
-   PLIC_IFC_16_2_7  plic <- mkPLIC_16_2_7;
+   PLIC_IFC_16_CoreNumX2_7  plic <- mkPLIC_16_CoreNumX2_7;
 
 `ifdef INCLUDE_GDB_CONTROL
    // Debug Module
@@ -402,13 +403,16 @@ module mkCoreW #(Reset dm_power_on_reset)
    // Connect external interrupt lines from PLIC to CPU
 
    rule rl_relay_external_interrupts;    // from PLIC
-      Bool meip = plic.v_targets [0].m_eip;
-      proc.m_external_interrupt_req (meip);
+      Vector #(CoreNum, Bool) meips;
+      Vector #(CoreNum, Bool) seips;
 
-      Bool seip = plic.v_targets [1].m_eip;
-      proc.s_external_interrupt_req (seip);
+      for (Integer i = 0; i < valueof(CoreNum); i = i + 1) begin
+	 meips [i] = plic.v_targets [2 * i].m_eip;
+	 seips [i] = plic.v_targets [2 * i + 1].m_eip;
+      end
 
-      // $display ("%0d: Core.rl_relay_external_interrupts: relaying: %d", cur_cycle, pack (x));
+      proc.m_external_interrupt_req (meips);
+      proc.s_external_interrupt_req (seips);
    endrule
 
    // ================================================================
