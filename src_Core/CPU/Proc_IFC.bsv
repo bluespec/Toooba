@@ -12,6 +12,8 @@ import ClientServer :: *;
 // ================================================================
 // Project imports
 
+import ProcTypes :: *;
+
 import ISA_Decls  :: *;
 
 import AXI4_Types  :: *;
@@ -53,10 +55,10 @@ interface Proc_IFC;
    // External interrupts
 
    (* always_ready, always_enabled *)
-   method Action  m_external_interrupt_req (Bool set_not_clear);
+   method Action  m_external_interrupt_req (Vector #(CoreNum, Bool) set_not_clear);
 
    (* always_ready, always_enabled *)
-   method Action  s_external_interrupt_req (Bool set_not_clear);
+   method Action  s_external_interrupt_req (Vector #(CoreNum, Bool) set_not_clear);
 
    // ----------------
    // Non-maskable interrupt

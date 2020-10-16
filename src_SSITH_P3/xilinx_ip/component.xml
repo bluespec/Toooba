@@ -2671,7 +2671,7 @@
         <spirit:userFileType>IMPORTED_FILE</spirit:userFileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>hdl/mkPLIC_16_2_7.v</spirit:name>
+        <spirit:name>hdl/mkPLIC_16_CoreNumX2_7.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
         <spirit:userFileType>IMPORTED_FILE</spirit:userFileType>
       </spirit:file>
@@ -3263,7 +3263,7 @@
         <spirit:userFileType>IMPORTED_FILE</spirit:userFileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>hdl/mkPLIC_16_2_7.v</spirit:name>
+        <spirit:name>hdl/mkPLIC_16_CoreNumX2_7.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
         <spirit:userFileType>IMPORTED_FILE</spirit:userFileType>
       </spirit:file>

@@ -273,11 +273,13 @@ module mkProc (Proc_IFC);
    // External interrupts
 
    method Action  m_external_interrupt_req (x);
-      core[0].setMEIP (pack (x));
+      for(Integer i = 0; i < valueof(CoreNum); i = i+1)
+         core[i].setMEIP (pack (x[i]));
    endmethod
 
    method Action  s_external_interrupt_req (x);
-      core[0].setSEIP (pack (x));
+      for(Integer i = 0; i < valueof(CoreNum); i = i+1)
+         core[i].setSEIP (pack (x[i]));
    endmethod
 
    // ----------------
