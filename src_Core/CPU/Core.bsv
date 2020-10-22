@@ -1319,7 +1319,7 @@ module mkCore#(CoreId coreId)(Core);
       l2Tlb.updateVMInfo(vmI, vmD);
 
       let startpc = csrf.dpc_read;
-      fetchStage.redirect (cast(startpc));
+      fetchStage.redirect (PredState{pc: cast(startpc)});
       renameStage.debug_resume;
       commitStage.debug_resume;
 

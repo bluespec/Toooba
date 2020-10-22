@@ -747,7 +747,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                                        ? 4
                                        : 1));
              csrf.dcsr_cause_write (dcsr_cause);
-             csrf.dpc_write (cast(trap.pc));
+             csrf.dpc_write (cast(trap.ps.pc));
 
              // Tell fetch stage to wait for redirect
              // Note: rule doCommitTrap_flush may have done this already; redundant call is ok.
