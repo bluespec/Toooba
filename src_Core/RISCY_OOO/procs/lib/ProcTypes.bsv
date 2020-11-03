@@ -513,6 +513,8 @@ typedef struct {
                             // mstatus.mprv), accessing page with U=1 will NOT
                             // fault
     Bit#(44) basePPN; // ppn of root page table
+    Bit#(1) globalCapLoadGenU;
+    Bit#(1) globalCapLoadGenS;
 `ifdef SECURITY
     // sanctum page walk check
     Bit#(64) sanctum_evbase;
@@ -538,7 +540,9 @@ instance DefaultValue#(VMInfo);
         sv39: False,
         exeReadable: False,
         userAccessibleByS: False,
-        basePPN: 0
+        basePPN: 0,
+        globalCapLoadGenU: 0,
+        globalCapLoadGenS: 0
 `ifdef SECURITY
         , sanctum_evbase:   maxBound,
         sanctum_evmask:     0,

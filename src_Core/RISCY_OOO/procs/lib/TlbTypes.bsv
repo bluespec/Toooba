@@ -70,11 +70,13 @@ typedef struct {
     Bool cap_writable;
     Bool cap_readable;
     Bool cap_dirty;
+    Bool cap_read_mod;
+    Bool cap_read_gen;
 } PTEUpperType deriving (Bits, Eq, FShow);
 
 typedef struct {
     PTEUpperType pteUpperType;
-    Bit#(7) reserved;
+    Bit#(5) reserved;
     Ppn ppn;
     Bit#(2) reserved_sw; // reserved for supervisor software
     PTEType pteType;
@@ -239,6 +241,24 @@ function TlbPermissionCheck hasVMPermission(
             if (!pte_type.readable &&
                 !(pte_type.executable && vm_info.exeReadable)) begin
                 fault = True;
+            end
+            if (cap) begin
+                // check for invalid PTE encodings
+                if ((!pte_upper_type.cap_readable && pte_upper_type.cap_read_gen) ||
+                    (pte_upper_type.cap_readable && !pte_upper_type.cap_read_mod &&
+                    pte_upper_type.cap_read_gen)) begin
+                    fault = True;
+                end
+                // load traps if page not cap readable and using cap_read_mod set
+                if (!pte_upper_type.cap_readable && pte_upper_type.cap_read_mod) begin
+                    fault = True;
+                end
+                // perform generation check
+                if (pte_upper_type.cap_read_mod
+                    && (pte_type.user ? vm_info.globalCapLoadGenU : vm_info.globalCapLoadGenS)
+                       != pack(pte_upper_type.cap_read_gen)) begin
+                    fault = True;
+                end
             end
         end
         DataStore: begin
