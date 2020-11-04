@@ -50,6 +50,7 @@ import GetPut       :: *;
 import ClientServer :: *;
 import Connectable  :: *;
 import FIFOF        :: *;
+import FIFO         :: *;
 import ConfigReg    :: *;
 
 // ----------------
@@ -170,15 +171,22 @@ module mkProc (Proc_IFC);
    // ================================================================
    // Connect stats
 
+   FIFO#(Bool) statReqs <- mkFIFO;
+
    for(Integer i = 0; i < valueof(CoreNum); i = i+1) begin
-      rule broadcastStats;
-         Bool doStats <- core[i].sendDoStats;
-         for(Integer j = 0; j < valueof(CoreNum); j = j+1) begin
-            core[j].recvDoStats(doStats);
-         end
-         llc.perf.setStatus(doStats);
-      endrule
+       rule recvStatReq;
+           Bool doStats <- core[i].sendDoStats;
+           statReqs.enq(doStats);
+       endrule
    end
+
+   rule broadcastStats;
+       for(Integer j = 0; j < valueof(CoreNum); j = j+1) begin
+           core[j].recvDoStats(statReqs.first);
+       end
+       llc.perf.setStatus(statReqs.first);
+       statReqs.deq;
+   endrule
 
    // ================================================================
    // Stub out deadlock and renameDebug interfaces
