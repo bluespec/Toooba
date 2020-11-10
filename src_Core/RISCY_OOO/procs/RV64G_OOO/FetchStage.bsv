@@ -487,13 +487,11 @@ module mkFetchStage(FetchStage);
         // Access main mem or boot rom if no TLB exception
         Bool access_mmio = False;
 `ifdef RVFI_DII
-        if (!isValid(cause)) begin
-            // We 32-bit align PC (and increment nbSupX2 accordingly) in
-            // doFetch1 for the real MMIO and ICache require 32-bit, so make
-            // DII look like that by decrementing pid if PC is "odd"; this
-            // extra parcel on the front will be discarded by fav_parse_insts.
-            dii.fromDii.request.put(in.dii_pid);
-        end
+        // We 32-bit align PC (and increment nbSupX2 accordingly) in
+        // doFetch1 for the real MMIO and ICache require 32-bit, so make
+        // DII look like that by decrementing pid if PC is "odd"; this
+        // extra parcel on the front will be discarded by fav_parse_insts.
+        dii.fromDii.request.put(in.dii_pid);
 `else
         if (!isValid(cause)) begin
             case(mmio.getFetchTarget(phys_pc))
@@ -561,10 +559,10 @@ module mkFetchStage(FetchStage);
         // valid.
         Vector#(SupSizeX2,Maybe#(Instruction16)) inst_d = replicate(tagged Valid (0));
         f22f3.deq();
-        if (!isValid(fetch3In.cause)) begin
 `ifdef RVFI_DII
-           inst_d <- dii.fromDii.response.get;
+        inst_d <- dii.fromDii.response.get;
 `else
+        if (!isValid(fetch3In.cause)) begin
            if(fetch3In.access_mmio) begin
               inst_d <- mmio.bootRomResp;
               if(verbose) $display("get answer from MMIO 0x%0x", getAddr(decompressPc(fetch3In.pc)), " ", fshow(inst_d));
@@ -572,9 +570,9 @@ module mkFetchStage(FetchStage);
            else begin
               if(verbose) $display("get answer from memory 0x%0x", getAddr(decompressPc(fetch3In.pc)));
                  inst_d <- mem_server.response.get;
-              end
-`endif
+           end
         end
+`endif
 
         for (Integer i = 0; i < valueOf(SupSizeX2) && fromInteger(i) <= fetch3In.inst_frags_fetched; i = i + 1) begin
            PcCompressed pc = fetch3In.pc;
