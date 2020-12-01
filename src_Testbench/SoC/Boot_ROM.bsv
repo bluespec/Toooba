@@ -64,10 +64,29 @@ interface Boot_ROM_IFC;
    method Action set_addr_map (Fabric_Addr addr_base, Fabric_Addr addr_lim);
 
    // Main Fabric Reqs/Rsps
-   interface AXI4_Slave_Synth #(Wd_SId, Wd_Addr, Wd_Data,
-                                Wd_AW_User, Wd_W_User, Wd_B_User,
-                                Wd_AR_User, Wd_R_User) slave;
+   interface AXI4_Slave #(Wd_SId, Wd_Addr, Wd_Data_Periph, 0, 0, 0, 0, 0)
+      slave;
 endinterface
+
+// ================================================================
+// Some local help-functions
+
+function Bool fn_addr_is_aligned (Fabric_Addr addr, AXI4_Size arsize);
+   if      (arsize == 1)  return True;
+   else if (arsize == 2)  return (addr [0] == 1'b_0);
+   else if (arsize == 4)  return (addr [1:0] == 2'b_00);
+   else if (arsize == 8)  return (addr [2:0] == 3'b_000);
+   else return False;
+endfunction
+
+function Bool fn_addr_is_in_range (Fabric_Addr base, Fabric_Addr addr, Fabric_Addr lim);
+   return ((base <= addr) && (addr < lim));
+endfunction
+
+function Bool fn_addr_is_ok (Fabric_Addr base, Fabric_Addr addr, Fabric_Addr lim, AXI4_Size arsize);
+   return (   fn_addr_is_aligned (addr, arsize)
+	   && fn_addr_is_in_range (base, addr, lim));
+endfunction
 
 // ================================================================
 
@@ -85,29 +104,9 @@ module mkBoot_ROM (Boot_ROM_IFC);
    // ----------------
    // Connector to fabric
 
-   AXI4_Slave_Width_Xactor#(Wd_SId, Wd_Addr, Wd_Data_Periph, Wd_Data,
-                              Wd_AW_User_Periph, Wd_W_User_Periph, Wd_B_User_Periph, Wd_AR_User_Periph, Wd_R_User_Periph,
-                              Wd_AW_User, Wd_W_User, Wd_B_User, Wd_AR_User, Wd_R_User) slave_xactor <- mkAXI4_Slave_Zeroing_Xactor;
+   let slavePortShim <- mkAXI4ShimFF;
 
    // ----------------
-
-   function Bool fn_addr_is_aligned (Fabric_Addr addr);
-      if (valueOf (Wd_Data) == 32)
-	 return (addr [1:0] == 2'b_00);
-      else if (valueOf (Wd_Data) == 64)
-	 return (addr [2:0] == 3'b_000);
-      else
-	 return False;
-   endfunction
-
-   function Bool fn_addr_is_in_range (Fabric_Addr base, Fabric_Addr addr, Fabric_Addr lim);
-      return ((base <= addr) && (addr < lim));
-   endfunction
-
-   function Bool fn_addr_is_ok (Fabric_Addr base, Fabric_Addr addr, Fabric_Addr lim);
-      return (   fn_addr_is_aligned (addr)
-	      && fn_addr_is_in_range (base, addr, lim));
-   endfunction
 
    // ================================================================
    // BEHAVIOR
@@ -116,34 +115,37 @@ module mkBoot_ROM (Boot_ROM_IFC);
    // Handle fabric read requests
 
    rule rl_process_rd_req (rg_module_ready);
-      let rda <- get(slave_xactor.master.ar);
-
-      let byte_addr = rda.araddr - rg_addr_base;
+      let rda <- get(slavePortShim.master.ar);
 
       AXI4_Resp  rresp  = OKAY;
       Bit #(64)  data64 = 0;
-      if (! fn_addr_is_ok (rg_addr_base, rda.araddr, rg_addr_lim)) begin
+
+      if (! fn_addr_is_ok (rg_addr_base, rda.araddr, rg_addr_lim, rda.arsize)) begin
 	 rresp = SLVERR;
-	 $display ("%0d: ERROR: Boot_ROM.rl_process_rd_req: unrecognized addr",  cur_cycle);
+	 $display ("%0d: ERROR: Boot_ROM.rl_process_rd_req: unrecognized or misaligned addr",
+		   cur_cycle);
 	 $display ("    ", fshow (rda));
       end
-      else if (rda.araddr [2:0] == 3'b0) begin
-	 Bit #(32) d0 = fn_read_ROM_0 (byte_addr);
-	 Bit #(32) d1 = fn_read_ROM_4 (byte_addr + 4);
-	 data64 = { d1, d0 };
-      end
-      else begin    // ((valueOf (Wd_Data) == 32) && (rda.addr [1:0] == 2'b_00))
-	 Bit #(32) d1 = fn_read_ROM_4 (byte_addr);
-	 data64 = { 0, d1 };
+      else begin
+	 // Byte offset
+	 let byte_offset = rda.araddr - rg_addr_base;
+	 let rom_addr_0 = (byte_offset & (~ 'b_111));
+	 Bit #(32) d0 = fn_read_ROM_0 (rom_addr_0);
+	 let rom_addr_4 = (rom_addr_0 | 'b_100);
+	 Bit #(32) d4 = fn_read_ROM_4 (rom_addr_4);
+	 if ((valueOf (Wd_Data) == 32) && (byte_offset [2] == 1'b_1))
+	    data64 = { 0, d4 };
+	 else
+	    data64 = { d4, d0 };
       end
 
-      Bit #(Wd_Data) rdata  = truncate (data64);
-      let rdr = AXI4_RFlit {rid:   rda.arid,
-			    rdata: rdata,
-			    rresp: rresp,
-			    rlast: True,
-			    ruser: rda.aruser}; // XXX This requires that Wd_AR_User == Wd_R_User
-      slave_xactor.master.r.put(rdr);
+      Bit #(Wd_Data_Periph) rdata  = truncate (data64);
+      AXI4_RFlit#(Wd_SId, Wd_Data_Periph, 0) rdr = AXI4_RFlit {rid:   rda.arid,
+			      rdata: rdata,
+			      rresp: rresp,
+			      rlast: True,
+			      ruser: 0};
+      slavePortShim.master.r.put(rdr);
 
       if (verbosity > 0) begin
 	 $display ("%0d: Boot_ROM.rl_process_rd_req: ", cur_cycle);
@@ -156,20 +158,21 @@ module mkBoot_ROM (Boot_ROM_IFC);
    // Handle fabric write requests: ignore all of them (this is a ROM)
 
    rule rl_process_wr_req (rg_module_ready);
-      let wra <- get(slave_xactor.master.aw);
-      let wrd <- get(slave_xactor.master.w);
+      let wra <- get(slavePortShim.master.aw);
+      let wrd <- get(slavePortShim.master.w);
 
       AXI4_Resp  bresp = OKAY;
-      if (! fn_addr_is_ok (rg_addr_base, wra.awaddr, rg_addr_lim)) begin
+      if (! fn_addr_is_ok (rg_addr_base, wra.awaddr, rg_addr_lim, wra.awsize)) begin
 	 bresp = SLVERR;
-	 $display ("%0d: ERROR: Boot_ROM.rl_process_wr_req: unrecognized addr",  cur_cycle);
+	 $display ("%0d: ERROR: Boot_ROM.rl_process_wr_req: unrecognized or misaligned addr",
+		   cur_cycle);
 	 $display ("    ", fshow (wra));
       end
 
-      let wrr = AXI4_BFlit {bid:   wra.awid,
-			    bresp: bresp,
-			    buser: wra.awuser}; // XXX This requires that Wd_AW_User == Wd_B_User
-      slave_xactor.master.b.put(wrr);
+      AXI4_BFlit#(Wd_SId, 0) wrr = AXI4_BFlit {bid:   wra.awid,
+			                       bresp: bresp,
+			                       buser: 0};
+      slavePortShim.master.b.put(wrr);
 
       if (verbosity > 0) begin
 	 $display ("%0d: Boot_ROM.rl_process_wr_req; ignoring all writes", cur_cycle);
@@ -206,14 +209,13 @@ module mkBoot_ROM (Boot_ROM_IFC);
       rg_addr_base    <= addr_base;
       rg_addr_lim     <= addr_lim;
       rg_module_ready <= True;
-      slave_xactor.clear;
       if (verbosity > 0) begin
 	 $display ("%0d: Boot_ROM.set_addr_map: base 0x%0h lim 0x%0h", cur_cycle, addr_base, addr_lim);
       end
    endmethod
 
    // Main Fabric Reqs/Rsps
-   interface  slave = slave_xactor.slaveSynth;
+   interface  slave = slavePortShim.slave;
 endmodule
 
 // ================================================================

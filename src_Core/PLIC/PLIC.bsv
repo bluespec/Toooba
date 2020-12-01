@@ -98,9 +98,8 @@ interface PLIC_IFC #(numeric type  t_n_external_sources,
    method Action set_addr_map (Bit #(64)  addr_base, Bit #(64)  addr_lim);
 
    // Memory-mapped access
-   interface AXI4_Slave_Synth #(Wd_SId_2x3, Wd_Addr, Wd_Data,
-                                Wd_AW_User, Wd_W_User, Wd_B_User,
-                                Wd_AR_User, Wd_R_User) axi4_slave;
+   interface AXI4_Slave #( Wd_SId_2x3, Wd_Addr, Wd_Data, 0, 0, 0, 0, 0)
+      axi4_slave;
 
    // sources
    interface Vector #(t_n_external_sources, PLIC_Source_IFC)  v_sources;
@@ -142,9 +141,7 @@ module mkPLIC (PLIC_IFC #(t_n_external_sources, t_n_targets, t_max_priority))
    Reg #(Bit #(64))  rg_addr_lim  <- mkRegU;
 
    // Connector to AXI4 fabric
-   AXI4_Slave_Width_Xactor#(Wd_SId_2x3, Wd_Addr, Wd_Data_Periph, Wd_Data,
-                              Wd_AW_User_Periph, Wd_W_User_Periph, Wd_B_User_Periph, Wd_AR_User_Periph, Wd_R_User_Periph,
-                              Wd_AW_User, Wd_W_User, Wd_B_User, Wd_AR_User, Wd_R_User) slave_xactor <- mkAXI4_Slave_Zeroing_Xactor;
+   let slavePortShim <- mkAXI4ShimFF;
 
    // ----------------
    // Per-interrupt source state
@@ -246,7 +243,7 @@ module mkPLIC (PLIC_IFC #(t_n_external_sources, t_n_targets, t_max_priority))
          for (Integer source_id = 0; source_id < n_sources; source_id = source_id + 1)
             vvrg_ie [target_id][source_id] <= False;
 
-      slave_xactor.clear;
+      slavePortShim.clear;
 
       f_reset_rsps.enq (?);
    endrule
@@ -261,7 +258,7 @@ module mkPLIC (PLIC_IFC #(t_n_external_sources, t_n_targets, t_max_priority))
 
    rule rl_process_rd_req (! f_reset_reqs.notEmpty);
 
-      let rda <- get(slave_xactor.master.ar);
+      let rda <- get(slavePortShim.master.ar);
       if (cfg_verbosity > 1) begin
          $display ("%0d: PLIC.rl_process_rd_req:", cur_cycle);
          $display ("    ", fshow (rda));
@@ -404,11 +401,11 @@ module mkPLIC (PLIC_IFC #(t_n_external_sources, t_n_targets, t_max_priority))
       // Send read-response to bus
       Fabric_Data x = truncate (rdata);
       let rdr = AXI4_RFlit {rid:   rda.arid,
-                            rdata: x,
-                            rresp: rresp,
-                            rlast: True,
-                            ruser: rda.aruser}; // XXX This requires that Wd_AR_User == Wd_R_User
-      slave_xactor.master.r.put(rdr);
+			    rdata: x,
+			    rresp: rresp,
+			    rlast: True,
+			    ruser: rda.aruser}; // XXX This requires that Wd_AR_User == Wd_R_User
+      slavePortShim.master.r.put(rdr);
 
       if (cfg_verbosity > 1) begin
          $display ("%0d: PLIC.rl_process_rd_req", cur_cycle);
@@ -424,8 +421,8 @@ module mkPLIC (PLIC_IFC #(t_n_external_sources, t_n_targets, t_max_priority))
 
    rule rl_process_wr_req (! f_reset_reqs.notEmpty);
 
-      let wra <- get(slave_xactor.master.aw);
-      let wrd <- get(slave_xactor.master.w);
+      let wra <- get(slavePortShim.master.aw);
+      let wrd <- get(slavePortShim.master.w);
       if (cfg_verbosity > 1) begin
          $display ("%0d: PLIC.rl_process_wr_req", cur_cycle);
          $display ("    ", fshow (wra));
@@ -551,9 +548,9 @@ module mkPLIC (PLIC_IFC #(t_n_external_sources, t_n_targets, t_max_priority))
 
       // Send write-response to bus
       let wrr = AXI4_BFlit {bid:   wra.awid,
-                            bresp: bresp,
-                            buser: wra.awuser}; // XXX This requires that Wd_AW_User == Wd_B_User
-      slave_xactor.master.b.put(wrr);
+			    bresp: bresp,
+			    buser: wra.awuser}; // XXX This requires that Wd_AW_User == Wd_B_User
+      slavePortShim.master.b.put(wrr);
 
       if (cfg_verbosity > 1) begin
          $display ("%0d: PLIC.AXI4.rl_process_wr_req", cur_cycle);
@@ -628,7 +625,7 @@ module mkPLIC (PLIC_IFC #(t_n_external_sources, t_n_targets, t_max_priority))
    endmethod
 
    // Memory-mapped access
-   interface  axi4_slave = slave_xactor.slaveSynth;
+   interface  axi4_slave = slavePortShim.slave;
 
    // sources
    interface  v_sources = genWith  (fn_mk_PLIC_Source_IFC);

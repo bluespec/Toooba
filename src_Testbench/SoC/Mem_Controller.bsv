@@ -207,8 +207,8 @@ interface Mem_Controller_IFC;
    method Action set_addr_map (Fabric_Addr addr_base, Fabric_Addr addr_lim);
 
    // Main Fabric Reqs/Rsps
-   interface AXI4_Slave_Synth #(Wd_SId, Wd_Addr, Wd_Data,
-                                Wd_AW_User, Wd_W_User, Wd_B_User, Wd_AR_User, Wd_R_User) slave;
+   interface AXI4_Slave #(Wd_SId, Wd_Addr, Wd_Data, 0, 0, 0, 0, 0)
+      slave;
 
    // To raw memory (outside the SoC)
    interface MemoryClient #(Bits_per_Raw_Mem_Addr, Bits_per_Raw_Mem_Word)  to_raw_mem;
@@ -269,9 +269,7 @@ module mkMem_Controller (Mem_Controller_IFC);
    FIFOF #(Bit #(0)) f_reset_rsps <- mkFIFOF;
 
    // Communication with fabric
-   AXI4_Slave_Width_Xactor#(Wd_SId, Wd_Addr, Wd_Data_Periph, Wd_Data,
-                              Wd_AW_User_Periph, Wd_W_User_Periph, Wd_B_User_Periph, Wd_AR_User_Periph, Wd_R_User_Periph,
-                              Wd_AW_User, Wd_W_User, Wd_B_User, Wd_AR_User, Wd_R_User) slave_xactor <- mkAXI4_Slave_Zeroing_Xactor;
+   let slavePortShim <- mkAXI4ShimFF;
 
    // Requests merged from the (WrA, WrD) and RdA channels
    FIFOF #(Req) f_reqs <- mkPipelineFIFOF;
@@ -304,7 +302,7 @@ module mkMem_Controller (Mem_Controller_IFC);
 
    function Action fa_reset_actions;
       action
-	 slave_xactor.clear;
+	 slavePortShim.clear;
 	 f_raw_mem_reqs.clear;
 	 f_raw_mem_rsps.clear;
 	 rg_status <= 0;
@@ -345,7 +343,7 @@ module mkMem_Controller (Mem_Controller_IFC);
    // Merge requests into a single queue, prioritizing reads over writes
 
    rule rl_merge_rd_req;
-      let rda <- get(slave_xactor.master.ar);
+      let rda <- get(slavePortShim.master.ar);
       let req = Req {req_op:     REQ_OP_RD,
 		     id:         rda.arid,
 		     addr:       rda.araddr,
@@ -370,8 +368,8 @@ module mkMem_Controller (Mem_Controller_IFC);
 
    (* descending_urgency = "rl_merge_rd_req, rl_merge_wr_req" *)
    rule rl_merge_wr_req;
-      let wra <- get(slave_xactor.master.aw);
-      let wrd <- get(slave_xactor.master.w);
+      let wra <- get(slavePortShim.master.aw);
+      let wrd <- get(slavePortShim.master.w);
       let req = Req {req_op:     REQ_OP_WR,
 		     id:         wra.awid,
 		     addr:       wra.awaddr,
@@ -504,8 +502,8 @@ module mkMem_Controller (Mem_Controller_IFC);
 			    rdata: rdata,
 			    rresp: OKAY,
 			    rlast: True,
-			    ruser: f_reqs.first.user}; // XXX This requires that Wd_AR_User == Wd_R_User
-      slave_xactor.master.r.put(rdr);
+                            ruser: 0'b0};
+      slavePortShim.master.r.put(rdr);
       f_reqs.deq;
 
       if (cfg_verbosity > 1) begin
@@ -546,8 +544,8 @@ module mkMem_Controller (Mem_Controller_IFC);
 
       let wrr = AXI4_BFlit {bid:   f_reqs.first.id,
 			    bresp: OKAY,
-			    buser: f_reqs.first.user}; // XXX This requires that Wd_AW_User == Wd_B_User
-      slave_xactor.master.b.put(wrr);
+                            buser: 0'b0};
+      slavePortShim.master.b.put(wrr);
       f_reqs.deq;
 
       if (cfg_verbosity > 1) begin
@@ -616,8 +614,8 @@ module mkMem_Controller (Mem_Controller_IFC);
 			    rdata: rdata,                 // for debugging only
 			    rresp: SLVERR,
 			    rlast: True,
-			    ruser: f_reqs.first.user}; // XXX This requires that Wd_AR_User == Wd_R_User
-      slave_xactor.master.r.put(rdr);
+			    ruser: 0'b0};
+      slavePortShim.master.r.put(rdr);
       f_reqs.deq;
 
       $write ("%0d: ERROR: Mem_Controller:", cur_cycle);
@@ -635,8 +633,8 @@ module mkMem_Controller (Mem_Controller_IFC);
 			       && (f_reqs.first.req_op == REQ_OP_WR));
       let wrr = AXI4_BFlit {bid:   f_reqs.first.id,
 			    bresp: SLVERR,
-			    buser: f_reqs.first.user}; // XXX This requires that Wd_AW_User == Wd_B_User
-      slave_xactor.master.b.put(wrr);
+			    buser: 0'b0};
+      slavePortShim.master.b.put(wrr);
       f_reqs.deq;
 
       $write ("%0d: ERROR: Mem_Controller:", cur_cycle);
@@ -671,7 +669,7 @@ module mkMem_Controller (Mem_Controller_IFC);
    endmethod
 
    // Main Fabric Reqs/Rsps
-   interface  slave = slave_xactor.slaveSynth;
+   interface  slave = slavePortShim.slave;
 
    // To raw memory (outside the SoC)
    interface  to_raw_mem = toGPClient (f_raw_mem_reqs, f_raw_mem_rsps);

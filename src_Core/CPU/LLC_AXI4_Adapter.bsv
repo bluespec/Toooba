@@ -54,9 +54,9 @@ interface LLC_AXI4_Adapter_IFC;
    method Action reset;
 
    // Fabric master interface for memory
-   interface AXI4_Master_Synth #(Wd_MId, Wd_Addr, Wd_Data,
-                                 Wd_AW_User, Wd_W_User, Wd_B_User,
-                                 Wd_AR_User, Wd_R_User) mem_master;
+   interface AXI4_Master #(Wd_MId, Wd_Addr, Wd_Data,
+                           Wd_AW_User, Wd_W_User, Wd_B_User,
+                           Wd_AR_User, Wd_R_User) mem_master;
 endinterface
 
 // ================================================================
@@ -76,7 +76,7 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
    // ================================================================
    // Fabric request/response
 
-   let master_xactor <- mkAXI4_Master_Xactor;
+   let masterPortShim <- mkAXI4ShimFF;
 
    // For discarding write-responses
    CreditCounter_IFC #(4) ctr_wr_rsps_pending <- mkCreditCounter; // Max 15 writes outstanding
@@ -100,7 +100,7 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
                                             arregion: fabric_default_region,
                                             aruser:   fabric_default_aruser};
 
-         master_xactor.slave.ar.put(mem_req_rd_addr);
+         masterPortShim.slave.ar.put(mem_req_rd_addr);
 
          // Debugging
          if (cfg_verbosity > 1) begin
@@ -134,7 +134,7 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
    endrule
 
    rule rl_handle_read_rsps;
-      let mem_rsp <- get(master_xactor.slave.r);
+      let mem_rsp <- get(masterPortShim.slave.r);
 
       if (cfg_verbosity > 1) begin
          $display ("%0d: LLC_AXI4_Adapter.rl_handle_read_rsps: beat %0d ", cur_cycle, rg_rd_rsp_beat);
@@ -189,7 +189,7 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
       // ================
       if (rg_wr_req_beat == 0) begin
          // send AXI4 AW flit
-         master_xactor.slave.aw.put (AXI4_AWFlit {
+         masterPortShim.slave.aw.put (AXI4_AWFlit {
            awid:     fabric_default_mid,
            awaddr:   { wb.addr [63:6], 6'h0 },
            awlen:    7, // burst len = awlen+1
@@ -218,7 +218,7 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
       Vector #(8, Bit #(8)) line_strb = unpack(pack(wb.byteEn));
       Vector #(4, MemTaggedData) line_data = clineToMemTaggedDataVector(wb.data);
       // send AXI4 W flit
-      master_xactor.slave.w.put(AXI4_WFlit {
+      masterPortShim.slave.w.put(AXI4_WFlit {
         wdata:  line_data[rg_wr_req_beat[2:1]].data[rg_wr_req_beat[0]],
         wstrb:  line_strb[rg_wr_req_beat],
         wlast:  rg_wr_req_beat == 7,
@@ -229,7 +229,7 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
    // Discard write-responses from the fabric
 
    rule rl_discard_write_rsp;
-      let wr_resp <- get(master_xactor.slave.b);
+      let wr_resp <- get(masterPortShim.slave.b);
 
       if (ctr_wr_rsps_pending.value == 0) begin
          $display ("%0d: ERROR: LLC_AXI4_Adapter.rl_discard_write_rsp: unexpected Wr response (ctr_wr_rsps_pending.value == 0)",
@@ -256,7 +256,7 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
    endmethod
 
    // Fabric interface for memory
-   interface mem_master = master_xactor.masterSynth;
+   interface mem_master = masterPortShim.master;
 endmodule
 
 // ================================================================

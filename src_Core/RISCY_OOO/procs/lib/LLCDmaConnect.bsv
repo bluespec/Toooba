@@ -131,9 +131,9 @@ module mkLLCDmaConnect #(
     DmaServer#(LLCDmaReqId) llc,
     // MemLoaderMemClient memLoader,    // REPLACED BY AXI4_Slave_interface
     Vector#(CoreNum, TlbMemClient) tlb
-)(AXI4_Slave_Synth #(Wd_SId_2x3, Wd_Addr, Wd_Data,
-                     Wd_AW_User, Wd_W_User, Wd_B_User,
-                     Wd_AR_User, Wd_R_User)) provisos (
+)(AXI4_Slave #(Wd_SId_2x3, Wd_Addr, Wd_Data,
+               Wd_AW_User, Wd_W_User, Wd_B_User,
+               Wd_AR_User, Wd_R_User)) provisos (
     Alias#(dmaRqT, DmaRq#(LLCDmaReqId))
 );
     Bool verbose = False;
@@ -143,8 +143,8 @@ module mkLLCDmaConnect #(
    // When debugger reads a word, request a line from LLC, and remember dword-in-line here
    FIFOF #(Bit #(3)) f_dword_in_line <- mkFIFOF;
 
-   // Slave transactor for requests from Debug Module
-   let axi4_slave_xactor <- mkAXI4_Slave_Xactor;
+   // Connector to AXI4 fabric
+   let slavePortShim <- mkAXI4ShimFF;
 
    // ================================================================
    // These regs are a 1-location local cache for an LLC Cache Line,
@@ -163,10 +163,10 @@ module mkLLCDmaConnect #(
    // Respond to store-requests from the external client on store-hit
    rule rl_handle_MemLoader_st_req (   (   (rg_cacheline_cache_state == CACHELINE_CACHE_CLEAN)
                                         || (rg_cacheline_cache_state == CACHELINE_CACHE_DIRTY))
-                                    && (fn_addr_is_in_line (axi4_slave_xactor.master.aw.peek.awaddr,
+                                    && (fn_addr_is_in_line (slavePortShim.master.aw.peek.awaddr,
                                                             rg_cacheline_cache_addr)));
-      let wr_addr <- get (axi4_slave_xactor.master.aw);
-      let wr_data <- get (axi4_slave_xactor.master.w);
+      let wr_addr <- get (slavePortShim.master.aw);
+      let wr_data <- get (slavePortShim.master.w);
 
       // Modify relevant bytes of relevant dword
       let newLine = setDataAtBE( rg_cacheline_cache_data
@@ -178,7 +178,7 @@ module mkLLCDmaConnect #(
       rg_cacheline_cache_dirty_delay <= '1;    // start write-back delay countdown
 
       // Send response to external client
-      axi4_slave_xactor.master.b.put(AXI4_BFlit{
+      slavePortShim.master.b.put(AXI4_BFlit{
         bid:   wr_addr.awid,    // TODO: change uniformly to Fabric_id
         bresp: OKAY,
         buser: ?
@@ -198,14 +198,14 @@ module mkLLCDmaConnect #(
    // Responds to load-requests from the external client on load-hit
    rule rl_handle_MemLoader_ld_req (   (   (rg_cacheline_cache_state == CACHELINE_CACHE_CLEAN)
                                         || (rg_cacheline_cache_state == CACHELINE_CACHE_DIRTY))
-                                    && (fn_addr_is_in_line (axi4_slave_xactor.master.ar.peek.araddr,
+                                    && (fn_addr_is_in_line (slavePortShim.master.ar.peek.araddr,
                                                             rg_cacheline_cache_addr)));
-      let rd_addr <- get (axi4_slave_xactor.master.ar);
+      let rd_addr <- get (slavePortShim.master.ar);
       let dword = getDataAt( rg_cacheline_cache_data
                            , getCLineDataSel(rd_addr.araddr));
 
       // Send response to external client
-      axi4_slave_xactor.master.r.put(AXI4_RFlit{
+      slavePortShim.master.r.put(AXI4_RFlit{
         rid: rd_addr.arid,
         rdata: dword,
         rresp: OKAY,
@@ -255,12 +255,12 @@ module mkLLCDmaConnect #(
 
    // Initiate writeback if dirty and next request is store-miss
    rule rl_cacheline_cache_writeback_st_miss (   (rg_cacheline_cache_state == CACHELINE_CACHE_DIRTY)
-                                              && (! fn_addr_is_in_line (axi4_slave_xactor.master.aw.peek.awaddr,
+                                              && (! fn_addr_is_in_line (slavePortShim.master.aw.peek.awaddr,
                                                                         rg_cacheline_cache_addr)));
       if (verbosity >= 2) begin
          $display ("%0d: %m.rl_cacheline_cache_writeback_st_miss.", cur_cycle);
          $display ("    Old line addr %0h", rg_cacheline_cache_addr);
-         $display ("    New addr      %0h", axi4_slave_xactor.master.aw.peek.awaddr);
+         $display ("    New addr      %0h", slavePortShim.master.aw.peek.awaddr);
       end
 
       fa_writeback;
@@ -269,12 +269,12 @@ module mkLLCDmaConnect #(
 
    // Initiate writeback if dirty and next request is load-miss
    rule rl_cacheline_cache_writeback_ld_miss (   (rg_cacheline_cache_state == CACHELINE_CACHE_DIRTY)
-                                              && (! fn_addr_is_in_line (axi4_slave_xactor.master.ar.peek.araddr,
+                                              && (! fn_addr_is_in_line (slavePortShim.master.ar.peek.araddr,
                                                                         rg_cacheline_cache_addr)));
       if (verbosity >= 2) begin
          $display ("%0d: %m.rl_cacheline_cache_writeback_ld_miss.", cur_cycle);
          $display ("    Old line addr %0h", rg_cacheline_cache_addr);
-         $display ("    New addr      %0h", axi4_slave_xactor.master.aw.peek.awaddr);
+         $display ("    New addr      %0h", slavePortShim.master.aw.peek.awaddr);
       end
 
       fa_writeback;
@@ -313,9 +313,9 @@ module mkLLCDmaConnect #(
 
    // Initiate reload when cacheline_cache is clean on store-miss
    rule rl_cacheline_cache_reload_req_st (   (rg_cacheline_cache_state == CACHELINE_CACHE_CLEAN)
-                                          && (! fn_addr_is_in_line (axi4_slave_xactor.master.aw.peek.awaddr,
+                                          && (! fn_addr_is_in_line (slavePortShim.master.aw.peek.awaddr,
                                                                     rg_cacheline_cache_addr)));
-      let addr = axi4_slave_xactor.master.aw.peek.awaddr;
+      let addr = slavePortShim.master.aw.peek.awaddr;
 
       if (verbosity >= 2) begin
          $display ("%0d: %m.rl_cacheline_cache_reload_req_st for addr %0h", cur_cycle, addr);
@@ -327,9 +327,9 @@ module mkLLCDmaConnect #(
 
    // Initiate reload when cacheline_cache is clean on load-miss
    rule rl_cacheline_cache_reload_req_ld (   (rg_cacheline_cache_state == CACHELINE_CACHE_CLEAN)
-                                          && (! fn_addr_is_in_line (axi4_slave_xactor.master.ar.peek.araddr,
+                                          && (! fn_addr_is_in_line (slavePortShim.master.ar.peek.araddr,
                                                                     rg_cacheline_cache_addr)));
-      let addr = axi4_slave_xactor.master.ar.peek.araddr;
+      let addr = slavePortShim.master.ar.peek.araddr;
 
       if (verbosity >= 2) begin
          $display ("%0d: %m.rl_cacheline_cache_reload_req_ld for addr %0h", cur_cycle, addr);
@@ -424,5 +424,5 @@ module mkLLCDmaConnect #(
     // ================================================================
     // INTERFACE
 
-    return axi4_slave_xactor.slaveSynth;
+    return slavePortShim.slave;
 endmodule
