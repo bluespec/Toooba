@@ -982,3 +982,8 @@ function Fmt showInst(Instruction inst);
   return ret;
 endfunction
 
+`ifdef PERFORMANCE_MONITORING
+typedef 96 No_Of_Evts;
+typedef 64 Counter_Width;
+typedef 29 No_Of_Ctrs;
+`endif
