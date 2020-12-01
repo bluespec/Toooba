@@ -59,6 +59,10 @@ import TlbTypes::*;
 import SynthParam::*;
 import VerificationPacket::*;
 import Performance::*;
+`ifdef PERFORMANCE_MONITORING
+import PerformanceMonitor::*;
+import SpecialWires::*;
+`endif
 import HasSpecBits::*;
 import Exec::*;
 import FetchStage::*;
@@ -156,6 +160,48 @@ endinterface
 interface CoreRenameDebug;
     interface Get#(RenameErrInfo) renameErr;
 endinterface
+
+// ================================================================
+
+`ifdef PERFORMANCE_MONITORING
+typedef struct {
+   Bool evt_REDIRECT;
+   Bool evt_TLB_EXC; // TODO: Misleading name
+   Bool evt_BRANCH;
+   Bool evt_JAL;
+   Bool evt_JALR;
+   Bool evt_AUIPC;
+   Bool evt_LOAD;
+   Bool evt_STORE;
+   Bool evt_LR;
+   Bool evt_SC;
+   Bool evt_AMO;
+   Bool evt_SERIAL_SHIFT;
+   Bool evt_INT_MUL_DIV_REM;
+   Bool evt_FP;
+   Bool evt_SC_SUCCESS;
+   Bool evt_LOAD_WAIT;
+   Bool evt_STORE_WAIT;
+   Bool evt_FENCE;
+   Bool evt_F_BUSY_NO_CONSUME;
+   Bool evt_D_BUSY_NO_CONSUME;
+   Bool evt_1_BUSY_NO_CONSUME;
+   Bool evt_2_BUSY_NO_CONSUME;
+   Bool evt_3_BUSY_NO_CONSUME;
+   Bool evt_IMPRECISE_SETBOUND;
+   Bool evt_UNREPRESENTABLE_CAP;
+   Bool evt_MEM_CAP_LOAD;
+   Bool evt_MEM_CAP_STORE;
+   Bool evt_MEM_CAP_LOAD_TAG_SET;
+   Bool evt_MEM_CAP_STORE_TAG_SET;
+} EventsCore deriving (Bits, FShow);
+
+instance BitVectorable #(EventsCore, 1, m) provisos (Bits #(EventsCore, m));
+   function to_vector = struct_to_vector;
+endinstance
+`endif
+
+// ================================================================
 
 interface Core;
     // core request & indication
@@ -256,6 +302,14 @@ module mkCore#(CoreId coreId)(Core);
 
 `ifdef INCLUDE_TANDEM_VERIF
    Vector #(SupSize, FIFOF #(Trace_Data2)) v_f_to_TV <- replicateM (mkFIFOF);
+`endif
+
+`ifdef PERFORMANCE_MONITORING
+   Array #(Wire #(EventsCore)) aw_events <- mkDWireOR (5, unpack (0));
+   Reg #(EventsCore) aw_events_reg <- mkConfigReg(unpack(0));
+   rule update_aw_events_reg;
+       aw_events_reg <= aw_events[0];
+   endrule
 `endif
 
    // ================================================================
@@ -400,6 +454,11 @@ module mkCore#(CoreId coreId)(Core);
 `endif
                     );
                     globalSpecUpdate.incorrectSpec(False, spec_tag, inst_tag);
+`ifdef PERFORMANCE_MONITORING
+                    EventsCore events = unpack (0);
+                    events.evt_REDIRECT = True;
+                    aw_events[1] <= events;
+`endif
                 endmethod
                 method correctSpec = globalSpecUpdate.correctSpec[finishAluCorrectSpecPort(i)].put;
                 method doStats = doStatsReg._read;
@@ -1073,6 +1132,27 @@ module mkCore#(CoreId coreId)(Core);
             perfRespQ.enq(r);
         end
     endrule
+`endif
+
+`ifdef PERFORMANCE_MONITORING
+     // ================================================================
+     // Performance counters
+
+     Vector #(1, Bit #(Counter_Width)) null_evt = replicate (0);
+     Vector #(31, Bit #(Counter_Width)) core_evts_vec = to_large_vector (aw_events_reg);
+     Vector #(16, Bit #(Counter_Width)) imem_evts_vec = replicate (0);//to_large_vector (near_mem.imem.events);
+     Vector #(16, Bit #(Counter_Width)) dmem_evts_vec = replicate (0);//to_large_vector (near_mem.dmem.events);
+     Vector #(32, Bit #(Counter_Width)) external_evts_vec = replicate (0);//to_large_vector (w_external_evts);
+
+     let events = append (null_evt, core_evts_vec);
+     events = append (events, imem_evts_vec);
+     events = append (events, dmem_evts_vec);
+     events = append (events, external_evts_vec);
+
+     (* fire_when_enabled, no_implicit_conditions *)
+     rule rl_send_perf_evts;
+          csrf.send_performance_events (events);
+     endrule
 `endif
 
 `ifdef INCLUDE_GDB_CONTROL

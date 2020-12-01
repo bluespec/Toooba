@@ -38,6 +38,7 @@ BSC_COMPILATION_FLAGS += \
 	-D CheriMasterIDWidth=1 \
 	-D CheriTransactionIDWidth=5 \
 	-D CAP128 -D BLUESIM \
+	-D PERFORMANCE_MONITORING \
 	-D MEM64 \
 	-D RISCV \
 	-D RVFI_DII \

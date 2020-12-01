@@ -1040,3 +1040,9 @@ function Fmt showInst(Instruction inst);
 endfunction
 
 function x addPc(x cap, Bit#(12) inc) provisos (Add#(f, 12, c), CHERICap::CHERICap#(x, a, b, c, d, e)) = setAddrUnsafe(cap, getAddr(cap) + signExtend(inc));
+
+`ifdef PERFORMANCE_MONITORING
+typedef 96 No_Of_Evts;
+typedef 64 Counter_Width;
+typedef 29 No_Of_Ctrs;
+`endif
