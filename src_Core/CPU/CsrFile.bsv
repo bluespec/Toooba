@@ -771,11 +771,10 @@ module mkCsrFile #(Data hartid)(CsrFile);
     function Reg#(Data) get_csr(CSR csr);
         Reg#(Data) ret = readOnlyReg(64'b0);
 `ifdef PERFORMANCE_MONITORING
-        let c = csr.addr;
-        if ((csrAddrMHPMCNT3.addr <= c) && (c <= csrAddrMHPMCNT31.addr))
-            ret = perf_counters.counter_vec[c-csrAddrMHPMCNT3.addr];
-        if ((csrAddrMHPMEVENT3.addr <= c) && (c <= csrAddrMHPMEVENT31.addr))
-            ret = perf_counters.event_vec[c - csrAddrMHPMEVENT3.addr];
+        if ((CSRmhpmcounter3 <= csr) && (csr <= CSRmhpmcounter31))
+            ret = perf_counters.counter_vec[csr-CSRmhpmcounter3];
+        if ((CSRmhpmevent3 <= csr) && (csr <= CSRmhpmevent31))
+            ret = perf_counters.event_vec[csr - CSRmhpmevent3];
 `endif
         return (case (csr)
             // User CSRs
@@ -817,6 +816,9 @@ module mkCsrFile #(Data hartid)(CsrFile);
             CSRmarchid:    marchid_csr;
             CSRmimpid:     mimpid_csr;
             CSRmhartid:    mhartid_csr;
+`ifdef PERFORMANCE_MONITORING
+            CSRmcounterinhibit: perf_counters.inhibit;
+`endif
 `ifdef SECURITY
             CSRmevbase:    mevbase_csr;
             CSRmevmask:    mevmask_csr;
