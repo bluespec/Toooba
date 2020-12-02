@@ -161,48 +161,6 @@ interface CoreRenameDebug;
     interface Get#(RenameErrInfo) renameErr;
 endinterface
 
-// ================================================================
-
-`ifdef PERFORMANCE_MONITORING
-typedef struct {
-   Bool evt_REDIRECT;
-   Bool evt_TLB_EXC; // TODO: Misleading name
-   Bool evt_BRANCH;
-   Bool evt_JAL;
-   Bool evt_JALR;
-   Bool evt_AUIPC;
-   Bool evt_LOAD;
-   Bool evt_STORE;
-   Bool evt_LR;
-   Bool evt_SC;
-   Bool evt_AMO;
-   Bool evt_SERIAL_SHIFT;
-   Bool evt_INT_MUL_DIV_REM;
-   Bool evt_FP;
-   Bool evt_SC_SUCCESS;
-   Bool evt_LOAD_WAIT;
-   Bool evt_STORE_WAIT;
-   Bool evt_FENCE;
-   Bool evt_F_BUSY_NO_CONSUME;
-   Bool evt_D_BUSY_NO_CONSUME;
-   Bool evt_1_BUSY_NO_CONSUME;
-   Bool evt_2_BUSY_NO_CONSUME;
-   Bool evt_3_BUSY_NO_CONSUME;
-   Bool evt_IMPRECISE_SETBOUND;
-   Bool evt_UNREPRESENTABLE_CAP;
-   Bool evt_MEM_CAP_LOAD;
-   Bool evt_MEM_CAP_STORE;
-   Bool evt_MEM_CAP_LOAD_TAG_SET;
-   Bool evt_MEM_CAP_STORE_TAG_SET;
-} EventsCore deriving (Bits, FShow);
-
-instance BitVectorable #(EventsCore, 1, m) provisos (Bits #(EventsCore, m));
-   function to_vector = struct_to_vector;
-endinstance
-`endif
-
-// ================================================================
-
 interface Core;
     // core request & indication
     interface CoreReq coreReq;
@@ -277,6 +235,13 @@ typedef enum {
    CORE_RUNNING
    } Core_Run_State
 deriving (Bits, Eq, FShow);
+
+`ifdef PERFORMANCE_MONITORING
+instance BitVectorable #(EventsCore, SizeOf#(SupCnt), EventsCoreElements) provisos (Bits #(EventsCore, m));
+   function Vector#(EventsCoreElements, SupCnt) to_vector(EventsCore e) =
+      reverse(unpack(pack(e)));
+endinstance
+`endif
 
 (* synthesize *)
 module mkCore#(CoreId coreId)(Core);
@@ -456,7 +421,7 @@ module mkCore#(CoreId coreId)(Core);
                     globalSpecUpdate.incorrectSpec(False, spec_tag, inst_tag);
 `ifdef PERFORMANCE_MONITORING
                     EventsCore events = unpack (0);
-                    events.evt_REDIRECT = True;
+                    events.evt_REDIRECT = 1;
                     aw_events[1] <= events;
 `endif
                 endmethod
@@ -1138,11 +1103,15 @@ module mkCore#(CoreId coreId)(Core);
      // ================================================================
      // Performance counters
 
-     Vector #(1, Bit #(Counter_Width)) null_evt = replicate (0);
-     Vector #(31, Bit #(Counter_Width)) core_evts_vec = to_large_vector (aw_events_reg);
-     Vector #(16, Bit #(Counter_Width)) imem_evts_vec = replicate (0);//to_large_vector (near_mem.imem.events);
-     Vector #(16, Bit #(Counter_Width)) dmem_evts_vec = replicate (0);//to_large_vector (near_mem.dmem.events);
-     Vector #(32, Bit #(Counter_Width)) external_evts_vec = replicate (0);//to_large_vector (w_external_evts);
+     rule report_commit_events;
+         aw_events[2] <= commitStage.events;
+     endrule
+
+     Vector #(1, Bit #(Report_Width)) null_evt = replicate (0);
+     Vector #(31, Bit #(Report_Width)) core_evts_vec = to_large_vector (aw_events_reg);
+     Vector #(16, Bit #(Report_Width)) imem_evts_vec = replicate (0);//to_large_vector (near_mem.imem.events);
+     Vector #(16, Bit #(Report_Width)) dmem_evts_vec = replicate (0);//to_large_vector (near_mem.dmem.events);
+     Vector #(32, Bit #(Report_Width)) external_evts_vec = replicate (0);//to_large_vector (w_external_evts);
 
      let events = append (null_evt, core_evts_vec);
      events = append (events, imem_evts_vec);

@@ -185,7 +185,7 @@ interface CsrFile;
 `endif
 `ifdef PERFORMANCE_MONITORING
    (* always_ready, always_enabled *)
-   method Action send_performance_events (Vector #(No_Of_Evts, Bit #(Counter_Width)) evts);
+   method Action send_performance_events (Vector #(No_Of_Evts, Bit #(Report_Width)) evts);
 `endif
 endinterface
 
@@ -246,11 +246,11 @@ interface PerfCountersVec;
     interface Vector#(No_Of_Ctrs, Reg#(Data)) counter_vec;
     interface Vector#(No_Of_Ctrs, Reg#(Data)) event_vec;
     interface Reg#(Data) inhibit;
-    method Action send_performance_events (Vector #(No_Of_Evts, Bit#(Counter_Width)) evts);
+    method Action send_performance_events (Vector #(No_Of_Evts, Bit#(Report_Width)) evts);
 endinterface
 (* synthesize *)
 module mkPerfCountersToooba (PerfCountersVec);
-    PerfCounters_IFC #(No_Of_Ctrs, Counter_Width, No_Of_Evts) perf_counters <- mkPerfCounters;
+    PerfCounters_IFC #(No_Of_Ctrs, Counter_Width, Report_Width, No_Of_Evts) perf_counters <- mkPerfCounters;
     Vector#(No_Of_Ctrs, Reg#(Data)) counters = ?;
     for (Bit#(TLog#(No_Of_Ctrs)) i = 0; i < 29; i = i + 1) counters[i] =
         interface Reg;
