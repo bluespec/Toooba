@@ -809,8 +809,8 @@ module mkCsrFile #(Data hartid)(CsrFile);
         Reg#(Data) ret = readOnlyReg(64'b0);
 `ifdef PERFORMANCE_MONITORING
         let c = csr.addr;
-        if ((csrAddrMHPMCNT3.addr <= c) && (c <= csrAddrMHPMCNT31.addr))
-            ret = perf_counters.counter_vec[c-csrAddrMHPMCNT3.addr];
+        if ((csrAddrMHPMCOUNTER3.addr <= c) && (c <= csrAddrMHPMCOUNTER31.addr))
+            ret = perf_counters.counter_vec[c-csrAddrMHPMCOUNTER3.addr];
         if ((csrAddrMHPMEVENT3.addr <= c) && (c <= csrAddrMHPMEVENT31.addr))
             ret = perf_counters.event_vec[c - csrAddrMHPMEVENT3.addr];
 `endif
@@ -855,6 +855,9 @@ module mkCsrFile #(Data hartid)(CsrFile);
             csrAddrMIMPID:     mimpid_csr;
             csrAddrMHARTID:    mhartid_csr;
             csrAddrMCCSR:      csr_capcause(mccsr_reg);
+`ifdef PERFORMANCE_MONITORING
+            csrAddrMCOUNTERINHIBIT: perf_counters.inhibit;
+`endif
 `ifdef SECURITY
             csrAddrMEVBASE:    mevbase_csr;
             csrAddrMEVMASK:    mevmask_csr;
