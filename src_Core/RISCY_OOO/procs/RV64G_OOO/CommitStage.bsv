@@ -27,6 +27,7 @@ import Vector::*;
 import GetPut::*;
 import Cntrs::*;
 import ConfigReg::*;
+import DReg::*;
 import FIFO::*;
 import FIFOF::*;
 import Types::*;
@@ -132,7 +133,9 @@ interface CommitStage;
    method Bool is_debug_halted;
    method Action debug_resume;
 `endif
-
+`ifdef PERFORMANCE_MONITORING
+   method EventsCore events;
+`endif
 endinterface
 
 // we apply actions the end of commit rule
@@ -305,6 +308,10 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
     Count#(Data) flushSecurityCnt <- mkCount(0);
     Count#(Data) flushBPCnt <- mkCount(0);
     Count#(Data) flushCacheCnt <- mkCount(0);
+`endif
+
+`ifdef PERFORMANCE_MONITORING
+    Reg#(EventsCore) events_reg <- mkDReg(unpack(0));
 `endif
 
     // deadlock check
@@ -885,7 +892,6 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         // incr committed inst cnt at the end of rule
         SupCnt comInstCnt = 0;
         SupCnt comUserInstCnt = 0;
-`ifdef PERF_COUNT
         // incr some performance counter at the end of rule
         SupCnt brCnt = 0;
         SupCnt jmpCnt = 0;
@@ -895,7 +901,6 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         SupCnt lrCnt = 0;
         SupCnt scCnt = 0;
         SupCnt amoCnt = 0;
-`endif
 
         Bit #(64) instret = 0;
 
@@ -977,7 +982,6 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                         comUserInstCnt = comUserInstCnt + 1; // user space inst
                     end
 
-`ifdef PERF_COUNT
                     // performance counter
                     case(x.iType)
                         Br: brCnt = brCnt + 1;
@@ -989,7 +993,6 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                         Sc: scCnt = scCnt + 1;
                         Amo: amoCnt = amoCnt + 1;
                     endcase
-`endif
                 end
             end
         end
@@ -1037,6 +1040,19 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                 supComUserCnt.incr(1);
             end
         end
+`endif
+`ifdef PERFORMANCE_MONITORING
+        EventsCore events = unpack(0);
+        events.evt_BRANCH = brCnt;
+        events.evt_JAL = jmpCnt;
+        events.evt_JALR = jrCnt;
+        events.evt_AUIPC = 0; // XXX
+        events.evt_LOAD = ldCnt;
+        events.evt_STORE = stCnt;
+        events.evt_LR = lrCnt;
+        events.evt_SC = scCnt;
+        events.evt_AMO = amoCnt;
+        events_reg <= events;
 `endif
     endrule
 
@@ -1103,5 +1119,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 	 $display ("%0d: %m.commitStage.debug_resume", cur_cycle);
    endmethod
 `endif
-
+`ifdef PERFORMANCE_MONITORING
+   method events = events_reg;
+`endif
 endmodule

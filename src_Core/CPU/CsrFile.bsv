@@ -163,7 +163,7 @@ interface CsrFile;
 `endif
 `ifdef PERFORMANCE_MONITORING
    (* always_ready, always_enabled *)
-   method Action send_performance_events (Vector #(No_Of_Evts, Bit #(Counter_Width)) evts);
+   method Action send_performance_events (Vector #(No_Of_Evts, Bit #(Report_Width)) evts);
 `endif
 endinterface
 
@@ -224,11 +224,11 @@ interface PerfCountersVec;
     interface Vector#(No_Of_Ctrs, Reg#(Data)) counter_vec;
     interface Vector#(No_Of_Ctrs, Reg#(Data)) event_vec;
     interface Reg#(Data) inhibit;
-    method Action send_performance_events (Vector #(No_Of_Evts, Bit#(Counter_Width)) evts);
+    method Action send_performance_events (Vector #(No_Of_Evts, Bit#(Report_Width)) evts);
 endinterface
 (* synthesize *)
 module mkPerfCountersToooba (PerfCountersVec);
-    PerfCounters_IFC #(No_Of_Ctrs, Counter_Width, No_Of_Evts) perf_counters <- mkPerfCounters;
+    PerfCounters_IFC #(No_Of_Ctrs, Counter_Width, Report_Width, No_Of_Evts) perf_counters <- mkPerfCounters;
     Vector#(No_Of_Ctrs, Reg#(Data)) counters = ?;
     for (Bit#(TLog#(No_Of_Ctrs)) i = 0; i < 29; i = i + 1) counters[i] =
         interface Reg;
@@ -771,10 +771,13 @@ module mkCsrFile #(Data hartid)(CsrFile);
     function Reg#(Data) get_csr(CSR csr);
         Reg#(Data) ret = readOnlyReg(64'b0);
 `ifdef PERFORMANCE_MONITORING
-        if ((CSRmhpmcounter3 <= csr) && (csr <= CSRmhpmcounter31))
-            ret = perf_counters.counter_vec[csr-CSRmhpmcounter3];
-        if ((CSRmhpmevent3 <= csr) && (csr <= CSRmhpmevent31))
-            ret = perf_counters.event_vec[csr - CSRmhpmevent3];
+	Bit#(12) c = pack(csr);
+	Bit#(12) hpmBase = pack(CSRmhpcounter3);
+	Bit#(12) hpmTop  = pack(CSRmhpcounter31);
+        if ((hpmBase <= c) && (c <= hpmTop)) ret = perf_counters.counter_vec[c-hpmBase];
+	hpmBase = pack(CSRmhpmevent3);
+	hpmTop  = pack(CSRmhpmevent31);
+        if ((hpmBase <= c) && (c <= hpmTop)) ret = perf_counters.event_vec[c - hpmBase];
 `endif
         return (case (csr)
             // User CSRs
