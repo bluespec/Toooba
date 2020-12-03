@@ -820,6 +820,13 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
             end
         end
 `endif
+`ifdef PERFORMANCE_MONITORING
+        EventsCore events = unpack(0);
+        case(x.iType)
+            Fence, FenceI, SFence: events.evt_FENCE = 1;
+        endcase
+        events_reg <= events;
+`endif
 `ifdef CHECK_DEADLOCK
         commitInst.send;
         if(csrf.decodeInfo.prv == 0) begin
@@ -901,6 +908,10 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         SupCnt lrCnt = 0;
         SupCnt scCnt = 0;
         SupCnt amoCnt = 0;
+        SupCnt shiftCnt = 0;
+        SupCnt muldivCnt = 0;
+        SupCnt auipcCnt = 0;
+        SupCnt fenceCnt = 0;
 
         Bit #(64) instret = 0;
 
@@ -982,8 +993,24 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                         comUserInstCnt = comUserInstCnt + 1; // user space inst
                     end
 
-                    // performance counter
+                    // performance counters
+                    // Some fields of the original instruction to help with classification.
+                    let inst = x.orig_inst;
+                    Opcode opcode = unpackOpcode(inst[  6 :  0 ]);
+                    let funct3    =              inst[ 14 : 12 ];
+                    let funct7    =              inst[ 31 : 25 ];
+                    // For "F" and "D" ISA extensions
+                    let funct5    =              inst[ 31 : 27 ];
+                    let fmt       =              inst[ 26 : 25 ];
+                    let rs3       =              inst[ 31 : 27 ];
+                    let funct2    =              inst[ 26 : 25 ];
+                    // For "A" ISA extension
+                    Bool aq       =       unpack(inst[ 26 ]);
+                    Bool rl       =       unpack(inst[ 25 ]);
+                    // For "xCHERI" ISA extension
+                    let funct5rs2 =              inst[ 24 : 20 ];
                     case(x.iType)
+                        Auipc, Auipcc: auipcCnt = auipcCnt + 1;
                         Br: brCnt = brCnt + 1;
                         J : jmpCnt = jmpCnt + 1;
                         Jr: jrCnt = jrCnt + 1;
@@ -992,6 +1019,13 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                         Lr: lrCnt = lrCnt + 1;
                         Sc: scCnt = scCnt + 1;
                         Amo: amoCnt = amoCnt + 1;
+                        Alu: begin
+                            if (((opcode == opcOpImm) || (opcode == opcOpImm32) || (opcode == opcOp)) && ((funct3 == fnSLL) || (funct3 == fnSR)))
+                                shiftCnt = shiftCnt + 1;
+                            if ((opcode == opcOp || opcode == opcOp32) && funct7 == opMULDIV)
+                                muldivCnt = muldivCnt + 1;
+                        end
+                        Fence, FenceI, SFence: fenceCnt = fenceCnt + 1; // Some of these are "System" instructions.
                     endcase
                 end
             end
@@ -1046,12 +1080,15 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         events.evt_BRANCH = brCnt;
         events.evt_JAL = jmpCnt;
         events.evt_JALR = jrCnt;
-        events.evt_AUIPC = 0; // XXX
+        events.evt_AUIPC = auipcCnt; // XXX
         events.evt_LOAD = ldCnt;
         events.evt_STORE = stCnt;
         events.evt_LR = lrCnt;
         events.evt_SC = scCnt;
         events.evt_AMO = amoCnt;
+        events.evt_SERIAL_SHIFT = shiftCnt;
+        events.evt_INT_MUL_DIV_REM = muldivCnt;
+        events.evt_FENCE = fenceCnt;
         events_reg <= events;
 `endif
     endrule
