@@ -500,7 +500,7 @@ module mkCoreW_Synth #(Reset dm_power_on_reset)
    interface core_external_interrupt_sources = core.core_external_interrupt_sources;
    method nmi_req = core.nmi_req;
 `ifdef RVFI_DII
-   interface rvfi_dii_server = core.Toooba_RVFI_DII_Server rvfi_dii_server;
+   interface rvfi_dii_server = core.rvfi_dii_server;
 `endif
 `ifdef INCLUDE_GDB_CONTROL
    interface dmi = core.dmi;
