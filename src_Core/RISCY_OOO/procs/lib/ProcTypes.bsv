@@ -1040,3 +1040,43 @@ function Fmt showInst(Instruction inst);
 endfunction
 
 function x addPc(x cap, Bit#(12) inc) provisos (Add#(f, 12, c), CHERICap::CHERICap#(x, a, b, c, d, e)) = setAddrUnsafe(cap, getAddr(cap) + signExtend(inc));
+
+`ifdef PERFORMANCE_MONITORING
+typedef 96 No_Of_Evts;
+typedef  8 Report_Width;
+typedef 64 Counter_Width;
+typedef 29 No_Of_Ctrs;
+
+typedef struct {
+   SupCnt evt_REDIRECT;
+   SupCnt evt_TLB_EXC; // TODO: Misleading name
+   SupCnt evt_BRANCH;
+   SupCnt evt_JAL;
+   SupCnt evt_JALR;
+   SupCnt evt_AUIPC;
+   SupCnt evt_LOAD;
+   SupCnt evt_STORE;
+   SupCnt evt_LR;
+   SupCnt evt_SC;
+   SupCnt evt_AMO;
+   SupCnt evt_SERIAL_SHIFT;
+   SupCnt evt_INT_MUL_DIV_REM;
+   SupCnt evt_FP;
+   SupCnt evt_SC_SUCCESS;
+   SupCnt evt_LOAD_WAIT;
+   SupCnt evt_STORE_WAIT;
+   SupCnt evt_FENCE;
+   SupCnt evt_F_BUSY_NO_CONSUME;
+   SupCnt evt_D_BUSY_NO_CONSUME;
+   SupCnt evt_1_BUSY_NO_CONSUME;
+   SupCnt evt_2_BUSY_NO_CONSUME;
+   SupCnt evt_3_BUSY_NO_CONSUME;
+   SupCnt evt_IMPRECISE_SETBOUND;
+   SupCnt evt_UNREPRESENTABLE_CAP;
+   SupCnt evt_MEM_CAP_LOAD;
+   SupCnt evt_MEM_CAP_STORE;
+   SupCnt evt_MEM_CAP_LOAD_TAG_SET;
+   SupCnt evt_MEM_CAP_STORE_TAG_SET;
+} EventsCore deriving (Bits, FShow);
+typedef TDiv#(SizeOf#(EventsCore),SizeOf#(SupCnt)) EventsCoreElements;
+`endif

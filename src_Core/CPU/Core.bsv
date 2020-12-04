@@ -59,6 +59,10 @@ import TlbTypes::*;
 import SynthParam::*;
 import VerificationPacket::*;
 import Performance::*;
+`ifdef PERFORMANCE_MONITORING
+import PerformanceMonitor::*;
+import SpecialWires::*;
+`endif
 import HasSpecBits::*;
 import Exec::*;
 import FetchStage::*;
@@ -232,6 +236,13 @@ typedef enum {
    } Core_Run_State
 deriving (Bits, Eq, FShow);
 
+`ifdef PERFORMANCE_MONITORING
+instance BitVectorable #(EventsCore, SizeOf#(SupCnt), EventsCoreElements) provisos (Bits #(EventsCore, m));
+   function Vector#(EventsCoreElements, SupCnt) to_vector(EventsCore e) =
+      reverse(unpack(pack(e)));
+endinstance
+`endif
+
 (* synthesize *)
 module mkCore#(CoreId coreId)(Core);
     let verbose = False;
@@ -256,6 +267,14 @@ module mkCore#(CoreId coreId)(Core);
 
 `ifdef INCLUDE_TANDEM_VERIF
    Vector #(SupSize, FIFOF #(Trace_Data2)) v_f_to_TV <- replicateM (mkFIFOF);
+`endif
+
+`ifdef PERFORMANCE_MONITORING
+   Array #(Wire #(EventsCore)) aw_events <- mkDWireOR (5, unpack (0));
+   Reg #(EventsCore) aw_events_reg <- mkConfigReg(unpack(0));
+   rule update_aw_events_reg;
+       aw_events_reg <= aw_events[0];
+   endrule
 `endif
 
    // ================================================================
@@ -400,6 +419,11 @@ module mkCore#(CoreId coreId)(Core);
 `endif
                     );
                     globalSpecUpdate.incorrectSpec(False, spec_tag, inst_tag);
+`ifdef PERFORMANCE_MONITORING
+                    EventsCore events = unpack (0);
+                    events.evt_REDIRECT = 1;
+                    aw_events[1] <= events;
+`endif
                 endmethod
                 method correctSpec = globalSpecUpdate.correctSpec[finishAluCorrectSpecPort(i)].put;
                 method doStats = doStatsReg._read;
@@ -1073,6 +1097,31 @@ module mkCore#(CoreId coreId)(Core);
             perfRespQ.enq(r);
         end
     endrule
+`endif
+
+`ifdef PERFORMANCE_MONITORING
+     // ================================================================
+     // Performance counters
+
+     rule report_commit_events;
+         aw_events[2] <= commitStage.events;
+     endrule
+
+     Vector #(1, Bit #(Report_Width)) null_evt = replicate (0);
+     Vector #(31, Bit #(Report_Width)) core_evts_vec = to_large_vector (aw_events_reg);
+     Vector #(16, Bit #(Report_Width)) imem_evts_vec = replicate (0);//to_large_vector (near_mem.imem.events);
+     Vector #(16, Bit #(Report_Width)) dmem_evts_vec = replicate (0);//to_large_vector (near_mem.dmem.events);
+     Vector #(32, Bit #(Report_Width)) external_evts_vec = replicate (0);//to_large_vector (w_external_evts);
+
+     let events = append (null_evt, core_evts_vec);
+     events = append (events, imem_evts_vec);
+     events = append (events, dmem_evts_vec);
+     events = append (events, external_evts_vec);
+
+     (* fire_when_enabled, no_implicit_conditions *)
+     rule rl_send_perf_evts;
+          csrf.send_performance_events (events);
+     endrule
 `endif
 
 `ifdef INCLUDE_GDB_CONTROL

@@ -43,6 +43,7 @@ import Vector::*;
 import GetPut::*;
 import Cntrs::*;
 import ConfigReg::*;
+import DReg::*;
 import FIFO::*;
 import FIFOF::*;
 import Types::*;
@@ -160,6 +161,9 @@ interface CommitStage;
 `ifdef INCLUDE_GDB_CONTROL
    method Bool is_debug_halted;
    method Action debug_resume;
+`endif
+`ifdef PERFORMANCE_MONITORING
+   method EventsCore events;
 `endif
 `ifdef DEBUG_WEDGE
     (* always_enabled *)
@@ -408,6 +412,10 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
     Count#(Data) flushSecurityCnt <- mkCount(0);
     Count#(Data) flushBPCnt <- mkCount(0);
     Count#(Data) flushCacheCnt <- mkCount(0);
+`endif
+
+`ifdef PERFORMANCE_MONITORING
+    Reg#(EventsCore) events_reg <- mkDReg(unpack(0));
 `endif
 
 `ifdef RVFI
@@ -988,6 +996,13 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
             end
         end
 `endif
+`ifdef PERFORMANCE_MONITORING
+        EventsCore events = unpack(0);
+        case(x.iType)
+            Fence, FenceI, SFence: events.evt_FENCE = 1;
+        endcase
+        events_reg <= events;
+`endif
 `ifdef CHECK_DEADLOCK
         commitInst.send;
         if(csrf.decodeInfo.prv == 0) begin
@@ -1060,7 +1075,6 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         // incr committed inst cnt at the end of rule
         SupCnt comInstCnt = 0;
         SupCnt comUserInstCnt = 0;
-`ifdef PERF_COUNT
         // incr some performance counter at the end of rule
         SupCnt brCnt = 0;
         SupCnt jmpCnt = 0;
@@ -1070,7 +1084,10 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         SupCnt lrCnt = 0;
         SupCnt scCnt = 0;
         SupCnt amoCnt = 0;
-`endif
+        SupCnt shiftCnt = 0;
+        SupCnt muldivCnt = 0;
+        SupCnt auipcCnt = 0;
+        SupCnt fenceCnt = 0;
 
 `ifdef RVFI
         Rvfi_Traces rvfis = replicate(tagged Invalid);
@@ -1170,9 +1187,24 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                         comUserInstCnt = comUserInstCnt + 1; // user space inst
                     end
 
-`ifdef PERF_COUNT
-                    // performance counter
+                    // performance counters
+                    // Some fields of the original instruction to help with classification.
+                    let inst = x.orig_inst;
+                    Opcode opcode = unpackOpcode(inst[  6 :  0 ]);
+                    let funct3    =              inst[ 14 : 12 ];
+                    let funct7    =              inst[ 31 : 25 ];
+                    // For "F" and "D" ISA extensions
+                    let funct5    =              inst[ 31 : 27 ];
+                    let fmt       =              inst[ 26 : 25 ];
+                    let rs3       =              inst[ 31 : 27 ];
+                    let funct2    =              inst[ 26 : 25 ];
+                    // For "A" ISA extension
+                    Bool aq       =       unpack(inst[ 26 ]);
+                    Bool rl       =       unpack(inst[ 25 ]);
+                    // For "xCHERI" ISA extension
+                    let funct5rs2 =              inst[ 24 : 20 ];
                     case(x.iType)
+                        Auipc, Auipcc: auipcCnt = auipcCnt + 1;
                         Br: brCnt = brCnt + 1;
                         J : jmpCnt = jmpCnt + 1;
                         Jr: jrCnt = jrCnt + 1;
@@ -1181,8 +1213,14 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                         Lr: lrCnt = lrCnt + 1;
                         Sc: scCnt = scCnt + 1;
                         Amo: amoCnt = amoCnt + 1;
+                        Alu: begin
+                            if (((opcode == opcOpImm) || (opcode == opcOpImm32) || (opcode == opcOp)) && ((funct3 == fnSLL) || (funct3 == fnSR)))
+                                shiftCnt = shiftCnt + 1;
+                            if ((opcode == opcOp || opcode == opcOp32) && funct7 == opMULDIV)
+                                muldivCnt = muldivCnt + 1;
+                        end
                     endcase
-`endif
+                    if (opcode == opcMiscMem && funct3 == fnFENCE) fenceCnt = fenceCnt + 1;
                 end
             end
         end
@@ -1234,6 +1272,22 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                 supComUserCnt.incr(1);
             end
         end
+`endif
+`ifdef PERFORMANCE_MONITORING
+        EventsCore events = unpack(0);
+        events.evt_BRANCH = brCnt;
+        events.evt_JAL = jmpCnt;
+        events.evt_JALR = jrCnt;
+        events.evt_AUIPC = auipcCnt; // XXX
+        events.evt_LOAD = ldCnt;
+        events.evt_STORE = stCnt;
+        events.evt_LR = lrCnt;
+        events.evt_SC = scCnt;
+        events.evt_AMO = amoCnt;
+        events.evt_SERIAL_SHIFT = shiftCnt;
+        events.evt_INT_MUL_DIV_REM = muldivCnt;
+        events.evt_FENCE = fenceCnt;
+        events_reg <= events;
 `endif
 `ifdef RVFI
         rvfiQ.enq(rvfis);
@@ -1307,6 +1361,10 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
       if (verbosity >= 2)
          $display ("%0d: %m.commitStage.debug_resume", cur_cycle);
    endmethod
+`endif
+
+`ifdef PERFORMANCE_MONITORING
+   method events = events_reg;
 `endif
 
 `ifdef DEBUG_WEDGE
