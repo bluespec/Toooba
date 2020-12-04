@@ -270,10 +270,10 @@ module mkCore#(CoreId coreId)(Core);
 `endif
 
 `ifdef PERFORMANCE_MONITORING
-   Array #(Wire #(EventsCore)) aw_events <- mkDWireOR (5, unpack (0));
-   Reg #(EventsCore) aw_events_reg <- mkConfigReg(unpack(0));
-   rule update_aw_events_reg;
-       aw_events_reg <= aw_events[0];
+   Array #(Wire #(EventsCore)) hpm_core_events <- mkDWireOR (5, unpack (0));
+   Reg #(EventsCore) hpm_core_events_reg <- mkConfigReg(unpack(0));
+   rule update_hpm_core_events_reg;
+       hpm_core_events_reg <= hpm_core_events[0];
    endrule
 `endif
 
@@ -422,7 +422,7 @@ module mkCore#(CoreId coreId)(Core);
 `ifdef PERFORMANCE_MONITORING
                     EventsCore events = unpack (0);
                     events.evt_REDIRECT = 1;
-                    aw_events[1] <= events;
+                    hpm_core_events[1] <= events;
 `endif
                 endmethod
                 method correctSpec = globalSpecUpdate.correctSpec[finishAluCorrectSpecPort(i)].put;
@@ -1104,11 +1104,11 @@ module mkCore#(CoreId coreId)(Core);
      // Performance counters
 
      rule report_commit_events;
-         aw_events[2] <= commitStage.events;
+         hpm_core_events[2] <= commitStage.events;
      endrule
 
      Vector #(1, Bit #(Report_Width)) null_evt = replicate (0);
-     Vector #(31, Bit #(Report_Width)) core_evts_vec = to_large_vector (aw_events_reg);
+     Vector #(31, Bit #(Report_Width)) core_evts_vec = to_large_vector (hpm_core_events_reg);
      Vector #(16, Bit #(Report_Width)) imem_evts_vec = replicate (0);//to_large_vector (near_mem.imem.events);
      Vector #(16, Bit #(Report_Width)) dmem_evts_vec = replicate (0);//to_large_vector (near_mem.dmem.events);
      Vector #(32, Bit #(Report_Width)) external_evts_vec = replicate (0);//to_large_vector (w_external_evts);
