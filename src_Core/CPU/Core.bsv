@@ -1103,8 +1103,8 @@ module mkCore#(CoreId coreId)(Core);
      // ================================================================
      // Performance counters
 
-     rule report_commit_events;
-         hpm_core_events[2] <= commitStage.events;
+     rule report_events;
+         hpm_core_events[2] <= unpack(pack(commitStage.events) | pack(coreFix.memExeIfc.events));
      endrule
 
      Vector #(1, Bit #(Report_Width)) null_evt = replicate (0);

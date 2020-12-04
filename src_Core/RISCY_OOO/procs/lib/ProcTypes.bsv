@@ -1049,7 +1049,7 @@ typedef 29 No_Of_Ctrs;
 
 typedef struct {
    SupCnt evt_REDIRECT;
-   SupCnt evt_TLB_EXC; // TODO: Misleading name
+   SupCnt evt_TRAP;
    SupCnt evt_BRANCH;
    SupCnt evt_JAL;
    SupCnt evt_JALR;
@@ -1064,19 +1064,19 @@ typedef struct {
    SupCnt evt_FP;
    SupCnt evt_SC_SUCCESS;
    SupCnt evt_LOAD_WAIT;
-   SupCnt evt_STORE_WAIT;
+   SupCnt evt_STORE_WAIT; // XXX
    SupCnt evt_FENCE;
-   SupCnt evt_F_BUSY_NO_CONSUME;
-   SupCnt evt_D_BUSY_NO_CONSUME;
-   SupCnt evt_1_BUSY_NO_CONSUME;
-   SupCnt evt_2_BUSY_NO_CONSUME;
-   SupCnt evt_3_BUSY_NO_CONSUME;
-   SupCnt evt_IMPRECISE_SETBOUND;
-   SupCnt evt_UNREPRESENTABLE_CAP;
+   SupCnt evt_F_BUSY_NO_CONSUME; // XXX
+   SupCnt evt_D_BUSY_NO_CONSUME; // XXX
+   SupCnt evt_1_BUSY_NO_CONSUME; // XXX
+   SupCnt evt_2_BUSY_NO_CONSUME; // XXX
+   SupCnt evt_3_BUSY_NO_CONSUME; // XXX
+   SupCnt evt_IMPRECISE_SETBOUND; // XXX
+   SupCnt evt_UNREPRESENTABLE_CAP; // XXX
    SupCnt evt_MEM_CAP_LOAD;
    SupCnt evt_MEM_CAP_STORE;
-   SupCnt evt_MEM_CAP_LOAD_TAG_SET;
-   SupCnt evt_MEM_CAP_STORE_TAG_SET;
+   SupCnt evt_MEM_CAP_LOAD_TAG_SET; // XXX
+   SupCnt evt_MEM_CAP_STORE_TAG_SET; // XXX
 } EventsCore deriving (Bits, FShow);
 typedef TDiv#(SizeOf#(EventsCore),SizeOf#(SupCnt)) EventsCoreElements;
 `endif

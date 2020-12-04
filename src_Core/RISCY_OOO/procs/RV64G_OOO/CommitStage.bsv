@@ -703,7 +703,11 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
             end
         end
 `endif
-
+`ifdef PERFORMANCE_MONITORING
+        EventsCore events = unpack(0);
+        events.evt_TRAP = 1;
+        events_reg <= events;
+`endif
         // checks
         doAssert(x.rob_inst_state == Executed, "must be executed");
         doAssert(x.spec_bits == 0, "cannot have spec bits");
@@ -1088,6 +1092,10 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         SupCnt muldivCnt = 0;
         SupCnt auipcCnt = 0;
         SupCnt fenceCnt = 0;
+        SupCnt fpuCnt = 0;
+        // CHERI-specific counters
+        SupCnt ldCapCnt = 0;
+        SupCnt stCapCnt = 0;
 
 `ifdef RVFI
         Rvfi_Traces rvfis = replicate(tagged Invalid);
@@ -1208,11 +1216,16 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                         Br: brCnt = brCnt + 1;
                         J : jmpCnt = jmpCnt + 1;
                         Jr: jrCnt = jrCnt + 1;
-                        Ld: ldCnt = ldCnt + 1;
-                        St: stCnt = stCnt + 1;
+                        Ld: begin
+                            ldCnt = ldCnt + 1;
+                        end
+                        St: begin
+                            stCnt = stCnt + 1;
+                        end
                         Lr: lrCnt = lrCnt + 1;
                         Sc: scCnt = scCnt + 1;
                         Amo: amoCnt = amoCnt + 1;
+                        Fpu: fpuCnt = fpuCnt + 1;
                         Alu: begin
                             if (((opcode == opcOpImm) || (opcode == opcOpImm32) || (opcode == opcOp)) && ((funct3 == fnSLL) || (funct3 == fnSR)))
                                 shiftCnt = shiftCnt + 1;
@@ -1286,6 +1299,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         events.evt_AMO = amoCnt;
         events.evt_SERIAL_SHIFT = shiftCnt;
         events.evt_INT_MUL_DIV_REM = muldivCnt;
+        events.evt_FP = fpuCnt;
         events.evt_FENCE = fenceCnt;
         events_reg <= events;
 `endif
