@@ -1219,8 +1219,8 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                             if ((opcode == opcOp || opcode == opcOp32) && funct7 == opMULDIV)
                                 muldivCnt = muldivCnt + 1;
                         end
-                        Fence, FenceI, SFence: fenceCnt = fenceCnt + 1; // Some of these are "System" instructions.
                     endcase
+                    if (opcode == opcMiscMem && funct3 == fnFENCE) fenceCnt = fenceCnt + 1;
                 end
             end
         end
