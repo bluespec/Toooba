@@ -1050,11 +1050,13 @@ module mkCore#(CoreId coreId)(Core);
      // Performance counters
 
      rule report_events;
-         hpm_core_events[2] <= unpack(pack(commitStage.events) | pack(coreFix.memExeIfc.events));
+         hpm_core_events[2] <= unpack(pack(commitStage.events));
      endrule
 
      Vector #(1, Bit #(Report_Width)) null_evt = replicate (0);
-     Vector #(31, Bit #(Report_Width)) core_evts_vec = to_large_vector (hpm_core_events_reg);
+     Vector #(31, Bit #(Report_Width)) mem_core_evts_vec =  reverse(unpack({pack(coreFix.memExeIfc.events),0}));
+     Vector #(31, Bit #(Report_Width)) other_core_evts_vec = to_large_vector (hpm_core_events_reg);
+     Vector #(31, Bit #(Report_Width)) core_evts_vec = unpack(pack(mem_core_evts_vec) | pack(other_core_evts_vec));
      Vector #(16, Bit #(Report_Width)) imem_evts_vec = replicate (0);//to_large_vector (near_mem.imem.events);
      Vector #(16, Bit #(Report_Width)) dmem_evts_vec = replicate (0);//to_large_vector (near_mem.dmem.events);
      Vector #(32, Bit #(Report_Width)) external_evts_vec = replicate (0);//to_large_vector (w_external_evts);

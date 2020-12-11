@@ -1014,7 +1014,7 @@ typedef struct {
    SupCnt evt_FP;
    SupCnt evt_SC_SUCCESS;
    SupCnt evt_LOAD_WAIT;
-   SupCnt evt_STORE_WAIT; // XXX
+   SupCnt evt_STORE_WAIT; // XXX Don't think we can make this make sense for Toooba.  Store delays overlap so we can't get a single number that tells us the cycles spent waiting for store delays. Toooba seems to measure the delay of each store independently. Maybe we could do this with ~8bits per element?  One report per cycle?
    SupCnt evt_FENCE;
    SupCnt evt_F_BUSY_NO_CONSUME; // XXX
    SupCnt evt_D_BUSY_NO_CONSUME; // XXX
@@ -1025,8 +1025,42 @@ typedef struct {
    SupCnt evt_UNREPRESENTABLE_CAP; // XXX
    SupCnt evt_MEM_CAP_LOAD;
    SupCnt evt_MEM_CAP_STORE;
-   SupCnt evt_MEM_CAP_LOAD_TAG_SET; // XXX
-   SupCnt evt_MEM_CAP_STORE_TAG_SET; // XXX
+   SupCnt evt_MEM_CAP_LOAD_TAG_SET;
+   SupCnt evt_MEM_CAP_STORE_TAG_SET;
 } EventsCore deriving (Bits, FShow);
 typedef TDiv#(SizeOf#(EventsCore),SizeOf#(SupCnt)) EventsCoreElements;
+
+typedef Bit#(Report_Width) HpmRpt;
+typedef struct {
+   HpmRpt evt_REDIRECT;
+   HpmRpt evt_TRAP;
+   HpmRpt evt_BRANCH;
+   HpmRpt evt_JAL;
+   HpmRpt evt_JALR;
+   HpmRpt evt_AUIPC;
+   HpmRpt evt_LOAD;
+   HpmRpt evt_STORE;
+   HpmRpt evt_LR;
+   HpmRpt evt_SC;
+   HpmRpt evt_AMO;
+   HpmRpt evt_SERIAL_SHIFT;
+   HpmRpt evt_INT_MUL_DIV_REM;
+   HpmRpt evt_FP;
+   HpmRpt evt_SC_SUCCESS;
+   HpmRpt evt_LOAD_WAIT;
+   HpmRpt evt_STORE_WAIT;
+   HpmRpt evt_FENCE;
+   HpmRpt evt_F_BUSY_NO_CONSUME; // XXX
+   HpmRpt evt_D_BUSY_NO_CONSUME; // XXX
+   HpmRpt evt_1_BUSY_NO_CONSUME; // XXX
+   HpmRpt evt_2_BUSY_NO_CONSUME; // XXX
+   HpmRpt evt_3_BUSY_NO_CONSUME; // XXX
+   HpmRpt evt_IMPRECISE_SETBOUND; // XXX
+   HpmRpt evt_UNREPRESENTABLE_CAP; // XXX
+   HpmRpt evt_MEM_CAP_LOAD;
+   HpmRpt evt_MEM_CAP_STORE;
+   HpmRpt evt_MEM_CAP_LOAD_TAG_SET;
+   HpmRpt evt_MEM_CAP_STORE_TAG_SET;
+} EventsCoreMem deriving (Bits, FShow); // Memory needs more space for reporting delays
+typedef TDiv#(SizeOf#(EventsCoreMem),Report_Width) EventsCoreMemElements;
 `endif
