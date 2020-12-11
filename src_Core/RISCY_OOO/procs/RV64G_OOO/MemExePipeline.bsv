@@ -276,7 +276,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
 `endif
 
 `ifdef PERFORMANCE_MONITORING
-   Array #(Wire #(EventsCoreMem)) events_wire <- mkDWireOR (4, unpack (0));
+   Array #(Wire #(EventsCoreMem)) events_wire <- mkDWireOR (5, unpack (0));
    Reg #(EventsCoreMem) events_reg <- mkReg(unpack(0));
    rule update_events_reg;
        events_reg <= events_wire[0];
@@ -381,7 +381,6 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             EventsCoreMem events = unpack(0);
             if (waitSt.shiftedBE == -1) events.evt_MEM_CAP_STORE = 1;
             events.evt_STORE_WAIT = saturating_truncate(lat);
-            events.evt_MEM_CAP_STORE_TAG_SET = (waitSt.shiftedData.tag) ? 1 : 0;
             events_wire[2] <= events;
 `endif
             // now figure out the data to be written
@@ -547,6 +546,11 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         if(x.ldstq_tag matches tagged St .stTag) begin
             MemTaggedData d = x.mem_func == Amo ? toMemData : shiftData; // XXX don't shift for AMO
             lsq.updateData(stTag, d);
+`ifdef PERFORMANCE_MONITORING
+            EventsCoreMem events = unpack(0);
+            events.evt_MEM_CAP_STORE_TAG_SET = (d.tag) ? 1 : 0;
+            events_wire[4] <= events;
+`endif
         end
 
         CapPipe ddc = cast(inIfc.scaprf_rd(scrAddrDDC));
