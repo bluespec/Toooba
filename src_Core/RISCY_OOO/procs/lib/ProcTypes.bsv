@@ -1014,7 +1014,7 @@ typedef struct {
    SupCnt evt_FP;
    SupCnt evt_SC_SUCCESS;
    SupCnt evt_LOAD_WAIT;
-   SupCnt evt_STORE_WAIT; // XXX Don't think we can make this make sense for Toooba.  Store delays overlap so we can't get a single number that tells us the cycles spent waiting for store delays. Toooba seems to measure the delay of each store independently. Maybe we could do this with ~8bits per element?  One report per cycle?
+   SupCnt evt_STORE_WAIT;
    SupCnt evt_FENCE;
    SupCnt evt_F_BUSY_NO_CONSUME; // XXX
    SupCnt evt_D_BUSY_NO_CONSUME; // XXX

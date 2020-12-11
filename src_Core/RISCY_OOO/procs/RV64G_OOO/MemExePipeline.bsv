@@ -312,8 +312,8 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
 `endif
 `ifdef PERFORMANCE_MONITORING
             EventsCoreMem events = unpack(0);
-            events.evt_LOAD_WAIT = truncate(lat);
-            events.evt_MEM_CAP_LOAD_TAG_SET = (d.tag) ? 1:0;
+            events.evt_LOAD_WAIT = saturating_truncate(lat);
+            events.evt_MEM_CAP_LOAD_TAG_SET = (d.tag) ? 1 : 0;
             events_wire[1] <= events;
 `endif
         endmethod
@@ -341,8 +341,8 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
 `ifdef PERFORMANCE_MONITORING
             EventsCoreMem events = unpack(0);
             if (waitSt.shiftedBE == -1) events.evt_MEM_CAP_STORE = 1;
-            events.evt_STORE_WAIT = truncate(lat);
-            events.evt_MEM_CAP_STORE_TAG_SET = (waitSt.shiftedData.tag) ? 1:0;
+            events.evt_STORE_WAIT = saturating_truncate(lat);
+            events.evt_MEM_CAP_STORE_TAG_SET = (waitSt.shiftedData.tag) ? 1 : 0;
             events_wire[2] <= events;
 `endif
             // now figure out the data to be written
@@ -368,8 +368,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
 `ifdef PERFORMANCE_MONITORING
             EventsCoreMem events = unpack(0);
             if (pack(e.byteEn) == -1) events.evt_MEM_CAP_STORE = 1;
-            events.evt_STORE_WAIT = truncate(lat);
-            events.evt_MEM_CAP_STORE_TAG_SET = pack(zeroExtend(countOnes(pack(e.line.tag))));
+            events.evt_STORE_WAIT = saturating_truncate(lat);
             events_wire[2] <= events;
 `endif
             return tuple2(e.byteEn, unpack(e.data)); // return SB entry
