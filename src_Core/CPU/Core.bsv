@@ -210,6 +210,10 @@ instance BitVectorable #(EventsCoreMem, SizeOf#(HpmRpt), EventsCoreMemElements) 
    function Vector#(EventsCoreMemElements, HpmRpt) to_vector(EventsCoreMem e) =
       reverse(unpack(pack(e)));
 endinstance
+instance BitVectorable #(EventsCache, SizeOf#(HpmRpt), EventsCacheElements) provisos (Bits #(EventsCache, m));
+   function Vector#(EventsCacheElements, HpmRpt) to_vector(EventsCache e) =
+      reverse(unpack(pack(e)));
+endinstance
 `endif
 
 (* synthesize *)
@@ -1062,7 +1066,7 @@ module mkCore#(CoreId coreId)(Core);
      Vector #(31, Bit #(Report_Width)) other_core_evts_vec = to_large_vector (hpm_core_events_reg);
      Vector #(31, Bit #(Report_Width)) core_evts_vec = unpack(pack(mem_core_evts_vec) | pack(other_core_evts_vec));
      Vector #(16, Bit #(Report_Width)) imem_evts_vec = replicate (0);//to_large_vector (near_mem.imem.events);
-     Vector #(16, Bit #(Report_Width)) dmem_evts_vec = replicate (0);//to_large_vector (near_mem.dmem.events);
+     Vector #(16, Bit #(Report_Width)) dmem_evts_vec = to_large_vector (dMem.events);
      Vector #(32, Bit #(Report_Width)) external_evts_vec = replicate (0);//to_large_vector (w_external_evts);
 
      let events = append (null_evt, core_evts_vec);
