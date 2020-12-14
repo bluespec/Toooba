@@ -515,17 +515,17 @@ function Maybe#(Trap) checkForException(
         Bool writes_csr = ((dInst.execFunc == tagged Alu Csrw) || (rs1 != 0) || (imm != 0));
         Bool read_only  = (csr [11:10] == 2'b11);
         Bool write_deny = (writes_csr && read_only);
-        Bool asr_deny = !getHardPerms(pcc).accessSysRegs && !(
-                        //((csr_addr_hpmcounter3 <= csr) && (csr <= csr_addr_hpmcounter31) && writes_csr) // TODO seems these aren't implemented?
-                        (csr == pack(csrAddrFFLAGS))
-                     || (csr == pack(csrAddrFRM))
-                     || (csr == pack(csrAddrFCSR))
-                     || (csr == pack(csrAddrCYCLE) && writes_csr)
-                     || (csr == pack(csrAddrINSTRET) && writes_csr));
+        Bool asr_allow = getHardPerms(pcc).accessSysRegs
+                      //|| ((csr_addr_hpmcounter3 <= csr) && (csr <= csr_addr_hpmcounter31) && writes_csr) // TODO seems these aren't implemented?
+                      || (csr == pack(csrAddrFFLAGS))
+                      || (csr == pack(csrAddrFRM))
+                      || (csr == pack(csrAddrFCSR))
+                      || (csr == pack(csrAddrCYCLE) && writes_csr)
+                      || (csr == pack(csrAddrINSTRET) && writes_csr);
         Bool unimplemented = (csr == pack(csrAddrNone));    // Added by Bluespec
         if (write_deny || !csr_has_priv || unimplemented) begin
             exception = Valid (Exception (excIllegalInst));
-        end else if (asr_deny) begin
+        end else if (!asr_allow) begin
             exception = Valid (CapException (CSR_XCapCause {cheri_exc_reg: {1'b1, pack(scrAddrPCC)}, cheri_exc_code: cheriExcPermitASRViolation}));
         end
     end
@@ -535,11 +535,11 @@ function Maybe#(Trap) checkForException(
         Bool writes_scr = regs.src1 == Valid (tagged Gpr 0) ? False : True;
         Bool read_only  = (scr == scrAddrPCC);
         Bool write_deny = (writes_scr && read_only);
-        Bool asr_deny = !getHardPerms(pcc).accessSysRegs && !(
-          scr == scrAddrDDC || scr == scrAddrPCC);
+        Bool asr_allow = getHardPerms(pcc).accessSysRegs ||
+          scr == scrAddrDDC || scr == scrAddrPCC;
         if(!scr_has_priv || unimplemented || write_deny) begin
             exception = Valid (Exception (excIllegalInst));
-        end else if (asr_deny) begin
+        end else if (!asr_allow) begin
             exception = Valid (CapException (CSR_XCapCause {cheri_exc_reg: {1'b1, pack(scrAddrPCC)}, cheri_exc_code: cheriExcPermitASRViolation}));
         end
     end
