@@ -478,10 +478,8 @@ endfunction
             fshow(slot), " ; ",
             fshow(cRqToP)
         );
-`ifdef PERF_COUNT
         // performance counter: start miss timer
         latTimer.start(n);
-`endif
     endrule
 
     // last stage of pipeline: process req
