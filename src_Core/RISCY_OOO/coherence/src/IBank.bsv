@@ -59,7 +59,7 @@ import LatencyTimer::*;
 import RandomReplace::*;
 `ifdef PERFORMANCE_MONITORING
 import PerformanceMonitor::*;
-import SpecialWires::*;
+import BlueUtils::*;
 `endif
 
 export ICRqStuck(..);
@@ -193,11 +193,7 @@ module mkIBank#(
     Count#(Data) ldMissLat <- mkCount(0);
 `endif
 `ifdef PERFORMANCE_MONITORING
-    Array #(Wire #(EventsCache)) perf_events <- mkDWireOR (2, unpack (0));
-    Reg #(EventsCache) perf_events_reg <- mkConfigReg(unpack(0));
-    rule update_events_reg;
-        perf_events_reg <= perf_events[0];
-    endrule
+    Array #(Reg #(EventsCache)) perf_events <- mkDRegOR (2, unpack (0));
 `endif
     function Action incrReqCnt;
     action
@@ -846,7 +842,7 @@ module mkIBank#(
         endcase);
     endmethod
 `ifdef PERFORMANCE_MONITORING
-    method EventsCache events = perf_events_reg;
+    method EventsCache events = perf_events[0];
 `endif
 endmodule
 
