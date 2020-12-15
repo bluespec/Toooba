@@ -52,7 +52,7 @@ import LatencyTimer::*;
 import CacheUtils::*;
 `ifdef PERFORMANCE_MONITORING
 import PerformanceMonitor::*;
-import BlueUtils::*;
+import SpecialRegs::*;
 `endif
 
 import Cur_Cycle :: *;
@@ -309,7 +309,6 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
 `ifdef PERFORMANCE_MONITORING
             EventsCoreMem events = unpack(0);
             events.evt_LOAD_WAIT = saturating_truncate(lat);
-            events.evt_MEM_CAP_LOAD_TAG_SET = (d.tag) ? 1 : 0;
             events_reg[1] <= events;
 `endif
         endmethod
@@ -486,7 +485,6 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             lsq.updateData(stTag, d);
 `ifdef PERFORMANCE_MONITORING
             EventsCoreMem events = unpack(0);
-            events.evt_MEM_CAP_STORE_TAG_SET = (d.tag) ? 1 : 0;
             events_reg[4] <= events;
 `endif
         end

@@ -992,10 +992,10 @@ function Fmt showInst(Instruction inst);
 endfunction
 
 `ifdef PERFORMANCE_MONITORING
-typedef 96 No_Of_Evts;
-typedef  8 Report_Width;
-typedef 64 Counter_Width;
-typedef 29 No_Of_Ctrs;
+typedef 112 No_Of_Evts;
+typedef   8 Report_Width;
+typedef  64 Counter_Width;
+typedef  29 No_Of_Ctrs;
 
 typedef struct {
    SupCnt evt_REDIRECT;

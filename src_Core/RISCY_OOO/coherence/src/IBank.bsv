@@ -47,7 +47,7 @@ import LatencyTimer::*;
 import RandomReplace::*;
 `ifdef PERFORMANCE_MONITORING
 import PerformanceMonitor::*;
-import BlueUtils::*;
+import SpecialRegs::*;
 `endif
 
 export ICRqStuck(..);
@@ -240,10 +240,8 @@ module mkIBank#(
         }));
         // enq to indexQ for in order resp
         cRqIndexQ.enq(n);
-`ifdef PERF_COUNT
         // performance counter: cRq type
         incrReqCnt;
-`endif
        if (verbose)
         $display("%t I %m cRqTransfer: ", $time,
             fshow(n), " ; ",
@@ -628,10 +626,8 @@ module mkIBank#(
                 "pRs must be a hit"
             );
             cRqHit(cOwner, procRq);
-`ifdef PERF_COUNT
             // performance counter: miss cRq
             incrMissCnt(cOwner);
-`endif
         end
         else begin
             doAssert(False, ("pRs owner must match some cRq"));

@@ -1018,7 +1018,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                     // For "xCHERI" ISA extension
                     let funct5rs2 =              inst[ 24 : 20 ];
                     case(x.iType)
-                        Auipc, Auipcc: auipcCnt = auipcCnt + 1;
+                        Auipc: auipcCnt = auipcCnt + 1;
                         Br: brCnt = brCnt + 1;
                         J : jmpCnt = jmpCnt + 1;
                         Jr: jrCnt = jrCnt + 1;
@@ -1033,13 +1033,13 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                         Amo: amoCnt = amoCnt + 1;
                         Fpu: fpuCnt = fpuCnt + 1;
                         Alu: begin
-                            if (((opcode == opcOpImm) || (opcode == opcOpImm32) || (opcode == opcOp)) && ((funct3 == fnSLL) || (funct3 == fnSR)))
+                            if (((opcode == OpImm) || (opcode == OpImm32) || (opcode == Op)) && ((funct3 == fnSLL) || (funct3 == fnSR)))
                                 shiftCnt = shiftCnt + 1;
-                            if ((opcode == opcOp || opcode == opcOp32) && funct7 == opMULDIV)
+                            if ((opcode == Op || opcode == Op32) && funct7 == opMULDIV)
                                 muldivCnt = muldivCnt + 1;
                         end
                     endcase
-                    if (opcode == opcMiscMem && funct3 == fnFENCE) fenceCnt = fenceCnt + 1;
+                    if (opcode == MiscMem && funct3 == fnFENCE) fenceCnt = fenceCnt + 1;
                 end
             end
         end
