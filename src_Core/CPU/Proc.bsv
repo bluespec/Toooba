@@ -188,6 +188,14 @@ module mkProc (Proc_IFC);
        statReqs.deq;
    endrule
 
+`ifdef PERFORMANCE_MONITORING
+   rule broadcastPerfEvents;
+       for(Integer j = 0; j < valueof(CoreNum); j = j+1) begin
+           core[j].events_llc(llc.events);
+       end
+   endrule
+`endif
+
    // ================================================================
    // Stub out deadlock and renameDebug interfaces
 
