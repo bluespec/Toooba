@@ -52,7 +52,7 @@ import LatencyTimer::*;
 import CacheUtils::*;
 `ifdef PERFORMANCE_MONITORING
 import PerformanceMonitor::*;
-import SpecialWires::*;
+import BlueUtils::*;
 `endif
 
 import Cur_Cycle :: *;
@@ -237,11 +237,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
 `endif
 
 `ifdef PERFORMANCE_MONITORING
-   Array #(Wire #(EventsCoreMem)) events_wire <- mkDWireOR (5, unpack (0));
-   Reg #(EventsCoreMem) events_reg <- mkReg(unpack(0));
-   rule update_events_reg;
-       events_reg <= events_wire[0];
-   endrule
+    Array #(Reg #(EventsCoreMem)) events_reg <- mkDRegOR (5, unpack (0));
 `endif
 
     // reservation station
@@ -314,7 +310,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             EventsCoreMem events = unpack(0);
             events.evt_LOAD_WAIT = saturating_truncate(lat);
             events.evt_MEM_CAP_LOAD_TAG_SET = (d.tag) ? 1 : 0;
-            events_wire[1] <= events;
+            events_reg[1] <= events;
 `endif
         endmethod
         method Action respLrScAmo(DProcReqId id, Data d);
@@ -342,7 +338,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             EventsCoreMem events = unpack(0);
             if (waitSt.shiftedBE == -1) events.evt_MEM_CAP_STORE = 1;
             events.evt_STORE_WAIT = saturating_truncate(lat);
-            events_wire[2] <= events;
+            events_reg[2] <= events;
 `endif
             // now figure out the data to be written
             Vector#(LineSzData, ByteEn) be = replicate(replicate(False));
@@ -368,7 +364,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             EventsCoreMem events = unpack(0);
             if (pack(e.byteEn) == -1) events.evt_MEM_CAP_STORE = 1;
             events.evt_STORE_WAIT = saturating_truncate(lat);
-            events_wire[2] <= events;
+            events_reg[2] <= events;
 `endif
             return tuple2(e.byteEn, unpack(e.data)); // return SB entry
         endmethod
@@ -491,7 +487,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
 `ifdef PERFORMANCE_MONITORING
             EventsCoreMem events = unpack(0);
             events.evt_MEM_CAP_STORE_TAG_SET = (d.tag) ? 1 : 0;
-            events_wire[4] <= events;
+            events_reg[4] <= events;
 `endif
         end
 
@@ -662,7 +658,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             doAssert(False, "load is stalled");
         end
 `ifdef PERFORMANCE_MONITORING
-        events_wire[0] <= events;
+        events_reg[0] <= events;
 `endif
     endaction
     endfunction
@@ -1157,7 +1153,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
 `ifdef PERFORMANCE_MONITORING
         EventsCoreMem events = unpack(0);
         events.evt_SC_SUCCESS = 1;
-        events_wire[3] <= events;
+        events_reg[3] <= events;
 `endif
     endrule
 
@@ -1375,6 +1371,6 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         endcase);
     endmethod
 `ifdef PERFORMANCE_MONITORING
-    method events = events_reg;
+    method events = events_reg[0];
 `endif
 endmodule

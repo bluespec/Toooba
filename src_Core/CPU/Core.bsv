@@ -46,7 +46,7 @@ import VerificationPacket::*;
 import Performance::*;
 `ifdef PERFORMANCE_MONITORING
 import PerformanceMonitor::*;
-import SpecialWires::*;
+import BlueUtils::*;
 `endif
 import HasSpecBits::*;
 import Exec::*;
@@ -243,11 +243,7 @@ module mkCore#(CoreId coreId)(Core);
 `endif
 
 `ifdef PERFORMANCE_MONITORING
-   Array #(Wire #(EventsCore)) hpm_core_events <- mkDWireOR (5, unpack (0));
-   Reg #(EventsCore) hpm_core_events_reg <- mkConfigReg(unpack(0));
-   rule update_hpm_core_events_reg;
-       hpm_core_events_reg <= hpm_core_events[0];
-   endrule
+   Array #(Reg #(EventsCore)) hpm_core_events <- mkDRegOR (5, unpack (0));
 `endif
 
    // ================================================================
@@ -1063,7 +1059,7 @@ module mkCore#(CoreId coreId)(Core);
 
      Vector #(1, Bit #(Report_Width)) null_evt = replicate (0);
      Vector #(31, Bit #(Report_Width)) mem_core_evts_vec =  to_large_vector (coreFix.memExeIfc.events);
-     Vector #(31, Bit #(Report_Width)) other_core_evts_vec = to_large_vector (hpm_core_events_reg);
+     Vector #(31, Bit #(Report_Width)) other_core_evts_vec = to_large_vector (hpm_core_events[0]);
      Vector #(31, Bit #(Report_Width)) core_evts_vec = unpack(pack(mem_core_evts_vec) | pack(other_core_evts_vec));
      Vector #(16, Bit #(Report_Width)) imem_evts_vec = to_large_vector (iMem.events);
      Vector #(16, Bit #(Report_Width)) dmem_evts_vec = to_large_vector (dMem.events);
