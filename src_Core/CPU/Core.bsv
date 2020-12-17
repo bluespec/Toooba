@@ -1066,7 +1066,8 @@ module mkCore#(CoreId coreId)(Core);
      Vector #(31, Bit #(Report_Width)) other_core_evts_vec = to_large_vector (hpm_core_events[0]);
      Vector #(31, Bit #(Report_Width)) core_evts_vec = unpack(pack(mem_core_evts_vec) | pack(other_core_evts_vec));
      Vector #(16, Bit #(Report_Width)) imem_evts_vec = to_large_vector (iMem.events);
-     Vector #(16, Bit #(Report_Width)) dmem_evts_vec = to_large_vector (dMem.events);
+     EventsCache dataMem = unpack(pack(dMem.events) | pack(dTlb.events));
+     Vector #(16, Bit #(Report_Width)) dmem_evts_vec = to_large_vector (dataMem);
      Vector #(32, Bit #(Report_Width)) external_evts_vec = replicate (0);//to_large_vector (w_external_evts);
      Vector #(16, Bit #(Report_Width)) llc_evts_vec = to_large_vector (events_llc_reg);
 
