@@ -32,6 +32,7 @@ import ISA_Decls  :: *;
 import AXI4  :: *;
 import Fabric_Defs :: *;
 import SoC_Map :: *;
+import CCTypes :: *;
 
 `ifdef INCLUDE_GDB_CONTROL
 import DM_CPU_Req_Rsp :: *;
@@ -142,6 +143,10 @@ interface Proc_IFC;
     method Tuple3 #(Bit #(32), Addr, Addr) hart0_debug_fetch;
     (* always_enabled *)
     method Bit #(32) hart0_debug_rename;
+`endif
+
+`ifdef PERFORMANCE_MONITORING
+    method Action events_tgc(EventsCache events);
 `endif
 
 endinterface

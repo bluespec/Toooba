@@ -189,9 +189,11 @@ module mkProc (Proc_IFC);
    endrule
 
 `ifdef PERFORMANCE_MONITORING
+   Reg#(EventsCache) events_tgc_reg <- mkRegU;
    rule broadcastPerfEvents;
        for(Integer j = 0; j < valueof(CoreNum); j = j+1) begin
            core[j].events_llc(llc.events);
+           core[j].events_tgc(events_tgc_reg);
        end
    endrule
 `endif
@@ -354,6 +356,10 @@ module mkProc (Proc_IFC);
     method Tuple4 #(Tuple3 #(Bit #(32), Bit #(32), Bit #(32)), Tuple4 #(CapMem, Bit #(32), CapMem, Bit #(32)), Tuple4 #(CapMem, Bit #(32), CapMem, Bit #(32)), void) hart0_debug_rob = core [0].debugRob;
     method Tuple3 #(Bit #(32), Addr, Addr) hart0_debug_fetch = core [0].debugFetch;
     method Bit #(32) hart0_debug_rename = core [0].debugRename;
+`endif
+
+`ifdef PERFORMANCE_MONITORING
+    method events_tgc = events_tgc_reg._write;
 `endif
 
 endmodule: mkProc
