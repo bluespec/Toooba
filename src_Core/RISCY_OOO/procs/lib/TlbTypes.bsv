@@ -184,14 +184,6 @@ typedef struct {
     Bool allowCap; // Whether we can load caps
 } TlbPermissionCheck deriving(Bits, Eq, FShow);
 
-function Exception tlbExcCode(TlbAccessType access, Bool cap);
-    if (access == DataStore) begin
-        return cap ? excStoreCapPageFault : excStorePageFault;
-    end else begin
-        return excLoadPageFault;
-    end
-endfunction
-
 function TlbPermissionCheck hasVMPermission(
     VMInfo vm_info,
     PTEType pte_type, PTEUpperType pte_upper_type,
@@ -231,12 +223,15 @@ function TlbPermissionCheck hasVMPermission(
         end
     end
 
+    Exception excCode;
+
     // check execute/read/write permission
     case(access)
         InstFetch: begin
             if(!pte_type.executable) begin
                 fault = True;
             end
+            excCode = excLoadPageFault;
         end
         DataLoad: begin
             // need to consider mstatus.mxr bit
@@ -244,21 +239,24 @@ function TlbPermissionCheck hasVMPermission(
                 !(pte_type.executable && vm_info.exeReadable)) begin
                 fault = True;
             end
+            excCode = excLoadPageFault;
         end
         DataStore: begin
             // store requires page to be both readable and writable
             if(!(pte_type.readable && pte_type.writable)) begin
                 fault = True;
+                excCode = excStorePageFault;
             end
-            if(cap && !pte_upper_type.cap_writable) begin
+            else if(cap && !pte_upper_type.cap_writable) begin
                 fault = True;
+                excCode = excStoreCapPageFault;
             end
         end
     endcase
 
     TlbPermissionCheck ret = TlbPermissionCheck {
         allowed:  !fault,
-        excCode:  tlbExcCode(access, cap),
+        excCode:  excCode,
         allowCap: pte_upper_type.cap_readable};
 
     if (!fault) begin
