@@ -223,7 +223,7 @@ function TlbPermissionCheck hasVMPermission(
         end
     end
 
-    Exception excCode;
+    Exception excCode = excLoadPageFault; // Unused default.  Just choose one valid option.
 
     // check execute/read/write permission
     case(access)
