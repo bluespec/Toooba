@@ -498,7 +498,7 @@ module mkPLIC (PLIC_IFC #(t_n_external_sources, t_n_targets, t_max_priority))
       end
 
       // Interrupt service completion by target
-      // Actual memory-write-data is irrelevant.
+      // Write data is the source ID to complete. Disabled sources are ignored.
       else if ((addr_offset [31:0] & 32'hFFFF_0FFF) == 32'h0020_0004) begin
 	 Bit #(T_wd_target_id)  target_id = truncate (addr_offset [20:12]);
 	 Bit #(T_wd_source_id)  source_id = truncate (wdata32);
