@@ -362,17 +362,18 @@ module mkPLIC (PLIC_IFC #(t_n_external_sources, t_n_targets, t_max_priority))
          match { .max_prio, .max_id } = fn_target_max_prio_and_max_id (target_id);
          Bool eip = (max_prio > vrg_target_threshold [target_id]);
          if (target_id <= fromInteger (n_targets - 1)) begin
-            if (max_id != 0) vrg_source_busy [max_id] <= True; // Set vrg_source_busy even if there was an error.
             if (vrg_servicing_source [target_id] != 0) begin
                $display ("%0d: ERROR: PLIC: target %0d claiming without prior completion",
                          cur_cycle, target_id);
                $display ("    Still servicing interrupt from source %0d", vrg_servicing_source [target_id]);
                $display ("    Trying to claim service   for  source %0d", max_id);
                $display ("    Ignoring.");
+               rresp = SLVERR;
             end
             else begin
                if (max_id != 0) begin
                   vrg_source_ip   [max_id]         <= False;
+                  vrg_source_busy [max_id]         <= True;
                   vrg_servicing_source [target_id] <= truncate (max_id);
                   rdata = changeWidth (max_id);
 
@@ -529,6 +530,7 @@ module mkPLIC (PLIC_IFC #(t_n_external_sources, t_n_targets, t_max_priority))
                          cur_cycle);
                $display ("    Completion message from target %0d to source %0d", target_id, source_id);
                $display ("    Ignoring");
+               bresp = SLVERR;
             end
          end
          else
