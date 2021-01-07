@@ -50,6 +50,7 @@ import ITlb::*;
 import CCTypes::*;
 import L1CoCache::*;
 import MMIOInst::*;
+import IndexedMultiset::*;
 
 import Cur_Cycle :: *;
 
@@ -98,6 +99,20 @@ interface FetchStage;
     interface Perf#(DecStagePerfType) perf;
 endinterface
 
+// PC "compression" types to facilitate storing common upper PC bits in a
+// shared structure
+typedef 12 PcLsbSz; // Defines PC block size for PCs that will share an index for upper bits.
+typedef TLog#(TMul#(SupSize,4)) PcIdxSz; // Number of distinct PC blocks allowed in-flight in the Fetch pipeline.
+typedef Bit#(PcLsbSz) PcLSB;
+typedef Bit#(TSub#(SizeOf#(Addr),PcLsbSz)) PcMSB;
+typedef Bit#(PcIdxSz) PcIdx;
+typedef struct {
+    PcLSB lsb;
+    PcIdx idx;
+} PcCompressed deriving(Bits,Eq,FShow);
+function PcCompressed compressPc(PcIdx i, Addr a) =
+    PcCompressed{idx: i, lsb: truncate(a)};
+
 typedef struct {
     Addr pc;
     Epoch mainEp;
@@ -106,15 +121,15 @@ typedef struct {
 } FetchDebugState deriving(Bits, Eq, FShow);
 
 typedef struct {
-    Addr pc;
-    Maybe#(Addr) pred_next_pc;
+    PcCompressed pc;
+    Maybe#(PcCompressed) pred_next_pc;
     Bool decode_epoch;
     Epoch main_epoch;
 } Fetch1ToFetch2 deriving(Bits, Eq, FShow);
 
 typedef struct {
-    Addr pc;
-    Maybe#(Addr) pred_next_pc;
+    PcCompressed pc;
+    Maybe#(PcCompressed) pred_next_pc;
     Maybe#(Exception) cause;
     Bool access_mmio; // inst fetch from MMIO
     Bool decode_epoch;
@@ -122,8 +137,8 @@ typedef struct {
 } Fetch2ToFetch3 deriving(Bits, Eq, FShow);
 
 typedef struct {
-    Addr pc;
-    Maybe#(Addr) ppc;
+    PcCompressed pc;
+    Maybe#(PcCompressed) ppc;
     Maybe#(Exception) cause;
     Bit#(16) inst_frag;
     Bool decode_epoch;
@@ -132,8 +147,8 @@ typedef struct {
 
 // Used purely internally in doDecode.
 typedef struct {
-  Addr pc;
-  Addr ppc;
+  PcCompressed pc;
+  PcCompressed ppc;
   Bool decode_epoch;
   Epoch main_epoch;
   Instruction inst;
@@ -147,7 +162,7 @@ typedef struct {
 function InstrFromFetch3 fetch3_2_instC(Fetch3ToDecode in, Instruction inst, Bit#(32) orig_inst) =
    InstrFromFetch3 {
       pc: in.pc,
-      ppc: fromMaybe(in.pc + 2, in.ppc), // This assumes we will call this function on the last fragment of any instruction.
+      ppc: fromMaybe(PcCompressed{lsb: in.pc.lsb + 2, idx: in.pc.idx}, in.ppc), // This assumes we will call this function on the last fragment of any instruction.
       decode_epoch: in.decode_epoch,
       main_epoch: in.main_epoch,
       inst: inst,
@@ -254,6 +269,9 @@ module mkFetchStage(FetchStage);
     Integer pc_fetch3_port = 2;
     Integer pc_redirect_port = 3;
 
+    // PC compression structure holding an indexed set of PC blocks so that only indexes need be tracked.
+    IndexedMultiset#(PcIdx, PcMSB, SupSizeX2) pcBlocks <- mkIndexedMultisetQueue;
+    function Addr decompressPc(PcCompressed p) = {pcBlocks.lookup(p.idx),p.lsb};
     // Epochs
     Ehr#(2, Bool) decode_epoch <- mkEhr(False);
     Reg#(Epoch) f_main_epoch <- mkReg(0); // fetch estimate of main epoch
@@ -336,17 +354,19 @@ module mkFetchStage(FetchStage);
         endfunction
         Bit#(TLog#(SupSizeX2)) posLastSupX2 = fromInteger(fromMaybe(valueof(SupSizeX2) - 1, find(findNextPc(pc), indexes)));
         Maybe#(Addr) pred_next_pc = pred_future_pc[posLastSupX2];
-
         let next_fetch_pc = fromMaybe(pc + 2 * (zeroExtend(posLastSupX2) + 1), pred_next_pc);
         pc_reg[pc_fetch1_port] <= next_fetch_pc;
 
         // Send TLB request.
-
         tlb_server.request.put (pc);
 
+        let pc_idxs <- pcBlocks.insertAndReserve(truncateLSB(pc), truncateLSB(next_fetch_pc));
+        PcIdx pc_idx = pc_idxs.inserted;
+        PcIdx ppc_idx = pc_idxs.reserved;
         let out = Fetch1ToFetch2 {
-            pc: pc,
-            pred_next_pc: pred_next_pc,
+            pc: compressPc(pc_idx, pc),
+            pred_next_pc: isValid(pred_next_pc) ?
+                Valid(compressPc(ppc_idx, validValue(pred_next_pc))) : Invalid,
             decode_epoch: decode_epoch[0],
             main_epoch: f_main_epoch};
 
@@ -427,33 +447,25 @@ module mkFetchStage(FetchStage);
         if (!isValid(fetch3In.cause)) begin
            if(fetch3In.access_mmio) begin
               inst_d <- mmio.bootRomResp;
-              if(verbose) $display("get answer from MMIO 0x%0x", fetch3In.pc, " ", fshow(inst_d));
+              if(verbose) $display("get answer from MMIO 0x%0x", decompressPc(fetch3In.pc), " ", fshow(inst_d));
            end
            else begin
-              if(verbose) $display("get answer from memory 0x%0x", fetch3In.pc);
+              if(verbose) $display("get answer from memory 0x%0x", decompressPc(fetch3In.pc));
                  inst_d <- mem_server.response.get;
            end
         end
 
-        if (drop_f22f3) begin
-            if (verbosity >= 2) begin
-                $display ("----------------");
-                $display ("Fetch3: Drop: main_epoch: %d decode epoch: %d", f_main_epoch, decode_epoch[1]);
-                $display ("Fetch3: f22f3.first: ", fshow (f22f3.first));
-                $display ("Fetch3: inst_d:      ", fshow (inst_d));
-            end
-        end
-        else begin
-            for (Integer i = 0; i < valueOf(SupSizeX2) && fromInteger(i) <= nbSupX2In; i = i + 1) begin
-               f32d.enqS[i].enq (Fetch3ToDecode {
-                   pc: fetch3In.pc + (2 * fromInteger(i)),
-                   ppc: (fromInteger(i)==nbSupX2In) ? fetch3In.pred_next_pc : Invalid,
-                   inst_frag: validValue(inst_d[i]),
-                   cause: fetch3In.cause,
-                   decode_epoch: fetch3In.decode_epoch,
-                   main_epoch: fetch3In.main_epoch
-               });
-            end
+        for (Integer i = 0; i < valueOf(SupSizeX2) && fromInteger(i) <= nbSupX2In; i = i + 1) begin
+           PcCompressed pc = fetch3In.pc;
+           pc.lsb = pc.lsb + (2 * fromInteger(i));
+           f32d.enqS[i].enq (Fetch3ToDecode {
+               pc: pc,
+               ppc: (fromInteger(i)==nbSupX2In) ? fetch3In.pred_next_pc : Invalid,
+               inst_frag: validValue(inst_d[i]),
+               cause: fetch3In.cause,
+               decode_epoch: fetch3In.decode_epoch,
+               main_epoch: fetch3In.main_epoch
+           });
         end
     endrule: doFetch3
 
@@ -461,7 +473,10 @@ module mkFetchStage(FetchStage);
 
    rule doDecodeFlush(f32d.deqS[0].canDeq && !isCurrent(f32d.deqS[0].first));
       for (Integer i = 0; i < valueOf(SupSizeX2); i = i + 1)
-         if (f32d.deqS[i].canDeq &&& !isCurrent(f32d.deqS[i].first)) f32d.deqS[i].deq;
+         if (f32d.deqS[i].canDeq &&& !isCurrent(f32d.deqS[i].first)) begin
+            pcBlocks.rPort[i].remove(f32d.deqS[i].first.pc.idx);
+            f32d.deqS[i].deq;
+         end
    endrule: doDecodeFlush
 
    rule doDecode(f32d.deqS[0].canDeq && isCurrent(f32d.deqS[0].first));
@@ -482,7 +497,7 @@ module mkFetchStage(FetchStage);
             if (prev_frag_available &&& !is_16b_inst(prev_frag.inst_frag)) begin // 2nd half of 32-bit instruction
                new_pick = tagged Valid fetch3s_2_inst(frag, prev_frag);
                if (!validValue(new_pick).mispred_first_half) begin
-                  doAssert(prev_frag.pc+2 == frag.pc, "Attached fragments with non-contigious PCs");
+                  doAssert(decompressPc(prev_frag.pc)+2 == decompressPc(frag.pc), "Attached fragments with non-contigious PCs");
                end
             end else if (is_16b_inst(frag.inst_frag)) begin // 16-bit instruction
                new_pick = tagged Valid fetch3_2_instC(frag,
@@ -517,7 +532,9 @@ module mkFetchStage(FetchStage);
       for (Integer i = 0; i < valueof(SupSize); i=i+1) begin
          if (decodeIn[i] matches tagged Valid .in)  begin
             let cause = in.cause;
-            let ppc = in.ppc;
+            let pc = decompressPc(in.pc);
+            let ppc = decompressPc(in.ppc);
+            pcBlocks.rPort[i].remove(in.pc.idx);
             if (verbose)
                $display("Decode: %0d in = ", i, fshow (in));
 
@@ -528,10 +545,10 @@ module mkFetchStage(FetchStage);
             // uncompressed instruction, so we redirect to this PC and
             // train it to fetch the other half in future.
             if (in.decode_epoch == decode_epoch_local && in.mispred_first_half) begin
-               if (verbose) $display("mispredicted first half in decode: pc :  %h", in.pc);
+               if (verbose) $display("mispredicted first half in decode: pc :  %h", pc);
                decode_epoch_local = !decode_epoch_local;
-               redirectPc = Valid (in.pc); // record redirect to the first PC in this bundle.
-               trainNAP = Valid (TrainNAP {pc: in.pc, nextPc: in.pc + 2});
+               redirectPc = Valid (pc); // record redirect to the first PC in this bundle.
+               trainNAP = Valid (TrainNAP {pc: pc, nextPc: pc + 2});
             end else if (in.decode_epoch == decode_epoch_local) begin
                doAssert(in.main_epoch == f_main_epoch, "main epoch must match");
 
@@ -551,11 +568,11 @@ module mkFetchStage(FetchStage);
                   // direction predict
                   Bool pred_taken = False;
                   if(dInst.iType == Br) begin
-                     let pred_res <- dirPred.pred[i].pred(in.pc);
+                     let pred_res <- dirPred.pred[i].pred(pc);
                      pred_taken = pred_res.taken;
                      dp_train = pred_res.train;
                   end
-                  Maybe#(Addr) nextPc = decodeBrPred(in.pc, dInst, pred_taken, (in.inst_kind == Inst_32b));
+                  Maybe#(Addr) nextPc = decodeBrPred(pc, dInst, pred_taken, (in.inst_kind == Inst_32b));
 
                   // return address stack link reg is x1 or x5
                   function Bool linkedR(Maybe#(ArchRIndx) register);
@@ -567,7 +584,7 @@ module mkFetchStage(FetchStage);
                   endfunction
                   Bool dst_link = linkedR(regs.dst);
                   Bool src1_link = linkedR(regs.src1);
-                  Addr push_addr = in.pc + ((in.inst_kind == Inst_32b) ? 4 : 2);
+                  Addr push_addr = pc + ((in.inst_kind == Inst_32b) ? 4 : 2);
 
                   Addr pop_addr = ras.ras[i].first;
                   if (dInst.iType == J && dst_link) begin
@@ -599,18 +616,18 @@ module mkFetchStage(FetchStage);
                   end
 
                   if(verbose) begin
-                     $display("Branch prediction: ", fshow(dInst.iType), " ; ", fshow(in.pc), " ; ",
+                     $display("Branch prediction: ", fshow(dInst.iType), " ; ", fshow(pc), " ; ",
                               fshow(ppc), " ; ", fshow(pred_taken), " ; ", fshow(nextPc));
                   end
 
                   // check previous mispred
-                  if (nextPc matches tagged Valid .decode_pred_next_pc &&& (decode_pred_next_pc != in.ppc)) begin
-                     if (verbose) $display("ppc and decodeppc :  %h %h", in.ppc, decode_pred_next_pc);
+                  if (nextPc matches tagged Valid .decode_pred_next_pc &&& (decode_pred_next_pc != ppc)) begin
+                     if (verbose) $display("ppc and decodeppc :  %h %h", ppc, decode_pred_next_pc);
                      decode_epoch_local = !decode_epoch_local;
                      redirectPc = Valid (decode_pred_next_pc); // record redirect next pc
                      ppc = decode_pred_next_pc;
                      // train next addr pred when mispredict
-                     let last_x16_pc = in.pc + ((in.inst_kind == Inst_32b) ? 2 : 0);
+                     let last_x16_pc = pc + ((in.inst_kind == Inst_32b) ? 2 : 0);
                      trainNAP = Valid (TrainNAP {pc: last_x16_pc, nextPc: decode_pred_next_pc});
 `ifdef PERF_COUNT
                      // performance stats: record decode redirect
@@ -619,7 +636,7 @@ module mkFetchStage(FetchStage);
 `endif
                   end
                end // if (!isValid(cause))
-               let out = FromFetchStage{pc: in.pc,
+               let out = FromFetchStage{pc: pc,
                                         ppc: ppc,
                                         main_epoch: in.main_epoch,
                                         dpTrain: dp_train,
@@ -628,7 +645,7 @@ module mkFetchStage(FetchStage);
                                         orig_inst: in.orig_inst,
                                         regs: decode_result.regs,
                                         cause: cause,
-                                        tval: in.pc + ((in.cause_second_half) ? 2:0)
+                                        tval: pc + ((in.cause_second_half) ? 2:0)
                                         };
                out_fifo.enqS[i].enq(out);
                if (verbosity >= 1) begin

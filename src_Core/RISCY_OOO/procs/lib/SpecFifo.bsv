@@ -1,6 +1,6 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +8,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -50,7 +50,7 @@ typedef struct {
     Integer validDeqPort;
     Integer validEnqPort;
     Integer validWrongSpecPort;
-    // specBits EHR port assignment  
+    // specBits EHR port assignment
     // correct spec is always the last
     Integer sbDeqPort;
     Integer sbEnqPort;
@@ -85,7 +85,7 @@ module mkSpecFifo#(
     Ehr#(2, idxT) deqP_ehr <- mkEhr(0);
     Reg#(idxT) deqP = deqP_ehr[0]; // port 0 is for deq and canon_deqP
 
-    // make incorrectSpeculation conflict with others 
+    // make incorrectSpeculation conflict with others
     RWire#(void) dummyRWire = (interface RWire;
         method Maybe#(void) wget = Invalid;
         method Action wset(void x) = noAction;
