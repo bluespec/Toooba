@@ -122,6 +122,7 @@ typedef struct {
 
 typedef struct {
     PcCompressed pc;
+    Bit#(TLog#(SupSizeX2)) inst_frags_fetched;
     Maybe#(PcCompressed) pred_next_pc;
     Bool decode_epoch;
     Epoch main_epoch;
@@ -129,6 +130,7 @@ typedef struct {
 
 typedef struct {
     PcCompressed pc;
+    Bit#(TLog#(SupSizeX2)) inst_frags_fetched;
     Maybe#(PcCompressed) pred_next_pc;
     Maybe#(Exception) cause;
     Bool access_mmio; // inst fetch from MMIO
@@ -277,8 +279,8 @@ module mkFetchStage(FetchStage);
     Reg#(Epoch) f_main_epoch <- mkReg(0); // fetch estimate of main epoch
 
     // Pipeline Stage FIFOs
-    Fifo#(2, Tuple2#(Bit#(TLog#(SupSizeX2)),Fetch1ToFetch2)) f12f2 <- mkCFFifo;
-    Fifo#(4, Tuple2#(Bit#(TLog#(SupSizeX2)),Fetch2ToFetch3)) f22f3 <- mkCFFifo; // FIFO should match I$ latency
+    Fifo#(2, Fetch1ToFetch2) f12f2 <- mkCFFifo;
+    Fifo#(4, Fetch2ToFetch3) f22f3 <- mkCFFifo; // FIFO should match I$ latency
     // These two fifos needs a capacity of 3 for full throughput if we fire only when we can enq on on channels.
     SupFifo#(SupSizeX2, 3, Fetch3ToDecode) f32d <- mkUGSupFifo; // Unguarded to prevent the static analyser from exploding.
     SupFifo#(SupSize, 3, FromFetchStage) out_fifo <- mkSupFifo;
@@ -365,17 +367,18 @@ module mkFetchStage(FetchStage);
         PcIdx ppc_idx = pc_idxs.reserved;
         let out = Fetch1ToFetch2 {
             pc: compressPc(pc_idx, pc),
+            inst_frags_fetched: posLastSupX2,
             pred_next_pc: isValid(pred_next_pc) ?
                 Valid(compressPc(ppc_idx, validValue(pred_next_pc))) : Invalid,
             decode_epoch: decode_epoch[0],
             main_epoch: f_main_epoch};
 
-        f12f2.enq(tuple2(posLastSupX2,out));
+        f12f2.enq(out);
         if (verbose) $display("Fetch1: ", fshow(out), " posLastSupX2: %d", posLastSupX2);
     endrule
 
     rule doFetch2;
-        let {nbSupX2,in} = f12f2.first;
+        let in = f12f2.first;
         f12f2.deq;
 
         // Get TLB response
@@ -394,7 +397,7 @@ module mkFetchStage(FetchStage);
                     // cache line size, so all nbSup+1 insts can be fetched
                     // from boot rom. It won't happen that insts fetched from
                     // boot rom is less than requested.
-                    mmio.bootRomReq(phys_pc, nbSupX2);
+                    mmio.bootRomReq(phys_pc, in.inst_frags_fetched);
                     access_mmio = True;
                 end
                 default: begin
@@ -406,17 +409,18 @@ module mkFetchStage(FetchStage);
 
         let out = Fetch2ToFetch3 {
             pc: in.pc,
+            inst_frags_fetched: in.inst_frags_fetched,
             pred_next_pc: in.pred_next_pc,
             cause: cause,
             access_mmio: access_mmio,
             decode_epoch: in.decode_epoch,
             main_epoch: in.main_epoch };
-        f22f3.enq(tuple2(nbSupX2,out));
+        f22f3.enq(out);
 
        if (verbosity >= 2) begin
 	  $display ("----------------");
 	  $display ("Fetch2: TLB response pyhs_pc 0x%0h  cause ", phys_pc, fshow (cause));
-	  $display ("Fetch2: f2_tof3.enq: nbSupX2 %0d out ", nbSupX2, fshow (out));
+	  $display ("Fetch2: f2_tof3.enq: out ", fshow (out));
        end
     endrule
 
@@ -424,10 +428,10 @@ module mkFetchStage(FetchStage);
     Vector#(SupSizeX2,Integer) indexes = genVector;
     function Bool f32d_lane_notFull(Integer i) = f32d.enqS[i].canEnq;
     rule doFetch3(all(f32d_lane_notFull, indexes));
-        let {nbSupX2In, fetch3In} = f22f3.first;
+        let fetch3In = f22f3.first;
         if (verbosity >= 2) begin
             if (f22f3.notEmpty)
-                $display("Fetch3: nbSupX2In: %0d fetch3In: ", nbSupX2In, fshow (fetch3In));
+                $display("Fetch3: fetch3In: ", fshow (fetch3In));
             else
                 $display("Fetch3: Nothing else from Fetch2");
         end
@@ -455,12 +459,12 @@ module mkFetchStage(FetchStage);
            end
         end
 
-        for (Integer i = 0; i < valueOf(SupSizeX2) && fromInteger(i) <= nbSupX2In; i = i + 1) begin
+        for (Integer i = 0; i < valueOf(SupSizeX2) && fromInteger(i) <= fetch3In.inst_frags_fetched; i = i + 1) begin
            PcCompressed pc = fetch3In.pc;
            pc.lsb = pc.lsb + (2 * fromInteger(i));
            f32d.enqS[i].enq (Fetch3ToDecode {
                pc: pc,
-               ppc: (fromInteger(i)==nbSupX2In) ? fetch3In.pred_next_pc : Invalid,
+               ppc: (fromInteger(i)==fetch3In.inst_frags_fetched) ? fetch3In.pred_next_pc : Invalid,
                inst_frag: validValue(inst_d[i]),
                cause: fetch3In.cause,
                decode_epoch: fetch3In.decode_epoch,
