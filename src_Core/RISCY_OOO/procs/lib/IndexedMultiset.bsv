@@ -165,22 +165,17 @@ module mkIndexedMultisetQueue(IndexedMultiset#(Bit#(idxTSz), datT, remWidth))
         Bit#(TAdd#(idxTSz,1)) nlhead = lhead;
         Bit#(TAdd#(idxTSz,1)) nltail = ltail;
         if (insertW.wget matches tagged Valid .d) begin
-            $display("insert dat:%x nlhead:%d", {pack(d),12'b0}, nlhead);
             idxT i = truncate(nlhead);
             recs[i] = d;
             nlhead = nlhead + 1;
         end
         if (reserveW.wget matches tagged Valid .d) begin
-            $display("reserve dat:%x nlhead:%d", {pack(d),12'b0}, nlhead);
             idxT i = truncate(nlhead);
             recs[i] = d;
-            //nlhead = nlhead + 1;
         end
         for (Integer i = 0; i < valueOf(remWidth); i = i + 1)
-            if (removeW[i].wget matches tagged Valid .r) begin
-                $display("remove[%d] idx:%d", i, r);
+            if (removeW[i].wget matches tagged Valid .r)
                 nltail = updateWidePointer(nltail, r);
-            end
         if (clearW) begin
             nlhead = 0;
             nltail = 0;
@@ -188,7 +183,6 @@ module mkIndexedMultisetQueue(IndexedMultiset#(Bit#(idxTSz), datT, remWidth))
         lhead <= nlhead;
         ltail <= nltail;
         writeVReg(records, recs);
-        $display("full:%x ltail:%d lhead:%d level:%d", full, ltail, lhead, level);
     endrule
 
     Vector#(remWidth, IndexedMultisetRemoveIfc#(idxT)) removes;
@@ -210,11 +204,10 @@ module mkIndexedMultisetQueue(IndexedMultiset#(Bit#(idxTSz), datT, remWidth))
         if (recsRead[head - 1]!=ins) begin
             insIdx = head;
             insertW.wset(ins); // Increment head.
-            resIdx = head; // new default for reserved.
             if (res!=ins) begin
                 resIdx = head + 1;
                 reserveW.wset(res); // Increment head again!
-            end
+            end else resIdx = head;
         end else if (recsRead[head - 1]!=res) begin
             resIdx = head;
             reserveW.wset(res);
