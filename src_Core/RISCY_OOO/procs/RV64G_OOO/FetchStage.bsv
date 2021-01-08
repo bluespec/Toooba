@@ -544,11 +544,10 @@ module mkFetchStage(FetchStage);
 
             // do decode and branch prediction
             // Drop here if does not match the decode_epoch.
-
-            // We predicted a taken branch for PC, but this is an
-            // uncompressed instruction, so we redirect to this PC and
-            // train it to fetch the other half in future.
             if (in.decode_epoch == decode_epoch_local && in.mispred_first_half) begin
+               // We predicted a taken branch for PC, but this is an
+               // uncompressed instruction, so we redirect to this PC and
+               // train it to fetch the other half in future.
                if (verbose) $display("mispredicted first half in decode: pc :  %h", pc);
                decode_epoch_local = !decode_epoch_local;
                redirectPc = Valid (pc); // record redirect to the first PC in this bundle.
