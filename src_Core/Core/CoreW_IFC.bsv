@@ -82,6 +82,74 @@ interface CoreW_IFC #(numeric type t_n_interrupt_sources);
    // AXI4 Fabric interfaces
 
    // CPU IMem to Fabric master interface
+   interface AXI4_Master #(TAdd#(Wd_MId,1), Wd_Addr, Wd_Data,
+                           0, 0, 0, 0, 0) cpu_imem_master;
+
+   // CPU DMem to Fabric master interface
+   interface AXI4_Master #(TAdd#(Wd_MId,1), Wd_Addr, Wd_Data,
+                           0, 0, 0, 0, 0) cpu_dmem_master;
+
+   // ----------------------------------------------------------------
+   // External interrupt sources
+
+   interface Vector #(t_n_interrupt_sources, PLIC_Source_IFC)  core_external_interrupt_sources;
+
+   // ----------------------------------------------------------------
+   // Non-maskable interrupt request
+
+   (* always_ready, always_enabled *)
+   method Action nmi_req (Bool set_not_clear);
+
+`ifdef RVFI_DII
+    interface Toooba_RVFI_DII_Server rvfi_dii_server;
+`endif
+
+`ifdef INCLUDE_GDB_CONTROL
+   // ----------------------------------------------------------------
+   // Optional Debug Module interfaces
+
+   // ----------------
+   // DMI (Debug Module Interface) facing remote debugger
+
+   interface DMI dmi;
+
+   // ----------------
+   // Facing Platform
+   // Non-Debug-Module Reset (reset all except DM)
+
+   interface Client #(Bool, Bool) ndm_reset_client;
+`endif
+
+`ifdef INCLUDE_TANDEM_VERIF
+   // ----------------------------------------------------------------
+   // Optional Tandem Verifier interface output tuples (n,vb),
+   // where 'vb' is a vector of bytes
+   // with relevant bytes in locations [0]..[n-1]
+
+   interface Get #(Info_CPU_to_Verifier)  tv_verifier_info_get;
+`endif
+
+endinterface
+
+// ================================================================
+// The Synthesizable CoreW interface (same with Synth AXI)
+
+interface CoreW_IFC_Synth #(numeric type t_n_interrupt_sources);
+
+   // ----------------------------------------------------------------
+   // Debugging: set core's verbosity
+
+   method Action  set_verbosity (Bit #(4)  verbosity, Bit #(64)  logdelay);
+
+   // ----------------------------------------------------------------
+   // Start
+
+   method Action start (Bool is_running, Bit #(64) tohost_addr, Bit #(64) fromhost_addr);
+
+   // ----------------------------------------------------------------
+   // AXI4 Fabric interfaces
+
+   // CPU IMem to Fabric master interface
    interface AXI4_Master_Synth #(TAdd#(Wd_MId,1), Wd_Addr, Wd_Data,
                                  0, 0, 0, 0, 0) cpu_imem_master;
 

@@ -74,6 +74,7 @@ import ProcTypes    :: *;
 // Main fabric
 import Fabric_Defs  :: *;    // for Wd_Id, Wd_Addr, Wd_Data...
 import SoC_Map      :: *;
+import CCTypes      :: *;    // for EventsCache.
 
 `ifdef INCLUDE_GDB_CONTROL
 import Debug_Module  :: *;
@@ -164,17 +165,27 @@ module mkCoreW #(Reset dm_power_on_reset)
    Proc_IFC proc <- mkProc (reset_by hart0_reset);
 
    // handle uncached interface
-   let proc_uncached <- toAXI4_Master_Synth(extendIDFields(zeroMasterUserFields(proc.master1), 0));
+   let proc_uncached = extendIDFields (zeroMasterUserFields (proc.master1), 0);
    // Bridge for uncached expernal bus transactions.
    let uncached_mem_shim <- mkAXI4ShimFF(reset_by hart0_reset);
-   let uncached_mem_master <- toAXI4_Master_Synth(extendIDFields(zeroMasterUserFields(uncached_mem_shim.master), 0), reset_by hart0_reset);
 
    // handle cached interface
    // AXI4 tagController
    TagControllerAXI#(Wd_MId, Wd_Addr, Wd_Data) tagController <- mkTagControllerAXI(reset_by hart0_reset); // TODO double check if reseting like this is good enough
-   AXI4_Master#(Wd_MId, Wd_Addr, Wd_Data, Wd_AW_User, Wd_W_User, Wd_B_User, Wd_AR_User, Wd_R_User)
-                tmp2 <- fromAXI4_Master_Synth(proc.master0, reset_by hart0_reset);
-   mkConnection(tmp2, tagController.slave, reset_by hart0_reset);
+   mkConnection(proc.master0, tagController.slave, reset_by hart0_reset);
+`ifdef PERFORMANCE_MONITORING
+   rule report_tagController_events;
+      Vector#(7, Bit#(1)) evts = tagController.events;
+      EventsCache ce = unpack(0);
+      ce.evt_ST = zeroExtend(evts[0]); // Unsure of mapping from EventsCacheCore to 7-bit vector.
+      ce.evt_ST_MISS = zeroExtend(evts[1]);
+      ce.evt_LD = zeroExtend(evts[2]);
+      ce.evt_LD_MISS = zeroExtend(evts[3]);
+      ce.evt_EVICT = zeroExtend(evts[4]);
+      // SET_TAG_WRITE/READ aren't used in TagCache; tag table data is not tagged.
+      proc.events_tgc(ce);
+   endrule
+`endif
 
    // PLIC (Platform-Level Interrupt Controller)
    PLIC_IFC_16_2_7  plic <- mkPLIC_16_2_7;
@@ -355,26 +366,24 @@ module mkCoreW #(Reset dm_power_on_reset)
    // Connect the local 2x3 fabric
 
    // Masters on the local 2x3 fabric
-   Vector#(Num_Masters_2x3,
-           AXI4_Master_Synth #(Wd_MId_2x3, Wd_Addr, Wd_Data,
-                               Wd_AW_User, Wd_W_User, Wd_B_User,
-                               Wd_AR_User, Wd_R_User))
-                               master_vector = newVector;
+   Vector#(Num_Masters_2x3, AXI4_Master #(Wd_MId_2x3, Wd_Addr, Wd_Data,
+                                          Wd_AW_User, Wd_W_User, Wd_B_User,
+                                          Wd_AR_User, Wd_R_User))
+                                          master_vector = newVector;
    //let master_vector = newVector;
    master_vector[cpu_uncached_master_num]     = proc_uncached;
    master_vector[debug_module_sba_master_num] = dm_master_local;
 
    // Slaves on the local 2x3 fabric
    // default slave is forwarded out directly to the Core interface
-   Vector#(Num_Slaves_2x3,
-           AXI4_Slave_Synth #(Wd_SId_2x3, Wd_Addr, Wd_Data,
-                              Wd_AW_User, Wd_W_User, Wd_B_User,
-                              Wd_AR_User, Wd_R_User))
-                              slave_vector = newVector;
+   Vector#(Num_Slaves_2x3, AXI4_Slave #(Wd_SId_2x3, Wd_Addr, Wd_Data,
+                                        Wd_AW_User, Wd_W_User, Wd_B_User,
+                                        Wd_AR_User, Wd_R_User))
+                                        slave_vector = newVector;
    //let slave_vector = newVector;
-   slave_vector[default_slave_num] <- toAXI4_Slave_Synth(uncached_mem_shim.slave);
+   slave_vector[default_slave_num] = uncached_mem_shim.slave;
    slave_vector[llc_slave_num]     = proc.debug_module_mem_server;
-   slave_vector[plic_slave_num]    = plic.axi4_slave;
+   slave_vector[plic_slave_num]    = zeroSlaveUserFields (plic.axi4_slave);
 
    function Vector#(Num_Slaves_2x3, Bool) route_2x3 (Bit#(Wd_Addr) addr);
       Vector#(Num_Slaves_2x3, Bool) res = replicate(False);
@@ -389,9 +398,7 @@ module mkCoreW #(Reset dm_power_on_reset)
       return res;
    endfunction
 
-   mkAXI4Bus_Synth (route_2x3, master_vector, slave_vector);
-
-   let cached_mem_master <- toAXI4_Master_Synth(tagController.master);
+   mkAXI4Bus (route_2x3, master_vector, slave_vector);
 
    // ================================================================
    // Connect external interrupt lines from PLIC to CPU
@@ -441,10 +448,10 @@ module mkCoreW #(Reset dm_power_on_reset)
    // AXI4 Fabric interfaces
 
    // Cached master to Fabric master interface
-   interface cpu_imem_master = cached_mem_master;
+   interface cpu_imem_master = tagController.master;
 
    // Uncached master to Fabric master interface
-   interface cpu_dmem_master = uncached_mem_master;
+   interface cpu_dmem_master = extendIDFields(zeroMasterUserFields(uncached_mem_shim.master), 0);
 
    // ----------------------------------------------------------------
    // External interrupt sources
@@ -492,6 +499,31 @@ module mkCoreW #(Reset dm_power_on_reset)
 `endif
 
 endmodule: mkCoreW
+
+(* synthesize *)
+module mkCoreW_Synth #(Reset dm_power_on_reset)
+                      (CoreW_IFC_Synth #(N_External_Interrupt_Sources));
+   let core <- mkCoreW (dm_power_on_reset);
+   let cpu_imem_master_synth <- toAXI4_Master_Synth (core.cpu_imem_master);
+   let cpu_dmem_master_synth <- toAXI4_Master_Synth (core.cpu_dmem_master);
+
+   method set_verbosity = core.set_verbosity;
+   method start = core.start;
+   interface cpu_imem_master = cpu_imem_master_synth;
+   interface cpu_dmem_master = cpu_dmem_master_synth;
+   interface core_external_interrupt_sources = core.core_external_interrupt_sources;
+   method nmi_req = core.nmi_req;
+`ifdef RVFI_DII
+   interface rvfi_dii_server = core.rvfi_dii_server;
+`endif
+`ifdef INCLUDE_GDB_CONTROL
+   interface dmi = core.dmi;
+   interface ndm_reset_client = core.ndm_reset_client;
+`endif
+`ifdef INCLUDE_TANDEM_VERIF
+   interface tv_verifier_info_get = core.tv_verifier_info_get;
+`endif
+endmodule
 
 // ================================================================
 // 2x3 Fabric for this Core

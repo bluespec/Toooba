@@ -153,16 +153,14 @@ module mkSoC_Top #(Reset dm_power_on_reset)
    // SoC Boot ROM
    Boot_ROM_IFC  boot_rom <- mkBoot_ROM;
    // AXI4 Deburster in front of Boot_ROM
-   AXI4_Shim#(Wd_SId, Wd_Addr, Wd_Data,
-              Wd_AW_User, Wd_W_User, Wd_B_User, Wd_AR_User, Wd_R_User)
-              boot_rom_axi4_deburster <- mkBurstToNoBurst;
+   AXI4_Shim#(Wd_SId, Wd_Addr, Wd_Data, 0, 0, 0, 0, 0)
+      boot_rom_axi4_deburster <- mkBurstToNoBurst;
 
    // SoC Memory
    Mem_Controller_IFC  mem0_controller <- mkMem_Controller;
    // AXI4 Deburster in front of SoC Memory
-   AXI4_Shim#(Wd_SId, Wd_Addr, Wd_Data,
-              Wd_AW_User, Wd_W_User, Wd_B_User, Wd_AR_User, Wd_R_User)
-              mem0_controller_axi4_deburster <- mkBurstToNoBurst;
+   AXI4_Shim#(Wd_SId, Wd_Addr, Wd_Data, 0, 0, 0, 0, 0)
+      mem0_controller_axi4_deburster <- mkBurstToNoBurst;
 
    // SoC IPs
    UART_IFC   uart0  <- mkUART;
@@ -176,9 +174,9 @@ module mkSoC_Top #(Reset dm_power_on_reset)
    // SoC fabric master connections
    // Note: see 'SoC_Map' for 'master_num' definitions
 
-   Vector#(Num_Masters, AXI4_Master_Synth #(TAdd#(Wd_MId,1), Wd_Addr, Wd_Data,
-                                            0, 0, 0, 0, 0))
-                                            master_vector = newVector;
+   Vector#(Num_Masters, AXI4_Master #(TAdd#(Wd_MId,1), Wd_Addr, Wd_Data,
+                                      0, 0, 0, 0, 0))
+      master_vector = newVector;
 
    // CPU IMem master to fabric
    master_vector[imem_master_num] = corew.cpu_imem_master;
@@ -190,30 +188,28 @@ module mkSoC_Top #(Reset dm_power_on_reset)
    // SoC fabric slave connections
    // Note: see 'SoC_Map' for 'slave_num' definitions
 
-   Vector#(Num_Slaves, AXI4_Slave_Synth #(Wd_SId, Wd_Addr, Wd_Data,
-                                          0, 0, 0, 0, 0))
-                                          slave_vector = newVector;
-   Vector#(Num_Slaves, Range#(Wd_Addr))   route_vector = newVector;
+   Vector#(Num_Slaves, AXI4_Slave #(Wd_SId, Wd_Addr, Wd_Data,
+                                    0, 0, 0, 0, 0))
+      slave_vector = newVector;
+   Vector#(Num_Slaves, Range#(Wd_Addr)) route_vector = newVector;
 
    // Fabric to Boot ROM
-   let br <- fromAXI4_Slave_Synth(boot_rom.slave);
-   mkConnection(boot_rom_axi4_deburster.master, br);
-   slave_vector[boot_rom_slave_num] <- toAXI4_Slave_Synth(zeroSlaveUserFields(boot_rom_axi4_deburster.slave));
+   mkConnection(boot_rom_axi4_deburster.master, boot_rom.slave);
+   slave_vector[boot_rom_slave_num] = boot_rom_axi4_deburster.slave;
    route_vector[boot_rom_slave_num] = soc_map.m_boot_rom_addr_range;
 
    // Fabric to Mem Controller
-   let mem <- fromAXI4_Slave_Synth(mem0_controller.slave);
-   mkConnection(mem0_controller_axi4_deburster.master, mem);
-   slave_vector[mem0_controller_slave_num] <- toAXI4_Slave_Synth(zeroSlaveUserFields(mem0_controller_axi4_deburster.slave));
+   mkConnection(mem0_controller_axi4_deburster.master, mem0_controller.slave);
+   slave_vector[mem0_controller_slave_num] = mem0_controller_axi4_deburster.slave;
    route_vector[mem0_controller_slave_num] = soc_map.m_mem0_controller_addr_range;
 
    // Fabric to UART0
-   slave_vector[uart0_slave_num] <- toAXI4_Slave_Synth(zeroSlaveUserFields(uart0.slave));
+   slave_vector[uart0_slave_num] = zeroSlaveUserFields(uart0.slave);
    route_vector[uart0_slave_num] = soc_map.m_uart0_addr_range;
 
 `ifdef INCLUDE_ACCEL0
    // Fabric to accel0
-   slave_vector[accel0_slave_num] <- liftAXI4_Slave_Synth(zeroSlaveUserFields, accel0.slave);
+   slave_vector[accel0_slave_num] = zeroSlaveUserFields (accel0.slave);
    route_vector[accel0_slave_num] = soc_map.m_accel0_addr_range;
 `endif
 
@@ -225,8 +221,8 @@ module mkSoC_Top #(Reset dm_power_on_reset)
 `endif
 
    // SoC Fabric
-   let bus <- mkAXI4Bus_Synth (routeFromMappingTable(route_vector),
-                               master_vector, slave_vector);
+   let bus <- mkAXI4Bus (routeFromMappingTable(route_vector),
+                         master_vector, slave_vector);
 
    // ----------------
    // Connect interrupt sources for CPU external interrupt request inputs.

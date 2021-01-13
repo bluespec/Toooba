@@ -59,6 +59,10 @@ import TlbTypes::*;
 import SynthParam::*;
 import VerificationPacket::*;
 import Performance::*;
+`ifdef PERFORMANCE_MONITORING
+import PerformanceMonitor::*;
+import BlueUtils::*;
+`endif
 import HasSpecBits::*;
 import Exec::*;
 import FetchStage::*;
@@ -212,6 +216,10 @@ interface Core;
     method Bit#(32) debugRename;
 `endif
 
+`ifdef PERFORMANCE_MONITORING
+    method Action events_llc(EventsCache events);
+    method Action events_tgc(EventsCache events);
+`endif
 endinterface
 
 // fixpoint to instantiate modules
@@ -231,6 +239,21 @@ typedef enum {
    CORE_RUNNING
    } Core_Run_State
 deriving (Bits, Eq, FShow);
+
+`ifdef PERFORMANCE_MONITORING
+instance BitVectorable #(EventsCore, SizeOf#(SupCnt), EventsCoreElements) provisos (Bits #(EventsCore, m));
+   function Vector#(EventsCoreElements, SupCnt) to_vector(EventsCore e) =
+      reverse(unpack(pack(e)));
+endinstance
+instance BitVectorable #(EventsCoreMem, SizeOf#(HpmRpt), EventsCoreMemElements) provisos (Bits #(EventsCoreMem, m));
+   function Vector#(EventsCoreMemElements, HpmRpt) to_vector(EventsCoreMem e) =
+      reverse(unpack(pack(e)));
+endinstance
+instance BitVectorable #(EventsCache, SizeOf#(HpmRpt), EventsCacheElements) provisos (Bits #(EventsCache, m));
+   function Vector#(EventsCacheElements, HpmRpt) to_vector(EventsCache e) =
+      reverse(unpack(pack(e)));
+endinstance
+`endif
 
 (* synthesize *)
 module mkCore#(CoreId coreId)(Core);
@@ -256,6 +279,10 @@ module mkCore#(CoreId coreId)(Core);
 
 `ifdef INCLUDE_TANDEM_VERIF
    Vector #(SupSize, FIFOF #(Trace_Data2)) v_f_to_TV <- replicateM (mkFIFOF);
+`endif
+
+`ifdef PERFORMANCE_MONITORING
+   Array #(Reg #(EventsCore)) hpm_core_events <- mkDRegOR (5, unpack (0));
 `endif
 
    // ================================================================
@@ -400,6 +427,11 @@ module mkCore#(CoreId coreId)(Core);
 `endif
                     );
                     globalSpecUpdate.incorrectSpec(False, spec_tag, inst_tag);
+`ifdef PERFORMANCE_MONITORING
+                    EventsCore events = unpack (0);
+                    events.evt_REDIRECT = 1;
+                    hpm_core_events[1] <= events;
+`endif
                 endmethod
                 method correctSpec = globalSpecUpdate.correctSpec[finishAluCorrectSpecPort(i)].put;
                 method doStats = doStatsReg._read;
@@ -1075,6 +1107,41 @@ module mkCore#(CoreId coreId)(Core);
     endrule
 `endif
 
+`ifdef PERFORMANCE_MONITORING
+     // ================================================================
+     // Performance counters
+
+     Reg#(EventsCache) events_llc_reg <- mkRegU;
+     Reg#(EventsCache) events_tgc_reg <- mkRegU;
+     rule report_events;
+         hpm_core_events[2] <= unpack(pack(commitStage.events));
+     endrule
+
+     Vector #(1, Bit #(Report_Width)) null_evt = replicate (0);
+     Vector #(31, Bit #(Report_Width)) mem_core_evts_vec =  to_large_vector (coreFix.memExeIfc.events);
+     Vector #(31, Bit #(Report_Width)) other_core_evts_vec = to_large_vector (hpm_core_events[0]);
+     Vector #(31, Bit #(Report_Width)) core_evts_vec = unpack(pack(mem_core_evts_vec) | pack(other_core_evts_vec));
+     EventsCache instMem = unpack(pack(iMem.events) | pack(iTlb.events));
+     Vector #(16, Bit #(Report_Width)) imem_evts_vec = to_large_vector (instMem);
+     EventsCache dataMem = unpack(pack(dMem.events) | pack(dTlb.events));
+     Vector #(16, Bit #(Report_Width)) dmem_evts_vec = to_large_vector (dataMem);
+     Vector #(32, Bit #(Report_Width)) external_evts_vec = replicate (0);//to_large_vector (w_external_evts);
+     Vector #(16, Bit #(Report_Width)) llc_evts_vec = to_large_vector (events_llc_reg);
+     Vector #(16, Bit #(Report_Width)) tgc_evts_vec = to_large_vector (events_tgc_reg);
+
+     let events = append (null_evt, core_evts_vec);
+     events = append (events, imem_evts_vec);
+     events = append (events, dmem_evts_vec);
+     events = append (events, external_evts_vec);
+     events = append (events, llc_evts_vec);
+     events = append (events, tgc_evts_vec);
+
+     (* fire_when_enabled, no_implicit_conditions *)
+     rule rl_send_perf_evts;
+          csrf.send_performance_events (events);
+     endrule
+`endif
+
 `ifdef INCLUDE_GDB_CONTROL
    // ================================================================
    // DEBUG MODULE INTERFACE
@@ -1465,6 +1532,11 @@ module mkCore#(CoreId coreId)(Core);
         Bit#(1) pendingMMIOPRq = pack(mmio.hasPendingPRq);
         return {15'b0, pendingMMIOPRq, checkedEp, curEp};
     endmethod
+`endif
+
+`ifdef PERFORMANCE_MONITORING
+    method events_llc = events_llc_reg._write;
+    method events_tgc = events_tgc_reg._write;
 `endif
 
 endmodule

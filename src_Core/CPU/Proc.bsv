@@ -50,6 +50,7 @@ import GetPut       :: *;
 import ClientServer :: *;
 import Connectable  :: *;
 import FIFOF        :: *;
+import FIFO         :: *;
 import ConfigReg    :: *;
 
 // ----------------
@@ -170,15 +171,32 @@ module mkProc (Proc_IFC);
    // ================================================================
    // Connect stats
 
+   FIFO#(Bool) statReqs <- mkFIFO;
+
    for(Integer i = 0; i < valueof(CoreNum); i = i+1) begin
-      rule broadcastStats;
-         Bool doStats <- core[i].sendDoStats;
-         for(Integer j = 0; j < valueof(CoreNum); j = j+1) begin
-            core[j].recvDoStats(doStats);
-         end
-         llc.perf.setStatus(doStats);
-      endrule
+       rule recvStatReq;
+           Bool doStats <- core[i].sendDoStats;
+           statReqs.enq(doStats);
+       endrule
    end
+
+   rule broadcastStats;
+       for(Integer j = 0; j < valueof(CoreNum); j = j+1) begin
+           core[j].recvDoStats(statReqs.first);
+       end
+       llc.perf.setStatus(statReqs.first);
+       statReqs.deq;
+   endrule
+
+`ifdef PERFORMANCE_MONITORING
+   Reg#(EventsCache) events_tgc_reg <- mkRegU;
+   rule broadcastPerfEvents;
+       for(Integer j = 0; j < valueof(CoreNum); j = j+1) begin
+           core[j].events_llc(llc.events);
+           core[j].events_tgc(events_tgc_reg);
+       end
+   endrule
+`endif
 
    // ================================================================
    // Stub out deadlock and renameDebug interfaces
@@ -338,6 +356,10 @@ module mkProc (Proc_IFC);
     method Tuple4 #(Tuple3 #(Bit #(32), Bit #(32), Bit #(32)), Tuple4 #(CapMem, Bit #(32), CapMem, Bit #(32)), Tuple4 #(CapMem, Bit #(32), CapMem, Bit #(32)), void) hart0_debug_rob = core [0].debugRob;
     method Tuple3 #(Bit #(32), Addr, Addr) hart0_debug_fetch = core [0].debugFetch;
     method Bit #(32) hart0_debug_rename = core [0].debugRename;
+`endif
+
+`ifdef PERFORMANCE_MONITORING
+    method events_tgc = events_tgc_reg._write;
 `endif
 
 endmodule: mkProc

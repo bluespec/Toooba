@@ -57,6 +57,10 @@ import CacheUtils::*;
 import Performance::*;
 import LatencyTimer::*;
 import RandomReplace::*;
+`ifdef PERFORMANCE_MONITORING
+import PerformanceMonitor::*;
+import BlueUtils::*;
+`endif
 
 export ICRqStuck(..);
 export IPRqStuck(..);
@@ -97,6 +101,9 @@ interface IBank#(
     // performance
     method Action setPerfStatus(Bool stats);
     method Data getPerfData(L1IPerfType t);
+`ifdef PERFORMANCE_MONITORING
+    method EventsCache events;
+`endif
 endinterface
 
 module mkIBank#(
@@ -178,32 +185,50 @@ module mkIBank#(
     Bool flushDone = True;
 `endif
 
+    LatencyTimer#(cRqNum, 10) latTimer <- mkLatencyTimer;
 `ifdef PERF_COUNT
     Reg#(Bool) doStats <- mkConfigReg(False);
     Count#(Data) ldCnt <- mkCount(0);
     Count#(Data) ldMissCnt <- mkCount(0);
     Count#(Data) ldMissLat <- mkCount(0);
-
-    LatencyTimer#(cRqNum, 10) latTimer <- mkLatencyTimer;
-
+`endif
+`ifdef PERFORMANCE_MONITORING
+    Array #(Reg #(EventsCache)) perf_events <- mkDRegOR (2, unpack (0));
+`endif
     function Action incrReqCnt;
     action
+`ifdef PERF_COUNT
         if(doStats) begin
             ldCnt.incr(1);
         end
+`endif
+`ifdef PERFORMANCE_MONITORING
+        EventsCache events = unpack (0);
+        events.evt_LD = 1;
+        perf_events[0] <= events;
+`endif
+        noAction;
     endaction
     endfunction
 
     function Action incrMissCnt(cRqIdxT idx);
     action
         let lat <- latTimer.done(idx);
+`ifdef PERF_COUNT
         if(doStats) begin
             ldMissLat.incr(zeroExtend(lat));
             ldMissCnt.incr(1);
         end
+`endif
+`ifdef PERFORMANCE_MONITORING
+        EventsCache events = unpack (0);
+        events.evt_LD_MISS_LAT = saturating_truncate(lat);
+        events.evt_LD_MISS = 1;
+        perf_events[1] <= events;
+`endif
+        noAction;
     endaction
     endfunction
-`endif
 
     function tagT getTag(Addr a) = truncateLSB(a);
 
@@ -227,10 +252,8 @@ module mkIBank#(
         }));
         // enq to indexQ for in order resp
         cRqIndexQ.enq(n);
-`ifdef PERF_COUNT
         // performance counter: cRq type
         incrReqCnt;
-`endif
        if (verbose)
         $display("%t I %m cRqTransfer: ", $time,
             fshow(n), " ; ",
@@ -377,10 +400,8 @@ module mkIBank#(
             fshow(slot), " ; ",
             fshow(cRqToP)
         );
-`ifdef PERF_COUNT
         // performance counter: start miss timer
         latTimer.start(n);
-`endif
     endrule
 
     // last stage of pipeline: process req
@@ -617,10 +638,8 @@ module mkIBank#(
                 "pRs must be a hit"
             );
             cRqHit(cOwner, procRq);
-`ifdef PERF_COUNT
             // performance counter: miss cRq
             incrMissCnt(cOwner);
-`endif
         end
         else begin
             doAssert(False, ("pRs owner must match some cRq"));
@@ -818,6 +837,9 @@ module mkIBank#(
             default: 0;
         endcase);
     endmethod
+`ifdef PERFORMANCE_MONITORING
+    method EventsCache events = perf_events[0];
+`endif
 endmodule
 
 

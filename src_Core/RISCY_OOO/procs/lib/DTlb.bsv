@@ -13,7 +13,7 @@
 //
 //     This work was supported by NCSC programme grant 4212611/RFA 15971 ("SafeBet").
 //-
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -21,10 +21,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -52,6 +52,11 @@ import LatencyTimer::*;
 import HasSpecBits::*;
 import Vector::*;
 import Ehr::*;
+`ifdef PERFORMANCE_MONITORING
+import PerformanceMonitor::*;
+import CCTypes::*;
+import BlueUtils::*;
+`endif
 
 export DTlbReq(..);
 export DTlbResp(..);
@@ -86,7 +91,7 @@ typedef struct {
 typedef struct {
     // may get page fault: i.e. hit invalid page or
     // get non-leaf page at last-level page table
-    Maybe#(TlbEntry) entry; 
+    Maybe#(TlbEntry) entry;
     DTlbReqIdx id;
 } DTlbTransRsFromP deriving(Bits, Eq, FShow);
 
@@ -117,6 +122,9 @@ interface DTlb#(type instT);
 
     // performance
     interface Perf#(L1TlbPerfType) perf;
+`ifdef PERFORMANCE_MONITORING
+    method EventsCache events;
+`endif
 endinterface
 
 typedef FullAssocTlb#(DTlbSize) DTlbArray;
@@ -199,6 +207,7 @@ module mkDTlb#(
     Fifo#(1, void) flushRsFromPQ <- mkCFFifo;
 
     // perf counters
+    LatencyTimer#(DTlbReqNum, 12) latTimer <- mkLatencyTimer; // max latency: 4K cycles
     Fifo#(1, L1TlbPerfType) perfReqQ <- mkCFFifo;
 `ifdef PERF_COUNT
     Fifo#(1, PerfResp#(L1TlbPerfType)) perfRespQ <- mkCFFifo;
@@ -210,8 +219,6 @@ module mkDTlb#(
     Count#(Data) missPeerLat <- mkCount(0);
     Count#(Data) hitUnderMissCnt <- mkCount(0);
     Count#(Data) allMissCycles <- mkCount(0);
-
-    LatencyTimer#(DTlbReqNum, 12) latTimer <- mkLatencyTimer; // max latency: 4K cycles
 
     rule doPerf;
         let t <- toGet(perfReqQ).get;
@@ -236,6 +243,9 @@ module mkDTlb#(
         when(all(isMiss, readVReg(pendWait)), allMissCycles.incr(1));
     endrule
 `endif
+`ifdef PERFORMANCE_MONITORING
+    Array #(Reg #(EventsCache)) perf_events <- mkDRegOR (3, unpack (0));
+`endif
 
     // do flush: start when all misses resolve
     Bool noMiss = all(\== (False) , readVReg(pendValid_noMiss));
@@ -246,6 +256,11 @@ module mkDTlb#(
         flushRqToPQ.enq(?);
         waitFlushP <= True;
         if(verbose) $display("[DTLB] flush begin");
+`ifdef PERFORMANCE_MONITORING
+        EventsCache ev = unpack(0);
+        ev.evt_TLB_FLUSH = 1;
+        perf_events[2] <= ev;
+`endif
     endrule
 
     rule doFinishFlush(needFlush && waitFlushP);
@@ -333,9 +348,9 @@ module mkDTlb#(
             ldTransRsFromPQ.deq;
         end
 
-`ifdef PERF_COUNT
         // perf: miss
         let lat <- latTimer.done(idx);
+`ifdef PERF_COUNT
         if(doStats) begin
             if(isValid(respForOtherReq)) begin
                 missPeerLat.incr(zeroExtend(lat));
@@ -347,7 +362,12 @@ module mkDTlb#(
             end
         end
 `endif
-
+`ifdef PERFORMANCE_MONITORING
+        EventsCache ev = unpack(0);
+        ev.evt_TLB_MISS_LAT = saturating_truncate(lat);
+        ev.evt_TLB_MISS = 1;
+        perf_events[0] <= ev;
+`endif
         // conflict with wrong spec
         wrongSpec_doPRs_conflict.wset(?);
     endrule
@@ -516,10 +536,8 @@ module mkDTlb#(
                                  idx, fshow(r));
                     end
                 end
-`ifdef PERF_COUNT
                 // perf: miss
                 latTimer.start(idx);
-`endif
             end
         end
         else begin
@@ -534,6 +552,11 @@ module mkDTlb#(
         if(doStats) begin
             accessCnt.incr(1);
         end
+`endif
+`ifdef PERFORMANCE_MONITORING
+        EventsCache ev = unpack(0);
+        ev.evt_TLB = 1;
+        perf_events[1] <= ev;
 `endif
         // conflict with wrong spec
         wrongSpec_procReq_conflict.wset(?);
@@ -623,4 +646,7 @@ module mkDTlb#(
 `endif
         endmethod
     endinterface
+`ifdef PERFORMANCE_MONITORING
+    method EventsCache events = perf_events[0];
+`endif
 endmodule
