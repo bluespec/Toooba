@@ -165,10 +165,6 @@ interface CommitStage;
 `ifdef PERFORMANCE_MONITORING
    method EventsCore events;
 `endif
-`ifdef DEBUG_WEDGE
-    (* always_enabled *)
-    method Tuple2#(CapMem, Bit#(32)) debugLastInst;
-`endif
 endinterface
 
 // we apply actions the end of commit rule
@@ -632,11 +628,6 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
    endfunction
 `endif
 
-`ifdef DEBUG_WEDGE
-    Reg#(CapMem)   rg_last_pcc  <- mkReg(unpack(0));
-    Reg#(Bit#(32)) rg_last_inst <- mkReg(0);
-`endif
-
     // TODO Currently we don't check spec bits == 0 when we commit an
     // instruction. This is because killings of wrong path instructions are
     // done in a single cycle. However, when we make killings distributed or
@@ -796,13 +787,6 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                     x, no_fflags, no_mstatus, tagged Valid trap_updates, no_ret_updates);
 `endif
           rg_serial_num <= rg_serial_num + 1;
-`ifdef DEBUG_WEDGE
-          Bool is_exception = trap.trap matches tagged Interrupt .i ? False : True;
-          if (is_exception) begin
-              rg_last_pcc  <= trap.pc;
-              rg_last_inst <= trap.orig_inst;
-          end
-`endif
 
           // system consistency
           // TODO spike flushes TLB here, but perhaps it is because spike's TLB
@@ -969,10 +953,6 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                   x, no_fflags, new_mstatus, no_trap_updates, m_ret_updates);
 `endif
         rg_serial_num <= rg_serial_num + 1;
-`ifdef DEBUG_WEDGE
-        rg_last_pcc  <= x.pc;
-        rg_last_inst <= x.orig_inst;
-`endif
 
         // rename stage only sends out system inst when ROB is empty, so no
         // need to flush ROB again
@@ -1110,10 +1090,6 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
        Bit #(5) po_fflags  = ?;
        Data     po_mstatus = ?;
 `endif
-`ifdef DEBUG_WEDGE
-        CapMem   last_pcc  = rg_last_pcc;
-        Bit#(32) last_inst = rg_last_inst;
-`endif
         // compute what actions to take
         for(Integer i = 0; i < valueof(SupSize); i = i+1) begin
             if(!stop && rob.deqPort[i].canDeq) begin
@@ -1155,10 +1131,6 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                              no_trap_updates, no_ret_updates);
 `endif
                     instret = instret + 1;
-`ifdef DEBUG_WEDGE
-                    last_pcc  = x.pc;
-                    last_inst = x.orig_inst;
-`endif
 
                     // inst can be committed, deq it
                     rob.deqPort[i].deq;
@@ -1238,10 +1210,6 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
             end
         end
         rg_serial_num <= rg_serial_num + instret;
-`ifdef DEBUG_WEDGE
-        rg_last_pcc  <= last_pcc;
-        rg_last_inst <= last_inst;
-`endif
 
         // write FPU csr
         if(csrf.fpuInstNeedWr(fflags, will_dirty_fpu_state)) begin
@@ -1379,12 +1347,6 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
 `ifdef PERFORMANCE_MONITORING
    method events = events_reg;
-`endif
-
-`ifdef DEBUG_WEDGE
-    method Tuple2#(CapMem, Bit#(32)) debugLastInst;
-        return tuple2(rg_last_pcc, rg_last_inst);
-    endmethod
 `endif
 
 endmodule
