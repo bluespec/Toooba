@@ -136,13 +136,9 @@ interface Proc_IFC;
 
 `ifdef DEBUG_WEDGE
     (* always_enabled *)
-    method Tuple2 #(CapMem, Bit #(32)) hart0_last_inst;
+    method Tuple2#(CapMem, Bit#(32)) hart0_last_inst;
     (* always_enabled *)
-    method Tuple4 #(Tuple3 #(Bit #(32), Bit #(32), Bit #(32)), Tuple4 #(CapMem, Bit #(32), CapMem, Bit #(32)), Tuple4 #(CapMem, Bit #(32), CapMem, Bit #(32)), void) hart0_debug_rob;
-    (* always_enabled *)
-    method Tuple3 #(Bit #(32), Addr, Addr) hart0_debug_fetch;
-    (* always_enabled *)
-    method Bit #(32) hart0_debug_rename;
+    method Tuple4#(Tuple3#(Bit#(32), Bit#(32), Bit#(32)), Tuple4#(CapMem, Bit#(32), CapMem, Bit#(32)), Tuple4#(CapMem, Bit#(32), CapMem, Bit#(32)), void) hart0_debug_rob;
 `endif
 
 `ifdef PERFORMANCE_MONITORING

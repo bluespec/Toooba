@@ -139,12 +139,6 @@ interface Debug_Module_IFC;
 
    (* always_enabled *)
    method Action hart0_debug_rob (Tuple4 #(Tuple3 #(Bit #(32), Bit #(32), Bit #(32)), Tuple4 #(CapMem, Bit #(32), CapMem, Bit #(32)), Tuple4 #(CapMem, Bit #(32), CapMem, Bit #(32)), void) state);
-
-   (* always_enabled *)
-   method Action hart0_debug_fetch (Tuple3 #(Bit #(32), Addr, Addr) state);
-
-   (* always_enabled *)
-   method Action hart0_debug_rename (Bit #(32) state);
 `endif
 
    // ----------------
@@ -192,12 +186,6 @@ module mkDebug_Module (Debug_Module_IFC);
    Reg #(Bit #(32))          rg_rob_last0_inst    <- mkConfigReg (0);
    Reg #(CapMem)             rg_rob_last1_pcc     <- mkConfigReg (unpack (0));
    Reg #(Bit #(32))          rg_rob_last1_inst    <- mkConfigReg (0);
-
-   Reg #(Bit #(32))          rg_fetch_flags_epoch <- mkConfigReg (0);
-   Reg #(Addr)               rg_fetch_last_itlb   <- mkConfigReg (0);
-   Reg #(Addr)               rg_fetch_last_imem   <- mkConfigReg (0);
-
-   Reg #(Bit #(32))          rg_rename_state      <- mkConfigReg (0);
 `endif
 
    // ================================================================
@@ -317,27 +305,27 @@ module mkDebug_Module (Debug_Module_IFC);
 
 	 else if (dm_addr == dm_addr_custom10)
 
-	    dm_word = rg_fetch_flags_epoch;
+	    dm_word = getAddr (rg_rob_last0_pcc) [31:0];
 
 	 else if (dm_addr == dm_addr_custom11)
 
-	    dm_word = rg_fetch_last_itlb [31:0];
+	    dm_word = getAddr (rg_rob_last0_pcc) [63:32];
 
 	 else if (dm_addr == dm_addr_custom12)
 
-	    dm_word = rg_fetch_last_itlb [63:32];
+	    dm_word = rg_rob_last0_inst;
 
 	 else if (dm_addr == dm_addr_custom13)
 
-	    dm_word = rg_fetch_last_imem [31:0];
+	    dm_word = getAddr (rg_rob_last1_pcc) [31:0];
 
 	 else if (dm_addr == dm_addr_custom14)
 
-	    dm_word = rg_fetch_last_imem [63:32];
+	    dm_word = getAddr (rg_rob_last1_pcc) [63:32];
 
 	 else if (dm_addr == dm_addr_custom15)
 
-	    dm_word = rg_rename_state;
+	    dm_word = rg_rob_last1_inst;
 `endif
 
 	 else begin
@@ -461,16 +449,6 @@ module mkDebug_Module (Debug_Module_IFC);
       rg_rob_last0_inst  <= tpl_2 (tpl_3 (state));
       rg_rob_last1_pcc   <= tpl_3 (tpl_3 (state));
       rg_rob_last1_inst  <= tpl_4 (tpl_3 (state));
-   endmethod
-
-   method Action hart0_debug_fetch (Tuple3 #(Bit #(32), Addr, Addr) state);
-      rg_fetch_flags_epoch <= tpl_1 (state);
-      rg_fetch_last_itlb   <= tpl_2 (state);
-      rg_fetch_last_imem   <= tpl_3 (state);
-   endmethod
-
-   method Action hart0_debug_rename (Bit #(32) state);
-      rg_rename_state <= state;
    endmethod
 `endif
 

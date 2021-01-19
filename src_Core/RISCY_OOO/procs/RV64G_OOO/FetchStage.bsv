@@ -152,10 +152,6 @@ interface FetchStage;
     // debug
     method FetchDebugState getFetchState;
 
-`ifdef DEBUG_WEDGE
-    method Tuple3#(Bit#(32), Addr, Addr) debugFetch;
-`endif
-
     // performance
     interface Perf#(DecStagePerfType) perf;
 endinterface
@@ -564,11 +560,6 @@ module mkFetchStage(FetchStage);
     endrule
 `endif
 
-`ifdef DEBUG_WEDGE
-    Reg#(Addr) lastItlbReq <- mkConfigReg(0);
-    Reg#(Addr) lastImemReq <- mkConfigReg(0);
-`endif
-
     // We don't send req to TLB when waiting for redirect or TLB flush. Since
     // there is no FIFO between doFetch1 and TLB, when OOO commit stage wait
     // TLB idle to change VM CSR / signal flush TLB, there is no wrong path
@@ -606,9 +597,6 @@ module mkFetchStage(FetchStage);
 
         // Send TLB request.
         tlb_server.request.put (getAddr(pc));
-`ifdef DEBUG_WEDGE
-        lastItlbReq <= getAddr(pc) & (~ align32b_mask);
-`endif
 
         let out = Fetch1ToFetch2 {
             pc: pc,
@@ -647,9 +635,6 @@ module mkFetchStage(FetchStage);
                 MainMem: begin
                     // Send ICache request
                     mem_server.request.put(phys_pc);
-`ifdef DEBUG_WEDGE
-                    lastImemReq <= phys_pc;
-`endif
                 end
                 IODevice: begin
                     // Send MMIO req. Luckily boot rom is also aligned with
@@ -658,25 +643,13 @@ module mkFetchStage(FetchStage);
                     // boot rom is less than requested.
                     mmio.bootRomReq(phys_pc, nbSupX2);
                     access_mmio = True;
-`ifdef DEBUG_WEDGE
-                    lastImemReq <= phys_pc;
-`endif
                 end
                 default: begin
                     // Access fault
                     cause = Valid (excInstAccessFault);
-`ifdef DEBUG_WEDGE
-                    lastImemReq <= 'hafafafafafafafaf;
-`endif
                 end
             endcase
         end
-`ifdef DEBUG_WEDGE
-        else begin
-           // TLB exception
-           lastImemReq <= 'heeeeeeeeeeeeeeee;
-        end
-`endif
 `endif
 
         let out = Fetch2ToFetch3 {
@@ -1287,12 +1260,4 @@ module mkFetchStage(FetchStage);
 `endif
     endinterface
 
-`ifdef DEBUG_WEDGE
-    method Tuple3#(Bit#(32), Addr, Addr) debugFetch;
-        Bit#(7) flags = {pack(out_fifo.deqS[1].canDeq), pack(out_fifo.deqS[0].canDeq), pack(f32d.notEmpty), pack(f22f3.notEmpty), pack(f12f2.notEmpty), pack(waitForFlush), pack(waitForRedirect)};
-        Bit #(16) epoch = zeroExtend(f_main_epoch);
-        Bit #(32) flagsEpoch = {8'b0, epoch, 1'b0, flags};
-        return tuple3(flagsEpoch, lastItlbReq, lastImemReq);
-    endmethod
-`endif
 endmodule
