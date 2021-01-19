@@ -209,7 +209,7 @@ interface Core;
     (* always_enabled *)
     method Tuple2#(CapMem, Bit#(32)) debugLastInst;
     (* always_enabled *)
-    method Tuple4#(Tuple3#(Bit#(32), Bit#(32), Bit#(32)), Tuple4#(CapMem, Bit#(32), CapMem, Bit#(32)), Tuple4#(CapMem, Bit#(32), CapMem, Bit#(32)), void) debugRob;
+    method Tuple2#(CapMem, Bit#(32)) debugNextInst;
 `endif
 
 `ifdef PERFORMANCE_MONITORING
@@ -1519,7 +1519,7 @@ module mkCore#(CoreId coreId)(Core);
 
 `ifdef DEBUG_WEDGE
     method Tuple2#(CapMem, Bit#(32)) debugLastInst = commitStage.debugLastInst;
-    method Tuple4#(Tuple3#(Bit#(32), Bit#(32), Bit#(32)), Tuple4#(CapMem, Bit#(32), CapMem, Bit#(32)), Tuple4#(CapMem, Bit#(32), CapMem, Bit#(32)), void) debugRob = rob.debugRob;
+    method Tuple2#(CapMem, Bit#(32)) debugNextInst = rob.debugNextInst;
 `endif
 
 `ifdef PERFORMANCE_MONITORING

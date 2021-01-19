@@ -245,7 +245,7 @@ module mkCoreW #(Reset dm_power_on_reset)
 
 `ifdef DEBUG_WEDGE
    mkConnection (proc.hart0_last_inst, debug_module.hart0_last_inst);
-   mkConnection (proc.hart0_debug_rob, debug_module.hart0_debug_rob);
+   mkConnection (proc.hart0_next_inst, debug_module.hart0_next_inst);
 `endif
 `endif
 

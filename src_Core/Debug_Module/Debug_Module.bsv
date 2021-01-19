@@ -138,7 +138,7 @@ interface Debug_Module_IFC;
    method Action hart0_last_inst (Tuple2 #(CapMem, Bit #(32)) pcc_inst);
 
    (* always_enabled *)
-   method Action hart0_debug_rob (Tuple4 #(Tuple3 #(Bit #(32), Bit #(32), Bit #(32)), Tuple4 #(CapMem, Bit #(32), CapMem, Bit #(32)), Tuple4 #(CapMem, Bit #(32), CapMem, Bit #(32)), void) state);
+   method Action hart0_next_inst (Tuple2 #(CapMem, Bit #(32)) pcc_inst);
 `endif
 
    // ----------------
@@ -172,20 +172,8 @@ module mkDebug_Module (Debug_Module_IFC);
 `ifdef DEBUG_WEDGE
    Reg #(CapMem)             rg_last_pcc          <- mkConfigReg (unpack (0));
    Reg #(Bit #(32))          rg_last_inst         <- mkConfigReg (0);
-
-   Reg #(Bit #(32))          rg_rob_ps_and_ways   <- mkConfigReg (0);
-   Reg #(Bit #(32))          rg_rob_valid0        <- mkConfigReg (0);
-   Reg #(Bit #(32))          rg_rob_valid1        <- mkConfigReg (0);
-
-   Reg #(CapMem)             rg_rob_first0_pcc    <- mkConfigReg (unpack (0));
-   Reg #(Bit #(32))          rg_rob_first0_inst   <- mkConfigReg (0);
-   Reg #(CapMem)             rg_rob_first1_pcc    <- mkConfigReg (unpack (0));
-   Reg #(Bit #(32))          rg_rob_first1_inst   <- mkConfigReg (0);
-
-   Reg #(CapMem)             rg_rob_last0_pcc     <- mkConfigReg (unpack (0));
-   Reg #(Bit #(32))          rg_rob_last0_inst    <- mkConfigReg (0);
-   Reg #(CapMem)             rg_rob_last1_pcc     <- mkConfigReg (unpack (0));
-   Reg #(Bit #(32))          rg_rob_last1_inst    <- mkConfigReg (0);
+   Reg #(CapMem)             rg_next_pcc          <- mkConfigReg (unpack (0));
+   Reg #(Bit #(32))          rg_next_inst         <- mkConfigReg (0);
 `endif
 
    // ================================================================
@@ -269,63 +257,23 @@ module mkDebug_Module (Debug_Module_IFC);
 
 	 else if (dm_addr == dm_addr_custom1)
 
-	    dm_word = rg_rob_ps_and_ways;
+	    dm_word = getAddr (rg_last_pcc) [63:32];
 
 	 else if (dm_addr == dm_addr_custom2)
 
-	    dm_word = rg_rob_valid0;
+	    dm_word = rg_last_inst;
 
 	 else if (dm_addr == dm_addr_custom3)
 
-	    dm_word = rg_rob_valid1;
+	    dm_word = getAddr (rg_next_pcc) [31:0];
 
 	 else if (dm_addr == dm_addr_custom4)
 
-	    dm_word = getAddr (rg_rob_first0_pcc) [31:0];
+	    dm_word = getAddr (rg_next_pcc) [63:32];
 
 	 else if (dm_addr == dm_addr_custom5)
 
-	    dm_word = getAddr (rg_rob_first0_pcc) [63:32];
-
-	 else if (dm_addr == dm_addr_custom6)
-
-	    dm_word = rg_rob_first0_inst;
-
-	 else if (dm_addr == dm_addr_custom7)
-
-	    dm_word = getAddr (rg_rob_first1_pcc) [31:0];
-
-	 else if (dm_addr == dm_addr_custom8)
-
-	    dm_word = getAddr (rg_rob_first1_pcc) [63:32];
-
-	 else if (dm_addr == dm_addr_custom9)
-
-	    dm_word = rg_rob_first1_inst;
-
-	 else if (dm_addr == dm_addr_custom10)
-
-	    dm_word = getAddr (rg_rob_last0_pcc) [31:0];
-
-	 else if (dm_addr == dm_addr_custom11)
-
-	    dm_word = getAddr (rg_rob_last0_pcc) [63:32];
-
-	 else if (dm_addr == dm_addr_custom12)
-
-	    dm_word = rg_rob_last0_inst;
-
-	 else if (dm_addr == dm_addr_custom13)
-
-	    dm_word = getAddr (rg_rob_last1_pcc) [31:0];
-
-	 else if (dm_addr == dm_addr_custom14)
-
-	    dm_word = getAddr (rg_rob_last1_pcc) [63:32];
-
-	 else if (dm_addr == dm_addr_custom15)
-
-	    dm_word = rg_rob_last1_inst;
+	    dm_word = rg_next_inst;
 `endif
 
 	 else begin
@@ -422,33 +370,9 @@ module mkDebug_Module (Debug_Module_IFC);
       rg_last_inst <= tpl_2 (pcc_inst);
    endmethod
 
-   // XXX: Yes the extra void at the end of the tuple is necessary. Without it,
-   // bsc seems to inline the last tuple and destroy the programmer-visible
-   // structure, such that the assignments to rg_rob_lastX_foo need to be
-   // tpl_[3456] (state), *not* tpl_[1234] (tpl_3 (state)), with the latter
-   // giving:
-   //
-   //   The provisos for this expression could not be resolved because there are no
-   //   instances of the form:
-   //       Has_tpl_1#(Bit#(32), Bit#(129))
-   //
-   // for the assignment to rg_rob_last0_pcc, and similarly for the others if
-   // you comment that one out. Just because they're isomorphic doesn't mean
-   // they're interchangeable :(.
-   method Action hart0_debug_rob (Tuple4 #(Tuple3 #(Bit #(32), Bit #(32), Bit #(32)), Tuple4 #(CapMem, Bit #(32), CapMem, Bit #(32)), Tuple4 #(CapMem, Bit #(32), CapMem, Bit #(32)), void) state);
-      rg_rob_ps_and_ways <= tpl_1 (tpl_1 (state));
-      rg_rob_valid0      <= tpl_2 (tpl_1 (state));
-      rg_rob_valid1      <= tpl_3 (tpl_1 (state));
-
-      rg_rob_first0_pcc  <= tpl_1 (tpl_2 (state));
-      rg_rob_first0_inst <= tpl_2 (tpl_2 (state));
-      rg_rob_first1_pcc  <= tpl_3 (tpl_2 (state));
-      rg_rob_first1_inst <= tpl_4 (tpl_2 (state));
-
-      rg_rob_last0_pcc   <= tpl_1 (tpl_3 (state));
-      rg_rob_last0_inst  <= tpl_2 (tpl_3 (state));
-      rg_rob_last1_pcc   <= tpl_3 (tpl_3 (state));
-      rg_rob_last1_inst  <= tpl_4 (tpl_3 (state));
+   method Action hart0_next_inst (Tuple2 #(CapMem, Bit #(32)) pcc_inst);
+      rg_next_pcc  <= tpl_1 (pcc_inst);
+      rg_next_inst <= tpl_2 (pcc_inst);
    endmethod
 `endif
 
