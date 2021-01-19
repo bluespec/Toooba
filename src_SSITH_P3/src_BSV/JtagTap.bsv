@@ -13,7 +13,7 @@ import PowerOnReset ::*;
 import ClockHacks ::*;
 import Giraffe_IFC ::*;
 
-typedef 7 ABITS;
+typedef 6 ABITS;
 `ifdef XILINX_BSCAN
 `ifdef XILINX_XCVU095
 typedef 6 IR_LENGTH;

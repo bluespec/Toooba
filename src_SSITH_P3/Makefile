@@ -40,9 +40,6 @@ BSC_COMPILATION_FLAGS += \
 	-D BRVF_TRACE \
 	-D XILINX_BSCAN  -D JTAG_TAP
 
-# Enable to expose last and next instruction info as DMI registers
-#BSC_COMPILATION_FLAGS += -D DEBUG_WEDGE
-
 # Synth only BSC_COMPILATION_FLAGS
 SYNTH_BSC_OPTIONS = -D XILINX_XCVU9P
 

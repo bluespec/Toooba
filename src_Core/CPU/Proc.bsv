@@ -104,11 +104,6 @@ import ProcTypes   :: *;
 import Trace_Data2 :: *;
 `endif
 
-`ifdef DEBUG_WEDGE
-import CHERICap    :: *;
-import CHERICC_Fat :: *;
-`endif
-
 // ================================================================
 
 (* synthesize *)
@@ -349,11 +344,6 @@ module mkProc (Proc_IFC);
 
 `ifdef INCLUDE_TANDEM_VERIF
    interface v_to_TV = core [0].v_to_TV;
-`endif
-
-`ifdef DEBUG_WEDGE
-    method Tuple2#(CapMem, Bit#(32)) hart0_last_inst = core[0].debugLastInst;
-    method Tuple2#(CapMem, Bit#(32)) hart0_next_inst = core[0].debugNextInst;
 `endif
 
 `ifdef PERFORMANCE_MONITORING

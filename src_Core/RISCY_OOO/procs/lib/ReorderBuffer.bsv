@@ -655,11 +655,6 @@ interface SupReorderBuffer#(numeric type aluExeNum, numeric type fpuMulDivExeNum
     method Bool isFull_ehrPort0;
 
     interface ROB_SpeculationUpdate specUpdate;
-
-`ifdef DEBUG_WEDGE
-    (* always_enabled *)
-    method Tuple2#(CapMem, Bit#(32)) debugNextInst;
-`endif
 endinterface
 
 typedef struct {
@@ -1312,10 +1307,4 @@ module mkSupReorderBuffer#(
             end
         endmethod
     endinterface
-
-`ifdef DEBUG_WEDGE
-    method Tuple2#(CapMem, Bit#(32)) debugNextInst;
-        return tuple2(fifo_first[0].pc, fifo_first[0].orig_inst);
-    endmethod
-`endif
 endmodule

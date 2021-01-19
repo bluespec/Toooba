@@ -47,11 +47,6 @@ import Trace_Data2 :: *;
 import ProcTypes :: *;
 `endif
 
-`ifdef DEBUG_WEDGE
-import CHERICap    :: *;
-import CHERICC_Fat :: *;
-`endif
-
 // ================================================================
 // CPU interface
 
@@ -132,13 +127,6 @@ interface Proc_IFC;
    // appears exactly once in exactly one of the streams. Thus, the
    // channels can easily be merged into a single program-order stream.
    interface Vector #(SupSize, Get #(Trace_Data2)) v_to_TV;
-`endif
-
-`ifdef DEBUG_WEDGE
-    (* always_enabled *)
-    method Tuple2#(CapMem, Bit#(32)) hart0_last_inst;
-    (* always_enabled *)
-    method Tuple2#(CapMem, Bit#(32)) hart0_next_inst;
 `endif
 
 `ifdef PERFORMANCE_MONITORING
