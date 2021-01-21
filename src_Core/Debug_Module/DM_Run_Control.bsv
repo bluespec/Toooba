@@ -274,12 +274,12 @@ module mkDM_Run_Control (DM_Run_Control_IFC);
 	    else if (resumereq && (! rg_harts_running[hartsel])) begin
 	       f_harts_run_halt_reqs[hartsel].enq (True);
 	       rg_harts_resumeack[hartsel] <= False;
-	       $display ("%0d: %m.dmcontrol_write: hart %i resume request", cur_cycle, hartsel);
+	       $display ("%0d: %m.dmcontrol_write: hart %0d resume request", cur_cycle, hartsel);
 	    end
 	    // Halt hart(s)
 	    else if (haltreq && rg_harts_running[hartsel]) begin
 	       f_harts_run_halt_reqs[hartsel].enq (False);
-	       $display ("%0d: %m.dmcontrol_write: hart %i halt request", cur_cycle, hartsel);
+	       $display ("%0d: %m.dmcontrol_write: hart %0d halt request", cur_cycle, hartsel);
 	    end
 	 end
       endaction
@@ -311,7 +311,7 @@ module mkDM_Run_Control (DM_Run_Control_IFC);
 	 rg_harts_running[core]  <= running;
 
 	 if (verbosity != 0)
-	    $display ("%0d: %m.rl_harts_reset_rsp: hart %i running = ", cur_cycle, core, fshow (running));
+	    $display ("%0d: %m.rl_harts_reset_rsp: hart %0d running = ", cur_cycle, core, fshow (running));
    endrule
 
    // Response from system for NDM reset
@@ -333,7 +333,7 @@ module mkDM_Run_Control (DM_Run_Control_IFC);
 	    rg_harts_resumeack[core] <= True;
 
       if (verbosity != 0)
-	    $display ("%0d: %m.rl_harts_run_rsp hart: hart %i 'running' = ", cur_cycle, core, fshow (running));
+	    $display ("%0d: %m.rl_harts_run_rsp hart: hart %0d 'running' = ", cur_cycle, core, fshow (running));
    endrule
 
    // ----------------------------------------------------------------
