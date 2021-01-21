@@ -133,11 +133,13 @@ module mkCoreW #(Reset dm_power_on_reset)
    let clk <- exposeCurrentClock;
    Bool    initial_reset_val   = False;
    Integer hart_reset_duration = 10;    // NOTE: assuming 10 cycle reset enough for hart
-   let dm_hart0_reset_controller <- mkReset(hart_reset_duration, initial_reset_val, clk);
+   Vector #(CoreNum, MakeResetIfc) dm_harts_reset_controller <- replicateM(mkReset(hart_reset_duration, initial_reset_val, clk));
 
-   let hart0_reset <- mkResetEither (ndm_reset, dm_hart0_reset_controller.new_rst);
+   function Reset proj_new_rst (MakeResetIfc x) = x.new_rst;
+
+   let all_harts_reset <- foldlM (mkResetEither, ndm_reset, map (proj_new_rst, dm_harts_reset_controller));
 `else
-   let hart0_reset = ndm_reset;
+   let all_harts_reset = ndm_reset;
 `endif
 
    // ================================================================
@@ -148,7 +150,7 @@ module mkCoreW #(Reset dm_power_on_reset)
 
    // RISCY-OOO processor
    // TODO (when we do multicore): need resets for each core.
-   Proc_IFC proc <- mkProc (reset_by hart0_reset);
+   Proc_IFC proc <- mkProc (reset_by all_harts_reset);
 
    // A 2x3 fabric for connecting {CPU, Debug_Module} to {Fabric, PLIC}
    Fabric_2x3_IFC  fabric_2x3 <- mkFabric_2x3;
@@ -175,29 +177,32 @@ module mkCoreW #(Reset dm_power_on_reset)
    // Hart-reset from DM
 
 `ifdef INCLUDE_GDB_CONTROL
-   Reg #(Bit #(8))  rg_hart0_reset_delay <- mkReg (0);
+   Reg #(Bit #(8))  rg_harts_reset_delay <- mkReg (0);
    Reg #(Bit #(64)) rg_tohost_addr       <- mkReg (0);
    Reg #(Bit #(64)) rg_fromhost_addr     <- mkReg (0);
 
-   rule rl_dm_hart0_reset (rg_hart0_reset_delay == 0);
-      let x <- debug_module.hart0_reset_client.request.get;
-      dm_hart0_reset_controller.assertReset;
-      rg_hart0_reset_delay <= fromInteger (hart_reset_duration + 200);    // NOTE: heuristic
+   for (Integer core = 0; core < valueOf(CoreNum); core = core + 1)
+      rule rl_dm_harts_reset (rg_harts_reset_delay == 0);
+	 let x <- debug_module.harts_reset_client[core].request.get;
+	 dm_harts_reset_controller[core].assertReset;
+	 rg_harts_reset_delay <= fromInteger (hart_reset_duration + 200);    // NOTE: heuristic
 
-      $display ("%0d: %m.rl_dm_hart0_reset: asserting hart0 reset for %0d cycles",
-		cur_cycle, hart_reset_duration);
+	 $display ("%0d: %m.rl_dm_harts_reset: asserting harts reset for %0d cycles",
+                cur_cycle, hart_reset_duration);
    endrule
 
-   rule rl_dm_hart0_reset_wait (rg_hart0_reset_delay != 0);
-      if (rg_hart0_reset_delay == 1) begin
-	 let pc      = soc_map_struct.pc_reset_value;
-	 Bool is_running = True;
-	 proc.start (is_running, pc, rg_tohost_addr, rg_fromhost_addr);
-	 debug_module.hart0_reset_client.response.put (is_running);
-	 $display ("%0d: %m.rl_dm_hart0_reset_wait: proc.start (pc %0h, tohostAddr %0h, fromhostAddr %0h",
-		   cur_cycle, pc, rg_tohost_addr, rg_fromhost_addr);
+   rule rl_dm_harts_reset_wait (rg_harts_reset_delay != 0);
+      if (rg_harts_reset_delay == 1) begin
+         let pc = soc_map_struct.pc_reset_value;
+         Bool is_running = True;
+      	proc.start (is_running, pc, rg_tohost_addr, rg_fromhost_addr);
+         // We reset all the harts, so we indicate this to the DM, even though it's possible only one hart was requested to reset
+         for (Integer core = 0; core < valueOf(CoreNum); core = core + 1)
+      	   debug_module.harts_reset_client[core].response.put (is_running);
+         $display ("%0d: %m.rl_dm_harts_reset_wait: proc.start (pc %0h, tohostAddr %0h, fromhostAddr %0h",
+                   cur_cycle, pc, rg_tohost_addr, rg_fromhost_addr);
       end
-      rg_hart0_reset_delay <= rg_hart0_reset_delay - 1;
+      rg_harts_reset_delay <= rg_harts_reset_delay - 1;
    endrule
 
 `endif
@@ -206,8 +211,8 @@ module mkCoreW #(Reset dm_power_on_reset)
    // ================================================================
    // Direct DM-to-CPU connections for run-control and other misc requests
 
-   mkConnection (debug_module.hart0_client_run_halt, proc.hart0_run_halt_server);
-   mkConnection (debug_module.hart0_get_other_req,   proc.hart0_put_other_req);
+   mkConnection (debug_module.harts_client_run_halt, proc.harts_run_halt_server);
+   mkConnection (debug_module.harts_get_other_req,   proc.harts_put_other_req);
 `endif
 
 `ifdef INCLUDE_TANDEM_VERIF
@@ -288,15 +293,15 @@ module mkCoreW #(Reset dm_power_on_reset)
    // BEGIN SECTION: DM, no TV
 
    // Connect DM's GPR interface directly to CPU
-   mkConnection (debug_module.hart0_gpr_mem_client, proc.hart0_gpr_mem_server);
+   mkConnection (debug_module.harts_gpr_mem_client, proc.harts_gpr_mem_server);
 
 `ifdef ISA_F_OR_D
    // Connect DM's FPR interface directly to CPU
-   mkConnection (debug_module.hart0_fpr_mem_client, proc.hart0_fpr_mem_server);
+   mkConnection (debug_module.harts_fpr_mem_client, proc.harts_fpr_mem_server);
 `endif
 
    // Connect DM's CSR interface directly to CPU
-   mkConnection (debug_module.hart0_csr_mem_client, proc.hart0_csr_mem_server);
+   mkConnection (debug_module.harts_csr_mem_client, proc.harts_csr_mem_server);
 
    // DM's bus master is directly the bus master
    let dm_master_local = debug_module.master;
@@ -373,7 +378,7 @@ module mkCoreW #(Reset dm_power_on_reset)
       proc.start (is_running, pc, tohost_addr, fromhost_addr);
 
 `ifdef INCLUDE_GDB_CONTROL
-      // Save for potential future use by rl_dm_hart0_reset
+      // Save for potential future use by rl_dm_harts_reset
       rg_tohost_addr   <= tohost_addr;
       rg_fromhost_addr <= fromhost_addr;
 `endif

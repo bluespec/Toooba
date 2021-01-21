@@ -18,13 +18,15 @@ import ISA_Decls  :: *;
 
 import AXI4_Types  :: *;
 import Fabric_Defs :: *;
+import SoC_Map :: *;
+import CCTypes :: *;
+import ProcTypes :: *;
 
 `ifdef INCLUDE_GDB_CONTROL
 import DM_CPU_Req_Rsp :: *;
 `endif
 
 `ifdef INCLUDE_TANDEM_VERIF
-import ProcTypes   :: *;
 import Trace_Data2 :: *;
 `endif
 
@@ -80,15 +82,15 @@ interface Proc_IFC;
    // Optional interface to Debug Module
 
 `ifdef INCLUDE_GDB_CONTROL
-   interface Server #(Bool, Bool)                                 hart0_run_halt_server;
-   interface Server #(DM_CPU_Req #(5,  XLEN), DM_CPU_Rsp #(XLEN)) hart0_gpr_mem_server;
+   interface Vector #(CoreNum, Server #(Bool, Bool))                                 harts_run_halt_server;
+   interface Vector #(CoreNum, Server #(DM_CPU_Req #(5,  XLEN), DM_CPU_Rsp #(XLEN))) harts_gpr_mem_server;
 `ifdef ISA_F
-   interface Server #(DM_CPU_Req #(5,  FLEN), DM_CPU_Rsp #(FLEN)) hart0_fpr_mem_server;
+   interface Vector #(CoreNum, Server #(DM_CPU_Req #(5,  FLEN), DM_CPU_Rsp #(FLEN))) harts_fpr_mem_server;
 `endif
-   interface Server #(DM_CPU_Req #(12, XLEN), DM_CPU_Rsp #(XLEN)) hart0_csr_mem_server;
+   interface Vector #(CoreNum, Server #(DM_CPU_Req #(12, XLEN), DM_CPU_Rsp #(XLEN))) harts_csr_mem_server;
 
    // Non-standard
-   interface Put #(Bit #(4))                                      hart0_put_other_req;
+   interface Vector #(CoreNum, Put #(Bit #(4)))                                      harts_put_other_req;
 `endif
 
 `ifdef INCLUDE_TANDEM_VERIF

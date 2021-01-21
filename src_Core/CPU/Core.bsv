@@ -164,12 +164,12 @@ interface Core;
     method Action setSEIP (Bit #(1) v);
 
 `ifdef INCLUDE_GDB_CONTROL
-   interface Server #(Bool, Bool)                             hart0_run_halt_server;
-   interface Server #(DM_CPU_Req #(5, 64),  DM_CPU_Rsp #(64)) hart0_gpr_mem_server;
+   interface Server #(Bool, Bool)                             hart_run_halt_server;
+   interface Server #(DM_CPU_Req #(5, 64),  DM_CPU_Rsp #(64)) hart_gpr_mem_server;
 `ifdef ISA_F
-   interface Server #(DM_CPU_Req #(5, 64),  DM_CPU_Rsp #(64)) hart0_fpr_mem_server;
+   interface Server #(DM_CPU_Req #(5, 64),  DM_CPU_Rsp #(64)) hart_fpr_mem_server;
 `endif
-   interface Server #(DM_CPU_Req #(12, 64), DM_CPU_Rsp #(64)) hart0_csr_mem_server;
+   interface Server #(DM_CPU_Req #(12, 64), DM_CPU_Rsp #(64)) hart_csr_mem_server;
 `endif
 
 `ifdef INCLUDE_TANDEM_VERIF
@@ -1440,12 +1440,12 @@ module mkCore#(CoreId coreId)(Core);
     method Action setSEIP (v) = csrf.setSEIP (v);
 
 `ifdef INCLUDE_GDB_CONTROL
-   interface Server  hart0_run_halt_server = toGPServer (f_run_halt_reqs, f_run_halt_rsps);
-   interface Server  hart0_gpr_mem_server  = toGPServer (f_gpr_reqs, f_gpr_rsps);
+   interface Server  hart_run_halt_server = toGPServer (f_run_halt_reqs, f_run_halt_rsps);
+   interface Server  hart_gpr_mem_server  = toGPServer (f_gpr_reqs, f_gpr_rsps);
 `ifdef ISA_F
-   interface Server  hart0_fpr_mem_server  = toGPServer (f_fpr_reqs, f_fpr_rsps);
+   interface Server  hart_fpr_mem_server  = toGPServer (f_fpr_reqs, f_fpr_rsps);
 `endif
-   interface Server  hart0_csr_mem_server  = toGPServer (f_csr_reqs, f_csr_rsps);
+   interface Server  hart_csr_mem_server  = toGPServer (f_csr_reqs, f_csr_rsps);
 `endif
 
 `ifdef INCLUDE_TANDEM_VERIF
