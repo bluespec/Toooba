@@ -71,6 +71,7 @@ import FIFO         :: *;
 import GetPut       :: *;
 import ClientServer :: *;
 import SpecialFIFOs :: *;
+import Vector       :: *;
 
 // ----------------
 // Other library imports
@@ -84,6 +85,7 @@ import AXI4       :: *;
 
 import ISA_Decls    :: *;
 import Fabric_Defs  :: *;
+import ProcTypes    :: *;
 
 import DM_Common            :: *;
 import DM_CPU_Req_Rsp       :: *;
@@ -111,20 +113,20 @@ interface Debug_Module_IFC;
    // This section replicated for additional harts.
 
    // Reset and run-control
-   interface Client #(Bool, Bool) hart0_reset_client;
-   interface Client #(Bool, Bool) hart0_client_run_halt;
-   interface Get #(Bit #(4))      hart0_get_other_req;
+   interface Vector #(CoreNum, Client #(Bool, Bool)) harts_reset_client;
+   interface Vector #(CoreNum, Client #(Bool, Bool)) harts_client_run_halt;
+   interface Vector #(CoreNum, Get #(Bit #(4)))      harts_get_other_req;
 
    // GPR access
-   interface Client #(DM_CPU_Req #(5,  XLEN), DM_CPU_Rsp #(XLEN)) hart0_gpr_mem_client;
+   interface Vector #(CoreNum, Client #(DM_CPU_Req #(5,  XLEN), DM_CPU_Rsp #(XLEN))) harts_gpr_mem_client;
 
    // FPR access
 `ifdef ISA_F
-   interface Client #(DM_CPU_Req #(5,  FLEN), DM_CPU_Rsp #(FLEN)) hart0_fpr_mem_client;
+   interface Vector #(CoreNum, Client #(DM_CPU_Req #(5,  FLEN), DM_CPU_Rsp #(FLEN))) harts_fpr_mem_client;
 `endif
 
    // CSR access
-   interface Client #(DM_CPU_Req #(12, XLEN), DM_CPU_Rsp #(XLEN)) hart0_csr_mem_client;
+   interface Vector #(CoreNum, Client #(DM_CPU_Req #(12, XLEN), DM_CPU_Rsp #(XLEN))) harts_csr_mem_client;
 
    // ----------------
    // Facing Platform
@@ -187,13 +189,11 @@ module mkDebug_Module (Debug_Module_IFC);
 	 if (   (dm_addr == dm_addr_dmcontrol)
 	    || (dm_addr == dm_addr_dmstatus)
 	    || (dm_addr == dm_addr_hartinfo)
-	    || (dm_addr == dm_addr_haltsum)
+	    || (dm_addr == dm_addr_haltsum0)
 	    || (dm_addr == dm_addr_hawindowsel)
 	    || (dm_addr == dm_addr_hawindow)
 	    || (dm_addr == dm_addr_devtreeaddr0)
 	    || (dm_addr == dm_addr_authdata)
-	    || (dm_addr == dm_addr_haltregion0)
-	    || (dm_addr == dm_addr_haltregion31)
 	    || (dm_addr == dm_addr_verbosity))
 
 	    dm_word <- dm_run_control.av_read (dm_addr);
@@ -241,21 +241,25 @@ module mkDebug_Module (Debug_Module_IFC);
       endmethod
 
       method Action write (DM_Addr dm_addr, DM_Word dm_word) if (dm_run_control.dmactive);
+
+	 Bool handled = False;
+
 	 if (   (dm_addr == dm_addr_dmcontrol)
 	    || (dm_addr == dm_addr_dmstatus)
 	    || (dm_addr == dm_addr_hartinfo)
-	    || (dm_addr == dm_addr_haltsum)
+	    || (dm_addr == dm_addr_haltsum0)
 	    || (dm_addr == dm_addr_hawindowsel)
 	    || (dm_addr == dm_addr_hawindow)
 	    || (dm_addr == dm_addr_devtreeaddr0)
 	    || (dm_addr == dm_addr_authdata)
-	    || (dm_addr == dm_addr_haltregion0)
-	    || (dm_addr == dm_addr_haltregion31)
-	    || (dm_addr == dm_addr_verbosity))
+	    || (dm_addr == dm_addr_verbosity)) begin
 
 	    dm_run_control.write (dm_addr, dm_word);
+	    handled = True;
+	 end
 
-	 else if (   (dm_addr == dm_addr_abstractcs)
+	 if (  (dm_addr == dm_addr_dmcontrol)
+	    || (dm_addr == dm_addr_abstractcs)
 		  || (dm_addr == dm_addr_command)
 		  || (dm_addr == dm_addr_data0)
 		  || (dm_addr == dm_addr_data1)
@@ -270,22 +274,26 @@ module mkDebug_Module (Debug_Module_IFC);
 		  || (dm_addr == dm_addr_data10)
 		  || (dm_addr == dm_addr_data11)
 		  || (dm_addr == dm_addr_abstractauto)
-		  || (dm_addr == dm_addr_progbuf0))
+	    || (dm_addr == dm_addr_progbuf0)) begin
 
 	    dm_abstract_commands.write (dm_addr, dm_word);
+	    handled = True;
+	 end
 
-	 else if (   (dm_addr == dm_addr_sbcs)
+	 if (  (dm_addr == dm_addr_sbcs)
 		  || (dm_addr == dm_addr_sbaddress0)
 		  || (dm_addr == dm_addr_sbaddress1)
 		  || (dm_addr == dm_addr_sbaddress2)
 		  || (dm_addr == dm_addr_sbdata0)
 		  || (dm_addr == dm_addr_sbdata1)
 		  || (dm_addr == dm_addr_sbdata2)
-		  || (dm_addr == dm_addr_sbdata3))
+	    || (dm_addr == dm_addr_sbdata3)) begin
 
 	    dm_system_bus.write (dm_addr, dm_word);
+	    handled = True;
+	 end
 
-	 else begin
+	 if (! handled) begin
 	    // TODO: set error status?
 	    noAction;
 	 end
@@ -297,23 +305,23 @@ module mkDebug_Module (Debug_Module_IFC);
    endinterface
 
    // ----------------
-   // Facing CPU/hart0
+   // Facing CPU/harts
 
    // Reset and run-control
-   interface Client hart0_reset_client    = dm_run_control.hart0_reset_client;
-   interface Client hart0_client_run_halt = dm_run_control.hart0_client_run_halt;
-   interface Get    hart0_get_other_req   = dm_run_control.hart0_get_other_req;
+   interface harts_reset_client    = dm_run_control.harts_reset_client;
+   interface harts_client_run_halt = dm_run_control.harts_client_run_halt;
+   interface harts_get_other_req   = dm_run_control.harts_get_other_req;
 
    // GPR access
-   interface Client hart0_gpr_mem_client = dm_abstract_commands.hart0_gpr_mem_client;
+   interface harts_gpr_mem_client = dm_abstract_commands.harts_gpr_mem_client;
 
    // FPR access
 `ifdef ISA_F
-   interface Client hart0_fpr_mem_client = dm_abstract_commands.hart0_fpr_mem_client;
+   interface harts_fpr_mem_client = dm_abstract_commands.harts_fpr_mem_client;
 `endif
 
    // CSR access
-   interface Client hart0_csr_mem_client = dm_abstract_commands.hart0_csr_mem_client;
+   interface harts_csr_mem_client = dm_abstract_commands.harts_csr_mem_client;
 
    // ----------------
    // Facing Platform
