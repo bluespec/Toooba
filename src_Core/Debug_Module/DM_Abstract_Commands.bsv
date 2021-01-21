@@ -284,7 +284,7 @@ module mkDM_Abstract_Commands (DM_Abstract_Commands_IFC);
 	 rg_start_reg_access <= False;
 
 	 if (verbosity != 0)
-	    $display ("%0d: DM_Abstract_Commands.rl_csr_write_start hart %i: ", cur_cycle, core, fshow (req));
+	    $display ("%0d: DM_Abstract_Commands.rl_csr_write_start hart %0d: ", cur_cycle, core, fshow (req));
       endrule
 
       // ----------------
@@ -296,7 +296,7 @@ module mkDM_Abstract_Commands (DM_Abstract_Commands_IFC);
 				   && is_csr);
 	       let rsp <- pop (f_harts_csr_rsps[core]);
 	       if (verbosity != 0)
-		  $display ("%0d: DM_Abstract_Commands.rl_csr_write_finish hart %i: ", cur_cycle, core, fshow (rsp));
+		  $display ("%0d: DM_Abstract_Commands.rl_csr_write_finish hart %0d: ", cur_cycle, core, fshow (rsp));
 
 	       rg_abstractcs_cmderr <= (rsp.ok ? DM_ABSTRACTCS_CMDERR_NONE : DM_ABSTRACTCS_CMDERR_HALT_RESUME);
 	       rg_abstractcs_busy   <= False;
@@ -318,7 +318,7 @@ module mkDM_Abstract_Commands (DM_Abstract_Commands_IFC);
 	 rg_start_reg_access <= False;
 
 	 if (verbosity != 0)
-	    $display ("%0d: DM_Abstract_Commands.rl_csr_read_start hart %i: ", cur_cycle, core, fshow (req));
+	    $display ("%0d: DM_Abstract_Commands.rl_csr_read_start hart %0d: ", cur_cycle, core, fshow (req));
       endrule
 
       // ----------------
@@ -330,7 +330,7 @@ module mkDM_Abstract_Commands (DM_Abstract_Commands_IFC);
 				     && is_csr);
 	       let rsp <- pop (f_harts_csr_rsps[core]);
 	       if (verbosity != 0)
-		  $display ("%0d: DM_Abstract_Commands.rl_csr_read_finish hart %i: ", cur_cycle, core, fshow (rsp));
+		  $display ("%0d: DM_Abstract_Commands.rl_csr_read_finish hart %0d: ", cur_cycle, core, fshow (rsp));
 
 	       rg_abstractcs_cmderr <= (rsp.ok ? DM_ABSTRACTCS_CMDERR_NONE : DM_ABSTRACTCS_CMDERR_HALT_RESUME);
 `ifdef RV32
@@ -365,7 +365,7 @@ module mkDM_Abstract_Commands (DM_Abstract_Commands_IFC);
 	 f_harts_gpr_reqs[core].enq (req);
 	 rg_start_reg_access <= False;
 	 if (verbosity != 0)
-	    $display ("%0d: DM_Abstract_Commands.rl_gpr_write_start hart %i: ", cur_cycle, core, fshow (req));
+	    $display ("%0d: DM_Abstract_Commands.rl_gpr_write_start hart %0d: ", cur_cycle, core, fshow (req));
       endrule
 
       // ----------------
@@ -377,7 +377,7 @@ module mkDM_Abstract_Commands (DM_Abstract_Commands_IFC);
 				      && is_gpr);
 	       let rsp <- pop (f_harts_gpr_rsps[core]);
 	       if (verbosity != 0)
-		  $display ("%0d: DM_Abstract_Commands.rl_gpr_write_finish hart %i: ", cur_cycle, core, fshow (rsp));
+		  $display ("%0d: DM_Abstract_Commands.rl_gpr_write_finish hart %0d: ", cur_cycle, core, fshow (rsp));
 
 	       rg_abstractcs_cmderr <= (rsp.ok ? DM_ABSTRACTCS_CMDERR_NONE : DM_ABSTRACTCS_CMDERR_HALT_RESUME);
 	       rg_abstractcs_busy   <= False;
@@ -399,7 +399,7 @@ module mkDM_Abstract_Commands (DM_Abstract_Commands_IFC);
 	 rg_start_reg_access <= False;
 
 	 if (verbosity != 0)
-	    $display ("%0d: DM_Abstract_Commands.rl_gpr_read_start hart %i: ", cur_cycle, core, fshow (req));
+	    $display ("%0d: DM_Abstract_Commands.rl_gpr_read_start hart %0d: ", cur_cycle, core, fshow (req));
       endrule
 
       // ----------------
@@ -411,7 +411,7 @@ module mkDM_Abstract_Commands (DM_Abstract_Commands_IFC);
 				     && is_gpr);
 	       let rsp <- pop (f_harts_gpr_rsps[core]);
 	       if (verbosity != 0)
-		  $display ("%0d: DM_Abstract_Commands.rl_gpr_read_finish hart %i: ", cur_cycle, core, fshow (rsp));
+		  $display ("%0d: DM_Abstract_Commands.rl_gpr_read_finish hart %0d: ", cur_cycle, core, fshow (rsp));
 
 `ifdef RV32
 	       rg_data0 <= rsp.data;
@@ -448,7 +448,7 @@ module mkDM_Abstract_Commands (DM_Abstract_Commands_IFC);
 	 f_harts_fpr_reqs[core].enq (req);
 	 rg_start_reg_access <= False;
 	 if (verbosity != 0)
-	    $display ("%0d: DM_Abstract_Commands.rl_fpr_write_start hart %i: ", cur_cycle, core, fshow (req));
+	    $display ("%0d: DM_Abstract_Commands.rl_fpr_write_start hart %0d: ", cur_cycle, core, fshow (req));
       endrule
 
       // ----------------
@@ -460,7 +460,7 @@ module mkDM_Abstract_Commands (DM_Abstract_Commands_IFC);
 				      && is_fpr);
 	       let rsp <- pop (f_harts_fpr_rsps[core]);
 	       if (verbosity != 0)
-		  $display ("%0d: DM_Abstract_Commands.rl_fpr_write_finish hart %i: ", cur_cycle, core, fshow (rsp));
+		  $display ("%0d: DM_Abstract_Commands.rl_fpr_write_finish hart %0d: ", cur_cycle, core, fshow (rsp));
 
 	       rg_abstractcs_cmderr <= (rsp.ok ? DM_ABSTRACTCS_CMDERR_NONE : DM_ABSTRACTCS_CMDERR_HALT_RESUME);
 	       rg_abstractcs_busy   <= False;
@@ -482,7 +482,7 @@ module mkDM_Abstract_Commands (DM_Abstract_Commands_IFC);
 	 rg_start_reg_access <= False;
 
 	 if (verbosity != 0)
-	    $display ("%0d: DM_Abstract_Commands.rl_fpr_read_start hart %i: ", cur_cycle, core, fshow (req));
+	    $display ("%0d: DM_Abstract_Commands.rl_fpr_read_start hart %0d: ", cur_cycle, core, fshow (req));
       endrule
 
       // ----------------
@@ -598,8 +598,10 @@ module mkDM_Abstract_Commands (DM_Abstract_Commands_IFC);
 	    rg_dmcontrol_hartsel <= fn_dmcontrol_hartsel(dm_word);
 	    // It is specified that the debugger must not change hartsel while this module is busy.
 	    // If this is done, the debug unit will wedge, so print a warning.
-	    $display ("%0d: DM_Abstract_Commands.write: [", cur_cycle, dm_addr_name,
-		      "] <= 0x%08h: ERROR: must not change hartsel while busy", dm_word);
+	    if (rg_abstractcs_busy) begin
+	       $display ("%0d: DM_Abstract_Commands.write: [", cur_cycle, dm_addr_name,
+			 "] <= 0x%08h: ERROR: must not change hartsel while busy", dm_word);
+	    end
 	 end
 
 	 else if (dm_addr == dm_addr_abstractcs)

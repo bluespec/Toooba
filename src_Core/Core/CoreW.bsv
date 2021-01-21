@@ -163,7 +163,7 @@ module mkCoreW #(Reset dm_power_on_reset)
    SoC_Map_IFC  soc_map  <- mkSoC_Map;
 
    // RISCY-OOO processor
-   // TODO (when we do multicore): need resets for each core.
+   // TODO: could have separate resets for each core.
    Proc_IFC proc <- mkProc (reset_by all_harts_reset);
 
    // handle uncached interface
