@@ -852,7 +852,10 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
       // Send a load-request to the fabric adapter.
       // Align addr to 8-byte boundary (FabricData-aligned)
       Addr addr1 = { addr [63:3], 3'b_000 };
-      let req = MMIOCRq {addr:addr, func:tagged Ld, byteEn:?, data:?};
+      // Byte enables are used in the AXI adapter to determine the size of the req. Set 8 bits (it
+      // doesn't matter which) to preserve the behaviour of requesting 8 bytes).
+      // TODO: instead specify access size in interface
+      let req = MMIOCRq {addr:addr, func:tagged Ld, byteEn:unpack(16'b0000_0000_1111_1111), data:?};
       mmio_fabric_adapter_core_side.request.put (req);
       state <= WaitResp;
       amoWaitWriteResp <= False;
@@ -927,7 +930,10 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
       // Note: addr may not be FabricData-aligned; result will be Data that contains addr
       // TODO: currently assumes superscalarity fits in fabric width
       Addr addr1 = { addr [63:3], 3'b_000 };
-      let req = MMIOCRq {addr:addr1, func: tagged Ld, byteEn: ?, data: ? };
+      // Byte enables are used in the AXI adapter to determine the size of the req. Set 8 bits (it
+      // doesn't matter which) to preserve the behaviour of requesting 8 bytes).
+      // TODO: instead specify access size in interface
+      let req = MMIOCRq {addr:addr1, func: tagged Ld, byteEn: unpack(16'b0000_0000_1111_1111), data: ? };
       mmio_fabric_adapter_core_side.request.put (req);
       state <= WaitResp;
 

@@ -103,6 +103,13 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
    Reg #(Bit #(1)) rg_rd_rsp_beat <- mkReg (0);
    Reg #(MemTaggedData) rspData <- mkReg (unpack(0));
 
+   // ================================================================
+   // Convert a request's byte enables to an AXI 4 size, to ensure that
+   // peripherals don't get confused about how large our access is.
+   function AXI4_Size byteEnToAxiSize (MemDataByteEn byteEn);
+      return toAXI4_Size(zeroExtend(pack(countIf(id, byteEn)))).Valid;
+   endfunction
+
    rule rl_handle_read_req (f_reqs_from_core.first.func matches Ld
                             &&& (ctr_wr_rsps_pending.value == 0));
       let req <- pop (f_reqs_from_core);
@@ -119,7 +126,7 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
       // necessary; the AXI4 fabric should return a DECERR for illegal
       // addrs; but not all AXI4 fabrics do the right thing.
       if (soc_map.m_is_IO_addr (req.addr, False)) begin
-         AXI4_Size size = 8;
+         AXI4_Size size = byteEnToAxiSize(req.byteEn);
          let mem_req_rd_addr = AXI4_ARFlit {arid:     fabric_2x3_default_mid,
                                             araddr:   req.addr,
                                             arlen:    (burst) ? 1:0,           // burst len = arlen+1
@@ -211,7 +218,7 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
          // on first flit...
          // ================
          if (first) begin
-            AXI4_Size  size = 8;
+            AXI4_Size size = byteEnToAxiSize(req.byteEn);
             AXI4_AWFlit #(Wd_MId_2x3, Wd_Addr, Wd_AW_User)
                 mem_req_wr_addr = AXI4_AWFlit {awid:     fabric_2x3_default_mid,
                                                awaddr:   req.addr,
