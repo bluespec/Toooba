@@ -234,6 +234,8 @@ module mkProc (Proc_IFC);
       end
    endrule
 
+
+`ifdef INCLUDE_GDB_CONTROL
    let emptyPut = interface Put
        method put (x) = noAction;
    endinterface;
@@ -243,6 +245,7 @@ module mkProc (Proc_IFC);
    function proj_fpr_mem_server (x) = x.hart_fpr_mem_server;
 `endif
    function proj_csr_mem_server (x) = x.hart_csr_mem_server;
+`endif
 
    // ================================================================
    // ================================================================
