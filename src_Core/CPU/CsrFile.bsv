@@ -1135,7 +1135,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
             tagged Interrupt .i: return mideleg_csr[pack(i)] == 1;
         endcase);
         // handle the trap
-        if(deleg) begin // handle in S mode
+        //if(deleg) begin // handle in S mode
             // ie/prv stack
             prev_prv_vec[prvS] <= prv_reg;
             prv_reg <= prvS;
@@ -1165,41 +1165,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
                                  tval:   trap_val
 `endif
                                  };
-        end
-        else begin
-            // ie/prv stack
-            prev_prv_vec[prvM] <= prv_reg;
-            prv_reg <= prvM;
-            prev_ie_vec[prvM] <= ie_vec[prvM];
-            ie_vec[prvM] <= 0;
-            // record trap info
-            mepcc_reg[0] <= cast(pcc);
-            mcause_interrupt_reg <= cause_interrupt;
-            mcause_code_reg <= cause_code;
-            mtval_csr <= trap_val;
-            // return next pc
-            Data mstatus_val = fn_mstatus_val (sxl_reg, uxl_reg,
-                                               tsr_reg, tw_reg,  tvm_reg,
-                                               mxr_reg, sum_reg, mprv_reg,
-                                               xs_reg,  fs_reg,
-                                               /* mpp */ prv_reg, spp_reg,
-                                               /* prev_ie_vec [prvM] */ ie_vec [prvM],
-                                               prev_ie_vec [prvS],
-                                               prev_ie_vec [prvU],
-                                               /* ie_vec [prvM] */ 0,
-                                               ie_vec [prvS],
-                                               ie_vec [prvU]);
-            Data mcause_val = fn_mcause_val (cause_interrupt, cause_code);
-            return Trap_Updates {new_pcc: getNextPcc(cast(mtcc_reg))
-`ifdef INCLUDE_TANDEM_VERIF
-                                 , prv:    prvM,
-                                 status: mstatus_val,
-                                 cause:  mcause_val,
-                                 epcc:   pcc,
-                                 tval:   trap_val
-`endif
-                                 };
-        end
+        //end
         // XXX yield load reservation should be done outside this method
     endmethod
 

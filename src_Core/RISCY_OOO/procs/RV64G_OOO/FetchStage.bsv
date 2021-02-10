@@ -471,14 +471,11 @@ module mkFetchStage(FetchStage);
     // Since CSR may be modified, sending wrong path request to TLB may cause problem
     // So we stall until the next redirection happens
     // The next redirect is either by the trap/system inst or an older one
-    Reg#(Bool) waitForRedirect <- mkReg(False);
-    // We don't want setWaitForRedirect method and redirect method to happen together
-    // make them conflict
-    RWire#(void) setWaitRedirect_redirect_conflict <- mkRWire;
+    Ehr#(3, Bool) waitForRedirect <- mkEhr(False);
 
     // Stall fetch during the flush triggered by the procesing trap/system inst in commit stage
     // We stall until the flush is done
-    Reg#(Bool) waitForFlush <- mkReg(False);
+    Ehr#(3, Bool) waitForFlush <- mkEhr(False);
 
     Ehr#(4, CapMem) pc_reg <- mkEhr(nullCap);
 `ifdef RVFI_DII
@@ -564,7 +561,7 @@ module mkFetchStage(FetchStage);
     // there is no FIFO between doFetch1 and TLB, when OOO commit stage wait
     // TLB idle to change VM CSR / signal flush TLB, there is no wrong path
     // request afterwards to race with the system code that manage paget table.
-    rule doFetch1(started && !waitForRedirect && !waitForFlush);
+    rule doFetch1(started && !(waitForRedirect[0]) && !(waitForFlush[0]));
         let pc = pc_reg[pc_fetch1_port];
 
         // Chain of prediction for the next instructions
@@ -1108,7 +1105,7 @@ module mkFetchStage(FetchStage);
     // (1) Fetch1 is stalled for waiting flush
     // (2) all internal FIFOs are empty (the output sup fifo needs not to be
     // empty, but why leave this security hole)
-    Bool empty_for_flush = waitForFlush &&
+    Bool empty_for_flush = waitForFlush[0] &&
                            !f12f2.notEmpty && !f22f3.notEmpty &&
                            !f32d.notEmpty && out_fifo.internalEmpty;
 
@@ -1131,16 +1128,15 @@ module mkFetchStage(FetchStage);
         dii_pid_reg[0] <= dii_pid;
 `endif
         started <= True;
-        waitForRedirect <= False;
-        waitForFlush <= False;
+        waitForRedirect[0] <= False;
+        waitForFlush[0] <= False;
     endmethod
     method Action stop();
         started <= False;
     endmethod
 
     method Action setWaitRedirect;
-        waitForRedirect <= True;
-        setWaitRedirect_redirect_conflict.wset(?); // conflict with redirect
+        waitForRedirect[0] <= True;
     endmethod
     method Action redirect(
         CapMem new_pc
@@ -1157,23 +1153,22 @@ module mkFetchStage(FetchStage);
         f_main_epoch <= (f_main_epoch == fromInteger(valueOf(NumEpochs)-1)) ? 0 : f_main_epoch + 1;
         ehr_pending_straddle[1] <= tagged Invalid;
         // redirect comes, stop stalling for redirect
-        waitForRedirect <= False;
-        setWaitRedirect_redirect_conflict.wset(?); // conflict with setWaitForRedirect
+        waitForRedirect[1] <= False;
         // this redirect may be caused by a trap/system inst in commit stage
         // we conservatively set wait for flush TODO make this an input parameter
-        waitForFlush <= True;
+        waitForFlush[2] <= True;
     endmethod
 
 `ifdef INCLUDE_GDB_CONTROL
    method Action setWaitFlush;
-      waitForFlush <= True;
+      waitForFlush[1] <= True;
       // $display ("%0d.%m.setWaitFlush", cur_cycle);
    endmethod
 `endif
 
-    method Action done_flushing() if (waitForFlush);
+    method Action done_flushing() if (waitForFlush[0]);
         // signal that the pipeline can resume fetching
-        waitForFlush <= False;
+        waitForFlush[0] <= False;
         if (verbose) $display("%t : Done Flushing",$time());
 
         // XXX The guard prevents the readyToFetch rule in Core.bsv from firing every cycle
@@ -1221,8 +1216,8 @@ module mkFetchStage(FetchStage);
     method FetchDebugState getFetchState;
         return FetchDebugState {
             pc: getAddr(pc_reg[0]),
-            waitForRedirect: waitForRedirect,
-            waitForFlush: waitForFlush,
+            waitForRedirect: waitForRedirect[0],
+            waitForFlush: waitForFlush[0],
             mainEp: f_main_epoch
         };
     endmethod

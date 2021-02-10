@@ -730,15 +730,11 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         end
 `endif
 
-       Bool debugger_halt = False;
-
 `ifdef INCLUDE_GDB_CONTROL
        if ((trap.trap == tagged Interrupt intrDebugHalt)
            || (trap.trap == tagged Interrupt intrDebugStep)
            || ((trap.trap == tagged Exception excBreakpoint) && (csrf.dcsr_break_bit == 1'b1)))
           begin
-             debugger_halt = True;
-
              // Flush everything (tlbs, caches, reservation, branch predictor);
              // reconcilei and I; update VM info.
              makeSystemConsistent_for_debug_mode;
@@ -754,6 +750,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
              // Tell fetch stage to wait for redirect
              // Note: rule doCommitTrap_flush may have done this already; redundant call is ok.
+             // Or not?  These apparently conflict with redirectPC now?
              inIfc.setFetchWaitRedirect;
              inIfc.setFetchWaitFlush;
 
@@ -762,39 +759,39 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
              if (verbosity >= 2)
                 $display ("%0d: %m.commitStage.doCommitTrap_handle; debugger halt:", cur_cycle);
-          end
+          end else begin
 `endif
-
-       if (! debugger_halt) begin
-          // trap handling & redirect
-          let trap_updates <- csrf.trap(trap.trap, cast(trap.pc), trap.addr, trap.orig_inst);
-          CapPipe new_pc = cast(trap_updates.new_pcc);
-          inIfc.redirectPc(cast(new_pc)
+       // trap handling & redirect
+       let trap_updates <- csrf.trap(trap.trap, cast(trap.pc), trap.addr, trap.orig_inst);
+       CapPipe new_pc = cast(trap_updates.new_pcc);
+       inIfc.redirectPc(cast(new_pc)
 `ifdef RVFI_DII
-                           , trap.x.dii_pid + (is_16b_inst(trap.orig_inst) ? 1 : 2)
+                        , trap.x.dii_pid + (is_16b_inst(trap.orig_inst) ? 1 : 2)
 `endif
-          );
+       );
 `ifdef RVFI
-          Rvfi_Traces rvfis = replicate(tagged Invalid);
-          rvfis[0] = genRVFI(trap.x, traceCnt, getTSB(), getAddr(new_pc));
-          rvfiQ.enq(rvfis);
-          traceCnt <= traceCnt + 1;
+       Rvfi_Traces rvfis = replicate(tagged Invalid);
+       rvfis[0] = genRVFI(trap.x, traceCnt, getTSB(), getAddr(new_pc));
+       rvfiQ.enq(rvfis);
+       traceCnt <= traceCnt + 1;
 `endif
 
 `ifdef INCLUDE_TANDEM_VERIF
-          fa_to_TV (way0, rg_serial_num,
-                    tagged Invalid,
-                    x, no_fflags, no_mstatus, tagged Valid trap_updates, no_ret_updates);
+       fa_to_TV (way0, rg_serial_num,
+                 tagged Invalid,
+                 x, no_fflags, no_mstatus, tagged Valid trap_updates, no_ret_updates);
 `endif
-          rg_serial_num <= rg_serial_num + 1;
+       rg_serial_num <= rg_serial_num + 1;
 
-          // system consistency
-          // TODO spike flushes TLB here, but perhaps it is because spike's TLB
-          // does not include prv info, and it has to flush when prv changes.
-          // XXX As approximation, Trap may cause context switch, so flush for
-          // security
-          makeSystemConsistent(False, True, False);
+       // system consistency
+       // TODO spike flushes TLB here, but perhaps it is because spike's TLB
+       // does not include prv info, and it has to flush when prv changes.
+       // XXX As approximation, Trap may cause context switch, so flush for
+       // security
+       makeSystemConsistent(False, True, False);
+`ifdef INCLUDE_GDB_CONTROL
        end
+`endif
     endrule
 
     // commit misspeculated load
