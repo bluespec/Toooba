@@ -29,6 +29,7 @@ BSC_COMPILATION_FLAGS += \
 	-D CheriBusBytes=8 \
 	-D CheriMasterIDWidth=1 \
 	-D CheriTransactionIDWidth=5 \
+	-D PERFORMANCE_MONITORING \
 	-D SHIFT_BARREL    \
 	-D MULT_SERIAL    \
 	-D Near_Mem_Caches    \

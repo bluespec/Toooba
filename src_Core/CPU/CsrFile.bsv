@@ -252,21 +252,38 @@ endinterface
 module mkPerfCountersToooba (PerfCountersVec);
     PerfCounters_IFC #(No_Of_Ctrs, Counter_Width, Report_Width, No_Of_Evts) perf_counters <- mkPerfCounters;
     Vector#(No_Of_Ctrs, Reg#(Data)) counters = ?;
+
+    let writeCounterFF <- mkFIFO;
+    rule forwardWriteCounter;
+      match {.i, .x} <- toGet(writeCounterFF).get;
+      perf_counters.write_counter(i, x);
+    endrule
+    let writeCounterSelFF <- mkFIFO;
+    rule forwardWriteCounterSel;
+      match {.i, .x} <- toGet(writeCounterSelFF).get;
+      perf_counters.write_ctr_sel(i, x);
+    endrule
+    let writeCounterInhibitFF <- mkFIFO;
+    rule forwardWriteCounterInhibit;
+      let x <- toGet(writeCounterInhibitFF).get;
+      perf_counters.write_ctr_inhibit(x);
+    endrule
+
     for (Bit#(TLog#(No_Of_Ctrs)) i = 0; i < 29; i = i + 1) counters[i] =
         interface Reg;
-            method Action _write(Data x) = perf_counters.write_counter(i,x);
+            method Action _write(Data x) = writeCounterFF.enq(tuple2(i,x));
             method Data _read = perf_counters.read_counters[i];
         endinterface;
     Vector#(No_Of_Ctrs, Reg#(Data)) events = ?;
     for (Bit#(TLog#(No_Of_Ctrs)) i = 0; i < 29; i = i + 1) events[i] =
         interface Reg;
-            method Action _write(Data x) = perf_counters.write_ctr_sel(i,truncate(x));
+            method Action _write(Data x) = writeCounterSelFF.enq(tuple2(i,truncate(x)));
             method Data _read = zeroExtend(perf_counters.read_ctr_sels[i]);
         endinterface;
     interface counter_vec = counters;
     interface event_vec = events;
     interface inhibit = interface Reg;
-        method Action _write(Data x) = perf_counters.write_ctr_inhibit(truncate(x));
+        method Action _write(Data x) = writeCounterInhibitFF.enq(truncate(x));
         method Data _read = zeroExtend(perf_counters.read_ctr_inhibit);
     endinterface;
     method send_performance_events = perf_counters.send_performance_events;
