@@ -471,7 +471,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
     Reg#(Bit#(1)) mcounteren_cy_reg <- mkCsrReg(0);
     Reg#(Data) mcounteren_csr = concatReg5(
         readOnlyReg(32'b0),
-        readOnlyReg(29'b0), // hpmcounter 3-31 not accessible in S mode
+        readOnlyReg(~29'b0), // hpmcounter 3-31 currently always accessible in S mode
         mcounteren_ir_reg, mcounteren_tm_reg, mcounteren_cy_reg
     );
     // mscratch
@@ -590,7 +590,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
     Reg#(Bit#(1)) scounteren_cy_reg <- mkCsrReg(0);
     Reg#(Data) scounteren_csr = concatReg5(
         readOnlyReg(32'b0),
-        readOnlyReg(29'b0), // hpmcounter 3-31 not accessible in U mode
+        readOnlyReg(~29'b0), // hpmcounter 3-31 currently always accessible in U mode
         scounteren_ir_reg, scounteren_tm_reg, scounteren_cy_reg
     );
     // sscratch
@@ -771,13 +771,14 @@ module mkCsrFile #(Data hartid)(CsrFile);
     function Reg#(Data) get_csr(CSR csr);
         Reg#(Data) ret = readOnlyReg(64'b0);
 `ifdef PERFORMANCE_MONITORING
-	Bit#(12) c = pack(csr);
-	Bit#(12) hpmBase = pack(CSRmhpcounter3);
-	Bit#(12) hpmTop  = pack(CSRmhpcounter31);
-        if ((hpmBase <= c) && (c <= hpmTop)) ret = perf_counters.counter_vec[c-hpmBase];
-	hpmBase = pack(CSRmhpmevent3);
-	hpmTop  = pack(CSRmhpmevent31);
-        if ((hpmBase <= c) && (c <= hpmTop)) ret = perf_counters.event_vec[c - hpmBase];
+	function Reg#(Data) getCsrFromRange(Bit#(12) first, Bit#(12) last, Vector#(n, Reg#(Data)) vec, Reg#(Data) def);
+		Bit#(12) c = pack(csr);
+		if ((first <= c) && (c <= last)) return vec[c - first];
+		else return def;
+	endfunction
+	ret = getCsrFromRange(pack(CSRmhpcounter3), pack(CSRmhpcounter31), perf_counters.counter_vec, ret);
+	ret = getCsrFromRange(pack(CSRmhpmevent3),  pack(CSRmhpmevent31),  perf_counters.event_vec,   ret);
+	ret = getCsrFromRange(pack(CSRhpcounter3),  pack(CSRhpcounter31),  perf_counters.counter_vec, ret);
 `endif
         return (case (csr)
             // User CSRs
