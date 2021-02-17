@@ -514,7 +514,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
     Reg#(Bit#(1)) mcounteren_cy_reg <- mkCsrReg(0);
     Reg#(Data) mcounteren_csr = concatReg5(
         readOnlyReg(32'b0),
-        readOnlyReg(29'b0), // hpmcounter 3-31 not accessible in S mode
+        readOnlyReg(~29'b0), // hpmcounter 3-31 currently always accessible in S mode
         mcounteren_ir_reg, mcounteren_tm_reg, mcounteren_cy_reg
     );
     // mscratch
@@ -624,7 +624,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
     Reg#(Bit#(1)) scounteren_cy_reg <- mkCsrReg(0);
     Reg#(Data) scounteren_csr = concatReg5(
         readOnlyReg(32'b0),
-        readOnlyReg(29'b0), // hpmcounter 3-31 not accessible in U mode
+        readOnlyReg(~29'b0), // hpmcounter 3-31 currently always accessible in U mode
         scounteren_ir_reg, scounteren_tm_reg, scounteren_cy_reg
     );
     // sscratch
@@ -830,6 +830,8 @@ module mkCsrFile #(Data hartid)(CsrFile);
             ret = perf_counters.counter_vec[c-csrAddrMHPMCOUNTER3.addr];
         if ((csrAddrMHPMEVENT3.addr <= c) && (c <= csrAddrMHPMEVENT31.addr))
             ret = perf_counters.event_vec[c - csrAddrMHPMEVENT3.addr];
+        if ((csrAddrHPMCOUNTER3.addr <= c) && (c <= csrAddrHPMCOUNTER31.addr))
+            ret = perf_counters.counter_vec[c-csrAddrHPMCOUNTER3.addr];
 `endif
         return (case (csr)
             // User CSRs
