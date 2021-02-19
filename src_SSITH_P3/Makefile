@@ -4,7 +4,7 @@
 
 .PHONY: help
 help:
-	@echo '    make  compile      Recompile Core (CPU, caches) into Verilog_RTL and copies into xilinx_ip/hdl'
+	@echo '    make  compile      Recompile Core (CPU, caches) into Verilog_RTL'
 	@echo '                           NOTE: needs Bluespec bsc compiler'
 	@echo ''
 	@echo '    make  clean        Remove intermediate build-files'
@@ -119,8 +119,6 @@ compile_synth:  build_dir_synth Verilog_RTL
 	@echo  "INFO: Generating RTL into Verilog_RTL for synthesis ..."
 	bsc -u -elab -verilog  -vdir Verilog_RTL $(BUILD_DIRS_SYNTH)  $(BSC_COMPILATION_FLAGS)  $(SYNTH_BSC_OPTIONS) $(BSC_PATH)  $(TOPFILE)
 	@echo  "INFO: Generated Synth RTL into Verilog_RTL"
-	cp  Verilog_RTL/*  xilinx_ip/hdl/
-	@echo  "INFO: Copied RTL from  Verilog_RTL/  to  xilinx_ip/hdl/"
 
 .PHONY: compile_sim
 compile_sim:  build_dir_sim Verilog_RTL_sim
