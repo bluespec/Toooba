@@ -119,14 +119,14 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
          $display ("    ", fshow (req));
       end
 
-      Vector #(2, Bit #(8)) line_strb = unpack(pack(req.byteEn));
-      Bool burst = line_strb[0]!=0 && line_strb[1]!=0;
+      AXI4_Size size = byteEnToAxiSize(req.byteEn);
+      Bool burst = size > 8;
+      if (burst) size = 8;
 
       // Technically the following check for legal IO addrs is not
       // necessary; the AXI4 fabric should return a DECERR for illegal
       // addrs; but not all AXI4 fabrics do the right thing.
       if (soc_map.m_is_IO_addr (req.addr, False)) begin
-         AXI4_Size size = byteEnToAxiSize(req.byteEn);
          let mem_req_rd_addr = AXI4_ARFlit {arid:     fabric_2x3_default_mid,
                                             araddr:   req.addr,
                                             arlen:    (burst) ? 1:0,           // burst len = arlen+1
@@ -203,8 +203,10 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
          $display ("    ", fshow (req));
       end
 
+      AXI4_Size size = byteEnToAxiSize(req.byteEn);
+      Bool burst = size > 8;
+      if (burst) size = 8;
       Vector #(2, Bit #(8)) line_strb = unpack(pack(req.byteEn));
-      Bool burst = line_strb[0]!=0 && line_strb[1]!=0;
       Bit#(1) whichHalf = rg_wr_req_beat;
       if (!burst) whichHalf = (line_strb[0]!=0) ? 0:1;
       Bool first = (burst) ? whichHalf==0:True;
@@ -218,7 +220,6 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
          // on first flit...
          // ================
          if (first) begin
-            AXI4_Size size = byteEnToAxiSize(req.byteEn);
             AXI4_AWFlit #(Wd_MId_2x3, Wd_Addr, Wd_AW_User)
                 mem_req_wr_addr = AXI4_AWFlit {awid:     fabric_2x3_default_mid,
                                                awaddr:   req.addr,
@@ -231,19 +232,6 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
                                                awqos:    fabric_default_qos,
                                                awregion: fabric_default_region,
                                                awuser:   0};
-`ifdef FABRIC64
-            // Work-around for a misbehavior on Xilinx UART and its
-            // Xilinx AXI4 adapter. On 64-bit fabrics, for a write where
-            // axsize says '8 bytes' but wstrb is for <= 4 bytes, the
-            // adapter converts it two 32-bit writes, one of which has
-            // wstrb=4'b0000. The Xilinx UART, in turn ignores wstrb and
-            // therefore performs a spurious write.  This workaround
-            // changes axsize for such writes to '4 bytes', avoiding this
-            // problem.
-
-            if (countOnes(pack(req.byteEn)) <= 4)
-               mem_req_wr_addr.awsize = 4;
-`endif
             master_shim.slave.aw.put (mem_req_wr_addr);
             if (cfg_verbosity > 0) begin
                $display ("%d: %m.rl_handle_write_req: sent aw flit:", cur_cycle);
