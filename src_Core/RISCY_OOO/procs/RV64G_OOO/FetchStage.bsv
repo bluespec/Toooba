@@ -471,7 +471,7 @@ module mkFetchStage(FetchStage);
     // Since CSR may be modified, sending wrong path request to TLB may cause problem
     // So we stall until the next redirection happens
     // The next redirect is either by the trap/system inst or an older one
-    Ehr#(3, Bool) waitForRedirect <- mkEhr(False);
+    Ehr#(2, Bool) waitForRedirect <- mkEhr(False);
 
     // Stall fetch during the flush triggered by the procesing trap/system inst in commit stage
     // We stall until the flush is done
