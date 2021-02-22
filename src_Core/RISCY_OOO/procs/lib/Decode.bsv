@@ -1134,6 +1134,13 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             dInst.scr = rs1 == 0 ? Valid (scrAddrDDC) : Invalid;
                             dInst.capFunc = CapInspect (TestSubset);
                         end
+                        f7_cap_CSetEqualExact: begin
+                            dInst.iType = Cap;
+                            regs.dst = Valid(tagged Gpr rd);
+                            regs.src1 = Valid(tagged Gpr rs1);
+                            regs.src2 = Valid(tagged Gpr rs2);
+                            dInst.capFunc = CapInspect (SetEqualExact);
+                        end
                         f7_cap_CCopyType: begin
                             dInst.capChecks.src2_tag = True;
                             dInst.capChecks.src2_unsealed = True;

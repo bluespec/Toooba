@@ -340,6 +340,7 @@ typedef union tagged {
 
 typedef union tagged {
     void TestSubset;
+    void SetEqualExact;
     void CSub;
     void GetLen;
     void GetBase;

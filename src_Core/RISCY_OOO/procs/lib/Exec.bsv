@@ -287,6 +287,8 @@ function Data capInspect(CapPipe a, CapPipe b, CapInspectFunc func);
                                    && ((getPerms(a) & getPerms(b)) == getPerms(a))
                                    && (getBase(a) >= getBase(b))
                                    && (getTop(a) <= getTop(b))));
+               tagged SetEqualExact          :
+                   zeroExtend(pack(toMem(a) == toMem(b)));
                tagged GetLen                 :
                    truncate(getLength(a));
                tagged GetBase                :

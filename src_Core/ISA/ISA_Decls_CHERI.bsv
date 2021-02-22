@@ -155,7 +155,8 @@ Bit #(7) f7_cap_CBuildCap       = 7'h1d;
 Bit #(7) f7_cap_CCopyType       = 7'h1e;
 Bit #(7) f7_cap_CCSeal          = 7'h1f;
 Bit #(7) f7_cap_CTestSubset     = 7'h20;
-// 7'h21-7'hfb unused
+Bit #(7) f7_cap_CSetEqualExact  = 7'h21;
+// 7'h22-7'hfb unused
 Bit #(7) f7_cap_Stores          = 7'h7c;
 Bit #(7) f7_cap_Loads           = 7'h7d;
 Bit #(7) f7_cap_TwoSrc          = 7'h7e;
