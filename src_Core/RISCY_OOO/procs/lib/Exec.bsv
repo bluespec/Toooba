@@ -518,7 +518,7 @@ function Maybe#(Trap) checkForException(
         Bool read_only  = (csr [11:10] == 2'b11);
         Bool write_deny = (writes_csr && read_only);
         Bool asr_allow = getHardPerms(pcc).accessSysRegs
-                      //|| ((csr_addr_hpmcounter3 <= csr) && (csr <= csr_addr_hpmcounter31) && !writes_csr) // TODO seems these aren't implemented?
+                      || ((pack(csrAddrHPMCOUNTER3) <= csr) && (csr <= pack(csrAddrHPMCOUNTER31)) && !writes_csr)
                       || (csr == pack(csrAddrFFLAGS))
                       || (csr == pack(csrAddrFRM))
                       || (csr == pack(csrAddrFCSR))
