@@ -1185,6 +1185,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                         Br: brCnt = brCnt + 1;
                         J : jmpCnt = jmpCnt + 1;
                         Jr: jrCnt = jrCnt + 1;
+                        CJALR: jrCnt = jrCnt + 1;
                         Ld: begin
                             ldCnt = ldCnt + 1;
                         end
