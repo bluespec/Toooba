@@ -1,6 +1,6 @@
 
 // Copyright (c) 2018 Massachusetts Institute of Technology
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +8,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -33,8 +33,8 @@ import MMIOAddrs::*;
 import SoC_Map :: *;    // Bluespec setup
 
 interface MMIOInstToCore;
-    interface FifoDeq#(Tuple2#(Addr, SupWaySel)) instReq;
-    interface FifoEnq#(Vector#(SupSize, Maybe#(Instruction))) instResp;
+    interface FifoDeq#(Tuple2#(Addr, SupWayX2Sel)) instReq;
+    interface FifoEnq#(Vector#(SupSizeX2, Maybe#(Instruction16))) instResp;
     method Action setHtifAddrs(Addr toHost, Addr fromHost);
 endinterface
 
@@ -49,10 +49,10 @@ interface MMIOInst;
     method InstFetchTarget getFetchTarget(Addr phyPc);
     // When req boot rom, need to specify the number of instructions to fetch,
     // i.e., maxWay + 1
-    method Action bootRomReq(Addr phyPc, SupWaySel maxWay);
+    method Action bootRomReq(Addr phyPc, SupWayX2Sel maxWay);
     // The return type is same as I$. An entry is Invalid if it is an access
     // fault or not requested before.
-    method ActionValue#(Vector#(SupSize, Maybe#(Instruction))) bootRomResp;
+    method ActionValue#(Vector#(SupSizeX2, Maybe#(Instruction16))) bootRomResp;
     interface MMIOInstToCore toCore;
 endinterface
 
@@ -66,8 +66,8 @@ module mkMMIOInst(MMIOInst);
     Reg#(DataAlignedAddr) fromHostAddr <- mkConfigReg(0);
     // MMIO requests are handled in a very slow manner at platform, so no need
     // to use large FIFO here
-    Fifo#(1, Tuple2#(Addr, SupWaySel)) reqQ <- mkCFFifo;
-    Fifo#(1, Vector#(SupSize, Maybe#(Instruction))) respQ <- mkCFFifo;
+    Fifo#(1, Tuple2#(Addr, SupWayX2Sel)) reqQ <- mkCFFifo;
+    Fifo#(1, Vector#(SupSizeX2, Maybe#(Instruction16))) respQ <- mkCFFifo;
     // To prevent inst fetch requests from clogging the network, we limit to at
     // most 1 pending req. The resp for the pending req will be buffered in
     // respQ, no affecting other MMIO accesses.
@@ -77,7 +77,7 @@ module mkMMIOInst(MMIOInst);
 
     method InstFetchTarget getFetchTarget(Addr phyPc);
         let addr = getDataAlignedAddr(phyPc);
-        if (soc_map.m_is_IO_addr (phyPc)) begin
+        if (soc_map.m_is_IO_addr (phyPc, True)) begin
             return IODevice;
         end
         else if(addr >= mainMemBaseAddr && (addr < mainMemBoundAddr) &&
@@ -89,12 +89,12 @@ module mkMMIOInst(MMIOInst);
         end
     endmethod
 
-    method Action bootRomReq(Addr phyPc, SupWaySel maxWay);
+    method Action bootRomReq(Addr phyPc, SupWayX2Sel maxWay);
         reqQ.enq(tuple2(phyPc, maxWay));
         pendQ.enq(?);
     endmethod
 
-    method ActionValue#(Vector#(SupSize, Maybe#(Instruction))) bootRomResp;
+    method ActionValue#(Vector#(SupSizeX2, Maybe#(Instruction16))) bootRomResp;
         pendQ.deq;
         respQ.deq;
         return respQ.first;

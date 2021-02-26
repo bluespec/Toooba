@@ -133,7 +133,7 @@ interface SoC_Map_IFC;
    method  Bool  m_is_mem_addr (Fabric_Addr addr);
 
    (* always_ready *)
-   method  Bool  m_is_IO_addr (Fabric_Addr addr);
+   method  Bool  m_is_IO_addr (Fabric_Addr addr, Bool imem_not_dmem);
 
    (* always_ready *)
    method  Bool  m_is_near_mem_IO_addr (Fabric_Addr addr);
@@ -286,25 +286,28 @@ module mkSoC_Map (SoC_Map_IFC);
    // Identifies I/O addresses in the Fabric.
    // (Caches needs this information to avoid cacheing these addresses.)
 
-   function Bool fn_is_IO_addr (Fabric_Addr addr);
-      return (   fn_is_plic_addr (addr)
-	      || fn_is_near_mem_io_addr (addr)
-	      || fn_is_flash_mem_addr (addr)
-	      || fn_is_ethernet_0_addr (addr)
-	      || fn_is_dma_0_addr (addr)
-	      || fn_is_uart16550_0_addr  (addr)
-	      || fn_is_gpio_0_addr (addr)
-	      || fn_is_boot_rom_addr (addr)
-	      || fn_is_ddr4_0_uncached_addr (addr)
-	      || fn_is_flash_regs_addr (addr)
-	      || fn_is_uart1_addr (addr)
-	      || fn_is_i2c_addr (addr)
-	      || fn_is_spi_addr (addr)
-	      || fn_is_uart2_addr (addr)
-	      || fn_is_gpio1_addr (addr)
-	      || fn_is_gpio2_addr (addr)
-	      || fn_is_xdma_control (addr)
-	      || fn_is_xdma_ecam (addr)
+   function Bool fn_is_IO_addr (Fabric_Addr addr, Bool imem_not_dmem);
+      return (   fn_is_boot_rom_addr (addr)
+        || fn_is_ddr4_0_uncached_addr (addr)
+        || fn_is_flash_mem_addr (addr)
+        || (   (! imem_not_dmem)
+		  && (   fn_is_plic_addr (addr)
+	        || fn_is_near_mem_io_addr (addr)
+	        || fn_is_ethernet_0_addr (addr)
+	        || fn_is_dma_0_addr (addr)
+	        || fn_is_uart16550_0_addr  (addr)
+	        || fn_is_gpio_0_addr (addr)
+	        || fn_is_flash_regs_addr (addr)
+	        || fn_is_uart1_addr (addr)
+	        || fn_is_i2c_addr (addr)
+	        || fn_is_spi_addr (addr)
+	        || fn_is_uart2_addr (addr)
+	        || fn_is_gpio1_addr (addr)
+	        || fn_is_gpio2_addr (addr)
+	        || fn_is_xdma_control (addr)
+	        || fn_is_xdma_ecam (addr)
+          )
+         )
 	      );
    endfunction
 
@@ -364,7 +367,7 @@ module mkSoC_Map (SoC_Map_IFC);
 
    method  Bool  m_is_mem_addr (Fabric_Addr addr) = fn_is_mem_addr (addr);
 
-   method  Bool  m_is_IO_addr (Fabric_Addr addr) = fn_is_IO_addr (addr);
+   method  Bool  m_is_IO_addr (Fabric_Addr addr, Bool imem_not_dmem) = fn_is_IO_addr (addr, imem_not_dmem);
 
    method  Bool  m_is_near_mem_IO_addr (Fabric_Addr addr) = fn_is_near_mem_io_addr (addr);
 

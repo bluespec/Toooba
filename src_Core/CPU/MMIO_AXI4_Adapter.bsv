@@ -171,7 +171,7 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
       // Technically the following check for legal IO addrs is not
       // necessary; the AXI4 fabric should return a DECERR for illegal
       // addrs; but not all AXI4 fabrics do the right thing.
-      if (soc_map.m_is_IO_addr (req.addr))
+      if (soc_map.m_is_IO_addr (req.addr, False))
 	 fa_fabric_send_read_req (req.addr);
       else begin
 	 let rsp = MMIODataPRs {valid: False,
@@ -222,7 +222,7 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
       // Technically the following check for legal IO addrs is not
       // necessary; the AXI4 fabric should return a DECERR for illegal
       // addrs; but not all AXI4 fabrics do the right thing.
-      if (soc_map.m_is_IO_addr (req.addr))
+      if (soc_map.m_is_IO_addr (req.addr, False))
 	 fa_fabric_send_write_req (req.addr, pack (req.byteEn), req.data);
       else begin
 	 let rsp = MMIODataPRs {valid: False,
@@ -262,10 +262,7 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
 	 $display ("    ", fshow (wr_resp));
 	 $finish (1);
       end
-      else begin
-	 let rsp = MMIODataPRs {valid: True, data: 0};
-	 f_rsps_to_core.enq (rsp);
-      end
+      f_rsps_to_core.enq (MMIODataPRs {valid: wr_resp.bresp == axi4_resp_okay, data: 0});
    endrule
 
    // ================================================================

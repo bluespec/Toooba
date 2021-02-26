@@ -1,6 +1,6 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +8,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -128,7 +128,7 @@ endinstance
 //   function Get#(Vector#(k,Maybe#(t))) toGet(SupFifo#(k,n, t) f);
 //     return (interface Get;
 //       method ActionValue#(Vector#(k,Maybe#(t)) get;
-// //  
+// //
 //         f.deq;
 //         return f.first;
 //       endmethod
@@ -147,7 +147,7 @@ endinstance
 //   endfunction
 // endinstance
 
-module mkSupFifo(SupFifo#(k,n,t)) provisos (
+module mkUGSupFifo(SupFifo#(k,n,t)) provisos (
     Bits#(t,tSz),
     FShow#(t),
     Add#(TExp#(TLog#(k)), 0, k) // k must be power of 2
@@ -164,7 +164,7 @@ module mkSupFifo(SupFifo#(k,n,t)) provisos (
         Bool can_enq = internalFifos[fifoIdx].notFull;
         return (interface SupFifoEnq;
             method Bool canEnq = can_enq;
-            method Action enq(t x) if(can_enq);
+            method Action enq(t x);
                 enqueueElement[i][0] <= tagged Valid x;
             endmethod
         endinterface);
@@ -175,10 +175,10 @@ module mkSupFifo(SupFifo#(k,n,t)) provisos (
         Bool can_deq = internalFifos[fifoIdx].notEmpty;
         return (interface SupFifoDeq;
             method Bool canDeq = can_deq;
-            method t first if(can_deq);
+            method t first;
                 return internalFifos[fifoIdx].first;
             endmethod
-            method Action deq if(can_deq);
+            method Action deq;
                 willDequeue[i][0] <= True;
             endmethod
         endinterface);
@@ -216,6 +216,35 @@ module mkSupFifo(SupFifo#(k,n,t)) provisos (
         function Bool isEmpty(Integer i) = !internalFifos[i].notEmpty;
         return all(isEmpty, indexes);
     endmethod
+endmodule
+
+module mkSupFifo(SupFifo#(k,n,t)) provisos (
+    Bits#(t,tSz),
+    FShow#(t),
+    Add#(TExp#(TLog#(k)), 0, k) // k must be power of 2
+);
+    SupFifo#(k,n,t) ugf <- mkUGSupFifo;
+
+    function SupFifoEnq#(t) getEnqIfc(Integer i);
+        return (interface SupFifoEnq;
+            method Bool canEnq = ugf.enqS[i].canEnq;
+            method Action enq(t x) if(ugf.enqS[i].canEnq) = ugf.enqS[i].enq(x);
+        endinterface);
+    endfunction
+
+    function SupFifoDeq#(t) getDeqIfc(Integer i);
+        return (interface SupFifoDeq;
+            method Bool canDeq = ugf.deqS[i].canDeq;
+            method t first if(ugf.deqS[i].canDeq) = ugf.deqS[i].first;
+            method Action deq if(ugf.deqS[i].canDeq) = ugf.deqS[i].deq;
+        endinterface);
+    endfunction
+
+    Vector#(k,Integer) indexes = genVector;
+    interface Vector enqS = map(getEnqIfc, indexes);
+    interface Vector deqS = map(getDeqIfc, indexes);
+
+    method Bool internalEmpty = ugf.internalEmpty;
 endmodule
 
 
@@ -314,7 +343,7 @@ module mkCFFifo( Fifo#(n, t) ) provisos (Bits#(t,tSz));
 
   method Action deq if( !empty );
     // Tell later stages a dequeue was requested
-    deqReq[0] <= tagged Valid;
+    deqReq[0] <= tagged Valid (?);
   endmethod
 
   method t first if( !empty );
@@ -327,7 +356,7 @@ module mkCFFifo( Fifo#(n, t) ) provisos (Bits#(t,tSz));
     enqReq[1] <= tagged Invalid;
     deqReq[1] <= tagged Invalid;
     // Tell later stages a clear was requested
-    clearReq[0] <= tagged Valid;
+    clearReq[0] <= tagged Valid (?);
   endmethod
 endmodule
 
@@ -649,4 +678,3 @@ module mkCFSCountFifo#(function Bool isFound(t v, st k))(SCountFifo#(n, t, st)) 
     deqEn[1] <= False;
   endmethod
 endmodule
-

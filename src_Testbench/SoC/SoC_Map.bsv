@@ -104,7 +104,7 @@ interface SoC_Map_IFC;
    method  Bool  m_is_mem_addr (Fabric_Addr addr);
 
    (* always_ready *)
-   method  Bool  m_is_IO_addr (Fabric_Addr addr);
+   method  Bool  m_is_IO_addr (Fabric_Addr addr, Bool imem_not_dmem);
 
    (* always_ready *)
    method  Bool  m_is_near_mem_IO_addr (Fabric_Addr addr);
@@ -212,11 +212,14 @@ module mkSoC_Map (SoC_Map_IFC);
    // Identifies I/O addresses in the Fabric.
    // (Caches need this information to avoid cacheing these addresses.)
 
-   function Bool fn_is_IO_addr (Fabric_Addr addr);
+   function Bool fn_is_IO_addr (Fabric_Addr addr, Bool imem_not_dmem);
       return (   fn_is_boot_rom_addr (addr)
-	      || fn_is_near_mem_io_addr (addr)
-	      || fn_is_plic_addr (addr)
-	      || fn_is_uart0_addr  (addr)
+        || (   (! imem_not_dmem)
+	    && (   fn_is_near_mem_io_addr (addr)
+	        || fn_is_plic_addr (addr)
+	        || fn_is_uart0_addr  (addr)
+         )
+      )
 	      );
    endfunction
 
@@ -256,7 +259,7 @@ module mkSoC_Map (SoC_Map_IFC);
 
    method  Bool  m_is_mem_addr (Fabric_Addr addr) = fn_is_mem_addr (addr);
 
-   method  Bool  m_is_IO_addr (Fabric_Addr addr) = fn_is_IO_addr (addr);
+   method  Bool  m_is_IO_addr (Fabric_Addr addr, Bool imem_not_dmem) = fn_is_IO_addr (addr, imem_not_dmem);
 
    method  Bool  m_is_near_mem_IO_addr (Fabric_Addr addr) = fn_is_near_mem_io_addr (addr);
 

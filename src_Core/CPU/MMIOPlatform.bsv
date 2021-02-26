@@ -1,7 +1,7 @@
 
 // Copyright (c) 2018 Massachusetts Institute of Technology
 // Portions (c) 2019-2020 Bluespec, Inc.
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -9,10 +9,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -33,7 +33,6 @@ import GetPut::*;
 import ClientServer::*;
 import Connectable::*;
 import FIFOF     :: *;
-// import BRAMCore::*;
 
 // ----------------
 // BSV additional libs
@@ -171,7 +170,7 @@ function Bit #(64) fn_amo_op (Bit #(2)   sz,        // encodes data size (.W or 
    Bit #(64) w1     = fn_extract_and_extend_bytes (sz, addr, ld_val);
    Bit #(64) w2     = fn_extract_and_extend_bytes (sz, addr, st_val);
 
-   
+
    // Do AMO op
    Int #(64) i1     = unpack (w1);    // Signed, for signed ops
    Int #(64) i2     = unpack (w2);    // Signed, for signed ops
@@ -265,10 +264,10 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
    // offset of the requested inst within a Data
    Reg#(DataInstOffset) instSel <- mkRegU;
    // the current superscaler way being fetched
-   Reg#(SupWaySel) fetchingWay <- mkRegU;
+   Reg#(SupWayX2Sel) fetchingWay <- mkRegU;
    // the already fetched insts
-   Vector#(TSub#(SupSize, 1),
-	   Reg#(Instruction)) fetchedInsts <- replicateM(mkRegU);
+   Vector#(TSub#(SupSizeX2, 1),
+           Reg#(Instruction16)) fetchedInsts <- replicateM(mkRegU);
 
    // we need to wait for resp from cores when we need to change MTIP
    Reg#(Vector#(CoreNum, Bool)) waitMTIPCRs <- mkRegU;
@@ -518,7 +517,7 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
 	    cores[upper_core].pRq.enq(MMIOPRq {
 	       target: MSIP,
 	       func: reqFunc,
-	       data: zeroExtend(reqData[32]) 
+	       data: zeroExtend(reqData[32])
 	       });
          end
          state <= WaitResp;
@@ -1011,15 +1010,15 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
 					&&& isInstFetch);
       MMIODataPRs dprs <- mmio_fabric_adapter_core_side.response.get;
       if (! dprs.valid) begin
-	 // Access fault
-         Vector #(SupSize, Maybe #(Instruction)) resp = replicate (Invalid);
-         for(Integer i = 0; i < valueof (SupSize); i = i+1) begin
-	    if (fromInteger (i) < fetchingWay)
-	       resp [i] = Valid (fetchedInsts [i]);
+         // Access fault
+         Vector #(SupSizeX2, Maybe #(Instruction16)) resp = replicate (Invalid);
+         for(Integer i = 0; i < valueof (SupSizeX2); i = i+1) begin
+            if (fromInteger (i) < fetchingWay)
+               resp [i] = Valid (fetchedInsts [i]);
             else if (fromInteger (i) == fetchingWay)
 	       resp [i] = tagged Invalid;
          end
-         cores[reqCore].pRs.enq (tagged InstFetch (resp));
+         cores[reqCore].pRs.enq (tagged InstFetch resp);
          state <= SelectReq;
 
 	 if (verbosity > 0) begin
@@ -1032,28 +1031,26 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
 	 // No access fault
 	 let data = dprs.data;
 
-         SupWaySel maxWay = 0;
+         SupWayX2Sel maxWay = 0;
          if(reqFunc matches tagged Inst .w) begin
             maxWay = w;
          end
 
-	 // View Data as a vector of instructions
-         Vector#(DataSzInst, Instruction) instVec = unpack(data);
+         // View Data as a vector of instructions
+         Vector#(MemDataSzInst, Instruction16) instVec = unpack(pack(dprs.data));
          // extract inst from resp data
-         Instruction inst = instVec[instSel];
+         Instruction16 inst = instVec[instSel];
          // check whether we are done or not
          if (fetchingWay >= maxWay) begin
-	    // all 0..maxWay insts are fetched; we can resp now
-            Vector#(SupSize, Maybe#(Instruction)) resp = replicate(Invalid);
-            for(Integer i = 0; i < valueof(SupSize); i = i+1) begin
-	       if(fromInteger(i) < fetchingWay) begin
+            // all 0..maxWay insts are fetched; we can resp now
+            Vector#(SupSizeX2, Maybe#(Instruction16)) resp = replicate(Invalid);
+            for(Integer i = 0; i < valueof(SupSizeX2); i = i+1) begin
+               if(fromInteger(i) < fetchingWay)
                   resp[i] = Valid (fetchedInsts[i]);
-	       end
-               else if(fromInteger(i) == fetchingWay) begin
+               else if(fromInteger(i) == fetchingWay)
                   resp[i] = Valid (inst);
-		  end
-               end
-            cores[reqCore].pRs.enq (tagged InstFetch (resp));
+            end
+            cores[reqCore].pRs.enq (tagged InstFetch resp);
             state <= SelectReq;
 
 	    if (verbosity > 0) begin

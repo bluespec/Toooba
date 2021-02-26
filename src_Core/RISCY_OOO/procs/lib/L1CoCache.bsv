@@ -1,6 +1,6 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +8,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -59,6 +59,7 @@ export DCoCache(..);
 export mkDCoCache;
 
 export ISupSz;
+export ISupSzX2;
 export L1ICRqStuck(..);
 export L1IPRqStuck(..);
 export ICoCache(..);
@@ -280,10 +281,11 @@ typedef Bit#(TLog#(ICRqNum)) ICRqMshrIdx;
 typedef Bit#(TLog#(IPRqNum)) IPRqMshrIdx;
 
 typedef SupSize ISupSz;
+typedef TMul#(SupSize, 2) ISupSzX2;
 
 (* synthesize *)
 module mkICRqMshrWrapper(
-    ICRqMshr#(ICRqNum, L1Way, ITag, ProcRqToI, Vector#(ISupSz, Maybe#(Instruction)))
+    ICRqMshr#(ICRqNum, L1Way, ITag, ProcRqToI, Vector#(ISupSzX2, Maybe#(Instruction16)))
 );
     function Addr getAddrFromReq(ProcRqToI r);
         return r.addr;
@@ -347,7 +349,7 @@ typedef IPRqStuck L1IPRqStuck;
 
 
 interface ICoCache;
-    interface Server#(Addr, Vector#(ISupSz, Maybe#(Instruction))) to_proc;
+    interface Server#(Addr, Vector#(ISupSzX2, Maybe#(Instruction16))) to_proc;
     method Action flush;
     method Bool flush_done;
     interface Perf#(L1IPerfType) perf;
