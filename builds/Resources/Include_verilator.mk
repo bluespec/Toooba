@@ -18,7 +18,7 @@ Verilog_RTL:
 ifeq (,$(filter clean full_clean,$(MAKECMDGOALS)))
 include .depends.mk
 
-.depends.mk: build_dir Verilog_RTL
+.depends.mk: | build_dir Verilog_RTL
 	if ! bluetcl -exec makedepend -verilog -elab  $(RTL_GEN_DIRS)  $(BSC_COMPILATION_FLAGS) -p $(BSC_PATH) -o $@ $(TOPFILE); then rm -f $@ && false; fi
 endif
 
@@ -27,7 +27,7 @@ endif
 	bsc -verilog -elab  $(RTL_GEN_DIRS)  $(BSC_COMPILATION_FLAGS) -p $(BSC_PATH) $<
 
 .PHONY: compile
-compile: build_dir Verilog_RTL build_dir/Top_HW_Side.bo
+compile: build_dir/Top_HW_Side.bo | build_dir Verilog_RTL
 #Verilog_RTL/mkTop_HW_Side.v:  build_dir Verilog_RTL /tmp/src_dir $(VERILOG_SUB_MODULES)
 #Verilog_RTL/mkTop_HW_Side.v: $(TOPFILE) build_dir/Top_HW_Side.bo build_dir Verilog_RTL
 #	@echo  "INFO: Verilog RTL generation ..."

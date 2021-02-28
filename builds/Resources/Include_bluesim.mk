@@ -15,7 +15,7 @@ build_dir:
 ifeq (,$(filter clean full_clean,$(MAKECMDGOALS)))
 include .depends.mk
 
-.depends.mk: build_dir
+.depends.mk: | build_dir
 	if ! bluetcl -exec makedepend -elab -sim  $(TMP_DIRS)  $(RTL_GEN_DIRS)  $(BSC_COMPILATION_FLAGS)  -p $(BSC_PATH) -o $@ $(TOPFILE); then rm -f $@ && false; fi
 endif
 
@@ -24,7 +24,7 @@ endif
 	bsc -elab -sim  $(TMP_DIRS)  $(RTL_GEN_DIRS)  $(BSC_COMPILATION_FLAGS)  -p $(BSC_PATH) $<
 
 .PHONY: compile
-compile: build_dir build_dir/Top_HW_Side.bo
+compile: build_dir/Top_HW_Side.bo | build_dir
 #	@echo "INFO: Re-compiling Core (CPU, Caches)"
 #	bsc -u -elab -sim  $(TMP_DIRS)  $(BSC_COMPILATION_FLAGS)  -p $(BSC_PATH)  $(TOPFILE)
 #	@echo "INFO: Re-compiled  Core (CPU, Caches)"
