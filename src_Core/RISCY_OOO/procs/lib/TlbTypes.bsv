@@ -228,28 +228,28 @@ function TlbPermissionCheck hasVMPermission(
     // check execute/read/write permission
     case(access)
         InstFetch: begin
+            excCode = excLoadPageFault;
             if(!pte_type.executable) begin
                 fault = True;
             end
-            excCode = excLoadPageFault;
         end
         DataLoad: begin
+            excCode = excLoadPageFault;
             // need to consider mstatus.mxr bit
             if (!pte_type.readable &&
                 !(pte_type.executable && vm_info.exeReadable)) begin
                 fault = True;
             end
-            excCode = excLoadPageFault;
         end
         DataStore: begin
+            excCode = excStorePageFault;
             // store requires page to be both readable and writable
             if(!(pte_type.readable && pte_type.writable)) begin
                 fault = True;
-                excCode = excStorePageFault;
             end
             else if(cap && !pte_upper_type.cap_writable) begin
+                if (!fault) excCode = excStoreCapPageFault;
                 fault = True;
-                excCode = excStoreCapPageFault;
             end
         end
     endcase
