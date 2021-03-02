@@ -48,7 +48,6 @@ import GetPut::*;
 import ClientServer::*;
 import Connectable::*;
 import FIFOF     :: *;
-// import BRAMCore::*;
 
 // ----------------
 // BSV additional libs
@@ -943,19 +942,7 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
          $display ("    ", fshow (req));
       end
    endrule
-/*
-   function Vector #(SupSizeX2, Maybe #(Instruction16)) prepareFinalInstResp(Vector #(SupSize, Maybe #(Instruction)) respBigInsts, Bit#(1) addr_bit_1);
-       Vector #(SupSizeX2, Maybe #(Instruction16)) respSmallInsts = replicate (Invalid);
-       for (Integer i = 0; i < valueOf (SupSize); i = i+1) begin
-          if (respBigInsts[i] matches tagged Valid .inst) begin
-              respSmallInsts[i*2]       = tagged Valid (truncate(inst));
-              respSmallInsts[(i*2) + 1] = tagged Valid (truncateLSB(inst));
-          end
-       end
-       // This unconventional zero-extension of addr_bit_1 works around a type error in shiftOutFrom0.
-       return shiftOutFrom0(Invalid, respSmallInsts, {4'b0, addr_bit_1});
-   endfunction
-*/
+
    rule rl_mmio_from_fabric_ifetch_rsp (curReq matches tagged MMIO_Fabric_Adapter .addr
                                         &&& (state == WaitResp)
                                         &&& isInstFetch);
