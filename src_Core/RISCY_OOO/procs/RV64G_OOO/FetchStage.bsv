@@ -236,7 +236,10 @@ function InstrFromFetch3 fetch3_2_instC(Fetch3ToDecode in, Instruction inst, Bit
 `ifdef RVFI_DII
       dii_pid: in.dii_pid,
 `endif
-      ppc: fromMaybe(PcCompressed{lsb: in.pc.lsb + 2, idx: in.pc.idx}, in.ppc), // This assumes we will call this function on the last fragment of any instruction.
+      // This assumes we will call this function on the last fragment of any instruction.
+      ppc: fromMaybe(PcCompressed{lsb: in.pc.lsb + 2,
+                                  idx: in.pc.idx + ((in.pc.lsb == -2) ? 1:0)}, // If we move to a new page, we will move to the next index in the compressed PC table.
+                     in.ppc),
       decode_epoch: in.decode_epoch,
       main_epoch: in.main_epoch,
       inst: inst,
