@@ -851,11 +851,8 @@ module mkFetchStage(FetchStage);
         method Bool respValid = perfReqQ.notEmpty;
 `endif
     endinterface
-<<<<<<< HEAD
-=======
 
 `ifdef PERFORMANCE_MONITORING
     method Bool redirect_evt = redirect_evt_reg._read;
 `endif
->>>>>>> 1ef2d0c... Include both execute redirect and commit redirect in "redirect" counter.
 endmodule
