@@ -665,7 +665,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
         if (verbosity >= 1) begin
            $display ("instret:%0d  PC:0x%0h  instr:0x%08h", rg_serial_num, x.pc, x.orig_inst,
-                     "  iType:", fshow (x.iType), "    [doCommitTrap]");
+                     "  iType:", fshow (x.iType), "    [doCommitTrap] %d", cur_cycle);
         end
         if (verbose) begin
            $display ("CommitStage.doCommitTrap_flush: deq_data:   ", fshow (x));
@@ -853,7 +853,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         if(verbose) $display("[doCommitSystemInst] ", fshow(x));
         if (verbosity >= 1) begin
            $display("instret:%0d  PC:0x%0h  instr:0x%08h", rg_serial_num, x.pc, x.orig_inst,
-                    "   iType:", fshow (x.iType), "    [doCommitSystemInst]");
+                    "   iType:", fshow (x.iType), "    [doCommitSystemInst] %d", cur_cycle);
         end
 
         // we claim a phy reg for every inst, so commit its renaming
@@ -1108,7 +1108,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
                     if (verbosity >= 1) begin
                        $display("instret:%0d  PC:0x%0h  instr:0x%08h", rg_serial_num + instret, x.pc, x.orig_inst,
-                                "   iType:", fshow (x.iType), "    [doCommitNormalInst [%0d]]", i);
+                                "   iType:", fshow (x.iType), "    [doCommitNormalInst [%0d]] %d", i, cur_cycle);
                     end
 
 `ifdef INCLUDE_TANDEM_VERIF
