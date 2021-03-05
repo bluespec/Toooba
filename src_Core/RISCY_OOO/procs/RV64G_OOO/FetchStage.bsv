@@ -343,7 +343,7 @@ module mkFetchStage(FetchStage);
     // We stall until the flush is done
     Ehr#(3, Bool) waitForFlush <- mkEhr(False);
 
-    Ehr#(4, CapMem) pc_reg <- mkEhr(nullCap);
+    Ehr#(5, CapMem) pc_reg <- mkEhr(nullCap);
 `ifdef RVFI_DII
     Ehr#(4, Dii_Parcel_Id) dii_pid_reg <- mkEhr(0);
 `endif
@@ -351,6 +351,7 @@ module mkFetchStage(FetchStage);
     Integer pc_decode_port = 1;
     Integer pc_fetch3_port = 2;
     Integer pc_redirect_port = 3;
+    Integer pc_final_port = 4;
 
     // PC compression structure holding an indexed set of PC blocks so that only indexes need be tracked.
     IndexedMultiset#(PcIdx, PcMSB, SupSizeX2) pcBlocks <- mkIndexedMultisetQueue;
@@ -414,6 +415,10 @@ module mkFetchStage(FetchStage);
     endrule
 `endif
 
+    rule updatePcInBtb;
+        nextAddrPred.put_pc(pc_reg[pc_final_port]);
+    endrule
+
     // We don't send req to TLB when waiting for redirect or TLB flush. Since
     // there is no FIFO between doFetch1 and TLB, when OOO commit stage wait
     // TLB idle to change VM CSR / signal flush TLB, there is no wrong path
@@ -421,14 +426,9 @@ module mkFetchStage(FetchStage);
     rule doFetch1(started && !(waitForRedirect[0]) && !(waitForFlush[0]));
         let pc = pc_reg[pc_fetch1_port];
 
-        // Chain of prediction for the next instructions
-        // We need a BTB with a register file with enough ports!
-        // Instead of cascading predictions, we can always feed pc+4*i into
-        // predictor, because we will break superscaler fetch if nextpc != pc+4
-        Vector#(SupSizeX2, Maybe#(CapMem)) pred_future_pc;
-        for(Integer i = 0; i < valueof(SupSizeX2); i = i+1) begin
-            pred_future_pc[i] = nextAddrPred.pred[i].predPc(addPc(pc, fromInteger(2 * i)));
-        end
+        // Grab a chain of predictions from the BTB, which predicts targets for the next
+        // set of addresses based on the current PC.
+        Vector#(SupSizeX2, Maybe#(CapMem)) pred_future_pc = nextAddrPred.pred;
 
         // Next pc is the first nextPc that breaks the chain of pc+4 or
         // that is at the end of a cacheline.
@@ -467,7 +467,7 @@ module mkFetchStage(FetchStage);
             main_epoch: f_main_epoch};
 
         f12f2.enq(out);
-        if (verbose) $display("Fetch1: ", fshow(out), " posLastSupX2: %d", posLastSupX2);
+        if (verbose) $display("%d Fetch1: ", cur_cycle, fshow(out), " posLastSupX2: %d", posLastSupX2);
     endrule
 
     rule doFetch2;
@@ -749,7 +749,7 @@ module mkFetchStage(FetchStage);
 
                   // check previous mispred
                   if (nextPc matches tagged Valid .decode_pred_next_pc &&& (decode_pred_next_pc != ppc)) begin
-                     if (verbose) $display("ppc and decodeppc :  %h %h", ppc, decode_pred_next_pc);
+                     if (verbose) $display("%x: ppc and decodeppc :  %h %h", pc, ppc, decode_pred_next_pc);
                      decode_epoch_local = !decode_epoch_local;
                      redirectPc = Valid (decode_pred_next_pc); // record redirect next pc
 `ifdef RVFI_DII
