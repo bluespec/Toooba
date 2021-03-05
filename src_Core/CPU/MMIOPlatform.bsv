@@ -162,7 +162,7 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
 
    provisos (Bits #(Data, 64)); // this module assumes Data is 64-bit wide
 
-   Integer verbosity = 2;
+   Integer verbosity = 0;
 
    // mtimecmp
    Vector#(CoreNum, Reg#(Data)) mtimecmp <- replicateM(mkReg(0));
