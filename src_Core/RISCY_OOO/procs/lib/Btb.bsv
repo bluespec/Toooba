@@ -116,7 +116,7 @@ module mkBtb(NextAddrPred);
         if(taken) begin
             valid[bank][index] <= True;
             records[bank].wrReq(index, BtbRecord{tag: tag, nextPc: nextPc});
-        end else
+        end else begin
             // current instruction had been prediceted taken, so clear its target in the TLB
             valid[bank][index] <= False;
             records[bank].wrReq(index, BtbRecord{tag: {4'ha,0}, nextPc: nextPc}); // An invalid virtual address.
