@@ -1,6 +1,5 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// 
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +7,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -60,5 +59,31 @@ module mkRWBramCore(RWBramCore#(addrT, dataT)) provisos(
 
     method Action deqRdResp;
         rdReqQ.deq;
+    endmethod
+endmodule
+
+module mkRWBramCoreUG(RWBramCore#(addrT, dataT)) provisos(
+    Bits#(addrT, addrSz), Bits#(dataT, dataSz)
+);
+    BRAM_DUAL_PORT#(addrT, dataT) bram <- mkBRAMCore2(valueOf(TExp#(addrSz)), False);
+    BRAM_PORT#(addrT, dataT) wrPort = bram.a;
+    BRAM_PORT#(addrT, dataT) rdPort = bram.b;
+
+    method Action wrReq(addrT a, dataT d);
+        wrPort.put(True, a, d);
+    endmethod
+
+    method Action rdReq(addrT a);
+        rdPort.put(False, a, ?);
+    endmethod
+
+    method dataT rdResp;
+        return rdPort.read;
+    endmethod
+
+    method rdRespValid = True;
+
+    method Action deqRdResp;
+        noAction;
     endmethod
 endmodule
