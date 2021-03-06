@@ -38,7 +38,7 @@
 import Types::*;
 import ProcTypes::*;
 import ConfigReg::*;
-import RegFile::*;
+import RWBramCore::*;
 import Vector::*;
 import CHERICC_Fat::*;
 import CHERICap::*;
@@ -86,7 +86,7 @@ module mkBtb(NextAddrPred);
     Reg#(BtbTag) tag_reg <- mkRegU;
     Reg#(BtbBank) firstBank_reg <- mkRegU;
     Vector#(SupSizeX2, Reg#(BtbIndex)) idxs_reg <- replicateM(mkRegU);
-    Vector#(SupSizeX2, RegFile#(BtbIndex, BtbRecord)) records <- replicateM(mkRegFileWCF(0,~0));
+    Vector#(SupSizeX2, RWBramCore#(BtbIndex, BtbRecord)) records <- replicateM(mkRWBramCoreUG);
     Vector#(SupSizeX2, Vector#(BtbIndices, Reg#(Bool))) valid <- replicateM(replicateM(mkConfigReg(False)));
 
     RWire#(BtbUpdate) updateEn <- mkRWire;
@@ -115,11 +115,11 @@ module mkBtb(NextAddrPred);
         $display("cap: %x, btbaddr: ", pc, fshow(getBtbAddr(pc)), " nextPc:%x", nextPc);
         if(taken) begin
             valid[bank][index] <= True;
-            records[bank].upd(index, BtbRecord{tag: tag, nextPc: nextPc});
-        end else if(records[bank].sub(index).tag == tag ) begin
-            // current instruction has target in btb, so clear it
+            records[bank].wrReq(index, BtbRecord{tag: tag, nextPc: nextPc});
+        end else
+            // current instruction had been prediceted taken, so clear its target in the TLB
             valid[bank][index] <= False;
-            records[bank].upd(index, BtbRecord{tag: {4'ha,0}, nextPc: nextPc}); // An invalid virtual address.
+            records[bank].wrReq(index, BtbRecord{tag: {4'ha,0}, nextPc: nextPc}); // An invalid virtual address.
         end
     endrule
 
@@ -139,13 +139,14 @@ module mkBtb(NextAddrPred);
             BtbAddr a = unpack(pack(addr) + fromInteger(i));
             $display("put pc[%d]: ", i, fshow(a));
             idxs_reg[a.bank] <= a.index;
+            records[a.bank].rdReq(a.index);
         end
     endmethod
 
     method Vector#(SupSizeX2, Maybe#(CapMem)) pred;
         Vector#(SupSizeX2, Maybe#(BtbRecord)) recs = ?;
         for (Integer i = 0; i < valueOf(SupSizeX2); i = i + 1)
-            recs[i] = (valid[i][idxs_reg[i]]) ? Valid(records[i].sub(idxs_reg[i])):Invalid;
+            recs[i] = (valid[i][idxs_reg[i]]) ? Valid(records[i].rdResp):Invalid;
         function Maybe#(CapMem) tagHit(Maybe#(BtbRecord) br) =
             case (br) matches
                 tagged Valid .b &&& (tag_reg == b.tag): return Valid(b.nextPc);
