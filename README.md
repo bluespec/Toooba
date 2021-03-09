@@ -58,10 +58,10 @@ timer and a UART for console I/O.
 still working out robust mechanisms to import C code, which is used in
 parts of the testbench.]
 
-This repository contains two sample build directories, to build
+This repository contains four sample build directories, to build
 an RV64ACDFIMSUxCHERI simulator, using Bluesim and Verilog simulation.
-The generated Verilog is synthesizable.
 There are also RVFI-DII variants of these to be used with [TestRIG](https://github.com/CTSRD-CHERI/TestRIG).
+The generated Verilog is synthesizable.
 
 #### Simulation
 
