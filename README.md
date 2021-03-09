@@ -1,15 +1,13 @@
 # CHERI-Enabled Out-of-Order RISC-V Core
 
-This is a prototype of an out-of-order core that implements hardware capabilities (see [CHERI](https://www.cl.cam.ac.uk/research/security/ctsrd/cheri/) for details). It is based off of [Bluespec's Toooba](https://github.com/bluespec/Toooba), which is a slight variation of MIT's RISCY-OO core.
+This is a prototype of an out-of-order core that implements hardware capabilities (see [CHERI](https://www.cl.cam.ac.uk/research/security/ctsrd/cheri/) for details).
+It is based off of [Bluespec's Toooba](https://github.com/bluespec/Toooba), which is a slight variation of [MIT's RisyOO core](https://github.com/csail-csg/riscy-OOO).
 
 ----------------------------------------------------------------
 ### Note re. distribution of MIT RISCY-OOO sources.
 
 The directory `src_Core/RISCY_OOO` contains sources copied from MIT's
 `riscy-OOO` repository.  See `LICENSE_RISCY-OOO` for MIT's license.
-
-[Note: MIT's repository is on an MIT git server, which can only be
- accessed with credentials; hence the local copy in of these files.]
 
 Bluespec's modifications to files in src_Core/RISCY_OOO are relatively
 small and mostly additive:
@@ -18,6 +16,8 @@ small and mostly additive:
 - To add support for Bluespec's Tandem Verification
 - To add support for Bluespec's Debug Module.
 - To fix about bugs leading to about half a dozen failures of standard RISC-V ISA tests
+
+The University of Cambridge made changes to RiscyOO to add support for [CHERI capabilities](https://www.cl.cam.ac.uk/techreports/UCAM-CL-TR-941.pdf). For details on what CHERI instructions do, please see the [Instruction Set Architecture document](https://www.cl.cam.ac.uk/techreports/UCAM-CL-TR-951.pdf).
 
 ----------------------------------------------------------------
 ### About the source codes (in BSV and Verilog)
