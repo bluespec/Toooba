@@ -419,7 +419,7 @@ module mkFetchStage(FetchStage);
     endrule
 `endif
 `ifdef PERFORMANCE_MONITORING
-    Reg#(Bool) redirect_evt <- mkDReg(False);
+    Reg#(Bool) redirect_evt_reg <- mkDReg(False);
 `endif
 
     rule updatePcInBtb;
@@ -905,7 +905,7 @@ module mkFetchStage(FetchStage);
         // we conservatively set wait for flush TODO make this an input parameter
         waitForFlush[2] <= True;
 `ifdef PERFORMANCE_MONITORING
-        redirect_evt <= True;
+        redirect_evt_reg <= True;
 `endif
     endmethod
 
@@ -1006,6 +1006,6 @@ module mkFetchStage(FetchStage);
     endinterface
 
 `ifdef PERFORMANCE_MONITORING
-    method Bool redirect_evt = redirect_evt._read;
+    method Bool redirect_evt = redirect_evt_reg._read;
 `endif
 endmodule
