@@ -53,6 +53,7 @@ import MMIOInst::*;
 import IndexedMultiset::*;
 
 import Cur_Cycle :: *;
+import DReg :: *;
 
 // ================================================================
 // For fv_decode_C function and related types and definitions
@@ -97,6 +98,9 @@ interface FetchStage;
 
     // performance
     interface Perf#(DecStagePerfType) perf;
+`ifdef PERFORMANCE_MONITORING
+    method Bool redirect_evt;
+`endif
 endinterface
 
 // PC "compression" types to facilitate storing common upper PC bits in a
@@ -331,6 +335,9 @@ module mkFetchStage(FetchStage);
             data: d
         });
     endrule
+`endif
+`ifdef PERFORMANCE_MONITORING
+    Reg#(Bool) redirect_evt <- mkDReg(False);
 `endif
 
     // We don't send req to TLB when waiting for redirect or TLB flush. Since
@@ -746,6 +753,9 @@ module mkFetchStage(FetchStage);
         // this redirect may be caused by a trap/system inst in commit stage
         // we conservatively set wait for flush TODO make this an input parameter
         waitForFlush <= True;
+`ifdef PERFORMANCE_MONITORING
+        redirect_evt <= True;
+`endif
     endmethod
 
 `ifdef INCLUDE_GDB_CONTROL
@@ -841,4 +851,11 @@ module mkFetchStage(FetchStage);
         method Bool respValid = perfReqQ.notEmpty;
 `endif
     endinterface
+<<<<<<< HEAD
+=======
+
+`ifdef PERFORMANCE_MONITORING
+    method Bool redirect_evt = redirect_evt._read;
+`endif
+>>>>>>> 1ef2d0c... Include both execute redirect and commit redirect in "redirect" counter.
 endmodule
