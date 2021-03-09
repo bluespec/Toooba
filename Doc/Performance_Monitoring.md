@@ -65,8 +65,8 @@ IMem, DMem L1 Cache, and LL Cache; events identical for all three, though some a
 - Load miss &ndash; count loads missed (0x21/0x31/0x61)
 - Load miss latency &ndash; count cycles waiting on a load miss (0x22/0x32/0x62)
 - Store &ndash; count stores requested by cpu (unimplemented/0x33/unimplemented)
-- Store miss &ndash; unimplemented
-- Store miss latency &ndash; unimplemented
+- Store miss &ndash; (unimplemented/unimplemented/unimplemented)
+- Store miss latency &ndash; (unimplemented/unimplemented/unimplemented)
 - Amo &ndash; count atomic ops requested by cpu (unimplemented/0x36/unimplemented)
 - Amo miss &ndash; count atomics missed (unimplemented/0x37/unimplemented)
 - Amo miss latency &ndash; count cycles waiting on a atomics miss (unimplemented/0x38/unimplemented)
