@@ -271,7 +271,7 @@ module mkCore#(CoreId coreId)(Core);
 `endif
 
 `ifdef PERFORMANCE_MONITORING
-   Array #(Reg #(EventsCore)) hpm_core_events <- mkDRegOR (5, unpack (0));
+   Array #(Reg #(EventsCore)) hpm_core_events <- mkDRegOR (2, unpack (0));
 `endif
 
    // ================================================================
@@ -416,11 +416,6 @@ module mkCore#(CoreId coreId)(Core);
 `endif
                     );
                     globalSpecUpdate.incorrectSpec(False, spec_tag, inst_tag);
-`ifdef PERFORMANCE_MONITORING
-                    EventsCore events = unpack (0);
-                    events.evt_REDIRECT = 1;
-                    hpm_core_events[1] <= events;
-`endif
                 endmethod
                 method correctSpec = globalSpecUpdate.correctSpec[finishAluCorrectSpecPort(i)].put;
                 method doStats = doStatsReg._read;
@@ -1103,7 +1098,9 @@ module mkCore#(CoreId coreId)(Core);
      Reg#(EventsCache) events_llc_reg <- mkRegU;
      Reg#(EventsCache) events_tgc_reg <- mkRegU;
      rule report_events;
-         hpm_core_events[2] <= unpack(pack(commitStage.events));
+         EventsCore events = unpack(pack(commitStage.events));
+         events.evt_REDIRECT = fetchStage.redirect_evt;
+         hpm_core_events[1] <= events;
      endrule
 
      Vector #(1, Bit #(Report_Width)) null_evt = replicate (0);
