@@ -112,7 +112,6 @@ module mkBtb(NextAddrPred);
         let index = getIndex(pc);
         let tag = getTag(pc);
         let bank = getBank(pc);
-        $display("cap: %x, btbaddr: ", pc, fshow(getBtbAddr(pc)), " nextPc:%x", nextPc);
         if(taken) begin
             valid[bank][index] <= True;
             records[bank].wrReq(index, BtbRecord{tag: tag, nextPc: nextPc});
@@ -137,7 +136,6 @@ module mkBtb(NextAddrPred);
         firstBank_reg <= addr.bank;
         for (Integer i = 0; i < valueOf(SupSizeX2); i = i + 1) begin
             BtbAddr a = unpack(pack(addr) + fromInteger(i));
-            $display("put pc[%d]: ", i, fshow(a));
             idxs_reg[a.bank] <= a.index;
             records[a.bank].rdReq(a.index);
         end
