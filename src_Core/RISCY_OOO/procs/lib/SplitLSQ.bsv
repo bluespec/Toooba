@@ -43,6 +43,7 @@ import Vector::*;
 import GetPut::*;
 import Assert::*;
 import Ehr::*;
+import Map::*;
 import HasSpecBits::*;
 import SpecFifo::*;
 import StoreBuffer::*;
@@ -270,6 +271,7 @@ typedef struct {
 
 typedef struct {
     Bool waitWPResp;
+    Bool delayIssue;
 } LSQUpdateAddrResult deriving(Bits, Eq, FShow);
 
 typedef struct {
@@ -347,7 +349,8 @@ interface SplitLSQ;
     method Action enqLd(InstTag inst_tag,
                         MemInst mem_inst,
                         Maybe#(PhyDst) dst,
-                        SpecBits spec_bits);
+                        SpecBits spec_bits,
+                        Bit#(16) pc_hash);
     method Action enqSt(InstTag inst_tag,
                         MemInst mem_inst,
                         Maybe#(PhyDst) dst,
@@ -621,7 +624,7 @@ module mkSplitLSQ(SplitLSQ);
     // request faults), we should first copy the MMIO request to a reg, and
     // then kill using the info in reg.
 
-    Bool verbose = False;
+    Bool verbose = True;
 
     // we may simplify things in case of single core
     Bool multicore = valueof(CoreNum) > 1;
@@ -638,6 +641,8 @@ module mkSplitLSQ(SplitLSQ);
     Vector#(LdQSize, Reg#(Bool))                    ld_acq             <- replicateM(mkRegU);
     Vector#(LdQSize, Reg#(Bool))                    ld_rel             <- replicateM(mkRegU);
     Vector#(LdQSize, Reg#(Maybe#(PhyDst)))          ld_dst             <- replicateM(mkRegU);
+    Vector#(LdQSize, Reg#(Bit#(16)))                ld_pc_hash         <- replicateM(mkRegU);
+    Vector#(LdQSize, Reg#(Bool))                    ld_waitForOlderSt  <- replicateM(mkRegU);
     Vector#(LdQSize, Ehr#(2, Addr))                 ld_paddr           <- replicateM(mkEhr(?));
     Vector#(LdQSize, Ehr#(2, Bool))                 ld_isMMIO          <- replicateM(mkEhr(?));
     Vector#(LdQSize, Ehr#(2, MemDataByteEn))        ld_shiftedBE       <- replicateM(mkEhr(?));
@@ -747,10 +752,12 @@ module mkSplitLSQ(SplitLSQ);
     let ld_killed_enqIss  = getVEhrPort(ld_killed, 2); // assert
     let ld_killed_enq     = getVEhrPort(ld_killed, 2); // write
 
-    let ld_olderSt_deqLd  = getVEhrPort(ld_olderSt, 0);
-    let ld_olderSt_verify = getVEhrPort(ld_olderSt, 0);
-    let ld_olderSt_deqSt  = getVEhrPort(ld_olderSt, 0); // write
-    let ld_olderSt_enq    = getVEhrPort(ld_olderSt, 1); // write
+    let ld_olderSt_findIss = getVEhrPort(ld_olderSt, 0);
+    let ld_olderSt_deqLd   = getVEhrPort(ld_olderSt, 0);
+    let ld_olderSt_verify  = getVEhrPort(ld_olderSt, 0);
+    let ld_olderSt_updAddr = getVEhrPort(ld_olderSt, 0);
+    let ld_olderSt_deqSt   = getVEhrPort(ld_olderSt, 0); // write
+    let ld_olderSt_enq     = getVEhrPort(ld_olderSt, 1); // write
 
     let ld_olderStVerified_deqLd  = getVEhrPort(ld_olderStVerified, 0);
     let ld_olderStVerified_verify = getVEhrPort(ld_olderStVerified, 0); // write
@@ -932,6 +939,7 @@ module mkSplitLSQ(SplitLSQ);
     RWire#(void) wrongSpec_wakeBySB_conflict <- mkRWire;
     // make wrongSpec more urgent than firstSt (resolve bsc error)
     Wire#(Bool) wrongSpec_urgent_firstSt <- mkDWire(True);
+    Map#(Bit#(8),Bit#(8),Bit#(0)) ldKillMap <- mkMapStatic;
 
     function LdQTag getNextLdPtr(LdQTag t);
         return t == fromInteger(valueOf(LdQSize) - 1) ? 0 : t + 1;
@@ -1082,6 +1090,7 @@ module mkSplitLSQ(SplitLSQ);
                 !ld_inIssueQ_findIss[i] && // (3) not in issueQ
                 !ld_executing_findIss[i] && // (4) not executing (or done)
                 !isValid(ld_depLdQDeq_findIss[i]) &&
+                !(ld_waitForOlderSt[i] && isValid(ld_olderSt_findIss[i])) &&
 `ifndef TSO_MM
                 !isValid(ld_depLdEx_findIss[i]) &&
                 !isValid(ld_depSBDeq_findIss[i]) &&
@@ -1428,7 +1437,8 @@ module mkSplitLSQ(SplitLSQ);
     method Action enqLd(InstTag inst_tag,
                         MemInst mem_inst,
                         Maybe#(PhyDst) dst,
-                        SpecBits spec_bits) if(ld_can_enq_wire);
+                        SpecBits spec_bits,
+                        Bit#(16) pc_hash) if(ld_can_enq_wire);
         if(verbose) begin
             $display("[LSQ - enqLd] enqP %d; ", ld_enqP,
                      "; ", fshow(inst_tag),
@@ -1457,6 +1467,9 @@ module mkSplitLSQ(SplitLSQ);
         ld_executing_enq[ld_enqP] <= False;
         ld_done_enq[ld_enqP] <= False;
         ld_killed_enq[ld_enqP] <= Invalid;
+        ld_pc_hash[ld_enqP] <= pc_hash;
+        ld_waitForOlderSt[ld_enqP] <= isValid(ldKillMap.lookup(unpack(pc_hash)));
+        $display("[Map - lookup] k: %x", pc_hash, " v: %x", isValid(ldKillMap.lookup(unpack(pc_hash))));
         ld_readFrom_enq[ld_enqP] <= Invalid;
         ld_depLdQDeq_enq[ld_enqP] <= Invalid;
         ld_depStQDeq_enq[ld_enqP] <= Invalid;
@@ -1551,6 +1564,8 @@ module mkSplitLSQ(SplitLSQ);
         // the olderSt field of the older Ld). "equal to" is also needed
         // because of Ld killing Ld.
         Maybe#(StQVirTag) curSt = Invalid;
+        // Delay issue due to predicted aliasing between load and older store.
+        Bool delayIssue = False;
 
         // update LQ/SQ entry and prepare for killing loads
         if(lsqTag matches tagged Ld .tag) begin
@@ -1573,6 +1588,8 @@ module mkSplitLSQ(SplitLSQ);
             ld_allowCap[tag] <= allowCap;
             ld_isMMIO_updAddr[tag] <= mmio;
             ld_shiftedBE_updAddr[tag] <= shift_be;
+
+            delayIssue = isValid(ld_olderSt_updAddr[tag]) && ld_waitForOlderSt[tag];
 
 `ifndef TSO_MM
             // for WEAK model, try to kill younger load in case of multicore
@@ -1682,7 +1699,7 @@ module mkSplitLSQ(SplitLSQ);
                 LdKilledBy by = lsqTag matches tagged Ld .unuse ? Ld : St;
                 ld_killed_updAddr[killTag] <= Valid (by);
                 if(verbose) begin
-                    $display("[LSQ - updateAddr] kill tag %d", killTag);
+                    $display("[LSQ - updateAddr] kill tag %d", killTag, " ld_hash: %x", ld_pc_hash[killTag]);
                 end
                 // checks
                 doAssert(ld_computed_updAddr[killTag], "must be computed");
@@ -1700,7 +1717,8 @@ module mkSplitLSQ(SplitLSQ);
             waitWPResp: (case(lsqTag) matches
                 tagged Ld .tag: (ld_waitWPResp_updAddr[tag]);
                 default: False;
-            endcase)
+            endcase),
+            delayIssue: delayIssue
         };
     endmethod
 
@@ -1873,8 +1891,8 @@ module mkSplitLSQ(SplitLSQ);
         StQTag stTag = validValue(matchStTag);
         StQVirTag stVTag = stVirTags[stTag];
         if(isValid(matchLdTag) && (!isValid(matchStTag) ||
-                                   (isValid(ldTagOlderSt) &&
-                                    validValue(ldTagOlderSt) >= stVTag))) begin
+                                            (isValid(ldTagOlderSt) &&
+                                             validValue(ldTagOlderSt) >= stVTag))) begin
             // stalled by Ld, Lr or acquire in LQ
             issRes = Stall (LdQ);
             if(ld_acq[ldTag]) begin
@@ -2088,6 +2106,7 @@ module mkSplitLSQ(SplitLSQ);
                      "must be done");
             doAssert(!ld_waitWPResp_deqLd[deqP],
                      "cannot wait for wrong path resp");
+            ldKillMap.update(unpack(ld_pc_hash[deqP]), 0); // Update predictor.
         end
 
         // remove the entry
@@ -2295,6 +2314,7 @@ module mkSplitLSQ(SplitLSQ);
                         ld_executing_wrongSpec[i] &&
                         !ld_done_wrongSpec[i]) begin
                         ld_waitWPResp_wrongSpec[i] <= True;
+                        $display("[LSQ - killLdQ] set ld_waitWPResp_wrongSpec[%x]", i);
                         doAssert(ld_memFunc[i] == Ld,
                                  "only load resp can be wrong path");
                     end

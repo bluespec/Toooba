@@ -1114,3 +1114,10 @@ typedef struct {
 } EventsCoreMem deriving (Bits, FShow); // Memory needs more space for reporting delays
 typedef TDiv#(SizeOf#(EventsCoreMem),Report_Width) EventsCoreMemElements;
 `endif
+
+function Bit#(outWidth) hash(Bit#(inWidth) in)
+    provisos(Add#(a__, inWidth, TMul#(TDiv#(inWidth, outWidth), outWidth)),
+             Add#(1, b__, TDiv#(inWidth, outWidth)));
+    Vector#(TDiv#(inWidth,outWidth), Bit#(outWidth)) vec = unpack(zeroExtend(in));
+    return fold( \^ , vec);
+endfunction

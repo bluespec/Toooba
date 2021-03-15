@@ -239,7 +239,7 @@ interface MemExePipeline;
 endinterface
 
 module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
-    Bool verbose = False;
+    Bool verbose = True;
 
     // we change cache request in case of single core, becaues our MSI protocol
     // is not good with single core
@@ -668,7 +668,8 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         // issue non-MMIO Ld which has no exception and is not waiting for
         // wrong path resp
         if (x.mem_func == Ld && !isMMIO &&
-            !isValid(cause) && !updRes.waitWPResp) begin
+            !isValid(cause) && !updRes.waitWPResp
+            && !updRes.delayIssue) begin
             LdQTag ldTag = ?;
             if(x.ldstq_tag matches tagged Ld .t) begin
                 ldTag = t;
