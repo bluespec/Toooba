@@ -110,6 +110,7 @@ compile: tagsparams
 .PHONY: clean
 clean:
 	rm -r -f  *~  Makefile_*  symbol_table.txt  build_dir/*  obj_dir Verilog_RTL/*
+	rm -r -f TagTableStructure.bsv .depends.mk
 
 .PHONY: full_clean
 full_clean: clean
