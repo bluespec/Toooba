@@ -17,6 +17,7 @@ help:
 	@echo '                           For Bluesim: generates Bluesim intermediate files'
 	@echo '                           For Verilog simulation: generates RTL'
 	@echo '    make  simulator    Compiles and links intermediate files/RTL to create simulation executable'
+	@echo '    make  tagsparams   Generates the CHERI tag controller parameters source file'
 	@echo '                           (Bluesim, verilator or iverilog)'
 	@echo '    make  all          = make  compile  simulator'
 	@echo ''
@@ -91,6 +92,18 @@ isa_tests:
 	@echo "Running regressions on ISA tests; saving logs in Logs/"
 	$(REPO)/Tests/Run_regression.py  ./exe_HW_sim  $(REPO)  ./Logs  $(ARCH)
 	@echo "Finished running regressions; saved logs in Logs/"
+
+# ================================================================
+# Generate Bluespec CHERI tag controller source file
+CAPSIZE = 128
+TAGS_STRUCT = 0 64
+TAGS_ALIGN = 32
+.PHONY: tagsparams
+tagsparams: $(REPO)/libs/TagController/tagsparams.py
+	@echo "INFO: Re-generating CHERI tag controller parameters"
+	$^ -v -c $(CAPSIZE) -s $(TAGS_STRUCT:"%"=%) -a $(TAGS_ALIGN) --covered-start-addr 0x80000000 --covered-mem-size 0x3fffc000 --top-addr 0xbffff000 -b TagTableStructure.bsv
+	@echo "INFO: Re-generated CHERI tag controller parameters"
+compile: tagsparams
 
 # ================================================================
 
