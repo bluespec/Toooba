@@ -99,9 +99,10 @@ CAPSIZE = 128
 TAGS_STRUCT = 0 64
 TAGS_ALIGN = 32
 .PHONY: tagsparams
-tagsparams: $(REPO)/libs/TagController/tagsparams.py
+tagsparams: TagTableStructure.bsv
+TagTableStructure.bsv: $(REPO)/libs/TagController/tagsparams.py
 	@echo "INFO: Re-generating CHERI tag controller parameters"
-	$^ -v -c $(CAPSIZE) -s $(TAGS_STRUCT:"%"=%) -a $(TAGS_ALIGN) --covered-start-addr 0x80000000 --covered-mem-size 0x3fffc000 --top-addr 0xbffff000 -b TagTableStructure.bsv
+	$^ -v -c $(CAPSIZE) -s $(TAGS_STRUCT:"%"=%) -a $(TAGS_ALIGN) --covered-start-addr 0x80000000 --covered-mem-size 0x3fffc000 --top-addr 0xbffff000 -b $@
 	@echo "INFO: Re-generated CHERI tag controller parameters"
 compile: tagsparams
 
@@ -115,7 +116,6 @@ clean:
 .PHONY: full_clean
 full_clean: clean
 	rm -r -f  $(SIM_EXE_FILE)*  *.log  *.vcd  *.hex  Logs/
-	rm -f .depends.mk
-	touch TagTableStructure.bsv
+	rm -f TagTableStructure.bsv .depends.mk
 
 # ================================================================

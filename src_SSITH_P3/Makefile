@@ -6,6 +6,7 @@
 help:
 	@echo '    make  compile      Recompile Core (CPU, caches) into Verilog_RTL'
 	@echo '                           NOTE: needs Bluespec bsc compiler'
+	@echo '    make  tagsparams   Generates the CHERI tag controller parameters source file'
 	@echo ''
 	@echo '    make  clean        Remove intermediate build-files'
 	@echo '    make  full_clean   Restore this directory to pristine state'
@@ -97,6 +98,20 @@ BSC_COMPILATION_FLAGS += \
 	-steps-warn-interval 1000000
 
 # ================================================================
+# Generate Bluespec CHERI tag controller source file
+CAPSIZE = 128
+TAGS_STRUCT = 0 64
+TAGS_ALIGN = 32
+.PHONY: tagsparams
+tagsparams: src_BSV/TagTableStructure.bsv
+src_BSV/TagTableStructure.bsv: $(REPO)/libs/TagController/tagsparams.py
+	@echo "INFO: Re-generating CHERI tag controller parameters"
+	$^ -v -c $(CAPSIZE) -s $(TAGS_STRUCT:"%"=%) -a $(TAGS_ALIGN) --covered-start-addr 0xc0000000 --covered-mem-size 0xbfff8000 --top-addr 0x17ffff000 -b $@
+	@echo "INFO: Re-generated CHERI tag controller parameters"
+compile_sim: tagsparams
+compile_synth: tagsparams
+
+# ================================================================
 # Generate Verilog RTL from BSV sources (needs Bluespec 'bsc' compiler)
 
 BUILD_DIRS_SYNTH = -bdir build_dir_synth  -info-dir build_dir_synth
@@ -129,7 +144,7 @@ compile_sim: | build_dir_sim Verilog_RTL_sim
 
 .PHONY: clean
 clean:
-	rm -r -f  *~  Makefile_*  build_dir_sim build_dir_synth
+	rm -r -f  *~  Makefile_*  build_dir_sim build_dir_synth src_BSV/TagTableStructure.bsv
 
 .PHONY: full_clean
 full_clean: clean
