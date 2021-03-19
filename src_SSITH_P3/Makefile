@@ -106,7 +106,7 @@ TAGS_ALIGN = 32
 tagsparams: src_BSV/TagTableStructure.bsv
 src_BSV/TagTableStructure.bsv: $(REPO)/libs/TagController/tagsparams.py
 	@echo "INFO: Re-generating CHERI tag controller parameters"
-	$^ -v -c $(CAPSIZE) -s $(TAGS_STRUCT:"%"=%) -a $(TAGS_ALIGN) --data-store-base-addr 0x80000000 -b $@ 0x3fffc000 0xbffff000
+	$^ -v -c $(CAPSIZE) -s $(TAGS_STRUCT:"%"=%) -a $(TAGS_ALIGN) --data-store-base-addr 0xc0000000 -b $@ 0xbfff8000 0x17ffff000
 	@echo "INFO: Re-generated CHERI tag controller parameters"
 compile_sim: tagsparams
 compile_synth: tagsparams
