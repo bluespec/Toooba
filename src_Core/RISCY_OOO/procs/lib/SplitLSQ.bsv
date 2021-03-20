@@ -624,7 +624,7 @@ module mkSplitLSQ(SplitLSQ);
     // request faults), we should first copy the MMIO request to a reg, and
     // then kill using the info in reg.
 
-    Bool verbose = True;
+    Bool verbose = False;
 
     // we may simplify things in case of single core
     Bool multicore = valueof(CoreNum) > 1;
@@ -939,7 +939,11 @@ module mkSplitLSQ(SplitLSQ);
     RWire#(void) wrongSpec_wakeBySB_conflict <- mkRWire;
     // make wrongSpec more urgent than firstSt (resolve bsc error)
     Wire#(Bool) wrongSpec_urgent_firstSt <- mkDWire(True);
-    Map#(Bit#(8),Bit#(8),Bit#(0)) ldKillMap <- mkMapStatic;
+    Map#(Bit#(8),Bit#(8),Bool) ldKillMap <- mkMapStatic;
+    Reg#(Bit#(16)) rand_count <- mkReg(0);
+    rule inc_rand_count;
+        rand_count <= rand_count + 1;
+    endrule
 
     function LdQTag getNextLdPtr(LdQTag t);
         return t == fromInteger(valueOf(LdQSize) - 1) ? 0 : t + 1;
@@ -1468,8 +1472,7 @@ module mkSplitLSQ(SplitLSQ);
         ld_done_enq[ld_enqP] <= False;
         ld_killed_enq[ld_enqP] <= Invalid;
         ld_pc_hash[ld_enqP] <= pc_hash;
-        ld_waitForOlderSt[ld_enqP] <= isValid(ldKillMap.lookup(unpack(pc_hash)));
-        $display("[Map - lookup] k: %x", pc_hash, " v: %x", isValid(ldKillMap.lookup(unpack(pc_hash))));
+        ld_waitForOlderSt[ld_enqP] <= fromMaybe(False, ldKillMap.lookup(unpack(pc_hash)));
         ld_readFrom_enq[ld_enqP] <= Invalid;
         ld_depLdQDeq_enq[ld_enqP] <= Invalid;
         ld_depStQDeq_enq[ld_enqP] <= Invalid;
@@ -1593,7 +1596,7 @@ module mkSplitLSQ(SplitLSQ);
 
 `ifndef TSO_MM
             // for WEAK model, try to kill younger load in case of multicore
-            if(multicore) begin
+            if(multicore && False) begin // XXX This case is disabled for now as it causes notable performance anomolies
                 doKill = True;
                 curSt = olderStVirTags[tag];
                 LdQVirTag virTag = ldVirTags[tag];
@@ -2106,7 +2109,10 @@ module mkSplitLSQ(SplitLSQ);
                      "must be done");
             doAssert(!ld_waitWPResp_deqLd[deqP],
                      "cannot wait for wrong path resp");
-            ldKillMap.update(unpack(ld_pc_hash[deqP]), 0); // Update predictor.
+            ldKillMap.update(unpack(ld_pc_hash[deqP]), True); // Update predictor.
+        end else if ((rand_count & (4096-1)) == 0) begin
+            // "randomly" evict trained entries in the store-to-load aliasing predictor.
+            ldKillMap.update(unpack(ld_pc_hash[deqP]), False);
         end
 
         // remove the entry
@@ -2314,7 +2320,6 @@ module mkSplitLSQ(SplitLSQ);
                         ld_executing_wrongSpec[i] &&
                         !ld_done_wrongSpec[i]) begin
                         ld_waitWPResp_wrongSpec[i] <= True;
-                        $display("[LSQ - killLdQ] set ld_waitWPResp_wrongSpec[%x]", i);
                         doAssert(ld_memFunc[i] == Ld,
                                  "only load resp can be wrong path");
                     end

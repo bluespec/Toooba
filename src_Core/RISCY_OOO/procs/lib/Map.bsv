@@ -53,7 +53,6 @@ Bounded#(i), Literal#(i), Bits#(i, a__));
 
     method Action update(Tuple2#(k,i) ki, v value);
         match {.key, .index} = ki;
-        $display("[Map - update] k: %x", key, " v: %x", value, " index: %x", index);
         mem.upd(index, tuple2(key, value));
     endmethod
     method Maybe#(v) lookup(Tuple2#(k,i) ki);
