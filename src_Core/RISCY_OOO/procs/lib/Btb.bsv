@@ -41,7 +41,7 @@ endinterface
 
 // Local BTB Typedefs
 typedef 1 PcLsbsIgnore;
-typedef 256 BtbEntries; // 4KB BTB
+typedef 1024 BtbEntries;
 typedef Bit#(TLog#(SupSizeX2)) BtbBank;
 typedef TDiv#(BtbEntries,SupSizeX2) BtbIndices;
 typedef Bit#(TLog#(BtbIndices)) BtbIndex;
