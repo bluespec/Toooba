@@ -33,14 +33,6 @@
 
 import RegFile::*;
 
-function inT poorMansMod(inT val, Integer i)
-    provisos (Bits#(inT, inW));
-    Bit#(inW) mask = ~((~0) << log2(i));
-    Bit#(inW) low = pack(val) & mask;
-    Bit#(inW) max = fromInteger(i);
-    return unpack(pack(val) & (mask >> ((low < max) ? 0:1)));
-endfunction
-
 interface Map#(type i, type k, type v);
     method Action update(Tuple2#(k,i) key, v value);
     method Maybe#(v) lookup(Tuple2#(k,i) lookup_key);
