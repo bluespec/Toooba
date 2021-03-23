@@ -32,24 +32,35 @@
 // SOFTWARE.
 
 import RegFile::*;
+import Vector::*;
 
-interface Map#(type i, type k, type v);
-    method Action update(Tuple2#(k,i) key, v value);
-    method Maybe#(v) lookup(Tuple2#(k,i) lookup_key);
+// Type parameters are for index and key (which together are the "address"),
+// the value stored in the map, and the associativity of the storage.
+interface Map#(type ix, type ky, type vl, numeric type as);
+    method Action update(Tuple2#(ky,ix) key, vl value);
+    method Maybe#(vl) lookup(Tuple2#(ky,ix) lookup_key);
 endinterface
 
-module mkMapStatic(Map#(i,k,v)) provisos (
-Bits#(k,k_sz), Bits#(v,v_sz), Eq#(k), Arith#(k),
-Bounded#(i), Literal#(i), Bits#(i, a__));
-    RegFile#(i, Tuple2#(k,v)) mem <- mkRegFileWCF(0, maxBound);
+module mkMapLossy(Map#(ix,ky,vl,as)) provisos (
+Bits#(ky,ky_sz), Bits#(vl,vl_sz), Eq#(ky), Arith#(ky),
+Bounded#(ix), Literal#(ix), Bits#(ix, ix_sz));
+    Vector#(as, RegFile#(ix, Tuple2#(ky,vl))) mem
+        <- replicateM(mkRegFileWCF(0, maxBound));
+    Reg#(Bit#(TLog#(as))) wayNext <- mkReg(0);
+    Integer a = valueof(as);
 
-    method Action update(Tuple2#(k,i) ki, v value);
+    method Action update(Tuple2#(ky,ix) ki, vl value);
         match {.key, .index} = ki;
-        mem.upd(index, tuple2(key, value));
+        mem[wayNext].upd(index, tuple2(key, value));
+        wayNext <= (wayNext == fromInteger(a-1)) ? 0: wayNext + 1;
     endmethod
-    method Maybe#(v) lookup(Tuple2#(k,i) ki);
+    method Maybe#(vl) lookup(Tuple2#(ky,ix) ki);
         match {.lookup_key, .index} = ki;
-        match {.key, .value} = mem.sub(index);
-        return (key == lookup_key) ? Valid(value):Invalid;
+        Maybe#(vl) ret = Invalid;
+        for (Integer i = 0; i < a; i = i + 1) begin
+            match {.key, .value} = mem[i].sub(index);
+            if (key == lookup_key) ret = Valid(value);
+        end
+        return ret;
     endmethod
 endmodule
