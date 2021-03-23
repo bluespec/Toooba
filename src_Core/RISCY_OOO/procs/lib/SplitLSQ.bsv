@@ -1,6 +1,6 @@
 
 // Copyright (c) 2018 Massachusetts Institute of Technology
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +8,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -157,7 +157,7 @@ typedef struct {
     // When the Ld allocates the LQ entry, we record the tag of the youngest SQ
     // entry, i.e., the youngest store that is older than the Ld. This is used
     // for searching older stores for bypass or stall. If the SQ entry is not
-    // valid, then the search is not needed. 
+    // valid, then the search is not needed.
     Maybe#(StQTag)   olderSt;
     // We can deq a LQ entry when older SQ entries have been dequeued or
     // verified. The olderSt field can indication if the immeidate older SQ
@@ -841,7 +841,7 @@ module mkSplitLSQ(SplitLSQ);
     let st_shiftedBE_updAddr = getVEhrPort(st_shiftedBE, 0); // write
     let st_shiftedBE_issue   = getVEhrPort(st_shiftedBE, 1);
     let st_shiftedBE_deqSt   = getVEhrPort(st_shiftedBE, 1);
-    
+
     let st_stData_issue   = getVEhrPort(st_stData, 0);
     let st_stData_deqSt   = getVEhrPort(st_stData, 0);
     let st_stData_updData = getVEhrPort(st_stData, 0); // write
@@ -1053,7 +1053,7 @@ module mkSplitLSQ(SplitLSQ);
     // Since this rule does not block any other rule, we can let it fire even
     // when it may do nothing
     rule findIssue;
-        // find all can issue loads 
+        // find all can issue loads
         function Bool canIssue(LdQTag i);
             return (
                 ld_valid_findIss[i] && ld_memFunc[i] == Ld && // (1) valid load
@@ -1851,7 +1851,7 @@ module mkSplitLSQ(SplitLSQ);
         StQTag stTag = validValue(matchStTag);
         StQVirTag stVTag = stVirTags[stTag];
         if(isValid(matchLdTag) && (!isValid(matchStTag) ||
-                                   (isValid(ldTagOlderSt) && 
+                                   (isValid(ldTagOlderSt) &&
                                     validValue(ldTagOlderSt) >= stVTag))) begin
             // stalled by Ld, Lr or acquire in LQ
             issRes = Stall (LdQ);
@@ -1866,7 +1866,7 @@ module mkSplitLSQ(SplitLSQ);
                 endcase
             end
         end
-        else if(isValid(matchStTag) && 
+        else if(isValid(matchStTag) &&
                 (!isValid(matchLdTag) ||
                  !isValid(ldTagOlderSt) ||
                  validValue(ldTagOlderSt) < stVTag)) begin
