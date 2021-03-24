@@ -1,7 +1,7 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
 // Portions (c) 2020 Bluespec, Inc.
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -9,10 +9,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -191,7 +191,7 @@ function Opcode unpackOpcode(Bit#(7) x);
     return (case(x)
         pack(Opcode'(Load   )): (Load   );
         pack(Opcode'(LoadFp )): (LoadFp );
-        pack(Opcode'(MiscMem)): (MiscMem); 
+        pack(Opcode'(MiscMem)): (MiscMem);
         pack(Opcode'(OpImm  )): (OpImm  );
         pack(Opcode'(Auipc  )): (Auipc  );
         pack(Opcode'(OpImm32)): (OpImm32);
@@ -1057,7 +1057,7 @@ function Fmt showInst(Instruction inst);
             privMRET: fshow("mret");
             privWFI: fshow("wfi");
             default: (
-              funct7 == privSFENCEVMA ? 
+              funct7 == privSFENCEVMA ?
               (fshow("sfence.vma ") + fshow(rs1) + fshow(" ") + fshow(rs2)) :
               fshow("SYSTEM not implemented")
             );
@@ -1148,3 +1148,10 @@ typedef struct {
 } EventsCoreMem deriving (Bits, FShow); // Memory needs more space for reporting delays
 typedef TDiv#(SizeOf#(EventsCoreMem),Report_Width) EventsCoreMemElements;
 `endif
+
+function Bit#(outWidth) hash(Bit#(inWidth) in)
+    provisos(Add#(a__, inWidth, TMul#(TDiv#(inWidth, outWidth), outWidth)),
+             Add#(1, b__, TDiv#(inWidth, outWidth)));
+    Vector#(TDiv#(inWidth,outWidth), Bit#(outWidth)) vec = unpack(zeroExtend(in));
+    return fold( \^ , vec);
+endfunction
