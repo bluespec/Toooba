@@ -63,8 +63,8 @@ typedef Bit#(TLog#(SupSizeX2)) BtbBank;
 // Total entries/lanes of superscalar lookup/associativity
 typedef TDiv#(TDiv#(BtbEntries,SupSizeX2),BtbAssociativity) BtbIndices;
 typedef Bit#(TLog#(BtbIndices)) BtbIndex;
-typedef Bit#(16) HashedTag;
 typedef Bit#(TSub#(TSub#(TSub#(AddrSz,SizeOf#(BtbBank)), SizeOf#(BtbIndex)), PcLsbsIgnore)) BtbTag;
+typedef Bit#(16) HashedTag;
 
 typedef struct {
     BtbTag tag;
