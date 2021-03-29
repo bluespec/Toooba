@@ -136,9 +136,9 @@ typedef enum {
 } WaitReconcile deriving(Bits, Eq, FShow);
 
 typedef struct {
-    LineDataOffset offset;
-    ByteEn shiftedBE;
-    Data shiftedData;
+    LineMemDataOffset offset;
+    MemDataByteEn shiftedBE;
+    MemTaggedData shiftedData;
 } WaitStResp deriving(Bits, Eq, FShow);
 
 // synthesized pipeline fifos
@@ -375,15 +375,16 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
 `endif
 `ifdef PERFORMANCE_MONITORING
             EventsCoreMem events = unpack(0);
-            if (waitSt.shiftedBE == -1) events.evt_MEM_CAP_STORE = 1;
+            if (pack(waitSt.shiftedBE) == -1) events.evt_MEM_CAP_STORE = 1;
             events.evt_STORE_WAIT = saturating_truncate(lat);
             events_reg[2] <= events;
 `endif
             // now figure out the data to be written
-            Vector#(LineSzData, ByteEn) be = replicate(replicate(False));
-            Line data = replicate(0);
+            CLineMemDataByteEn be = replicate(replicate(False));
+            Line data = unpack(0);
             be[waitSt.offset] = waitSt.shiftedBE;
-            data[waitSt.offset] = waitSt.shiftedData; //XXX I guess this doesn't work with capabilities?  Maybe we don't build TSO?
+            data.data[waitSt.offset] = waitSt.shiftedData.data;
+            data.tag[waitSt.offset] = waitSt.shiftedData.tag;
             return tuple2(unpack(pack(be)), data);
         endmethod
 `else
@@ -1130,9 +1131,8 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         Addr addr = lsqDeqSt.paddr;
         reqStQ.enq(addr);
         // record waiting for store resp
-        LineDataOffset offset = getLineDataOffset(addr);
         waitStRespQ.enq(WaitStResp {
-            offset: getLineDataOffset(addr),
+            offset: getLineMemDataOffset(addr),
             shiftedBE: lsqDeqSt.shiftedBE,
             shiftedData: lsqDeqSt.stData
         });
