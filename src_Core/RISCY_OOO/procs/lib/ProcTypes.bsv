@@ -257,14 +257,12 @@ typedef enum {
     CSRmarchid    = 12'hf12,
     CSRmimpid     = 12'hf13,
     CSRmhartid    = 12'hf14,
-`ifdef PERFORMANCE_MONITORING
     CSRhpcounter3   = 12'hc03,
     CSRhpcounter31  = 12'hc1f,
     CSRmhpcounter3  = 12'hb03,
     CSRmhpcounter31 = 12'hb1f,
     CSRmhpmevent3   = 12'h323,
     CSRmhpmevent31  = 12'h33f,
-`endif
 `ifdef SECURITY
     // sanctum machine CSR
     CSRmevbase    = 12'h7c0,
