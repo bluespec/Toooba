@@ -52,7 +52,7 @@ import LatencyTimer::*;
 `ifdef PERFORMANCE_MONITORING
 import PerformanceMonitor::*;
 import CCTypes::*;
-import BlueUtils::*;
+import SpecialRegs::*;
 `endif
 
 // currently blocking
