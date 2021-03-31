@@ -45,8 +45,9 @@ import CHERICap::*;
 
 export NextAddrPred(..);
 export mkBtb;
+export mkBtbSmall;
 
-interface NextAddrPred;
+interface NextAddrPred#(numeric type hashSz);
     method Action put_pc(CapMem pc);
     interface Vector#(SupSizeX2, Maybe#(CapMem)) pred;
     method Action update(CapMem pc, CapMem brTarget, Bool taken);
@@ -64,7 +65,7 @@ typedef Bit#(TLog#(SupSizeX2)) BtbBank;
 typedef TDiv#(TDiv#(BtbEntries,SupSizeX2),BtbAssociativity) BtbIndices;
 typedef Bit#(TLog#(BtbIndices)) BtbIndex;
 typedef Bit#(TSub#(TSub#(TSub#(AddrSz,SizeOf#(BtbBank)), SizeOf#(BtbIndex)), PcLsbsIgnore)) BtbTag;
-typedef Bit#(16) HashedTag;
+typedef Bit#(hashSz) HashedTag#(numeric type hashSz);
 
 typedef struct {
     BtbTag tag;
@@ -84,10 +85,19 @@ typedef struct {
 } VnD#(type data) deriving(Bits, Eq, FShow);
 
 (* synthesize *)
-module mkBtb(NextAddrPred);
+module mkBtbSmall(NextAddrPred#(16));
+    NextAddrPred#(16) btb <- mkBtb;
+    return btb;
+endmodule
+
+//(* synthesize *)
+module mkBtb(NextAddrPred#(hashSz))
+    provisos (NumAlias#(tagSz, TSub#(TSub#(TSub#(AddrSz,SizeOf#(BtbBank)), SizeOf#(BtbIndex)), PcLsbsIgnore)),
+        Add#(1, a__, TDiv#(tagSz, hashSz)),
+    Add#(b__, tagSz, TMul#(TDiv#(tagSz, hashSz), hashSz)));
     // Read and Write ordering doesn't matter since this is a predictor
     Reg#(BtbBank) firstBank_reg <- mkRegU;
-    Vector#(SupSizeX2, MapSplit#(HashedTag, BtbIndex, VnD#(CapMem), BtbAssociativity))
+    Vector#(SupSizeX2, MapSplit#(HashedTag#(hashSz), BtbIndex, VnD#(CapMem), BtbAssociativity))
         records <- replicateM(mkMapLossyBRAM);
     RWire#(BtbUpdate) updateEn <- mkRWire;
 
@@ -95,7 +105,7 @@ module mkBtb(NextAddrPred);
     function BtbBank getBank(CapMem pc) = getBtbAddr(pc).bank;
     function BtbIndex getIndex(CapMem pc) = getBtbAddr(pc).index;
     function BtbTag getTag(CapMem pc) = getBtbAddr(pc).tag;
-    function MapKeyIndex#(HashedTag,BtbIndex) lookupKey(CapMem pc) =
+    function MapKeyIndex#(HashedTag#(hashSz),BtbIndex) lookupKey(CapMem pc) =
         MapKeyIndex{key: hash(getTag(pc)), index: getIndex(pc)};
 
     // no flush, accept update
