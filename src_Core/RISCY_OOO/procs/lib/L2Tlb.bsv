@@ -54,6 +54,11 @@ import SetAssocTlb::*;
 import L2SetAssocTlb::*;
 import TranslationCache::*;
 import LatencyTimer::*;
+`ifdef PERFORMANCE_MONITORING
+import PerformanceMonitor::*;
+import CCTypes::*;
+import BlueUtils::*;
+`endif
 
 // for SV39 only
 
@@ -114,6 +119,9 @@ interface L2Tlb;
 
     // performace
     interface Perf#(L2TlbPerfType) perf;
+`ifdef PERFORMANCE_MONITORING
+    method EventsCache events;
+`endif
 endinterface
 
 typedef FullAssocTlb#(`L2_TLB_HUGE_SIZE) L2FullAssocTlb;
@@ -277,6 +285,9 @@ module mkL2Tlb(L2Tlb::L2Tlb);
         });
     endrule
 `endif
+`ifdef PERFORMANCE_MONITORING
+    Array #(Reg #(EventsCache)) perf_events <- mkDRegOR (3, unpack (0));
+`endif
 
     // when flushing is true, since both I and D TLBs have finished flush and
     // is waiting for L2 to flush, all I/D TLB req must have been responded.
@@ -289,6 +300,11 @@ module mkL2Tlb(L2Tlb::L2Tlb);
         // check no req
         doAssert(!rqFromCQ.notEmpty, "cannot have new req");
         doAssert(readVEhr(0, pendValid) == replicate(False), "cannot have pending req");
+`ifdef PERFORMANCE_MONITORING
+        EventsCache ev = unpack(0);
+        ev.evt_TLB_FLUSH = 1;
+        perf_events[2] <= ev;
+`endif
     endrule
 
     rule doWaitFlush(flushing && waitFlushDone && tlb4KB.flush_done && transCache.flush_done);
@@ -403,6 +419,11 @@ module mkL2Tlb(L2Tlb::L2Tlb);
                 end
             end
 `endif
+`ifdef PERFORMANCE_MONITORING
+            EventsCache ev = unpack(0);
+            ev.evt_TLB = 1;
+            perf_events[1] <= ev;
+`endif
         end
         else if(resp4KB.hit) begin
             // hit on 4KB page
@@ -411,6 +432,11 @@ module mkL2Tlb(L2Tlb::L2Tlb);
             pageHit(entry);
             // update 4KB array replacement, no need to touch MG array
             tlb4KB.deqResp(Valid (resp4KB.way));
+`ifdef PERFORMANCE_MONITORING
+            EventsCache ev = unpack(0);
+            ev.evt_TLB = 1;
+            perf_events[1] <= ev;
+`endif
         end
         else begin
             // miss, deq resp
@@ -429,6 +455,11 @@ module mkL2Tlb(L2Tlb::L2Tlb);
                     dataMissCnt.incr(1);
                 end
             end
+`endif
+`ifdef PERFORMANCE_MONITORING
+            EventsCache ev = unpack(0);
+            ev.evt_TLB_MISS = 1;
+            perf_events[0] <= ev;
 `endif
         end
     endrule
@@ -662,6 +693,12 @@ module mkL2Tlb(L2Tlb::L2Tlb);
                     child: cRq.child,
                     entry: Valid (entry)
                 });
+`ifdef PERFORMANCE_MONITORING
+                // page table walks are counted as accesses
+                EventsCache ev = unpack(0);
+                ev.evt_TLB = 1;
+                perf_events[1] <= ev;
+`endif
                 // update TLB array
                 if(entry.level > 0) begin
                     // add to mega/giga page tlb
@@ -675,6 +712,11 @@ module mkL2Tlb(L2Tlb::L2Tlb);
                             dataHugePageMissCnt.incr(1);
                         end
                     end
+`endif
+`ifdef PERFORMANCE_MONITORING
+                    EventsCache ev = unpack(0);
+                    ev.evt_TLB_MISS = 1;
+                    perf_events[0] <= ev;
 `endif
                 end
                 else begin
@@ -764,4 +806,7 @@ module mkL2Tlb(L2Tlb::L2Tlb);
 `endif
         endmethod
     endinterface
+`ifdef PERFORMANCE_MONITORING
+    method EventsCache events = perf_events[0];
+`endif
 endmodule

@@ -60,7 +60,7 @@ to the fact that they are Flute-only events)
 - Mem cap load tag set &ndash; count when a tagged capability is loaded (0x1c)
 - Mem cap store tag set &ndash; count when stage a tagged capability is stored (0x1d)
 
-IMem, DMem L1 Cache, and LL Cache; events identical for all three, though some are irrelevant for the respective caches. IDs in format (IMem/DMem/LLC):
+IMem, DMem L1 Cache, and LL Cache (including the respective TLBs); events identical for all three, though some are irrelevant for the respective caches. IDs in format (IMem/DMem/LLC):
 - Load &ndash; count loads requested by cpu (0x20/0x30/unimplemented)
 - Load miss &ndash; count loads missed (0x21/0x31/0x61)
 - Load miss latency &ndash; count cycles waiting on a load miss (0x22/0x32/0x62)
@@ -70,10 +70,10 @@ IMem, DMem L1 Cache, and LL Cache; events identical for all three, though some a
 - Amo &ndash; count atomic ops requested by cpu (unimplemented/0x36/unimplemented)
 - Amo miss &ndash; count atomics missed (unimplemented/0x37/unimplemented)
 - Amo miss latency &ndash; count cycles waiting on a atomics miss (unimplemented/0x38/unimplemented)
-- Tlb &ndash; count tlb accesses (0x29/0x39/unimplemented)
-- Tlb miss &ndash; count tlb missed (0x2a/0x3a/unimplemented)
+- Tlb &ndash; count tlb accesses (0x29/0x39/0x69)
+- Tlb miss &ndash; count tlb missed (0x2a/0x3a/0x6a)
 - Tlb miss latency &ndash; count cycles waiting on a tlb miss (0x2b/0x3b/unimplemented)
-- Tlb flush &ndash; count tlb flushes (0x2c/0x3c/unimplemented)
+- Tlb flush &ndash; count tlb flushes (0x2c/0x3c/0x6c)
 - Evict &ndash; count cache line evictions (unimplemented/unimplemented/unimplemented)
 
 
