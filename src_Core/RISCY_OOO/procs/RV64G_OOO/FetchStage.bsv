@@ -373,7 +373,7 @@ module mkFetchStage(FetchStage);
        // Can the fifo size be smaller?
 
     // Branch Predictors
-    NextAddrPred#(16)    nextAddrPred <- mkBtbSmall;
+    NextAddrPred#(16)    nextAddrPred <- mkBtb;
     let             dirPred      <- mkDirPredictor;
     ReturnAddrStack ras          <- mkRas;
     // Wire to train next addr pred (NAP)
