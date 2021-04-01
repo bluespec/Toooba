@@ -29,7 +29,6 @@ import Vector::*;
 
 export NextAddrPred(..);
 export mkBtb;
-export mkBtbSmall;
 
 interface NextAddrPred#(numeric type hashSz);
     method Action put_pc(Addr pc);
