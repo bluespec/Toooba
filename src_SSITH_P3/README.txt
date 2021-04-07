@@ -29,6 +29,14 @@ into this socket:
     - Variations/alternatives by various SSITH project teams
 
 >================================================================
+Extra dependencies:
+
+On top of the dependencies in the top project, you must have a build of bsc-contrib,
+which you can find here: https://github.com/B-Lang-org/bsc-contrib
+The Makefile expects the folder that is generated in bsc-contrib/inst/lib/Libraries/Bus
+to be located in the default bsc build at bsc/inst/lib/Libraries.
+
+>================================================================
 Whenever there are changes to the Toooba core, rerun:
 
   $ make compile
