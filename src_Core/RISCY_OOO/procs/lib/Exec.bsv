@@ -415,7 +415,7 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
     if (dInst.capChecks.cfromptr_bypass && getAddr(rVal1) == 0) begin
         capException = Invalid;
     end
-    if (dInst.capChecks.ccseal_bypass && (!isValidCap(rVal2) || getAddr(rVal2) == -1 || getKind(rVal1) != UNSEALED) && isValidCap(rVal1)) begin
+    if (dInst.capChecks.ccseal_bypass && (!isValidCap(rVal2) || getAddr(rVal2) == -1 || getKind(rVal1) != UNSEALED || !isInBounds(rVal2, False)) && isValidCap(rVal1)) begin
         capException = Invalid;
         boundsCheck = Invalid;
     end
