@@ -43,6 +43,7 @@ import Vector::*;
 import CHERICap::*;
 import CHERICC_Fat::*;
 import ISA_Decls_CHERI::*;
+import CacheUtils::*; // For CLoadTags alignment
 
 (* noinline *)
 function Maybe#(CSR_XCapCause) capChecksExec(CapPipe a, CapPipe b, CapPipe ddc, CapChecks toCheck, Bool cap_exact);
@@ -98,7 +99,7 @@ function Maybe#(CSR_XCapCause) capChecksExec(CapPipe a, CapPipe b, CapPipe ddc, 
 endfunction
 
 (* noinline *)
-function Maybe#(CSR_XCapCause) capChecksMem(CapPipe auth, CapPipe data, CapChecks toCheck, MemFunc mem_func, MemDataByteEn byteEn);
+function Maybe#(CSR_XCapCause) capChecksMem(CapPipe auth, CapPipe data, CapChecks toCheck, MemFunc mem_func, ByteOrTagEn byteOrTagEn);
     function Maybe#(CSR_XCapCause) eAuth(CHERIException e)   = Valid(CSR_XCapCause{cheri_exc_reg: case (toCheck.check_authority_src) matches Src1: toCheck.rn1;
                                                                                                                                        Ddc: {1'b1, pack(scrAddrDDC)};
                                                                                               endcase
@@ -111,11 +112,13 @@ function Maybe#(CSR_XCapCause) capChecksMem(CapPipe auth, CapPipe data, CapCheck
     else if (mem_func == Ld || mem_func == Lr || mem_func == Amo) begin
         if (!getHardPerms(auth).permitLoad)
             result = eAuth(cheriExcPermitRViolation);
+        else if (!getHardPerms(auth).permitLoadCap && byteOrTagEn == TagMemAccess)
+            result = eAuth(cheriExcPermitRCapViolation);
     end
     else if (mem_func == St || mem_func == Sc || mem_func == Amo) begin
         if (!getHardPerms(auth).permitStore)
             result = eAuth(cheriExcPermitWViolation);
-        if (isValidCap(data) && byteEn == replicate(True)) begin
+        if (isValidCap(data) && byteOrTagEn == DataMemAccess(replicate(True))) begin
             if (!getHardPerms(auth).permitStoreCap)
                 result = eAuth(cheriExcPermitWCapViolation);
             if (!getHardPerms(auth).permitStoreLocalCap && getHardPerms(data).global)
@@ -127,7 +130,7 @@ endfunction
 
 (* noinline *)
 function Maybe#(BoundsCheck) prepareBoundsCheck(CapPipe a, CapPipe b, CapPipe pcc,
-                                                CapPipe ddc, Data vaddr, Bit#(5) size, // These two are only used in the memory pipe. May factor into two functions later.
+                                                CapPipe ddc, Data vaddr, Bit#(TAdd#(CacheUtils::LogCLineNumMemDataBytes,1)) size, // These two are only used in the memory pipe. May factor into two functions later.
                                                 CapChecks toCheck);
     BoundsCheck ret = ?;
     CapPipe authority = ?;
@@ -579,8 +582,12 @@ function Maybe#(Trap) checkForException(
 endfunction
 
 // check mem access misaligned: byteEn is unshifted (just from Decode)
-function Bool memAddrMisaligned(Addr addr, MemDataByteEn byteEn);
-    if(byteEn[15]) begin
+function Bool memAddrMisaligned(Addr addr, ByteOrTagEn byteOrTagEn);
+    MemDataByteEn byteEn = byteOrTagEn.DataMemAccess;
+    if (byteOrTagEn == TagMemAccess) begin
+        return(!isCLineAlignAddr(addr));
+    end
+    else if(byteEn[15]) begin
         return addr[3:0] != 0;
     end
     else if(byteEn[7]) begin
@@ -597,12 +604,13 @@ function Bool memAddrMisaligned(Addr addr, MemDataByteEn byteEn);
     end
 endfunction
 
-function MemTaggedData gatherLoad( Addr addr, MemDataByteEn byteEn
+function MemTaggedData gatherLoad( Addr addr, ByteOrTagEn byteOrTagEn
                                  , Bool unsignedLd, MemTaggedData data);
     function extend = unsignedLd ? zeroExtend : signExtend;
     Bit#(IndxShamt) offset = truncate(addr);
 
-    if(pack(byteEn) == ~0) return data;
+    MemDataByteEn byteEn = byteOrTagEn.DataMemAccess;
+    if((byteOrTagEn == TagMemAccess) || pack(byteEn) == ~0) return data;
     else if(byteEn[7]) begin
         Vector#(2, Bit#(64)) dataVec = unpack(pack(data.data));
         return dataToMemTaggedData(extend(dataVec[offset[3]]));

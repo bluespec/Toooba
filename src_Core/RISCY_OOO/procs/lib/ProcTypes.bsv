@@ -695,6 +695,9 @@ typedef struct {
     // For STORE: this is store data shifted to be 64-bit aligned
     // For AMO: this is UNshifted data (like normal mem req)
     MemTaggedData data;
+    Bool loadTags;
+    // Whether the request is for tags rather than data
+    // For non-LOAD: always False
 } MMIOCRq deriving(Bits, Eq, FShow);
 
 // resp from platform to core

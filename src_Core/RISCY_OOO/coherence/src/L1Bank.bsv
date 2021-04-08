@@ -520,7 +520,11 @@ endfunction
         LineMemDataOffset dataSel = getLineMemDataOffset(req.addr);
         case(req.op) matches
             Ld: begin
-                procResp.respLd(req.id, getTaggedDataAt(curLine, dataSel));
+                if (req.loadTags) begin
+                    procResp.respLd(req.id, getTagsAt(curLine));
+                end else begin
+                    procResp.respLd(req.id, getTaggedDataAt(curLine, dataSel));
+                end
             end
             Lr: begin
                 procResp.respLrScAmo(req.id, getTaggedDataAt(curLine, dataSel));

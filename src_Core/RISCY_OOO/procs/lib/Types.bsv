@@ -145,6 +145,11 @@ typedef Bit#(AsidSz) Asid;
 typedef TLog#(MemDataBytes) IndxShamt;
 typedef Vector#(MemDataBytes, Bool) MemDataByteEn;
 
+typedef union tagged {
+  void TagMemAccess;
+  MemDataByteEn DataMemAccess;
+} ByteOrTagEn deriving (FShow, Eq, Bits);
+
 typedef TDiv#(DataSz, Inst16_Sz) DataSzInst;
 typedef TLog#(DataSzInst) LgDataSzInst;
 typedef Bit#(LgDataSzInst) DataInstOffset;
@@ -166,7 +171,7 @@ typedef struct {
     MemFunc        mem_func; // Ld, St, Lr, Sc, Amo
     AmoFunc        amo_func;
     Bool           unsignedLd;
-    MemDataByteEn  byteEn; // takes place of double word
+    ByteOrTagEn    byteOrTagEn; // takes place of double word
     Bool           aq;
     Bool           rl;
     Bool           reg_bounds;

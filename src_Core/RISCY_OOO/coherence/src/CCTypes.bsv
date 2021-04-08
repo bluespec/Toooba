@@ -223,6 +223,7 @@ typedef struct {
     MemDataByteEn byteEn; // valid when op == Sc
     MemTaggedData data; // valid when op == Sc/Amo
     AmoInst amoInst; // valid when op == Amo
+    Bool loadTags; // valid when op == Ld
 } ProcRq#(type idT) deriving(Bits, Eq, FShow);
 
 interface L1ProcReq#(type idT);

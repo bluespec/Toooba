@@ -195,7 +195,8 @@ Bit #(5) f5rs2_cap_CClearReg   = 5'h0d;
 Bit #(5) f5rs2_cap_CGetAddr    = 5'h0f;
 Bit #(5) f5rs2_cap_CClearFPReg = 5'h10;
 Bit #(5) f5rs2_cap_CSealEntry  = 5'h11;
-// 5'h12-5'h1f unused (5'h1f reserved for 1-reg instructions
+Bit #(5) f5rs2_cap_CLoadTags   = 5'h12;
+// 5'h13-5'h1f unused (5'h1f reserved for 1-reg instructions)
 
 // ================================================================
 // f7_cap_{Load, Store} opcode subdivision

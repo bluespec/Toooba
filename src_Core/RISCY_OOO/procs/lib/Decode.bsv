@@ -159,7 +159,7 @@ function Maybe#(MemInst) decodeMemInst(Instruction inst, Bool cap_mode);
                                 mem_func: mem_func,
                                 amo_func: amo_func,
                                 unsignedLd: unsignedLd,
-                                byteEn: byteEn,
+                                byteOrTagEn: DataMemAccess(byteEn),
                                 aq: aq,
                                 rl: rl,
                                 reg_bounds: cap_mode } );
@@ -242,7 +242,7 @@ function Maybe#(MemInst) decodeExplicitBoundsMemInst(Instruction inst);
                                 mem_func: mem_func,
                                 amo_func: amo_func,
                                 unsignedLd: unsignedLd,
-                                byteEn: byteEn,
+                                byteOrTagEn: DataMemAccess(byteEn),
                                 aq: amo,
                                 rl: amo,
                                 reg_bounds: bounds_from_register} );
@@ -816,7 +816,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             mem_func: Fence,
                             amo_func: None,
                             unsignedLd: False,
-                            byteEn: replicate(False),
+                            byteOrTagEn: DataMemAccess(replicate(False)),
                             aq: reconcile,
                             rl: commit,
                             reg_bounds: False // unused
@@ -1362,6 +1362,21 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                                     regs.dst = Valid(tagged Gpr rd);
                                     regs.src1 = Valid(tagged Gpr rs1);
                                     dInst.capFunc = CapInspect (GetType);
+                                end
+                                f5rs2_cap_CLoadTags: begin
+                                    dInst.iType = Ld;
+                                    dInst.imm = Valid(0);
+                                    dInst.execFunc = tagged Mem MemInst{
+                                        mem_func: Ld,
+                                        amo_func: None,
+                                        unsignedLd: False,
+                                        byteOrTagEn: TagMemAccess,
+                                        aq: False,
+                                        rl: False,
+                                        reg_bounds: True };
+                                    regs.dst  = Valid(tagged Gpr rd);
+                                    regs.src1 = Valid(tagged Gpr rs1);
+                                    dInst.capChecks = memCapChecks(True);
                                 end
                                 default: begin
                                     illegalInst = True;

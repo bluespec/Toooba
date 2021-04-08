@@ -91,6 +91,8 @@ function CLine setDataAtBE(CLine line, CLineDataSel sel, Data data, ByteEn be);
 endfunction
 function MemTaggedData getTaggedDataAt(CLine line, CLineMemTaggedDataSel sel) =
   MemTaggedData { tag: line.tag[sel], data: line.data[sel] };
+function MemTaggedData getTagsAt(CLine line) =
+  MemTaggedData { tag: False, data: cons(zeroExtend(pack(line.tag)), unpack(0)) };
 function CLine setTaggedDataAt(CLine line, CLineMemTaggedDataSel sel, MemTaggedData data);
   let newLine = line;
   newLine.tag[sel] = data.tag;

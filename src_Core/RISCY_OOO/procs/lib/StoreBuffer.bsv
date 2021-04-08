@@ -82,12 +82,12 @@ interface StoreBuffer;
     method Action enq(SBIndex idx, Addr paddr, MemDataByteEn be, MemTaggedData data);
     method ActionValue#(SBEntry) deq(SBIndex idx);
     method ActionValue#(Tuple2#(SBIndex, SBEntry)) issue;
-    method SBSearchRes search(Addr paddr, MemDataByteEn be); // load bypass/stall or atomic inst stall
+    method SBSearchRes search(Addr paddr, ByteOrTagEn be); // load bypass/stall or atomic inst stall
     // check no matching entry for AMO/Lr/Sc issue
     // XXX assume BE has been shifted approriately for paddr offset
     // (for load we need to do that before calling the methods)
-    method Bool noMatchLdQ(Addr paddr, MemDataByteEn be);
-    method Bool noMatchStQ(Addr paddr, MemDataByteEn be);
+    method Bool noMatchLdQ(Addr paddr, ByteOrTagEn be);
+    method Bool noMatchStQ(Addr paddr, ByteOrTagEn be);
 endinterface
 
 /////////////////
@@ -141,9 +141,9 @@ module mkStoreBufferEhr(StoreBuffer);
         endcase
     endfunction
 
-    function Bool noMatch(Addr paddr, MemDataByteEn be);
+    function Bool noMatch(Addr paddr, ByteOrTagEn be);
         // input BE has been shifted, just pack it
-        Bit#(MemDataBytes) ldBE = pack(be);
+        Bit#(MemDataBytes) ldBE = pack(be.DataMemAccess);
 
         // data offset within block
         SBBlockMemDataSel sel = getSBBlockMemDataSel(paddr);
@@ -158,7 +158,7 @@ module mkStoreBufferEhr(StoreBuffer);
         function Bool matchEntry(Integer i);
             // entry must be valid, addr should match, byte enable should overlap
             Bool sameAddr = getSBBlockAddr(paddr) == entry[i][searchPort].addr;
-            Bool beOverlap = (ldBE & getEntryBE(fromInteger(i))) != 0;
+            Bool beOverlap = be == TagMemAccess || (ldBE & getEntryBE(fromInteger(i))) != 0;
             return valid[i][searchPort] && sameAddr && beOverlap;
         endfunction
 
@@ -252,9 +252,9 @@ module mkStoreBufferEhr(StoreBuffer);
         return tuple2(idx, entry[idx][issuePort]);
     endmethod
 
-    method SBSearchRes search(Addr paddr, MemDataByteEn be);
+    method SBSearchRes search(Addr paddr, ByteOrTagEn be);
         // input BE has been shifted, just pack it
-        Bit#(MemDataBytes) ldBE = pack(be);
+        Bit#(MemDataBytes) ldBE = pack(be.DataMemAccess);
 
         // data offset within block
         SBBlockMemDataSel sel = getSBBlockMemDataSel(paddr);
@@ -269,7 +269,7 @@ module mkStoreBufferEhr(StoreBuffer);
         function Bool matchEntry(Integer i);
             // entry must be valid, addr should match, byte enable should overlap
             Bool sameAddr = getSBBlockAddr(paddr) == entry[i][searchPort].addr;
-            Bool beOverlap = (ldBE & getEntryBE(fromInteger(i))) != 0;
+            Bool beOverlap = be == TagMemAccess || (ldBE & getEntryBE(fromInteger(i))) != 0;
             return valid[i][searchPort] && sameAddr && beOverlap;
         endfunction
 
@@ -277,7 +277,7 @@ module mkStoreBufferEhr(StoreBuffer);
         Vector#(SBSize, Integer) idxVec = genVector;
         if(searchIndex(matchEntry, idxVec) matches tagged Valid .idx) begin
             // check whether bytes reading are all covered by the entry
-            if((getEntryBE(idx) & ldBE) == ldBE) begin
+            if(be != TagMemAccess && (getEntryBE(idx) & ldBE) == ldBE) begin
                 // fully covered, forward data
                 CLine block = entry[idx][searchPort].line;
                 return SBSearchRes {
@@ -322,9 +322,9 @@ module mkDummyStoreBuffer(StoreBuffer);
         doAssert(False, "issue should never be called)");
         return ?;
     endmethod
-    method SBSearchRes search(Addr paddr, MemDataByteEn be);
+    method SBSearchRes search(Addr paddr, ByteOrTagEn be);
         return SBSearchRes {matchIdx: Invalid, forwardData: Invalid};
     endmethod
-    method Bool noMatchLdQ(Addr paddr, MemDataByteEn be) = True;
-    method Bool noMatchStQ(Addr paddr, MemDataByteEn be) = True;
+    method Bool noMatchLdQ(Addr paddr, ByteOrTagEn be) = True;
+    method Bool noMatchStQ(Addr paddr, ByteOrTagEn be) = True;
 endmodule

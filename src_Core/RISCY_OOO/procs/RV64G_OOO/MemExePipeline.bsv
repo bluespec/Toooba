@@ -105,7 +105,7 @@ typedef struct {
     InstTag tag;
     LdStQTag ldstq_tag;
     // result
-    MemDataByteEn shiftedBE;
+    ByteOrTagEn shiftedBE;
     CapPipe vaddr;         // virtual addr
 `ifdef INCLUDE_TANDEM_VERIF
     // for those mem instrs that store data
@@ -312,7 +312,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
     Fifo#(1, WaitStResp) waitStRespQ <- mkCFFifo;
 `endif
     // fifo for req mem
-    Fifo#(1, Tuple2#(LdQTag, Addr)) reqLdQ <- mkBypassFifo;
+    Fifo#(1, Tuple3#(LdQTag, Addr, Bool)) reqLdQ <- mkBypassFifo;
     Fifo#(1, ProcRq#(DProcReqId)) reqLrScAmoQ <- mkBypassFifo;
 `ifdef TSO_MM
     Fifo#(1, Addr) reqStQ <- mkBypassFifo;
@@ -529,7 +529,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
 
         // get shifted data and BE
         // we can use virtual addr to shift, since page size > dword size
-        MemDataByteEn origBE = lsq.getOrigBE(x.ldstq_tag);
+        ByteOrTagEn origBE = lsq.getOrigBE(x.ldstq_tag);
         function Tuple2#(MemDataByteEn, MemTaggedData) getShiftedBEData(
             Addr addr, MemDataByteEn be, MemTaggedData d);
             Bit#(TLog#(MemDataBytes)) byteOffset = truncate(addr);
@@ -537,7 +537,11 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
                            tag: (byteOffset == 0 && be == replicate(True)) ? d.tag : False
                          , data: unpack(pack(d.data) << {byteOffset, 3'b0})});
         endfunction
-        let {shiftBE, shiftData} = getShiftedBEData(getAddr(vaddr), origBE, toMemData);
+        let {shiftBEData, shiftData} = getShiftedBEData(getAddr(vaddr), origBE.DataMemAccess, toMemData);
+        let shiftBE = DataMemAccess(shiftBEData);
+        if (origBE == TagMemAccess) begin
+            shiftBE = TagMemAccess;
+        end
 
         // update LSQ data now
         if(x.ldstq_tag matches tagged St .stTag) begin
@@ -552,6 +556,12 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
 
         CapPipe ddc = cast(inIfc.scaprf_rd(scrAddrDDC));
 
+        // get size of the access
+        Bit#(TAdd#(CacheUtils::LogCLineNumMemDataBytes,1)) accessByteCount = zeroExtend(pack(countOnes(pack(origBE.DataMemAccess))));
+        if (origBE == TagMemAccess) begin
+            accessByteCount = fromInteger(valueOf(CacheUtils::CLineNumMemDataBytes));
+        end
+
         // go to next stage by sending to TLB
         dTlb.procReq(DTlbReq {
             inst: MemExeToFinish {
@@ -565,11 +575,11 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
                 store_data_BE: origBE,
 `endif
                 misaligned: memAddrMisaligned(getAddr(vaddr), origBE),
-                capStore: isValidCap(data) && pack(origBE) == ~0,
+                capStore: isValidCap(data) && origBE == DataMemAccess(unpack(~0)),
                 allowCap: getHardPerms(x.rVal1).permitLoadCap,
                 capException: capChecksMem(x.rVal1, x.rVal2, x.cap_checks, x.mem_func, origBE),
                 check: prepareBoundsCheck(x.rVal1, x.rVal2, almightyCap/*ToDo: pcc*/,
-                                          ddc, getAddr(vaddr), pack(countOnes(pack(origBE))), x.cap_checks)
+                                          ddc, getAddr(vaddr), accessByteCount, x.cap_checks)
             },
             specBits: regToExe.spec_bits
         });
@@ -656,7 +666,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
 `ifdef RVFI
                                           , ExtraTraceBundle{
                                               regWriteData: memData[pack(x.ldstq_tag)],
-                                              memByteEn: unpack(truncate(pack(x.shiftedBE) >> getAddr(x.vaddr)[3:0]))
+                                              memByteEn: unpack(truncate(pack(x.shiftedBE.DataMemAccess) >> getAddr(x.vaddr)[3:0]))
                                           }
 `endif
                                          );
@@ -714,7 +724,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
 `endif
 `ifdef PERFORMANCE_MONITORING
         EventsCoreMem events = unpack(0);
-        if (pack(info.shiftedBE) == -1) events.evt_MEM_CAP_LOAD = 1;
+        if (info.shiftedBE == DataMemAccess (unpack(~0))) events.evt_MEM_CAP_LOAD = 1;
 `endif
         // search LSQ
         LSQIssueLdResult issRes <- lsq.issueLd(info.tag, info.paddr, info.shiftedBE, sbRes);
@@ -737,7 +747,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
 `endif
         end
         else if(issRes == ToCache) begin
-            reqLdQ.enq(tuple2(zeroExtend(info.tag), info.paddr));
+            reqLdQ.enq(tuple3(zeroExtend(info.tag), info.paddr, info.shiftedBE == TagMemAccess));
             // perf: load mem latency
             ldMemLatTimer.start(info.tag);
         end
@@ -913,7 +923,8 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             op: Lr,
             byteEn: ?,
             data: ?,
-            amoInst: ?
+            amoInst: ?,
+            loadTags: False
         };
         reqLrScAmoQ.enq(req);
         if(verbose) $display("[doDeqLdQ_Lr_issue] ", fshow(lsqDeqLd), "; ", fshow(req));
@@ -956,7 +967,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         waitLrScAmoMMIOResp <= Invalid;
         // get resp data (need shifting)
         let d <- toGet(respLrScAmoQ).get;
-        MemTaggedData resp = gatherLoad(lsqDeqLd.paddr, lsqDeqLd.byteEn, lsqDeqLd.unsignedLd, d);
+        MemTaggedData resp = gatherLoad(lsqDeqLd.paddr, lsqDeqLd.byteOrTagEn, lsqDeqLd.unsignedLd, d);
         // write reg file & set ROB as Executed & wakeup rs
         if(lsqDeqLd.dst matches tagged Valid .dst) begin
             CapPipe dataUnpacked = fromMem(unpack(pack(resp)));
@@ -1003,8 +1014,9 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         let req = MMIOCRq {
             addr: lsqDeqLd.paddr,
             func: Ld,
-            byteEn: lsqDeqLd.shiftedBE, // BE is LSQ is always shifted
-            data: ?
+            byteEn: lsqDeqLd.shiftedBE.DataMemAccess, // BE is LSQ is always shifted
+            data: ?,
+            loadTags: lsqDeqLd.shiftedBE == TagMemAccess
         };
         inIfc.mmioReq(req);
         if(verbose) $display("[doDeqLdQ_MMIO_issue] ", fshow(lsqDeqLd), "; ", fshow(req));
@@ -1046,7 +1058,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         waitLrScAmoMMIOResp <= Invalid;
         // get resp (need to shift data)
         let d = inIfc.mmioRespVal.data;
-        MemTaggedData resp = gatherLoad(lsqDeqLd.paddr, lsqDeqLd.byteEn, lsqDeqLd.unsignedLd, d);
+        MemTaggedData resp = gatherLoad(lsqDeqLd.paddr, lsqDeqLd.byteOrTagEn, lsqDeqLd.unsignedLd, d);
         // write reg file & wakeup rs (this wakeup is late but MMIO is rare) & set ROB as Executed
         if(lsqDeqLd.dst matches tagged Valid .dst) begin
             CapPipe dataUnpacked = fromMem(tuple2(resp.tag,unpack(pack(resp.data))));
@@ -1232,7 +1244,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         && (lsqDeqSt.memFunc == Sc || lsqDeqSt.memFunc == Amo)
         && waitLrScAmoMMIOResp == Invalid
 `ifndef TSO_MM
-        && stb.noMatchStQ(lsqDeqSt.paddr, lsqDeqSt.shiftedBE)
+        && stb.noMatchStQ(lsqDeqSt.paddr, DataMemAccess(lsqDeqSt.shiftedBE))
         && (!lsqDeqSt.rel || stb.isEmpty)
 `endif
     );
@@ -1256,7 +1268,8 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
                        (pack(lsqDeqSt.shiftedBE)[7:0] == ~0) ? DWord : Word,
                 aq: lsqDeqSt.acq,
                 rl: lsqDeqSt.rel
-            }
+            },
+            loadTags: False
         };
         reqLrScAmoQ.enq(req);
         if(verbose) $display("[doDeqStQ_ScAmo_issue] ", fshow(lsqDeqSt), "; ", fshow(req));
@@ -1361,7 +1374,8 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
                        default: ?;
                    endcase),
             byteEn: lsqDeqSt.shiftedBE, // BE is LSQ is always shifted
-            data: lsqDeqSt.stData // stData in LSQ is not shifted for AMO but for St
+            data: lsqDeqSt.stData, // stData in LSQ is not shifted for AMO but for St
+            loadTags: False
         };
         inIfc.mmioReq(req);
         if(verbose) $display("[doDeqStQ_MMIO_issue] ", fshow(lsqDeqSt), "; ", fshow(req));
@@ -1468,7 +1482,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
 
     // send req to D$
     rule sendLdToMem;
-        let {lsqTag, addr} <- toGet(reqLdQ).get;
+        let {lsqTag, addr, loadTags} <- toGet(reqLdQ).get;
         dMem.procReq.req(ProcRq {
             id: zeroExtend(lsqTag),
             addr: addr,
@@ -1476,7 +1490,8 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             op: Ld,
             byteEn: ?,
             data: ?,
-            amoInst: ?
+            amoInst: ?,
+            loadTags: loadTags
         });
     endrule
     (* descending_urgency = "sendLdToMem, sendStToMem" *) // prioritize Ld over St
@@ -1495,7 +1510,8 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             op: St,
             byteEn: ?,
             data: ?,
-            amoInst: ?
+            amoInst: ?,
+            loadTags: False
         });
     endrule
     (* descending_urgency = "sendLrScAmoToMem, sendStToMem" *) // prioritize Lr/Sc/Amo over St

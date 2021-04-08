@@ -154,6 +154,7 @@ typedef union tagged {
    void ToHost;
    void FromHost;
    Addr  MMIO_Fabric_Adapter;
+   void LoadTags;
 } MMIOPlatformReq deriving(Bits, Eq, FShow);
 
 module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
@@ -298,7 +299,10 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
             DataAlignedAddr addr = getDataAlignedAddr(req.addr);
             MMIOPlatformReq newReq = Invalid;
 
-            if(addr >= msipBaseAddr && addr < msipBoundAddr) begin
+            if(req.loadTags) begin
+               newReq = LoadTags;
+            end
+            else if(addr >= msipBaseAddr && addr < msipBoundAddr) begin
                newReq = MSIP (truncate(addr - msipBaseAddr));
             end
             else if(addr >= mtimecmpBaseAddr &&
@@ -353,6 +357,19 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
    Bool isAmo       = (reqFunc matches tagged Amo  .amofunc ? True : False);
    Bool isLd        = (reqFunc matches tagged Ld            ? True : False);
    Bool isSt        = (reqFunc matches tagged St            ? True : False);
+
+   rule processLoadTags(
+      // LoadTags to MMIO, fault
+      curReq == LoadTags &&& state == ProcessReq
+      );
+      state <= SelectReq;
+      cores[reqCore].pRs.enq(DataAccess (MMIODataPRs {
+         valid: False, data: ?
+         }));
+      if(verbosity > 0) begin
+         $display("[Platform - process LoadTags] attempted LoadTags from MMIO, which is illegal");
+      end
+   endrule
 
    // handle MSIP access
    rule processMSIP(
@@ -817,7 +834,7 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
    rule rl_mmio_to_fabric_req (curReq matches tagged MMIO_Fabric_Adapter .addr
                                &&& (state == ProcessReq)
                                &&& (isLd || isSt));
-      let req = MMIOCRq {addr:addr, func:reqFunc, byteEn:reqBE, data:reqData};
+      let req = MMIOCRq {addr:addr, func:reqFunc, byteEn:reqBE, data:reqData, loadTags:False};
       mmio_fabric_adapter_core_side.request.put (req);
       state <= WaitResp;
 
@@ -854,7 +871,7 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
       // Byte enables are used in the AXI adapter to determine the size of the req. Set 8 bits (it
       // doesn't matter which) to preserve the behaviour of requesting 8 bytes).
       // TODO: instead specify access size in interface
-      let req = MMIOCRq {addr:addr, func:tagged Ld, byteEn:unpack(16'b0000_0000_1111_1111), data:?};
+      let req = MMIOCRq {addr:addr, func:tagged Ld, byteEn:unpack(16'b0000_0000_1111_1111), data:?, loadTags:False};
       mmio_fabric_adapter_core_side.request.put (req);
       state <= WaitResp;
       amoWaitWriteResp <= False;
@@ -896,7 +913,7 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
                                   ld_val, reqData);
 
          // Write back new st_val to fabric
-         let req = MMIOCRq {addr:addr, func:tagged St, byteEn:reqBE, data: new_st_val};
+         let req = MMIOCRq {addr:addr, func:tagged St, byteEn:reqBE, data: new_st_val, loadTags: False};
          mmio_fabric_adapter_core_side.request.put (req);
 
          let prs = tagged DataAccess (MMIODataPRs { valid: True, data: ld_val });
@@ -932,7 +949,7 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
       // Byte enables are used in the AXI adapter to determine the size of the req. Set 8 bits (it
       // doesn't matter which) to preserve the behaviour of requesting 8 bytes).
       // TODO: instead specify access size in interface
-      let req = MMIOCRq {addr:addr1, func: tagged Ld, byteEn: unpack(16'b0000_0000_1111_1111), data: ? };
+      let req = MMIOCRq {addr:addr1, func: tagged Ld, byteEn: unpack(16'b0000_0000_1111_1111), data: ?, loadTags: False};
       mmio_fabric_adapter_core_side.request.put (req);
       state <= WaitResp;
 

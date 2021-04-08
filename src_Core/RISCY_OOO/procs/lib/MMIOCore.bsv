@@ -167,7 +167,8 @@ module mkMMIOCore#(MMIOCoreInput inIfc)(MMIOCore);
             addr: addr,
             func: Inst (maxWay),
             byteEn: ?,
-            data: ?
+            data: ?,
+            loadTags: False
         });
     endrule
 
