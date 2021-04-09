@@ -957,7 +957,7 @@ module mkSplitLSQ(SplitLSQ);
     RWire#(void) wrongSpec_wakeBySB_conflict <- mkRWire;
     // make wrongSpec more urgent than firstSt (resolve bsc error)
     Wire#(Bool) wrongSpec_urgent_firstSt <- mkDWire(True);
-    Map#(Bit#(10),Bit#(6),Bool,2) ldKillMap <- mkMapLossy;
+    Map#(Bit#(10),Bit#(6),Int#(2),2) ldKillMap <- mkMapLossy;
     Reg#(Bit#(16)) rand_count <- mkReg(0);
     rule inc_rand_count;
         rand_count <= rand_count + 1;
@@ -1490,7 +1490,7 @@ module mkSplitLSQ(SplitLSQ);
         ld_done_enq[ld_enqP] <= False;
         ld_killed_enq[ld_enqP] <= Invalid;
         ld_pc_hash[ld_enqP] <= pc_hash;
-        ld_waitForOlderSt[ld_enqP] <= fromMaybe(False, ldKillMap.lookup(unpack(pc_hash)));
+        ld_waitForOlderSt[ld_enqP] <= fromMaybe(minBound, ldKillMap.lookup(unpack(pc_hash))) == maxBound;
         ld_readFrom_enq[ld_enqP] <= Invalid;
         ld_depLdQDeq_enq[ld_enqP] <= Invalid;
         ld_depStQDeq_enq[ld_enqP] <= Invalid;
@@ -2127,10 +2127,10 @@ module mkSplitLSQ(SplitLSQ);
                      "must be done");
             doAssert(!ld_waitWPResp_deqLd[deqP],
                      "cannot wait for wrong path resp");
-            ldKillMap.update(unpack(ld_pc_hash[deqP]), True); // Update predictor.
-        end else if ((rand_count & (4096-1)) == 0) begin
+            ldKillMap.updateWithFunc(unpack(ld_pc_hash[deqP]), 1, boundedPlus); // Update predictor.
+        end else if ((rand_count & (512-1)) == 0) begin
             // "randomly" evict trained entries in the store-to-load aliasing predictor.
-            ldKillMap.update(unpack(ld_pc_hash[deqP]), False);
+            ldKillMap.update(unpack(ld_pc_hash[deqP]), minBound);
         end
 
         // remove the entry

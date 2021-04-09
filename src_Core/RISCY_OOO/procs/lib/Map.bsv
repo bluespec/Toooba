@@ -55,6 +55,7 @@ typedef struct {
 // the value stored in the map, and the associativity of the storage.
 interface Map#(type ky, type ix, type vl, numeric type as);
     method Action update(MapKeyIndex#(ky,ix) key, vl value);
+    method Action updateWithFunc(MapKeyIndex#(ky,ix) ki, vl value, function vl up(vl old_v, vl new_v));
     method Maybe#(vl) lookup(MapKeyIndex#(ky,ix) lookup_key);
     method Action clear;
     method Bool clearDone;
@@ -78,16 +79,30 @@ Bitwise#(ix), Eq#(ix), Arith#(ix));
         if (clearCount == ~0) clearReg <= False;
     endrule
 
-    method Action update(MapKeyIndex#(ky,ix) ki, vl value);
+    function Action doUpdate(MapKeyIndex#(ky,ix) ki, vl value, function vl up(vl old_v, vl new_v));
+    action
         Bit#(TLog#(as)) way = wayNext;
+        MapKeyValue#(ky,vl) old = unpack(0);
         if (a > 1) begin
-          for (Integer i = 0; i < a; i = i + 1)
-              if (mem[i].sub(ki.index).key == ki.key) way = fromInteger(i);
+            for (Integer i = 0; i < a; i = i + 1) begin
+                MapKeyValue#(ky,vl) entry = mem[i].sub(ki.index);
+                if (entry.key == ki.key) begin
+                    way = fromInteger(i);
+                    old = entry;
+                end
+            end
         end
-        mem[way].upd(ki.index, MapKeyValue{key: ki.key, value: value});
+        mem[way].upd(ki.index, MapKeyValue{key: ki.key, value: up(old.value, value)});
         wayNext <= (wayNext == fromInteger(a-1)) ? 0: wayNext + 1;
         didUpdate.send;
-    endmethod
+    endaction
+    endfunction
+
+    function vl returnNew(vl old_v, vl new_v) = new_v;
+    method Action update(MapKeyIndex#(ky,ix) ki, vl value) = doUpdate(ki, value, returnNew);
+    method Action updateWithFunc(MapKeyIndex#(ky,ix) ki, vl value, function vl up(vl old_v, vl new_v)) =
+        doUpdate(ki, value, up);
+
     method Maybe#(vl) lookup(MapKeyIndex#(ky,ix) lu);
         Maybe#(vl) ret = Invalid;
         for (Integer i = 0; i < a; i = i + 1) begin
