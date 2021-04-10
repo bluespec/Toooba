@@ -2119,7 +2119,8 @@ module mkSplitLSQ(SplitLSQ);
             doAssert(ld_specBits_deqLd[deqP] == 0,
                      "at commit means zero spec bits");
         end
-        if(isValid(ld_killed_deqLd[deqP])) begin
+        Bool killedLd = isValid(ld_killed_deqLd[deqP]);
+        if(killedLd) begin
             doAssert(ld_memFunc[deqP] == Ld && !ld_isMMIO_deqLd[deqP],
                      "must be non-MMIO Ld");
             doAssert(!isValid(ld_fault_deqLd[deqP]), "cannot have fault");
@@ -2127,11 +2128,15 @@ module mkSplitLSQ(SplitLSQ);
                      "must be done");
             doAssert(!ld_waitWPResp_deqLd[deqP],
                      "cannot wait for wrong path resp");
-            ldKillMap.updateWithFunc(unpack(ld_pc_hash[deqP]), 1, boundedPlus); // Update predictor.
-        end else if ((rand_count & (512-1)) == 0) begin
-            // "randomly" evict trained entries in the store-to-load aliasing predictor.
-            ldKillMap.update(unpack(ld_pc_hash[deqP]), minBound);
         end
+        Bool rand_inv = (rand_count & (512-1)) == 0;
+        Bool waited = ld_waitForOlderSt[deqP]; // Don't negative train if we waited for older stores.
+        // Update predictor.
+        ldKillMap.updateWithFunc(unpack(ld_pc_hash[deqP]), // Key
+                                 waited ? 0:1,             // value; don't train if we waited.
+                                 killedLd ? boundedPlus:boundedMinus, // function to combine this value with existing
+                                 killedLd || rand_inv      // insert if doesn't exist
+                                );
 
         // remove the entry
         ld_valid_deqLd[deqP] <= False;

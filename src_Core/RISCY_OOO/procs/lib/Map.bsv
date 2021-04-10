@@ -55,7 +55,7 @@ typedef struct {
 // the value stored in the map, and the associativity of the storage.
 interface Map#(type ky, type ix, type vl, numeric type as);
     method Action update(MapKeyIndex#(ky,ix) key, vl value);
-    method Action updateWithFunc(MapKeyIndex#(ky,ix) ki, vl value, function vl up(vl old_v, vl new_v));
+    method Action updateWithFunc(MapKeyIndex#(ky,ix) ki, vl value, function vl up(vl old_v, vl new_v), Bool insert);
     method Maybe#(vl) lookup(MapKeyIndex#(ky,ix) lookup_key);
     method Action clear;
     method Bool clearDone;
@@ -79,29 +79,31 @@ Bitwise#(ix), Eq#(ix), Arith#(ix));
         if (clearCount == ~0) clearReg <= False;
     endrule
 
-    function Action doUpdate(MapKeyIndex#(ky,ix) ki, vl value, function vl up(vl old_v, vl new_v));
+    function Action doUpdate(MapKeyIndex#(ky,ix) ki, vl value, function vl up(vl old_v, vl new_v), Bool insert);
     action
+        Bool found = False;
         Bit#(TLog#(as)) way = wayNext;
         MapKeyValue#(ky,vl) old = unpack(0);
         if (a > 1) begin
             for (Integer i = 0; i < a; i = i + 1) begin
                 MapKeyValue#(ky,vl) entry = mem[i].sub(ki.index);
                 if (entry.key == ki.key) begin
+                    found = True;
                     way = fromInteger(i);
                     old = entry;
                 end
             end
         end
-        mem[way].upd(ki.index, MapKeyValue{key: ki.key, value: up(old.value, value)});
+        if (found || insert) mem[way].upd(ki.index, MapKeyValue{key: ki.key, value: up(old.value, value)});
         wayNext <= (wayNext == fromInteger(a-1)) ? 0: wayNext + 1;
         didUpdate.send;
     endaction
     endfunction
 
     function vl returnNew(vl old_v, vl new_v) = new_v;
-    method Action update(MapKeyIndex#(ky,ix) ki, vl value) = doUpdate(ki, value, returnNew);
-    method Action updateWithFunc(MapKeyIndex#(ky,ix) ki, vl value, function vl up(vl old_v, vl new_v)) =
-        doUpdate(ki, value, up);
+    method Action update(MapKeyIndex#(ky,ix) ki, vl value) = doUpdate(ki, value, returnNew, True);
+    method Action updateWithFunc(MapKeyIndex#(ky,ix) ki, vl value, function vl up(vl old_v, vl new_v), Bool insert) =
+        doUpdate(ki, value, up, insert);
 
     method Maybe#(vl) lookup(MapKeyIndex#(ky,ix) lu);
         Maybe#(vl) ret = Invalid;
