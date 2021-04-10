@@ -957,7 +957,7 @@ module mkSplitLSQ(SplitLSQ);
     RWire#(void) wrongSpec_wakeBySB_conflict <- mkRWire;
     // make wrongSpec more urgent than firstSt (resolve bsc error)
     Wire#(Bool) wrongSpec_urgent_firstSt <- mkDWire(True);
-    Map#(Bit#(10),Bit#(6),Int#(2),2) ldKillMap <- mkMapLossy;
+    Map#(Bit#(10),Bit#(6),UInt#(2),2) ldKillMap <- mkMapLossy;
     Reg#(Bit#(16)) rand_count <- mkReg(0);
     rule inc_rand_count;
         rand_count <= rand_count + 1;
