@@ -642,6 +642,11 @@ endfunction
                 toMQ.enq(msg);
                 // don't deq info, do ld next time
                 doLdAfterReplace <= True;
+`ifdef PERFORMANCE_MONITORING
+                EventsCache events = unpack (0);
+                events.evt_ST_MISS = 1;
+                perf_events[0] <= events;
+`endif
                if (verbose)
                 $display("%t LL %m sendToM: rep then ld: rep: ", $time, fshow(msg));
             end
