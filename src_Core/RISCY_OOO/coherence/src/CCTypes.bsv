@@ -37,7 +37,7 @@ typedef struct {
    Bit#(8) evt_LD_MISS;
    Bit#(8) evt_LD_MISS_LAT;
    Bit#(8) evt_ST;
-   Bit#(8) evt_ST_MISS;     // Unimplemented
+   Bit#(8) evt_ST_MISS;
    Bit#(8) evt_ST_MISS_LAT; // Unimplemented
    Bit#(8) evt_AMO;
    Bit#(8) evt_AMO_MISS;
