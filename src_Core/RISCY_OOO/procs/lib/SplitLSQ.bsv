@@ -2132,8 +2132,11 @@ module mkSplitLSQ(SplitLSQ);
         Bool rand_inv = (rand_count & (512-1)) == 0;
         Bool waited = ld_waitForOlderSt[deqP]; // Don't negative train if we waited for older stores.
         // Update predictor.
+        UInt#(3) inc = 1; // Subtract one by default.
+        if (waited) inc = 0; // Don't train if we waited for stores.
+        else if (killedLd) inc = 2;  // Double train if we flushed the pipe.
         ldKillMap.updateWithFunc(unpack(ld_pc_hash[deqP]), // Key
-                                 waited ? 0:1,             // value; don't train if we waited.
+                                 inc,                      // value; don't train if we waited.
                                  killedLd ? boundedPlus:boundedMinus, // function to combine this value with existing
                                  killedLd || rand_inv      // insert if doesn't exist
                                 );
