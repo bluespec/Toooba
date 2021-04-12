@@ -33,7 +33,6 @@ BSC_COMPILATION_FLAGS += \
 	-D PERFORMANCE_MONITORING \
 	-D SHIFT_BARREL    \
 	-D MULT_SERIAL    \
-        -D NUM_CORES=2 \
 	-D Near_Mem_Caches    \
 	-D FABRIC64    \
 	-D CAP128 \
@@ -48,6 +47,9 @@ SYNTH_BSC_OPTIONS = -D XILINX_XCVU9P
 
 # Sim only BSC_COMPILATION_FLAGS
 SIM_BSC_OPTIONS = -D BSIM
+
+# Set number of cores for RISCY config
+CORE_NUM = 2
 
 # Only used if we don't have INCLUDE_GDB_CONTROL
 #	-D EXTERNAL_DEBUG_MODULE
