@@ -957,7 +957,7 @@ module mkSplitLSQ(SplitLSQ);
     RWire#(void) wrongSpec_wakeBySB_conflict <- mkRWire;
     // make wrongSpec more urgent than firstSt (resolve bsc error)
     Wire#(Bool) wrongSpec_urgent_firstSt <- mkDWire(True);
-    Map#(Bit#(10),Bit#(6),UInt#(2),2) ldKillMap <- mkMapLossy;
+    Map#(Bit#(10),Bit#(6),Int#(3),2) ldKillMap <- mkMapLossy(minBound);
     Reg#(Bit#(16)) rand_count <- mkReg(0);
     rule inc_rand_count;
         rand_count <= rand_count + 1;
@@ -2132,12 +2132,12 @@ module mkSplitLSQ(SplitLSQ);
         Bool rand_inv = (rand_count & (512-1)) == 0;
         Bool waited = ld_waitForOlderSt[deqP]; // Don't negative train if we waited for older stores.
         // Update predictor.
-        UInt#(3) inc = 1; // Subtract one by default.
+        Int#(3) inc = -1; // Subtract one by default.
         if (waited) inc = 0; // Don't train if we waited for stores.
         else if (killedLd) inc = 2;  // Double train if we flushed the pipe.
         ldKillMap.updateWithFunc(unpack(ld_pc_hash[deqP]), // Key
                                  inc,                      // value; don't train if we waited.
-                                 killedLd ? boundedPlus:boundedMinus, // function to combine this value with existing
+                                 boundedPlus, // function to combine this value with existing
                                  killedLd || rand_inv      // insert if doesn't exist
                                 );
 

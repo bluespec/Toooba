@@ -61,7 +61,7 @@ interface Map#(type ky, type ix, type vl, numeric type as);
     method Bool clearDone;
 endinterface
 
-module mkMapLossy(Map#(ky,ix,vl,as)) provisos (
+module mkMapLossy#(vl default_value)(Map#(ky,ix,vl,as)) provisos (
 Bits#(ky,ky_sz), Bits#(vl,vl_sz), Eq#(ky), Arith#(ky),
 Bounded#(ix), Literal#(ix), Bits#(ix, ix_sz),
 Bitwise#(ix), Eq#(ix), Arith#(ix));
@@ -83,18 +83,18 @@ Bitwise#(ix), Eq#(ix), Arith#(ix));
     action
         Bool found = False;
         Bit#(TLog#(as)) way = wayNext;
-        MapKeyValue#(ky,vl) old = unpack(0);
+        vl old_value = default_value;
         if (a > 1) begin
             for (Integer i = 0; i < a; i = i + 1) begin
                 MapKeyValue#(ky,vl) entry = mem[i].sub(ki.index);
                 if (entry.key == ki.key) begin
                     found = True;
                     way = fromInteger(i);
-                    old = entry;
+                    old_value = entry.value;
                 end
             end
         end
-        if (found || insert) mem[way].upd(ki.index, MapKeyValue{key: ki.key, value: up(old.value, value)});
+        if (found || insert) mem[way].upd(ki.index, MapKeyValue{key: ki.key, value: up(old_value, value)});
         wayNext <= (wayNext == fromInteger(a-1)) ? 0: wayNext + 1;
         didUpdate.send;
     endaction
