@@ -47,6 +47,10 @@ import CrossBar::*;
 import Performance::*;
 import LatencyTimer::*;
 import RandomReplace::*;
+`ifdef PERFORMANCE_MONITORING
+import PerformanceMonitor::*;
+import SpecialRegs::*;
+`endif
 
 export L1CRqStuck(..);
 export L1PRqStuck(..);
@@ -90,6 +94,9 @@ interface L1Bank#(
     // performance
     method Action setPerfStatus(Bool stats);
     method Data getPerfData(L1DPerfType t);
+`ifdef PERFORMANCE_MONITORING
+    method EventsCache events;
+`endif
 endinterface
 
 typedef struct {
@@ -178,6 +185,7 @@ module mkL1Bank#(
 `endif
 
     // performance
+    LatencyTimer#(cRqNum, 10) latTimer <- mkLatencyTimer; // max 1K cycle latency
 `ifdef PERF_COUNT
     Reg#(Bool) doStats <- mkConfigReg(False);
     Count#(Data) ldCnt <- mkCount(0);
@@ -189,43 +197,77 @@ module mkL1Bank#(
     Count#(Data) ldMissLat <- mkCount(0);
     Count#(Data) stMissLat <- mkCount(0);
     Count#(Data) amoMissLat <- mkCount(0);
-    
-    LatencyTimer#(cRqNum, 10) latTimer <- mkLatencyTimer; // max 1K cycle latency
-
-    function Action incrReqCnt(MemOp op);
-    action
-        if(doStats) begin
-            case(op)
-                Ld: ldCnt.incr(1);
-                St: stCnt.incr(1);
-                Lr, Sc, Amo: amoCnt.incr(1);
-            endcase
-        end
-    endaction
-    endfunction
-
-    function Action incrMissCnt(MemOp op, cRqIdxT idx);
-    action
-        let lat <- latTimer.done(idx);
-        if(doStats) begin
-            case(op)
-                Ld: begin
-                    ldMissLat.incr(zeroExtend(lat));
-                    ldMissCnt.incr(1);
-                end
-                St: begin
-                    stMissLat.incr(zeroExtend(lat));
-                    stMissCnt.incr(1);
-                end
-                Lr, Sc, Amo: begin
-                    amoMissLat.incr(zeroExtend(lat));
-                    amoMissCnt.incr(1);
-                end
-            endcase
-        end
-    endaction
-    endfunction
 `endif
+`ifdef PERFORMANCE_MONITORING
+    Array #(Reg #(EventsCache)) perf_events <- mkDRegOR (2, unpack (0));
+`endif
+function Action incrReqCnt(MemOp op);
+action
+`ifdef PERF_COUNT
+    if(doStats) begin
+        case(op)
+            Ld: ldCnt.incr(1);
+            St: stCnt.incr(1);
+            Lr, Sc, Amo: amoCnt.incr(1);
+        endcase
+    end
+`endif
+`ifdef PERFORMANCE_MONITORING
+    EventsCache events = unpack (0);
+    case(op)
+        Ld: events.evt_LD = 1;
+        St: events.evt_ST = 1;
+        Lr, Sc, Amo: events.evt_AMO = 1;
+    endcase
+    perf_events[0] <= events;
+`endif
+    noAction;
+endaction
+endfunction
+
+function Action incrMissCnt(MemOp op, cRqIdxT idx);
+action
+    let lat <- latTimer.done(idx);
+`ifdef PERF_COUNT
+    if(doStats) begin
+        case(op)
+            Ld: begin
+                ldMissLat.incr(zeroExtend(lat));
+                ldMissCnt.incr(1);
+            end
+            St: begin
+                stMissLat.incr(zeroExtend(lat));
+                stMissCnt.incr(1);
+            end
+            Lr, Sc, Amo: begin
+                amoMissLat.incr(zeroExtend(lat));
+                amoMissCnt.incr(1);
+            end
+        endcase
+    end
+`endif
+`ifdef PERFORMANCE_MONITORING
+    EventsCache events = unpack (0);
+    case(op)
+        Ld: begin
+            events.evt_LD_MISS_LAT = saturating_truncate(lat);
+            events.evt_LD_MISS = 1;
+        end
+        St: begin
+            events.evt_ST_MISS_LAT = saturating_truncate(lat);
+            events.evt_ST_MISS = 1;
+        end
+        Lr, Sc, Amo: begin
+            events.evt_AMO_MISS_LAT = saturating_truncate(lat);
+            events.evt_AMO_MISS = 1;
+        end
+    endcase
+    perf_events[1] <= events;
+`endif
+    noAction;
+endaction
+endfunction
+
 
     function tagT getTag(Addr a) = truncateLSB(a);
 
@@ -261,10 +303,8 @@ module mkL1Bank#(
             addr: r.addr, 
             mshrIdx: n
         }));
-`ifdef PERF_COUNT
         // performance counter: cRq type
         incrReqCnt(r.op);
-`endif
        if (verbose)
         $display("%t L1 %m cRqTransfer_new: ", $time, 
             fshow(n), " ; ",
@@ -421,10 +461,8 @@ module mkL1Bank#(
             fshow(slot), " ; ", 
             fshow(cRqToP)
         );
-`ifdef PERF_COUNT
         // performance counter: start miss timer
         latTimer.start(n);
-`endif
     endrule
 
     // last stage of pipeline: process req
@@ -821,10 +859,8 @@ module mkL1Bank#(
                 ("pRs must be a hit")
             );
             cRqHit(cOwner, procRq);
-`ifdef PERF_COUNT
             // performance counter: miss cRq
             incrMissCnt(procRq.op, cOwner);
-`endif
         end
         else begin
             doAssert(False, ("pRs owner must match some cRq"));
@@ -1061,6 +1097,9 @@ module mkL1Bank#(
             default: 0;
         endcase);
     endmethod
+`ifdef PERFORMANCE_MONITORING
+    method EventsCache events = perf_events[0];
+`endif
 endmodule
 
 
@@ -1292,4 +1331,13 @@ module mkL1Cache#(
         end
         return fold(\+ , d);
     endmethod
+`ifdef PERFORMANCE_MONITORING
+    method EventsCache events;
+        EventsCache ret = unpack(0);
+        for(Integer i = 0; i < valueof(bankNum); i = i+1) begin
+            ret = unpack(pack(ret) | pack(banks[i].events));
+        end
+        return ret;
+    endmethod
+`endif
 endmodule

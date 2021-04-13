@@ -31,6 +31,26 @@ import Connectable::*;
 import GetPut::*;
 import ClientServer::*;
 
+`ifdef PERFORMANCE_MONITORING
+typedef struct {
+   Bit#(8) evt_LD;
+   Bit#(8) evt_LD_MISS;
+   Bit#(8) evt_LD_MISS_LAT;
+   Bit#(8) evt_ST;
+   Bit#(8) evt_ST_MISS;
+   Bit#(8) evt_ST_MISS_LAT; // Unimplemented
+   Bit#(8) evt_AMO;
+   Bit#(8) evt_AMO_MISS;
+   Bit#(8) evt_AMO_MISS_LAT;
+   Bit#(8) evt_TLB;
+   Bit#(8) evt_TLB_MISS;     // Only leaf is stored in TLB thus a full
+   Bit#(8) evt_TLB_MISS_LAT; // walk must happen every miss
+   Bit#(8) evt_TLB_FLUSH;
+   Bit#(8) evt_EVICT;
+} EventsCache deriving (Bits, FShow);
+typedef TDiv#(SizeOf#(EventsCache),8) EventsCacheElements;
+`endif
+
 typedef enum {
     I = 2'd0,
     S = 2'd1,

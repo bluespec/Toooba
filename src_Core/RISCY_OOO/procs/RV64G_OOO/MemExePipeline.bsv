@@ -49,6 +49,11 @@ import CCTypes::*;
 import L1CoCache::*;
 import Bypass::*;
 import LatencyTimer::*;
+import CacheUtils::*;
+`ifdef PERFORMANCE_MONITORING
+import PerformanceMonitor::*;
+import SpecialRegs::*;
+`endif
 
 import Cur_Cycle :: *;
 
@@ -189,6 +194,9 @@ interface MemExePipeline;
     interface Server#(void, void) reconcile;
 `endif
     method Data getPerf(ExeStagePerfType t);
+`ifdef PERFORMANCE_MONITORING
+    method EventsCoreMem events;
+`endif
 endinterface
 
 module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
@@ -198,6 +206,10 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
     // is not good with single core
     Bool multicore = valueof(CoreNum) > 1;
 
+    // load/store memory total latency (max 1K cycle latency for 1 Ld/St)
+    // These are always included as they are used by both stat counter systems.
+    LatencyTimer#(LdQSize, 10) ldMemLatTimer <- mkLatencyTimer;
+    LatencyTimer#(SBSize, 10) stMemLatTimer <- mkLatencyTimer;
 `ifdef PERF_COUNT
     // load issue stall
     Count#(Data) exeLdStallByLdCnt <- mkCount(0);
@@ -206,8 +218,6 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
     // load forward count
     Count#(Data) exeLdForwardCnt <- mkCount(0);
     // load/store memory total latency (max 1K cycle latency for 1 Ld/St)
-    LatencyTimer#(LdQSize, 10) ldMemLatTimer <- mkLatencyTimer;
-    LatencyTimer#(SBSize, 10) stMemLatTimer <- mkLatencyTimer;
     Count#(Data) exeLdMemLat <- mkCount(0);
     Count#(Data) exeStMemLat <- mkCount(0);
     // load to use latency: dispatch to resp
@@ -224,6 +234,10 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
     Count#(Data) exeFenceCnt <- mkCount(0);
     Count#(Data) exeFenceAcqCnt <- mkCount(0);
     Count#(Data) exeFenceRelCnt <- mkCount(0);
+`endif
+
+`ifdef PERFORMANCE_MONITORING
+    Array #(Reg #(EventsCoreMem)) events_reg <- mkDRegOR (5, unpack (0));
 `endif
 
     // reservation station
@@ -285,12 +299,17 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             if(verbose) begin
                 $display("[Ld resp] ", fshow(id), "; ", fshow(d), "; ", fshow(info));
             end
-`ifdef PERF_COUNT
             // perf: load mem latency
             let lat <- ldMemLatTimer.done(tag);
+`ifdef PERF_COUNT
             if(inIfc.doStats) begin
                 exeLdMemLat.incr(zeroExtend(lat));
             end
+`endif
+`ifdef PERFORMANCE_MONITORING
+            EventsCoreMem events = unpack(0);
+            events.evt_LOAD_WAIT = saturating_truncate(lat);
+            events_reg[1] <= events;
 `endif
         endmethod
         method Action respLrScAmo(DProcReqId id, Data d);
@@ -307,18 +326,24 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
                 $display("[Store resp] idx ", fshow(id),
                          ", ", fshow(waitSt));
             end
-`ifdef PERF_COUNT
             // perf: store mem latency
             let lat <- stMemLatTimer.done(0);
+`ifdef PERF_COUNT
             if(inIfc.doStats) begin
                 exeStMemLat.incr(zeroExtend(lat));
             end
+`endif
+`ifdef PERFORMANCE_MONITORING
+            EventsCoreMem events = unpack(0);
+            if (waitSt.shiftedBE == -1) events.evt_MEM_CAP_STORE = 1;
+            events.evt_STORE_WAIT = saturating_truncate(lat);
+            events_reg[2] <= events;
 `endif
             // now figure out the data to be written
             Vector#(LineSzData, ByteEn) be = replicate(replicate(False));
             Line data = replicate(0);
             be[waitSt.offset] = waitSt.shiftedBE;
-            data[waitSt.offset] = waitSt.shiftedData;
+            data[waitSt.offset] = waitSt.shiftedData; //XXX I guess this doesn't work with capabilities?  Maybe we don't build TSO?
             return tuple2(unpack(pack(be)), data);
         endmethod
 `else
@@ -327,12 +352,18 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             let e <- stb.deq(idx); // deq SB
             lsq.wakeupLdStalledBySB(idx); // wake up loads
             if(verbose) $display("[Store resp] idx = %x, ", idx, fshow(e));
-`ifdef PERF_COUNT
             // perf: store mem latency
             let lat <- stMemLatTimer.done(idx);
+`ifdef PERF_COUNT
             if(inIfc.doStats) begin
                 exeStMemLat.incr(zeroExtend(lat));
             end
+`endif
+`ifdef PERFORMANCE_MONITORING
+            EventsCoreMem events = unpack(0);
+            if (pack(e.byteEn) == -1) events.evt_MEM_CAP_STORE = 1;
+            events.evt_STORE_WAIT = saturating_truncate(lat);
+            events_reg[2] <= events;
 `endif
             return tuple2(e.byteEn, unpack(e.data)); // return SB entry
         endmethod
@@ -452,6 +483,10 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         if(x.ldstq_tag matches tagged St .stTag) begin
             Data d = x.mem_func == Amo ? data : shiftData; // XXX don't shift for AMO
             lsq.updateData(stTag, d);
+`ifdef PERFORMANCE_MONITORING
+            EventsCoreMem events = unpack(0);
+            events_reg[4] <= events;
+`endif
         end
 
         // go to next stage by sending to TLB
@@ -575,6 +610,10 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
 `else
         SBSearchRes sbRes = stb.search(info.paddr, info.shiftedBE);
 `endif
+`ifdef PERFORMANCE_MONITORING
+        EventsCoreMem events = unpack(0);
+        if (pack(info.shiftedBE) == -1) events.evt_MEM_CAP_LOAD = 1;
+`endif
         // search LSQ
         LSQIssueLdResult issRes <- lsq.issueLd(info.tag, info.paddr, info.shiftedBE, sbRes);
         if(verbose) begin
@@ -597,10 +636,8 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         end
         else if(issRes == ToCache) begin
             reqLdQ.enq(tuple2(zeroExtend(info.tag), info.paddr));
-`ifdef PERF_COUNT
             // perf: load mem latency
             ldMemLatTimer.start(info.tag);
-`endif
         end
         else if(issRes matches tagged Stall .stallBy) begin
 `ifdef PERF_COUNT
@@ -618,6 +655,9 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         else begin
             doAssert(False, "load is stalled");
         end
+`ifdef PERFORMANCE_MONITORING
+        events_reg[0] <= events;
+`endif
     endaction
     endfunction
 
@@ -939,10 +979,8 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         // we leave deq to resp time
         // ROB should have already been set to executed
         if(verbose) $display("[doDeqStQ_St] ", fshow(lsqDeqSt));
-`ifdef PERF_COUNT
         // perf: store mem latency
         stMemLatTimer.start(0);
-`endif
     endrule
 
 `else
@@ -966,10 +1004,8 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
     rule doIssueSB;
         let {sbIdx, en} <- stb.issue;
         reqStQ.enq(tuple2(sbIdx, {en.addr, 0}));
-`ifdef PERF_COUNT
         // perf: store mem latency
         stMemLatTimer.start(sbIdx);
-`endif
     endrule
 `endif
 
@@ -1111,6 +1147,11 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         if(inIfc.doStats && lsqDeqSt.memFunc == Sc && resp == fromInteger(valueof(ScSuccVal))) begin
             exeScSuccessCnt.incr(1);
         end
+`endif
+`ifdef PERFORMANCE_MONITORING
+        EventsCoreMem events = unpack(0);
+        events.evt_SC_SUCCESS = 1;
+        events_reg[3] <= events;
 `endif
     endrule
 
@@ -1327,4 +1368,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             default: 0;
         endcase);
     endmethod
+`ifdef PERFORMANCE_MONITORING
+    method events = events_reg[0];
+`endif
 endmodule

@@ -165,6 +165,9 @@ interface DCoCache;
     method Bool flush_done;
     method Action resetLinkAddr;
     interface Perf#(L1DPerfType) perf;
+`ifdef PERFORMANCE_MONITORING
+    method EventsCache events;
+`endif
 
     interface ChildCacheToParent#(L1Way, void) to_parent;
 
@@ -254,6 +257,9 @@ module mkDCoCache#(L1ProcResp#(DProcReqId) procResp)(DCoCache);
 `endif
         endmethod
     endinterface
+`ifdef PERFORMANCE_MONITORING
+    method EventsCache events = cache.events;
+`endif
 
     interface to_parent = cache.to_parent;
 
@@ -353,6 +359,9 @@ interface ICoCache;
     method Action flush;
     method Bool flush_done;
     interface Perf#(L1IPerfType) perf;
+`ifdef PERFORMANCE_MONITORING
+    method EventsCache events;
+`endif
 
     interface ChildCacheToParent#(L1Way, void) to_parent;
 
@@ -423,6 +432,9 @@ module mkICoCache(ICoCache);
 `endif
         endmethod
     endinterface
+`ifdef PERFORMANCE_MONITORING
+    method EventsCache events = cache.events;
+`endif
 
     interface to_parent = cache.to_parent;
 

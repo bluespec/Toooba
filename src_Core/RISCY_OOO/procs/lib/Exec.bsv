@@ -183,8 +183,21 @@ function Maybe#(Exception) checkForException(
                 validValue(dInst.csr) == CSRsatp) begin
             exception = Valid (IllegalInst);
         end
-        // TODO check permission for accessing cycle/inst/time, and check
-        // read-only CSRs being written
+        let rs1 = case (regs.src2) matches
+                     tagged Valid (tagged Gpr .r) : r;
+                     default: 0;
+                  endcase;
+        let imm = case (dInst.imm) matches
+                     tagged Valid .n: n;
+                     default: 0;
+                  endcase;
+        Bool writes_csr = ((dInst.execFunc == tagged Alu Csrw) || (rs1 != 0) || (imm != 0));
+        Bool read_only  = (csr [11:10] == 2'b11);
+        Bool write_deny = (writes_csr && read_only);
+        Bool unimplemented = (csr == pack(CSRnone));    // Added by Bluespec
+        if (write_deny || !csr_has_priv || unimplemented) begin
+            exception = Valid (IllegalInst);
+        end
     end
     else if(dInst.iType == Fpu) begin
         if(dInst.execFunc matches tagged Fpu .fpu_f) begin

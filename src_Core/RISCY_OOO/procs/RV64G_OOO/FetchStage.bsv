@@ -53,6 +53,7 @@ import MMIOInst::*;
 import IndexedMultiset::*;
 
 import Cur_Cycle :: *;
+import DReg :: *;
 
 // ================================================================
 // For fv_decode_C function and related types and definitions
@@ -97,6 +98,9 @@ interface FetchStage;
 
     // performance
     interface Perf#(DecStagePerfType) perf;
+`ifdef PERFORMANCE_MONITORING
+    method Bool redirect_evt;
+`endif
 endinterface
 
 // PC "compression" types to facilitate storing common upper PC bits in a
@@ -164,7 +168,10 @@ typedef struct {
 function InstrFromFetch3 fetch3_2_instC(Fetch3ToDecode in, Instruction inst, Bit#(32) orig_inst) =
    InstrFromFetch3 {
       pc: in.pc,
-      ppc: fromMaybe(PcCompressed{lsb: in.pc.lsb + 2, idx: in.pc.idx}, in.ppc), // This assumes we will call this function on the last fragment of any instruction.
+      // This assumes we will call this function on the last fragment of any instruction.
+      ppc: fromMaybe(PcCompressed{lsb: in.pc.lsb + 2,
+                                  idx: in.pc.idx + ((in.pc.lsb == -2) ? 1:0)}, // If we move to a new page, we will move to the next index in the compressed PC table.
+                     in.ppc),
       decode_epoch: in.decode_epoch,
       main_epoch: in.main_epoch,
       inst: inst,
@@ -328,6 +335,9 @@ module mkFetchStage(FetchStage);
             data: d
         });
     endrule
+`endif
+`ifdef PERFORMANCE_MONITORING
+    Reg#(Bool) redirect_evt_reg <- mkDReg(False);
 `endif
 
     // We don't send req to TLB when waiting for redirect or TLB flush. Since
@@ -743,6 +753,9 @@ module mkFetchStage(FetchStage);
         // this redirect may be caused by a trap/system inst in commit stage
         // we conservatively set wait for flush TODO make this an input parameter
         waitForFlush <= True;
+`ifdef PERFORMANCE_MONITORING
+        redirect_evt_reg <= True;
+`endif
     endmethod
 
 `ifdef INCLUDE_GDB_CONTROL
@@ -838,4 +851,8 @@ module mkFetchStage(FetchStage);
         method Bool respValid = perfReqQ.notEmpty;
 `endif
     endinterface
+
+`ifdef PERFORMANCE_MONITORING
+    method Bool redirect_evt = redirect_evt_reg._read;
+`endif
 endmodule

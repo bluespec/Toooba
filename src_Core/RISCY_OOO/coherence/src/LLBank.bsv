@@ -38,6 +38,10 @@ import LatencyTimer::*;
 import Cntrs::*;
 import ConfigReg::*;
 import RandomReplace::*;
+`ifdef PERFORMANCE_MONITORING
+import PerformanceMonitor::*;
+import SpecialRegs::*;
+`endif
 
 export LLCRqStuck(..);
 export LLBank(..);
@@ -89,6 +93,9 @@ interface LLBank#(
     // performance
     method Action setPerfStatus(Bool stats);
     method Data getPerfData(LLCPerfType t);
+`ifdef PERFORMANCE_MONITORING
+    method EventsCache events;
+`endif
 endinterface
 
 typedef struct {
@@ -206,6 +213,7 @@ module mkLLBank#(
 `endif
 
     // performance
+    LatencyTimer#(cRqNum, 10) latTimer <- mkLatencyTimer; // max 1K cycle latency
 `ifdef PERF_COUNT
     Reg#(Bool) doStats <- mkConfigReg(False);
     Count#(Data) dmaMemLdCnt <- mkCount(0);
@@ -220,25 +228,34 @@ module mkLLBank#(
     Count#(Data) upRespDataCnt <- mkCount(0);
     Count#(Data) dmaLdReqCnt <- mkCount(0);
     Count#(Data) dmaStReqCnt <- mkCount(0);
-    
-    LatencyTimer#(cRqNum, 10) latTimer <- mkLatencyTimer; // max 1K cycle latency
-
-    function Action incrMissCnt(cRqIndexT idx, Bool isDma);
-    action
-        let lat <- latTimer.done(idx);
-        if(doStats) begin
-            if(isDma) begin
-                dmaMemLdCnt.incr(1);
-                dmaMemLdLat.incr(zeroExtend(lat));
-            end
-            else begin
-                normalMemLdCnt.incr(1);
-                normalMemLdLat.incr(zeroExtend(lat));
-            end
-        end
-    endaction
-    endfunction
 `endif
+`ifdef PERFORMANCE_MONITORING
+    Array #(Reg #(EventsCache)) perf_events <- mkDRegOR (2, unpack (0));
+`endif
+function Action incrMissCnt(cRqIndexT idx, Bool isDma);
+action
+    let lat <- latTimer.done(idx);
+`ifdef PERF_COUNT
+    if(doStats) begin
+        if(isDma) begin
+            dmaMemLdCnt.incr(1);
+            dmaMemLdLat.incr(zeroExtend(lat));
+        end
+        else begin
+            normalMemLdCnt.incr(1);
+            normalMemLdLat.incr(zeroExtend(lat));
+        end
+    end
+`endif
+`ifdef PERFORMANCE_MONITORING
+    EventsCache events = unpack (0);
+    events.evt_LD_MISS_LAT = saturating_truncate(lat); // Don't support seperate DMA counts.
+    events.evt_LD_MISS = 1;
+    perf_events[1] <= events;
+`endif
+endaction
+endfunction
+
 
     function tagT getTag(Addr a) = truncateLSB(a);
 
@@ -502,10 +519,8 @@ module mkLLBank#(
             fshow(cRq), " ; ",
             fshow(cSlot), " ; "
         );
-`ifdef PERF_COUNT
         // performance counter: normal miss lat and cnt
         incrMissCnt(n, False);
-`endif
     endrule
 
     // this mem resp is just for a DMA req, won't go into pipeline to refill cache
@@ -517,10 +532,8 @@ module mkLLBank#(
         // save data into cRq mshr & send to DMA resp IndexQ
         cRqMshr.mRsDeq.setData(mRs.id.mshrIdx, Valid (mRs.data));
         rsLdToDmaIndexQ_mRsDeq.enq(mRs.id.mshrIdx);
-`ifdef PERF_COUNT
         // performance counter: dma miss lat and cnt
         incrMissCnt(mRs.id.mshrIdx, True);
-`endif
     endrule
 
     // send rd/wr to mem
@@ -559,10 +572,8 @@ module mkLLBank#(
             $display("%t LL %m sendToM: load only: ", $time, fshow(msg));
             doAssert(!isValid(data), "cannot have data");
             doAssert(!doLdAfterReplace, "doLdAfterReplace should be false");
-`ifdef PERF_COUNT
             // performance counter: start miss timer
             latTimer.start(n);
-`endif
 `ifdef DEBUG_DMA
             if(cRq.id matches tagged Dma .dmaId) begin
                 dmaRdMissQ.enq(dmaId); // DMA read takes effect
@@ -606,10 +617,8 @@ module mkLLBank#(
                 doLdAfterReplace <= False;
 	       if (verbose)
                 $display("%t LL %m sendToM: rep then ld: ld: ", $time, fshow(msg));
-`ifdef PERF_COUNT
                 // performance counter: start miss timer
                 latTimer.start(n);
-`endif
             end
             else begin // do write back part
                 toMemT msg = Wb (WbMemRs {
@@ -620,7 +629,12 @@ module mkLLBank#(
                 toMQ.enq(msg);
                 // don't deq info, do ld next time
                 doLdAfterReplace <= True;
-	       if (verbose)
+`ifdef PERFORMANCE_MONITORING
+                EventsCache events = unpack (0);
+                events.evt_ST_MISS = 1;
+                perf_events[0] <= events;
+`endif
+               if (verbose)
                 $display("%t LL %m sendToM: rep then ld: rep: ", $time, fshow(msg));
             end
             doAssert(isRqFromC(cRq.id), "must be child req");
@@ -1518,6 +1532,9 @@ module mkLLBank#(
             default: 0;
         endcase);
     endmethod
+    `ifdef PERFORMANCE_MONITORING
+        method EventsCache events = perf_events[0];
+    `endif
 endmodule
 
 // Scheduling notes
@@ -1580,4 +1597,3 @@ endmodule
 //    -- this cRq is different from that in mRsDeq
 //    -- this cRq is different from that in sendRsToC/sendRsToDma
 //    -- XXX this cRq may be the same as that in sendRqToC!!!
-

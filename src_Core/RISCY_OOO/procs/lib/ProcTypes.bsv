@@ -245,6 +245,7 @@ typedef enum {
     CSRmie        = 12'h304,
     CSRmtvec      = 12'h305,
     CSRmcounteren = 12'h306,
+    CSRmcounterinhibit = 12'h320,
     CSRmscratch   = 12'h340,
     CSRmepc       = 12'h341,
     CSRmcause     = 12'h342,
@@ -256,6 +257,93 @@ typedef enum {
     CSRmarchid    = 12'hf12,
     CSRmimpid     = 12'hf13,
     CSRmhartid    = 12'hf14,
+    CSRhpcounter3   = 12'hc03,
+    CSRhpcounter4   = 12'hc04,
+    CSRhpcounter5   = 12'hc05,
+    CSRhpcounter6   = 12'hc06,
+    CSRhpcounter7   = 12'hc07,
+    CSRhpcounter8   = 12'hc08,
+    CSRhpcounter9   = 12'hc09,
+    CSRhpcounter10  = 12'hc0a,
+    CSRhpcounter11  = 12'hc0b,
+    CSRhpcounter12  = 12'hc0c,
+    CSRhpcounter13  = 12'hc0d,
+    CSRhpcounter14  = 12'hc0e,
+    CSRhpcounter15  = 12'hc0f,
+    CSRhpcounter16  = 12'hc10,
+    CSRhpcounter17  = 12'hc11,
+    CSRhpcounter18  = 12'hc12,
+    CSRhpcounter19  = 12'hc13,
+    CSRhpcounter20  = 12'hc14,
+    CSRhpcounter21  = 12'hc15,
+    CSRhpcounter22  = 12'hc16,
+    CSRhpcounter23  = 12'hc17,
+    CSRhpcounter24  = 12'hc18,
+    CSRhpcounter25  = 12'hc19,
+    CSRhpcounter26  = 12'hc1a,
+    CSRhpcounter27  = 12'hc1b,
+    CSRhpcounter28  = 12'hc1c,
+    CSRhpcounter29  = 12'hc1d,
+    CSRhpcounter30  = 12'hc1e,
+    CSRhpcounter31  = 12'hc1f,
+    CSRmhpcounter3  = 12'hb03,
+    CSRmhpcounter4  = 12'hb04,
+    CSRmhpcounter5  = 12'hb05,
+    CSRmhpcounter6  = 12'hb06,
+    CSRmhpcounter7  = 12'hb07,
+    CSRmhpcounter8  = 12'hb08,
+    CSRmhpcounter9  = 12'hb09,
+    CSRmhpcounter10 = 12'hb0a,
+    CSRmhpcounter11 = 12'hb0b,
+    CSRmhpcounter12 = 12'hb0c,
+    CSRmhpcounter13 = 12'hb0d,
+    CSRmhpcounter14 = 12'hb0e,
+    CSRmhpcounter15 = 12'hb0f,
+    CSRmhpcounter16 = 12'hb10,
+    CSRmhpcounter17 = 12'hb11,
+    CSRmhpcounter18 = 12'hb12,
+    CSRmhpcounter19 = 12'hb13,
+    CSRmhpcounter20 = 12'hb14,
+    CSRmhpcounter21 = 12'hb15,
+    CSRmhpcounter22 = 12'hb16,
+    CSRmhpcounter23 = 12'hb17,
+    CSRmhpcounter24 = 12'hb18,
+    CSRmhpcounter25 = 12'hb19,
+    CSRmhpcounter26 = 12'hb1a,
+    CSRmhpcounter27 = 12'hb1b,
+    CSRmhpcounter28 = 12'hb1c,
+    CSRmhpcounter29 = 12'hb1d,
+    CSRmhpcounter30 = 12'hb1e,
+    CSRmhpcounter31 = 12'hb1f,
+    CSRmhpmevent3   = 12'h323,
+    CSRmhpmevent4   = 12'h324,
+    CSRmhpmevent5   = 12'h325,
+    CSRmhpmevent6   = 12'h326,
+    CSRmhpmevent7   = 12'h327,
+    CSRmhpmevent8   = 12'h328,
+    CSRmhpmevent9   = 12'h329,
+    CSRmhpmevent10  = 12'h32a,
+    CSRmhpmevent11  = 12'h32b,
+    CSRmhpmevent12  = 12'h32c,
+    CSRmhpmevent13  = 12'h32d,
+    CSRmhpmevent14  = 12'h32e,
+    CSRmhpmevent15  = 12'h32f,
+    CSRmhpmevent16  = 12'h330,
+    CSRmhpmevent17  = 12'h331,
+    CSRmhpmevent18  = 12'h332,
+    CSRmhpmevent19  = 12'h333,
+    CSRmhpmevent20  = 12'h334,
+    CSRmhpmevent21  = 12'h335,
+    CSRmhpmevent22  = 12'h336,
+    CSRmhpmevent23  = 12'h337,
+    CSRmhpmevent24  = 12'h338,
+    CSRmhpmevent25  = 12'h339,
+    CSRmhpmevent26  = 12'h33a,
+    CSRmhpmevent27  = 12'h33b,
+    CSRmhpmevent28  = 12'h33c,
+    CSRmhpmevent29  = 12'h33d,
+    CSRmhpmevent30  = 12'h33e,
+    CSRmhpmevent31  = 12'h33f,
 `ifdef SECURITY
     // sanctum machine CSR
     CSRmevbase    = 12'h7c0,
@@ -292,6 +380,10 @@ typedef enum {
 } CSR deriving(Bits, Eq, FShow);
 
 function CSR unpackCSR(Bit#(12) x);
+    CSR ret = CSRnone;
+    if (x >= pack(CSRhpcounter3) && x <= pack(CSRhpcounter31)) ret = unpack(x);
+    if (x >= pack(CSRmhpcounter3) && x <= pack(CSRmhpcounter31)) ret = unpack(x);
+    if (x >= pack(CSRmhpmevent3) && x <= pack(CSRmhpmevent31)) ret = unpack(x);
     return (case(x)
         pack(CSR'(CSRfflags    )): (CSRfflags    );
         pack(CSR'(CSRfrm       )): (CSRfrm       );
@@ -305,6 +397,7 @@ function CSR unpackCSR(Bit#(12) x);
         pack(CSR'(CSRsie       )): (CSRsie       );
         pack(CSR'(CSRstvec     )): (CSRstvec     );
         pack(CSR'(CSRscounteren)): (CSRscounteren);
+        pack(CSR'(CSRmcounterinhibit)): (CSRmcounterinhibit);
         pack(CSR'(CSRsscratch  )): (CSRsscratch  );
         pack(CSR'(CSRsepc      )): (CSRsepc      );
         pack(CSR'(CSRscause    )): (CSRscause    );
@@ -356,7 +449,7 @@ function CSR unpackCSR(Bit#(12) x);
         pack(CSR'(CSRdscratch1 )): (CSRdscratch1 );
 `endif
 
-        default                  : (CSRnone      );
+        default : ret;
     endcase);
 endfunction
 
@@ -982,3 +1075,76 @@ function Fmt showInst(Instruction inst);
   return ret;
 endfunction
 
+`ifdef PERFORMANCE_MONITORING
+typedef 112 No_Of_Evts;
+typedef   8 Report_Width;
+typedef  64 Counter_Width;
+typedef  29 No_Of_Ctrs;
+
+typedef struct {
+   SupCnt evt_REDIRECT;
+   SupCnt evt_TRAP;
+   SupCnt evt_BRANCH;
+   SupCnt evt_JAL;
+   SupCnt evt_JALR;
+   SupCnt evt_AUIPC;
+   SupCnt evt_LOAD;
+   SupCnt evt_STORE;
+   SupCnt evt_LR;
+   SupCnt evt_SC;
+   SupCnt evt_AMO;
+   SupCnt evt_SERIAL_SHIFT;
+   SupCnt evt_INT_MUL_DIV_REM;
+   SupCnt evt_FP;
+   SupCnt evt_SC_SUCCESS;
+   SupCnt evt_LOAD_WAIT;
+   SupCnt evt_STORE_WAIT;
+   SupCnt evt_FENCE;
+   SupCnt evt_F_BUSY_NO_CONSUME; // XXX
+   SupCnt evt_D_BUSY_NO_CONSUME; // XXX
+   SupCnt evt_1_BUSY_NO_CONSUME; // XXX
+   SupCnt evt_2_BUSY_NO_CONSUME; // XXX
+   SupCnt evt_3_BUSY_NO_CONSUME; // XXX
+   SupCnt evt_IMPRECISE_SETBOUND; // XXX
+   SupCnt evt_UNREPRESENTABLE_CAP; // XXX
+   SupCnt evt_MEM_CAP_LOAD;
+   SupCnt evt_MEM_CAP_STORE;
+   SupCnt evt_MEM_CAP_LOAD_TAG_SET;
+   SupCnt evt_MEM_CAP_STORE_TAG_SET;
+} EventsCore deriving (Bits, FShow);
+typedef TDiv#(SizeOf#(EventsCore),SizeOf#(SupCnt)) EventsCoreElements;
+
+typedef Bit#(Report_Width) HpmRpt;
+typedef struct {
+   HpmRpt evt_REDIRECT;
+   HpmRpt evt_TRAP;
+   HpmRpt evt_BRANCH;
+   HpmRpt evt_JAL;
+   HpmRpt evt_JALR;
+   HpmRpt evt_AUIPC;
+   HpmRpt evt_LOAD;
+   HpmRpt evt_STORE;
+   HpmRpt evt_LR;
+   HpmRpt evt_SC;
+   HpmRpt evt_AMO;
+   HpmRpt evt_SERIAL_SHIFT;
+   HpmRpt evt_INT_MUL_DIV_REM;
+   HpmRpt evt_FP;
+   HpmRpt evt_SC_SUCCESS;
+   HpmRpt evt_LOAD_WAIT;
+   HpmRpt evt_STORE_WAIT;
+   HpmRpt evt_FENCE;
+   HpmRpt evt_F_BUSY_NO_CONSUME; // XXX
+   HpmRpt evt_D_BUSY_NO_CONSUME; // XXX
+   HpmRpt evt_1_BUSY_NO_CONSUME; // XXX
+   HpmRpt evt_2_BUSY_NO_CONSUME; // XXX
+   HpmRpt evt_3_BUSY_NO_CONSUME; // XXX
+   HpmRpt evt_IMPRECISE_SETBOUND; // XXX
+   HpmRpt evt_UNREPRESENTABLE_CAP; // XXX
+   HpmRpt evt_MEM_CAP_LOAD;
+   HpmRpt evt_MEM_CAP_STORE;
+   HpmRpt evt_MEM_CAP_LOAD_TAG_SET;
+   HpmRpt evt_MEM_CAP_STORE_TAG_SET;
+} EventsCoreMem deriving (Bits, FShow); // Memory needs more space for reporting delays
+typedef TDiv#(SizeOf#(EventsCoreMem),Report_Width) EventsCoreMemElements;
+`endif

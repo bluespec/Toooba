@@ -41,6 +41,10 @@ import BuildVector::*;
 
 import Cur_Cycle  :: *;
 
+`ifdef PERFORMANCE_MONITORING
+import PerformanceMonitor :: *;
+`endif
+
 // ================================================================
 // Project imports from Toooba
 
@@ -157,6 +161,10 @@ interface CsrFile;
    method Action dcsr_cause_write (Bit #(3)  dcsr_cause);
 
 `endif
+`ifdef PERFORMANCE_MONITORING
+   (* always_ready, always_enabled *)
+   method Action send_performance_events (Vector #(No_Of_Evts, Bit #(Report_Width)) evts);
+`endif
 endinterface
 
 // Fancy Reg functions
@@ -210,6 +218,38 @@ function Reg#(t) addWriteSideEffect(Reg#(t) r, Action a);
         endmethod
     endinterface);
 endfunction
+
+`ifdef PERFORMANCE_MONITORING
+interface PerfCountersVec;
+    interface Vector#(No_Of_Ctrs, Reg#(Data)) counter_vec;
+    interface Vector#(No_Of_Ctrs, Reg#(Data)) event_vec;
+    interface Reg#(Data) inhibit;
+    method Action send_performance_events (Vector #(No_Of_Evts, Bit#(Report_Width)) evts);
+endinterface
+(* synthesize *)
+module mkPerfCountersToooba (PerfCountersVec);
+    PerfCounters_IFC #(No_Of_Ctrs, Counter_Width, Report_Width, No_Of_Evts) perf_counters <- mkPerfCounters;
+    Vector#(No_Of_Ctrs, Reg#(Data)) counters = ?;
+    for (Bit#(TLog#(No_Of_Ctrs)) i = 0; i < 29; i = i + 1) counters[i] =
+        interface Reg;
+            method Action _write(Data x) = perf_counters.write_counter(i,x);
+            method Data _read = perf_counters.read_counters[i];
+        endinterface;
+    Vector#(No_Of_Ctrs, Reg#(Data)) events = ?;
+    for (Bit#(TLog#(No_Of_Ctrs)) i = 0; i < 29; i = i + 1) events[i] =
+        interface Reg;
+            method Action _write(Data x) = perf_counters.write_ctr_sel(i,truncate(x));
+            method Data _read = zeroExtend(perf_counters.read_ctr_sels[i]);
+        endinterface;
+    interface counter_vec = counters;
+    interface event_vec = events;
+    interface inhibit = interface Reg;
+        method Action _write(Data x) = perf_counters.write_ctr_inhibit(truncate(x));
+        method Data _read = zeroExtend(perf_counters.read_ctr_inhibit);
+    endinterface;
+    method send_performance_events = perf_counters.send_performance_events;
+endmodule
+`endif
 
 function Bool has_csr_permission(CSR csr, Bit#(2) prv, Bool write);
     Bit#(12) csr_index = pack(csr);
@@ -431,7 +471,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
     Reg#(Bit#(1)) mcounteren_cy_reg <- mkCsrReg(0);
     Reg#(Data) mcounteren_csr = concatReg5(
         readOnlyReg(32'b0),
-        readOnlyReg(29'b0), // hpmcounter 3-31 not accessible in S mode
+        readOnlyReg(~29'b0), // hpmcounter 3-31 currently always accessible in S mode
         mcounteren_ir_reg, mcounteren_tm_reg, mcounteren_cy_reg
     );
     // mscratch
@@ -550,7 +590,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
     Reg#(Bit#(1)) scounteren_cy_reg <- mkCsrReg(0);
     Reg#(Data) scounteren_csr = concatReg5(
         readOnlyReg(32'b0),
-        readOnlyReg(29'b0), // hpmcounter 3-31 not accessible in U mode
+        readOnlyReg(~29'b0), // hpmcounter 3-31 currently always accessible in U mode
         scounteren_ir_reg, scounteren_tm_reg, scounteren_cy_reg
     );
     // sscratch
@@ -666,6 +706,16 @@ module mkCsrFile #(Data hartid)(CsrFile);
    Reg #(Data) rg_dscratch1 <- mkConfigRegU;
 `endif
 
+`ifdef PERFORMANCE_MONITORING
+   PerfCountersVec perf_counters <- mkPerfCountersToooba;
+
+   //Reg #(Bit #(2)) rg_ctr_inhib_lsb   <- mkReg (0);
+   //Wire #(Bit #(2)) w_ctr_inhib_lsb <- mkWire;
+   //Bit #(3) ctr_inhibit_lsb = { rg_ctr_inhib_lsb [1], 0, rg_ctr_inhib_lsb [0] };
+   //Word ctr_inhibit = zeroExtend ({ perf_counters.read_ctr_inhibit, ctr_inhibit_lsb });
+   //CSR_Addr no_of_ctrs = fromInteger (valueOf (No_Of_Ctrs));
+`endif
+
 `ifdef SECURITY
     // sanctum machine CSRs
 
@@ -719,6 +769,17 @@ module mkCsrFile #(Data hartid)(CsrFile);
 
     // Function for getting a csr given an index
     function Reg#(Data) get_csr(CSR csr);
+        Reg#(Data) ret = readOnlyReg(64'b0);
+`ifdef PERFORMANCE_MONITORING
+	function Reg#(Data) getCsrFromRange(Bit#(12) first, Bit#(12) last, Vector#(n, Reg#(Data)) vec, Reg#(Data) def);
+		Bit#(12) c = pack(csr);
+		if ((first <= c) && (c <= last)) return vec[c - first];
+		else return def;
+	endfunction
+	ret = getCsrFromRange(pack(CSRmhpcounter3), pack(CSRmhpcounter31), perf_counters.counter_vec, ret);
+	ret = getCsrFromRange(pack(CSRmhpmevent3),  pack(CSRmhpmevent31),  perf_counters.event_vec,   ret);
+	ret = getCsrFromRange(pack(CSRhpcounter3),  pack(CSRhpcounter31),  perf_counters.counter_vec, ret);
+`endif
         return (case (csr)
             // User CSRs
             CSRfflags:     fflags_csr;
@@ -759,6 +820,9 @@ module mkCsrFile #(Data hartid)(CsrFile);
             CSRmarchid:    marchid_csr;
             CSRmimpid:     mimpid_csr;
             CSRmhartid:    mhartid_csr;
+`ifdef PERFORMANCE_MONITORING
+            CSRmcounterinhibit: perf_counters.inhibit;
+`endif
 `ifdef SECURITY
             CSRmevbase:    mevbase_csr;
             CSRmevmask:    mevmask_csr;
@@ -785,7 +849,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
 	   CSRdscratch1:  rg_dscratch1;
 `endif
 
-            default:       readOnlyReg(64'b0);
+            default: ret;
         endcase);
     endfunction
 
@@ -1268,4 +1332,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
 
 `endif
 
+`ifdef PERFORMANCE_MONITORING
+    method send_performance_events = perf_counters.send_performance_events;
+`endif
 endmodule

@@ -1,0 +1,3 @@
+[submodule "src_Core/BSV_Additional_Libs/BlueStuff"]
+	path = src_Core/BSV_Additional_Libs/BlueStuff
+	url = https://github.com/CTSRD-CHERI/BlueStuff.git
