@@ -6,6 +6,7 @@
 `CAP_CHECK_FIELD(ddc_unsealed,"ddc_unsealed")
 `CAP_CHECK_FIELD(src1_unsealed,"src1_unsealed")
 `CAP_CHECK_FIELD(src1_unsealed_or_sentry,"src1_unsealed_or_sentry")
+`CAP_CHECK_FIELD(src1_unsealed_or_imm_zero,"src1_unsealed_or_imm_zero")
 `CAP_CHECK_FIELD(src2_unsealed,"src2_unsealed")
 `CAP_CHECK_FIELD(src1_src2_types_match,"src1_src2_types_match")
 `CAP_CHECK_FIELD(src1_permit_ccall,"src1_permit_ccall")

@@ -46,54 +46,56 @@ import ISA_Decls_CHERI::*;
 import CacheUtils::*; // For CLoadTags alignment
 
 (* noinline *)
-function Maybe#(CSR_XCapCause) capChecksExec(CapPipe a, CapPipe b, CapPipe ddc, CapChecks toCheck, Bool cap_exact);
+function Maybe#(CSR_XCapCause) capChecksExec(CapPipe a, CapPipe b, CapPipe ddc, CapChecks toCheck, Bool cap_exact, ImmData imm);
     function Maybe#(CSR_XCapCause) e1(CHERIException e)   = Valid(CSR_XCapCause{cheri_exc_reg: toCheck.rn1, cheri_exc_code: e});
     function Maybe#(CSR_XCapCause) e2(CHERIException e)   = Valid(CSR_XCapCause{cheri_exc_reg: toCheck.rn2, cheri_exc_code: e});
     function Maybe#(CSR_XCapCause) eDDC(CHERIException e) = Valid(CSR_XCapCause{cheri_exc_reg: {1'b1, pack(scrAddrDDC)}, cheri_exc_code: e});
     Maybe#(CSR_XCapCause) result = Invalid;
-    if (toCheck.ddc_tag                       && !isValidCap(ddc))
+    if (toCheck.ddc_tag                        && !isValidCap(ddc))
         result = eDDC(cheriExcTagViolation);
-    else if (toCheck.src1_tag                 && !isValidCap(a))
+    else if (toCheck.src1_tag                  && !isValidCap(a))
         result = e1(cheriExcTagViolation);
-    else if (toCheck.src2_tag                 && !isValidCap(b))
+    else if (toCheck.src2_tag                  && !isValidCap(b))
         result = e2(cheriExcTagViolation);
-    else if (toCheck.ddc_unsealed             && isValidCap(ddc) && (getKind(ddc) != UNSEALED))
+    else if (toCheck.ddc_unsealed              && isValidCap(ddc) && (getKind(ddc) != UNSEALED))
         result = eDDC(cheriExcSealViolation);
-    else if (toCheck.src1_unsealed            && isValidCap(a) && (getKind(a) != UNSEALED))
+    else if (toCheck.src1_unsealed             && isValidCap(a) && (getKind(a) != UNSEALED))
         result = e1(cheriExcSealViolation);
-    else if (toCheck.src1_unsealed_or_sentry  && isValidCap(a) && (getKind(a) != UNSEALED) && (getKind(a) != SENTRY))
+    else if (toCheck.src1_unsealed_or_sentry   && isValidCap(a) && (getKind(a) != UNSEALED) && (getKind(a) != SENTRY))
         result = e1(cheriExcSealViolation);
-    else if (toCheck.src2_unsealed            && isValidCap(b) && (getKind(b) != UNSEALED))
+    else if (toCheck.src1_unsealed_or_imm_zero && isValidCap(a) && (getKind(a) != UNSEALED) && (imm != 0))
+        result = e1(cheriExcSealViolation);
+    else if (toCheck.src2_unsealed             && isValidCap(b) && (getKind(b) != UNSEALED))
         result = e2(cheriExcSealViolation);
-    else if (toCheck.src1_sealed_with_type    && (getKind (a) matches tagged SEALED_WITH_TYPE .t ? False : True))
+    else if (toCheck.src1_sealed_with_type     && (getKind (a) matches tagged SEALED_WITH_TYPE .t ? False : True))
         result = e1(cheriExcSealViolation);
-    else if (toCheck.src2_sealed_with_type    && (getKind (b) matches tagged SEALED_WITH_TYPE .t ? False : True))
+    else if (toCheck.src2_sealed_with_type     && (getKind (b) matches tagged SEALED_WITH_TYPE .t ? False : True))
         result = e2(cheriExcSealViolation);
-    else if (toCheck.src1_type_not_reserved   && !validAsType(a, zeroExtend(getKind(a).SEALED_WITH_TYPE)))
+    else if (toCheck.src1_type_not_reserved    && !validAsType(a, zeroExtend(getKind(a).SEALED_WITH_TYPE)))
         result = e1(cheriExcTypeViolation);
-    else if (toCheck.src1_src2_types_match    && getKind(a).SEALED_WITH_TYPE != getKind(b).SEALED_WITH_TYPE)
+    else if (toCheck.src1_src2_types_match     && getKind(a).SEALED_WITH_TYPE != getKind(b).SEALED_WITH_TYPE)
         result = e1(cheriExcTypeViolation);
-    else if (toCheck.src1_permit_ccall        && !getHardPerms(a).permitCCall)
+    else if (toCheck.src1_permit_ccall         && !getHardPerms(a).permitCCall)
         result = e1(cheriExcPermitCCallViolation);
-    else if (toCheck.src2_permit_ccall        && !getHardPerms(b).permitCCall)
+    else if (toCheck.src2_permit_ccall         && !getHardPerms(b).permitCCall)
         result = e2(cheriExcPermitCCallViolation);
-    else if (toCheck.src1_permit_x            && !getHardPerms(a).permitExecute)
+    else if (toCheck.src1_permit_x             && !getHardPerms(a).permitExecute)
         result = e1(cheriExcPermitXViolation);
-    else if (toCheck.src2_no_permit_x         && getHardPerms(b).permitExecute)
+    else if (toCheck.src2_no_permit_x          && getHardPerms(b).permitExecute)
         result = e2(cheriExcPermitXViolation);
-    else if (toCheck.src2_permit_unseal       && !getHardPerms(b).permitUnseal)
+    else if (toCheck.src2_permit_unseal        && !getHardPerms(b).permitUnseal)
         result = e2(cheriExcPermitUnsealViolation);
-    else if (toCheck.src2_permit_seal         && !getHardPerms(b).permitSeal)
+    else if (toCheck.src2_permit_seal          && !getHardPerms(b).permitSeal)
         result = e2(cheriExcPermitSealViolation);
-    else if (toCheck.src2_points_to_src1_type && getAddr(b) != zeroExtend(getKind(a).SEALED_WITH_TYPE))
+    else if (toCheck.src2_points_to_src1_type  && getAddr(b) != zeroExtend(getKind(a).SEALED_WITH_TYPE))
         result = e2(cheriExcTypeViolation);
-    else if (toCheck.src2_addr_valid_type     && !validAsType(b, truncate(getAddr(b))))
+    else if (toCheck.src2_addr_valid_type      && !validAsType(b, truncate(getAddr(b))))
         result = e2(cheriExcLengthViolation);
-    else if (toCheck.src1_perm_subset_src2    && (getPerms(a) & getPerms(b)) != getPerms(a))
+    else if (toCheck.src1_perm_subset_src2     && (getPerms(a) & getPerms(b)) != getPerms(a))
         result = e2(cheriExcSoftwarePermViolation);
-    else if (toCheck.src1_derivable           && !isDerivable(a))
+    else if (toCheck.src1_derivable            && !isDerivable(a))
         result = e1(cheriExcLengthViolation);
-    else if (toCheck.cap_exact                && !cap_exact)
+    else if (toCheck.cap_exact                 && !cap_exact)
         result = e1(cheriExcRepresentViolation);
     return result;
 endfunction
@@ -358,7 +360,7 @@ function CapPipe brAddrCalc(CapPipe pc, CapPipe val, IType iType, Data imm, Bool
     jumpTarget = setAddrUnsafe(jumpTarget, {truncateLSB(getAddr(jumpTarget)), 1'b0});
     jumpTarget = setKind(jumpTarget, UNSEALED); // It is checked elsewhere that we have an unsealed cap already, or sentry if permitted
     CapPipe targetAddr = (case (iType)
-            J       : branchTarget;
+            J, CJAL : branchTarget;
             Jr,CCall,CJALR      : jumpTarget;
             Br      : (taken? branchTarget : pcPlusN);
             default : pcPlusN;
@@ -407,7 +409,7 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
     cf.taken = aluBr(getAddr(rVal1), getAddr(rVal2), br_f);
     cf.nextPc = brAddrCalc(pcc, rVal1, dInst.iType, fromMaybe(0,getDInstImm(dInst)), cf.taken, orig_inst, newPcc);
 
-    Maybe#(CSR_XCapCause) capException = capChecksExec(rVal1, aluVal2, nullCap, dInst.capChecks, cap_exact);
+    Maybe#(CSR_XCapCause) capException = capChecksExec(rVal1, aluVal2, nullCap, dInst.capChecks, cap_exact, dInst.imm.Valid);
     if (dInst.execFunc matches tagged Br .unused) begin
         rVal1 = cf.nextPc;
         if (!cf.taken) dInst.capChecks.check_enable = False;
@@ -431,6 +433,7 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
             Sc          : rVal2;
             Amo         : rVal2;
             J           : nullWithAddr(getOffset(link_pcc));
+            CJAL        : setKind(link_pcc, SENTRY);
             CCall       : cap_alu_result;
             CJALR       : setKind(link_pcc, SENTRY);
             Jr          : nullWithAddr(getOffset(link_pcc));
