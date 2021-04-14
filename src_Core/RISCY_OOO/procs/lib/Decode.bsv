@@ -92,8 +92,8 @@ function Maybe#(MemInst) decodeMemInst(Instruction inst, Bool cap_mode);
         illegalInst = True;
     end
 
-    Bool capWidth = ((mem_func == St || mem_func == Amo) && funct3 == 3'b100)
-                 || (opcode   == opcMiscMem && funct3 == 3'b010);
+    Bool capWidth = ((mem_func == St || mem_func == Amo) && funct3 == f3_SQ)
+                 || (opcode   == opcMiscMem && funct3 == f3_LQ);
 
     if (capWidth && amo_func != None && amo_func != Swap) begin
         illegalInst = True; // Don't support atomic cap arithmetic
