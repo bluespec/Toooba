@@ -1365,7 +1365,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                                     regs.src1 = Valid(tagged Gpr rs1);
                                     dInst.capFunc = CapInspect (GetPerm);
                                 end
-                                f5rs2_cap_CJALR: begin
+                                f5rs2_cap_JALR_CAP: begin
                                     dInst.capChecks.src1_tag = True;
                                     dInst.capChecks.src1_permit_x = True;
                                     dInst.capChecks.src1_unsealed_or_sentry = True;
@@ -1380,7 +1380,19 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                                     dInst.execFunc = tagged Br AT;
                                     regs.dst  = Valid(tagged Gpr rd);
                                     regs.src1 = Valid(tagged Gpr rs1);
-                                    end
+                                end
+                                f5rs2_cap_JALR_PCC: begin
+                                    dInst.capChecks.check_enable = True;
+                                    dInst.capChecks.check_authority_src = Pcc;
+                                    dInst.capChecks.check_low_src = Src1Addr;
+                                    dInst.capChecks.check_high_src = Src1AddrPlus2;
+                                    dInst.capChecks.check_inclusive = True;
+
+                                    dInst.iType = Jr;
+                                    dInst.execFunc = tagged Br AT;
+                                    regs.dst  = Valid(tagged Gpr rd);
+                                    regs.src1 = Valid(tagged Gpr rs1);
+                                end
                                 f5rs2_cap_CGetType: begin
                                     dInst.iType = Cap;
                                     regs.dst = Valid(tagged Gpr rd);

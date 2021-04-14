@@ -177,14 +177,16 @@ Bit #(5) f5rs2_cap_CRRL        = 5'h08;
 Bit #(5) f5rs2_cap_CRAM        = 5'h09;
 Bit #(5) f5rs2_cap_CMove       = 5'h0a;
 Bit #(5) f5rs2_cap_CClearTag   = 5'h0b;
-Bit #(5) f5rs2_cap_CJALR       = 5'h0c;
+Bit #(5) f5rs2_cap_JALR_CAP    = 5'h0c;
 Bit #(5) f5rs2_cap_CClearReg   = 5'h0d;
 // 5'h0e unused
 Bit #(5) f5rs2_cap_CGetAddr    = 5'h0f;
 Bit #(5) f5rs2_cap_CClearFPReg = 5'h10;
 Bit #(5) f5rs2_cap_CSealEntry  = 5'h11;
 Bit #(5) f5rs2_cap_CLoadTags   = 5'h12;
-// 5'h13-5'h1f unused (5'h1f reserved for 1-reg instructions)
+// 5'h13 unused
+Bit #(5) f5rs2_cap_JALR_PCC    = 5'h14;
+// 5'h15-5'h1f unused (5'h1f reserved for 1-reg instructions)
 
 // ================================================================
 // f7_cap_{Load, Store} opcode subdivision
