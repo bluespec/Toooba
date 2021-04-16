@@ -50,7 +50,7 @@ TOPMODULE ?= mkTop_HW_Side
 
 # ----------------
 # Target for Bluestuff submodules.
-../src_Core/BSV_Additional_Libs/BlueStuff/.git:
+$(REPO)/src_Core/BSV_Additional_Libs/BlueStuff/.git:
 	git submodule update --init --recursive
 
 # ================================================================
