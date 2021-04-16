@@ -146,7 +146,7 @@ To generate Verilog variants with other parameter choices, the user
 will need Bluespec's `bsc` compiler.  See the next section for
 examples of how the build is configured for different ISA features.
 
-BSV_Additional_Libs contains a submodule, `BlueStuff`, which must be checked out using:
+`BSV_Additional_Libs` contains a submodule, `BlueStuff`, which must be checked out using:
 ```sh
 $ git submodule update --init --recursive
 ```
