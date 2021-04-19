@@ -48,6 +48,11 @@ BSC_PATH = $(ALL_RISCY_DIRS):$(CORE_DIRS):$(TESTBENCH_DIRS):$(BLUESTUFF_DIRS):+
 TOPFILE   ?= $(REPO)/src_Testbench/Top/Top_HW_Side.bsv
 TOPMODULE ?= mkTop_HW_Side
 
+# ----------------
+# Target for Bluestuff submodules.
+$(REPO)/src_Core/BSV_Additional_Libs/BlueStuff/.git:
+	git submodule update --init --recursive
+
 # ================================================================
 # bsc compilation flags
 

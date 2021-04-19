@@ -13,7 +13,7 @@ build_dir:
 	mkdir -p $@
 
 .PHONY: compile
-compile: build_dir
+compile: build_dir $(REPO)/src_Core/BSV_Additional_Libs/BlueStuff/.git
 	@echo "INFO: Re-compiling Core (CPU, Caches)"
 	bsc -u -elab -sim  $(TMP_DIRS)  $(BSC_COMPILATION_FLAGS)  -p $(BSC_PATH)  $(TOPFILE)
 	@echo "INFO: Re-compiled  Core (CPU, Caches)"
