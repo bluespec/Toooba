@@ -1614,7 +1614,7 @@ module mkSplitLSQ(SplitLSQ);
 
 `ifndef TSO_MM
             // for WEAK model, try to kill younger load in case of multicore
-            if(multicore && False) begin // XXX This case is disabled for now as it causes notable performance anomolies
+            if(multicore) begin
                 doKill = True;
                 curSt = olderStVirTags[tag];
                 LdQVirTag virTag = ldVirTags[tag];
