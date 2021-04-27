@@ -46,6 +46,7 @@ package CoreW;
 // BSV library imports
 
 import Vector       :: *;
+import FIFO         :: *;
 import FIFOF        :: *;
 import GetPut       :: *;
 import ClientServer :: *;
@@ -84,9 +85,9 @@ import SoC_Map      :: *;
 import Debug_Module  :: *;
 `endif
 
-import CoreW_IFC    :: *;
-import Proc_IFC     :: *;
-import Proc         :: *;
+import WindCoreInterface :: *;
+import Proc_IFC          :: *;
+import Proc              :: *;
 
 import PLIC                :: *;
 import PLIC_16_CoreNumX2_7 :: *;
@@ -110,9 +111,16 @@ import DM_CPU_Req_Rsp ::*;
 // ================================================================
 // The Core module
 
-(* synthesize *)
+//(* synthesize *)
 module mkCoreW #(Reset dm_power_on_reset)
-               (CoreW_IFC #(N_External_Interrupt_Sources));
+               (WindCoreLo #( // AXI manager 0 port parameters
+                              TAdd#(Wd_MId,1), Wd_Addr, Wd_Data, 0, 0, 0, 0, 0
+                              // AXI manager 1 port parameters
+                            , TAdd#(Wd_MId,1), Wd_Addr, Wd_Data, 0, 0, 0, 0, 0
+                              // AXI subordinate 0 port parameters
+                            , t_s_mid, t_s_addr, t_s_data, 0, 0, 0, 0, 0
+                              // Number of interrupt lines
+                            , N_External_Interrupt_Sources));
 
    // ================================================================
    // Notes on 'reset'
@@ -201,8 +209,9 @@ module mkCoreW #(Reset dm_power_on_reset)
    PLIC_IFC_16_CoreNumX2_7  plic <- mkPLIC_16_CoreNumX2_7;
 
 `ifdef INCLUDE_GDB_CONTROL
+   let dbg_reset <- mkReset (0, True, clk, reset_by dm_power_on_reset);
    // Debug Module
-   Debug_Module_IFC  debug_module <- mkDebug_Module (reset_by dm_power_on_reset);
+   Debug_Module_IFC  debug_module <- mkDebug_Module (reset_by dbg_reset.new_rst);
 `endif
 
 `ifdef INCLUDE_TANDEM_VERIF
@@ -423,76 +432,108 @@ module mkCoreW #(Reset dm_power_on_reset)
    endrule
 
    // ================================================================
-   // INTERFACE
+   // Connect external debug module interface
 
-   // ----------------------------------------------------------------
-   // Debugging: set core's verbosity, htif addrs
+   let f_dbg_reqs <- mkFIFO1;
+   let f_dbg_rsps <- mkFIFO1;
+   let f_dbg_rst_reqs <- mkFIFO1;
+   let f_dbg_rst_rsps <- mkFIFO1;
 
-   method Action  set_verbosity (Bit #(4)  verbosity, Bit #(64)  logdelay);
-      // Warning: ignoring logdelay
-      proc.set_verbosity (verbosity);
-   endmethod
+   rule rl_debug_module_req;
+      case (f_dbg_reqs.first) matches
+         tagged ReadReq {.rd_addr}: debug_module.dmi.read_addr (rd_addr);
+         tagged WriteReq {.wr_addr, .wr_data}:
+            debug_module.dmi.write (wr_addr, wr_data);
+         tagged ResetReq: dbg_reset.assertReset;
+      endcase
+      f_dbg_reqs.deq;
+   endrule
 
-   // ----------------------------------------------------------------
-   // Start
+   rule rl_debug_module_rsp;
+      let x <- debug_module.dmi.read_data;
+      f_dbg_rsps.enq (ReadRsp(x));
+   endrule
 
-   method Action start (Bool is_running, Bit #(64) tohost_addr, Bit #(64) fromhost_addr);
+   rule rl_debug_module_reset_req;
+      let _ <- debug_module.ndm_reset_client.request.get;
+      f_dbg_rst_reqs.enq(?);
+   endrule
+
+   rule rl_debug_module_reset_rsp;
+      debug_module.ndm_reset_client.response.put(True);
+      f_dbg_rst_rsps.deq;
+   endrule
+
+   // ================================================================
+   // Connect external interrupts to the PLIC and Proc
+
+   Vector #(t_n_irq, SetClear) irq_ifc;
+   for (Integer i = 0; i < valueof(t_n_irq); i = i + 1) begin
+      irq_ifc [i] = interface SetClear;
+         method set = plic.v_sources[i].m_interrupt_req(True);
+         method clear = plic.v_sources[i].m_interrupt_req(False);
+      endinterface;
+   end
+
+   let nmirq_ifc = interface SetClear;
+      // TODO: fixup; passing const False for now
+      method set = proc.non_maskable_interrupt_req (False);
+      method clear = proc.non_maskable_interrupt_req (False);
+   endinterface;
+
+   // ================================================================
+   // Connect other control and status signals
+
+   let f_ctrl_reqs <- mkFIFO1;
+   let f_ctrl_rsps <- mkFIFO1;
+
+   function do_release = action
       plic.set_addr_map (zeroExtend (soc_map.m_plic_addr_range.base),
                          zeroExtend (rangeTop(soc_map.m_plic_addr_range)));
+      proc.start ( True, soc_map_struct.pc_reset_value, 0, 0);
+      //proc.set_verbosity (verbosity);
+   endaction;
 
-      let pc = soc_map_struct.pc_reset_value;
-      proc.start (is_running, pc, tohost_addr, fromhost_addr);
+   rule rl_ctrl_req;
+      case (f_ctrl_reqs.first) matches
+         tagged ReleaseReq: do_release;
+         tagged StatusReq: $display ("StatusReq not supported in Toooba");
+      endcase
+      f_ctrl_reqs.deq;
+   endrule
 
-`ifdef INCLUDE_GDB_CONTROL
-      // Save for potential future use by rl_dm_harts_reset
-      rg_tohost_addr   <= tohost_addr;
-      rg_fromhost_addr <= fromhost_addr;
-`endif
+   rule rl_ctrl_rsp;
+      f_ctrl_rsps.enq (StatusRsp(?));
+   endrule
 
-      $display ("%0d: %m.method start: proc.start (pc %0h, tohostAddr %0h, fromhostAddr %0h)",
-                cur_cycle, pc, tohost_addr, fromhost_addr);
-   endmethod
+   // ================================================================
+   // INTERFACE
 
-   // ----------------------------------------------------------------
-   // AXI4 Fabric interfaces
+   // debug related signals
+   // ---------------------
+   interface debugModuleServer = toGPServer (f_dbg_reqs, f_dbg_rsps);
+   interface debugModuleResetClient = toGPClient (f_dbg_rst_reqs, f_dbg_rst_rsps);
 
+   // interrupt related signals
+   // -------------------------
+   interface irq = irq_ifc;
+   interface nmirq = nmirq_ifc;
+
+   // other control and status signals
+   // --------------------------------
+   interface controlStatusServer = toGPServer (f_ctrl_reqs, f_ctrl_rsps);
+
+   // memory interfaces
+   // -----------------
    // Cached master to Fabric master interface
-   interface cpu_imem_master = tagController.master;
-
+   interface manager_0 = tagController.master;
    // Uncached master to Fabric master interface
-   interface cpu_dmem_master = prepend_AXI4_Master_id(0, zero_AXI4_Master_user(uncached_mem_shim.master));
-
-   // ----------------------------------------------------------------
-   // External interrupt sources
-
-   interface core_external_interrupt_sources = plic.v_sources;
-
-   // ----------------------------------------------------------------
-   // Non-maskable interrupt request
-
-   method Action nmi_req (Bool set_not_clear);
-      // TODO: fixup; passing const False for now
-      proc.non_maskable_interrupt_req (False);
-   endmethod
-
+   interface manager_1 = extendIDFields(zeroMasterUserFields(uncached_mem_shim.master), 0);
+   // TODO:
+   interface subordinate_0 = culDeSac;
+/*
 `ifdef RVFI_DII
    interface Toooba_RVFI_DII_Server rvfi_dii_server = proc.rvfi_dii_server;
-`endif
-
-`ifdef INCLUDE_GDB_CONTROL
-   // ----------------------------------------------------------------
-   // Optional DM interfaces
-
-   // ----------------
-   // DMI (Debug Module Interface) facing remote debugger
-
-   interface DMI dmi = debug_module.dmi;
-
-   // ----------------
-   // Facing Platform
-
-   // Non-Debug-Module Reset (reset all except DM)
-   interface Client ndm_reset_client = debug_module.ndm_reset_client;
 `endif
 
 `ifdef INCLUDE_TANDEM_VERIF
@@ -506,9 +547,11 @@ module mkCoreW #(Reset dm_power_on_reset)
       endmethod
    endinterface
 `endif
+*/
 
 endmodule: mkCoreW
 
+/*
 (* synthesize *)
 module mkCoreW_Synth #(Reset dm_power_on_reset)
                       (CoreW_IFC_Synth #(N_External_Interrupt_Sources));
@@ -533,6 +576,7 @@ module mkCoreW_Synth #(Reset dm_power_on_reset)
    interface tv_verifier_info_get = core.tv_verifier_info_get;
 `endif
 endmodule
+*/
 
 // ================================================================
 // 2x3 Fabric for this Core
