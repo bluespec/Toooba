@@ -47,6 +47,7 @@ import Cur_Cycle   :: *;
 import GetPut_Aux  :: *;
 import Routable    :: *;
 import AXI4        :: *;
+import AXI4Lite    :: *;
 
 // ================================================================
 // Project imports
@@ -56,7 +57,7 @@ import SoC_Map     :: *;
 
 // SoC components (CPU, mem, and IPs)
 
-import CoreW_IFC :: *;
+import WindCoreInterface :: *;
 import CoreW     :: *;
 import PLIC      :: *;    // For interface to PLIC interrupt sources, in CoreW_IFC
 
@@ -90,15 +91,9 @@ import Debug_Module     :: *;
 // The outermost interface of the SoC
 
 interface SoC_Top_IFC;
-   // Set core's verbosity
-   method Action  set_verbosity (Bit #(4)  verbosity, Bit #(64)  logdelay);
 
 `ifdef INCLUDE_GDB_CONTROL
-   // DMI (Debug Module Interface) facing remote debugger
-   interface DMI dmi;
-
-   // Non-Debug-Module Reset (reset all except DM)
-   interface Client #(Bool, Bool) ndm_reset_client;
+  interface AXI4Lite_Slave #(7, 32, 0, 0, 0, 0, 0) debug_subordinate;
 `endif
 
 `ifdef INCLUDE_TANDEM_VERIF
@@ -148,7 +143,7 @@ module mkSoC_Top #(Reset dm_power_on_reset)
    // Core: CPU + Near_Mem_IO (CLINT) + PLIC + Debug module (optional) + TV (optional)
    // The Debug Module has its own RST_N reset signal (which comes
    // from outside this module as a paramter)
-   CoreW_IFC #(N_External_Interrupt_Sources)  corew <- mkCoreW (dm_power_on_reset);
+   CoreW_IFC #(N_External_Interrupt_Sources)  corew <- mkCoreW;
 
    // SoC Boot ROM
    Boot_ROM_IFC  boot_rom <- mkBoot_ROM;
@@ -179,10 +174,10 @@ module mkSoC_Top #(Reset dm_power_on_reset)
       master_vector = newVector;
 
    // CPU IMem master to fabric
-   master_vector[imem_master_num] = corew.cpu_imem_master;
+   master_vector[imem_master_num] = corew.manager_0;
 
    // CPU DMem master to fabric
-   master_vector[dmem_master_num] = corew.cpu_dmem_master;
+   master_vector[dmem_master_num] = corew.manager_1;
 
    // ----------------
    // SoC fabric slave connections
@@ -232,21 +227,21 @@ module mkSoC_Top #(Reset dm_power_on_reset)
       Bool intr = uart0.intr;
 
       // UART
-      corew.core_external_interrupt_sources [irq_num_uart0].m_interrupt_req (intr);
+      corew.irq [irq_num_uart0].put (intr);
       Integer last_irq_num = irq_num_uart0;
 
 `ifdef INCLUDE_ACCEL0
       Bool intr_accel0 = accel0.interrupt_req;
-      corew.core_external_interrupt_sources [irq_num_accel0].m_interrupt_req (intr_accel0);
+      corew.irq [irq_num_accel0].put (intr_accel0);
       last_irq_num = irq_num_accel0;
 `endif
 
       // Tie off remaining interrupt request lines (1..N)
       for (Integer j = last_irq_num + 1; j < valueOf (N_External_Interrupt_Sources); j = j + 1)
-         corew.core_external_interrupt_sources [j].m_interrupt_req (False);
+         corew.irq [j].put (False);
 
       // Non-maskable interrupt request. [Tie-off; TODO: connect to genuine sources]
-      corew.nmi_req (False);
+      corew.nmirq.put (False);
    endrule
 
    // ================================================================
@@ -314,17 +309,9 @@ module mkSoC_Top #(Reset dm_power_on_reset)
    // ================================================================
    // INTERFACE
 
-   method Action  set_verbosity (Bit #(4)  new_verbosity, Bit #(64)  logdelay);
-      corew.set_verbosity (new_verbosity, logdelay);
-   endmethod
-
    // To external controller (E.g., GDB)
 `ifdef INCLUDE_GDB_CONTROL
-   // DMI (Debug Module Interface) facing remote debugger
-   interface DMI dmi = corew.dmi;
-
-   // Non-Debug-Module Reset (reset all except DM)
-   interface Client ndm_reset_client = corew.ndm_reset_client;
+  interface debug_subordinate = corew.debug_subordinate;
 `endif
 
 `ifdef INCLUDE_TANDEM_VERIF
@@ -352,7 +339,7 @@ module mkSoC_Top #(Reset dm_power_on_reset)
       Bool watch_tohost = (tohost_addr != 0);
       mem0_controller.set_watch_tohost (watch_tohost, tohost_addr);
       Bool is_running = True;
-      corew.start (is_running, tohost_addr, fromhost_addr);
+      corew.controlStatusServer.request.put (ReleaseReq);
       $display ("%0d: %m.method start (tohost %0h, fromhost %0h)",
                 cur_cycle, tohost_addr, fromhost_addr);
    endmethod

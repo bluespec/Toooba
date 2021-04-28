@@ -60,7 +60,8 @@ import Cur_Cycle  :: *;
 import GetPut_Aux :: *;
 import Routable   :: *;
 import AXI4       :: *;
-import AXI4_Utils :: *;
+import AXI4Lite   :: *;
+import SourceSink :: *;
 import TagControllerAXI :: *;
 import CacheCore  :: *;
 
@@ -118,15 +119,18 @@ typedef WindCoreMid #( // AXI manager 0 port parameters
                        // AXI subordinate 0 port parameters
                      , 0, 0, 0, 0, 0, 0, 0, 0
                        // Number of interrupt lines
-                     , N_External_Interrupt_Sources) WindCoreMidIfc;
+                     , t_n_irq) CoreW_IFC #(numeric type t_n_irq);
 
 //(* synthesize *)
-module mkCoreW (WindCoreMidIfc);
-   Reset dfltRst <- exposeCurrentReset;
-   Reset otherRst = ?;
-   match {.fromDbgReset, .ifc} <- mkCoreResetHelper ( dfltRst
-                                                    , reset_by otherRst );
-   otherRst <- mkResetEither (dfltRst, fromDbgReset);
+module mkCoreW (CoreW_IFC #(t_n_irq));
+   Clock clk <- exposeCurrentClock;
+   Reset rst <- exposeCurrentReset;
+   let newRst <- mkReset (0, True, clk, reset_by rst);
+   match {.otherRst, .ifc} <- mkCoreResetHelper ( rst
+                                                , reset_by newRst.new_rst);
+   rule rl_forward_debug_reset (otherRst);
+      newRst.assertReset;
+   endrule
    return ifc;
 endmodule
 
@@ -134,7 +138,7 @@ endmodule
 // hacks to the nicer outer interface, and not have to use a large amount of
 // reset_by to decouple the debug module from the rest...
 module mkCoreResetHelper #(Reset toDbgReset)
-                          (Tuple2#(Reset, WindCoreMidIfc));
+                          (Tuple2#(PulseWire, CoreW_IFC #(t_n_irq)));
 
    // ================================================================
    // Notes on 'reset'
@@ -447,36 +451,36 @@ module mkCoreResetHelper #(Reset toDbgReset)
    // ================================================================
    // Connect external debug module interface
 
-   let f_dbg_reqs <- mkFIFO1;
-   let f_dbg_rsps <- mkFIFO1;
+   let dbgShim <- mkAXI4LiteShim (reset_by toDbgReset);
 
-   rule rl_debug_module_req;
-      case (f_dbg_reqs.first) matches
-         tagged ReadReq {.rd_addr}: debug_module.dmi.read_addr (rd_addr);
-         tagged WriteReq {.wr_addr, .wr_data}:
-            debug_module.dmi.write (wr_addr, wr_data);
-      endcase
-      f_dbg_reqs.deq;
+   rule rl_debug_module_read_req;
+      let arFlit <- get (dbgShim.master.ar);
+      debug_module.dmi.read_addr (arFlit.araddr);
    endrule
-
-   rule rl_debug_module_rsp;
+   rule rl_debug_module_read_rsp;
       let x <- debug_module.dmi.read_data;
-      f_dbg_rsps.enq (ReadRsp(x));
+      dbgShim.master.r.put(AXI4Lite_RFlit { rdata: x, rresp: OKAY, ruser: ?});
+   endrule
+   rule rl_debug_module_write_req;
+      let awFlit <- get (dbgShim.master.aw);
+      let wFlit <- get (dbgShim.master.w);
+      dbgShim.master.b.put(defaultValue);
+      debug_module.dmi.write (awFlit.awaddr, wFlit.wdata);
    endrule
 
-   let fromDbgReset <- mkReset (0, False, clk);
+   let fromDbgReset <- mkPulseWire (reset_by toDbgReset);
    rule rl_debug_module_send_reset;
       let _ <- debug_module.ndm_reset_client.request.get;
-      fromDbgReset.assertReset;
+      fromDbgReset.send;
    endrule
 
    // ================================================================
    // Connect external interrupts to the PLIC and Proc
 
-   Vector #(N_External_Interrupt_Sources, Reg #(Bool)) irq_reg
+   Vector #(t_n_irq, Reg #(Bool)) irq_reg
       <- replicateM (mkReg (False));
-   Vector #(N_External_Interrupt_Sources, Put #(Bool)) irq_ifc;
-   for (Integer i = 0; i < valueof (N_External_Interrupt_Sources); i = i + 1) begin
+   Vector #(t_n_irq, Put #(Bool)) irq_ifc;
+   for (Integer i = 0; i < valueof (t_n_irq); i = i + 1) begin
       irq_ifc [i] = interface Put;
          method put = writeReg (irq_reg[i]);
       endinterface;
@@ -523,10 +527,10 @@ module mkCoreResetHelper #(Reset toDbgReset)
    // ================================================================
    // INTERFACE
 
-   let ifc = interface WindCoreMidIfc;
+   let ifc = interface CoreW_IFC;
       // debug related signals
       // ---------------------
-      interface debugModuleServer = toGPServer (f_dbg_reqs, f_dbg_rsps);
+      interface debug_subordinate = dbgShim.slave;
 
       // interrupt related signals
       // -------------------------
@@ -566,7 +570,7 @@ module mkCoreResetHelper #(Reset toDbgReset)
 `endif
 */
 
-   return tuple2 (fromDbgReset.new_rst, ifc);
+   return tuple2 (fromDbgReset, ifc);
 endmodule: mkCoreResetHelper
 
 // ================================================================
