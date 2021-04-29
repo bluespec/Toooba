@@ -1122,7 +1122,8 @@ module mkCsrFile #(Data hartid)(CsrFile);
                     excInstAccessFault, excInstPageFault,
                     excLoadAddrMisaligned, excLoadAccessFault,
                     excStoreAddrMisaligned, excStoreAccessFault,
-                    excLoadPageFault, excStorePageFault, excStoreCapPageFault: return addr;
+                    excLoadPageFault, excStorePageFault,
+                    excStoreCapPageFault, excLoadCapPageFault: return addr;
 
                     default: return 0;
                 endcase);

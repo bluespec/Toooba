@@ -243,6 +243,7 @@ function TlbPermissionCheck hasVMPermission(
                 fault = True;
             end
             if (cap) begin
+                if (!fault) excCode = excLoadCapPageFault;
                 // check for invalid PTE encodings
                 if ((!pte_upper_type.cap_readable && pte_upper_type.cap_read_gen) ||
                     (pte_upper_type.cap_readable && !pte_upper_type.cap_read_mod &&
