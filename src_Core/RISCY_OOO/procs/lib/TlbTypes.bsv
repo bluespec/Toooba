@@ -207,6 +207,11 @@ function TlbPermissionCheck hasVMPermission(
     if(!isPpnAligned(ppn, level)) begin
         fault = True; // unaligned super page
     end
+    if ((!pte_upper_type.cap_readable && pte_upper_type.cap_read_gen) ||
+        (pte_upper_type.cap_readable && !pte_upper_type.cap_read_mod &&
+        pte_upper_type.cap_read_gen)) begin
+        fault = True;
+    end
 
     // check permission related to user page
     if(pte_type.user) begin
@@ -244,12 +249,6 @@ function TlbPermissionCheck hasVMPermission(
             end
             if (cap) begin
                 if (!fault) excCode = excLoadCapPageFault;
-                // check for invalid PTE encodings
-                if ((!pte_upper_type.cap_readable && pte_upper_type.cap_read_gen) ||
-                    (pte_upper_type.cap_readable && !pte_upper_type.cap_read_mod &&
-                    pte_upper_type.cap_read_gen)) begin
-                    fault = True;
-                end
                 // load traps if page not cap readable and using cap_read_mod set
                 if (!pte_upper_type.cap_readable && pte_upper_type.cap_read_mod) begin
                     fault = True;
