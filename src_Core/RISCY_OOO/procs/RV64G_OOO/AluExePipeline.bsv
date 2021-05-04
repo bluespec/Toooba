@@ -327,9 +327,10 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
             doAssert(!exec_result.controlFlow.mispredict, "Scr inst cannot mispredict");
             doAssert(cast(exec_result.controlFlow.nextPc) == x.ppc && x.ppc == addPc(x.pc, 4), "Scr inst ppc = pc+4");
         end
+`ifdef MELTDOWN_CF_MITIGATION
         // This condition can eliminate Meltdown-CF vulnerabilities for exception conditions that don't need the bounds check result.
-        //if (isValid(exec_result.capException)) exec_result.data = setValidCap(exec_result.data, False);
-
+        if (isValid(exec_result.capException)) exec_result.data = setValidCap(exec_result.data, False);
+`endif
         // send bypass
         if(x.dst matches tagged Valid .dst) begin
             inIfc.sendBypass[exeSendBypassPort].send(dst.indx, exec_result.data);
