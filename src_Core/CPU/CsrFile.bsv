@@ -644,8 +644,9 @@ module mkCsrFile #(Data hartid)(CsrFile);
     // stval (sbadaddr in spike)
     Reg#(Data) stval_csr <- mkCsrReg(0);
     // Capability cause register
-    Reg#(Bit#(2)) gclg_reg <- mkCsrReg(0);
-    Reg#(Data) sccsr_csr = concatReg3 (readOnlyReg(60'b0), gclg_reg, readOnlyReg(2'b11));
+    Reg#(Bit#(1)) global_cap_load_gen_s_reg <- mkCsrReg(0);
+    Reg#(Bit#(1)) global_cap_load_gen_u_reg <- mkCsrReg(0);
+    Reg#(Data) sccsr_csr = concatReg4 (readOnlyReg(60'b0), global_cap_load_gen_u_reg, global_cap_load_gen_s_reg, readOnlyReg(2'b11));
     // sip: restricted view of mip
     Reg#(Data) sip_csr = concatReg9(
         readOnlyReg(54'b0),
@@ -1123,7 +1124,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
                     excLoadAddrMisaligned, excLoadAccessFault,
                     excStoreAddrMisaligned, excStoreAccessFault,
                     excLoadPageFault, excStorePageFault,
-                    excStoreCapPageFault, excLoadCapPageFault: return addr;
+                    excLoadCapPageFault, excStoreCapPageFault: return addr;
 
                     default: return 0;
                 endcase);
@@ -1292,8 +1293,8 @@ module mkCsrFile #(Data hartid)(CsrFile);
             exeReadable: mxr_reg == 1,
             userAccessibleByS: sum_reg == 1,
             basePPN: ppn_reg,
-            globalCapLoadGenU: gclg_reg[1],
-            globalCapLoadGenS: gclg_reg[0]
+            globalCapLoadGenU: global_cap_load_gen_u_reg,
+            globalCapLoadGenS: global_cap_load_gen_s_reg
 `ifdef SECURITY
             , sanctum_evbase:   mevbase_csr,
             sanctum_evmask:     mevmask_csr,
@@ -1321,8 +1322,8 @@ module mkCsrFile #(Data hartid)(CsrFile);
             exeReadable: mxr_reg == 1,
             userAccessibleByS: sum_reg == 1,
             basePPN: ppn_reg,
-            globalCapLoadGenU: gclg_reg[1],
-            globalCapLoadGenS: gclg_reg[0]
+            globalCapLoadGenU: global_cap_load_gen_u_reg,
+            globalCapLoadGenS: global_cap_load_gen_s_reg
 `ifdef SECURITY
             , sanctum_evbase:   mevbase_csr,
             sanctum_evmask:     mevmask_csr,
