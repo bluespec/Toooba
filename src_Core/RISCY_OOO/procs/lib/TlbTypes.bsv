@@ -257,8 +257,8 @@ function TlbPermissionCheck hasVMPermission(
                 end
                 // perform generation check
                 if (pte_upper_type.cap_read_mod
-                    && (pte_type.user ? vm_info.globalCapLoadGenU : vm_info.globalCapLoadGenS)
-                       != pack(pte_upper_type.cap_read_gen)) begin
+                    && ((pte_type.user ? vm_info.globalCapLoadGenU : vm_info.globalCapLoadGenS)
+                       != pack(pte_upper_type.cap_read_gen))) begin
                     fault = True;
                 end
             end
