@@ -31,7 +31,8 @@ import ProcTypes::*;
 typedef struct{
     Addr  addr;
     Bool  write;
-    Bool  cap;
+    Bool  capStore;
+    Bool  capWidthLoad;
 } TlbReq deriving(Eq, Bits, FShow);
 typedef Tuple3#(Addr, Maybe#(Exception), Bool) TlbResp;
 
@@ -190,7 +191,8 @@ function TlbPermissionCheck hasVMPermission(
     VMInfo vm_info,
     PTEType pte_type, PTEUpperType pte_upper_type,
      Ppn ppn, PageWalkLevel level,
-    TlbAccessType access, Bool cap
+    TlbAccessType access,
+    Bool capStore, Bool capWidthLoad
 );
     // try to find any page fault
     Bool fault = False;
@@ -247,7 +249,7 @@ function TlbPermissionCheck hasVMPermission(
                 !(pte_type.executable && vm_info.exeReadable)) begin
                 fault = True;
             end
-            if (cap) begin
+            if (capWidthLoad) begin
                 if (!fault) excCode = excLoadCapPageFault;
                 // load traps if page not cap readable and using cap_read_mod set
                 if (!pte_upper_type.cap_readable && pte_upper_type.cap_read_mod) begin
@@ -267,7 +269,7 @@ function TlbPermissionCheck hasVMPermission(
             if(!(pte_type.readable && pte_type.writable)) begin
                 fault = True;
             end
-            else if(cap && !pte_upper_type.cap_writable) begin
+            else if(capStore && !pte_upper_type.cap_writable) begin
                 if (!fault) excCode = excStoreCapPageFault;
                 fault = True;
             end
@@ -281,7 +283,7 @@ function TlbPermissionCheck hasVMPermission(
 
     if (!fault) begin
         // check if accessed or dirty bit needs to be set
-        if(cap && access == DataStore && !pte_upper_type.cap_dirty) begin
+        if(capStore && access == DataStore && !pte_upper_type.cap_dirty) begin
             ret.allowed = False;
             ret.excCode = excStoreCapPageFault;
         end

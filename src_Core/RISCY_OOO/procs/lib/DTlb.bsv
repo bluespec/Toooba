@@ -286,13 +286,18 @@ module mkDTlb#(
         end
         else if(pRs.entry matches tagged Valid .en) begin
             // check permission
+            $display("dPRs: vm_info: ", fshow(vm_info),
+                     "      en     : ", fshow(en),
+                     "      r      : ", fshow(r)
+                     );
             let permCheck = hasVMPermission(vm_info,
                                             en.pteType,
                                             en.pteUpperType,
                                             en.ppn,
                                             en.level,
                                             r.write ? DataStore : DataLoad,
-                                            r.cap);
+                                            r.capStore,
+                                            r.capWidthLoad);
             if (permCheck.allowed) begin
                 // fill TLB, and record resp
                 tlb.addEntry(en);
@@ -471,13 +476,18 @@ module mkDTlb#(
                 // TLB hit
                 let entry = trans_result.entry;
                 // check permission
+            $display("procReq: vm_info: ", fshow(vm_info),
+                     "         en     : ", fshow(entry),
+                     "         r      : ", fshow(r)
+                     );
                 let permCheck = hasVMPermission(vm_info,
                                                 entry.pteType,
                                                 entry.pteUpperType,
                                                 entry.ppn,
                                                 entry.level,
                                                 r.write ? DataStore : DataLoad,
-                                                r.cap);
+                                                r.capStore,
+                                                r.capWidthLoad);
                 $display("Permission check output 2: ", fshow(permCheck));
                 if (permCheck.allowed) begin
                     // update TLB replacement info

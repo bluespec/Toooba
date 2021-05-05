@@ -114,6 +114,7 @@ typedef struct {
 `endif
     Bool misaligned;
     Bool capStore;
+    Bool capWidthLoad;
     Bool allowCap;
     Maybe#(CSR_XCapCause) capException;
     Maybe#(BoundsCheck) check;
@@ -166,7 +167,8 @@ module mkDTlbSynth(DTlbSynth);
                         St, Sc, Amo: True;
                         default: False;
                     endcase),
-            cap: x.capStore
+            capStore: x.capStore,
+            capWidthLoad: x.capWidthLoad
         };
     endfunction
     let m <- mkDTlb(getTlbReq);
@@ -576,6 +578,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
 `endif
                 misaligned: memAddrMisaligned(getAddr(vaddr), origBE),
                 capStore: isValidCap(data) && origBE == DataMemAccess(unpack(~0)),
+                capWidthLoad: origBE == DataMemAccess(unpack(~0)),
                 allowCap: getHardPerms(x.rVal1).permitLoadCap,
                 capException: capChecksMem(x.rVal1, x.rVal2, x.cap_checks, x.mem_func, origBE),
                 check: prepareBoundsCheck(x.rVal1, x.rVal2, almightyCap/*ToDo: pcc*/,

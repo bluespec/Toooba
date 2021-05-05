@@ -195,6 +195,7 @@ module mkITlb(ITlb::ITlb);
                                en.ppn,
                                en.level,
                                InstFetch,
+                               False,
                                False).allowed) begin
                 // fill TLB and resp to proc
                 tlb.addEntry(en);
@@ -312,6 +313,7 @@ module mkITlb(ITlb::ITlb);
                                            entry.ppn,
                                            entry.level,
                                            InstFetch,
+                                           False,
                                            False).allowed) begin
                             // update replacement info
                             tlb.updateRepByHit(trans_result.index);
