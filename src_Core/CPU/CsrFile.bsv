@@ -283,7 +283,7 @@ module mkPerfCountersToooba (PerfCountersVec);
     interface counter_vec = counters;
     interface event_vec = events;
     interface inhibit = interface Reg;
-        method Action _write(Bit#(No_Of_Ctrs) x) = writeCounterInhibitFF.enq(truncate(x));
+        method Action _write(Bit#(No_Of_Ctrs) x) = writeCounterInhibitFF.enq(x);
         method Bit#(No_Of_Ctrs) _read = (perf_counters.read_ctr_inhibit);
     endinterface;
     method send_performance_events = perf_counters.send_performance_events;
@@ -823,14 +823,14 @@ module mkCsrFile #(Data hartid)(CsrFile);
 
 `ifdef PERFORMANCE_MONITORING
     // Performance monitoring
-    Reg#(Bit#(1)) mcountinhibit_cy_reg <- mkReg(0);
-    Reg#(Bit#(1)) mcountinhibit_ir_reg <- mkReg(0);
+    Reg#(Bit#(1)) mcountinhibit_cy_reg <- mkCsrReg(0);
+    Reg#(Bit#(1)) mcountinhibit_ir_reg <- mkCsrReg(0);
     Reg#(Data) mcountinhibit_reg = concatReg5(readOnlyReg(32'h00000000), perf_counters.inhibit, mcountinhibit_ir_reg, readOnlyReg(1'b0), mcountinhibit_cy_reg);
 `endif
 
     rule incCycle;
 `ifdef PERFORMANCE_MONITORING
-        if(unpack(mcountinhibit_cy_reg)) mcycle_ehr[1] <= mcycle_ehr[1] + 1;
+        if(!unpack(mcountinhibit_cy_reg)) mcycle_ehr[1] <= mcycle_ehr[1] + 1;
 `else
         mcycle_ehr[1] <= mcycle_ehr[1] + 1;
 `endif
@@ -1373,7 +1373,11 @@ module mkCsrFile #(Data hartid)(CsrFile);
     };
 
     method Action incInstret(SupCnt x);
+`ifdef PERFORMANCE_MONITORING
+        if(!unpack(mcountinhibit_cy_reg))  minstret_ehr[1] <= minstret_ehr[1] + zeroExtend(x);
+`else
         minstret_ehr[1] <= minstret_ehr[1] + zeroExtend(x);
+`endif
     endmethod
 
     method Action setTime(Data t);
