@@ -1374,7 +1374,7 @@ module mkCsrFile #(Data hartid)(CsrFile);
 
     method Action incInstret(SupCnt x);
 `ifdef PERFORMANCE_MONITORING
-        if(!unpack(mcountinhibit_cy_reg))  minstret_ehr[1] <= minstret_ehr[1] + zeroExtend(x);
+        if(!unpack(mcountinhibit_ir_reg))  minstret_ehr[1] <= minstret_ehr[1] + zeroExtend(x);
 `else
         minstret_ehr[1] <= minstret_ehr[1] + zeroExtend(x);
 `endif
