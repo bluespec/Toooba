@@ -297,7 +297,7 @@ module mkDTlb#(
                                             en.level,
                                             r.write ? DataStore : DataLoad,
                                             r.capStore,
-                                            r.capWidthLoad);
+                                            r.potentialCapLoad);
             if (permCheck.allowed) begin
                 // fill TLB, and record resp
                 tlb.addEntry(en);
@@ -487,7 +487,7 @@ module mkDTlb#(
                                                 entry.level,
                                                 r.write ? DataStore : DataLoad,
                                                 r.capStore,
-                                                r.capWidthLoad);
+                                                r.potentialCapLoad);
                 $display("Permission check output 2: ", fshow(permCheck));
                 if (permCheck.allowed) begin
                     // update TLB replacement info
