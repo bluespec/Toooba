@@ -92,6 +92,13 @@ function Maybe#(MemInst) decodeMemInst(Instruction inst, Bool cap_mode);
         illegalInst = True;
     end
 
+    Bool capWidth = ((mem_func == St || mem_func == Amo) && funct3 == 3'b100)
+                 || (opcode   == opcMiscMem && funct3 == 3'b010);
+
+    if (capWidth && amo_func != None && amo_func != Swap) begin
+        illegalInst = True; // Don't support atomic cap arithmetic
+    end
+
     // unsignedLd
     // it doesn't matter if this is set to True for stores
     Bool unsignedLd = False;
@@ -108,9 +115,6 @@ function Maybe#(MemInst) decodeMemInst(Instruction inst, Bool cap_mode);
     if (opcode == opcLoadFp) begin
         unsignedLd = True;
     end
-
-    Bool capWidth = (mem_func == St      && funct3 == 3'b100)
-                 || (opcode   == opcMiscMem && funct3 == 3'b010);
 
     // byteEn
     // TODO: Some combinations of operations and byteEn's are illegal.

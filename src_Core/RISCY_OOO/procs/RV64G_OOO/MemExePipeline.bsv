@@ -1314,7 +1314,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         // write reg file & set ROB as Executed & wake up rs
         if(lsqDeqSt.dst matches tagged Valid .dst) begin
             CapPipe dataUnpacked = fromMem(tuple2(resp.tag, pack(resp.data)));
-            dataUnpacked = setValidCap(dataUnpacked, False); // TODO no allowCapLoad around. Can a cap be loaded this way (e.g. AMOSWAP?)
+            dataUnpacked = setValidCap(dataUnpacked, lsqDeqSt.allowCapAmoLd && isValidCap(dataUnpacked));
             inIfc.writeRegFile(dst.indx, dataUnpacked);
             inIfc.setRegReadyAggr_mem(dst.indx);
 `ifdef INCLUDE_TANDEM_VERIF
@@ -1428,7 +1428,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         // write reg file & wakeup rs (this wakeup is late but MMIO is rare) & set ROB as Executed
         if(lsqDeqSt.dst matches tagged Valid .dst) begin
             CapPipe dataUnpacked = fromMem(tuple2(resp.tag, pack(resp.data)));
-            dataUnpacked = setValidCap(dataUnpacked, False); // TODO no allowCapLoad around. Can a cap be loaded this way (e.g. AMOSWAP?)
+            dataUnpacked = setValidCap(dataUnpacked, lsqDeqSt.allowCapAmoLd && isValidCap(dataUnpacked));
             inIfc.writeRegFile(dst.indx, dataUnpacked);
             inIfc.setRegReadyAggr_mem(dst.indx);
 `ifdef INCLUDE_TANDEM_VERIF
