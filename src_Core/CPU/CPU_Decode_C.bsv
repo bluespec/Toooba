@@ -3,6 +3,7 @@
 // RVFI_DII + CHERI modifications:
 //     Copyright (c) 2020 Jessica Clarke
 //     Copyright (c) 2020 Jonathan Woodruff
+//     Copyright (c) 2020 Peter Rugg
 //     All rights reserved.
 //
 //     This software was developed by SRI International and the University of
