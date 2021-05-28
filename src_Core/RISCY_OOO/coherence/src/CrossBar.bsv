@@ -108,7 +108,7 @@ module mkXBar#(
                 end
                 else begin
                     // otherwise just get one valid src
-                    Vector#(srcNum, srcIdxT) srcIdxVec = genWith(fromInteger);
+                    Vector#(srcNum, srcIdxT) srcIdxVec = rotateBy(genWith(fromInteger), unpack(srcRR[dst]));
                     whichSrc = searchIndex(isFromSrc, srcIdxVec);
                 end
                 if(whichSrc matches tagged Valid .src) begin
