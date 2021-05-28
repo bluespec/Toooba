@@ -110,6 +110,9 @@ module mkXilinxIntMul(XilinxIntMul#(tagT)) provisos(
     // different multilpliers: WaitAutoReset is not needed, since mul is a
     // pipeline with fixed latency
 `ifdef BSIM
+`define NO_XILINX
+`endif
+`ifdef NO_XILINX
     IntMulImport mulSigned <- mkIntMulSim(Signed);
     IntMulImport mulUnsigned <- mkIntMulSim(Unsigned);
     IntMulImport mulSignedUnsigned <- mkIntMulSim(SignedUnsigned);

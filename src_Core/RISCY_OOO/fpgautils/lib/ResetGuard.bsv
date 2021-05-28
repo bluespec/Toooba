@@ -28,6 +28,9 @@ interface ResetGuard;
 endinterface
 
 `ifdef BSIM
+`define NO_XILINX
+`endif
+`ifdef NO_XILINX
 module mkResetGuard(ResetGuard);
     Reg#(Bool) ready <- mkReg(False);
 

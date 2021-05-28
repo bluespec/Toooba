@@ -124,6 +124,9 @@ module mkXilinxIntDiv(XilinxIntDiv#(tagT)) provisos (
     Bits#(tagT, tagSz), Add#(tagSz, a__, 8)
 );
 `ifdef BSIM
+`define NO_XILINX
+`endif
+`ifdef NO_XILINX
     IntDivUnsignedImport divIfc <- mkIntDivUnsignedSim;
 `else
     IntDivUnsignedImport divIfc <- mkIntDivUnsignedImport;
