@@ -1184,6 +1184,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                         Auipc, Auipcc: auipcCnt = auipcCnt + 1;
                         Br: brCnt = brCnt + 1;
                         J : jmpCnt = jmpCnt + 1;
+                        CJAL: jmpCnt = jmpCnt + 1;
                         Jr: jrCnt = jrCnt + 1;
                         CJALR: jrCnt = jrCnt + 1;
                         Ld: begin

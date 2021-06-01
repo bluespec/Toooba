@@ -245,7 +245,7 @@ endfunction
 interface PerfCountersVec;
     interface Vector#(No_Of_Ctrs, Reg#(Data)) counter_vec;
     interface Vector#(No_Of_Ctrs, Reg#(Data)) event_vec;
-    interface Reg#(Data) inhibit;
+    interface Reg#(Bit#(No_Of_Ctrs)) inhibit;
     method Action send_performance_events (Vector #(No_Of_Evts, Bit#(Report_Width)) evts);
 endinterface
 (* synthesize *)
@@ -283,8 +283,8 @@ module mkPerfCountersToooba (PerfCountersVec);
     interface counter_vec = counters;
     interface event_vec = events;
     interface inhibit = interface Reg;
-        method Action _write(Data x) = writeCounterInhibitFF.enq(truncate(x));
-        method Data _read = zeroExtend(perf_counters.read_ctr_inhibit);
+        method Action _write(Bit#(No_Of_Ctrs) x) = writeCounterInhibitFF.enq(x);
+        method Bit#(No_Of_Ctrs) _read = (perf_counters.read_ctr_inhibit);
     endinterface;
     method send_performance_events = perf_counters.send_performance_events;
 endmodule
@@ -821,8 +821,19 @@ module mkCsrFile #(Data hartid)(CsrFile);
     Reg#(CapReg) mScratchC_reg <- mkCsrReg(nullCap);
     Ehr#(2, CapReg) mepcc_reg  <- mkConfigEhr(defaultValue);
 
+`ifdef PERFORMANCE_MONITORING
+    // Performance monitoring
+    Reg#(Bit#(1)) mcountinhibit_cy_reg <- mkCsrReg(0);
+    Reg#(Bit#(1)) mcountinhibit_ir_reg <- mkCsrReg(0);
+    Reg#(Data) mcountinhibit_reg = concatReg5(readOnlyReg(32'h00000000), perf_counters.inhibit, mcountinhibit_ir_reg, readOnlyReg(1'b0), mcountinhibit_cy_reg);
+`endif
+
     rule incCycle;
+`ifdef PERFORMANCE_MONITORING
+        if(!unpack(mcountinhibit_cy_reg)) mcycle_ehr[1] <= mcycle_ehr[1] + 1;
+`else
         mcycle_ehr[1] <= mcycle_ehr[1] + 1;
+`endif
     endrule
 
     // Function for getting a csr given an index
@@ -880,7 +891,8 @@ module mkCsrFile #(Data hartid)(CsrFile);
             csrAddrMHARTID:    mhartid_csr;
             csrAddrMCCSR:      mccsr_csr;
 `ifdef PERFORMANCE_MONITORING
-            csrAddrMCOUNTERINHIBIT: perf_counters.inhibit;
+            //csrAddrMCOUNTERINHIBIT: perf_counters.inhibit;
+            csrAddrMCOUNTERINHIBIT: mcountinhibit_reg;
 `endif
 `ifdef SECURITY
             csrAddrMEVBASE:    mevbase_csr;
@@ -1361,7 +1373,11 @@ module mkCsrFile #(Data hartid)(CsrFile);
     };
 
     method Action incInstret(SupCnt x);
+`ifdef PERFORMANCE_MONITORING
+        if(!unpack(mcountinhibit_ir_reg))  minstret_ehr[1] <= minstret_ehr[1] + zeroExtend(x);
+`else
         minstret_ehr[1] <= minstret_ehr[1] + zeroExtend(x);
+`endif
     endmethod
 
     method Action setTime(Data t);

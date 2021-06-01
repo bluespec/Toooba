@@ -48,7 +48,7 @@ function Maybe#(CapMem) decodeBrPred( CapMem pc, DecodedInst dInst, Bool histTak
   Maybe#(CapMem) nextPc = tagged Invalid;
   CapPipe pcPipe = cast(pc);
   CapMem jTarget = cast(incOffset(pcPipe, imm_val).value);
-  if( dInst.iType == J ) begin
+  if( dInst.iType == J || dInst.iType == CJAL ) begin
     nextPc = tagged Valid jTarget;
   end else if( dInst.iType == Br ) begin
     if( histTaken ) begin

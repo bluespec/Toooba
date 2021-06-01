@@ -626,7 +626,7 @@ module mkFetchStage(FetchStage);
                end
             end else if (is_16b_inst(frag.inst_frag)) begin // 16-bit instruction
                new_pick = tagged Valid fetch3_2_instC(frag,
-                                                      fv_decode_C (misa, misa_mxl_64, frag.inst_frag),
+                                                      fv_decode_C (misa, misa_mxl_64, getFlags(decompressPc(frag.pc))==1, frag.inst_frag),
                                                       zeroExtend(frag.inst_frag));
             end
          end
@@ -717,7 +717,7 @@ module mkFetchStage(FetchStage);
                   CapMem push_addr = addPc(pc, ((in.inst_kind == Inst_32b) ? 4 : 2));
 
                   CapMem pop_addr = ras.ras[i].first;
-                  if (dInst.iType == J && dst_link) begin
+                  if ((dInst.iType == J || dInst.iType == CJAL) && dst_link) begin
                      // rs1 is invalid, i.e., not link: push
                      ras.ras[i].popPush(False, Valid (push_addr));
                   end
@@ -821,7 +821,7 @@ module mkFetchStage(FetchStage);
       if(redirectInst matches tagged Valid .iType &&& doStats) begin
          case(iType)
             Br: decRedirectBrCnt.incr(1);
-            J : decRedirectJmpCnt.incr(1);
+            J, CJAL: decRedirectJmpCnt.incr(1);
             Jr: decRedirectJrCnt.incr(1);
             default: decRedirectOtherCnt.incr(1);
          endcase
@@ -930,7 +930,7 @@ module mkFetchStage(FetchStage);
         CapMem pc, CapMem next_pc, IType iType, Bool taken,
         DirPredTrainInfo dpTrain, Bool mispred, Bool isCompressed
     );
-        //if (iType == J || (iType == Br && next_pc < pc)) begin
+        //if (iType == J || iType == CJAL || (iType == Br && next_pc < pc)) begin
         //    // Only train the next address predictor for jumps and backward branches
         //    // next_pc != pc + 4 is a substitute for taken
         //    nextAddrPred.update(pc, next_pc, taken);

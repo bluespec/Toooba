@@ -32,7 +32,7 @@ typedef struct{
     Addr  addr;
     Bool  write;
     Bool  capStore;
-    Bool  capWidthLoad;
+    Bool  potentialCapLoad;
 } TlbReq deriving(Eq, Bits, FShow);
 typedef Tuple3#(Addr, Maybe#(Exception), Bool) TlbResp;
 
@@ -192,7 +192,7 @@ function TlbPermissionCheck hasVMPermission(
     PTEType pte_type, PTEUpperType pte_upper_type,
      Ppn ppn, PageWalkLevel level,
     TlbAccessType access,
-    Bool capStore, Bool capWidthLoad
+    Bool capStore, Bool potentialCapLoad
 );
     // try to find any page fault
     Bool fault = False;
@@ -249,7 +249,7 @@ function TlbPermissionCheck hasVMPermission(
                 !(pte_type.executable && vm_info.exeReadable)) begin
                 fault = True;
             end
-            if (capWidthLoad) begin
+            if (potentialCapLoad) begin
                 if (!fault) excCode = excLoadCapPageFault;
                 // load traps if page not cap readable and using cap_read_mod set
                 if (!pte_upper_type.cap_readable && pte_upper_type.cap_read_mod) begin

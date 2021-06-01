@@ -101,16 +101,9 @@ module mkXBar#(
                         return False;
                     end
                 endfunction
-                Maybe#(srcIdxT) whichSrc = Invalid; // the src to select
-                if(isFromSrc(srcRR[dst])) begin
-                    // first check the src with priority
-                    whichSrc = Valid (srcRR[dst]);
-                end
-                else begin
-                    // otherwise just get one valid src
-                    Vector#(srcNum, srcIdxT) srcIdxVec = genWith(fromInteger);
-                    whichSrc = searchIndex(isFromSrc, srcIdxVec);
-                end
+                // find the first valid source starting at srcRR[dst]
+                Vector#(srcNum, srcIdxT) srcIdxVec = reverse(rotateBy(reverse(genWith(fromInteger)), unpack(srcRR[dst]))); // Double reverse to achieve rotateBy left, since it's not provided by Bluespec
+                Maybe#(srcIdxT) whichSrc = fmap(select(srcIdxVec), searchIndex(isFromSrc, srcIdxVec)); // the src to select
                 if(whichSrc matches tagged Valid .src) begin
                     // can do enq & deq
                     deqSrcByDst[dst] = whichSrc;

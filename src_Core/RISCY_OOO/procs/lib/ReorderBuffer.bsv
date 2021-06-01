@@ -57,7 +57,7 @@ import Cur_Cycle :: *;
 // some parts of full_result are for verification
 // but some are truly used for execution
 
-// ppc is only used by iType = BR/J/JR
+// ppc is only used by iType = BR/J/CJAL/JR
 // csrData is only used by iType = Csr
 // vaddr is only used by mem inst in page fault
 typedef union tagged {

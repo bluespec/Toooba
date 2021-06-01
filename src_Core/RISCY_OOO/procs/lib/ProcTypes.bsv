@@ -268,7 +268,7 @@ typedef enum {
     Alu,
     Ld, St, Lr, Sc,
     J, Jr, Br,
-    CCall, CJALR, Cap,
+    CCall, CJAL, CJALR, Cap,
     Auipc,
     Auipcc,
     Fpu,

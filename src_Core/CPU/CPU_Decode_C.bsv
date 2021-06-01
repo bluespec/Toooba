@@ -3,6 +3,7 @@
 // RVFI_DII + CHERI modifications:
 //     Copyright (c) 2020 Jessica Clarke
 //     Copyright (c) 2020 Jonathan Woodruff
+//     Copyright (c) 2020 Peter Rugg
 //     All rights reserved.
 //
 //     This software was developed by SRI International and the University of
@@ -38,71 +39,72 @@ export fv_decode_C;
 // ================================================================
 // Project imports
 
-import ISA_Decls   :: *;
+import ISA_Decls       :: *;
+import ISA_Decls_CHERI :: *;
 
 // ================================================================
 
-function Instr fv_decode_C (MISA misa, Bit #(2) xl, Instr_C instr_C);
+function Instr fv_decode_C (MISA misa, Bit #(2) xl, Bool cap_enc, Instr_C instr_C);
    // ----------------
    // Try each possible C instruction
-   match { .valid_C_LWSP,     .i_C_LWSP }     = fv_decode_C_LWSP     (misa, xl, instr_C);
-   match { .valid_C_SWSP,     .i_C_SWSP }     = fv_decode_C_SWSP     (misa, xl, instr_C);
-   match { .valid_C_LW,       .i_C_LW }       = fv_decode_C_LW       (misa, xl, instr_C);
-   match { .valid_C_SW,       .i_C_SW }       = fv_decode_C_SW       (misa, xl, instr_C);
+   match { .valid_C_LWSP,               .i_C_LWSP }               = fv_decode_C_LWSP               (misa, xl, cap_enc, instr_C);
+   match { .valid_C_SWSP,               .i_C_SWSP }               = fv_decode_C_SWSP               (misa, xl, cap_enc, instr_C);
+   match { .valid_C_LW,                 .i_C_LW }                 = fv_decode_C_LW                 (misa, xl, cap_enc, instr_C);
+   match { .valid_C_SW,                 .i_C_SW }                 = fv_decode_C_SW                 (misa, xl, cap_enc, instr_C);
 
-   match { .valid_C_J,        .i_C_J }        = fv_decode_C_J        (misa, xl, instr_C);
-   match { .valid_C_JAL,      .i_C_JAL }      = fv_decode_C_JAL      (misa, xl, instr_C);
-   match { .valid_C_JR,       .i_C_JR }       = fv_decode_C_JR       (misa, xl, instr_C);
-   match { .valid_C_JALR,     .i_C_JALR }     = fv_decode_C_JALR     (misa, xl, instr_C);
-   match { .valid_C_BEQZ,     .i_C_BEQZ }     = fv_decode_C_BEQZ     (misa, xl, instr_C);
-   match { .valid_C_BNEZ,     .i_C_BNEZ }     = fv_decode_C_BNEZ     (misa, xl, instr_C);
-   match { .valid_C_LI,       .i_C_LI }       = fv_decode_C_LI       (misa, xl, instr_C);
-   match { .valid_C_LUI,      .i_C_LUI }      = fv_decode_C_LUI      (misa, xl, instr_C);
-   match { .valid_C_ADDI,     .i_C_ADDI }     = fv_decode_C_ADDI     (misa, xl, instr_C);
-   match { .valid_C_NOP,      .i_C_NOP }      = fv_decode_C_NOP      (misa, xl, instr_C);
-   match { .valid_C_ADDIW,    .i_C_ADDIW }    = fv_decode_C_ADDIW    (misa, xl, instr_C);
-   match { .valid_C_ADDI16SP, .i_C_ADDI16SP } = fv_decode_C_ADDI16SP (misa, xl, instr_C);
-   match { .valid_C_ADDI4SPN, .i_C_ADDI4SPN } = fv_decode_C_ADDI4SPN (misa, xl, instr_C);
-   match { .valid_C_SLLI,     .i_C_SLLI }     = fv_decode_C_SLLI     (misa, xl, instr_C);
-   match { .valid_C_SRLI,     .i_C_SRLI }     = fv_decode_C_SRLI     (misa, xl, instr_C);
-   match { .valid_C_SRAI,     .i_C_SRAI }     = fv_decode_C_SRAI     (misa, xl, instr_C);
-   match { .valid_C_ANDI,     .i_C_ANDI }     = fv_decode_C_ANDI     (misa, xl, instr_C);
-   match { .valid_C_MV,       .i_C_MV }       = fv_decode_C_MV       (misa, xl, instr_C);
-   match { .valid_C_ADD,      .i_C_ADD }      = fv_decode_C_ADD      (misa, xl, instr_C);
-   match { .valid_C_AND,      .i_C_AND }      = fv_decode_C_AND      (misa, xl, instr_C);
-   match { .valid_C_OR,       .i_C_OR }       = fv_decode_C_OR       (misa, xl, instr_C);
-   match { .valid_C_XOR,      .i_C_XOR }      = fv_decode_C_XOR      (misa, xl, instr_C);
-   match { .valid_C_SUB,      .i_C_SUB }      = fv_decode_C_SUB      (misa, xl, instr_C);
-   match { .valid_C_ADDW,     .i_C_ADDW }     = fv_decode_C_ADDW     (misa, xl, instr_C);
-   match { .valid_C_SUBW,     .i_C_SUBW }     = fv_decode_C_SUBW     (misa, xl, instr_C);
-   match { .valid_C_EBREAK,   .i_C_EBREAK }   = fv_decode_C_EBREAK   (misa, xl, instr_C);
+   match { .valid_C_J,                  .i_C_J }                  = fv_decode_C_J                  (misa, xl, cap_enc, instr_C);
+   match { .valid_C_JAL,                .i_C_JAL }                = fv_decode_C_JAL                (misa, xl, cap_enc, instr_C);
+   match { .valid_C_JR,                 .i_C_JR }                 = fv_decode_C_JR                 (misa, xl, cap_enc, instr_C);
+   match { .valid_C_JALR,               .i_C_JALR }               = fv_decode_C_JALR               (misa, xl, cap_enc, instr_C);
+   match { .valid_C_BEQZ,               .i_C_BEQZ }               = fv_decode_C_BEQZ               (misa, xl, cap_enc, instr_C);
+   match { .valid_C_BNEZ,               .i_C_BNEZ }               = fv_decode_C_BNEZ               (misa, xl, cap_enc, instr_C);
+   match { .valid_C_LI,                 .i_C_LI }                 = fv_decode_C_LI                 (misa, xl, cap_enc, instr_C);
+   match { .valid_C_LUI,                .i_C_LUI }                = fv_decode_C_LUI                (misa, xl, cap_enc, instr_C);
+   match { .valid_C_ADDI,               .i_C_ADDI }               = fv_decode_C_ADDI               (misa, xl, cap_enc, instr_C);
+   match { .valid_C_NOP,                .i_C_NOP }                = fv_decode_C_NOP                (misa, xl, cap_enc, instr_C);
+   match { .valid_C_ADDIW,              .i_C_ADDIW }              = fv_decode_C_ADDIW              (misa, xl, cap_enc, instr_C);
+   match { .valid_C_ADDI16SP,           .i_C_ADDI16SP }           = fv_decode_C_ADDI16SP           (misa, xl, cap_enc, instr_C);
+   match { .valid_C_CIncOffsetImm16CSP, .i_C_CIncOffsetImm16CSP } = fv_decode_C_CIncOffsetImm16CSP (misa, xl, cap_enc, instr_C);
+   match { .valid_C_ADDI4SPN,           .i_C_ADDI4SPN }           = fv_decode_C_ADDI4SPN           (misa, xl, cap_enc, instr_C);
+   match { .valid_C_CIncOffsetImm4CSPN, .i_C_CIncOffsetImm4CSPN } = fv_decode_C_CIncOffsetImm4CSPN (misa, xl, cap_enc, instr_C);
+   match { .valid_C_SLLI,               .i_C_SLLI }               = fv_decode_C_SLLI               (misa, xl, cap_enc, instr_C);
+   match { .valid_C_SRLI,               .i_C_SRLI }               = fv_decode_C_SRLI               (misa, xl, cap_enc, instr_C);
+   match { .valid_C_SRAI,               .i_C_SRAI }               = fv_decode_C_SRAI               (misa, xl, cap_enc, instr_C);
+   match { .valid_C_ANDI,               .i_C_ANDI }               = fv_decode_C_ANDI               (misa, xl, cap_enc, instr_C);
+   match { .valid_C_MV,                 .i_C_MV }                 = fv_decode_C_MV                 (misa, xl, cap_enc, instr_C);
+   match { .valid_C_ADD,                .i_C_ADD }                = fv_decode_C_ADD                (misa, xl, cap_enc, instr_C);
+   match { .valid_C_AND,                .i_C_AND }                = fv_decode_C_AND                (misa, xl, cap_enc, instr_C);
+   match { .valid_C_OR,                 .i_C_OR }                 = fv_decode_C_OR                 (misa, xl, cap_enc, instr_C);
+   match { .valid_C_XOR,                .i_C_XOR }                = fv_decode_C_XOR                (misa, xl, cap_enc, instr_C);
+   match { .valid_C_SUB,                .i_C_SUB }                = fv_decode_C_SUB                (misa, xl, cap_enc, instr_C);
+   match { .valid_C_ADDW,               .i_C_ADDW }               = fv_decode_C_ADDW               (misa, xl, cap_enc, instr_C);
+   match { .valid_C_SUBW,               .i_C_SUBW }               = fv_decode_C_SUBW               (misa, xl, cap_enc, instr_C);
+   match { .valid_C_EBREAK,             .i_C_EBREAK }             = fv_decode_C_EBREAK             (misa, xl, cap_enc, instr_C);
+
+   match { .valid_C_LDSP,               .i_C_LDSP }               = fv_decode_C_LDSP               (misa, xl, cap_enc, instr_C);
+   match { .valid_C_SDSP,               .i_C_SDSP }               = fv_decode_C_SDSP               (misa, xl, cap_enc, instr_C);
+   match { .valid_C_LD,                 .i_C_LD }                 = fv_decode_C_LD                 (misa, xl, cap_enc, instr_C);
+   match { .valid_C_SD,                 .i_C_SD }                 = fv_decode_C_SD                 (misa, xl, cap_enc, instr_C);
 
 `ifdef RV64
-   match { .valid_C_LDSP,     .i_C_LDSP }     = fv_decode_C_LDSP     (misa, xl, instr_C);
-   match { .valid_C_SDSP,     .i_C_SDSP }     = fv_decode_C_SDSP     (misa, xl, instr_C);
-   match { .valid_C_LD,       .i_C_LD }       = fv_decode_C_LD       (misa, xl, instr_C);
-   match { .valid_C_SD,       .i_C_SD }       = fv_decode_C_SD       (misa, xl, instr_C);
-`endif
-
-`ifdef RV128
-   match { .valid_C_LQSP,     .i_C_LQSP }     = fv_decode_C_LQSP     (misa, xl, instr_C);
-   match { .valid_C_SQSP,     .i_C_SQSP }     = fv_decode_C_SQSP     (misa, xl, instr_C);
-   match { .valid_C_LQ,       .i_C_LQ }       = fv_decode_C_LQ       (misa, xl, instr_C);
-   match { .valid_C_SQ,       .i_C_SQ }       = fv_decode_C_SQ       (misa, xl, instr_C);
+   match { .valid_C_LQSP,               .i_C_LQSP }               = fv_decode_C_LQSP               (misa, xl, cap_enc, instr_C);
+   match { .valid_C_SQSP,               .i_C_SQSP }               = fv_decode_C_SQSP               (misa, xl, cap_enc, instr_C);
+   match { .valid_C_LQ,                 .i_C_LQ }                 = fv_decode_C_LQ                 (misa, xl, cap_enc, instr_C);
+   match { .valid_C_SQ,                 .i_C_SQ }                 = fv_decode_C_SQ                 (misa, xl, cap_enc, instr_C);
 `endif
 
 `ifdef ISA_F
-   match { .valid_C_FLWSP,    .i_C_FLWSP }    = fv_decode_C_FLWSP    (misa, xl, instr_C);
-   match { .valid_C_FSWSP,    .i_C_FSWSP }    = fv_decode_C_FSWSP    (misa, xl, instr_C);
-   match { .valid_C_FLW,      .i_C_FLW }      = fv_decode_C_FLW      (misa, xl, instr_C);
-   match { .valid_C_FSW,      .i_C_FSW }      = fv_decode_C_FSW      (misa, xl, instr_C);
+   match { .valid_C_FLWSP,              .i_C_FLWSP }              = fv_decode_C_FLWSP              (misa, xl, cap_enc, instr_C);
+   match { .valid_C_FSWSP,              .i_C_FSWSP }              = fv_decode_C_FSWSP              (misa, xl, cap_enc, instr_C);
+   match { .valid_C_FLW,                .i_C_FLW }                = fv_decode_C_FLW                (misa, xl, cap_enc, instr_C);
+   match { .valid_C_FSW,                .i_C_FSW }                = fv_decode_C_FSW                (misa, xl, cap_enc, instr_C);
 `endif
 
 `ifdef ISA_D
-   match { .valid_C_FLDSP,    .i_C_FLDSP }    = fv_decode_C_FLDSP    (misa, xl, instr_C);
-   match { .valid_C_FSDSP,    .i_C_FSDSP }    = fv_decode_C_FSDSP    (misa, xl, instr_C);
-   match { .valid_C_FLD,      .i_C_FLD }      = fv_decode_C_FLD      (misa, xl, instr_C);
-   match { .valid_C_FSD,      .i_C_FSD }      = fv_decode_C_FSD      (misa, xl, instr_C);
+   match { .valid_C_FLDSP,              .i_C_FLDSP }              = fv_decode_C_FLDSP              (misa, xl, cap_enc, instr_C);
+   match { .valid_C_FSDSP,              .i_C_FSDSP }              = fv_decode_C_FSDSP              (misa, xl, cap_enc, instr_C);
+   match { .valid_C_FLD,                .i_C_FLD }                = fv_decode_C_FLD                (misa, xl, cap_enc, instr_C);
+   match { .valid_C_FSD,                .i_C_FSD }                = fv_decode_C_FSD                (misa, xl, cap_enc, instr_C);
 `endif
 
    // ----------------
@@ -110,64 +112,64 @@ function Instr fv_decode_C (MISA misa, Bit #(2) xl, Instr_C instr_C);
 
    Instr instr = ?;
 
-   if      (valid_C_LWSP)     instr = i_C_LWSP;
-   else if (valid_C_SWSP)     instr = i_C_SWSP;
-   else if (valid_C_LW)       instr = i_C_LW;
-   else if (valid_C_SW)       instr = i_C_SW;
+   if      (valid_C_LWSP)               instr = i_C_LWSP;
+   else if (valid_C_SWSP)               instr = i_C_SWSP;
+   else if (valid_C_LW)                 instr = i_C_LW;
+   else if (valid_C_SW)                 instr = i_C_SW;
 
-   else if (valid_C_J)        instr = i_C_J;
-   else if (valid_C_JAL)      instr = i_C_JAL;
-   else if (valid_C_JR)       instr = i_C_JR;
-   else if (valid_C_JALR)     instr = i_C_JALR;
-   else if (valid_C_BEQZ)     instr = i_C_BEQZ;
-   else if (valid_C_BNEZ)     instr = i_C_BNEZ;
-   else if (valid_C_LI)       instr = i_C_LI;
-   else if (valid_C_LUI)      instr = i_C_LUI;
-   else if (valid_C_ADDI)     instr = i_C_ADDI;
-   else if (valid_C_NOP)      instr = i_C_NOP;
-   else if (valid_C_ADDIW)    instr = i_C_ADDIW;
-   else if (valid_C_ADDI16SP) instr = i_C_ADDI16SP;
-   else if (valid_C_ADDI4SPN) instr = i_C_ADDI4SPN;
-   else if (valid_C_SLLI)     instr = i_C_SLLI;
-   else if (valid_C_SRLI)     instr = i_C_SRLI;
-   else if (valid_C_SRAI)     instr = i_C_SRAI;
-   else if (valid_C_ANDI)     instr = i_C_ANDI;
-   else if (valid_C_MV)       instr = i_C_MV;
-   else if (valid_C_ADD)      instr = i_C_ADD;
-   else if (valid_C_AND)      instr = i_C_AND;
-   else if (valid_C_OR)       instr = i_C_OR;
-   else if (valid_C_XOR)      instr = i_C_XOR;
-   else if (valid_C_SUB)      instr = i_C_SUB;
-   else if (valid_C_ADDW)     instr = i_C_ADDW;
-   else if (valid_C_SUBW)     instr = i_C_SUBW;
-   else if (valid_C_EBREAK)   instr = i_C_EBREAK;
+   else if (valid_C_J)                  instr = i_C_J;
+   else if (valid_C_JAL)                instr = i_C_JAL;
+   else if (valid_C_JR)                 instr = i_C_JR;
+   else if (valid_C_JALR)               instr = i_C_JALR;
+   else if (valid_C_BEQZ)               instr = i_C_BEQZ;
+   else if (valid_C_BNEZ)               instr = i_C_BNEZ;
+   else if (valid_C_LI)                 instr = i_C_LI;
+   else if (valid_C_LUI)                instr = i_C_LUI;
+   else if (valid_C_ADDI)               instr = i_C_ADDI;
+   else if (valid_C_NOP)                instr = i_C_NOP;
+   else if (valid_C_ADDIW)              instr = i_C_ADDIW;
+   else if (valid_C_ADDI16SP)           instr = i_C_ADDI16SP;
+   else if (valid_C_CIncOffsetImm16CSP) instr = i_C_CIncOffsetImm16CSP;
+   else if (valid_C_ADDI4SPN)           instr = i_C_ADDI4SPN;
+   else if (valid_C_CIncOffsetImm4CSPN) instr = i_C_CIncOffsetImm4CSPN;
+   else if (valid_C_SLLI)               instr = i_C_SLLI;
+   else if (valid_C_SRLI)               instr = i_C_SRLI;
+   else if (valid_C_SRAI)               instr = i_C_SRAI;
+   else if (valid_C_ANDI)               instr = i_C_ANDI;
+   else if (valid_C_MV)                 instr = i_C_MV;
+   else if (valid_C_ADD)                instr = i_C_ADD;
+   else if (valid_C_AND)                instr = i_C_AND;
+   else if (valid_C_OR)                 instr = i_C_OR;
+   else if (valid_C_XOR)                instr = i_C_XOR;
+   else if (valid_C_SUB)                instr = i_C_SUB;
+   else if (valid_C_ADDW)               instr = i_C_ADDW;
+   else if (valid_C_SUBW)               instr = i_C_SUBW;
+   else if (valid_C_EBREAK)             instr = i_C_EBREAK;
 
 `ifdef RV64
-   else if (valid_C_LDSP)     instr = i_C_LDSP;
-   else if (valid_C_SDSP)     instr = i_C_SDSP;
-   else if (valid_C_LD)       instr = i_C_LD;
-   else if (valid_C_SD)       instr = i_C_SD;
+   else if (valid_C_LDSP)               instr = i_C_LDSP;
+   else if (valid_C_SDSP)               instr = i_C_SDSP;
+   else if (valid_C_LD)                 instr = i_C_LD;
+   else if (valid_C_SD)                 instr = i_C_SD;
 `endif
 
-`ifdef RV128
-   else if (valid_C_LQSP)     instr = i_C_LQSP;
-   else if (valid_C_SQSP)     instr = i_C_SQSP;
-   else if (valid_C_LQ)       instr = i_C_LQ;
-   else if (valid_C_SQ)       instr = i_C_SQ;
-`endif
+   else if (valid_C_LQSP)               instr = i_C_LQSP;
+   else if (valid_C_SQSP)               instr = i_C_SQSP;
+   else if (valid_C_LQ)                 instr = i_C_LQ;
+   else if (valid_C_SQ)                 instr = i_C_SQ;
 
 `ifdef ISA_F
-   else if (valid_C_FLWSP)    instr = i_C_FLWSP;
-   else if (valid_C_FSWSP)    instr = i_C_FSWSP;
-   else if (valid_C_FLW)      instr = i_C_FLW;
-   else if (valid_C_FSW)      instr = i_C_FSW;
+   else if (valid_C_FLWSP)              instr = i_C_FLWSP;
+   else if (valid_C_FSWSP)              instr = i_C_FSWSP;
+   else if (valid_C_FLW)                instr = i_C_FLW;
+   else if (valid_C_FSW)                instr = i_C_FSW;
 `endif
 
 `ifdef ISA_D
-   else if (valid_C_FLDSP)    instr = i_C_FLDSP;
-   else if (valid_C_FSDSP)    instr = i_C_FSDSP;
-   else if (valid_C_FLD)      instr = i_C_FLD;
-   else if (valid_C_FSD)      instr = i_C_FSD;
+   else if (valid_C_FLDSP)              instr = i_C_FLDSP;
+   else if (valid_C_FSDSP)              instr = i_C_FSDSP;
+   else if (valid_C_FLD)                instr = i_C_FLD;
+   else if (valid_C_FSD)                instr = i_C_FSD;
 `endif
 
    else
@@ -180,7 +182,7 @@ endfunction
 // 'C' Extension Stack-Pointer-Based Loads
 
 // LWSP: expands into LW
-function Tuple2 #(Bool, Instr) fv_decode_C_LWSP (MISA  misa, Bit #(2)  xl, Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_LWSP (MISA  misa, Bit #(2)  xl, Bool cap_enc, Instr_C  instr_C);
    begin
       // Instr fields: I-type
       match { .funct3, .imm_at_12, .rd, .imm_at_6_2, .op } = fv_ifields_CI_type (instr_C);
@@ -198,9 +200,8 @@ function Tuple2 #(Bool, Instr) fv_decode_C_LWSP (MISA  misa, Bit #(2)  xl, Instr
    end
 endfunction
 
-`ifdef RV64
 // LDSP: expands into LD
-function Tuple2 #(Bool, Instr) fv_decode_C_LDSP (MISA  misa, Bit #(2)  xl, Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_LDSP (MISA  misa, Bit #(2)  xl, Bool cap_enc, Instr_C  instr_C);
    begin
       // Instr fields: I-type
       match { .funct3, .imm_at_12, .rd, .imm_at_6_2, .op } = fv_ifields_CI_type  (instr_C);
@@ -211,7 +212,7 @@ function Tuple2 #(Bool, Instr) fv_decode_C_LDSP (MISA  misa, Bit #(2)  xl, Instr
                        && (rd != 0)
                        && (funct3 == funct3_C_LDSP)
                        && (   (xl == misa_mxl_64)
-                           || (xl == misa_mxl_128)));
+                           || (cap_enc)));
 
       RegName rs1   = reg_sp;
       let     instr = mkInstr_I_type (zeroExtend (offset),  rs1,  f3_LD,  rd,  op_LOAD);
@@ -219,11 +220,10 @@ function Tuple2 #(Bool, Instr) fv_decode_C_LDSP (MISA  misa, Bit #(2)  xl, Instr
       return tuple2 (is_legal, instr);
    end
 endfunction
-`endif
 
-`ifdef RV128
+`ifdef RV64
 // LQSP: expands into LQ
-function Tuple2 #(Bool, Instr) fv_decode_C_LQSP (MISA  misa, Bit #(2)  xl, Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_LQSP (MISA  misa, Bit #(2)  xl, Bool cap_enc, Instr_C  instr_C);
    begin
       // Instr fields: I-type
       match { .funct3, .imm_at_12, .rd, .imm_at_6_2, .op } = fv_ifields_CI_type  (instr_C);
@@ -233,10 +233,11 @@ function Tuple2 #(Bool, Instr) fv_decode_C_LQSP (MISA  misa, Bit #(2)  xl, Instr
                        && (op == opcode_C2)
                        && (rd != 0)
                        && (funct3 == funct3_C_LQSP)
-                       && (xl == misa_mxl_128));
+                       && (xl == misa_mxl_64)
+                       && (cap_enc));
 
       RegName rs1   = reg_sp;
-      let     instr = mkInstr_I_type (zeroExtend (offset),  rs1,  f3_LQ,  rd,  op_LOAD);
+      let     instr = mkInstr_I_type (zeroExtend (offset),  rs1,  f3_LQ,  rd,  op_MISC_MEM);
 
       return tuple2 (is_legal, instr);
    end
@@ -245,7 +246,7 @@ endfunction
 
 `ifdef ISA_F
 // FLWSP: expands into FLW
-function Tuple2 #(Bool, Instr) fv_decode_C_FLWSP (MISA  misa, Bit #(2)  xl, Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_FLWSP (MISA  misa, Bit #(2)  xl, Bool cap_enc, Instr_C  instr_C);
    begin
       // Instr fields: I-type
       match { .funct3, .imm_at_12, .rd, .imm_at_6_2, .op } = fv_ifields_CI_type  (instr_C);
@@ -254,7 +255,8 @@ function Tuple2 #(Bool, Instr) fv_decode_C_FLWSP (MISA  misa, Bit #(2)  xl, Inst
       Bool is_legal = ((misa.c == 1'b1)
 		       && (op == opcode_C2)
 		       && (funct3 == funct3_C_FLWSP)
-		       && (misa.f == 1'b1));
+		       && (misa.f == 1'b1)
+                       && (! cap_enc));
 
       RegName rs1   = reg_sp;
       let     instr = mkInstr_I_type (zeroExtend (offset),  rs1,  f3_FLW,  rd,  op_LOAD_FP);
@@ -266,7 +268,7 @@ endfunction
 
 `ifdef ISA_D
 // FLDSP: expands into FLD
-function Tuple2 #(Bool, Instr) fv_decode_C_FLDSP (MISA  misa,  Bit #(2) xl, Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_FLDSP (MISA  misa,  Bit #(2) xl, Bool cap_enc, Instr_C  instr_C);
    begin
       // Instr fields: I-type
       match { .funct3, .imm_at_12, .rd, .imm_at_6_2, .op } = fv_ifields_CI_type  (instr_C);
@@ -276,8 +278,8 @@ function Tuple2 #(Bool, Instr) fv_decode_C_FLDSP (MISA  misa,  Bit #(2) xl, Inst
 		       && (op == opcode_C2)
 		       && (funct3 == funct3_C_FLDSP)
 		       && (misa.d == 1'b1)
-		       && (   (xl == misa_mxl_64)
-			   || (xl == misa_mxl_128)));
+                       && (   (xl == misa_mxl_32)
+                           || (! cap_enc)));
 
       RegName rs1   = reg_sp;
       let     instr = mkInstr_I_type (zeroExtend (offset),  rs1,  f3_FLD,  rd,  op_LOAD_FP);
@@ -291,7 +293,7 @@ endfunction
 // 'C' Extension Stack-Pointer-Based Stores
 
 // SWSP: expands to SW
-function Tuple2 #(Bool, Instr) fv_decode_C_SWSP (MISA  misa,  Bit #(2)  xl, Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_SWSP (MISA  misa,  Bit #(2)  xl, Bool cap_enc, Instr_C  instr_C);
    begin
       // Instr fields: CSS-type
       match { .funct3, .imm_at_12_7, .rs2, .op } = fv_ifields_CSS_type (instr_C);
@@ -308,9 +310,8 @@ function Tuple2 #(Bool, Instr) fv_decode_C_SWSP (MISA  misa,  Bit #(2)  xl, Inst
    end
 endfunction
 
-`ifdef RV64
 // SDSP: expands to SD
-function Tuple2 #(Bool, Instr) fv_decode_C_SDSP (MISA  misa,  Bit #(2)  xl, Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_SDSP (MISA  misa,  Bit #(2)  xl, Bool cap_enc, Instr_C  instr_C);
    begin
       // Instr fields: CSS-type
       match { .funct3, .imm_at_12_7, .rs2, .op } = fv_ifields_CSS_type (instr_C);
@@ -320,7 +321,7 @@ function Tuple2 #(Bool, Instr) fv_decode_C_SDSP (MISA  misa,  Bit #(2)  xl, Inst
                        && (op == opcode_C2)
                        && (funct3 == funct3_C_SDSP)
                        && (   (xl == misa_mxl_64)
-                           || (xl == misa_mxl_128)));
+                           || (cap_enc)));
 
       RegName   rs1   = reg_sp;
       let       instr = mkInstr_S_type (zeroExtend (offset), rs2, rs1, f3_SD, op_STORE);
@@ -328,11 +329,10 @@ function Tuple2 #(Bool, Instr) fv_decode_C_SDSP (MISA  misa,  Bit #(2)  xl, Inst
       return tuple2 (is_legal, instr);
    end
 endfunction
-`endif
 
-`ifdef RV128
+`ifdef RV64
 // SQSP: expands to SQ
-function Tuple2 #(Bool, Instr) fv_decode_C_SQSP (MISA  misa,  Bit #(2)  xl, Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_SQSP (MISA  misa,  Bit #(2)  xl, Bool cap_enc, Instr_C  instr_C);
    begin
       // Instr fields: CSS-type
       match { .funct3, .imm_at_12_7, .rs2, .op } = fv_ifields_CSS_type (instr_C);
@@ -341,7 +341,8 @@ function Tuple2 #(Bool, Instr) fv_decode_C_SQSP (MISA  misa,  Bit #(2)  xl, Inst
       Bool is_legal = ((misa.c == 1'b1)
                        && (op == opcode_C2)
                        && (funct3 == funct3_C_SQSP)
-                       && (xl == misa_mxl_128));
+                       && (xl == misa_mxl_64)
+                       && (cap_enc));
 
       RegName   rs1   = reg_sp;
       let       instr = mkInstr_S_type (zeroExtend (offset), rs2, rs1, f3_SQ, op_STORE);
@@ -353,7 +354,7 @@ endfunction
 
 `ifdef ISA_F
 // FSWSP: expands to FSW
-function Tuple2 #(Bool, Instr) fv_decode_C_FSWSP (MISA  misa,  Bit #(2)  xl, Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_FSWSP (MISA  misa,  Bit #(2)  xl, Bool cap_enc, Instr_C  instr_C);
    begin
       // Instr fields: CSS-type
       match { .funct3, .imm_at_12_7, .rs2, .op } = fv_ifields_CSS_type (instr_C);
@@ -361,7 +362,9 @@ function Tuple2 #(Bool, Instr) fv_decode_C_FSWSP (MISA  misa,  Bit #(2)  xl, Ins
 
       Bool is_legal = ((misa.c == 1'b1)
                        && (op == opcode_C2)
-                       && (funct3 == funct3_C_FSWSP));
+                       && (funct3 == funct3_C_FSWSP)
+                       && (xl == misa_mxl_32)
+                       && (! cap_enc));
 
       RegName   rs1   = reg_sp;
       let       instr = mkInstr_S_type (zeroExtend (offset), rs2, rs1, f3_FSW, op_STORE_FP);
@@ -373,7 +376,7 @@ endfunction
 
 `ifdef ISA_D
 // FSDSP: expands to FSD
-function Tuple2 #(Bool, Instr) fv_decode_C_FSDSP (MISA  misa,  Bit #(2)  xl, Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_FSDSP (MISA  misa,  Bit #(2)  xl, Bool cap_enc, Instr_C  instr_C);
    begin
       // Instr fields: CSS-type
       match { .funct3, .imm_at_12_7, .rs2, .op } = fv_ifields_CSS_type (instr_C);
@@ -382,8 +385,8 @@ function Tuple2 #(Bool, Instr) fv_decode_C_FSDSP (MISA  misa,  Bit #(2)  xl, Ins
       Bool is_legal = ((misa.c == 1'b1)
                        && (op == opcode_C2)
                        && (funct3 == funct3_C_FSDSP)
-                       && (   (xl == misa_mxl_64)
-                           || (xl == misa_mxl_128)));
+                       && (   (xl == misa_mxl_32)
+                           || (! cap_enc)));
 
       RegName   rs1   = reg_sp;
       let       instr = mkInstr_S_type (zeroExtend (offset), rs2, rs1, f3_FSD, op_STORE_FP);
@@ -397,7 +400,7 @@ endfunction
 // 'C' Extension Register-Based Loads
 
 // C_LW: expands to LW
-function Tuple2 #(Bool, Instr) fv_decode_C_LW (MISA  misa,  Bit #(2)  xl,  Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_LW (MISA  misa,  Bit #(2)  xl, Bool cap_enc,  Instr_C  instr_C);
    begin
       // Instr fields: CL-type
       match { .funct3, .imm_at_12_10, .rs1, .imm_at_6_5, .rd, .op } = fv_ifields_CL_type (instr_C);
@@ -413,9 +416,8 @@ function Tuple2 #(Bool, Instr) fv_decode_C_LW (MISA  misa,  Bit #(2)  xl,  Instr
    end
 endfunction
 
-`ifdef RV64
 // C_LD: expands to LD
-function Tuple2 #(Bool, Instr) fv_decode_C_LD (MISA  misa,  Bit #(2)  xl,  Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_LD (MISA  misa,  Bit #(2)  xl, Bool cap_enc,  Instr_C  instr_C);
    begin
       // Instr fields: CL-type
       match { .funct3, .imm_at_12_10, .rs1, .imm_at_6_5, .rd, .op } = fv_ifields_CL_type (instr_C);
@@ -425,18 +427,17 @@ function Tuple2 #(Bool, Instr) fv_decode_C_LD (MISA  misa,  Bit #(2)  xl,  Instr
                        && (op == opcode_C0)
                        && (funct3 == funct3_C_LD)
                        && (   (xl == misa_mxl_64)
-                           || (xl == misa_mxl_128)));
+                           || (cap_enc)));
 
       let instr = mkInstr_I_type (zeroExtend (offset),  rs1,  f3_LD,  rd,  op_LOAD);
 
       return tuple2 (is_legal, instr);
    end
 endfunction
-`endif
 
-`ifdef RV128
+`ifdef RV64
 // C_LQ: expands to LQ
-function Tuple2 #(Bool, Instr) fv_decode_C_LQ (MISA  misa,  Bit #(2)  xl,  Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_LQ (MISA  misa,  Bit #(2)  xl, Bool cap_enc,  Instr_C  instr_C);
    begin
       // Instr fields: CL-type
       match { .funct3, .imm_at_12_10, .rs1, .imm_at_6_5, .rd, .op } = fv_ifields_CL_type (instr_C);
@@ -445,9 +446,10 @@ function Tuple2 #(Bool, Instr) fv_decode_C_LQ (MISA  misa,  Bit #(2)  xl,  Instr
       Bool is_legal = ((misa.c == 1'b1)
                        && (op == opcode_C0)
                        && (funct3 == funct3_C_LQ)
-                       && (xl == misa_mxl_128));
+                       && (xl == misa_mxl_64)
+                       && (cap_enc));
 
-      let     instr = mkInstr_I_type (zeroExtend (offset),  rs1,  f3_LQ,  rd,  op_LOAD);
+      let     instr = mkInstr_I_type (zeroExtend (offset),  rs1,  f3_LQ,  rd,  op_MISC_MEM);
 
       return tuple2 (is_legal, instr);
    end
@@ -456,7 +458,7 @@ endfunction
 
 `ifdef ISA_F
 // C_FLW: expands to FLW
-function Tuple2 #(Bool, Instr) fv_decode_C_FLW (MISA  misa,  Bit #(2)  xl,  Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_FLW (MISA  misa,  Bit #(2)  xl, Bool cap_enc,  Instr_C  instr_C);
    begin
       // Instr fields: CL-type
       match { .funct3, .imm_at_12_10, .rs1, .imm_at_6_5, .rd, .op } = fv_ifields_CL_type (instr_C);
@@ -464,7 +466,9 @@ function Tuple2 #(Bool, Instr) fv_decode_C_FLW (MISA  misa,  Bit #(2)  xl,  Inst
 
       Bool is_legal = ((misa.c == 1'b1)
                        && (op == opcode_C0)
-                       && (funct3 == funct3_C_FLW));
+                       && (funct3 == funct3_C_FLW)
+                       && (xl == misa_mxl_32)
+                       && (! cap_enc));
 
       let     instr = mkInstr_I_type (zeroExtend (offset),  rs1,  f3_FLW,  rd,  op_LOAD_FP);
 
@@ -475,7 +479,7 @@ endfunction
 
 `ifdef ISA_D
 // C_FLD: expands to FLD
-function Tuple2 #(Bool, Instr) fv_decode_C_FLD (MISA  misa,  Bit #(2)  xl,  Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_FLD (MISA  misa,  Bit #(2)  xl, Bool cap_enc,  Instr_C  instr_C);
    begin
       // Instr fields: CL-type
       match { .funct3, .imm_at_12_10, .rs1, .imm_at_6_5, .rd, .op } = fv_ifields_CL_type (instr_C);
@@ -484,8 +488,8 @@ function Tuple2 #(Bool, Instr) fv_decode_C_FLD (MISA  misa,  Bit #(2)  xl,  Inst
       Bool is_legal = ((misa.c == 1'b1)
                        && (op == opcode_C0)
                        && (funct3 == funct3_C_FLD)
-                       && (   (xl == misa_mxl_64)
-                           || (xl == misa_mxl_128)));
+                       && (   (xl == misa_mxl_32)
+                           || (! cap_enc)));
 
       let     instr = mkInstr_I_type (zeroExtend (offset),  rs1,  f3_FLD,  rd,  op_LOAD_FP);
 
@@ -498,7 +502,7 @@ endfunction
 // 'C' Extension Register-Based Stores
 
 // C_SW: expands to SW
-function Tuple2 #(Bool, Instr) fv_decode_C_SW (MISA  misa,  Bit #(2)  xl,  Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_SW (MISA  misa,  Bit #(2)  xl, Bool cap_enc,  Instr_C  instr_C);
    begin
       // Instr fields: CS-type
       match { .funct3, .imm_at_12_10, .rs1, .imm_at_6_5, .rs2, .op } = fv_ifields_CS_type (instr_C);
@@ -514,9 +518,8 @@ function Tuple2 #(Bool, Instr) fv_decode_C_SW (MISA  misa,  Bit #(2)  xl,  Instr
    end
 endfunction
 
-`ifdef RV64
 // C_SD: expands to SD
-function Tuple2 #(Bool, Instr) fv_decode_C_SD (MISA  misa,  Bit #(2)  xl,  Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_SD (MISA  misa,  Bit #(2)  xl, Bool cap_enc,  Instr_C  instr_C);
    begin
       // Instr fields: CS-type
       match { .funct3, .imm_at_12_10, .rs1, .imm_at_6_5, .rs2, .op } = fv_ifields_CS_type (instr_C);
@@ -524,18 +527,19 @@ function Tuple2 #(Bool, Instr) fv_decode_C_SD (MISA  misa,  Bit #(2)  xl,  Instr
 
       Bool is_legal = ((misa.c == 1'b1)
                        && (op == opcode_C0)
-                       && (funct3 == funct3_C_SD));
+                       && (funct3 == funct3_C_SD)
+                       && (   (xl == misa_mxl_64)
+                           || (cap_enc)));
 
       let instr = mkInstr_S_type (zeroExtend (offset), rs2, rs1, f3_SD, op_STORE);
       
       return tuple2 (is_legal, instr);
    end
 endfunction
-`endif
 
-`ifdef RV128
+`ifdef RV64
 // C_SQ: expands to SQ
-function Tuple2 #(Bool, Instr) fv_decode_C_SQ (MISA  misa,  Bit #(2)  xl,  Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_SQ (MISA  misa,  Bit #(2)  xl, Bool cap_enc,  Instr_C  instr_C);
    begin
       // Instr fields: CS-type
       match { .funct3, .imm_at_12_10, .rs1, .imm_at_6_5, .rs2, .op } = fv_ifields_CS_type (instr_C);
@@ -543,7 +547,9 @@ function Tuple2 #(Bool, Instr) fv_decode_C_SQ (MISA  misa,  Bit #(2)  xl,  Instr
 
       Bool is_legal = ((misa.c == 1'b1)
                        && (op == opcode_C0)
-                       && (funct3 == funct3_C_SQ));
+                       && (funct3 == funct3_C_SQ)
+                       && (xl == misa_mxl_64)
+                       && (cap_enc));
 
       let instr = mkInstr_S_type (zeroExtend (offset), rs2, rs1, f3_SQ, op_STORE);
       
@@ -554,7 +560,7 @@ endfunction
 
 `ifdef ISA_F
 // C_FSW: expands to FSW
-function Tuple2 #(Bool, Instr) fv_decode_C_FSW (MISA  misa,  Bit #(2)  xl,  Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_FSW (MISA  misa,  Bit #(2)  xl, Bool cap_enc,  Instr_C  instr_C);
    begin
       // Instr fields: CS-type
       match { .funct3, .imm_at_12_10, .rs1, .imm_at_6_5, .rs2, .op } = fv_ifields_CS_type (instr_C);
@@ -562,7 +568,9 @@ function Tuple2 #(Bool, Instr) fv_decode_C_FSW (MISA  misa,  Bit #(2)  xl,  Inst
 
       Bool is_legal = ((misa.c == 1'b1)
                        && (op == opcode_C0)
-                       && (funct3 == funct3_C_FSW));
+                       && (funct3 == funct3_C_FSW)
+                       && (xl == misa_mxl_32)
+                       && (! cap_enc));
 
       let instr = mkInstr_S_type (zeroExtend (offset), rs2, rs1, f3_FSW, op_STORE_FP);
       
@@ -573,7 +581,7 @@ endfunction
 
 `ifdef ISA_D
 // C_FSD: expands to FSD
-function Tuple2 #(Bool, Instr) fv_decode_C_FSD (MISA  misa,  Bit #(2)  xl,  Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_FSD (MISA  misa,  Bit #(2)  xl, Bool cap_enc,  Instr_C  instr_C);
    begin
       // Instr fields: CS-type
       match { .funct3, .imm_at_12_10, .rs1, .imm_at_6_5, .rs2, .op } = fv_ifields_CS_type (instr_C);
@@ -581,7 +589,9 @@ function Tuple2 #(Bool, Instr) fv_decode_C_FSD (MISA  misa,  Bit #(2)  xl,  Inst
 
       Bool is_legal = ((misa.c == 1'b1)
                        && (op == opcode_C0)
-                       && (funct3 == funct3_C_FSD));
+                       && (funct3 == funct3_C_FSD)
+                       && (   (xl == misa_mxl_32)
+                           || (! cap_enc)));
 
       let instr = mkInstr_S_type (zeroExtend (offset), rs2, rs1, f3_FSD, op_STORE_FP);
       
@@ -595,7 +605,7 @@ endfunction
 // C.J, C.JAL, C.JR, C.JALR, C.BEQZ, C.BNEZ
 
 // C.J: expands to JAL
-function Tuple2 #(Bool, Instr) fv_decode_C_J (MISA  misa,  Bit #(2)  xl,  Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_J (MISA  misa,  Bit #(2)  xl, Bool cap_enc,  Instr_C  instr_C);
    begin
       // Instr fields: CJ-type
       match { .funct3, .imm_at_12_2, .op } = fv_ifields_CJ_type (instr_C);
@@ -622,7 +632,7 @@ function Tuple2 #(Bool, Instr) fv_decode_C_J (MISA  misa,  Bit #(2)  xl,  Instr_
 endfunction
 
 // C.JAL: expands to JAL
-function Tuple2 #(Bool, Instr) fv_decode_C_JAL (MISA  misa,  Bit #(2)  xl,  Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_JAL (MISA  misa,  Bit #(2)  xl, Bool cap_enc,  Instr_C  instr_C);
    begin
       // Instr fields: CJ-type
       match { .funct3, .imm_at_12_2, .op } = fv_ifields_CJ_type (instr_C);
@@ -650,7 +660,7 @@ function Tuple2 #(Bool, Instr) fv_decode_C_JAL (MISA  misa,  Bit #(2)  xl,  Inst
 endfunction
 
 // C.JR: expands to JALR
-function Tuple2 #(Bool, Instr) fv_decode_C_JR (MISA  misa,  Bit #(2)  xl,  Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_JR (MISA  misa,  Bit #(2)  xl, Bool cap_enc,  Instr_C  instr_C);
    begin
       // Instr fields: CR-type
       match { .funct4, .rs1, .rs2, .op } = fv_ifields_CR_type (instr_C);
@@ -669,7 +679,7 @@ function Tuple2 #(Bool, Instr) fv_decode_C_JR (MISA  misa,  Bit #(2)  xl,  Instr
 endfunction
 
 // C.JALR: expands to JALR
-function Tuple2 #(Bool, Instr) fv_decode_C_JALR (MISA  misa,  Bit #(2)  xl,  Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_JALR (MISA  misa,  Bit #(2)  xl, Bool cap_enc,  Instr_C  instr_C);
    begin
       // Instr fields: CR-type
       match { .funct4, .rs1, .rs2, .op } = fv_ifields_CR_type (instr_C);
@@ -689,7 +699,7 @@ function Tuple2 #(Bool, Instr) fv_decode_C_JALR (MISA  misa,  Bit #(2)  xl,  Ins
 endfunction
 
 // C.BEQZ: expands to BEQ
-function Tuple2 #(Bool, Instr) fv_decode_C_BEQZ (MISA  misa,  Bit #(2)  xl,  Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_BEQZ (MISA  misa,  Bit #(2)  xl, Bool cap_enc,  Instr_C  instr_C);
    begin
       // Instr fields: CB-type
       match { .funct3, .imm_at_12_10, .rs1, .imm_at_6_2, .op } = fv_ifields_CB_type (instr_C);
@@ -708,7 +718,7 @@ function Tuple2 #(Bool, Instr) fv_decode_C_BEQZ (MISA  misa,  Bit #(2)  xl,  Ins
 endfunction
 
 // C.BNEZ: expands to BNE
-function Tuple2 #(Bool, Instr) fv_decode_C_BNEZ (MISA  misa,  Bit #(2)  xl,  Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_BNEZ (MISA  misa,  Bit #(2)  xl, Bool cap_enc,  Instr_C  instr_C);
    begin
       // Instr fields: CB-type
       match { .funct3, .imm_at_12_10, .rs1, .imm_at_6_2, .op } = fv_ifields_CB_type (instr_C);
@@ -730,7 +740,7 @@ endfunction
 // 'C' Extension Integer Constant-Generation
 
 // C.LI: expands to ADDI
-function Tuple2 #(Bool, Instr) fv_decode_C_LI (MISA  misa,  Bit #(2)  xl,  Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_LI (MISA  misa,  Bit #(2)  xl, Bool cap_enc,  Instr_C  instr_C);
    begin
       // Instr fields: CI-type
       match { .funct3, .imm_at_12, .rd, .imm_at_6_2, .op } = fv_ifields_CI_type (instr_C);
@@ -750,7 +760,7 @@ function Tuple2 #(Bool, Instr) fv_decode_C_LI (MISA  misa,  Bit #(2)  xl,  Instr
 endfunction
 
 // C.LUI: expands to LUI
-function Tuple2 #(Bool, Instr) fv_decode_C_LUI (MISA  misa,  Bit #(2)  xl,  Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_LUI (MISA  misa,  Bit #(2)  xl, Bool cap_enc,  Instr_C  instr_C);
    begin
       // Instr fields: CI-type
       match { .funct3, .imm_at_12, .rd, .imm_at_6_2, .op } = fv_ifields_CI_type (instr_C);
@@ -774,7 +784,7 @@ endfunction
 // 'C' Extension Integer Register-Immediate Operations
 
 // C.ADDI: expands to ADDI
-function Tuple2 #(Bool, Instr) fv_decode_C_ADDI (MISA  misa,  Bit #(2)  xl,  Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_ADDI (MISA  misa,  Bit #(2)  xl, Bool cap_enc,  Instr_C  instr_C);
    begin
       // Instr fields: CI-type
       match { .funct3, .imm_at_12, .rd_rs1, .imm_at_6_2, .op } = fv_ifields_CI_type (instr_C);
@@ -794,7 +804,7 @@ function Tuple2 #(Bool, Instr) fv_decode_C_ADDI (MISA  misa,  Bit #(2)  xl,  Ins
 endfunction
 
 // C.NOP: expands to ADDI
-function Tuple2 #(Bool, Instr) fv_decode_C_NOP (MISA  misa,  Bit #(2)  xl,  Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_NOP (MISA  misa,  Bit #(2)  xl, Bool cap_enc,  Instr_C  instr_C);
    begin
       // Instr fields: CI-type
       match { .funct3, .imm_at_12, .rd_rs1, .imm_at_6_2, .op } = fv_ifields_CI_type (instr_C);
@@ -814,7 +824,7 @@ function Tuple2 #(Bool, Instr) fv_decode_C_NOP (MISA  misa,  Bit #(2)  xl,  Inst
 endfunction
 
 // C.ADDIW: expands to ADDIW
-function Tuple2 #(Bool, Instr) fv_decode_C_ADDIW (MISA  misa,  Bit #(2)  xl,  Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_ADDIW (MISA  misa,  Bit #(2)  xl, Bool cap_enc,  Instr_C  instr_C);
    begin
       // Instr fields: CI-type
       match { .funct3, .imm_at_12, .rd_rs1, .imm_at_6_2, .op } = fv_ifields_CI_type (instr_C);
@@ -824,8 +834,7 @@ function Tuple2 #(Bool, Instr) fv_decode_C_ADDIW (MISA  misa,  Bit #(2)  xl,  In
                        && (op == opcode_C1)
                        && (funct3 == funct3_C_ADDIW)
                        && (rd_rs1 != 0)
-                       && (   (xl == misa_mxl_64)
-                           || (xl == misa_mxl_128)));
+                       && (xl == misa_mxl_64));
 
       Bit #(12) imm12 = signExtend (imm6);
       let       instr = mkInstr_I_type (imm12, rd_rs1, f3_ADDIW, rd_rs1, op_OP_IMM_32);
@@ -835,7 +844,7 @@ function Tuple2 #(Bool, Instr) fv_decode_C_ADDIW (MISA  misa,  Bit #(2)  xl,  In
 endfunction
 
 // C.ADDI16SP: expands to ADDI
-function Tuple2 #(Bool, Instr) fv_decode_C_ADDI16SP (MISA  misa,  Bit #(2)  xl,  Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_ADDI16SP (MISA  misa,  Bit #(2)  xl, Bool cap_enc,  Instr_C  instr_C);
    begin
       // Instr fields: CI-type
       match { .funct3, .imm_at_12, .rd_rs1, .imm_at_6_2, .op } = fv_ifields_CI_type (instr_C);
@@ -845,7 +854,8 @@ function Tuple2 #(Bool, Instr) fv_decode_C_ADDI16SP (MISA  misa,  Bit #(2)  xl, 
                        && (op == opcode_C1)
                        && (funct3 == funct3_C_ADDI16SP)
                        && (rd_rs1 == reg_sp)
-                       && (nzimm10 != 0));
+                       && (nzimm10 != 0)
+                       && (! cap_enc));
 
       Bit #(12) imm12 = signExtend (nzimm10);
       let       instr = mkInstr_I_type (imm12, rd_rs1, f3_ADDI, rd_rs1, op_OP_IMM);
@@ -854,8 +864,29 @@ function Tuple2 #(Bool, Instr) fv_decode_C_ADDI16SP (MISA  misa,  Bit #(2)  xl, 
    end
 endfunction
 
+// C.CIncOffsetImm16CSP: expands to CIncOffsetImm
+function Tuple2 #(Bool, Instr) fv_decode_C_CIncOffsetImm16CSP (MISA  misa,  Bit #(2)  xl, Bool cap_enc,  Instr_C  instr_C);
+   begin
+      // Instr fields: CI-type
+      match { .funct3, .imm_at_12, .rd_rs1, .imm_at_6_2, .op } = fv_ifields_CI_type (instr_C);
+      Bit #(10) nzimm10 = { imm_at_12, imm_at_6_2 [2:1], imm_at_6_2 [3], imm_at_6_2 [0], imm_at_6_2 [4], 4'b0 };
+
+      Bool is_legal = ((misa.c == 1'b1)
+                       && (op == opcode_C1)
+                       && (funct3 == funct3_C_CIncOffsetImm16CSP)
+                       && (rd_rs1 == reg_sp)
+                       && (nzimm10 != 0)
+                       && (cap_enc));
+
+      Bit #(12) imm12 = signExtend (nzimm10);
+      let       instr = mkInstr_I_type (imm12, rd_rs1, f3_cap_CIncOffsetImmediate, rd_rs1, op_cap_Manip);
+
+      return tuple2 (is_legal, instr);
+   end
+endfunction
+
 // C.ADDI4SPN: expands to ADDI
-function Tuple2 #(Bool, Instr) fv_decode_C_ADDI4SPN (MISA  misa,  Bit #(2)  xl,  Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_ADDI4SPN (MISA  misa,  Bit #(2)  xl, Bool cap_enc,  Instr_C  instr_C);
    begin
       // Instr fields: CIW-type
       match { .funct3, .imm_at_12_5, .rd, .op } = fv_ifields_CIW_type (instr_C);
@@ -864,7 +895,8 @@ function Tuple2 #(Bool, Instr) fv_decode_C_ADDI4SPN (MISA  misa,  Bit #(2)  xl, 
       Bool is_legal = ((misa.c == 1'b1)
                        && (op == opcode_C0)
                        && (funct3 == funct3_C_ADDI4SPN)
-                       && (nzimm10 != 0));
+                       && (nzimm10 != 0)
+                       && (! cap_enc));
 
       RegName   rs1   = reg_sp;
       Bit #(12) imm12 = zeroExtend (nzimm10);
@@ -874,8 +906,29 @@ function Tuple2 #(Bool, Instr) fv_decode_C_ADDI4SPN (MISA  misa,  Bit #(2)  xl, 
    end
 endfunction
 
+// C.CIncOffsetImm4CSPN: expands to CIncOffsetImm
+function Tuple2 #(Bool, Instr) fv_decode_C_CIncOffsetImm4CSPN (MISA  misa,  Bit #(2)  xl, Bool cap_enc,  Instr_C  instr_C);
+   begin
+      // Instr fields: CIW-type
+      match { .funct3, .imm_at_12_5, .rd, .op } = fv_ifields_CIW_type (instr_C);
+      Bit #(10) nzimm10 = { imm_at_12_5 [5:2], imm_at_12_5 [7:6], imm_at_12_5 [0], imm_at_12_5 [1], 2'b0 };
+
+      Bool is_legal = ((misa.c == 1'b1)
+                       && (op == opcode_C0)
+                       && (funct3 == funct3_C_CIncOffsetImm4CSPN)
+                       && (nzimm10 != 0)
+                       && (cap_enc));
+
+      RegName   rs1   = reg_sp;
+      Bit #(12) imm12 = zeroExtend (nzimm10);
+      let       instr = mkInstr_I_type (imm12, rs1, f3_cap_CIncOffsetImmediate, rd, op_cap_Manip);
+
+      return tuple2 (is_legal, instr);
+   end
+endfunction
+
 // C.SLLI: expands to SLLI
-function Tuple2 #(Bool, Instr) fv_decode_C_SLLI (MISA  misa,  Bit #(2)  xl,  Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_SLLI (MISA  misa,  Bit #(2)  xl, Bool cap_enc,  Instr_C  instr_C);
    begin
       // Instr fields: CI-type
       match { .funct3, .imm_at_12, .rd_rs1, .imm_at_6_2, .op } = fv_ifields_CI_type (instr_C);
@@ -898,7 +951,7 @@ function Tuple2 #(Bool, Instr) fv_decode_C_SLLI (MISA  misa,  Bit #(2)  xl,  Ins
 endfunction
 
 // C.SRLI: expands to SRLI
-function Tuple2 #(Bool, Instr) fv_decode_C_SRLI (MISA  misa,  Bit #(2)  xl,  Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_SRLI (MISA  misa,  Bit #(2)  xl, Bool cap_enc,  Instr_C  instr_C);
    begin
       // Instr fields: CB-type
       match { .funct3, .imm_at_12_10, .rd_rs1, .imm_at_6_2, .op } = fv_ifields_CB_type (instr_C);
@@ -924,7 +977,7 @@ function Tuple2 #(Bool, Instr) fv_decode_C_SRLI (MISA  misa,  Bit #(2)  xl,  Ins
 endfunction
 
 // C.SRAI: expands to SRAI
-function Tuple2 #(Bool, Instr) fv_decode_C_SRAI (MISA  misa,  Bit #(2)  xl,  Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_SRAI (MISA  misa,  Bit #(2)  xl, Bool cap_enc,  Instr_C  instr_C);
    begin
       // Instr fields: CB-type
       match { .funct3, .imm_at_12_10, .rd_rs1, .imm_at_6_2, .op } = fv_ifields_CB_type (instr_C);
@@ -950,7 +1003,7 @@ function Tuple2 #(Bool, Instr) fv_decode_C_SRAI (MISA  misa,  Bit #(2)  xl,  Ins
 endfunction
 
 // C.ANDI: expands to ANDI
-function Tuple2 #(Bool, Instr) fv_decode_C_ANDI (MISA  misa,  Bit #(2)  xl,  Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_ANDI (MISA  misa,  Bit #(2)  xl, Bool cap_enc,  Instr_C  instr_C);
    begin
       // Instr fields: CB-type
       match { .funct3, .imm_at_12_10, .rd_rs1, .imm_at_6_2, .op } = fv_ifields_CB_type (instr_C);
@@ -974,7 +1027,7 @@ endfunction
 // 'C' Extension Integer Register-Register Operations
 
 // C.MV: expands to ADD
-function Tuple2 #(Bool, Instr) fv_decode_C_MV (MISA  misa,  Bit #(2)  xl,  Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_MV (MISA  misa,  Bit #(2)  xl, Bool cap_enc,  Instr_C  instr_C);
    begin
       match { .funct4, .rd_rs1, .rs2, .op } = fv_ifields_CR_type (instr_C);
 
@@ -992,7 +1045,7 @@ function Tuple2 #(Bool, Instr) fv_decode_C_MV (MISA  misa,  Bit #(2)  xl,  Instr
 endfunction
 
 // C.ADD: expands to ADD
-function Tuple2 #(Bool, Instr) fv_decode_C_ADD (MISA  misa,  Bit #(2)  xl,  Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_ADD (MISA  misa,  Bit #(2)  xl, Bool cap_enc,  Instr_C  instr_C);
    begin
       match { .funct4, .rd_rs1, .rs2, .op } = fv_ifields_CR_type (instr_C);
 
@@ -1009,7 +1062,7 @@ function Tuple2 #(Bool, Instr) fv_decode_C_ADD (MISA  misa,  Bit #(2)  xl,  Inst
 endfunction
 
 // C.AND: expands to AND
-function Tuple2 #(Bool, Instr) fv_decode_C_AND (MISA  misa,  Bit #(2)  xl,  Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_AND (MISA  misa,  Bit #(2)  xl, Bool cap_enc,  Instr_C  instr_C);
    begin
       // Instr fields: CA-type
       match { .funct6, .rd_rs1, .funct2, .rs2, .op } = fv_ifields_CA_type (instr_C);
@@ -1026,7 +1079,7 @@ function Tuple2 #(Bool, Instr) fv_decode_C_AND (MISA  misa,  Bit #(2)  xl,  Inst
 endfunction
 
 // C.OR: expands to OR
-function Tuple2 #(Bool, Instr) fv_decode_C_OR (MISA  misa,  Bit #(2)  xl,  Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_OR (MISA  misa,  Bit #(2)  xl, Bool cap_enc,  Instr_C  instr_C);
    begin
       // Instr fields: CA-type
       match { .funct6, .rd_rs1, .funct2, .rs2, .op } = fv_ifields_CA_type (instr_C);
@@ -1043,7 +1096,7 @@ function Tuple2 #(Bool, Instr) fv_decode_C_OR (MISA  misa,  Bit #(2)  xl,  Instr
 endfunction
 
 // C.XOR: expands to XOR
-function Tuple2 #(Bool, Instr) fv_decode_C_XOR (MISA  misa,  Bit #(2)  xl,  Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_XOR (MISA  misa,  Bit #(2)  xl, Bool cap_enc,  Instr_C  instr_C);
    begin
       // Instr fields: CA-type
       match { .funct6, .rd_rs1, .funct2, .rs2, .op } = fv_ifields_CA_type (instr_C);
@@ -1060,7 +1113,7 @@ function Tuple2 #(Bool, Instr) fv_decode_C_XOR (MISA  misa,  Bit #(2)  xl,  Inst
 endfunction
 
 // C.SUB: expands to SUB
-function Tuple2 #(Bool, Instr) fv_decode_C_SUB (MISA  misa,  Bit #(2)  xl,  Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_SUB (MISA  misa,  Bit #(2)  xl, Bool cap_enc,  Instr_C  instr_C);
    begin
       // Instr fields: CA-type
       match { .funct6, .rd_rs1, .funct2, .rs2, .op } = fv_ifields_CA_type (instr_C);
@@ -1077,7 +1130,7 @@ function Tuple2 #(Bool, Instr) fv_decode_C_SUB (MISA  misa,  Bit #(2)  xl,  Inst
 endfunction
 
 // C.ADDW: expands to ADDW
-function Tuple2 #(Bool, Instr) fv_decode_C_ADDW (MISA  misa,  Bit #(2)  xl,  Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_ADDW (MISA  misa,  Bit #(2)  xl, Bool cap_enc,  Instr_C  instr_C);
    begin
       // Instr fields: CA-type
       match { .funct6, .rd_rs1, .funct2, .rs2, .op } = fv_ifields_CA_type (instr_C);
@@ -1086,8 +1139,7 @@ function Tuple2 #(Bool, Instr) fv_decode_C_ADDW (MISA  misa,  Bit #(2)  xl,  Ins
                        && (op == opcode_C1)
                        && (funct6 == funct6_C_ADDW)
                        && (funct2 == funct2_C_ADDW)
-                       && (   (xl == misa_mxl_64)
-                           || (xl == misa_mxl_128)));
+                       && (xl == misa_mxl_64));
 
       let instr = mkInstr_R_type (funct7_ADDW, rs2, rd_rs1, funct3_ADDW, rd_rs1, op_OP_32);
 
@@ -1096,7 +1148,7 @@ function Tuple2 #(Bool, Instr) fv_decode_C_ADDW (MISA  misa,  Bit #(2)  xl,  Ins
 endfunction
 
 // C.SUBW: expands to SUBW
-function Tuple2 #(Bool, Instr) fv_decode_C_SUBW (MISA  misa,  Bit #(2)  xl,  Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_SUBW (MISA  misa,  Bit #(2)  xl, Bool cap_enc,  Instr_C  instr_C);
    begin
       // Instr fields: CA-type
       match { .funct6, .rd_rs1, .funct2, .rs2, .op } = fv_ifields_CA_type (instr_C);
@@ -1105,8 +1157,7 @@ function Tuple2 #(Bool, Instr) fv_decode_C_SUBW (MISA  misa,  Bit #(2)  xl,  Ins
                        && (op == opcode_C1)
                        && (funct6 == funct6_C_SUBW)
                        && (funct2 == funct2_C_SUBW)
-                       && (   (xl == misa_mxl_64)
-                           || (xl == misa_mxl_128)));
+                       && ((xl == misa_mxl_64)));
 
       let instr = mkInstr_R_type (funct7_SUBW, rs2, rd_rs1, funct3_SUBW, rd_rs1, op_OP_32);
 
@@ -1118,7 +1169,7 @@ endfunction
 // 'C' Extension EBREAK
 
 // C.EBREAK: expands to EBREAK
-function Tuple2 #(Bool, Instr) fv_decode_C_EBREAK (MISA  misa,  Bit #(2)  xl,  Instr_C  instr_C);
+function Tuple2 #(Bool, Instr) fv_decode_C_EBREAK (MISA  misa,  Bit #(2)  xl, Bool cap_enc,  Instr_C  instr_C);
    begin
       // Instr fields: CR-type
       match { .funct4, .rd_rs1, .rs2, .op } = fv_ifields_CR_type (instr_C);

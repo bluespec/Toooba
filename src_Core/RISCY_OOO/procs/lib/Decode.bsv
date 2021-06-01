@@ -92,6 +92,13 @@ function Maybe#(MemInst) decodeMemInst(Instruction inst, Bool cap_mode);
         illegalInst = True;
     end
 
+    Bool capWidth = ((mem_func == St || mem_func == Amo) && funct3 == f3_SQ)
+                 || (opcode   == opcMiscMem && funct3 == f3_LQ);
+
+    if (capWidth && amo_func != None && amo_func != Swap) begin
+        illegalInst = True; // Don't support atomic cap arithmetic
+    end
+
     // unsignedLd
     // it doesn't matter if this is set to True for stores
     Bool unsignedLd = False;
@@ -108,9 +115,6 @@ function Maybe#(MemInst) decodeMemInst(Instruction inst, Bool cap_mode);
     if (opcode == opcLoadFp) begin
         unsignedLd = True;
     end
-
-    Bool capWidth = (mem_func == St      && funct3 == 3'b100)
-                 || (opcode   == opcMiscMem && funct3 == 3'b010);
 
     // byteEn
     // TODO: Some combinations of operations and byteEn's are illegal.
@@ -487,7 +491,13 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
         end
 
         opcJal: begin
-            dInst.iType = J;
+            if (cap_mode) begin
+                dInst.iType = CJAL;
+            end
+            else begin
+                dInst.iType = J;
+            end
+
             regs.dst  = Valid(tagged Gpr rd);
             regs.src1 = Invalid;
             regs.src2 = Invalid;
@@ -502,18 +512,32 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
         end
 
         opcJalr: begin
-            dInst.iType = Jr;
             regs.dst  = Valid(tagged Gpr rd);
             regs.src1 = Valid(tagged Gpr rs1);
             regs.src2 = Invalid;
             dInst.imm = Valid(immI);
             dInst.csr = tagged Invalid;
             dInst.execFunc = tagged Br AT;
+
             dInst.capChecks.check_enable = True;
-            dInst.capChecks.check_authority_src = Pcc;
             dInst.capChecks.check_low_src = Src1Addr;
             dInst.capChecks.check_high_src = Src1AddrPlus2;
             dInst.capChecks.check_inclusive = True;
+            if (cap_mode) begin
+                dInst.iType = CJALR;
+
+                dInst.capChecks.src1_tag = True;
+                dInst.capChecks.src1_permit_x = True;
+                dInst.capChecks.src1_unsealed_or_sentry = True;
+                dInst.capChecks.src1_unsealed_or_imm_zero = True;
+
+                dInst.capChecks.check_authority_src = Src1;
+            end
+            else begin
+                dInst.iType = Jr;
+
+                dInst.capChecks.check_authority_src = Pcc;
+            end
         end
 
         opcBranch: begin
@@ -1341,7 +1365,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                                     regs.src1 = Valid(tagged Gpr rs1);
                                     dInst.capFunc = CapInspect (GetPerm);
                                 end
-                                f5rs2_cap_CJALR: begin
+                                f5rs2_cap_JALR_CAP: begin
                                     dInst.capChecks.src1_tag = True;
                                     dInst.capChecks.src1_permit_x = True;
                                     dInst.capChecks.src1_unsealed_or_sentry = True;
@@ -1356,7 +1380,19 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                                     dInst.execFunc = tagged Br AT;
                                     regs.dst  = Valid(tagged Gpr rd);
                                     regs.src1 = Valid(tagged Gpr rs1);
-                                    end
+                                end
+                                f5rs2_cap_JALR_PCC: begin
+                                    dInst.capChecks.check_enable = True;
+                                    dInst.capChecks.check_authority_src = Pcc;
+                                    dInst.capChecks.check_low_src = Src1Addr;
+                                    dInst.capChecks.check_high_src = Src1AddrPlus2;
+                                    dInst.capChecks.check_inclusive = True;
+
+                                    dInst.iType = Jr;
+                                    dInst.execFunc = tagged Br AT;
+                                    regs.dst  = Valid(tagged Gpr rd);
+                                    regs.src1 = Valid(tagged Gpr rs1);
+                                end
                                 f5rs2_cap_CGetType: begin
                                     dInst.iType = Cap;
                                     regs.dst = Valid(tagged Gpr rd);
