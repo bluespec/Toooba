@@ -74,7 +74,6 @@ import ProcTypes    :: *;
 // Main fabric
 import Fabric_Defs  :: *;    // for Wd_Id, Wd_Addr, Wd_Data...
 import SoC_Map      :: *;
-import CCTypes      :: *;    // for EventsCache.
 
 `ifdef INCLUDE_GDB_CONTROL
 import Debug_Module  :: *;
@@ -179,14 +178,7 @@ module mkCoreW #(Reset dm_power_on_reset)
 `ifdef PERFORMANCE_MONITORING
    rule report_tagController_events;
       Vector#(7, Bit#(1)) evts = tagController.events;
-      EventsCache ce = unpack(0);
-      ce.evt_ST = zeroExtend(evts[0]); // Unsure of mapping from EventsCacheCore to 7-bit vector.
-      ce.evt_ST_MISS = zeroExtend(evts[1]);
-      ce.evt_LD = zeroExtend(evts[2]);
-      ce.evt_LD_MISS = zeroExtend(evts[3]);
-      ce.evt_EVICT = zeroExtend(evts[4]);
-      // SET_TAG_WRITE/READ aren't used in TagCache; tag table data is not tagged.
-      proc.events_tgc(ce);
+      proc.events_tgc(evts);
    endrule
 `endif
 
