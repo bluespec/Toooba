@@ -78,13 +78,13 @@ IMem, DMem L1 Cache, and LL Cache (including the respective TLBs); events identi
 
 
 TagController events:
-- Load (0x40)
-- Load miss (0x41)
-- Write &ndash; count writes to tag cache (0x43)
-- Write miss (0x44)
-- Set tag write (unimplemented)
-- Set tag read (unimplemented)
-- Evict (0x4d)
+- Write &ndash; count writes to tag cache (0x40)
+- Write miss (0x41)
+- Read (0x42)
+- Read miss (0x43)
+- Evict (0x44)
+- Set tag write (0x45)
+- Set tag read (0x46)
 
 Missing events are:
 - L1 WT CHERI events
