@@ -238,6 +238,10 @@ instance BitVectorable #(EventsCoreMem, SizeOf#(HpmRpt), EventsCoreMemElements) 
    function Vector#(EventsCoreMemElements, HpmRpt) to_vector(EventsCoreMem e) =
       reverse(unpack(pack(e)));
 endinstance
+instance BitVectorable #(EventsTransExe, SizeOf#(SupCnt), EventsTransExeElements) provisos (Bits #(EventsTransExe, m));
+   function Vector#(EventsTransExeElements, SupCnt) to_vector(EventsTransExe e) =
+      reverse(unpack(pack(e)));
+endinstance
 instance BitVectorable #(EventsCache, SizeOf#(HpmRpt), EventsCacheElements) provisos (Bits #(EventsCache, m));
    function Vector#(EventsCacheElements, HpmRpt) to_vector(EventsCache e) =
       reverse(unpack(pack(e)));
@@ -1116,12 +1120,14 @@ module mkCore#(CoreId coreId)(Core);
      Vector #(32, Bit #(Report_Width)) tgc_evts_vec = to_large_vector (events_tgc_reg);
      EventsCache llMem = unpack(pack(events_llc_reg) | pack(l2Tlb.events));
      Vector #(16, Bit #(Report_Width)) llc_evts_vec = to_large_vector (llMem);
+     Vector #(16, Bit #(Report_Width)) trans_exe_evts_vec = to_large_vector (renameStage.events);
 
      let events = append (null_evt, core_evts_vec);
      events = append (events, imem_evts_vec);
      events = append (events, dmem_evts_vec);
      events = append (events, tgc_evts_vec);
      events = append (events, llc_evts_vec);
+     events = append (events, trans_exe_evts_vec);
 
      (* fire_when_enabled, no_implicit_conditions *)
      rule rl_send_perf_evts;

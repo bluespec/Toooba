@@ -45,6 +45,7 @@ import Fifos::*;
 import FIFO::*;
 import Types::*;
 import ProcTypes::*;
+import DReg::*;
 import CCTypes::*;
 import SynthParam::*;
 import Performance::*;
@@ -104,6 +105,11 @@ endinterface
 interface RenameStage;
     // performance count
     method Data getPerf(ExeStagePerfType t);
+
+`ifdef PERFORMANCE_MONITORING
+    method EventsTransExe events;
+`endif
+
     // deadlock check
     interface Get#(RenameStuck) renameInstStuck;
     interface Get#(RenameStuck) renameCorrectPathStuck;
@@ -140,7 +146,9 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
     Count#(Data) specNonMemCycles <- mkCount(0);
 `endif
 `endif
-
+`ifdef PERFORMANCE_MONITORING
+    Reg#(EventsTransExe) events_reg <- mkDReg(unpack(0));
+`endif
     // deadlock check
 `ifdef CHECK_DEADLOCK
     // timer to check deadlock
@@ -578,6 +586,13 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
 `endif
                                };
         rob.enqPort[0].enq(y);
+
+`ifdef PERFORMANCE_MONITORING
+        EventsTransExe events = unpack(0);
+        $display("Rename-SysInst: 1");
+        events.evt_RENAMED_INST = 1;
+        events_reg <= events;
+`endif
 
         // record if we issue an CSR inst. TODO also for SCRs?
         if(dInst.iType == Csr) begin
@@ -1161,6 +1176,12 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
             end
         end
 `endif
+`ifdef PERFORMANCE_MONITORING
+        EventsTransExe events = unpack(0);
+        $display("Rename-NormalInst count:", fshow(renameCnt));
+        events.evt_RENAMED_INST = renameCnt;
+        events_reg <= events;
+`endif
 
 `ifdef CHECK_DEADLOCK
         if(doCorrectPath) begin
@@ -1190,6 +1211,10 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
             default: 0;
         endcase);
     endmethod
+
+`ifdef PERFORMANCE_MONITORING
+    method events = events_reg;
+`endif
 
 `ifdef INCLUDE_GDB_CONTROL
    method Action debug_halt_req () if (rg_m_halt_req == tagged Invalid);

@@ -1049,7 +1049,7 @@ endfunction
 function x addPc(x cap, Bit#(12) inc) provisos (Add#(f, 12, c), CHERICap::CHERICap#(x, a, b, c, d, e)) = setAddrUnsafe(cap, getAddr(cap) + signExtend(inc));
 
 `ifdef PERFORMANCE_MONITORING
-typedef 112 No_Of_Evts;
+typedef 128 No_Of_Evts;
 typedef   8 Report_Width;
 typedef  64 Counter_Width;
 typedef  29 No_Of_Ctrs;
@@ -1120,6 +1120,11 @@ typedef struct {
    HpmRpt evt_MEM_CAP_STORE_TAG_SET;
 } EventsCoreMem deriving (Bits, FShow); // Memory needs more space for reporting delays
 typedef TDiv#(SizeOf#(EventsCoreMem),Report_Width) EventsCoreMemElements;
+
+typedef struct {
+   SupCnt evt_RENAMED_INST;
+} EventsTransExe deriving (Bits, FShow);
+typedef TDiv#(SizeOf#(EventsTransExe),SizeOf#(SupCnt)) EventsTransExeElements;
 `endif
 
 function Bit#(outWidth) hash(Bit#(inWidth) in)
