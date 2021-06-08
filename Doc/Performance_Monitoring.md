@@ -86,6 +86,9 @@ TagController events:
 - Set tag write (0x45)
 - Set tag read (0x46)
 
+Transient-execution events
+- Renamed Instructions &ndash; count renamed instructions excluding instructions that are already trapping (0x70)
+
 Missing events are:
 - L1 WT CHERI events
 - L1 WB events
