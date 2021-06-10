@@ -132,6 +132,9 @@ interface CommitInput;
     // deadlock check
     method Bool checkDeadlock;
 
+    // update branch targets
+    method Action updateTargets(Vector#(SupSize, Maybe#(CapMem)) targets);
+
 `ifdef INCLUDE_TANDEM_VERIF
     interface Vector #(SupSize, Put #(Trace_Data2)) v_to_TV;
 `endif
@@ -1087,8 +1090,12 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
        Bit #(5) po_fflags  = ?;
        Data     po_mstatus = ?;
 `endif
+
+        // update targets vector
+        Vector#(SupSize, Maybe#(CapMem)) targets;
         // compute what actions to take
         for(Integer i = 0; i < valueof(SupSize); i = i+1) begin
+            Maybe#(CapMem) tar = tagged Invalid;
             if(!stop && rob.deqPort[i].canDeq) begin
                 let x = rob.deqPort[i].deq_data;
                 let inst_tag = rob.deqPort[i].getDeqInstTag;
@@ -1131,6 +1138,11 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
                     // inst can be committed, deq it
                     rob.deqPort[i].deq;
+
+                    // update target
+                    if(x.iType == CJALR || x.iType == Jr) begin
+                        tar = tagged Valid x.ppc_vaddr_csrData.PPC;
+                    end
 
                     // every inst here should have been renamed, commit renaming
                     regRenamingTable.commit[i].commit;
@@ -1207,6 +1219,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                     if (opcode == opcMiscMem && funct3 == fnFENCE) fenceCnt = fenceCnt + 1;
                 end
             end
+            targets[i] = tar;
         end
         rg_serial_num <= rg_serial_num + instret;
 
@@ -1270,6 +1283,9 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         events.evt_FENCE = fenceCnt;
         events_reg <= events;
 `endif
+
+        inIfc.updateTargets(targets);
+
 `ifdef RVFI
         rvfiQ.enq(rvfis);
         traceCnt <= traceCnt + zeroExtend(whichTrace);

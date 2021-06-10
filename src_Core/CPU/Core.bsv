@@ -101,6 +101,8 @@ import CommitStage::*;
 import Bypass::*;
 import CHERICap::*;
 import CHERICC_Fat::*;
+import Bag::*;
+import VnD :: *;
 
 `ifdef RVFI_DII
 import Toooba_RVFI_DII_Bridge::*;
@@ -303,6 +305,10 @@ module mkCore#(CoreId coreId)(Core);
     EpochManager epochManager <- mkEpochManager;
     SpecTagManager specTagManager <- mkSpecTagManager;
     ReorderBufferSynth rob <- mkReorderBufferSynth;
+    Vector#(SupSize, Bag#(16, CapMem, CapMem)) bags;
+    for(Integer i = 0; i < valueof(SupSize); i=i+1) begin
+        bags[i] <- mkSmallBag;
+    end
 
     // We have two scoreboards: one conservative and other aggressive
     // - Aggressive sb is checked at rename stage, so inst after rename may be issued early
@@ -423,6 +429,13 @@ module mkCore#(CoreId coreId)(Core);
                 endmethod
                 method correctSpec = globalSpecUpdate.correctSpec[finishAluCorrectSpecPort(i)].put;
                 method doStats = doStatsReg._read;
+                method Bool checkTarget(CapMem ppc);
+                    Bool ret = False;
+                    for(Integer j = 0; j < valueof(SupSize); j=j+1) begin
+                        ret = ret || bags[j].isMember(ppc).v;
+                    end
+                    return ret;
+                endmethod
             endinterface);
             aluExe[i] <- mkAluExePipeline(aluExeInput);
             // truly call fetch method to train branch predictor
@@ -673,6 +686,14 @@ module mkCore#(CoreId coreId)(Core);
 `else
             return False;
 `endif
+        endmethod
+
+        method Action updateTargets(Vector#(SupSize, Maybe#(CapMem)) targets);
+            for(Integer i = 0; i < valueof(SupSize); i=i+1) begin
+                if(targets[i] matches tagged Valid .tar) begin
+                    bags[i].insert(tar, tar);
+                end
+            end
         endmethod
 
 `ifdef INCLUDE_TANDEM_VERIF

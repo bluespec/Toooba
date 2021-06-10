@@ -194,6 +194,9 @@ interface AluExeInput;
 
     // performance
     method Bool doStats;
+
+    // check previous branch targets
+    method Bool checkTarget(CapMem ppc);
 endinterface
 
 interface AluExePipeline;
@@ -281,6 +284,8 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
         let pc = inIfc.rob_getPC(x.tag);
         let ppc = inIfc.rob_getPredPC(x.tag);
         let orig_inst = inIfc.rob_getOrig_Inst (x.tag);
+
+        let res = inIfc.checkTarget(ppc);
 
         // go to next stage
         regToExeQ.enq(ToSpecFifo {
