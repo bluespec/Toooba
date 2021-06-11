@@ -1141,7 +1141,17 @@ module mkCore#(CoreId coreId)(Core);
      Vector #(32, Bit #(Report_Width)) tgc_evts_vec = to_large_vector (events_tgc_reg);
      EventsCache llMem = unpack(pack(events_llc_reg) | pack(l2Tlb.events));
      Vector #(16, Bit #(Report_Width)) llc_evts_vec = to_large_vector (llMem);
-     Vector #(16, Bit #(Report_Width)) trans_exe_evts_vec = to_large_vector (renameStage.events);
+     //Vector #(16, Bit #(Report_Width)) trans_exe_evts_vec = to_large_vector (renameStage.events);
+
+     EventsTransExe transExe = renameStage.events;
+     Bit#(Report_Width) wildJumps = 0;
+     for(Integer i = 0; i < valueof(AluExeNum); i = i+1) begin
+          let alu_events = coreFix.aluExeIfc[i].events;
+          wildJumps = wildJumps + alu_events.evt_WILD_JUMP;
+     end
+
+     transExe.evt_EXECUTED_INSTS = executedInsts;
+     Vector #(16, Bit #(Report_Width)) trans_exe_evts_vec = to_large_vector (transExe);
 
      let events = append (null_evt, core_evts_vec);
      events = append (events, imem_evts_vec);

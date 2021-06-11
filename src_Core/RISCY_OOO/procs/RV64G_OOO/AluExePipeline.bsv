@@ -205,6 +205,10 @@ interface AluExePipeline;
     interface ReservationStationAlu rsAluIfc;
     interface SpeculationUpdate specUpdate;
     method Data getPerf(ExeStagePerfType t);
+
+`ifdef PERFORMANCE_MONITORING
+    method EventsTransExe events;
+`endif
 endinterface
 
 module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
@@ -222,6 +226,10 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
     // index to send bypass, ordering doesn't matter
     Integer exeSendBypassPort = 0;
     Integer finishSendBypassPort = 1;
+
+`ifdef PERFORMANCE_MONITORING
+    Reg#(EventsTransExe) events_reg <- mkDReg(unpack(0));
+`endif
 
 `ifdef PERF_COUNT
     // performance counters
@@ -285,7 +293,19 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
         let ppc = inIfc.rob_getPredPC(x.tag);
         let orig_inst = inIfc.rob_getOrig_Inst (x.tag);
 
+`ifdef PERFORMANCE_MONITORING
         let res = inIfc.checkTarget(ppc);
+        if(!res) begin
+            let ppc_addr = getAddr(ppc);
+            let pc_addr = getAddr(pc);
+            if((ppc != pc + 2) || (ppc != pc + 4)) begin
+                $display("Not a previous target: pc = ", fshow(pc), ", ppc = ", fshow(ppc));
+                EventsTransExe events = unpack(0);
+                events.evt_WILD_JUMP = 1;
+                events_reg <= events;
+            end
+        end
+`endif
 
         // go to next stage
         regToExeQ.enq(ToSpecFifo {
