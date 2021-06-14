@@ -21,6 +21,7 @@
 `CHERIException(PermitSealViolation,      5'd23)
 `CHERIException(PermitASRViolation,       5'd24)
 `CHERIException(PermitCCallViolation,     5'd25)
-`CHERIException(PermitUnsealViolation,    5'd26)
-`CHERIException(PermitSetCIDViolation,    5'd27)
-// 5'd28 - 5'd31 reserved
+// 5'd26 reserved (obsolete CCallAccessIDCViolation)
+`CHERIException(PermitUnsealViolation,    5'd27)
+`CHERIException(PermitSetCIDViolation,    5'd28)
+// 5'd29 - 5'd31 reserved
