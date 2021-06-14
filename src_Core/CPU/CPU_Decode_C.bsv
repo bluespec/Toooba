@@ -146,17 +146,17 @@ function Instr fv_decode_C (MISA misa, Bit #(2) xl, Bool cap_enc, Instr_C instr_
    else if (valid_C_SUBW)               instr = i_C_SUBW;
    else if (valid_C_EBREAK)             instr = i_C_EBREAK;
 
-`ifdef RV64
    else if (valid_C_LDSP)               instr = i_C_LDSP;
    else if (valid_C_SDSP)               instr = i_C_SDSP;
    else if (valid_C_LD)                 instr = i_C_LD;
    else if (valid_C_SD)                 instr = i_C_SD;
-`endif
 
+`ifdef RV64
    else if (valid_C_LQSP)               instr = i_C_LQSP;
    else if (valid_C_SQSP)               instr = i_C_SQSP;
    else if (valid_C_LQ)                 instr = i_C_LQ;
    else if (valid_C_SQ)                 instr = i_C_SQ;
+`endif
 
 `ifdef ISA_F
    else if (valid_C_FLWSP)              instr = i_C_FLWSP;
