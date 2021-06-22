@@ -1150,7 +1150,7 @@ module mkCore#(CoreId coreId)(Core);
           wildJumps = wildJumps + alu_events.evt_WILD_JUMP;
      end
 
-     transExe.evt_EXECUTED_INSTS = executedInsts;
+     transExe.evt_WILD_JUMP = wildJumps;
      Vector #(16, Bit #(Report_Width)) trans_exe_evts_vec = to_large_vector (transExe);
 
      let events = append (null_evt, core_evts_vec);

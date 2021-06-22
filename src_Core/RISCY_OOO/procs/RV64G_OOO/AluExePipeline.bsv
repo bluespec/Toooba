@@ -44,6 +44,7 @@ import BuildVector::*;
 import Cntrs::*;
 import Types::*;
 import ProcTypes::*;
+import DReg::*;
 import SynthParam::*;
 import Exec::*;
 import Performance::*;
@@ -295,12 +296,13 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
 
 `ifdef PERFORMANCE_MONITORING
         if(x.dInst.iType == Br || x.dInst.iType == Jr || x.dInst.iType == CJALR) begin
-            let res = inIfc.checkTarget(ppc);
-            if((ppc != pc + 2) || (ppc != pc + 4)) begin
-                let ppc_addr = getAddr(ppc);
-                let pc_addr = getAddr(pc);
+            $display("BRANCH pc = ", fshow(pc), ", ppc = ", fshow(ppc));
+            //let res = inIfc.checkTarget(ppc);
+            let ppc_addr = getAddr(ppc);
+            let pc_addr = getAddr(pc);
+            if((ppc_addr != pc_addr + 2) && (ppc_addr != pc_addr + 4)) begin
                 let res = inIfc.checkTarget(ppc);
-                $display("doRegReadAlu: pc = ", fshow(pc), ", ppc = ", fshow(ppc));
+                $display("doRegReadAlu: pc = ", fshow(pc_addr), ", ppc = ", fshow(ppc_addr));
                 EventsTransExe events = unpack(0);
                 if((x.dInst.iType == CJALR || x.dInst.iType == Jr) && !res) begin
                     $display("Not a previous target:  ppc = ", fshow(ppc));
@@ -308,9 +310,12 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
                     events_reg <= events;
                 end
                 else if(x.dInst.iType == Br) begin
-                    Bit#(12) imm = truncate(fromMaybe(12'h000, x.dInst.imm) << 1);
-                    let val = getAddr(pc) + signExtend(imm);
+                    Bit#(32) imm = fromMaybe(32'h00000000, x.dInst.imm);
+                    // TODO: does not seem correct yet
+                    $display("direct-imm: ", fshow(imm));
+                    let val = pc_addr + signExtend(imm);
                     if(val != ppc_addr) begin
+                        $display("Wild direct jump: ppc = ", fshow(ppc));
                         events.evt_WILD_JUMP = 1;
                         events_reg <= events;
                     end
