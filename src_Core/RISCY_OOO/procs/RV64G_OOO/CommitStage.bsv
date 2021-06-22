@@ -134,6 +134,8 @@ interface CommitInput;
 
     // update branch targets
     method Action updateTargets(Vector#(SupSize, Maybe#(CapMem)) targets);
+    // update return targets
+    method Action updateReturnTargets(Vector#(SupSize, Maybe#(CapMem)) returnTargets);
 
 `ifdef INCLUDE_TANDEM_VERIF
     interface Vector #(SupSize, Put #(Trace_Data2)) v_to_TV;
@@ -1093,9 +1095,12 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
         // update targets vector
         Vector#(SupSize, Maybe#(CapMem)) targets;
+        // update return targets vector
+        Vector#(SupSize, Maybe#(CapMem)) returnTargets;
         // compute what actions to take
         for(Integer i = 0; i < valueof(SupSize); i = i+1) begin
             Maybe#(CapMem) tar = tagged Invalid;
+            Maybe#(CapMem) retTar = tagged Invalid;
             if(!stop && rob.deqPort[i].canDeq) begin
                 let x = rob.deqPort[i].deq_data;
                 let inst_tag = rob.deqPort[i].getDeqInstTag;
@@ -1138,6 +1143,20 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
                     // inst can be committed, deq it
                     rob.deqPort[i].deq;
+
+                    // return address stack link reg is x1 or x5
+                    function Bool linkedR(Maybe#(ArchRIndx) register);
+                        Bool res = False;
+                        if (register matches tagged Valid .r &&& (r == tagged Gpr 1 || r == tagged Gpr 5)) begin
+                           res = True;
+                        end
+                        return res;
+                    endfunction
+
+                    // update return target
+                    if((x.iType == J || x.iType == CJAL) && linkedR(x.dst)) begin
+                        retTar = tagged Valid x.ppc_vaddr_csrData.PPC;
+                    end
 
                     // update target
                     if(x.iType == CJALR || x.iType == Jr) begin
@@ -1220,6 +1239,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                 end
             end
             targets[i] = tar;
+            returnTargets[i] = retTar;
         end
         rg_serial_num <= rg_serial_num + instret;
 
@@ -1285,6 +1305,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 `endif
 
         inIfc.updateTargets(targets);
+        inIfc.updateReturnTargets(returnTargets);
 
 `ifdef RVFI
         rvfiQ.enq(rvfis);

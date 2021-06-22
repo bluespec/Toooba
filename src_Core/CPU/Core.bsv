@@ -309,6 +309,10 @@ module mkCore#(CoreId coreId)(Core);
     for(Integer i = 0; i < valueof(SupSize); i=i+1) begin
         bags[i] <- mkSmallBag;
     end
+    Vector#(SupSize, Bag#(16, CapMem, CapMem)) returnBags;
+    for(Integer i = 0; i < valueof(SupSize); i=i+1) begin
+        returnBags[i] <- mkSmallBag;
+    end
 
     // We have two scoreboards: one conservative and other aggressive
     // - Aggressive sb is checked at rename stage, so inst after rename may be issued early
@@ -433,6 +437,13 @@ module mkCore#(CoreId coreId)(Core);
                     Bool ret = False;
                     for(Integer j = 0; j < valueof(SupSize); j=j+1) begin
                         ret = ret || bags[j].isMember(ppc).v;
+                    end
+                    return ret;
+                endmethod
+                method Bool checkReturnTarget(CapMem ppc);
+                    Bool ret = False;
+                    for(Integer j = 0; j < valueof(SupSize); j=j+1) begin
+                        ret = ret || returnBags[j].isMember(ppc).v;
                     end
                     return ret;
                 endmethod
@@ -692,6 +703,14 @@ module mkCore#(CoreId coreId)(Core);
             for(Integer i = 0; i < valueof(SupSize); i=i+1) begin
                 if(targets[i] matches tagged Valid .tar) begin
                     bags[i].insert(tar, tar);
+                end
+            end
+        endmethod
+
+        method Action updateReturnTargets(Vector#(SupSize, Maybe#(CapMem)) returnTargets);
+            for(Integer i = 0; i < valueof(SupSize); i=i+1) begin
+                if(returnTargets[i] matches tagged Valid .retTar) begin
+                    returnBags[i].insert(retTar, retTar);
                 end
             end
         endmethod

@@ -198,6 +198,8 @@ interface AluExeInput;
 
     // check previous branch targets
     method Bool checkTarget(CapMem ppc);
+    // check (previous) return targets
+    method Bool checkReturnTarget(CapMem ppc);
 endinterface
 
 interface AluExePipeline;
@@ -294,6 +296,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
         let ppc = inIfc.rob_getPredPC(x.tag);
         let orig_inst = inIfc.rob_getOrig_Inst (x.tag);
 
+        // TODO: split into Br, jumps, and rets
 `ifdef PERFORMANCE_MONITORING
         if(x.dInst.iType == Br || x.dInst.iType == Jr || x.dInst.iType == CJALR) begin
             $display("BRANCH pc = ", fshow(pc), ", ppc = ", fshow(ppc));
