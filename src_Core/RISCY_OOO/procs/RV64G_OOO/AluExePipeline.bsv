@@ -509,4 +509,9 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
             default: 0;
         endcase);
     endmethod
+
+`ifdef PERFORMANCE_MONITORING
+    method events = events_reg;
+`endif
+
 endmodule
