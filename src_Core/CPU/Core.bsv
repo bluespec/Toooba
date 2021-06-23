@@ -1163,7 +1163,7 @@ module mkCore#(CoreId coreId)(Core);
      //Vector #(16, Bit #(Report_Width)) trans_exe_evts_vec = to_large_vector (renameStage.events);
 
      EventsTransExe transExe = renameStage.events;
-     Bit#(Report_Width) wildJumps = 0;
+     SupCnt wildJumps = 0;
      for(Integer i = 0; i < valueof(AluExeNum); i = i+1) begin
           let alu_events = coreFix.aluExeIfc[i].events;
           wildJumps = wildJumps + alu_events.evt_WILD_JUMP;
