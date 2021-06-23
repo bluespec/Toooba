@@ -298,33 +298,32 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
 
         // TODO: split into Br, jumps, and rets
 `ifdef PERFORMANCE_MONITORING
-        if(x.dInst.iType == Br || x.dInst.iType == Jr || x.dInst.iType == CJALR) begin
-            $display("BRANCH pc = ", fshow(pc), ", ppc = ", fshow(ppc));
-            //let res = inIfc.checkTarget(ppc);
-            let ppc_addr = getAddr(ppc);
-            let pc_addr = getAddr(pc);
-            if((ppc_addr != pc_addr + 2) && (ppc_addr != pc_addr + 4)) begin
-                let res = inIfc.checkTarget(ppc);
-                $display("doRegReadAlu: pc = ", fshow(pc_addr), ", ppc = ", fshow(ppc_addr));
-                EventsTransExe events = unpack(0);
-                if((x.dInst.iType == CJALR || x.dInst.iType == Jr) && !res) begin
-                    $display("Not a previous target:  ppc = ", fshow(ppc));
-                    events.evt_WILD_JUMP = 1;
-                    events_reg <= events;
-                end
-                else if(x.dInst.iType == Br) begin
-                    Bit#(32) imm = fromMaybe(32'h00000000, x.dInst.imm);
-                    // TODO: does not seem correct yet
-                    $display("direct-imm: ", fshow(imm));
-                    let val = pc_addr + signExtend(imm);
-                    if(val != ppc_addr) begin
-                        $display("Wild direct jump: ppc = ", fshow(ppc));
-                        events.evt_WILD_JUMP = 1;
-                        events_reg <= events;
-                    end
-                end
+
+        let ppc_addr = getAddr(ppc);
+        let pc_addr = getAddr(pc);
+        EventsTransExe events = unpack(0);
+        if(x.dInst.iType == Br) begin
+            Bit#(32) imm = fromMaybe(32'h00000000, x.dInst.imm);
+            let val = pc_addr + signExtend(imm);
+            if((val != ppc_addr) && (ppc_addr != pc_addr + 2) && (ppc_addr != pc_addr + 4)) begin
+                $display("Wild direct jump: pc = ", fshow(pc), " ppc = ", fshow(ppc), " imm = ", fshow(imm));
+                events.evt_WILD_JUMP = 1;
+                events_reg <= events;
             end
         end
+
+        else if(x.dInst.iType == CJALR || x.dInst.iType == Jr || x.dInst.iType == CJAL || x.dInst.iType == J) begin
+            let res_targets = inIfc.checkTarget(ppc);
+            let res_ret_targets = inIfc.checkReturnTarget(ppc);
+            if(!res_targets && !res_ret_targets && (ppc_addr != pc_addr + 2) && (ppc_addr != pc_addr + 4)) begin
+                $display("Wild indirect jump: pc = ", fshow(pc), " ppc = ", fshow(ppc));
+                events.evt_WILD_JUMP = 1;
+                events_reg <= events;
+            end
+        end
+
+
+        
 `endif
 
         // go to next stage
