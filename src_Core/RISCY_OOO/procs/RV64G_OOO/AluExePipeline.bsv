@@ -215,7 +215,7 @@ interface AluExePipeline;
 endinterface
 
 module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
-    Bool verbose = False;
+    Bool verbose = True;
     Integer verbosity = 0;
 
     // alu reservation station
@@ -302,7 +302,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
         let ppc_addr = getAddr(ppc);
         let pc_addr = getAddr(pc);
         EventsTransExe events = unpack(0);
-        if(x.dInst.iType == Br) begin
+        if(x.dInst.iType == Br || x.dInst.iType == CJAL || x.dInst.iType == J) begin
             Bit#(32) imm = fromMaybe(32'h00000000, x.dInst.imm);
             let val = pc_addr + signExtend(imm);
             if((val != ppc_addr) && (ppc_addr != pc_addr + 2) && (ppc_addr != pc_addr + 4)) begin
@@ -312,9 +312,12 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
             end
         end
 
-        else if(x.dInst.iType == CJALR || x.dInst.iType == Jr || x.dInst.iType == CJAL || x.dInst.iType == J) begin
+        
+
+        else if(x.dInst.iType == CJALR || x.dInst.iType == Jr) begin
             let res_targets = inIfc.checkTarget(ppc);
             let res_ret_targets = inIfc.checkReturnTarget(ppc);
+            $display("pc = ", fshow(pc), "res_targets = ", fshow(res_targets), " res_ret_targets = ", fshow(res_ret_targets));
             if(!res_targets && !res_ret_targets && (ppc_addr != pc_addr + 2) && (ppc_addr != pc_addr + 4)) begin
                 $display("Wild indirect jump: pc = ", fshow(pc), " ppc = ", fshow(ppc));
                 events.evt_WILD_JUMP = 1;

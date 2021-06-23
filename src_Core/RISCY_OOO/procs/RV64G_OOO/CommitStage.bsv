@@ -1152,16 +1152,26 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                         end
                         return res;
                     endfunction
+                    function Bool is_16b_inst (Bit #(n) inst);
+                        return (inst [1:0] != 2'b11);
+                    endfunction
 
                     // update return target
-                    if((x.iType == J || x.iType == CJAL) && linkedR(x.dst)) begin
-                        retTar = tagged Valid x.ppc_vaddr_csrData.PPC;
+                    if(x.iType == J || x.iType == CJAL || x.iType == CJALR || x.iType == Jr) begin
+                        tar = tagged Valid x.ppc_vaddr_csrData.PPC;
+                        $display("BRANCH target added: pc = ", fshow(x.pc), " tar = ", fshow(tar));
+                        if(linkedR(x.dst)) begin
+                            let imm = is_16b_inst(x.orig_inst) ? 2 : 4;
+                            retTar = tagged Valid addPc(x.pc, imm);
+                            $display("RETURN target added: pc = ", fshow(x.pc), " retTar = ", fshow(retTar));
+                        end
                     end
 
                     // update target
-                    if(x.iType == CJALR || x.iType == Jr) begin
+                    /*else if((x.iType == CJALR || x.iType == Jr) && !linkedR(x.dst)) begin
                         tar = tagged Valid x.ppc_vaddr_csrData.PPC;
-                    end
+                        $display("BRANCH target added: pc = ", fshow(x.pc), " ppc = ", fshow(tar));
+                    end*/
 
                     // every inst here should have been renamed, commit renaming
                     regRenamingTable.commit[i].commit;
