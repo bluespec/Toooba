@@ -196,10 +196,12 @@ interface AluExeInput;
     // performance
     method Bool doStats;
 
+`ifdef PERFORMANCE_MONITORING
     // check previous branch targets
     method Bool checkTarget(CapMem ppc);
     // check (previous) return targets
     method Bool checkReturnTarget(CapMem ppc);
+`endif
 endinterface
 
 interface AluExePipeline;
@@ -296,9 +298,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
         let ppc = inIfc.rob_getPredPC(x.tag);
         let orig_inst = inIfc.rob_getOrig_Inst (x.tag);
 
-        // TODO: split into Br, jumps, and rets
 `ifdef PERFORMANCE_MONITORING
-
         let ppc_addr = getAddr(ppc);
         let pc_addr = getAddr(pc);
         EventsTransExe events = unpack(0);
@@ -323,10 +323,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
                 events.evt_WILD_JUMP = 1;
                 events_reg <= events;
             end
-        end
-
-
-        
+        end  
 `endif
 
         // go to next stage

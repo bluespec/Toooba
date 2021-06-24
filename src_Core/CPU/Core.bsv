@@ -305,6 +305,8 @@ module mkCore#(CoreId coreId)(Core);
     EpochManager epochManager <- mkEpochManager;
     SpecTagManager specTagManager <- mkSpecTagManager;
     ReorderBufferSynth rob <- mkReorderBufferSynth;
+
+`ifdef PERFORMANCE_MONITORING
     Vector#(SupSize, Bag#(16, CapMem, CapMem)) bags;
     for(Integer i = 0; i < valueof(SupSize); i=i+1) begin
         bags[i] <- mkSmallBag;
@@ -313,6 +315,7 @@ module mkCore#(CoreId coreId)(Core);
     for(Integer i = 0; i < valueof(SupSize); i=i+1) begin
         returnBags[i] <- mkSmallBag;
     end
+`endif
 
     // We have two scoreboards: one conservative and other aggressive
     // - Aggressive sb is checked at rename stage, so inst after rename may be issued early
@@ -433,6 +436,7 @@ module mkCore#(CoreId coreId)(Core);
                 endmethod
                 method correctSpec = globalSpecUpdate.correctSpec[finishAluCorrectSpecPort(i)].put;
                 method doStats = doStatsReg._read;
+`ifdef PERFORMANCE_MONITORING
                 method Bool checkTarget(CapMem ppc);
                     Bool ret = False;
                     for(Integer j = 0; j < valueof(SupSize); j=j+1) begin
@@ -447,6 +451,7 @@ module mkCore#(CoreId coreId)(Core);
                     end
                     return ret;
                 endmethod
+`endif
             endinterface);
             aluExe[i] <- mkAluExePipeline(aluExeInput);
             // truly call fetch method to train branch predictor
@@ -699,6 +704,7 @@ module mkCore#(CoreId coreId)(Core);
 `endif
         endmethod
 
+`ifdef PERFORMANCE_MONITORING
         method Action updateTargets(Vector#(SupSize, Maybe#(CapMem)) targets);
             for(Integer i = 0; i < valueof(SupSize); i=i+1) begin
                 if(targets[i] matches tagged Valid .tar) begin
@@ -714,6 +720,7 @@ module mkCore#(CoreId coreId)(Core);
                 end
             end
         endmethod
+`endif
 
 `ifdef INCLUDE_TANDEM_VERIF
        interface v_to_TV = map (toPut, v_f_to_TV);
