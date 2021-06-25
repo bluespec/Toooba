@@ -59,6 +59,10 @@ import Bypass::*;
 import CHERICap::*;
 import CHERICC_Fat::*;
 import ISA_Decls_CHERI::*;
+`ifdef PERFORMANCE_MONITORING
+import BlueUtils::*;
+`endif
+
 
 import Cur_Cycle :: *;
 
@@ -233,7 +237,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
     Integer finishSendBypassPort = 1;
 
 `ifdef PERFORMANCE_MONITORING
-    Reg#(EventsTransExe) events_reg <- mkDReg(unpack(0));
+    Array#(Reg#(EventsTransExe)) events_reg <- mkDRegOR(2, unpack(0));
 `endif
 
 `ifdef PERF_COUNT
@@ -308,7 +312,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
             if((val != ppc_addr) && (ppc_addr != pc_addr + 2) && (ppc_addr != pc_addr + 4)) begin
                 $display("Wild direct jump: pc = ", fshow(pc), " ppc = ", fshow(ppc), " imm = ", fshow(imm));
                 events.evt_WILD_JUMP = 1;
-                events_reg <= events;
+                events_reg[1] <= events;
             end
         end
 
@@ -321,7 +325,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
             if(!res_targets && !res_ret_targets && (ppc_addr != pc_addr + 2) && (ppc_addr != pc_addr + 4)) begin
                 $display("Wild indirect jump: pc = ", fshow(pc), " ppc = ", fshow(ppc));
                 events.evt_WILD_JUMP = 1;
-                events_reg <= events;
+                events_reg[1] <= events;
             end
         end  
 `endif
@@ -439,6 +443,21 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
 `endif
         );
 
+`ifdef PERFORMANCE_MONITORING
+        // get PC and PPC
+        let pc = getAddr(x.controlFlow.pc);
+        let ppc = getAddr(x.controlFlow.nextPc);
+        let validPc = x.isCompressed ? (pc + 2) : (pc + 4);
+        $display("spec_excps: pc = ", fshow(pc), ", ppc = ", fshow(ppc), ", validPc = ", fshow(validPc));
+        $display("capException = ", fshow(x.capException));
+        if(x.capException matches tagged Valid .exc &&& (ppc != validPc)) begin
+            $display("Wild exception");
+            EventsTransExe events = unpack(0);
+            events.evt_WILD_EXCEPTION = 1;
+            events_reg[0] <= events;
+        end
+`endif
+
         // handle spec tags for branch predictions
         // TODO what happens here if we trap?
         (* split *)
@@ -513,7 +532,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
     endmethod
 
 `ifdef PERFORMANCE_MONITORING
-    method events = events_reg;
+    method events = events_reg[0];
 `endif
 
 endmodule

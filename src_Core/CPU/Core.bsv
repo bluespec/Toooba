@@ -1171,12 +1171,15 @@ module mkCore#(CoreId coreId)(Core);
 
      EventsTransExe transExe = renameStage.events;
      SupCnt wildJumps = 0;
+     SupCnt wildExceptions = 0;
      for(Integer i = 0; i < valueof(AluExeNum); i = i+1) begin
           let alu_events = coreFix.aluExeIfc[i].events;
           wildJumps = wildJumps + alu_events.evt_WILD_JUMP;
+          wildExceptions = wildExceptions + alu_events.evt_WILD_EXCEPTION;
      end
 
      transExe.evt_WILD_JUMP = wildJumps;
+     transExe.evt_WILD_EXCEPTION = wildExceptions;
      Vector #(16, Bit #(Report_Width)) trans_exe_evts_vec = to_large_vector (transExe);
 
      let events = append (null_evt, core_evts_vec);

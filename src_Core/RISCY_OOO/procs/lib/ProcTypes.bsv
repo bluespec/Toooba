@@ -1124,6 +1124,7 @@ typedef TDiv#(SizeOf#(EventsCoreMem),Report_Width) EventsCoreMemElements;
 typedef struct {
    SupCnt evt_RENAMED_INST;
    SupCnt evt_WILD_JUMP;
+   SupCnt evt_WILD_EXCEPTION;
 } EventsTransExe deriving (Bits, FShow);
 typedef TDiv#(SizeOf#(EventsTransExe),SizeOf#(SupCnt)) EventsTransExeElements;
 `endif
