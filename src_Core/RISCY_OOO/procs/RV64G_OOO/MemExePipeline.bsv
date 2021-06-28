@@ -72,6 +72,7 @@ import CacheUtils::*;
 `ifdef PERFORMANCE_MONITORING
 import PerformanceMonitor::*;
 import BlueUtils::*;
+import DReg::*;
 `endif
 
 import Cur_Cycle :: *;
@@ -219,6 +220,11 @@ interface MemExeInput;
 
     // performance
     method Bool doStats;
+
+`ifdef PERFORMANCE_MONITORING
+    method CapMem rob_getPredPC(InstTag t);
+    method Bit #(32) rob_getOrig_Inst (InstTag t);
+`endif
 endinterface
 
 interface MemExePipeline;
@@ -236,6 +242,7 @@ interface MemExePipeline;
     method Data getPerf(ExeStagePerfType t);
 `ifdef PERFORMANCE_MONITORING
     method EventsCoreMem events;
+    method EventsTransExe events_trans;
 `endif
 endinterface
 
@@ -278,6 +285,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
 
 `ifdef PERFORMANCE_MONITORING
     Array #(Reg #(EventsCoreMem)) events_reg <- mkDRegOR (5, unpack (0));
+    Reg#(EventsTransExe) events_trans_reg <- mkDReg(unpack(0));
 `endif
 
     // reservation station
@@ -671,6 +679,24 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
                                           }
 `endif
                                          );
+
+`ifdef PERFORMANCE_MONITORING
+        function Bool is_16b_inst (Bit #(n) inst);
+            return (inst [1:0] != 2'b11);
+        endfunction
+        let pc = inIfc.rob_getPC(x.tag);
+        let ppc = inIfc.rob_getPredPC(x.tag);
+        let inst = inIfc.rob_getOrig_Inst(x.tag);
+        let validPc = is_16b_inst(inst) ? addPc(pc,2) : addPc(pc,4);
+        $display("spec_excps: pc = ", fshow(pc), ", ppc = ", fshow(ppc), ", validPc = ", fshow(validPc));
+        $display("sbc_excps: cause = ", fshow(cause));
+        if(cause matches tagged Valid .c &&& (ppc != validPc)) begin
+            $display("Wild Exception");
+            EventsTransExe events_trans = unpack(0);
+            events_trans.evt_WILD_EXCEPTION = 1;
+            events_trans_reg <= events_trans;
+        end
+`endif
 
         // update LSQ
         LSQUpdateAddrResult updRes <- lsq.updateAddr(
@@ -1581,5 +1607,6 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
     endmethod
 `ifdef PERFORMANCE_MONITORING
     method events = events_reg[0];
+    method events_trans = events_trans_reg;
 `endif
 endmodule

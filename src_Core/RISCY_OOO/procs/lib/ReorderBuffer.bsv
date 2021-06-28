@@ -645,9 +645,13 @@ interface SupReorderBuffer#(numeric type aluExeNum, numeric type fpuMulDivExeNum
 
     // get original PC/PPC before execution, EHR port 0 will suffice
     interface Vector#(TAdd#(1, aluExeNum), ROB_getOrigPC) getOrigPC;
+`ifdef PERFORMANCE_MONITORING
+    interface Vector#(TAdd#(1, aluExeNum), ROB_getOrigPredPC) getOrigPredPC;
+    interface Vector#(TAdd#(1, aluExeNum), ROB_getOrig_Inst) getOrig_Inst;
+`else
     interface Vector#(aluExeNum, ROB_getOrigPredPC) getOrigPredPC;
     interface Vector#(aluExeNum, ROB_getOrig_Inst) getOrig_Inst;
-
+`endif
     // get enq time for reservation station dispatch
     method InstTime getEnqTime;
 
@@ -1172,18 +1176,39 @@ module mkSupReorderBuffer#(
 
     // get pc/ppc ifc used by alu exe (also one pc for mem exe)
     Vector#(TAdd#(1, aluExeNum), ROB_getOrigPC) getOrigPCIfc;
+`ifdef PERFORMANCE_MONITORING
+    Vector#(TAdd#(1, aluExeNum), ROB_getOrigPredPC) getOrigPredPCIfc;
+`else
     Vector#(aluExeNum, ROB_getOrigPredPC) getOrigPredPCIfc;
+`endif
     for(Integer i = 0; i < valueof(aluExeNum) + 1; i = i+1) begin
         getOrigPCIfc[i] = (interface ROB_getOrigPC;
             method CapMem get(InstTag x) = row[x.way][x.ptr].getOrigPC;
         endinterface);
     end
+`ifdef PERFORMANCE_MONITORING
+    for(Integer i = 0; i < valueof(aluExeNum) + 1; i = i+1) begin
+        getOrigPredPCIfc[i] = (interface ROB_getOrigPredPC;
+            method CapMem get(InstTag x) = row[x.way][x.ptr].getOrigPredPC;
+        endinterface);
+    end
+`else
     for(Integer i = 0; i < valueof(aluExeNum); i = i+1) begin
         getOrigPredPCIfc[i] = (interface ROB_getOrigPredPC;
             method CapMem get(InstTag x) = row[x.way][x.ptr].getOrigPredPC;
         endinterface);
     end
+`endif
 
+`ifdef PERFORMANCE_MONITORING
+    // get original instr (16b or 32b). Lsbs [1:0] encode whether 16b or 32b
+    Vector#(TAdd#(1, aluExeNum), ROB_getOrig_Inst) getOrig_Inst_Ifc;
+    for(Integer i = 0; i < valueof(aluExeNum) + 1; i = i+1) begin
+        getOrig_Inst_Ifc[i] = (interface ROB_getOrig_Inst;
+            method Bit #(32) get(InstTag x) = row[x.way][x.ptr].getOrig_Inst;
+        endinterface);
+    end
+`else
     // get original instr (16b or 32b). Lsbs [1:0] encode whether 16b or 32b
     Vector#(aluExeNum, ROB_getOrig_Inst) getOrig_Inst_Ifc;
     for(Integer i = 0; i < valueof(aluExeNum); i = i+1) begin
@@ -1191,6 +1216,7 @@ module mkSupReorderBuffer#(
             method Bit #(32) get(InstTag x) = row[x.way][x.ptr].getOrig_Inst;
         endinterface);
     end
+`endif
 
     interface enqPort = enqIfc;
 

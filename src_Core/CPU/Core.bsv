@@ -504,6 +504,10 @@ module mkCore#(CoreId coreId)(Core);
             method setRegReadyAggr_forward = writeAggr(forwardWrAggrPort);
             method writeRegFile = writeCons(memWrConsPort);
             method doStats = doStatsReg._read;
+`ifdef PERFORMANCE_MONITORING
+            method rob_getPredPC = rob.getOrigPredPC[valueof(AluExeNum)].get; // last getOrigPredPC port
+            method rob_getOrig_Inst = rob.getOrig_Inst[valueof(AluExeNum)].get; // last getOrig_Inst port
+`endif
         endinterface);
         let memExe <- mkMemExePipeline(memExeInput);
 
