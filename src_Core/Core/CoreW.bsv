@@ -455,7 +455,7 @@ module mkCoreResetHelper #(Reset toDbgReset)
 
    rule rl_debug_module_read_req;
       let arFlit <- get (dbgShim.master.ar);
-      debug_module.dmi.read_addr (arFlit.araddr);
+      debug_module.dmi.read_addr (truncate (arFlit.araddr >> 2));
    endrule
    rule rl_debug_module_read_rsp;
       let x <- debug_module.dmi.read_data;
@@ -465,7 +465,7 @@ module mkCoreResetHelper #(Reset toDbgReset)
       let awFlit <- get (dbgShim.master.aw);
       let wFlit <- get (dbgShim.master.w);
       dbgShim.master.b.put(defaultValue);
-      debug_module.dmi.write (awFlit.awaddr, wFlit.wdata);
+      debug_module.dmi.write (truncate (awFlit.awaddr >> 2), wFlit.wdata);
    endrule
 
    let fromDbgReset <- mkPulseWire (reset_by toDbgReset);
