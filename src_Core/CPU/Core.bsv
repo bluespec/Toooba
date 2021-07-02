@@ -857,9 +857,6 @@ module mkCore#(CoreId coreId)(Core);
 `endif // SELF_INV_CACHE
 
     rule readyToFetch(
-`ifdef INCLUDE_GDB_CONTROL
-        (rg_core_run_state == CORE_RUNNING) &&
-`endif
         !flush_reservation && !flush_tlbs && !update_vm_info
         && iTlb.flush_done && dTlb.flush_done
 `ifdef SECURITY_OR_INCLUDE_GDB_CONTROL
@@ -875,16 +872,19 @@ module mkCore#(CoreId coreId)(Core);
 `endif
     );
         fetchStage.done_flushing();
+    endrule
 
 `ifdef INCLUDE_GDB_CONTROL
-        if (commitStage.is_debug_halted) begin
-           started           <= False;
-           rg_core_run_state <= CORE_HALTING;
-           if (verbosity >= 1)
-              $display ("%0d: %m.rule readyToFetch: halting for debug mode", cur_cycle);
-        end
-`endif
+    rule readyToHalt(
+        (rg_core_run_state == CORE_RUNNING) &&
+        commitStage.is_debug_halted
+    );
+        started           <= False;
+        rg_core_run_state <= CORE_HALTING;
+        if (verbosity >= 1)
+           $display ("%0d: %m.rule readyToHalt: halting for debug mode", cur_cycle);
     endrule
+`endif
 
 `ifdef PERF_COUNT
     // incr cycle count
