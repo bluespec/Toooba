@@ -70,7 +70,7 @@ Bitwise#(ix), Eq#(ix), Arith#(ix));
     Reg#(Bit#(TLog#(as))) wayNext <- mkReg(0);
     Integer a = valueof(as);
 
-    Reg#(Bool) clearReg <- mkReg(False);
+    Reg#(Bool) clearReg <- mkReg(True);
     Reg#(ix) clearCount <- mkReg(0);
     PulseWire didUpdate <- mkPulseWire;
     rule doClear(clearReg && !didUpdate);
@@ -137,7 +137,7 @@ Bitwise#(ix), Eq#(ix), Arith#(ix), PrimIndex#(ix, a__));
     Reg#(Bit#(TLog#(as))) wayNext <- mkReg(0);
     Integer a = valueof(as);
 
-    Reg#(Bool) clearReg <- mkReg(False);
+    Reg#(Bool) clearReg <- mkReg(True);
     Reg#(ix) clearCount <- mkReg(0);
     (* fire_when_enabled, no_implicit_conditions *)
     rule updateCanon;
