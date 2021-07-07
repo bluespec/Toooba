@@ -624,7 +624,7 @@ module mkFetchStage(FetchStage);
                   doAssert(prev_frag.dii_pid+1 == frag.dii_pid, "Attached fragments with non-contigious DII IDs");
 `endif
                end
-            end else if (is_16b_inst(frag.inst_frag)) begin // 16-bit instruction
+            end else if (is_16b_inst(frag.inst_frag) || isValid(frag.cause)) begin // 16-bit instruction
                new_pick = tagged Valid fetch3_2_instC(frag,
                                                       fv_decode_C (misa, misa_mxl_64, getFlags(decompressPc(frag.pc))==1, frag.inst_frag),
                                                       zeroExtend(frag.inst_frag));
