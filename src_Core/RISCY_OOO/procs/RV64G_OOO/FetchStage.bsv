@@ -510,7 +510,7 @@ module mkFetchStage(FetchStage);
                if (!validValue(new_pick).mispred_first_half) begin
                   doAssert(decompressPc(prev_frag.pc)+2 == decompressPc(frag.pc), "Attached fragments with non-contigious PCs");
                end
-            end else if (is_16b_inst(frag.inst_frag)) begin // 16-bit instruction
+            end else if (is_16b_inst(frag.inst_frag) || isValid(frag.cause)) begin // 16-bit instruction
                new_pick = tagged Valid fetch3_2_instC(frag,
                                                       fv_decode_C (misa, misa_mxl_64, frag.inst_frag),
                                                       zeroExtend(frag.inst_frag));
