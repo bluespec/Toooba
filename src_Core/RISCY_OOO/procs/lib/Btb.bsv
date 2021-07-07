@@ -68,13 +68,13 @@ typedef struct {
 } VnD#(type data) deriving(Bits, Eq, FShow);
 
 (* synthesize *)
-module mkBtbSmall(NextAddrPred#(16));
-    NextAddrPred#(16) btb <- mkBtb;
+module mkBtb(NextAddrPred#(16));
+    NextAddrPred#(16) btb <- mkBtbCore;
     return btb;
 endmodule
 
 //(* synthesize *)
-module mkBtb(NextAddrPred#(hashSz))
+module mkBtbCore(NextAddrPred#(hashSz))
     provisos (NumAlias#(tagSz, TSub#(TSub#(TSub#(AddrSz,SizeOf#(BtbBank)), SizeOf#(BtbIndex)), PcLsbsIgnore)),
         Add#(1, a__, TDiv#(tagSz, hashSz)),
     Add#(b__, tagSz, TMul#(TDiv#(tagSz, hashSz), hashSz)));
