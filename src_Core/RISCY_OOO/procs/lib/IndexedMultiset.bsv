@@ -146,7 +146,7 @@ module mkIndexedMultisetQueue(IndexedMultiset#(Bit#(idxTSz), datT, remWidth))
     Reg#(Bit#(TAdd#(idxTSz,1))) ltail <- mkReg(0);
     idxT head = truncate(lhead);
     Bit#(TAdd#(idxTSz,1)) level = lhead - ltail;
-    //Bool empty = (level==0);
+    Bool empty = (level==0);
     Bool full  = (level==fromInteger(valueOf(TExp#(idxTSz))));
     Bool almostFull = (level>=fromInteger(valueOf(TExp#(idxTSz)))-1);
 
@@ -201,7 +201,7 @@ module mkIndexedMultisetQueue(IndexedMultiset#(Bit#(idxTSz), datT, remWidth))
     method ActionValue#(IndexedMultisetIndices#(idxT)) insertAndReserve(datT ins, datT res) if (!almostFull);
         idxT insIdx = head - 1; // Default, assuming a match.
         idxT resIdx = head - 1; // Default, assuming a match.
-        if (recsRead[head - 1]!=ins) begin
+        if (recsRead[head - 1]!=ins || empty) begin
             insIdx = head;
             insertW.wset(ins); // Increment head.
             if (res!=ins) begin
