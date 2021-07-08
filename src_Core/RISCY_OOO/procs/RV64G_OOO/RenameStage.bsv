@@ -324,8 +324,6 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
     );
         fetchStage.pipelines[0].deq;
 `ifdef INCLUDE_GDB_CONTROL
-        fa_step_check;
-
        if (verbosity >= 1) begin
           if (firstTrap == tagged Valid (tagged Interrupt intrDebugHalt))
              $display ("%0d: %m.renameStage.doRenaming_Trap: intrDebugHalt", cur_cycle);
