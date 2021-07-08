@@ -4,7 +4,7 @@ package Proc;
 
 // Copyright (c) 2018 Massachusetts Institute of Technology
 // Portions Copyright (c) 2019-2020 Bluespec, Inc.
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -12,10 +12,10 @@ package Proc;
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -33,7 +33,7 @@ import Vector       :: *;
 import GetPut       :: *;
 import ClientServer :: *;
 import Connectable  :: *;
-import FIFOF        :: *;
+import FIFO         :: *;
 import ConfigReg    :: *;
 
 // ----------------
@@ -149,15 +149,22 @@ module mkProc (Proc_IFC);
    // ================================================================
    // Connect stats
 
+   FIFO#(Bool) statReqs <- mkFIFO;
+
    for(Integer i = 0; i < valueof(CoreNum); i = i+1) begin
-      rule broadcastStats;
+      rule recvStatReq;
          Bool doStats <- core[i].sendDoStats;
-         for(Integer j = 0; j < valueof(CoreNum); j = j+1) begin
-	    core[j].recvDoStats(doStats);
-         end
-         llc.perf.setStatus(doStats);
+         statReqs.enq(doStats);
       endrule
    end
+
+   rule broadcastStats;
+      for(Integer j = 0; j < valueof(CoreNum); j = j+1) begin
+         core[j].recvDoStats(statReqs.first);
+      end
+      llc.perf.setStatus(statReqs.first);
+      statReqs.deq;
+   endrule
 
 `ifdef PERFORMANCE_MONITORING
    rule broadcastPerfEvents;
