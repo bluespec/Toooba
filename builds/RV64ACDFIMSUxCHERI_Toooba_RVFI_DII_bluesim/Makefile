@@ -43,6 +43,7 @@ BSC_COMPILATION_FLAGS += \
 	-D RISCV \
 	-D RVFI_DII \
 	-D RVFI \
+	-D CONTRACTS_VERIFY \
 
 
 # Default ISA test

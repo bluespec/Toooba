@@ -201,10 +201,12 @@ interface AluExeInput;
     method Bool doStats;
 
 `ifdef PERFORMANCE_MONITORING
+`ifdef CONTRACTS_VERIFY
     // check previous branch targets
     method Bool checkTarget(CapMem ppc);
     // check (previous) return targets
     method Bool checkReturnTarget(CapMem ppc);
+`endif
 `endif
 endinterface
 
@@ -216,7 +218,9 @@ interface AluExePipeline;
     method Data getPerf(ExeStagePerfType t);
 
 `ifdef PERFORMANCE_MONITORING
+`ifdef CONTRACTS_VERIFY
     method EventsTransExe events;
+`endif
 `endif
 endinterface
 
@@ -237,7 +241,9 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
     Integer finishSendBypassPort = 1;
 
 `ifdef PERFORMANCE_MONITORING
+`ifdef CONTRACTS_VERIFY
     Array#(Reg#(EventsTransExe)) events_reg <- mkDRegOR(2, unpack(0));
+`endif
 `endif
 
 `ifdef PERF_COUNT
@@ -303,6 +309,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
         let orig_inst = inIfc.rob_getOrig_Inst (x.tag);
 
 `ifdef PERFORMANCE_MONITORING
+`ifdef CONTRACTS_VERIFY
         let ppc_addr = getAddr(ppc);
         let pc_addr = getAddr(pc);
         EventsTransExe events = unpack(0);
@@ -327,7 +334,8 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
                 events.evt_WILD_JUMP = 1;
                 events_reg[1] <= events;
             end
-        end  
+        end
+`endif
 `endif
 
         // go to next stage
@@ -444,6 +452,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
         );
 
 `ifdef PERFORMANCE_MONITORING
+`ifdef CONTRACTS_VERIFY
         // get PC and PPC
         let pc = getAddr(x.controlFlow.pc);
         let ppc = getAddr(x.controlFlow.nextPc);
@@ -456,6 +465,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
             events.evt_WILD_EXCEPTION = 1;
             events_reg[0] <= events;
         end
+`endif
 `endif
 
         // handle spec tags for branch predictions
@@ -532,7 +542,9 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
     endmethod
 
 `ifdef PERFORMANCE_MONITORING
+`ifdef CONTRACTS_VERIFY
     method events = events_reg[0];
+`endif
 `endif
 
 endmodule

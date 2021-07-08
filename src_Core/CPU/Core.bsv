@@ -307,6 +307,7 @@ module mkCore#(CoreId coreId)(Core);
     ReorderBufferSynth rob <- mkReorderBufferSynth;
 
 `ifdef PERFORMANCE_MONITORING
+`ifdef CONTRACTS_VERIFY
     Vector#(SupSize, Bag#(16, CapMem, CapMem)) bags;
     for(Integer i = 0; i < valueof(SupSize); i=i+1) begin
         bags[i] <- mkSmallBag;
@@ -315,6 +316,7 @@ module mkCore#(CoreId coreId)(Core);
     for(Integer i = 0; i < valueof(SupSize); i=i+1) begin
         returnBags[i] <- mkSmallBag;
     end
+`endif
 `endif
 
     // We have two scoreboards: one conservative and other aggressive
@@ -437,6 +439,7 @@ module mkCore#(CoreId coreId)(Core);
                 method correctSpec = globalSpecUpdate.correctSpec[finishAluCorrectSpecPort(i)].put;
                 method doStats = doStatsReg._read;
 `ifdef PERFORMANCE_MONITORING
+`ifdef CONTRACTS_VERIFY
                 method Bool checkTarget(CapMem ppc);
                     Bool ret = False;
                     for(Integer j = 0; j < valueof(SupSize); j=j+1) begin
@@ -451,6 +454,7 @@ module mkCore#(CoreId coreId)(Core);
                     end
                     return ret;
                 endmethod
+`endif
 `endif
             endinterface);
             aluExe[i] <- mkAluExePipeline(aluExeInput);
@@ -505,8 +509,10 @@ module mkCore#(CoreId coreId)(Core);
             method writeRegFile = writeCons(memWrConsPort);
             method doStats = doStatsReg._read;
 `ifdef PERFORMANCE_MONITORING
+`ifdef CONTRACTS_VERIFY
             method rob_getPredPC = rob.getOrigPredPC[valueof(AluExeNum)].get; // last getOrigPredPC port
             method rob_getOrig_Inst = rob.getOrig_Inst[valueof(AluExeNum)].get; // last getOrig_Inst port
+`endif
 `endif
         endinterface);
         let memExe <- mkMemExePipeline(memExeInput);
@@ -709,6 +715,7 @@ module mkCore#(CoreId coreId)(Core);
         endmethod
 
 `ifdef PERFORMANCE_MONITORING
+`ifdef CONTRACTS_VERIFY
         method Action updateTargets(Vector#(SupSize, Maybe#(CapMem)) targets);
             for(Integer i = 0; i < valueof(SupSize); i=i+1) begin
                 if(targets[i] matches tagged Valid .tar) begin
@@ -724,6 +731,7 @@ module mkCore#(CoreId coreId)(Core);
                 end
             end
         endmethod
+`endif
 `endif
 
 `ifdef INCLUDE_TANDEM_VERIF
@@ -1171,8 +1179,8 @@ module mkCore#(CoreId coreId)(Core);
      Vector #(32, Bit #(Report_Width)) tgc_evts_vec = to_large_vector (events_tgc_reg);
      EventsCache llMem = unpack(pack(events_llc_reg) | pack(l2Tlb.events));
      Vector #(16, Bit #(Report_Width)) llc_evts_vec = to_large_vector (llMem);
-     //Vector #(16, Bit #(Report_Width)) trans_exe_evts_vec = to_large_vector (renameStage.events);
 
+`ifdef CONTRACTS_VERIFY
      EventsTransExe transExe = renameStage.events;
      SupCnt wildJumps = 0;
      SupCnt wildExceptions = 0;
@@ -1185,13 +1193,16 @@ module mkCore#(CoreId coreId)(Core);
      transExe.evt_WILD_JUMP = wildJumps;
      transExe.evt_WILD_EXCEPTION = wildExceptions;
      Vector #(16, Bit #(Report_Width)) trans_exe_evts_vec = to_large_vector (transExe);
+`endif
 
      let events = append (null_evt, core_evts_vec);
      events = append (events, imem_evts_vec);
      events = append (events, dmem_evts_vec);
      events = append (events, tgc_evts_vec);
      events = append (events, llc_evts_vec);
+`ifdef CONTRACTS_VERIFY
      events = append (events, trans_exe_evts_vec);
+`endif
 
      (* fire_when_enabled, no_implicit_conditions *)
      rule rl_send_perf_evts;

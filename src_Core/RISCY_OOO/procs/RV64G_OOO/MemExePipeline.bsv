@@ -222,8 +222,10 @@ interface MemExeInput;
     method Bool doStats;
 
 `ifdef PERFORMANCE_MONITORING
+`ifdef CONTRACTS_VERIFY
     method CapMem rob_getPredPC(InstTag t);
     method Bit #(32) rob_getOrig_Inst (InstTag t);
+`endif
 `endif
 endinterface
 
@@ -242,7 +244,9 @@ interface MemExePipeline;
     method Data getPerf(ExeStagePerfType t);
 `ifdef PERFORMANCE_MONITORING
     method EventsCoreMem events;
+`ifdef CONTRACTS_VERIFY
     method EventsTransExe events_trans;
+`endif
 `endif
 endinterface
 
@@ -285,7 +289,9 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
 
 `ifdef PERFORMANCE_MONITORING
     Array #(Reg #(EventsCoreMem)) events_reg <- mkDRegOR (5, unpack (0));
+`ifdef CONTRACTS_VERIFY
     Reg#(EventsTransExe) events_trans_reg <- mkDReg(unpack(0));
+`endif
 `endif
 
     // reservation station
@@ -681,6 +687,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
                                          );
 
 `ifdef PERFORMANCE_MONITORING
+`ifdef CONTRACTS_VERIFY
         function Bool is_16b_inst (Bit #(n) inst);
             return (inst [1:0] != 2'b11);
         endfunction
@@ -696,6 +703,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             events_trans.evt_WILD_EXCEPTION = 1;
             events_trans_reg <= events_trans;
         end
+`endif
 `endif
 
         // update LSQ
@@ -1607,6 +1615,8 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
     endmethod
 `ifdef PERFORMANCE_MONITORING
     method events = events_reg[0];
+`ifdef CONTRACTS_VERIFY
     method events_trans = events_trans_reg;
+`endif
 `endif
 endmodule

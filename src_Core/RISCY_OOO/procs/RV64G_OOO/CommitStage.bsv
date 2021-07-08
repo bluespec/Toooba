@@ -133,10 +133,12 @@ interface CommitInput;
     method Bool checkDeadlock;
 
 `ifdef PERFORMANCE_MONITORING
+`ifdef CONTRACTS_VERIFY
     // update branch targets
     method Action updateTargets(Vector#(SupSize, Maybe#(CapMem)) targets);
     // update return targets
     method Action updateReturnTargets(Vector#(SupSize, Maybe#(CapMem)) returnTargets);
+`endif
 `endif
 
 `ifdef INCLUDE_TANDEM_VERIF
@@ -1096,16 +1098,20 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 `endif
 
 `ifdef PERFORMANCE_MONITORING
+`ifdef CONTRACTS_VERIFY
         // update targets vector
         Vector#(SupSize, Maybe#(CapMem)) targets;
         // update return targets vector
         Vector#(SupSize, Maybe#(CapMem)) returnTargets;
 `endif
+`endif
         // compute what actions to take
         for(Integer i = 0; i < valueof(SupSize); i = i+1) begin
 `ifdef PERFORMANCE_MONITORING
+`ifdef CONTRACTS_VERIFY
             Maybe#(CapMem) tar = tagged Invalid;
             Maybe#(CapMem) retTar = tagged Invalid;
+`endif
 `endif
             if(!stop && rob.deqPort[i].canDeq) begin
                 let x = rob.deqPort[i].deq_data;
@@ -1151,6 +1157,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                     rob.deqPort[i].deq;
 
 `ifdef PERFORMANCE_MONITORING
+`ifdef CONTRACTS_VERIFY
                     // return address stack link reg is x1 or x5
                     function Bool linkedR(Maybe#(ArchRIndx) register);
                         Bool res = False;
@@ -1173,12 +1180,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                             $display("RETURN target added: pc = ", fshow(x.pc), " retTar = ", fshow(retTar));
                         end
                     end
-
-                    // update target
-                    /*else if((x.iType == CJALR || x.iType == Jr) && !linkedR(x.dst)) begin
-                        tar = tagged Valid x.ppc_vaddr_csrData.PPC;
-                        $display("BRANCH target added: pc = ", fshow(x.pc), " ppc = ", fshow(tar));
-                    end*/
+`endif
 `endif
 
                     // every inst here should have been renamed, commit renaming
@@ -1257,8 +1259,10 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                 end
             end
 `ifdef PERFORMANCE_MONITORING
+`ifdef CONTRACTS_VERIFY
             targets[i] = tar;
             returnTargets[i] = retTar;
+`endif
 `endif
         end
         rg_serial_num <= rg_serial_num + instret;

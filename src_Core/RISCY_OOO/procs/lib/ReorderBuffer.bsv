@@ -645,7 +645,7 @@ interface SupReorderBuffer#(numeric type aluExeNum, numeric type fpuMulDivExeNum
 
     // get original PC/PPC before execution, EHR port 0 will suffice
     interface Vector#(TAdd#(1, aluExeNum), ROB_getOrigPC) getOrigPC;
-`ifdef PERFORMANCE_MONITORING
+`ifdef CONTRACTS_VERIFY
     interface Vector#(TAdd#(1, aluExeNum), ROB_getOrigPredPC) getOrigPredPC;
     interface Vector#(TAdd#(1, aluExeNum), ROB_getOrig_Inst) getOrig_Inst;
 `else
@@ -1176,7 +1176,7 @@ module mkSupReorderBuffer#(
 
     // get pc/ppc ifc used by alu exe (also one pc for mem exe)
     Vector#(TAdd#(1, aluExeNum), ROB_getOrigPC) getOrigPCIfc;
-`ifdef PERFORMANCE_MONITORING
+    `ifdef CONTRACTS_VERIFY
     Vector#(TAdd#(1, aluExeNum), ROB_getOrigPredPC) getOrigPredPCIfc;
 `else
     Vector#(aluExeNum, ROB_getOrigPredPC) getOrigPredPCIfc;
@@ -1186,7 +1186,7 @@ module mkSupReorderBuffer#(
             method CapMem get(InstTag x) = row[x.way][x.ptr].getOrigPC;
         endinterface);
     end
-`ifdef PERFORMANCE_MONITORING
+    `ifdef CONTRACTS_VERIFY
     for(Integer i = 0; i < valueof(aluExeNum) + 1; i = i+1) begin
         getOrigPredPCIfc[i] = (interface ROB_getOrigPredPC;
             method CapMem get(InstTag x) = row[x.way][x.ptr].getOrigPredPC;
