@@ -1176,7 +1176,7 @@ module mkSupReorderBuffer#(
 
     // get pc/ppc ifc used by alu exe (also one pc for mem exe)
     Vector#(TAdd#(1, aluExeNum), ROB_getOrigPC) getOrigPCIfc;
-    `ifdef CONTRACTS_VERIFY
+`ifdef CONTRACTS_VERIFY
     Vector#(TAdd#(1, aluExeNum), ROB_getOrigPredPC) getOrigPredPCIfc;
 `else
     Vector#(aluExeNum, ROB_getOrigPredPC) getOrigPredPCIfc;
@@ -1186,7 +1186,7 @@ module mkSupReorderBuffer#(
             method CapMem get(InstTag x) = row[x.way][x.ptr].getOrigPC;
         endinterface);
     end
-    `ifdef CONTRACTS_VERIFY
+`ifdef CONTRACTS_VERIFY
     for(Integer i = 0; i < valueof(aluExeNum) + 1; i = i+1) begin
         getOrigPredPCIfc[i] = (interface ROB_getOrigPredPC;
             method CapMem get(InstTag x) = row[x.way][x.ptr].getOrigPredPC;
@@ -1200,7 +1200,7 @@ module mkSupReorderBuffer#(
     end
 `endif
 
-`ifdef PERFORMANCE_MONITORING
+`ifdef CONTRACTS_VERIFY
     // get original instr (16b or 32b). Lsbs [1:0] encode whether 16b or 32b
     Vector#(TAdd#(1, aluExeNum), ROB_getOrig_Inst) getOrig_Inst_Ifc;
     for(Integer i = 0; i < valueof(aluExeNum) + 1; i = i+1) begin
