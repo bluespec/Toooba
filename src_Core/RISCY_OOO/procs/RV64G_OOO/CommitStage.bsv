@@ -1326,9 +1326,10 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         events.evt_FP = fpuCnt;
         events.evt_FENCE = fenceCnt;
         events_reg <= events;
-
+`ifdef CONTRACTS_VERIFY
         inIfc.updateTargets(targets);
         inIfc.updateReturnTargets(returnTargets);
+`endif
 `endif
 
 `ifdef RVFI
