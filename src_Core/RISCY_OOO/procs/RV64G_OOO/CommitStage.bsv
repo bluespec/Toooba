@@ -1173,11 +1173,9 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                     // update return target
                     if(x.iType == J || x.iType == CJAL || x.iType == CJALR || x.iType == Jr) begin
                         tar = tagged Valid x.ppc_vaddr_csrData.PPC;
-                        $display("BRANCH target added: pc = ", fshow(x.pc), " tar = ", fshow(tar));
                         if(linkedR(x.dst)) begin
                             let imm = is_16b_inst(x.orig_inst) ? 2 : 4;
                             retTar = tagged Valid addPc(x.pc, imm);
-                            $display("RETURN target added: pc = ", fshow(x.pc), " retTar = ", fshow(retTar));
                         end
                     end
 `endif

@@ -317,7 +317,6 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
             Bit#(32) imm = fromMaybe(32'h00000000, x.dInst.imm);
             let val = pc_addr + signExtend(imm);
             if((val != ppc_addr) && (ppc_addr != pc_addr + 2) && (ppc_addr != pc_addr + 4)) begin
-                $display("Wild direct jump: pc = ", fshow(pc), " ppc = ", fshow(ppc), " imm = ", fshow(imm));
                 events.evt_WILD_JUMP = 1;
                 events_reg[1] <= events;
             end
@@ -328,9 +327,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
         else if(x.dInst.iType == CJALR || x.dInst.iType == Jr) begin
             let res_targets = inIfc.checkTarget(ppc);
             let res_ret_targets = inIfc.checkReturnTarget(ppc);
-            $display("pc = ", fshow(pc), "res_targets = ", fshow(res_targets), " res_ret_targets = ", fshow(res_ret_targets));
             if(!res_targets && !res_ret_targets && (ppc_addr != pc_addr + 2) && (ppc_addr != pc_addr + 4)) begin
-                $display("Wild indirect jump: pc = ", fshow(pc), " ppc = ", fshow(ppc));
                 events.evt_WILD_JUMP = 1;
                 events_reg[1] <= events;
             end
@@ -457,10 +454,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
         let pc = getAddr(x.controlFlow.pc);
         let ppc = getAddr(x.controlFlow.nextPc);
         let validPc = x.isCompressed ? (pc + 2) : (pc + 4);
-        $display("spec_excps: pc = ", fshow(pc), ", ppc = ", fshow(ppc), ", validPc = ", fshow(validPc));
-        $display("capException = ", fshow(x.capException));
         if(x.capException matches tagged Valid .exc &&& (ppc != validPc)) begin
-            $display("Wild exception");
             EventsTransExe events = unpack(0);
             events.evt_WILD_EXCEPTION = 1;
             events_reg[0] <= events;

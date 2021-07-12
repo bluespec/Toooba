@@ -695,10 +695,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         let ppc = inIfc.rob_getPredPC(x.tag);
         let inst = inIfc.rob_getOrig_Inst(x.tag);
         let validPc = is_16b_inst(inst) ? addPc(pc,2) : addPc(pc,4);
-        $display("spec_excps: pc = ", fshow(pc), ", ppc = ", fshow(ppc), ", validPc = ", fshow(validPc));
-        $display("sbc_excps: cause = ", fshow(cause));
         if(cause matches tagged Valid .c &&& (ppc != validPc)) begin
-            $display("Wild Exception");
             EventsTransExe events_trans = unpack(0);
             events_trans.evt_WILD_EXCEPTION = 1;
             events_trans_reg <= events_trans;
