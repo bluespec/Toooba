@@ -45,7 +45,7 @@ CONNECTAL_DIRS = $(RISCY_HOME)/connectal/bsv:$(RISCY_HOME)/connectal/tests/spi:$
 CHERI_DIRS = $(RISCY_HOME)/../../libs/cheri-cap-lib
 
 # ALL_RISCY_DIRS = $(RISCY_DIRS)
-ALL_RISCY_DIRS +=$(RISCY_DIRS):$(CONNECTAL_DIRS):$(CHERI_DIRS)
+ALL_RISCY_DIRS = $(EXTRA_DIRS):$(RISCY_DIRS):$(CONNECTAL_DIRS):$(CHERI_DIRS)
 
 # ================================================================
 # Search path for bsc for .bsv files

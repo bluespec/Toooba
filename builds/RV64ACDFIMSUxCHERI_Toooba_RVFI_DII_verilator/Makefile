@@ -3,7 +3,7 @@
 # ================================================================
 # Path to RISCY-OOO sources not included in Common
 
-ALL_RISCY_DIRS = $(RISCY_HOME)/../../src_Verifier:$(RISCY_HOME)/../../src_Verifier/BSV-RVFI-DII
+EXTRA_DIRS = $(RISCY_HOME)/../../src_Verifier:$(RISCY_HOME)/../../src_Verifier/BSV-RVFI-DII
 
 # ================================================================
 
