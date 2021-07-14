@@ -35,13 +35,14 @@ typedef Bit #(32) DM_Word;
 DM_Addr dm_addr_dmcontrol    = 'h10;
 DM_Addr dm_addr_dmstatus     = 'h11;
 DM_Addr dm_addr_hartinfo     = 'h12;
-DM_Addr dm_addr_haltsum      = 'h13;
+DM_Addr dm_addr_haltsum1     = 'h13;
 DM_Addr dm_addr_hawindowsel  = 'h14;
 DM_Addr dm_addr_hawindow     = 'h15;
 DM_Addr dm_addr_devtreeaddr0 = 'h19;
 DM_Addr dm_addr_authdata     = 'h30;
-DM_Addr dm_addr_haltregion0  = 'h40;
-DM_Addr dm_addr_haltregion31 = 'h5F;
+DM_Addr dm_addr_haltsum2     = 'h34;
+DM_Addr dm_addr_haltsum3     = 'h35;
+DM_Addr dm_addr_haltsum0     = 'h40;
 
 DM_Addr dm_addr_verbosity    = 'h60;    // Non-standard (not in spec)
 
@@ -87,14 +88,15 @@ function Fmt fshow_dm_addr (DM_Addr dm_addr);
 	     dm_addr_dmcontrol:    $format ("dm_addr_dmcontrol");
 	     dm_addr_dmstatus:     $format ("dm_addr_dmstatus");
 	     dm_addr_hartinfo:     $format ("dm_addr_hartinfo");
-	     dm_addr_haltsum:      $format ("dm_addr_haltsum");
+	     dm_addr_haltsum1:     $format ("dm_addr_haltsum1");
 	     dm_addr_hawindowsel:  $format ("dm_addr_hawindowsel");
 	     dm_addr_hawindow:     $format ("dm_addr_hawindow");
 	     dm_addr_devtreeaddr0: $format ("dm_addr_devtreeaddr0");
 	     dm_addr_authdata:     $format ("dm_addr_authdata");
-	     dm_addr_haltregion0:  $format ("dm_addr_haltregion0");
-	     dm_addr_haltregion31: $format ("dm_addr_haltregion31");
-             dm_addr_verbosity:    $format ("dm_addr_verbosity");
+	     dm_addr_haltsum2:     $format ("dm_addr_haltsum2");
+	     dm_addr_haltsum3:     $format ("dm_addr_haltsum3");
+	     dm_addr_haltsum0:     $format ("dm_addr_haltsum0");
+	     dm_addr_verbosity:    $format ("dm_addr_verbosity");
 
 	     // Abstract Commands
 	     dm_addr_abstractcs:   $format ("dm_addr_abstractcs");
@@ -168,8 +170,8 @@ function Bool fn_dmcontrol_hasel (DM_Word dm_word);
    return unpack (dm_word [26]);
 endfunction
 
-function Bit #(10) fn_dmcontrol_hartsel (DM_Word dm_word);
-   return dm_word [25:16];
+function Bit #(20) fn_dmcontrol_hartsel (DM_Word dm_word);
+   return {dm_word [15:6], dm_word[25:16]};
 endfunction
 
 function Bool fn_dmcontrol_ndmreset (DM_Word dm_word);

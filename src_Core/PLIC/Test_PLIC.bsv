@@ -31,8 +31,9 @@ import AXI4_Types   :: *;
 import AXI4_Fabric  :: *;
 import Fabric_Defs  :: *;    // for Wd_Id, Wd_Addr, Wd_Data, Wd_User
 import SoC_Map      :: *;
-import PLIC         :: *;
-import PLIC_16_2_7  :: *;
+
+import PLIC                :: *;
+import PLIC_16_CoreNumX2_7 :: *;
 
 // ================================================================
 
@@ -57,7 +58,7 @@ module mkTest_PLIC (Empty);
    SoC_Map_IFC  soc_map  <- mkSoC_Map;
 
    // PLIC (Platform-Level Interrupt Controller)
-   PLIC_IFC_16_2_7  plic <- mkPLIC_16_2_7;
+   PLIC_IFC_16_CoreNumX2_7  plic <- mkPLIC_16_CoreNumX2_7;
 
    // Master transactor through which to read/write PLIC regs
    AXI4_Master_Xactor_IFC #(Wd_Id, Wd_Addr, Wd_Data, Wd_User) master_xactor <- mkAXI4_Master_Xactor;

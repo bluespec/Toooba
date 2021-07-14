@@ -269,11 +269,12 @@ module mkFetchStage(FetchStage);
     // We stall until the flush is done
     Ehr#(3, Bool) waitForFlush <- mkEhr(False);
 
-    Ehr#(4, Addr) pc_reg <- mkEhr(0);
+    Ehr#(5, Addr) pc_reg <- mkEhr(0);
     Integer pc_fetch1_port = 0;
     Integer pc_decode_port = 1;
     Integer pc_fetch3_port = 2;
     Integer pc_redirect_port = 3;
+    Integer pc_final_port = 4;
 
     // PC compression structure holding an indexed set of PC blocks so that only indexes need be tracked.
     IndexedMultiset#(PcIdx, PcMSB, SupSizeX2) pcBlocks <- mkIndexedMultisetQueue;
@@ -291,7 +292,7 @@ module mkFetchStage(FetchStage);
        // Can the fifo size be smaller?
 
     // Branch Predictors
-    NextAddrPred    nextAddrPred <- mkBtb;
+    let             nextAddrPred <- mkBtb;
     let             dirPred      <- mkDirPredictor;
     ReturnAddrStack ras          <- mkRas;
     // Wire to train next addr pred (NAP)
@@ -337,6 +338,10 @@ module mkFetchStage(FetchStage);
     Reg#(Bool) redirect_evt_reg <- mkDReg(False);
 `endif
 
+    rule updatePcInBtb;
+        nextAddrPred.put_pc(pc_reg[pc_final_port]);
+    endrule
+
     // We don't send req to TLB when waiting for redirect or TLB flush. Since
     // there is no FIFO between doFetch1 and TLB, when OOO commit stage wait
     // TLB idle to change VM CSR / signal flush TLB, there is no wrong path
@@ -344,14 +349,9 @@ module mkFetchStage(FetchStage);
     rule doFetch1(started && !(waitForRedirect[0]) && !(waitForFlush[0]));
         let pc = pc_reg[pc_fetch1_port];
 
-        // Chain of prediction for the next instructions
-        // We need a BTB with a register file with enough ports!
-        // Instead of cascading predictions, we can always feed pc+4*i into
-        // predictor, because we will break superscaler fetch if nextpc != pc+4
-        Vector#(SupSizeX2, Maybe#(Addr)) pred_future_pc;
-        for(Integer i = 0; i < valueof(SupSizeX2); i = i+1) begin
-            pred_future_pc[i] = nextAddrPred.predPc(pc + fromInteger(2 * i));
-        end
+        // Grab a chain of predictions from the BTB, which predicts targets for the next
+        // set of addresses based on the current PC.
+        Vector#(SupSizeX2, Maybe#(Addr)) pred_future_pc = nextAddrPred.pred;
 
         // Next pc is the first nextPc that breaks the chain of pc+4 or
         // that is at the end of a cacheline.
@@ -381,7 +381,7 @@ module mkFetchStage(FetchStage);
             main_epoch: f_main_epoch};
 
         f12f2.enq(out);
-        if (verbose) $display("Fetch1: ", fshow(out), " posLastSupX2: %d", posLastSupX2);
+        if (verbose) $display("%d Fetch1: ", cur_cycle, fshow(out), " posLastSupX2: %d", posLastSupX2);
     endrule
 
     rule doFetch2;
@@ -510,7 +510,7 @@ module mkFetchStage(FetchStage);
                if (!validValue(new_pick).mispred_first_half) begin
                   doAssert(decompressPc(prev_frag.pc)+2 == decompressPc(frag.pc), "Attached fragments with non-contigious PCs");
                end
-            end else if (is_16b_inst(frag.inst_frag)) begin // 16-bit instruction
+            end else if (is_16b_inst(frag.inst_frag) || isValid(frag.cause)) begin // 16-bit instruction
                new_pick = tagged Valid fetch3_2_instC(frag,
                                                       fv_decode_C (misa, misa_mxl_64, frag.inst_frag),
                                                       zeroExtend(frag.inst_frag));
@@ -632,7 +632,7 @@ module mkFetchStage(FetchStage);
 
                   // check previous mispred
                   if (nextPc matches tagged Valid .decode_pred_next_pc &&& (decode_pred_next_pc != ppc)) begin
-                     if (verbose) $display("ppc and decodeppc :  %h %h", ppc, decode_pred_next_pc);
+                     if (verbose) $display("%x: ppc and decodeppc :  %h %h", pc, ppc, decode_pred_next_pc);
                      decode_epoch_local = !decode_epoch_local;
                      redirectPc = Valid (decode_pred_next_pc); // record redirect next pc
                      ppc = decode_pred_next_pc;

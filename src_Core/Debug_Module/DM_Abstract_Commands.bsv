@@ -12,6 +12,8 @@ package DM_Abstract_Commands;
 import FIFOF        :: *;
 import GetPut       :: *;
 import ClientServer :: *;
+import ConfigReg    :: *;
+import Vector       :: *;
 
 // ----------------
 // Other library imports
@@ -25,6 +27,7 @@ import Cur_Cycle  :: *;
 import ISA_Decls      :: *;
 import DM_Common      :: *;
 import DM_CPU_Req_Rsp :: *;
+import ProcTypes      :: *;
 
 // ================================================================
 // Interface
@@ -39,11 +42,11 @@ interface DM_Abstract_Commands_IFC;
 
    // ----------------
    // Facing CPU/hart
-   interface Client #(DM_CPU_Req #(5,  XLEN), DM_CPU_Rsp #(XLEN)) hart0_gpr_mem_client;
+   interface Vector #(CoreNum, Client #(DM_CPU_Req #(5,  XLEN), DM_CPU_Rsp #(XLEN))) harts_gpr_mem_client;
 `ifdef ISA_F
-   interface Client #(DM_CPU_Req #(5,  FLEN), DM_CPU_Rsp #(FLEN)) hart0_fpr_mem_client;
+   interface Vector #(CoreNum, Client #(DM_CPU_Req #(5,  FLEN), DM_CPU_Rsp #(FLEN))) harts_fpr_mem_client;
 `endif
-   interface Client #(DM_CPU_Req #(12, XLEN), DM_CPU_Rsp #(XLEN)) hart0_csr_mem_client;
+   interface Vector #(CoreNum, Client #(DM_CPU_Req #(12, XLEN), DM_CPU_Rsp #(XLEN))) harts_csr_mem_client;
 endinterface
 
 // ================================================================
@@ -57,19 +60,21 @@ module mkDM_Abstract_Commands (DM_Abstract_Commands_IFC);
 
    Reg #(Bool) rg_start_reg_access <- mkReg (False);
 
+   Reg #(Bit#(20)) rg_dmcontrol_hartsel <- mkConfigReg(0);
+
    // FIFOs for request/response to access GPRs
-   FIFOF #(DM_CPU_Req #(5,  XLEN)) f_hart0_gpr_reqs <- mkFIFOF;
-   FIFOF #(DM_CPU_Rsp #(XLEN))     f_hart0_gpr_rsps <- mkFIFOF;
+   Vector #(CoreNum, FIFOF #(DM_CPU_Req #(5,  XLEN))) f_harts_gpr_reqs <- replicateM(mkFIFOF);
+   Vector #(CoreNum, FIFOF #(DM_CPU_Rsp #(XLEN)))     f_harts_gpr_rsps <- replicateM(mkFIFOF);
 
    // FIFOs for request/response to access FPRs
 `ifdef ISA_F
-   FIFOF #(DM_CPU_Req #(5,  FLEN)) f_hart0_fpr_reqs <- mkFIFOF;
-   FIFOF #(DM_CPU_Rsp #(FLEN))     f_hart0_fpr_rsps <- mkFIFOF;
+   Vector #(CoreNum, FIFOF #(DM_CPU_Req #(5,  FLEN))) f_harts_fpr_reqs <- replicateM(mkFIFOF);
+   Vector #(CoreNum, FIFOF #(DM_CPU_Rsp #(FLEN)))     f_harts_fpr_rsps <- replicateM(mkFIFOF);
 `endif
 
    // FIFOs for request/response to access CSRs
-   FIFOF #(DM_CPU_Req #(12, XLEN)) f_hart0_csr_reqs <- mkFIFOF;
-   FIFOF #(DM_CPU_Rsp #(XLEN))     f_hart0_csr_rsps <- mkFIFOF;
+   Vector #(CoreNum, FIFOF #(DM_CPU_Req #(12, XLEN))) f_harts_csr_reqs <- replicateM(mkFIFOF);
+   Vector #(CoreNum, FIFOF #(DM_CPU_Rsp #(XLEN)))     f_harts_csr_rsps <- replicateM(mkFIFOF);
 
    // ----------------------------------------------------------------
    // rg_data0
@@ -211,8 +216,8 @@ module mkDM_Abstract_Commands (DM_Abstract_Commands_IFC);
 	       rg_abstractcs_busy          <= True;
 	       rg_start_reg_access         <= True;
 	       cmderr = DM_ABSTRACTCS_CMDERR_NONE;
-               if (verbosity != 0)
-                  $display ("%0d: DM_Abstract_Commands.write: [command] <= 0x%08h: OKAY", cur_cycle, dm_word);
+	       if (verbosity != 0)
+	          $display ("%0d: DM_Abstract_Commands.write: [command] <= 0x%08h: OKAY", cur_cycle, dm_word);
 	    end
 	    rg_abstractcs_cmderr <= cmderr;
 	 end
@@ -242,220 +247,253 @@ module mkDM_Abstract_Commands (DM_Abstract_Commands_IFC);
    // ----------------------------------------------------------------
    // Write CSR
 
-   rule rl_csr_write_start (   rg_abstractcs_busy
-			    && rg_start_reg_access
-			    && rg_command_access_reg_write
-			    && is_csr);
-      let req = DM_CPU_Req {write:   True,
-			    address: csr_addr,
+
+   Rules finishRules = emptyRules;
+
+   for (Integer core = 0; core < valueOf(CoreNum); core = core + 1) begin
+      rule rl_csr_write_start (   rg_abstractcs_busy
+			       && rg_start_reg_access
+			       && rg_command_access_reg_write
+				  && is_csr
+				  && (fromInteger(core) == rg_dmcontrol_hartsel));
+	 let req = DM_CPU_Req {write:   True,
+			       address: csr_addr,
 `ifdef RV32
-			    data:    rg_data0
+			       data:    rg_data0
 `endif
 `ifdef RV64
-			    data:    {rg_data1, rg_data0}
+			       data:    {rg_data1, rg_data0}
 `endif
-			    };
-      f_hart0_csr_reqs.enq (req);
-      rg_start_reg_access <= False;
+			       };
+	 f_harts_csr_reqs[core].enq (req);
+	 rg_start_reg_access <= False;
 
-      if (verbosity != 0)
-	 $display ("%0d: DM_Abstract_Commands.rl_csr_write_start: ", cur_cycle, fshow (req));
-   endrule
+	 if (verbosity != 0)
+	    $display ("%0d: DM_Abstract_Commands.rl_csr_write_start hart %0d: ", cur_cycle, core, fshow (req));
+      endrule
 
-   // ----------------
+      // ----------------
 
-   rule rl_csr_write_finish (rg_abstractcs_busy
-			     && rg_command_access_reg_write
-			     && is_csr);
-      let rsp <- pop (f_hart0_csr_rsps);
-      if (verbosity != 0)
-	 $display ("%0d: DM_Abstract_Commands.rl_csr_write_finish: ", cur_cycle, fshow (rsp));
+      finishRules = rJoinMutuallyExclusive(finishRules,
+	 rules
+	    rule rl_csr_write_finish (rg_abstractcs_busy
+				   && rg_command_access_reg_write
+				   && is_csr);
+	       let rsp <- pop (f_harts_csr_rsps[core]);
+	       if (verbosity != 0)
+		  $display ("%0d: DM_Abstract_Commands.rl_csr_write_finish hart %0d: ", cur_cycle, core, fshow (rsp));
 
-      rg_abstractcs_cmderr <= (rsp.ok ? DM_ABSTRACTCS_CMDERR_NONE : DM_ABSTRACTCS_CMDERR_HALT_RESUME);
-      rg_abstractcs_busy   <= False;
-   endrule
+	       rg_abstractcs_cmderr <= (rsp.ok ? DM_ABSTRACTCS_CMDERR_NONE : DM_ABSTRACTCS_CMDERR_HALT_RESUME);
+	       rg_abstractcs_busy   <= False;
+	    endrule
+	 endrules
+      );
 
-   // ----------------------------------------------------------------
-   // Read CSR
+      // ----------------------------------------------------------------
+      // Read CSR
 
-   rule rl_csr_read_start (   rg_abstractcs_busy
-			   && rg_start_reg_access
-			   && (! rg_command_access_reg_write)
-			   && is_csr);
-      Bit #(XLEN) data = ?;
-      let req = DM_CPU_Req {write: False, address: csr_addr, data: data};
-      f_hart0_csr_reqs.enq (req);
-      rg_start_reg_access <= False;
+      rule rl_csr_read_start (   rg_abstractcs_busy
+			      && rg_start_reg_access
+			      && (! rg_command_access_reg_write)
+			      && is_csr
+			      && (fromInteger(core) == rg_dmcontrol_hartsel));
+	 Bit #(XLEN) data = ?;
+	 let req = DM_CPU_Req {write: False, address: csr_addr, data: data};
+	 f_harts_csr_reqs[core].enq (req);
+	 rg_start_reg_access <= False;
 
-      if (verbosity != 0)
-	 $display ("%0d: DM_Abstract_Commands.rl_csr_read_start: ", cur_cycle, fshow (req));
-   endrule
+	 if (verbosity != 0)
+	    $display ("%0d: DM_Abstract_Commands.rl_csr_read_start hart %0d: ", cur_cycle, core, fshow (req));
+      endrule
 
-   // ----------------
+      // ----------------
 
-   rule rl_csr_read_finish (   rg_abstractcs_busy
-			    && (! rg_command_access_reg_write)
-			    && is_csr);
-      let rsp <- pop (f_hart0_csr_rsps);
-      if (verbosity != 0)
-	 $display ("%0d: DM_Abstract_Commands.rl_csr_read_finish: ", cur_cycle, fshow (rsp));
+      finishRules = rJoinMutuallyExclusive(finishRules,
+	 rules
+	    rule rl_csr_read_finish (   rg_abstractcs_busy
+				     && (! rg_command_access_reg_write)
+				     && is_csr);
+	       let rsp <- pop (f_harts_csr_rsps[core]);
+	       if (verbosity != 0)
+		  $display ("%0d: DM_Abstract_Commands.rl_csr_read_finish hart %0d: ", cur_cycle, core, fshow (rsp));
 
-      rg_abstractcs_cmderr <= (rsp.ok ? DM_ABSTRACTCS_CMDERR_NONE : DM_ABSTRACTCS_CMDERR_HALT_RESUME);
+	       rg_abstractcs_cmderr <= (rsp.ok ? DM_ABSTRACTCS_CMDERR_NONE : DM_ABSTRACTCS_CMDERR_HALT_RESUME);
 `ifdef RV32
-      rg_data0 <= rsp.data;
+	       rg_data0 <= rsp.data;
 `endif
 `ifdef RV64
-      rg_data0 <= truncate (rsp.data);
-      rg_data1 <= rsp.data[63:32];
+	       rg_data0 <= truncate (rsp.data);
+	       rg_data1 <= rsp.data[63:32];
 `endif
-      rg_abstractcs_busy <= False;
-   endrule
+	       rg_abstractcs_busy <= False;
+	    endrule
+	 endrules
+      );
 
-   // ----------------------------------------------------------------
-   // Write GPR
+      // ----------------------------------------------------------------
+      // Write GPR
 
-   rule rl_gpr_write_start (   rg_abstractcs_busy
-			    && rg_start_reg_access
-			    && rg_command_access_reg_write
-			    && is_gpr);
-      let req = DM_CPU_Req {write:   True,
-			    address: gpr_addr,
+      rule rl_gpr_write_start (   rg_abstractcs_busy
+			       && rg_start_reg_access
+			       && rg_command_access_reg_write
+			       && is_gpr
+			       && (fromInteger(core) == rg_dmcontrol_hartsel));
+	 let req = DM_CPU_Req {write:   True,
+			       address: gpr_addr,
 `ifdef RV32
-			    data:    rg_data0
+			       data:    rg_data0
 `endif
 `ifdef RV64
-			    data:    {rg_data1, rg_data0}
+			       data:    {rg_data1, rg_data0}
 `endif
-			    };
-      f_hart0_gpr_reqs.enq (req);
-      rg_start_reg_access <= False;
-      if (verbosity != 0)
-	 $display ("%0d: DM_Abstract_Commands.rl_gpr_write_start: ", cur_cycle, fshow (req));
-   endrule
+			       };
+	 f_harts_gpr_reqs[core].enq (req);
+	 rg_start_reg_access <= False;
+	 if (verbosity != 0)
+	    $display ("%0d: DM_Abstract_Commands.rl_gpr_write_start hart %0d: ", cur_cycle, core, fshow (req));
+      endrule
 
-   // ----------------
+      // ----------------
 
-   rule rl_gpr_write_finish (   rg_abstractcs_busy
-			     && rg_command_access_reg_write
-			     && is_gpr);
-      let rsp <- pop (f_hart0_gpr_rsps);
-      if (verbosity != 0)
-	 $display ("%0d: DM_Abstract_Commands.rl_gpr_write_finish: ", cur_cycle, fshow (rsp));
+      finishRules = rJoinMutuallyExclusive(finishRules,
+	 rules
+	    rule rl_gpr_write_finish (   rg_abstractcs_busy
+				      && rg_command_access_reg_write
+				      && is_gpr);
+	       let rsp <- pop (f_harts_gpr_rsps[core]);
+	       if (verbosity != 0)
+		  $display ("%0d: DM_Abstract_Commands.rl_gpr_write_finish hart %0d: ", cur_cycle, core, fshow (rsp));
 
-      rg_abstractcs_cmderr <= (rsp.ok ? DM_ABSTRACTCS_CMDERR_NONE : DM_ABSTRACTCS_CMDERR_HALT_RESUME);
-      rg_abstractcs_busy   <= False;
-   endrule
+	       rg_abstractcs_cmderr <= (rsp.ok ? DM_ABSTRACTCS_CMDERR_NONE : DM_ABSTRACTCS_CMDERR_HALT_RESUME);
+	       rg_abstractcs_busy   <= False;
+	    endrule
+	 endrules
+      );
 
-   // ----------------------------------------------------------------
-   // Read GPR
+      // ----------------------------------------------------------------
+      // Read GPR
 
-   rule rl_gpr_read_start (   rg_abstractcs_busy
-			   && rg_start_reg_access
-			   && (! rg_command_access_reg_write)
-			   && is_gpr);
-      Bit #(XLEN) data = ?;
-      let req = DM_CPU_Req {write: False, address: gpr_addr, data: data };
-      f_hart0_gpr_reqs.enq (req);
-      rg_start_reg_access <= False;
+      rule rl_gpr_read_start (   rg_abstractcs_busy
+			      && rg_start_reg_access
+			      && (! rg_command_access_reg_write)
+			      && is_gpr
+			      && (fromInteger(core) == rg_dmcontrol_hartsel));
+	 Bit #(XLEN) data = ?;
+	 let req = DM_CPU_Req {write: False, address: gpr_addr, data: data };
+	 f_harts_gpr_reqs[core].enq (req);
+	 rg_start_reg_access <= False;
 
-      if (verbosity != 0)
-	 $display ("%0d: DM_Abstract_Commands.rl_gpr_read_start: ", cur_cycle, fshow (req));
-   endrule
+	 if (verbosity != 0)
+	    $display ("%0d: DM_Abstract_Commands.rl_gpr_read_start hart %0d: ", cur_cycle, core, fshow (req));
+      endrule
 
-   // ----------------
+      // ----------------
 
-   rule rl_gpr_read_finish (   rg_abstractcs_busy
-			    && (! rg_command_access_reg_write)
-			    && is_gpr);
-      let rsp <- pop (f_hart0_gpr_rsps);
-      if (verbosity != 0)
-	 $display ("%0d: DM_Abstract_Commands.rl_gpr_read_finish: ", cur_cycle, fshow (rsp));
+      finishRules = rJoinMutuallyExclusive(finishRules,
+	 rules
+	    rule rl_gpr_read_finish (   rg_abstractcs_busy
+				     && (! rg_command_access_reg_write)
+				     && is_gpr);
+	       let rsp <- pop (f_harts_gpr_rsps[core]);
+	       if (verbosity != 0)
+		  $display ("%0d: DM_Abstract_Commands.rl_gpr_read_finish hart %0d: ", cur_cycle, core, fshow (rsp));
 
 `ifdef RV32
-      rg_data0 <= rsp.data;
+	       rg_data0 <= rsp.data;
 `endif
 `ifdef RV64
-      rg_data0 <= truncate (rsp.data);
-      rg_data1 <= rsp.data[63:32];
+	       rg_data0 <= truncate (rsp.data);
+	       rg_data1 <= rsp.data[63:32];
 `endif
-      rg_abstractcs_cmderr <= (rsp.ok ? DM_ABSTRACTCS_CMDERR_NONE : DM_ABSTRACTCS_CMDERR_HALT_RESUME);
-      rg_abstractcs_busy <= False;
-   endrule
+	       rg_abstractcs_cmderr <= (rsp.ok ? DM_ABSTRACTCS_CMDERR_NONE : DM_ABSTRACTCS_CMDERR_HALT_RESUME);
+	       rg_abstractcs_busy <= False;
+	    endrule
+	 endrules
+      );
 
-   // ----------------------------------------------------------------
-   // Write FPR
+      // ----------------------------------------------------------------
+      // Write FPR
 
 `ifdef ISA_F
 
-   rule rl_fpr_write_start (   rg_abstractcs_busy
-			    && rg_start_reg_access
-			    && rg_command_access_reg_write
-			    && is_fpr);
-      let req = DM_CPU_Req {write:   True,
-			    address: fpr_addr,
+      rule rl_fpr_write_start (   rg_abstractcs_busy
+			       && rg_start_reg_access
+			       && rg_command_access_reg_write
+			       && is_fpr
+			       && (fromInteger(core) == rg_dmcontrol_hartsel));
+	 DM_CPU_Req#(5, ISA_Decls::FLEN) req = DM_CPU_Req {write:   True,
+							   address: fpr_addr,
 `ifdef RV32
-			    data:    rg_data0
+							   data:    unpack(zeroExtend(rg_data0))
 `endif
 `ifdef RV64
-			    data:    {rg_data1, rg_data0}
+							   data:    unpack({rg_data1, rg_data0})
 `endif
-			    };
-      f_hart0_fpr_reqs.enq (req);
-      rg_start_reg_access <= False;
-      if (verbosity != 0)
-	 $display ("%0d: DM_Abstract_Commands.rl_fpr_write_start: ", cur_cycle, fshow (req));
-   endrule
+							  };
+	 f_harts_fpr_reqs[core].enq (req);
+	 rg_start_reg_access <= False;
+	 if (verbosity != 0)
+	    $display ("%0d: DM_Abstract_Commands.rl_fpr_write_start hart %0d: ", cur_cycle, core, fshow (req));
+      endrule
 
-   // ----------------
+      // ----------------
 
-   rule rl_fpr_write_finish (   rg_abstractcs_busy
-			     && rg_command_access_reg_write
-			     && is_fpr);
-      let rsp <- pop (f_hart0_fpr_rsps);
-      if (verbosity != 0)
-	 $display ("%0d: DM_Abstract_Commands.rl_fpr_write_finish: ", cur_cycle, fshow (rsp));
+      finishRules = rJoinMutuallyExclusive(finishRules,
+	 rules
+	    rule rl_fpr_write_finish (   rg_abstractcs_busy
+				      && rg_command_access_reg_write
+				      && is_fpr);
+	       let rsp <- pop (f_harts_fpr_rsps[core]);
+	       if (verbosity != 0)
+		  $display ("%0d: DM_Abstract_Commands.rl_fpr_write_finish hart %0d: ", cur_cycle, core, fshow (rsp));
 
-      rg_abstractcs_cmderr <= (rsp.ok ? DM_ABSTRACTCS_CMDERR_NONE : DM_ABSTRACTCS_CMDERR_HALT_RESUME);
-      rg_abstractcs_busy   <= False;
-   endrule
+	       rg_abstractcs_cmderr <= (rsp.ok ? DM_ABSTRACTCS_CMDERR_NONE : DM_ABSTRACTCS_CMDERR_HALT_RESUME);
+	       rg_abstractcs_busy   <= False;
+	    endrule
+	 endrules
+      );
 
-   // ----------------------------------------------------------------
-   // Read FPR
+      // ----------------------------------------------------------------
+      // Read FPR
 
-   rule rl_fpr_read_start (   rg_abstractcs_busy
-			   && rg_start_reg_access
-			   && (! rg_command_access_reg_write)
-			   && is_fpr);
-      Bit #(XLEN) data = ?;
-      let req = DM_CPU_Req {write: False, address: fpr_addr, data: data };
-      f_hart0_fpr_reqs.enq (req);
-      rg_start_reg_access <= False;
+      rule rl_fpr_read_start (   rg_abstractcs_busy
+			      && rg_start_reg_access
+			      && (! rg_command_access_reg_write)
+			      && is_fpr
+			      && (fromInteger(core) == rg_dmcontrol_hartsel));
+	 Bit #(FLEN) data = ?;
+	 let req = DM_CPU_Req {write: False, address: fpr_addr, data: data };
+	 f_harts_fpr_reqs[core].enq (req);
+	 rg_start_reg_access <= False;
 
-      if (verbosity != 0)
-	 $display ("%0d: DM_Abstract_Commands.rl_fpr_read_start: ", cur_cycle, fshow (req));
-   endrule
+	 if (verbosity != 0)
+	    $display ("%0d: DM_Abstract_Commands.rl_fpr_read_start hart %0d: ", cur_cycle, core, fshow (req));
+      endrule
 
-   // ----------------
+      // ----------------
 
-   rule rl_fpr_read_finish (   rg_abstractcs_busy
-			    && (! rg_command_access_reg_write)
-			    && is_fpr);
-      let rsp <- pop (f_hart0_fpr_rsps);
-      if (verbosity != 0)
-	 $display ("%0d: DM_Abstract_Commands.rl_fpr_read_finish: ", cur_cycle, fshow (rsp));
+      finishRules = rJoinMutuallyExclusive(finishRules,
+	 rules
+	    rule rl_fpr_read_finish (   rg_abstractcs_busy
+				     && (! rg_command_access_reg_write)
+				     && is_fpr);
+	       let rsp <- pop (f_harts_fpr_rsps[core]);
+	       if (verbosity != 0)
+		  $display ("%0d: DM_Abstract_Commands.rl_fpr_read_finish hart: ", cur_cycle, core, fshow (rsp));
 
-`ifdef RV32
-      rg_data0 <= rsp.data;
-`endif
+	       rg_data0 <= truncate (rsp.data);
 `ifdef RV64
-      rg_data0 <= truncate (rsp.data);
-      rg_data1 <= rsp.data[63:32];
+	       rg_data1 <= rsp.data[63:32];
 `endif
-      rg_abstractcs_cmderr <= (rsp.ok ? DM_ABSTRACTCS_CMDERR_NONE : DM_ABSTRACTCS_CMDERR_HALT_RESUME);
-      rg_abstractcs_busy <= False;
-   endrule
+	       rg_abstractcs_cmderr <= (rsp.ok ? DM_ABSTRACTCS_CMDERR_NONE : DM_ABSTRACTCS_CMDERR_HALT_RESUME);
+	       rg_abstractcs_busy <= False;
+	    endrule
+	 endrules
+      );
+`endif
+   end
 
-`endif
+   addRules(finishRules);
 
    // ----------------------------------------------------------------
    // Read/Write unknown address
@@ -492,10 +530,12 @@ module mkDM_Abstract_Commands (DM_Abstract_Commands_IFC);
    method Action reset;
       rg_start_reg_access <= False;
 
-      f_hart0_gpr_reqs.clear;
-      f_hart0_gpr_rsps.clear;
-      f_hart0_csr_reqs.clear;
-      f_hart0_csr_rsps.clear;
+      function proj_clear (x) = x.clear();
+
+      mapM_(proj_clear, f_harts_gpr_reqs);
+      mapM_(proj_clear, f_harts_gpr_rsps);
+      mapM_(proj_clear, f_harts_csr_reqs);
+      mapM_(proj_clear, f_harts_csr_rsps);
 
       rg_abstractcs_busy   <= False;
       rg_abstractcs_cmderr <= DM_ABSTRACTCS_CMDERR_NONE;
@@ -539,7 +579,17 @@ module mkDM_Abstract_Commands (DM_Abstract_Commands_IFC);
       action
 	 let dm_addr_name = fshow_dm_addr (dm_addr);
 
-	 if (dm_addr == dm_addr_abstractcs)
+	 if (dm_addr == dm_addr_dmcontrol) begin
+	    rg_dmcontrol_hartsel <= fn_dmcontrol_hartsel(dm_word);
+	    // It is specified that the debugger must not change hartsel while this module is busy.
+	    // If this is done, the debug unit will wedge, so print a warning.
+	    if (rg_abstractcs_busy) begin
+	       $display ("%0d: DM_Abstract_Commands.write: [", cur_cycle, dm_addr_name,
+			 "] <= 0x%08h: ERROR: must not change hartsel while busy", dm_word);
+	    end
+	 end
+
+	 else if (dm_addr == dm_addr_abstractcs)
 	    fa_rg_abstractcs_write (dm_word);
 
 	 else if (rg_abstractcs_cmderr != DM_ABSTRACTCS_CMDERR_NONE) begin
@@ -580,11 +630,11 @@ module mkDM_Abstract_Commands (DM_Abstract_Commands_IFC);
 
    // ----------------
    // Facing CPU/hart
-      interface Client hart0_gpr_mem_client = toGPClient (f_hart0_gpr_reqs, f_hart0_gpr_rsps);
+      interface harts_gpr_mem_client = zipWith (toGPClient, f_harts_gpr_reqs, f_harts_gpr_rsps);
 `ifdef ISA_F
-      interface Client hart0_fpr_mem_client = toGPClient (f_hart0_fpr_reqs, f_hart0_fpr_rsps);
+      interface harts_fpr_mem_client = zipWith (toGPClient, f_harts_fpr_reqs, f_harts_fpr_rsps);
 `endif
-      interface Client hart0_csr_mem_client = toGPClient (f_hart0_csr_reqs, f_hart0_csr_rsps);
+      interface harts_csr_mem_client = zipWith (toGPClient, f_harts_csr_reqs, f_harts_csr_rsps);
 endmodule
 
 // ================================================================

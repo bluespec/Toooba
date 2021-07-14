@@ -68,7 +68,7 @@ CORE_DIRS = $(REPO)/src_Core/CPU:$(REPO)/src_Core/ISA:$(REPO)/src_Core/Core:$(RE
 
 TESTBENCH_DIRS  = $(REPO)/src_Testbench/Fabrics/AXI4
 
-BSC_PATH = -p $(ALL_RISCY_DIRS):$(CORE_DIRS):src_BSV:$(TESTBENCH_DIRS):+:%/Libraries/TLM3:%/Libraries/Axi:%/Libraries/Axi4
+BSC_PATH = -p $(ALL_RISCY_DIRS):$(CORE_DIRS):src_BSV:$(TESTBENCH_DIRS):+:%/Libraries/AMBA_TLM3/TLM3:%/Libraries/AMBA_TLM3/Axi:%/Libraries/AMBA_TLM3/Axi4:%/Libraries/Bus
 
 # ----------------
 # Top-level file and module
@@ -82,7 +82,10 @@ BSC_COMPILATION_FLAGS += \
 	-keep-fires -aggressive-conditions \
 	-no-warn-action-shadowing -no-show-timestamps \
 	-suppress-warnings G0020    \
-	+RTS -K512000000 -RTS  -show-range-conflict
+	+RTS -K128M -RTS  -show-range-conflict \
+	-unspecified-to X -opt-undetermined-vals \
+	-steps-max-intervals 10000000 \
+	-steps-warn-interval 1000000
 
 # ================================================================
 # Generate Verilog RTL from BSV sources (needs Bluespec 'bsc' compiler)

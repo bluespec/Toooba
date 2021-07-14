@@ -4,7 +4,7 @@ package Proc;
 
 // Copyright (c) 2018 Massachusetts Institute of Technology
 // Portions Copyright (c) 2019-2020 Bluespec, Inc.
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -12,10 +12,10 @@ package Proc;
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -33,7 +33,7 @@ import Vector       :: *;
 import GetPut       :: *;
 import ClientServer :: *;
 import Connectable  :: *;
-import FIFOF        :: *;
+import FIFO         :: *;
 import ConfigReg    :: *;
 
 // ----------------
@@ -100,12 +100,6 @@ module mkProc (Proc_IFC);
     end
 
    // ----------------
-   // Verbosity control for debugging
-
-   // Verbosity: 0=quiet; 1=instruction trace; 2=more detail
-   Reg #(Bit #(4))  cfg_verbosity <- mkConfigReg (0);
-
-   // ----------------
    // MMIO
 
    MMIO_AXI4_Adapter_IFC mmio_axi4_adapter <- mkMMIO_AXI4_Adapter;
@@ -149,15 +143,22 @@ module mkProc (Proc_IFC);
    // ================================================================
    // Connect stats
 
+   FIFO#(Bool) statReqs <- mkFIFO;
+
    for(Integer i = 0; i < valueof(CoreNum); i = i+1) begin
-      rule broadcastStats;
+      rule recvStatReq;
          Bool doStats <- core[i].sendDoStats;
-         for(Integer j = 0; j < valueof(CoreNum); j = j+1) begin
-	    core[j].recvDoStats(doStats);
-         end
-         llc.perf.setStatus(doStats);
+         statReqs.enq(doStats);
       endrule
    end
+
+   rule broadcastStats;
+      for(Integer j = 0; j < valueof(CoreNum); j = j+1) begin
+         core[j].recvDoStats(statReqs.first);
+      end
+      llc.perf.setStatus(statReqs.first);
+      statReqs.deq;
+   endrule
 
 `ifdef PERFORMANCE_MONITORING
    rule broadcastPerfEvents;
@@ -233,6 +234,19 @@ module mkProc (Proc_IFC);
       end
    endrule
 
+
+`ifdef INCLUDE_GDB_CONTROL
+   let emptyPut = interface Put
+       method put (x) = noAction;
+   endinterface;
+   function proj_run_halt_server (x) = x.hart_run_halt_server;
+   function proj_gpr_mem_server (x) = x.hart_gpr_mem_server;
+`ifdef ISA_F
+   function proj_fpr_mem_server (x) = x.hart_fpr_mem_server;
+`endif
+   function proj_csr_mem_server (x) = x.hart_csr_mem_server;
+`endif
+
    // ================================================================
    // ================================================================
    // ================================================================
@@ -266,11 +280,13 @@ module mkProc (Proc_IFC);
    // External interrupts
 
    method Action  m_external_interrupt_req (x);
-      core[0].setMEIP (pack (x));
+      for(Integer i = 0; i < valueof(CoreNum); i = i+1)
+         core[i].setMEIP (pack (x[i]));
    endmethod
 
    method Action  s_external_interrupt_req (x);
-      core[0].setSEIP (pack (x));
+      for(Integer i = 0; i < valueof(CoreNum); i = i+1)
+         core[i].setSEIP (pack (x[i]));
    endmethod
 
    // ----------------
@@ -283,7 +299,7 @@ module mkProc (Proc_IFC);
    // For tracing
 
    method Action  set_verbosity (Bit #(4)  verbosity);
-      cfg_verbosity <= verbosity;
+      noAction;
    endmethod
 
    // ----------------
@@ -295,20 +311,19 @@ module mkProc (Proc_IFC);
    // Optional interface to Debug Module
 
 `ifdef INCLUDE_GDB_CONTROL
-   // run/halt, gpr, mem and csr control goes to core
-   interface Server  hart0_run_halt_server = core [0].hart0_run_halt_server;
 
-   interface Put  hart0_put_other_req;
-      method Action  put (Bit #(4) req);
-	 cfg_verbosity <= req;
-      endmethod
-   endinterface
+   // run/halt, gpr, mem and csr control goes to cores
+   interface harts_run_halt_server = map (proj_run_halt_server, core);
 
-   interface Server  hart0_gpr_mem_server  = core[0].hart0_gpr_mem_server;
+   // currently "other req" not core specific - only affected cfg_verbosity which
+   // is not read anywhere!
+   interface harts_put_other_req = replicate(emptyPut);
+
+   interface harts_gpr_mem_server  = map(proj_gpr_mem_server, core);
 `ifdef ISA_F
-   interface Server  hart0_fpr_mem_server  = core[0].hart0_fpr_mem_server;
+   interface harts_fpr_mem_server  = map(proj_fpr_mem_server, core);
 `endif
-   interface Server  hart0_csr_mem_server  = core[0].hart0_csr_mem_server;
+   interface harts_csr_mem_server  = map(proj_csr_mem_server, core);
 
 `endif
 

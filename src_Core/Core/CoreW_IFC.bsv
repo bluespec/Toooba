@@ -10,7 +10,7 @@ package CoreW_IFC;
 //                  interface and its module is called 'CoreW', to disambiguate.
 //     - mkFabric_2x3
 //     - mkNear_Mem_IO_AXI4
-//     - mkPLIC_16_2_7
+//     - mkPLIC_16_CoreNumX2_7
 //     - mkTV_Encode          (Tandem-Verification logic, optional: INCLUDE_TANDEM_VERIF)
 //     - mkDebug_Module       (RISC-V Debug Module, optional: INCLUDE_GDB_CONTROL)
 

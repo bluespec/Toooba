@@ -1063,7 +1063,7 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
             fetchedInsts[fetchingWay] <= inst;
             fetchingWay <= fetchingWay + 1;
             instSel <= instSel + 1;
-	    curReq <= MMIO_Fabric_Adapter (instSel == maxBound ? addr + 8 : addr);
+            curReq <= MMIO_Fabric_Adapter (addr + 2);
             state <= ProcessReq;
 
 	    if (verbosity > 0) begin
