@@ -39,6 +39,7 @@
 
 `include "ProcConfig.bsv"
 
+
 import Vector::*;
 import BuildVector::*;
 import DefaultValue::*;
@@ -222,6 +223,10 @@ interface CoreFixPoint;
     interface Reg#(Bool) doStatsIfc;
 endinterface
 
+`ifdef CONTRACTS_VERIFY
+typedef 32 BagSz;
+`endif
+
 typedef enum {
 `ifdef INCLUDE_GDB_CONTROL
    CORE_HALTING,
@@ -308,11 +313,11 @@ module mkCore#(CoreId coreId)(Core);
 
 `ifdef PERFORMANCE_MONITORING
 `ifdef CONTRACTS_VERIFY
-    Vector#(SupSize, Bag#(16, CapMem, CapMem)) bags;
+    Vector#(SupSize, Bag#(BagSz, CapMem, CapMem)) bags;
     for(Integer i = 0; i < valueof(SupSize); i=i+1) begin
         bags[i] <- mkSmallBag;
     end
-    Vector#(SupSize, Bag#(16, CapMem, CapMem)) returnBags;
+    Vector#(SupSize, Bag#(BagSz, CapMem, CapMem)) returnBags;
     for(Integer i = 0; i < valueof(SupSize); i=i+1) begin
         returnBags[i] <- mkSmallBag;
     end
