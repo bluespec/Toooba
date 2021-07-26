@@ -1188,7 +1188,7 @@ module mkCore#(CoreId coreId)(Core);
 `ifdef CONTRACTS_VERIFY
      EventsTransExe transExe = renameStage.events;
      SupCnt wildJumps = 0;
-     SupCnt wildExceptions = 0;
+     SupCnt wildExceptions = transExe.evt_WILD_EXCEPTION;
      for(Integer i = 0; i < valueof(AluExeNum); i = i+1) begin
           let alu_events = coreFix.aluExeIfc[i].events;
           wildJumps = wildJumps + alu_events.evt_WILD_JUMP;

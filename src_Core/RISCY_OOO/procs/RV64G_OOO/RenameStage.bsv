@@ -394,6 +394,17 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         end
 `endif
 
+`ifdef PERFORMANCE_MONITORING
+`ifdef CONTRACTS_VERIFY
+        let validPc = (x.orig_inst[1:0] != 2'b11) ? addPc(pc,2) : addPc(pc,4);
+        if((ppc != validPc)) begin
+            EventsTransExe events = unpack(0);
+            events.evt_WILD_EXCEPTION = 1;
+            events_reg <= events;
+        end
+`endif
+`endif
+
 `ifdef CHECK_DEADLOCK
         renameCorrectPath.send;
 `endif
