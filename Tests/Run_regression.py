@@ -5,7 +5,7 @@
 
 usage_line = (
     "  Usage:\n"
-    "    $ <this_prog>    <simulation_executable>  <repo_dir>  <logs_dir>  <arch>  <opt verbosity>  <opt parallelism>\n"
+    "    $ <this_prog>    <simulation_executable>  <repo_dir>  <logs_dir>  <arch>  <opt verbosity>  <opt parallelism> <opt timeout_secs>\n"
     "\n"
     "  Runs the RISC-V <simulation_executable>\n"
     "  on ISA tests: ELF files taken from <repo-dir>/isa and its sub-directories.\n"
@@ -23,6 +23,10 @@ usage_line = (
     "        (creates temporary separate working directories worker_0, worker_1, ...)\n"
     "      By default uses the number of CPUs listed in /proc/cpuinfo - 4.\n"
     "      In any case, limits it to 8.\n"
+    "\n"
+    " If <opt timeout_secs> is given, it must be an integer and must follow an explicit <opt parallelism>\n"
+    "      Specifies the number of seconds to wait for each command run.\n"
+    "      Defaults to 60s\n."
     "\n"
     "  Example:\n"
     "      $ <this_prog>  .exe_HW_sim  ~somebody/GitHub/Piccolo  ./Logs  RV32IMU  v1 4\n"
@@ -51,6 +55,8 @@ import multiprocessing
 exclude_list = []
 
 n_workers_max = 8
+
+timeout = 60
 
 # ================================================================
 
@@ -127,10 +133,17 @@ def main (argv = None):
     # Optional parallelism; limit it to 8
     if len (argv [j:]) != 0 and isdecimal (argv [j]):
         n_workers = int (argv [j])
+        j = 7
     else:
         n_workers = multiprocessing.cpu_count () - 4
     n_workers = max(min (n_workers_max, n_workers), 1)
     sys.stdout.write ("Using {0} worker processes\n".format (n_workers))
+
+    global timeout
+    if len(argv[j:]) != 0 and isdecimal (argv[j]):
+        timeout = int(argv[j])
+        j = 8
+    sys.stdout.write (f"Using {timeout}s timeout\n")
 
     # End of command-line arg processing
     # ================================================================
@@ -399,20 +412,21 @@ def do_isa_test (args_dict, full_filename):
     for x in command2:
         message = message + (" {0}".format (x))
     message = message + ("\n")
-
-    # Run command as a sub-process
-    completed_process1 = run_command (command1)
-    completed_process2 = run_command (command2)
-    passed = completed_process2.stdout.find ("PASS") != -1
-
+    
     # Save stdouts in log file
     log_filename = os.path.join (args_dict ['logs_path'], basename + ".log")
     message = message + ("    Writing log: {0}\n".format (log_filename))
 
-    fd = open (log_filename, 'w')
-    fd.write (completed_process1.stdout)
-    fd.write (completed_process2.stdout)
-    fd.close ()
+    with open (log_filename, 'w') as fd:
+        completed_process1 = run_command (command1, fd)
+        
+        if completed_process1 is not None and completed_process1.returncode == 0:
+            completed_process2 = run_command (command2, fd)
+            passed = completed_process2 is not None and \
+                completed_process2.returncode == 0 and \
+                completed_process2.stdout.find ("PASS") != -1
+        else:
+            passed = False
 
     # If Tandem Verification trace file was created, save it as well
     if os.path.exists ("./trace_out.dat"):
@@ -426,23 +440,35 @@ def do_isa_test (args_dict, full_filename):
 # This is a wrapper around 'subprocess.run' because of an annoying
 # incompatible change in moving from Python 3.5 to 3.6
 
-def run_command (command):
-    python_minor_version = sys.version_info [1]
-    if python_minor_version < 6:
-        # Python 3.5 and earlier
-        result = subprocess.run (args = command,
-                                 bufsize = 0,
-                                 stdout = subprocess.PIPE,
-                                 stderr = subprocess.STDOUT,
-                                 universal_newlines = True)
-    else:
-        # Python 3.6 and later
-        result = subprocess.run (args = command,
-                                 bufsize = 0,
-                                 stdout = subprocess.PIPE,
-                                 stderr = subprocess.STDOUT,
-                                 encoding='utf-8')
-    return result
+def run_command (command, log_fd):
+    command_str = " ".join(command)
+    log_fd.write (f"Running: {command_str}\n")
+    try:
+        python_minor_version = sys.version_info [1]
+        if python_minor_version < 6:
+            # Python 3.5 and earlier
+            result = subprocess.run (args = command,
+                                    bufsize = 0,
+                                    stdout = subprocess.PIPE,
+                                    stderr = subprocess.STDOUT,
+                                    universal_newlines = True,
+                                    timeout=timeout)
+        else:
+            # Python 3.6 and later
+            result = subprocess.run (args = command,
+                                    bufsize = 0,
+                                    stdout = subprocess.PIPE,
+                                    stderr = subprocess.STDOUT,
+                                    encoding='utf-8',
+                                    timeout=timeout)
+        log_fd.write(f"Finished with exit code {result.returncode}\n")
+        log_fd.write("Stdout:\n")
+        log_fd.write (result.stdout)
+        return result
+    except subprocess.TimeoutExpired:
+        sys.stderr.write(f"TIMEOUT: {command_str} !\n")
+        log_fd.write("TIMEOUT!\n")
+        return None
 
 # ================================================================
 # For non-interactive invocations, call main() and use its return value
