@@ -107,26 +107,26 @@ function Maybe#(CSR_XCapCause) capChecksMem(CapPipe auth, CapPipe data, CapCheck
                                                                                               endcase
                                                                              , cheri_exc_code: e});
     Maybe#(CSR_XCapCause) result = Invalid;
+    match {.isLoad, .isStore} = case (mem_func)
+        Ld, Lr: tuple2(True, False);
+        St, Sc: tuple2(False, True);
+        Amo:    tuple2(True, True);
+    endcase;
+    Bool storeValidCap = isStore && isValidCap(data) && byteOrTagEn == DataMemAccess(replicate(True));
     if      (!isValidCap(auth))
         result = eAuth(cheriExcTagViolation);
     else if (getKind(auth) != UNSEALED)
         result = eAuth(cheriExcSealViolation);
-    else if (mem_func == Ld || mem_func == Lr || mem_func == Amo) begin
-        if (!getHardPerms(auth).permitLoad)
-            result = eAuth(cheriExcPermitRViolation);
-        else if (!getHardPerms(auth).permitLoadCap && byteOrTagEn == TagMemAccess)
-            result = eAuth(cheriExcPermitRCapViolation);
-    end
-    else if (mem_func == St || mem_func == Sc || mem_func == Amo) begin
-        if (!getHardPerms(auth).permitStore)
-            result = eAuth(cheriExcPermitWViolation);
-        if (isValidCap(data) && byteOrTagEn == DataMemAccess(replicate(True))) begin
-            if (!getHardPerms(auth).permitStoreCap)
-                result = eAuth(cheriExcPermitWCapViolation);
-            if (!getHardPerms(auth).permitStoreLocalCap && getHardPerms(data).global)
-                result = eAuth(cheriExcPermitWLocalCapViolation);
-        end
-    end
+    else if (isLoad && !getHardPerms(auth).permitLoad)
+        result = eAuth(cheriExcPermitRViolation);
+    else if (isLoad && !getHardPerms(auth).permitLoadCap && byteOrTagEn == TagMemAccess)
+        result = eAuth(cheriExcPermitRCapViolation);
+    else if (isStore && !getHardPerms(auth).permitStore)
+        result = eAuth(cheriExcPermitWViolation);
+    else if (storeValidCap && !getHardPerms(auth).permitStoreCap)
+        result = eAuth(cheriExcPermitWCapViolation);
+    else if (storeValidCap && !getHardPerms(auth).permitStoreLocalCap && getHardPerms(data).global)
+        result = eAuth(cheriExcPermitWLocalCapViolation);
     return result;
 endfunction
 
