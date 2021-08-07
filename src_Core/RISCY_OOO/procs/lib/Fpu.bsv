@@ -48,8 +48,9 @@ import FIFO::*;
 import FIFOF::*;
 import ClientServer::*;
 import GetPut::*;
-import Divide::*;
-import SquareRoot::*;
+//import Divide::*;
+//import SquareRoot::*;
+import NonPipelinedMath :: *;
 import FloatingPoint::*;
 import XilinxFpu::*;
 import HasSpecBits::*;
@@ -95,7 +96,8 @@ module mkDoubleDiv(Server#(Tuple3#(Double, Double, FpuRoundMode), Tuple2#(Double
 `ifdef USE_XILINX_FPU
     let fpu <- mkXilinxFpDiv;
 `else
-    let int_div <- mkNonPipelinedDivider(3); // [sizhuo] size in RVFpu: 2
+    //let int_div <- mkDivider(1); // [sizhuo] size in RVFpu: 2
+    let int_div <- mkNonPipelinedDividerBlah(3);
     let fpu <- mkFloatingPointDivider(int_div);
 `endif
     return fpu;

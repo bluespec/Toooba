@@ -224,7 +224,7 @@ module mkCoreResetHelper #(Reset toDbgReset)
 `endif
 
    // PLIC (Platform-Level Interrupt Controller)
-   PLIC_IFC_16_CoreNumX2_7  plic <- mkPLIC_16_CoreNumX2_7;
+   PLIC_IFC_16_CoreNumX2_7  plic <- mkPLIC_16_CoreNumX2_7 (reset_by all_harts_reset);
 
 `ifdef INCLUDE_GDB_CONTROL
    // Debug Module
@@ -279,8 +279,8 @@ module mkCoreResetHelper #(Reset toDbgReset)
    // ================================================================
    // Direct DM-to-CPU connections for run-control and other misc requests
 
-   mkConnection (debug_module.harts_client_run_halt, proc.harts_run_halt_server);
-   mkConnection (debug_module.harts_get_other_req,   proc.harts_put_other_req);
+   mkConnection (debug_module.harts_client_run_halt, proc.harts_run_halt_server, reset_by toDbgReset);
+   mkConnection (debug_module.harts_get_other_req,   proc.harts_put_other_req, reset_by toDbgReset);
 `endif
 
 `ifdef INCLUDE_TANDEM_VERIF
@@ -361,15 +361,15 @@ module mkCoreResetHelper #(Reset toDbgReset)
    // BEGIN SECTION: DM, no TV
 
    // Connect DM's GPR interface directly to CPU
-   mkConnection (debug_module.harts_gpr_mem_client, proc.harts_gpr_mem_server);
+   mkConnection (debug_module.harts_gpr_mem_client, proc.harts_gpr_mem_server, reset_by toDbgReset);
 
 `ifdef ISA_F_OR_D
    // Connect DM's FPR interface directly to CPU
-   mkConnection (debug_module.harts_fpr_mem_client, proc.harts_fpr_mem_server);
+   mkConnection (debug_module.harts_fpr_mem_client, proc.harts_fpr_mem_server, reset_by toDbgReset);
 `endif
 
    // Connect DM's CSR interface directly to CPU
-   mkConnection (debug_module.harts_csr_mem_client, proc.harts_csr_mem_server);
+   mkConnection (debug_module.harts_csr_mem_client, proc.harts_csr_mem_server, reset_by toDbgReset);
 
    // DM's bus master is directly the bus master
    let dm_master_local = debug_module.master;
@@ -430,7 +430,7 @@ module mkCoreResetHelper #(Reset toDbgReset)
       return res;
    endfunction
 
-   mkAXI4Bus (route_2x3, master_vector, slave_vector);
+   mkAXI4Bus (route_2x3, master_vector, slave_vector, reset_by all_harts_reset);
 
    // ================================================================
    // Connect external interrupt lines from PLIC to CPU
@@ -469,8 +469,12 @@ module mkCoreResetHelper #(Reset toDbgReset)
    endrule
 
    let fromDbgReset <- mkPulseWire (reset_by toDbgReset);
-   rule rl_debug_module_send_reset;
-      let _ <- debug_module.ndm_reset_client.request.get;
+   Reg #(UInt #(8)) ndm_reset_delay <- mkReg (0, reset_by toDbgReset);
+   Reg #(Bool) ndm_reset_restart_running <- mkReg (True, reset_by toDbgReset);
+   rule rl_debug_module_send_reset (ndm_reset_delay == 0);
+      let restartRunning <- debug_module.ndm_reset_client.request.get;
+      ndm_reset_delay <= 110;
+      ndm_reset_restart_running <= restartRunning;
       fromDbgReset.send;
    endrule
 
