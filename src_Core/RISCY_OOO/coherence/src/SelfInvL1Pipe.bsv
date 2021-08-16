@@ -33,6 +33,7 @@
 // ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
+`ifdef SELF_INV_CACHE
 
 import Assert::*;
 import ConfigReg::*;
@@ -508,3 +509,4 @@ module mkSelfInvL1Pipe(
         return !needReconcile;
     endmethod
 endmodule
+`endif //  SELF_INV_CACHE

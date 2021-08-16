@@ -33,7 +33,7 @@
 // ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-
+`ifdef SELF_INF_CACHE
 `include "ProcConfig.bsv"
 
 import Types::*;
@@ -660,3 +660,4 @@ endmodule
 // unsafe version: all reads read the original reg value, except sendRsToC, which should bypass from pipelineResp
 // all writes are cononicalized. NOTE: writes of sendRsToC should be after pipelineResp
 // we maintain the logical ordering in safe version
+`endif // SELF_INF_CACHE
