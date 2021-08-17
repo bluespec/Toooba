@@ -1262,7 +1262,11 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                         f7_cap_Loads: begin
                             dInst.iType = Ld;
                             MemInst mi = exp_bnds_mem_inst.Valid;
-                            if (isValid(exp_bnds_mem_inst)) dInst.execFunc = tagged Mem mi;
+                            if (isValid(exp_bnds_mem_inst)) begin
+                                dInst.execFunc = tagged Mem mi;
+                                if (mi.mem_func == Lr)
+                                    dInst.iType = Lr;
+                            end
                             else illegalInst = True;
                             regs.dst  = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs1);
@@ -1272,7 +1276,13 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                         f7_cap_Stores: begin
                             dInst.iType = St;
                             MemInst mi = exp_bnds_mem_inst.Valid;
-                            if (isValid(exp_bnds_mem_inst)) dInst.execFunc = tagged Mem mi;
+                            if (isValid(exp_bnds_mem_inst)) begin
+                                dInst.execFunc = tagged Mem mi;
+                                if (mi.mem_func == Sc) begin
+                                    dInst.iType = Sc;
+                                    regs.dst = Valid(tagged Gpr rs2);
+                                end
+                            end
                             else illegalInst = True;
                             regs.src1 = Valid(tagged Gpr rs1);
                             regs.src2 = Valid(tagged Gpr rs2);
