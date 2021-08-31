@@ -107,13 +107,15 @@ endfunction
 // FLEN and related constants, for floating point data
 // Can have one or two fpu sizes (should they be merged sooner than later ?).
 
-// Cannot define ISA_D unless ISA_F is also defined
+// ISA_D => ISA_F (ISA_D implies ISA_F)
+// The combination ISA_D and !ISA_F is not permitted
+
 // ISA_F - 32 bit FPU
 // ISA_D - 64 bit FPU
 
 `ifdef ISA_F
 
-`ifdef ISA_D   // ISA_D precludes ISA_F
+`ifdef ISA_D
 typedef 64 FLEN;
 Bool hasFpu32 = False;
 Bool hasFpu64 = True;
@@ -131,12 +133,6 @@ typedef  TLog #(Bytes_per_WordFL)              Bits_per_Byte_in_WordFL;
 typedef  Bit #(Bits_per_Byte_in_WordFL)        Byte_in_WordFL;
 typedef  Vector #(Bytes_per_WordFL, Byte)      WordFL_B;
 
-`endif
-
-`ifdef ISA_F
-`ifdef ISA_D
-`define ISA_F_AND_D
-`endif
 `endif
 
 // ================================================================
@@ -484,6 +480,23 @@ Bit #(5)    f5_AMO_MIN    = 5'b10000;
 Bit #(5)    f5_AMO_MAX    = 5'b10100;
 Bit #(5)    f5_AMO_MINU   = 5'b11000;
 Bit #(5)    f5_AMO_MAXU   = 5'b11100;
+
+function Fmt fshow_f5_AMO_op (Bit #(5) op);
+   Fmt fmt = case (op)
+		f5_AMO_LR: $format ("LR");
+		f5_AMO_SC: $format ("SC");
+		f5_AMO_ADD: $format ("ADD");
+		f5_AMO_SWAP: $format ("SWAP");
+		f5_AMO_XOR: $format ("XOR");
+		f5_AMO_AND: $format ("AND");
+		f5_AMO_OR: $format ("OR");
+		f5_AMO_MIN: $format ("MIN");
+		f5_AMO_MAX: $format ("MAX");
+		f5_AMO_MINU: $format ("MINU");
+		f5_AMO_MAXU: $format ("MAXU");
+	     endcase;
+   return fmt;
+endfunction
 
 Bit #(10) f10_LR_W       = 10'b00010_00_010;
 Bit #(10) f10_SC_W       = 10'b00011_00_010;
@@ -844,8 +857,10 @@ function Bool fv_is_fp_instr_legal (
       if (    (f7 == f7_FADD_S)  
           ||  (f7 == f7_FSUB_S)  
           ||  (f7 == f7_FMUL_S)  
-`ifdef ISA_FD_DIV
+`ifdef INCLUDE_FDIV
           ||  (f7 == f7_FDIV_S)  
+`endif
+`ifdef INCLUDE_FSQRT
           ||  (f7 == f7_FSQRT_S) 
 `endif
           || ((f7 == f7_FSGNJ_S)  && ( rm == 0))
@@ -875,8 +890,10 @@ function Bool fv_is_fp_instr_legal (
           ||  (f7 == f7_FADD_D)  
           ||  (f7 == f7_FSUB_D)  
           ||  (f7 == f7_FMUL_D)  
-`ifdef ISA_FD_DIV
+`ifdef INCLUDE_FDIV
           ||  (f7 == f7_FDIV_D)  
+`endif
+`ifdef INCLUDE_FSQRT
           ||  (f7 == f7_FSQRT_D) 
 `endif
           || ((f7 == f7_FSGNJ_D)  && ( rm == 0))
