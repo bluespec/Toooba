@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 Bluespec, Inc.
+// Copyright (c) 2019-2021 Bluespec, Inc.
 
 package MMIO_AXI4_Adapter;
 
@@ -171,7 +171,7 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
       // Technically the following check for legal IO addrs is not
       // necessary; the AXI4 fabric should return a DECERR for illegal
       // addrs; but not all AXI4 fabrics do the right thing.
-      if (soc_map.m_is_IO_addr (req.addr, False))
+      if (soc_map.m_is_IO_addr (req.addr))
 	 fa_fabric_send_read_req (req.addr);
       else begin
 	 let rsp = MMIODataPRs {valid: False,
@@ -222,7 +222,7 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
       // Technically the following check for legal IO addrs is not
       // necessary; the AXI4 fabric should return a DECERR for illegal
       // addrs; but not all AXI4 fabrics do the right thing.
-      if (soc_map.m_is_IO_addr (req.addr, False))
+      if (soc_map.m_is_IO_addr (req.addr))
 	 fa_fabric_send_write_req (req.addr, pack (req.byteEn), req.data);
       else begin
 	 let rsp = MMIODataPRs {valid: False,

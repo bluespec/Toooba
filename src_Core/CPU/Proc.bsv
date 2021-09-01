@@ -68,10 +68,16 @@ import Performance::*;
 
 import ISA_Decls  :: *;
 
-import Core              :: *;
+import CPU               :: *;    // Was 'Core' in RISCY_OOO
 import Proc_IFC          :: *;
 import MMIOPlatform      :: *;
-import LLC_AXI4_Adapter  :: *;
+
+`ifdef MEM_512b
+import LLC_AXI4_Adapter_2 :: *;
+`else
+import LLC_AXI4_Adapter   :: *;
+`endif
+
 import MMIO_AXI4_Adapter :: *;
 
 import SoC_Map      :: *;
@@ -96,7 +102,7 @@ module mkProc (Proc_IFC);
     // cores
     Vector#(CoreNum, Core) core = ?;
     for(Integer i = 0; i < valueof(CoreNum); i = i+1) begin
-        core[i] <- mkCore(fromInteger(i));
+        core[i] <- mkCPU(fromInteger(i));
     end
 
    // ----------------
@@ -230,7 +236,7 @@ module mkProc (Proc_IFC);
 	    $display ("PASS");
 	 else
 	    $display ("FAIL %0d", failed_testnum);
-	 $finish (0);
+	 // $finish (0);
       end
    endrule
 
@@ -262,6 +268,8 @@ module mkProc (Proc_IFC);
       endaction
 
       mmioPlatform.start (tohostAddr, fromhostAddr);
+
+      llc_axi4_adapter.ma_ddr4_ready;    // Enable memory access
 
       $display ("%0d: %m.method start: startpc %0h, tohostAddr %0h, fromhostAddr %0h",
 		cur_cycle, startpc, tohostAddr, fromhostAddr);

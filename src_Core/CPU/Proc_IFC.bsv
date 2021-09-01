@@ -21,6 +21,7 @@ import Fabric_Defs :: *;
 import SoC_Map :: *;
 import CCTypes :: *;
 import ProcTypes :: *;
+import Core_IFC :: *;    // For Wd_{Id,Addr,Data,User}_Mem
 
 `ifdef INCLUDE_GDB_CONTROL
 import DM_CPU_Req_Rsp :: *;
@@ -48,7 +49,7 @@ interface Proc_IFC;
    // SoC fabric connections
 
    // Fabric master interface for memory (from LLC)
-   interface AXI4_Master_IFC #(Wd_Id, Wd_Addr, Wd_Data, Wd_User)  master0;
+   interface AXI4_Master_IFC #(Wd_Id_Mem, Wd_Addr_Mem, Wd_Data_Mem, Wd_User_Mem)  master0;
 
    // Fabric master interface for IO (from MMIOPlatform)
    interface AXI4_Master_IFC #(Wd_Id, Wd_Addr, Wd_Data, Wd_User)  master1;

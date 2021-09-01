@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2019 Bluespec, Inc. All Rights Reserved
+// Copyright (c) 2018-2021 Bluespec, Inc. All Rights Reserved
 
 package Fabric_Defs;
 
@@ -29,14 +29,16 @@ import AXI4_Types :: *;
 
 // ----------------
 // Width of fabric 'id' buses
-typedef  4             Wd_Id;
+typedef  16            Wd_Id;
 typedef  Bit #(Wd_Id)  Fabric_Id;
 
 // ----------------
 // Width of fabric 'addr' buses
 `ifdef FABRIC64
 typedef 64   Wd_Addr;
-`else
+`endif
+
+`ifdef FABRIC32
 typedef 32   Wd_Addr;
 `endif
 
@@ -49,7 +51,9 @@ Integer  bytes_per_fabric_addr = valueOf (Bytes_per_Fabric_Addr);
 // Width of fabric 'data' buses
 `ifdef FABRIC64
 typedef 64   Wd_Data;
-`else
+`endif
+
+`ifdef FABRIC32
 typedef 32   Wd_Data;
 `endif
 
