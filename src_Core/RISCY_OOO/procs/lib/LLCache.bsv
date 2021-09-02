@@ -55,6 +55,7 @@ import SelfInvLLBank::*;
 import L1CoCache::*;
 import LLCDmaConnect::*;
 import Performance::*;
+import StatCounters::*;
 
 // Last-Level
 
@@ -255,7 +256,7 @@ interface LLCache;
     // performance
     interface Perf#(LLCPerfType) perf;
 `ifdef PERFORMANCE_MONITORING
-    method EventsCache events;
+    method EventsLL events;
 `endif
 endinterface
 
@@ -466,6 +467,6 @@ module mkLLCache(LLCache);
         endmethod
     endinterface
 `ifdef PERFORMANCE_MONITORING
-    method EventsCache events = cache.events;
+    method EventsLL events = cache.events;
 `endif
 endmodule

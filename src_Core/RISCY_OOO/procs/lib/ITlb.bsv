@@ -53,6 +53,7 @@ import LatencyTimer::*;
 import PerformanceMonitor::*;
 import CCTypes::*;
 import BlueUtils::*;
+import StatCounters::*;
 `endif
 
 // currently blocking
@@ -91,7 +92,7 @@ interface ITlb;
     // performance
     interface Perf#(L1TlbPerfType) perf;
 `ifdef PERFORMANCE_MONITORING
-    method EventsCache events;
+    method EventsL1I events;
 `endif
 endinterface
 
@@ -154,7 +155,7 @@ module mkITlb(ITlb::ITlb);
     endrule
 `endif
 `ifdef PERFORMANCE_MONITORING
-    Array #(Reg #(EventsCache)) perf_events <- mkDRegOR (3, unpack (0));
+    Array #(Reg #(EventsL1I)) perf_events <- mkDRegOR (3, unpack (0));
 `endif
 
     // do flush: only start when all misses resolve
@@ -165,7 +166,7 @@ module mkITlb(ITlb::ITlb);
         waitFlushP <= True;
         if(verbose) $display("ITLB %m: flush begin");
 `ifdef PERFORMANCE_MONITORING
-        EventsCache ev = unpack(0);
+        EventsL1I ev = unpack(0);
         ev.evt_TLB_FLUSH = 1;
         perf_events[2] <= ev;
 `endif
@@ -229,7 +230,7 @@ module mkITlb(ITlb::ITlb);
         end
 `endif
 `ifdef PERFORMANCE_MONITORING
-        EventsCache ev = unpack(0);
+        EventsL1I ev = unpack(0);
         ev.evt_TLB_MISS_LAT = saturating_truncate(lat);
         ev.evt_TLB_MISS = 1;
         perf_events[0] <= ev;
@@ -363,7 +364,7 @@ module mkITlb(ITlb::ITlb);
                 end
 `endif
 `ifdef PERFORMANCE_MONITORING
-                EventsCache ev = unpack(0);
+                EventsL1I ev = unpack(0);
                 ev.evt_TLB = 1;
                 perf_events[1] <= ev;
 `endif
@@ -416,6 +417,6 @@ module mkITlb(ITlb::ITlb);
         endmethod
     endinterface
 `ifdef PERFORMANCE_MONITORING
-    method EventsCache events = perf_events[0];
+    method EventsL1I events = perf_events[0];
 `endif
 endmodule

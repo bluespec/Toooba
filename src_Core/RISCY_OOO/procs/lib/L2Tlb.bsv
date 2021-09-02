@@ -58,6 +58,7 @@ import LatencyTimer::*;
 import PerformanceMonitor::*;
 import CCTypes::*;
 import BlueUtils::*;
+import StatCounters::*;
 `endif
 
 // for SV39 only
@@ -120,7 +121,7 @@ interface L2Tlb;
     // performace
     interface Perf#(L2TlbPerfType) perf;
 `ifdef PERFORMANCE_MONITORING
-    method EventsCache events;
+    method EventsLL events;
 `endif
 endinterface
 
@@ -286,7 +287,7 @@ module mkL2Tlb(L2Tlb::L2Tlb);
     endrule
 `endif
 `ifdef PERFORMANCE_MONITORING
-    Array #(Reg #(EventsCache)) perf_events <- mkDRegOR (3, unpack (0));
+    Array #(Reg #(EventsLL)) perf_events <- mkDRegOR (3, unpack (0));
 `endif
 
     // when flushing is true, since both I and D TLBs have finished flush and
@@ -301,7 +302,7 @@ module mkL2Tlb(L2Tlb::L2Tlb);
         doAssert(!rqFromCQ.notEmpty, "cannot have new req");
         doAssert(readVEhr(0, pendValid) == replicate(False), "cannot have pending req");
 `ifdef PERFORMANCE_MONITORING
-        EventsCache ev = unpack(0);
+        EventsLL ev = unpack(0);
         ev.evt_TLB_FLUSH = 1;
         perf_events[2] <= ev;
 `endif
@@ -420,7 +421,7 @@ module mkL2Tlb(L2Tlb::L2Tlb);
             end
 `endif
 `ifdef PERFORMANCE_MONITORING
-            EventsCache ev = unpack(0);
+            EventsLL ev = unpack(0);
             ev.evt_TLB = 1;
             perf_events[1] <= ev;
 `endif
@@ -433,7 +434,7 @@ module mkL2Tlb(L2Tlb::L2Tlb);
             // update 4KB array replacement, no need to touch MG array
             tlb4KB.deqResp(Valid (resp4KB.way));
 `ifdef PERFORMANCE_MONITORING
-            EventsCache ev = unpack(0);
+            EventsLL ev = unpack(0);
             ev.evt_TLB = 1;
             perf_events[1] <= ev;
 `endif
@@ -457,7 +458,7 @@ module mkL2Tlb(L2Tlb::L2Tlb);
             end
 `endif
 `ifdef PERFORMANCE_MONITORING
-            EventsCache ev = unpack(0);
+            EventsLL ev = unpack(0);
             ev.evt_TLB_MISS = 1;
             perf_events[0] <= ev;
 `endif
@@ -695,7 +696,7 @@ module mkL2Tlb(L2Tlb::L2Tlb);
                 });
 `ifdef PERFORMANCE_MONITORING
                 // page table walks are counted as accesses
-                EventsCache ev = unpack(0);
+                EventsLL ev = unpack(0);
                 ev.evt_TLB = 1;
                 perf_events[1] <= ev;
 `endif
@@ -714,7 +715,7 @@ module mkL2Tlb(L2Tlb::L2Tlb);
                     end
 `endif
 `ifdef PERFORMANCE_MONITORING
-                    EventsCache ev = unpack(0);
+                    EventsLL ev = unpack(0);
                     ev.evt_TLB_MISS = 1;
                     perf_events[0] <= ev;
 `endif
@@ -807,6 +808,6 @@ module mkL2Tlb(L2Tlb::L2Tlb);
         endmethod
     endinterface
 `ifdef PERFORMANCE_MONITORING
-    method EventsCache events = perf_events[0];
+    method EventsLL events = perf_events[0];
 `endif
 endmodule

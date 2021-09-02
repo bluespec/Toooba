@@ -59,6 +59,7 @@ import SelfInvL1Pipe::*;
 import SelfInvL1Bank::*;
 import SelfInvIPipe::*;
 import SelfInvIBank::*;
+import StatCounters::*;
 
 export L1Num;
 export LgL1WayNum;
@@ -179,7 +180,7 @@ interface DCoCache;
     method Action resetLinkAddr;
     interface Perf#(L1DPerfType) perf;
 `ifdef PERFORMANCE_MONITORING
-    method EventsCache events;
+    method EventsL1D events;
 `endif
 
     interface ChildCacheToParent#(L1Way, void) to_parent;
@@ -271,7 +272,7 @@ module mkDCoCache#(L1ProcResp#(DProcReqId) procResp)(DCoCache);
         endmethod
     endinterface
 `ifdef PERFORMANCE_MONITORING
-    method EventsCache events = cache.events;
+    method EventsL1D events = cache.events;
 `endif
 
     interface to_parent = cache.to_parent;
@@ -373,7 +374,7 @@ interface ICoCache;
     method Bool flush_done;
     interface Perf#(L1IPerfType) perf;
 `ifdef PERFORMANCE_MONITORING
-    method EventsCache events;
+    method EventsL1I events;
 `endif
 
     interface ChildCacheToParent#(L1Way, void) to_parent;
@@ -446,7 +447,7 @@ module mkICoCache(ICoCache);
         endmethod
     endinterface
 `ifdef PERFORMANCE_MONITORING
-    method EventsCache events = cache.events;
+    method EventsL1I events = cache.events;
 `endif
 
     interface to_parent = cache.to_parent;

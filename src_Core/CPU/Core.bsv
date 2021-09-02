@@ -103,7 +103,8 @@ import Bypass::*;
 import CHERICap::*;
 import CHERICC_Fat::*;
 import Bag::*;
-import VnD :: *;
+import VnD::*;
+import StatCounters::*;
 
 `ifdef RVFI_DII
 import Toooba_RVFI_DII_Bridge::*;
@@ -209,7 +210,7 @@ interface Core;
 `endif
 
 `ifdef PERFORMANCE_MONITORING
-    method Action events_llc(EventsCache events);
+    method Action events_llc(EventsLL events);
     method Action events_tgc(Vector#(7, Bit#(1)) events);
 `endif
 endinterface
@@ -236,24 +237,24 @@ typedef enum {
    } Core_Run_State
 deriving (Bits, Eq, FShow);
 
-`ifdef PERFORMANCE_MONITORING
-instance BitVectorable #(EventsCore, SizeOf#(SupCnt), EventsCoreElements) provisos (Bits #(EventsCore, m));
-   function Vector#(EventsCoreElements, SupCnt) to_vector(EventsCore e) =
-      reverse(unpack(pack(e)));
-endinstance
-instance BitVectorable #(EventsCoreMem, SizeOf#(HpmRpt), EventsCoreMemElements) provisos (Bits #(EventsCoreMem, m));
-   function Vector#(EventsCoreMemElements, HpmRpt) to_vector(EventsCoreMem e) =
-      reverse(unpack(pack(e)));
-endinstance
-instance BitVectorable #(EventsTransExe, SizeOf#(SupCnt), EventsTransExeElements) provisos (Bits #(EventsTransExe, m));
-   function Vector#(EventsTransExeElements, SupCnt) to_vector(EventsTransExe e) =
-      reverse(unpack(pack(e)));
-endinstance
-instance BitVectorable #(EventsCache, SizeOf#(HpmRpt), EventsCacheElements) provisos (Bits #(EventsCache, m));
-   function Vector#(EventsCacheElements, HpmRpt) to_vector(EventsCache e) =
-      reverse(unpack(pack(e)));
-endinstance
-`endif
+//`ifdef PERFORMANCE_MONITORING
+//instance BitVectorable #(EventsCore, SizeOf#(SupCnt), EventsCoreElements) provisos (Bits #(EventsCore, m));
+//   function Vector#(EventsCoreElements, SupCnt) to_vector(EventsCore e) =
+//      reverse(unpack(pack(e)));
+//endinstance
+//instance BitVectorable #(EventsCoreMem, SizeOf#(HpmRpt), EventsCoreMemElements) provisos (Bits #(EventsCoreMem, m));
+//   function Vector#(EventsCoreMemElements, HpmRpt) to_vector(EventsCoreMem e) =
+//      reverse(unpack(pack(e)));
+//endinstance
+//instance BitVectorable #(EventsTransExe, SizeOf#(SupCnt), EventsTransExeElements) provisos (Bits #(EventsTransExe, m));
+//   function Vector#(EventsTransExeElements, SupCnt) to_vector(EventsTransExe e) =
+//      reverse(unpack(pack(e)));
+//endinstance
+//instance BitVectorable #(EventsCache, SizeOf#(HpmRpt), EventsCacheElements) provisos (Bits #(EventsCache, m));
+//   function Vector#(EventsCacheElements, HpmRpt) to_vector(EventsCache e) =
+//      reverse(unpack(pack(e)));
+//endinstance
+//`endif
 
 (* synthesize *)
 module mkCore#(CoreId coreId)(Core);
@@ -1165,7 +1166,7 @@ module mkCore#(CoreId coreId)(Core);
      // Each cache and TLB pair uses the same struct (EventsCache), but the cache accesses
      // different fields than the TLB, which makes it safe to combine them
 
-     Reg#(EventsCache) events_llc_reg <- mkRegU;
+     Reg#(EventsLL) events_llc_reg <- mkRegU;
      Reg#(Vector#(7, Bit#(1))) events_tgc_reg <- mkRegU;
      rule report_events;
          EventsCore events = unpack(pack(commitStage.events));
@@ -1173,17 +1174,17 @@ module mkCore#(CoreId coreId)(Core);
          hpm_core_events[1] <= events;
      endrule
 
-     Vector #(1, Bit #(Report_Width)) null_evt = replicate (0);
-     Vector #(31, Bit #(Report_Width)) mem_core_evts_vec =  to_large_vector (coreFix.memExeIfc.events);
-     Vector #(31, Bit #(Report_Width)) other_core_evts_vec = to_large_vector (hpm_core_events[0]);
-     Vector #(31, Bit #(Report_Width)) core_evts_vec = unpack(pack(mem_core_evts_vec) | pack(other_core_evts_vec));
-     EventsCache instMem = unpack(pack(iMem.events) | pack(iTlb.events));
-     Vector #(16, Bit #(Report_Width)) imem_evts_vec = to_large_vector (instMem);
-     EventsCache dataMem = unpack(pack(dMem.events) | pack(dTlb.events));
-     Vector #(16, Bit #(Report_Width)) dmem_evts_vec = to_large_vector (dataMem);
-     Vector #(32, Bit #(Report_Width)) tgc_evts_vec = to_large_vector (events_tgc_reg);
-     EventsCache llMem = unpack(pack(events_llc_reg) | pack(l2Tlb.events));
-     Vector #(16, Bit #(Report_Width)) llc_evts_vec = to_large_vector (llMem);
+     //Vector #(1, Bit #(Report_Width)) null_evt = replicate (0);
+     //Vector #(31, Bit #(Report_Width)) mem_core_evts_vec =  to_large_vector (coreFix.memExeIfc.events);
+     //Vector #(31, Bit #(Report_Width)) other_core_evts_vec = to_large_vector (hpm_core_events[0]);
+     //Vector #(31, Bit #(Report_Width)) core_evts_vec = unpack(pack(mem_core_evts_vec) | pack(other_core_evts_vec));
+     //EventsCache instMem = unpack(pack(iMem.events) | pack(iTlb.events));
+     //Vector #(16, Bit #(Report_Width)) imem_evts_vec = to_large_vector (instMem);
+     //EventsCache dataMem = unpack(pack(dMem.events) | pack(dTlb.events));
+     //Vector #(16, Bit #(Report_Width)) dmem_evts_vec = to_large_vector (dataMem);
+     //Vector #(32, Bit #(Report_Width)) tgc_evts_vec = to_large_vector (events_tgc_reg);
+     //EventsCache llMem = unpack(pack(events_llc_reg) | pack(l2Tlb.events));
+     //Vector #(16, Bit #(Report_Width)) llc_evts_vec = to_large_vector (llMem);
 
 `ifdef CONTRACTS_VERIFY
      EventsTransExe transExe = renameStage.events;
@@ -1200,11 +1201,12 @@ module mkCore#(CoreId coreId)(Core);
      Vector #(16, Bit #(Report_Width)) trans_exe_evts_vec = to_large_vector (transExe);
 `endif
 
-     let events = append (null_evt, core_evts_vec);
-     events = append (events, imem_evts_vec);
-     events = append (events, dmem_evts_vec);
-     events = append (events, tgc_evts_vec);
-     events = append (events, llc_evts_vec);
+     //let events = append (null_evt, core_evts_vec);
+     //events = append (events, imem_evts_vec);
+     //events = append (events, dmem_evts_vec);
+     //events = append (events, tgc_evts_vec);
+     //events = append (events, llc_evts_vec);
+     Vector#(112, Bit#(Report_Width)) events = replicate(0);
 `ifdef CONTRACTS_VERIFY
      events = append (events, trans_exe_evts_vec);
 `endif
