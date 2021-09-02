@@ -211,7 +211,7 @@ interface Core;
 
 `ifdef PERFORMANCE_MONITORING
     method Action events_llc(EventsLL events);
-    method Action events_tgc(Vector#(7, Bit#(1)) events);
+    method Action events_tgc(EventsCacheCore events);
 `endif
 endinterface
 
@@ -1167,7 +1167,7 @@ module mkCore#(CoreId coreId)(Core);
      // different fields than the TLB, which makes it safe to combine them
 
      Reg#(EventsLL) events_llc_reg <- mkRegU;
-     Reg#(Vector#(7, Bit#(1))) events_tgc_reg <- mkRegU;
+     Reg#(EventsCacheCore) events_tgc_reg <- mkRegU;
      rule report_events;
          EventsCore events = unpack(pack(commitStage.events));
          events.evt_REDIRECT = zeroExtend(pack(fetchStage.redirect_evt));

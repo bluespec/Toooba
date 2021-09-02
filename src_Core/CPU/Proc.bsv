@@ -79,6 +79,7 @@ import MMIOAddrs::*;
 import MMIOCore::*;
 import DramCommon::*;
 import Performance::*;
+import StatCounters::*;
 
 // ----------------
 // From Tooba
@@ -178,7 +179,7 @@ module mkProc (Proc_IFC);
    endrule
 
 `ifdef PERFORMANCE_MONITORING
-   Reg#(Vector#(7, Bit#(1))) events_tgc_reg <- mkRegU;
+   Reg#(EventsCacheCore) events_tgc_reg <- mkRegU;
    rule broadcastPerfEvents;
        for(Integer j = 0; j < valueof(CoreNum); j = j+1) begin
            core[j].events_llc(llc.events);

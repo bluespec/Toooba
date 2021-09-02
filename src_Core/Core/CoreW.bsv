@@ -67,6 +67,7 @@ import TagControllerAXI :: *;
 // ----------------
 // From RISCY-ooo
 import ProcTypes    :: *;
+import StatCounters::*;
 
 // ----------------
 // From Toooba
@@ -177,7 +178,7 @@ module mkCoreW #(Reset dm_power_on_reset)
    mkConnection(proc.master0, tagController.slave, reset_by all_harts_reset);
 `ifdef PERFORMANCE_MONITORING
    rule report_tagController_events;
-      Vector#(7, Bit#(1)) evts = tagController.events;
+      EventsCacheCore evts = tagController.events;
       proc.events_tgc(evts);
    endrule
 `endif
