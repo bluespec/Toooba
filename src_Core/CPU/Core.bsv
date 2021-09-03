@@ -105,6 +105,7 @@ import CHERICC_Fat::*;
 import Bag::*;
 import VnD::*;
 import StatCounters::*;
+import GenerateHPMVector::*;
 
 `ifdef RVFI_DII
 import Toooba_RVFI_DII_Bridge::*;
@@ -1178,12 +1179,17 @@ module mkCore#(CoreId coreId)(Core);
      //Vector #(31, Bit #(Report_Width)) mem_core_evts_vec =  to_large_vector (coreFix.memExeIfc.events);
      //Vector #(31, Bit #(Report_Width)) other_core_evts_vec = to_large_vector (hpm_core_events[0]);
      //Vector #(31, Bit #(Report_Width)) core_evts_vec = unpack(pack(mem_core_evts_vec) | pack(other_core_evts_vec));
+     EventsCore core_evts = unpack(pack(coreFix.memExeIfc.events) | pack(hpm_core_events[0]));
      //EventsCache instMem = unpack(pack(iMem.events) | pack(iTlb.events));
+     EventsL1I imem_evts = unpack(pack(iMem.events) | pack(iTlb.events));
      //Vector #(16, Bit #(Report_Width)) imem_evts_vec = to_large_vector (instMem);
      //EventsCache dataMem = unpack(pack(dMem.events) | pack(dTlb.events));
+     EventsL1D dmem_evts = unpack(pack(dMem.events) | pack(dTlb.events));
      //Vector #(16, Bit #(Report_Width)) dmem_evts_vec = to_large_vector (dataMem);
+     EventsCacheCore tgc_evts = events_tgc_reg;
      //Vector #(32, Bit #(Report_Width)) tgc_evts_vec = to_large_vector (events_tgc_reg);
      //EventsCache llMem = unpack(pack(events_llc_reg) | pack(l2Tlb.events));
+     EventsLL llmem_evts = unpack(pack(events_llc_reg) | pack(l2Tlb.events));
      //Vector #(16, Bit #(Report_Width)) llc_evts_vec = to_large_vector (llMem);
 
 `ifdef CONTRACTS_VERIFY
@@ -1206,7 +1212,11 @@ module mkCore#(CoreId coreId)(Core);
      //events = append (events, dmem_evts_vec);
      //events = append (events, tgc_evts_vec);
      //events = append (events, llc_evts_vec);
-     Vector#(112, Bit#(Report_Width)) events = replicate(0);
+     //Vector#(109, Bit#(Report_Width)) events = replicate(0);
+     let ev_struct = HPMEvents{mab_EventsCore: tagged Valid core_evts, mab_EventsL1I: tagged Valid imem_evts,
+                               mab_EventsL1D: tagged Valid dmem_evts, mab_EventsLL: tagged Valid llmem_evts,
+                               mab_EventsCacheCore: tagged Valid tgc_evts};
+     let events = generateHPMVector(ev_struct);
 `ifdef CONTRACTS_VERIFY
      events = append (events, trans_exe_evts_vec);
 `endif

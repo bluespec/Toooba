@@ -1311,19 +1311,19 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 `endif
 `ifdef PERFORMANCE_MONITORING
         EventsCore events = unpack(0);
-        events.evt_BRANCH = brCnt;
-        events.evt_JAL = jmpCnt;
-        events.evt_JALR = jrCnt;
-        events.evt_AUIPC = auipcCnt; // XXX
-        events.evt_LOAD = ldCnt;
-        events.evt_STORE = stCnt;
-        events.evt_LR = lrCnt;
-        events.evt_SC = scCnt;
-        events.evt_AMO = amoCnt;
-        events.evt_SERIAL_SHIFT = shiftCnt;
-        events.evt_INT_MUL_DIV_REM = muldivCnt;
-        events.evt_FP = fpuCnt;
-        events.evt_FENCE = fenceCnt;
+        events.evt_BRANCH = zeroExtend(brCnt);
+        events.evt_JAL = zeroExtend(jmpCnt);
+        events.evt_JALR = zeroExtend(jrCnt);
+        events.evt_AUIPC = zeroExtend(auipcCnt); // XXX
+        events.evt_LOAD = zeroExtend(ldCnt);
+        events.evt_STORE = zeroExtend(stCnt);
+        events.evt_LR = zeroExtend(lrCnt);
+        events.evt_SC = zeroExtend(scCnt);
+        events.evt_AMO = zeroExtend(amoCnt);
+        events.evt_SERIAL_SHIFT = zeroExtend(shiftCnt);
+        events.evt_INT_MUL_DIV_REM = zeroExtend(muldivCnt);
+        events.evt_FP = zeroExtend(fpuCnt);
+        events.evt_FENCE = zeroExtend(fenceCnt);
         events_reg <= events;
 `ifdef CONTRACTS_VERIFY
         inIfc.updateTargets(targets);
