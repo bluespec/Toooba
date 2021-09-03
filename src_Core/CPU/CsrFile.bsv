@@ -40,6 +40,7 @@
 `include "ProcConfig.bsv"
 import Types::*;
 import ProcTypes::*;
+import StatCounters::*;
 import DefaultValue::*;
 import ConcatReg::*;
 import ConfigReg::*;
