@@ -1,9 +1,7 @@
 package Proc;
 
-// Note: this module corresponds to module 'mkCPU' in Piccolo/Flute.
-
 // Copyright (c) 2018 Massachusetts Institute of Technology
-// Portions Copyright (c) 2019-2020 Bluespec, Inc.
+// Portions Copyright (c) 2019-2021 Bluespec, Inc.
 //
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
@@ -64,25 +62,31 @@ import DramCommon::*;
 import Performance::*;
 
 // ----------------
-// From Tooba
+// From Toooba
 
 import ISA_Decls  :: *;
 
-import CPU               :: *;    // Was 'Core' in RISCY_OOO
-import Proc_IFC          :: *;
-import MMIOPlatform      :: *;
+import SoC_Map      :: *;
+import AXI4_Types   :: *;
+import AXI_Widths   :: *;
+import Fabric_Defs  :: *;
+
+import CPU       :: *;    // Was 'Core' in RISCY_OOO
+import Proc_IFC  :: *;
+
+import DMA_Cache         :: *;
+import L1_IFC_Adapter    :: *;
+import MMIO              :: *;
+import MMIO_AXI4_Adapter :: *;
+
+import MMIOPlatform              :: *;
+import MMIOPlatform_AXI4_Adapter :: *;
 
 `ifdef MEM_512b
 import LLC_AXI4_Adapter_2 :: *;
 `else
 import LLC_AXI4_Adapter   :: *;
 `endif
-
-import MMIO_AXI4_Adapter :: *;
-
-import SoC_Map      :: *;
-import AXI4_Types   :: *;
-import Fabric_Defs  :: *;
 
 `ifdef INCLUDE_GDB_CONTROL
 import DM_CPU_Req_Rsp  :: *;
@@ -98,17 +102,27 @@ import Trace_Data2 :: *;
 (* synthesize *)
 module mkProc (Proc_IFC);
 
+   Integer verbosity_mmio_axi4_adapter = 0;
+   Integer verbosity_DMA_L1_L2         = 0;
+
+`ifdef OPTION_DMA_CACHE
+   messageM ("\nINFO: mkProc: instantiating DMA Cache connecting to L2/LLC");
+`else
+   messageM ("\nINFO: mkProc: omitting DMA Cache");
+`endif
+
    // ----------------
-    // cores
-    Vector#(CoreNum, Core) core = ?;
-    for(Integer i = 0; i < valueof(CoreNum); i = i+1) begin
-        core[i] <- mkCPU(fromInteger(i));
-    end
+   // cores
+   Vector#(CoreNum, Core) core = ?;
+   for(Integer i = 0; i < valueof(CoreNum); i = i+1) begin
+      core[i] <- mkCPU(fromInteger(i));
+   end
 
    // ----------------
    // MMIO
 
-   MMIO_AXI4_Adapter_IFC mmio_axi4_adapter <- mkMMIO_AXI4_Adapter;
+   MMIOPlatform_AXI4_Adapter_IFC  mmioplatform_axi4_adapter
+                                  <- mkMMIOPlatform_AXI4_Adapter;
 
    // MMIO platform
    Vector#(CoreNum, MMIOCoreToPlatform) mmioToP;
@@ -116,17 +130,40 @@ module mkProc (Proc_IFC);
       mmioToP[i] = core[i].mmioToPlatform;
    end
    MMIOPlatform mmioPlatform <- mkMMIOPlatform (mmioToP,
-						mmio_axi4_adapter.core_side);
+						mmioplatform_axi4_adapter.core_side);
+
+`ifdef OPTION_DMA_CACHE
+   DMA_Cache_IFC  dma_cache  <- mkDMA_Cache;
+
+   // Adapter (vector size 1) for MMIO interface of dma_cache to AXI4
+   MMIO_AXI4_Adapter_IFC #(1)
+       mmio_axi4_adapter <- mkMMIO_AXI4_Adapter (fromInteger (verbosity_mmio_axi4_adapter));
+
+   mkConnection (dma_cache.mmio_client,   mmio_axi4_adapter.v_mmio_server [0]);
+`endif
 
    // last level cache
    LLCache llc <- mkLLCache;
 
-   // connect LLC to L1 caches
-   Vector#(L1Num, ChildCacheToParent#(L1Way, void)) l1 = ?;
+   // ----------------
+   // connect core L1 I- and D-caches to LLC
+   Vector #(L1Num, ChildCacheToParent#(L1Way, void)) l1 = ?;
    for(Integer i = 0; i < valueof(CoreNum); i = i+1) begin
-      l1[i] = core[i].dCacheToParent;
+      l1[i]                    = core[i].dCacheToParent;
       l1[i + valueof(CoreNum)] = core[i].iCacheToParent;
    end
+
+`ifdef OPTION_DMA_CACHE
+   // Instantiate L1_IFC adapter connected to dma_cache
+   Integer l1_client_id = 2 * valueOf (CoreNum);
+   let ifc_DMA_L1 <- mkL1_IFC_Adapter (verbosity_DMA_L1_L2,
+				       l1_client_id,
+				       dma_cache.l1_to_l2_client,
+				       dma_cache.l2_to_l1_server);
+   // and connect it to LLC
+   l1 [fromInteger (l1_client_id)] = ifc_DMA_L1;
+`endif
+
    mkL1LLConnect(llc.to_child, l1);
 
    // ================================================================
@@ -139,6 +176,7 @@ module mkProc (Proc_IFC);
     end
 
    // Note: mkLLCDmaConnect is Toooba version, different from riscy-ooo version
+   // llc_mem_server is an AXI4_S that serves the Debug Module
    let llc_mem_server <- mkLLCDmaConnect(llc.dma, tlbToMem);
 
    // ================================================================
@@ -224,6 +262,7 @@ module mkProc (Proc_IFC);
    // ================================================================
    // Print out values written 'tohost'
 
+   /* DELETE: OLD
    rule rl_tohost;
       let x <- mmioPlatform.to_host;
       $display ("%0d: mmioPlatform.rl_tohost: 0x%0x (= %0d)", cur_cycle, x, x);
@@ -239,6 +278,7 @@ module mkProc (Proc_IFC);
 	 // $finish (0);
       end
    endrule
+    */
 
 
 `ifdef INCLUDE_GDB_CONTROL
@@ -258,31 +298,29 @@ module mkProc (Proc_IFC);
    // ================================================================
    // INTERFACE
 
-   // ----------------
-   // Start the cores running
-   // Use toHostAddr = 0 if not monitoring tohost
-   method Action start (Bool running, Addr startpc, Addr tohostAddr, Addr fromhostAddr);
-      action
-	 for(Integer i = 0; i < valueof(CoreNum); i = i+1)
-	    core[i].coreReq.start (running, startpc, tohostAddr, fromhostAddr);
-      endaction
-
-      mmioPlatform.start (tohostAddr, fromhostAddr);
-
-      llc_axi4_adapter.ma_ddr4_ready;    // Enable memory access
-
-      $display ("%0d: %m.method start: startpc %0h, tohostAddr %0h, fromhostAddr %0h",
-		cur_cycle, startpc, tohostAddr, fromhostAddr);
-   endmethod
+   AXI4_Slave_IFC #(Wd_Id_Dma,
+		    Wd_Addr_Dma,
+		    Wd_Data_Dma,
+		    Wd_User_Dma) dma_server_tieoff = dummy_AXI4_Slave_ifc;
 
    // ----------------
    // SoC fabric connections
 
-   // Fabric master interface for memory (from LLC)
+   // M interface for memory (from LLC)
    interface  master0 = llc_axi4_adapter.mem_master;
 
-   // Fabric master interface for IO (from MMIOPlatform)
-   interface  master1 = mmio_axi4_adapter.mmio_master;
+   // M interface for IO (from MMIOPlatform)
+   interface  master1 = mmioplatform_axi4_adapter.mmio_master;
+
+   // M interface for IO (from DMA_Cache)
+   interface  master2 = mmio_axi4_adapter.mem_master;
+
+   // Interface to 'coherent DMA' port of L2 cache
+`ifdef OPTION_DMA_CACHE
+   interface dma_server = dma_cache.axi4_s;
+`else
+   interface dma_server = dma_server_tieoff;
+`endif
 
    // ----------------
    // External interrupts
@@ -302,13 +340,6 @@ module mkProc (Proc_IFC);
 
    // TODO: fixup: NMIs should send CPU to an NMI vector (TBD in SoC_Map)
    method Action  non_maskable_interrupt_req (Bool set_not_clear) = noAction;
-
-   // ----------------
-   // For tracing
-
-   method Action  set_verbosity (Bit #(4)  verbosity);
-      noAction;
-   endmethod
 
    // ----------------
    // Coherent port into LLC (used by Debug Module, DMA engines, ... to read/write memory)
@@ -338,6 +369,54 @@ module mkProc (Proc_IFC);
 `ifdef INCLUDE_TANDEM_VERIF
    interface v_to_TV = core [0].v_to_TV;
 `endif
+
+   // ----------------------------------------------------------------
+   // Misc. control and status
+
+   // ----------------
+   // For tracing
+
+   method Action  set_verbosity (Bit #(4)  verbosity);
+      noAction;
+   endmethod
+
+   // ----------------
+   // For ISA tests: watch memory writes to <tohost> addr
+
+`ifdef WATCH_TOHOST
+   method Action ma_set_watch_tohost (Bool watch_tohost, Bit #(64) tohost_addr);
+      mmioPlatform.ma_set_watch_tohost (watch_tohost, tohost_addr);
+   endmethod
+
+   method Bit #(64) mv_tohost_value;
+      return mmioPlatform.mv_tohost_value;
+   endmethod
+`endif
+
+   // ----------------
+   // Start the hart(s)
+   // Use toHostAddr = 0 if not monitoring tohost
+   method Action start (Bool running, Addr startpc, Addr tohostAddr, Addr fromhostAddr);
+      $display ("%0d: %m.m_start: ", cur_cycle);
+      $display ("    running %0d  startpc %0h  tohostAddr %0h  fromhostAddr %0h",
+		running, startpc, tohostAddr, fromhostAddr);
+      for(Integer i = 0; i < valueof(CoreNum); i = i+1) begin
+	 core[i].coreReq.start (running, startpc, tohostAddr, fromhostAddr);
+	 $display ("    start CPU[%0d]", i);
+      end
+
+      mmioPlatform.start (tohostAddr, fromhostAddr);
+   endmethod
+
+   // Inform core that DDR4 has been initialized and is ready to accept requests
+   method Action ma_ddr4_ready;
+      llc_axi4_adapter.ma_ddr4_ready;    // Enable memory access
+   endmethod
+
+   // Misc. status; 0 = running, no error
+   method Bit #(8) mv_status;
+      return 0;    // TODO: return a more meaningful value on fatal errors?
+   endmethod
 
 endmodule: mkProc
 

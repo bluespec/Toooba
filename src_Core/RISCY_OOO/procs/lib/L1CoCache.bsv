@@ -65,8 +65,13 @@ export L1IPRqStuck(..);
 export ICoCache(..);
 export mkICoCache;
 
-// L1$: 1 I$ and 1 D$
+// L1$: 1 I$ and 1 D$, plus 1 for the coherent-DMA cache
+`ifdef OPTION_DMA_CACHE
+// When device's coherent port comes from DMA_Cache
+typedef TAdd #(TMul#(CoreNum, 2), 1) L1Num;
+`else
 typedef TMul#(CoreNum, 2) L1Num;
+`endif
 
 // Way num is shared among all coherent L1$ (I and D)
 typedef `LOG_L1_WAYS LgL1WayNum;

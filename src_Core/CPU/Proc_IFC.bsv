@@ -41,18 +41,21 @@ import Trace_Data2 :: *;
 interface Proc_IFC;
 
    // ----------------
-   // Start the cores running
-   // Use toHostAddr = 0 if not monitoring tohost
-   method Action start (Bool running, Addr startpc, Addr tohostAddr, Addr fromhostAddr);
-
-   // ----------------
    // SoC fabric connections
 
-   // Fabric master interface for memory (from LLC)
+   // M interface for memory (from LLC)
    interface AXI4_Master_IFC #(Wd_Id_Mem, Wd_Addr_Mem, Wd_Data_Mem, Wd_User_Mem)  master0;
 
-   // Fabric master interface for IO (from MMIOPlatform)
+   // M interface for IO (from MMIOPlatform)
    interface AXI4_Master_IFC #(Wd_Id, Wd_Addr, Wd_Data, Wd_User)  master1;
+
+   // M interface for IO (from DMA_Cache)
+   interface AXI4_Master_IFC #(Wd_Id, Wd_Addr, Wd_Data, Wd_User)  master2;
+
+   // ----------------------------------------------------------------
+   // Interface to 'coherent DMA' port of L2 cache
+
+   interface AXI4_Slave_IFC #(Wd_Id_Dma, Wd_Addr_Dma, Wd_Data_Dma, Wd_User_Dma)  dma_server;
 
    // ----------------
    // External interrupts
@@ -68,11 +71,6 @@ interface Proc_IFC;
 
    (* always_ready, always_enabled *)
    method Action  non_maskable_interrupt_req (Bool set_not_clear);
-
-   // ----------------
-   // Set core's verbosity
-
-   method Action  set_verbosity (Bit #(4)  verbosity);
 
    // ----------------
    // Coherent port into LLC (used by Debug Module, DMA engines, ... to read/write memory)
@@ -102,6 +100,34 @@ interface Proc_IFC;
    // channels can easily be merged into a single program-order stream.
    interface Vector #(SupSize, Get #(Trace_Data2)) v_to_TV;
 `endif
+
+   // ----------------------------------------------------------------
+   // Misc. control and status
+
+   // ----------------
+   // Set core's verbosity
+
+   method Action  set_verbosity (Bit #(4)  verbosity);
+
+   // ----------------
+   // For ISA tests: watch memory writes to <tohost> addr
+
+`ifdef WATCH_TOHOST
+   method Action ma_set_watch_tohost (Bool watch_tohost, Bit #(64) tohost_addr);
+   method Bit #(64) mv_tohost_value;
+`endif
+
+   // ----------------
+   // Start the cores running
+   // Use toHostAddr = 0 if not monitoring tohost
+   method Action start (Bool running, Addr startpc, Addr tohostAddr, Addr fromhostAddr);
+
+   // Inform core that DDR4 has been initialized and is ready to accept requests
+   method Action ma_ddr4_ready;
+
+   // Misc. status; 0 = running, no error
+   (* always_ready *)
+   method Bit #(8) mv_status;
 
 endinterface
 

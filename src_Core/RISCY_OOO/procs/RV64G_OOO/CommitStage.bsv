@@ -1,6 +1,6 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// Portions Copyright (c) 2019-2020 Bluespec, Inc.
+// Portions Copyright (c) 2019-2021 Bluespec, Inc.
 // 
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
@@ -160,7 +160,7 @@ deriving (Eq, FShow, Bits);
 module mkCommitStage#(CommitInput inIfc)(CommitStage);
     Bool verbose = False;
 
-    Integer verbosity = 1;   // Bluespec: for lightweight verbosity trace
+    Integer verbosity = 0;   // Bluespec: for lightweight verbosity trace
 
     // Used to inform tandem-verifier about program order.
     // 0 is used to indicate we've just come out of reset
@@ -549,9 +549,14 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         f_rob_data.enq (x);    // Save data to be sent to TV in rule doCommitTrap_handle, next
 `endif
 
-        if (verbosity >= 1) begin
-	   $display ("instret:%0d  PC:0x%0h  instr:0x%08h", rg_serial_num, x.pc, x.orig_inst,
-		     "  iType:", fshow (x.iType), "    [doCommitTrap]");
+        if ((verbosity >= 1) || ((rg_serial_num & 'h_F_FFFF) == 0))begin
+	   $display ("instret:%0d  PC:0x%0h  instr:0x%08h",
+		     rg_serial_num,
+		     x.pc,
+		     x.orig_inst,
+		     "  iType:",
+		     fshow (x.iType),
+		     "    [doCommitTrap]");
 	end
         if (verbose) begin
 	   $display ("CommitStage.doCommitTrap_flush: deq_data:   ", fshow (x));
@@ -717,9 +722,14 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         let x = rob.deqPort[0].deq_data;
 
         if(verbose) $display("[doCommitSystemInst] ", fshow(x));
-        if (verbosity >= 1) begin
-	   $display("instret:%0d  PC:0x%0h  instr:0x%08h", rg_serial_num, x.pc, x.orig_inst,
-		    "   iType:", fshow (x.iType), "    [doCommitSystemInst]");
+        if ((verbosity >= 1) || ((rg_serial_num & 'h_F_FFFF) == 0))begin
+	   $display("instret:%0d  PC:0x%0h  instr:0x%08h",
+		    rg_serial_num,
+		    x.pc,
+		    x.orig_inst,
+		    "   iType:",
+		    fshow (x.iType),
+		    "    [doCommitSystemInst]");
 	end
 
         // we claim a phy reg for every inst, so commit its renaming
@@ -936,9 +946,15 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                 else begin
                     if (verbose) $display("[doCommitNormalInst - %d] ", i, fshow(inst_tag), " ; ", fshow(x));
 
-		    if (verbosity >= 1) begin
-		       $display("instret:%0d  PC:0x%0h  instr:0x%08h", rg_serial_num + instret, x.pc, x.orig_inst,
-				"   iType:", fshow (x.iType), "    [doCommitNormalInst [%0d]]", i);
+		    if ((verbosity >= 1) || ((rg_serial_num & 'h_F_FFFF) == 0))begin
+		       $display("instret:%0d  PC:0x%0h  instr:0x%08h",
+				rg_serial_num + instret,
+				x.pc,
+				x.orig_inst,
+				"   iType:",
+				fshow (x.iType),
+				"    [doCommitNormalInst [%0d]]",
+				i);
 		    end
 
 `ifdef INCLUDE_TANDEM_VERIF

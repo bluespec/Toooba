@@ -58,7 +58,7 @@ module mkSpecTagManager(SpecTagManager);
         end
     end
 
-    rule debugSt;
+    rule debugSt (False);    // True for debug
         if ((next_spec_tag == tagged Invalid )) begin 
             $fdisplay(stdout, "SpecTag manager locked");
         end

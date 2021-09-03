@@ -1,6 +1,6 @@
 
 // Copyright (c) 2018 Massachusetts Institute of Technology
-// Portions (c) 2019-2020 Bluespec, Inc.
+// Portions (c) 2019-2021 Bluespec, Inc.
 //
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
@@ -206,8 +206,16 @@ endfunction: fn_amo_op
 
 interface MMIOPlatform;
    method Action start(Addr toHost, Addr fromHost);
+
+   /* DELETE: OBSOLETE
    method ActionValue#(Data) to_host;
    method Action from_host(Data x);
+   */
+
+`ifdef WATCH_TOHOST
+   method Action ma_set_watch_tohost (Bool watch_tohost, Bit #(64) tohost_addr);
+   method Bit #(64) mv_tohost_value;
+`endif
 endinterface
 
 typedef enum {
@@ -243,7 +251,8 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
    // mtime
    Reg#(Data) mtime <- mkReg(0);
    // HTIF mem mapped addrs
-   Fifo#(1, Data) toHostQ <- mkCFFifo;
+   Reg #(Data) rg_tohost_value <- mkReg (0);
+   // DELETE: OLD: Fifo#(1, Data) toHostQ <- mkCFFifo;
    Fifo#(1, Data) fromHostQ <- mkCFFifo;
    Reg#(DataAlignedAddr) toHostAddr <- mkReg(0);
    Reg#(DataAlignedAddr) fromHostAddr <- mkReg(0);
@@ -796,27 +805,36 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
         else begin
             let resp = MMIODataPRs {valid: False, data: ?};
             if(reqFunc == St) begin
-                if(toHostQ.notEmpty) begin
-                    doAssert(False,
-                             "Cannot write tohost when toHostQ not empty");
-                    // this will raise access fault
-                end
-                else begin
-                    let data = getWriteData(0);
-                    if(data != 0) begin // 0 means nothing for tohost
-                        toHostQ.enq(data);
-                    end
-                    resp.valid = True;
-                end
+	       let data = getWriteData(0);
+	       rg_tohost_value <= data;
+               resp.valid = True;
+
+	       /* DELETE: OLD
+	       if(toHostQ.notEmpty) begin
+                  doAssert(False,
+			   "Cannot write tohost when toHostQ not empty");
+                  // this will raise access fault
+		end
+               else begin
+                  let data = getWriteData(0);
+                  if(data != 0) begin // 0 means nothing for tohost
+		     toHostQ.enq(data);
+                  end
+                  resp.valid = True;
+		end
+		*/
             end
             else if(reqFunc == Ld) begin
                 resp.valid = True;
+	        resp.data  = rg_tohost_value;
+	       /* DELETE: OLD
                 if(toHostQ.notEmpty) begin
                     resp.data = toHostQ.first;
                 end
                 else begin
                     resp.data = 0;
                 end
+	       */
             end
             else begin
                 // amo: access fault
@@ -1085,6 +1103,7 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
         state <= SelectReq;
     endmethod
 
+   /* DELETE: OBSOLETE
     method ActionValue#(Data) to_host;
         toHostQ.deq;
         return toHostQ.first;
@@ -1093,4 +1112,16 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
     method Action from_host(Data x);
         fromHostQ.enq(x);
     endmethod
+   */
+
+`ifdef WATCH_TOHOST
+   method Action ma_set_watch_tohost (Bool watch_tohost, Bit #(64) tohost_addr);
+      toHostAddr <= (watch_tohost ? getDataAlignedAddr(tohost_addr) : 0);
+   endmethod
+
+   method Bit #(64) mv_tohost_value;
+      return rg_tohost_value;
+   endmethod
+`endif
+
 endmodule

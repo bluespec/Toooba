@@ -12,17 +12,20 @@ package Core;
 // 'CPU.bsv' to avoid the name clash.
 
 // This package defines:
-//     Core_IFC
 //     mkCore #(Core_IFC)
-//     mkFabric_2x3    -- specialized AXI4 fabric used inside this core
+//     mkFabric_3x3    -- specialized AXI4 fabric used inside this core
 //
 // mkCore instantiates:
 //     - mkProc (the RISC-V CPU, a version of MIT's RISCY-OOO)
-//     - mkFabric_2x3
+//     - mkFabric_3x3
 //     - mkPLIC_16_CoreNumX2_7
 //     - mkTV_Encode          (Tandem-Verification logic, optional: INCLUDE_TANDEM_VERIF)
 //     - mkDebug_Module       (RISC-V Debug Module, optional: INCLUDE_GDB_CONTROL)
 // and connects them all up.
+
+// ================================================================
+
+export mkCore;
 
 // ================================================================
 // BSV library imports
@@ -147,11 +150,8 @@ module mkCore #(Reset dm_power_on_reset)
    // TODO: could have separate resets for each core.
    Proc_IFC proc <- mkProc (reset_by all_harts_reset);
 
-   // TODO: this will change to 1x2 since
-   //     -- Debug Module mem will connect to dma_server
-   //     -- Clint is already inside Core
-   // A 2x3 fabric for connecting {CPU, Debug_Module} to {Fabric, PLIC}
-   Fabric_2x3_IFC  fabric_2x3 <- mkFabric_2x3;
+   // A 3x3 fabric for connecting {CPU, Debug_Module} to {Fabric, PLIC, coherent DMA port}
+   Fabric_3x3_IFC  fabric_3x3 <- mkFabric_3x3;
 
    // PLIC (Platform-Level Interrupt Controller)
    PLIC_IFC_16_CoreNumX2_7  plic <- mkPLIC_16_CoreNumX2_7;
@@ -176,7 +176,7 @@ module mkCore #(Reset dm_power_on_reset)
 
    // ================================================================
    // RESET
-   // TODO: DELETE this, since we're going to rely on RST_N signal only
+   // TODO: Re-architect this as a 'start' method, since we're going to rely on RST_N for reset
 
    // Reset requests from SoC and responses to SoC
    // 'Bool' is 'running' state
@@ -184,16 +184,16 @@ module mkCore #(Reset dm_power_on_reset)
    FIFOF #(Bool) f_reset_rsps <- mkFIFOF;
 
    rule rl_reset;
-      let running <- pop (f_reset_reqs);
-      let pc       = soc_map_struct.pc_reset_value;
-
-      // TODO: how is this done in Toooba?
+      // TODO: Toooba needs plumbing to be able to set addr_map for Near_Mem_IO/CLINT?
       // near_mem_io.set_addr_map (zeroExtend (soc_map.m_near_mem_io_addr_base),
       //			   zeroExtend (soc_map.m_near_mem_io_addr_lim));
 
       plic.set_addr_map (zeroExtend (soc_map.m_plic_addr_base),
 			 zeroExtend (soc_map.m_plic_addr_lim));
 
+      // Start the hart(s) in Proc
+      let running <- pop (f_reset_reqs);
+      let pc       = soc_map_struct.pc_reset_value;
       proc.start (running, pc, rg_tohost_addr, rg_fromhost_addr);
 
       f_reset_rsps.enq (running);
@@ -353,17 +353,19 @@ module mkCore #(Reset dm_power_on_reset)
 
 
    // ================================================================
-   // Connect the local 2x3 fabric
+   // Connect the local 3x3 fabric
 
-   // Masters on the local 2x3 fabric
-   mkConnection (proc.master1,  fabric_2x3.v_from_masters [cpu_dmem_master_num]);
-   mkConnection (dm_master_local, fabric_2x3.v_from_masters [debug_module_sba_master_num]);
+   // Masters on the local 3x3 fabric
+   mkConnection (proc.master1,    fabric_3x3.v_from_masters [cpu_dmem_master1_num]);
+   mkConnection (proc.master2,    fabric_3x3.v_from_masters [cpu_dmem_master2_num]);
+   mkConnection (dm_master_local, fabric_3x3.v_from_masters [debug_module_sba_master_num]);
 
-   // Slaves on the local 2x3 fabric
+   // Slaves on the local 3x3 fabric
    // Two of the slaves are connected here.
+   //     The [llc_slave_num] port is how the Debug Module talks to memory
    // The third slave (default slave) is taken out directly to the Core interface
-   mkConnection (fabric_2x3.v_to_slaves [plic_slave_num], plic.axi4_slave);
-   mkConnection (fabric_2x3.v_to_slaves [llc_slave_num],  proc.debug_module_mem_server);
+   mkConnection (fabric_3x3.v_to_slaves [plic_slave_num], plic.axi4_slave);
+   mkConnection (fabric_3x3.v_to_slaves [llc_slave_num],  proc.debug_module_mem_server);
 
    // ================================================================
    // Connect external interrupt lines from PLIC to CPU
@@ -384,11 +386,6 @@ module mkCore #(Reset dm_power_on_reset)
    // ================================================================
    // INTERFACE
 
-   AXI4_Slave_IFC #(Wd_Id_Dma,
-		    Wd_Addr_Dma,
-		    Wd_Data_Dma,
-		    Wd_User_Dma) dma_server_tieoff = dummy_AXI4_Slave_ifc;
-
    // ----------------------------------------------------------------
    // Soft reset
 
@@ -397,16 +394,16 @@ module mkCore #(Reset dm_power_on_reset)
    // ----------------------------------------------------------------
    // AXI4 Fabric interfaces
 
-   // MMIO to Fabric M interface
-   interface AXI4_Master_IFC  cpu_imem_master = fabric_2x3.v_to_slaves [default_slave_num];
-
    // LLC to Fabric M interface
    interface AXI4_Master_IFC  core_mem_master = proc.master0;
+
+   // MMIO to Fabric M interface
+   interface AXI4_Master_IFC  cpu_imem_master = fabric_3x3.v_to_slaves [default_slave_num];
 
    // ----------------------------------------------------------------
    // Interface to 'coherent DMA' port of caches
 
-   interface AXI4_Slave_IFC  dma_server = dma_server_tieoff;    // TODO: FIXME
+   interface AXI4_Slave_IFC  dma_server = proc.dma_server;
 
    // ----------------------------------------------------------------
    // External interrupt sources
@@ -471,69 +468,71 @@ module mkCore #(Reset dm_power_on_reset)
 
 `ifdef WATCH_TOHOST
    method Action set_watch_tohost (Bool watch_tohost, Bit #(64) tohost_addr);
-      // TODO: FIXME
-      // proc.set_watch_tohost (watch_tohost, tohost_addr);
+      proc.ma_set_watch_tohost (watch_tohost, tohost_addr);
+
 `ifdef INCLUDE_GDB_CONTROL
+      // DELETE: OBSOLETE
       // Save for potential future use by rl_dm_harts_reset
-      rg_tohost_addr   <= tohost_addr;
+      rg_tohost_addr <= tohost_addr;
 `endif
    endmethod
 
-   method Bit #(64) mv_tohost_value = 0; // TODO: FIXME: proc.mv_tohost_value;
+   method Bit #(64) mv_tohost_value;
+      return proc.mv_tohost_value;
+   endmethod
 `endif
 
    // Inform core that DDR4 has been initialized and is ready to accept requests
    method Action ma_ddr4_ready;
-      // TODO: FIXME
-      // proc.ma_ddr4_ready;
+      proc.ma_ddr4_ready;
    endmethod
 
    // Misc. status; 0 = running, no error
    method Bit #(8) mv_status;
-      // TODO: FIXME
-      return 0; // proc.mv_status;
+      return proc.mv_status;
    endmethod
 endmodule: mkCore
 
 // ================================================================
-// 2x3 Fabric for this Core
+// 3x3 Fabric for this Core
 // Masters: CPU DMem, Debug Module System Bus Access, External access
 
 // ----------------
 // Fabric port numbers for masters
 
-typedef 2  Num_Masters_2x3;
+typedef 3  Num_Masters_3x3;
 
-typedef Bit #(TLog #(Num_Masters_2x3))  Master_Num_2x3;
+typedef Bit #(TLog #(Num_Masters_3x3))  Master_Num_3x3;
 
-Master_Num_2x3  cpu_dmem_master_num         = 0;
-Master_Num_2x3  debug_module_sba_master_num = 1;
+Master_Num_3x3  cpu_dmem_master1_num        = 0;
+Master_Num_3x3  cpu_dmem_master2_num        = 1;
+Master_Num_3x3  debug_module_sba_master_num = 2;
 
 // ----------------
 // Fabric port numbers for slaves
 
-typedef 3  Num_Slaves_2x3;
+typedef 3  Num_Slaves_3x3;
 
-typedef Bit #(TLog #(Num_Slaves_2x3))  Slave_Num_2x3;
+typedef Bit #(TLog #(Num_Slaves_3x3))  Slave_Num_3x3;
 
-Slave_Num_2x3  default_slave_num = 0;    // for I/O, uncached memory, etc.
-Slave_Num_2x3  plic_slave_num    = 1;    // PLIC mem-mapped registers
-Slave_Num_2x3  llc_slave_num     = 2;    // Normal cached memory (connects to coherent Last-Level Cache)
+Slave_Num_3x3  default_slave_num = 0;    // for I/O, uncached memory, etc.
+Slave_Num_3x3  plic_slave_num    = 1;    // PLIC mem-mapped registers
+Slave_Num_3x3  llc_slave_num     = 2;    // Normal cached memory (connects to coherent Last-Level Cache)
 
 // ----------------
-// Specialization of parameterized AXI4 fabric for 2x3 Core fabric
+// Specialization of parameterized AXI4 fabric for 3x3 Core fabric
 
-typedef AXI4_Fabric_IFC #(Num_Masters_2x3,
-			  Num_Slaves_2x3,
+typedef AXI4_Fabric_IFC #(Num_Masters_3x3,
+			  Num_Slaves_3x3,
 			  Wd_Id,
 			  Wd_Addr,
 			  Wd_Data,
-			  Wd_User)  Fabric_2x3_IFC;
+			  Wd_User)  Fabric_3x3_IFC;
 
 // ----------------
 
 (* synthesize *)
-module mkFabric_2x3 (Fabric_2x3_IFC);
+module mkFabric_3x3 (Fabric_3x3_IFC);
 
    // System address map
    SoC_Map_IFC  soc_map  <- mkSoC_Map;
@@ -542,7 +541,7 @@ module mkFabric_2x3 (Fabric_2x3_IFC);
    // Slave address decoder
    // Any addr is legal, and there is only one slave to service it.
 
-   function Tuple2 #(Bool, Slave_Num_2x3) fn_addr_to_slave_num_2x3  (Fabric_Addr addr);
+   function Tuple2 #(Bool, Slave_Num_3x3) fn_addr_to_slave_num_3x3  (Fabric_Addr addr);
       if (   (soc_map.m_ddr4_0_cached_addr_base <= addr)
 	  && (addr < soc_map.m_ddr4_0_cached_addr_lim))
 	 return tuple2 (True, llc_slave_num);
@@ -555,11 +554,11 @@ module mkFabric_2x3 (Fabric_2x3_IFC);
 	 return tuple2 (True, default_slave_num);
    endfunction
 
-   AXI4_Fabric_IFC #(Num_Masters_2x3, Num_Slaves_2x3, Wd_Id, Wd_Addr, Wd_Data, Wd_User)
-       fabric <- mkAXI4_Fabric (fn_addr_to_slave_num_2x3);
+   AXI4_Fabric_IFC #(Num_Masters_3x3, Num_Slaves_3x3, Wd_Id, Wd_Addr, Wd_Data, Wd_User)
+       fabric <- mkAXI4_Fabric (fn_addr_to_slave_num_3x3);
 
    return fabric;
-endmodule: mkFabric_2x3
+endmodule: mkFabric_3x3
 
 // ================================================================
 
