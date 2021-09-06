@@ -60,8 +60,8 @@ import RandomReplace::*;
 `ifdef PERFORMANCE_MONITORING
 import PerformanceMonitor::*;
 import BlueUtils::*;
-`endif
 import StatCounters::*;
+`endif
 
 export ICRqStuck(..);
 export IPRqStuck(..);

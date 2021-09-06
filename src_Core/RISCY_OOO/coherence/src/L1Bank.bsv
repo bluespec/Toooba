@@ -62,9 +62,9 @@ import LatencyTimer::*;
 import RandomReplace::*;
 `ifdef PERFORMANCE_MONITORING
 import PerformanceMonitor::*;
+import StatCounters::*;
 import BlueUtils::*;
 `endif
-import StatCounters::*;
 
 export L1CRqStuck(..);
 export L1PRqStuck(..);

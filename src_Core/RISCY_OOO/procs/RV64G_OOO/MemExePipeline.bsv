@@ -72,9 +72,9 @@ import CacheUtils::*;
 `ifdef PERFORMANCE_MONITORING
 import PerformanceMonitor::*;
 import BlueUtils::*;
+import StatCounters::*;
 import DReg::*;
 `endif
-import StatCounters::*;
 
 import Cur_Cycle :: *;
 

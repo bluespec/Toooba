@@ -40,7 +40,6 @@
 `include "ProcConfig.bsv"
 import Types::*;
 import ProcTypes::*;
-import StatCounters::*;
 import DefaultValue::*;
 import ConcatReg::*;
 import ConfigReg::*;
@@ -61,6 +60,7 @@ import Cur_Cycle  :: *;
 
 `ifdef PERFORMANCE_MONITORING
 import PerformanceMonitor :: *;
+import StatCounters::*;
 `endif
 
 // ================================================================

@@ -1049,81 +1049,10 @@ endfunction
 function x addPc(x cap, Bit#(12) inc) provisos (Add#(f, 12, c), CHERICap::CHERICap#(x, a, b, c, d, e)) = setAddrUnsafe(cap, getAddr(cap) + signExtend(inc));
 
 `ifdef PERFORMANCE_MONITORING
-//`ifdef CONTRACTS_VERIFY
-//typedef 128 No_Of_Evts;
-//`else
-//typedef 112 No_Of_Evts;
-//`endif
 typedef   8 Report_Width;
 typedef  64 Counter_Width;
 typedef  29 No_Of_Ctrs;
 
-//typedef struct {
-//   SupCnt evt_REDIRECT;
-//   SupCnt evt_TRAP;
-//   SupCnt evt_BRANCH;
-//   SupCnt evt_JAL;
-//   SupCnt evt_JALR;
-//   SupCnt evt_AUIPC;
-//   SupCnt evt_LOAD;
-//   SupCnt evt_STORE;
-//   SupCnt evt_LR;
-//   SupCnt evt_SC;
-//   SupCnt evt_AMO;
-//   SupCnt evt_SERIAL_SHIFT;
-//   SupCnt evt_INT_MUL_DIV_REM;
-//   SupCnt evt_FP;
-//   SupCnt evt_SC_SUCCESS;
-//   SupCnt evt_LOAD_WAIT;
-//   SupCnt evt_STORE_WAIT;
-//   SupCnt evt_FENCE;
-//   SupCnt evt_F_BUSY_NO_CONSUME; // XXX
-//   SupCnt evt_D_BUSY_NO_CONSUME; // XXX
-//   SupCnt evt_1_BUSY_NO_CONSUME; // XXX
-//   SupCnt evt_2_BUSY_NO_CONSUME; // XXX
-//   SupCnt evt_3_BUSY_NO_CONSUME; // XXX
-//   SupCnt evt_IMPRECISE_SETBOUND; // XXX
-//   SupCnt evt_UNREPRESENTABLE_CAP; // XXX
-//   SupCnt evt_MEM_CAP_LOAD;
-//   SupCnt evt_MEM_CAP_STORE;
-//   SupCnt evt_MEM_CAP_LOAD_TAG_SET;
-//   SupCnt evt_MEM_CAP_STORE_TAG_SET;
-//} EventsCore deriving (Bits, FShow);
-//typedef TDiv#(SizeOf#(EventsCore),SizeOf#(SupCnt)) EventsCoreElements;
-//
-//typedef Bit#(Report_Width) HpmRpt;
-//typedef struct {
-//   HpmRpt evt_REDIRECT;
-//   HpmRpt evt_TRAP;
-//   HpmRpt evt_BRANCH;
-//   HpmRpt evt_JAL;
-//   HpmRpt evt_JALR;
-//   HpmRpt evt_AUIPC;
-//   HpmRpt evt_LOAD;
-//   HpmRpt evt_STORE;
-//   HpmRpt evt_LR;
-//   HpmRpt evt_SC;
-//   HpmRpt evt_AMO;
-//   HpmRpt evt_SERIAL_SHIFT;
-//   HpmRpt evt_INT_MUL_DIV_REM;
-//   HpmRpt evt_FP;
-//   HpmRpt evt_SC_SUCCESS;
-//   HpmRpt evt_LOAD_WAIT;
-//   HpmRpt evt_STORE_WAIT;
-//   HpmRpt evt_FENCE;
-//   HpmRpt evt_F_BUSY_NO_CONSUME; // XXX
-//   HpmRpt evt_D_BUSY_NO_CONSUME; // XXX
-//   HpmRpt evt_1_BUSY_NO_CONSUME; // XXX
-//   HpmRpt evt_2_BUSY_NO_CONSUME; // XXX
-//   HpmRpt evt_3_BUSY_NO_CONSUME; // XXX
-//   HpmRpt evt_IMPRECISE_SETBOUND; // XXX
-//   HpmRpt evt_UNREPRESENTABLE_CAP; // XXX
-//   HpmRpt evt_MEM_CAP_LOAD;
-//   HpmRpt evt_MEM_CAP_STORE;
-//   HpmRpt evt_MEM_CAP_LOAD_TAG_SET;
-//   HpmRpt evt_MEM_CAP_STORE_TAG_SET;
-//} EventsCoreMem deriving (Bits, FShow); // Memory needs more space for reporting delays
-//typedef TDiv#(SizeOf#(EventsCoreMem),Report_Width) EventsCoreMemElements;
 
 typedef struct {
    SupCnt evt_RENAMED_INST;

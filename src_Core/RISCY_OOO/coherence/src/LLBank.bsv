@@ -53,9 +53,9 @@ import ConfigReg::*;
 import RandomReplace::*;
 `ifdef PERFORMANCE_MONITORING
 import PerformanceMonitor::*;
+import StatCounters::*;
 import BlueUtils::*;
 `endif
-import StatCounters::*;
 
 export LLCRqStuck(..);
 export LLBank(..);
