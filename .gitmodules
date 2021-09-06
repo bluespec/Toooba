@@ -10,3 +10,6 @@
 [submodule "libs/cheri-cap-lib"]
 	path = libs/cheri-cap-lib
 	url = https://github.com/CTSRD-CHERI/cheri-cap-lib.git
+[submodule "libs/RISCV_HPM_Events"]
+	path = libs/RISCV_HPM_Events
+	url = https://github.com/CTSRD-CHERI/RISCV_HPM_Events.git
