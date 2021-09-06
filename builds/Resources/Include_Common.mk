@@ -138,7 +138,6 @@ TagTableStructure.bsv: $(REPO)/libs/TagController/tagsparams.py
 	@echo "INFO: Re-generating CHERI tag controller parameters"
 	$^ -v -c $(CAPSIZE) -s $(TAGS_STRUCT:"%"=%) -a $(TAGS_ALIGN) --data-store-base-addr 0x80000000 -b $@ 0x3fffc000 0xbffff000
 	@echo "INFO: Re-generated CHERI tag controller parameters"
-#compile: tagsparams
 
 
 .PHONY: generate_hpm_vector
