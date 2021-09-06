@@ -162,11 +162,11 @@ compile: tagsparams #stat_counters generate_hpm_vector
 .PHONY: clean
 clean:
 	rm -r -f  *~  Makefile_*  symbol_table.txt  build_dir/*  obj_dir Verilog_RTL/*
-	rm -f TagTableStructure.bsv
+	rm -f TagTableStructure.bsv StatCounters.bsv GenerateHPMVector.bsv
 
 .PHONY: full_clean
 full_clean: clean
 	rm -r -f  $(SIM_EXE_FILE)*  *.log  *.vcd  *.hex  Logs/
-	rm -f TagTableStructure.bsv .depends.mk
+	rm -f TagTableStructure.bsv GenerateHPMVector.bsv .depends.mk
 
 # ================================================================
