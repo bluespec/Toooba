@@ -138,7 +138,24 @@ TagTableStructure.bsv: $(REPO)/libs/TagController/tagsparams.py
 	@echo "INFO: Re-generating CHERI tag controller parameters"
 	$^ -v -c $(CAPSIZE) -s $(TAGS_STRUCT:"%"=%) -a $(TAGS_ALIGN) --data-store-base-addr 0x80000000 -b $@ 0x3fffc000 0xbffff000
 	@echo "INFO: Re-generated CHERI tag controller parameters"
-compile: tagsparams
+#compile: tagsparams
+
+
+.PHONY: generate_hpm_vector
+generate_hpm_vector: GenerateHPMVector.bsv
+GenerateHPMVector.bsv: $(REPO)/libs/RISCV_HPM_Events/parse_counters.py
+	@echo "INFO: Re-generating GenerateHPMVector bluespec file"
+	$^ -f $(REPO)/libs/RISCV_HPM_Events/counters.yaml -b $@
+	@echo "INFO: Re-generated GenerateHPMVector bluespec file"
+
+
+.PHONY: stat_counters
+stat_counters: StatCounters.bsv
+StatCounters.bsv: $(REPO)/libs/RISCV_HPM_Events/parse_counters.py
+	@echo "INFO: Re-generating HPM events struct bluepsec file"
+	$^ -f $(REPO)/libs/RISCV_HPM_Events/counters.yaml -s $@
+	@echo "INFO: Re-generated HPM events struct bluespec file"
+compile: tagsparams #stat_counters generate_hpm_vector
 
 # ================================================================
 

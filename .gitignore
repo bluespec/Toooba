@@ -21,3 +21,5 @@ builds/RV*/Verilog_RTL
 src_SSITH_P3/Verilog_RTL
 src_SSITH_P3/Verilog_RTL_sim
 **/TagTableStructure.bsv
+**/GenerateHPMVector.bsv
+**/StatCounters.bsv
