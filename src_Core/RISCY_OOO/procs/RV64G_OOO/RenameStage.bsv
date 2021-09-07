@@ -67,6 +67,7 @@ import SplitLSQ::*;
 import CHERICap::*;
 import CHERICC_Fat::*;
 import ISA_Decls_CHERI::*;
+import StatCounters::*;
 
 import Cur_Cycle :: *;
 
@@ -1186,7 +1187,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
 `endif
 `ifdef PERFORMANCE_MONITORING
         EventsTransExe events = unpack(0);
-        events.evt_RENAMED_INST = renameCnt;
+        events.evt_RENAMED_INST = zeroExtend(renameCnt);
         events_reg <= events;
 `endif
 

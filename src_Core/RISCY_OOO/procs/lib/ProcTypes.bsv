@@ -1054,14 +1054,6 @@ typedef  64 Counter_Width;
 typedef  29 No_Of_Ctrs;
 
 
-typedef struct {
-   SupCnt evt_RENAMED_INST;
-   SupCnt evt_WILD_JUMP;
-   SupCnt evt_WILD_EXCEPTION;
-} EventsTransExe deriving (Bits, FShow);
-typedef TDiv#(SizeOf#(EventsTransExe),SizeOf#(SupCnt)) EventsTransExeElements;
-`endif
-
 function Bit#(outWidth) hash(Bit#(inWidth) in)
     provisos(Add#(a__, inWidth, TMul#(TDiv#(inWidth, outWidth), outWidth)),
              Add#(1, b__, TDiv#(inWidth, outWidth)));

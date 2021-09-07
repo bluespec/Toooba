@@ -1162,15 +1162,13 @@ module mkCore#(CoreId coreId)(Core);
      EventsL1D dmem_evts = unpack(pack(dMem.events) | pack(dTlb.events));
      EventsCacheCore tgc_evts = events_tgc_reg;
      EventsLL llmem_evts = unpack(pack(events_llc_reg) | pack(l2Tlb.events));
+     Maybe#(EventsTransExe) mab_trans_exe = tagged Invalid;
 
-     let ev_struct = HPMEvents{mab_EventsCore: tagged Valid core_evts, mab_EventsL1I: tagged Valid imem_evts,
-                               mab_EventsL1D: tagged Valid dmem_evts, mab_EventsLL: tagged Valid llmem_evts,
-                               mab_EventsCacheCore: tagged Valid tgc_evts};
 
 `ifdef CONTRACTS_VERIFY
      EventsTransExe texe_evts = renameStage.events;
-     SupCnt wildJumps = 0;
-     SupCnt wildExceptions = texe_evts.evt_WILD_EXCEPTION;
+     Bit#(Report_Width) wildJumps = 0;
+     Bit#(Report_Width) wildExceptions = texe_evts.evt_WILD_EXCEPTION;
      for(Integer i = 0; i < valueof(AluExeNum); i = i+1) begin
           let alu_events = coreFix.aluExeIfc[i].events;
           wildJumps = wildJumps + alu_events.evt_WILD_JUMP;
@@ -1179,15 +1177,14 @@ module mkCore#(CoreId coreId)(Core);
 
      texe_evts.evt_WILD_JUMP = wildJumps;
      texe_evts.evt_WILD_EXCEPTION = wildExceptions;
-     ev_struct = HPMEvents{mab_EventsCore: tagged Valid core_evts, mab_EventsL1I: tagged Valid imem_evts,
-                               mab_EventsL1D: tagged Valid dmem_evts, mab_EventsLL: tagged Valid llmem_evts,
-                               mab_EventsCacheCore: tagged Valid tgc_evts, mab_EventsTransExe: tagged Valid texe_evts};
+     mab_trans_exe = tagged Valid texe_evts;
 `endif
 
+     let ev_struct = HPMEvents{mab_EventsCore: tagged Valid core_evts, mab_EventsL1I: tagged Valid imem_evts,
+                               mab_EventsL1D: tagged Valid dmem_evts, mab_EventsLL: tagged Valid llmem_evts,
+                               mab_EventsCacheCore: tagged Valid tgc_evts, mab_EventsTransExe: mab_trans_exe};
+
      let events = generateHPMVector(ev_struct);
-`ifdef CONTRACTS_VERIFY
-     events = append (events, trans_exe_evts_vec);
-`endif
 
      (* fire_when_enabled, no_implicit_conditions *)
      rule rl_send_perf_evts;
