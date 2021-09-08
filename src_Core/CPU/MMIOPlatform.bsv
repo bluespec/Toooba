@@ -968,10 +968,8 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
          // Access fault
          Vector #(SupSizeX2, Maybe #(Instruction16)) resp = replicate (Invalid);
          for(Integer i = 0; i < valueof (SupSizeX2); i = i+1) begin
-            if (fromInteger (i) < fetchingWay)
-               resp [i] = Valid (fetchedInsts [i]);
-            else if (fromInteger (i) == fetchingWay)
-               resp [i] = tagged Invalid;
+            if (fromInteger (i) <= fetchingWay)
+               resp [i] = Valid (unpack(pack(0)));
          end
          cores[reqCore].pRs.enq (tagged InstFetch resp);
          state <= SelectReq;
