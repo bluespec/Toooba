@@ -969,7 +969,7 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
          Vector #(SupSizeX2, Maybe #(Instruction16)) resp = replicate (Invalid);
          for(Integer i = 0; i < valueof (SupSizeX2); i = i+1) begin
             if (fromInteger (i) <= fetchingWay)
-               resp [i] = Valid (unpack(pack(0)));
+               resp [i] = Valid (0);
          end
          cores[reqCore].pRs.enq (tagged InstFetch resp);
          state <= SelectReq;
