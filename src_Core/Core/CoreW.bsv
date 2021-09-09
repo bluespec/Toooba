@@ -126,8 +126,8 @@ module mkCoreW (CoreW_IFC #(t_n_irq));
    Clock clk <- exposeCurrentClock;
    Reset rst <- exposeCurrentReset;
    let newRst <- mkReset (0, True, clk, reset_by rst);
-   match {.otherRst, .ifc} <- mkCoreResetHelper ( rst
-                                                , reset_by newRst.new_rst);
+   match {.otherRst, .ifc} <- mkCoreW_reset ( rst
+                                            , reset_by newRst.new_rst);
    rule rl_forward_debug_reset (otherRst);
       newRst.assertReset;
    endrule
@@ -137,8 +137,8 @@ endmodule
 // The interface to this module is a convenience to avoid exposing the reset
 // hacks to the nicer outer interface, and not have to use a large amount of
 // reset_by to decouple the debug module from the rest...
-module mkCoreResetHelper #(Reset toDbgReset)
-                          (Tuple2#(PulseWire, CoreW_IFC #(t_n_irq)));
+module mkCoreW_reset #(Reset toDbgReset)
+                      (Tuple2#(PulseWire, CoreW_IFC #(t_n_irq)));
 
    // ================================================================
    // Notes on 'reset'
@@ -244,6 +244,7 @@ module mkCoreResetHelper #(Reset toDbgReset)
    // ================================================================
    // Hart-reset from DM
 
+   Bool start_running = False;
 `ifdef INCLUDE_GDB_CONTROL
    Reg #(Bit #(8))  rg_harts_reset_delay <- mkReg (0);
    Reg #(Bit #(64)) rg_tohost_addr       <- mkReg (0);
@@ -262,11 +263,10 @@ module mkCoreResetHelper #(Reset toDbgReset)
    rule rl_dm_harts_reset_wait (rg_harts_reset_delay != 0);
       if (rg_harts_reset_delay == 1) begin
          let pc = soc_map_struct.pc_reset_value;
-         Bool is_running = True;
-	 proc.start (is_running, pc, rg_tohost_addr, rg_fromhost_addr);
+	     proc.start (start_running, pc, rg_tohost_addr, rg_fromhost_addr);
          // We reset all the harts, so we indicate this to the DM, even though it's possible only one hart was requested to reset
          for (Integer core = 0; core < valueOf(CoreNum); core = core + 1)
-	    debug_module.harts_reset_client[core].response.put (is_running);
+	    debug_module.harts_reset_client[core].response.put (start_running);
 	 $display ("%0d: %m.rl_dm_harts_reset_wait: proc.start (pc %0h, tohostAddr %0h, fromhostAddr %0h",
                    cur_cycle, pc, rg_tohost_addr, rg_fromhost_addr);
       end
@@ -274,6 +274,15 @@ module mkCoreResetHelper #(Reset toDbgReset)
    endrule
 
 `endif
+   // ================================================================
+   // Start the proc a suitable time after a PoR
+   UInt#(8) initial_wait = 100; // heuristic -- better to wait till "all out of reset" received from corew
+   Reg #(UInt#(8)) rg_corew_start_after_por <- mkReg(initial_wait);
+   rule rl_step_0 (rg_corew_start_after_por != 0);
+      let n = rg_corew_start_after_por - 1;
+      rg_corew_start_after_por <= n;
+      if (n==0) do_release(start_running);
+   endrule
 
 `ifdef INCLUDE_GDB_CONTROL
    // ================================================================
@@ -470,7 +479,7 @@ module mkCoreResetHelper #(Reset toDbgReset)
 
    let fromDbgReset <- mkPulseWire (reset_by toDbgReset);
    Reg #(UInt #(8)) ndm_reset_delay <- mkReg (0, reset_by toDbgReset);
-   Reg #(Bool) ndm_reset_restart_running <- mkReg (True, reset_by toDbgReset);
+   Reg #(Bool) ndm_reset_restart_running <- mkReg (False, reset_by toDbgReset);
    rule rl_debug_module_send_reset (ndm_reset_delay == 0);
       let restartRunning <- debug_module.ndm_reset_client.request.get;
       ndm_reset_delay <= 110;
@@ -575,7 +584,7 @@ module mkCoreResetHelper #(Reset toDbgReset)
 */
 
    return tuple2 (fromDbgReset, ifc);
-endmodule: mkCoreResetHelper
+endmodule: mkCoreW_reset
 
 // ================================================================
 // 2x3 Fabric for this Core
