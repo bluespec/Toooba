@@ -58,9 +58,9 @@ BLUESTUFF_DIRS = $(REPO)/libs/BlueStuff:$(REPO)/libs/BlueStuff/AXI:$(REPO)/libs/
 
 TAGCONTROLLER_DIRS = $(REPO)/libs/TagController/TagController:$(REPO)/libs/TagController/TagController/CacheCore
 
-RISCV_HPM_Events_DIRS = $(REPO)/libs/RISCV_HPM_Events
+RISCV_HPM_Events_DIR = $(REPO)/libs/RISCV_HPM_Events
 
-BSC_PATH = $(BLUESTUFF_DIRS):$(ALL_RISCY_DIRS):$(CORE_DIRS):$(TESTBENCH_DIRS):$(TAGCONTROLLER_DIRS):$(RISCV_HPM_Events):+
+BSC_PATH = $(BLUESTUFF_DIRS):$(ALL_RISCY_DIRS):$(CORE_DIRS):$(TESTBENCH_DIRS):$(TAGCONTROLLER_DIRS):$(RISCV_HPM_Events_DIR):+
 
 # ----------------
 # Top-level file and module
@@ -142,17 +142,17 @@ TagTableStructure.bsv: $(REPO)/libs/TagController/tagsparams.py
 
 .PHONY: generate_hpm_vector
 generate_hpm_vector: GenerateHPMVector.bsv
-GenerateHPMVector.bsv: $(REPO)/libs/RISCV_HPM_Events/parse_counters.py
+GenerateHPMVector.bsv: $(RISCV_HPM_Events_DIR)/parse_counters.py
 	@echo "INFO: Re-generating GenerateHPMVector bluespec file"
-	$^ -f $(REPO)/libs/RISCV_HPM_Events/counters.yaml -b $@
+	$^ $(RISCV_HPM_Events_DIR)/counters.yaml -b $@
 	@echo "INFO: Re-generated GenerateHPMVector bluespec file"
 
 
 .PHONY: stat_counters
 stat_counters: StatCounters.bsv
-StatCounters.bsv: $(REPO)/libs/RISCV_HPM_Events/parse_counters.py
+StatCounters.bsv: $(RISCV_HPM_Events_DIR)/parse_counters.py
 	@echo "INFO: Re-generating HPM events struct bluepsec file"
-	$^ -f $(REPO)/libs/RISCV_HPM_Events/counters.yaml -s $@
+	$^ $(RISCV_HPM_Events_DIR)/counters.yaml -s $@
 	@echo "INFO: Re-generated HPM events struct bluespec file"
 compile: tagsparams #stat_counters generate_hpm_vector
 
