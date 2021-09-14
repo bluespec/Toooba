@@ -137,7 +137,7 @@ endmodule
 // The interface to this module is a convenience to avoid exposing the reset
 // hacks to the nicer outer interface, and not have to use a large amount of
 // reset_by to decouple the debug module from the rest...
-module mkCoreW_reset #(Reset toDbgReset)
+module mkCoreW_reset #(Reset porReset)
                       (Tuple2#(PulseWire, CoreW_IFC #(t_n_irq)));
 
    // ================================================================
@@ -147,7 +147,7 @@ module mkCoreW_reset #(Reset toDbgReset)
    // 'non-debug-module reset', or 'ndm-reset': it resets everything
    // in mkCoreW other than the optional RISC-V Debug Module (DM).
 
-   // DM is reset ONLY by 'toDbgReset' (parameter of this module).
+   // DM is reset ONLY by 'porReset' (parameter of this module).
    // This is expected to be performed exactly once, on power-up.
 
    // Note: DM has an internal functionality that the DM spec calls
@@ -228,7 +228,7 @@ module mkCoreW_reset #(Reset toDbgReset)
 
 `ifdef INCLUDE_GDB_CONTROL
    // Debug Module
-   Debug_Module_IFC  debug_module <- mkDebug_Module (reset_by toDbgReset);
+   Debug_Module_IFC  debug_module <- mkDebug_Module (reset_by porReset);
 `endif
 
 `ifdef INCLUDE_TANDEM_VERIF
@@ -252,22 +252,21 @@ module mkCoreW_reset #(Reset toDbgReset)
 
    for (Integer core = 0; core < valueOf(CoreNum); core = core + 1)
       rule rl_dm_harts_reset (rg_harts_reset_delay == 0);
-	 let x <- debug_module.harts_reset_client[core].request.get;
-	 dm_harts_reset_controller[core].assertReset;
-	 rg_harts_reset_delay <= fromInteger (hart_reset_duration + 200);    // NOTE: heuristic
-
-	 $display ("%0d: %m.rl_dm_harts_reset: asserting harts reset for %0d cycles",
+         let x <- debug_module.harts_reset_client[core].request.get;
+         dm_harts_reset_controller[core].assertReset;
+         rg_harts_reset_delay <= fromInteger (hart_reset_duration + 200);    // NOTE: heuristic
+         $display ("%0d: %m.rl_dm_harts_reset: asserting harts reset for %0d cycles",
                 cur_cycle, hart_reset_duration);
-   endrule
+      endrule
 
    rule rl_dm_harts_reset_wait (rg_harts_reset_delay != 0);
       if (rg_harts_reset_delay == 1) begin
          let pc = soc_map_struct.pc_reset_value;
-	     proc.start (start_running, pc, rg_tohost_addr, rg_fromhost_addr);
+         proc.start (start_running, pc, rg_tohost_addr, rg_fromhost_addr);
          // We reset all the harts, so we indicate this to the DM, even though it's possible only one hart was requested to reset
          for (Integer core = 0; core < valueOf(CoreNum); core = core + 1)
-	    debug_module.harts_reset_client[core].response.put (start_running);
-	 $display ("%0d: %m.rl_dm_harts_reset_wait: proc.start (pc %0h, tohostAddr %0h, fromhostAddr %0h",
+         debug_module.harts_reset_client[core].response.put (start_running);
+         $display ("%0d: %m.rl_dm_harts_reset_wait: proc.start (pc %0h, tohostAddr %0h, fromhostAddr %0h",
                    cur_cycle, pc, rg_tohost_addr, rg_fromhost_addr);
       end
       rg_harts_reset_delay <= rg_harts_reset_delay - 1;
@@ -277,7 +276,7 @@ module mkCoreW_reset #(Reset toDbgReset)
    // ================================================================
    // Start the proc a suitable time after a PoR
    UInt#(8) initial_wait = 100; // heuristic -- better to wait till "all out of reset" received from corew
-   Reg #(UInt#(8)) rg_corew_start_after_por <- mkReg(initial_wait);
+   Reg #(UInt#(8)) rg_corew_start_after_por <- mkReg(initial_wait, reset_by porReset);
    rule rl_step_0 (rg_corew_start_after_por != 0);
       let n = rg_corew_start_after_por - 1;
       rg_corew_start_after_por <= n;
@@ -288,8 +287,8 @@ module mkCoreW_reset #(Reset toDbgReset)
    // ================================================================
    // Direct DM-to-CPU connections for run-control and other misc requests
 
-   mkConnection (debug_module.harts_client_run_halt, proc.harts_run_halt_server, reset_by toDbgReset);
-   mkConnection (debug_module.harts_get_other_req,   proc.harts_put_other_req, reset_by toDbgReset);
+   mkConnection (debug_module.harts_client_run_halt, proc.harts_run_halt_server, reset_by porReset);
+   mkConnection (debug_module.harts_get_other_req,   proc.harts_put_other_req, reset_by porReset);
 `endif
 
 `ifdef INCLUDE_TANDEM_VERIF
@@ -370,15 +369,15 @@ module mkCoreW_reset #(Reset toDbgReset)
    // BEGIN SECTION: DM, no TV
 
    // Connect DM's GPR interface directly to CPU
-   mkConnection (debug_module.harts_gpr_mem_client, proc.harts_gpr_mem_server, reset_by toDbgReset);
+   mkConnection (debug_module.harts_gpr_mem_client, proc.harts_gpr_mem_server, reset_by porReset);
 
 `ifdef ISA_F_OR_D
    // Connect DM's FPR interface directly to CPU
-   mkConnection (debug_module.harts_fpr_mem_client, proc.harts_fpr_mem_server, reset_by toDbgReset);
+   mkConnection (debug_module.harts_fpr_mem_client, proc.harts_fpr_mem_server, reset_by porReset);
 `endif
 
    // Connect DM's CSR interface directly to CPU
-   mkConnection (debug_module.harts_csr_mem_client, proc.harts_csr_mem_server, reset_by toDbgReset);
+   mkConnection (debug_module.harts_csr_mem_client, proc.harts_csr_mem_server, reset_by porReset);
 
    // DM's bus master is directly the bus master
    let dm_master_local = debug_module.master;
@@ -460,7 +459,7 @@ module mkCoreW_reset #(Reset toDbgReset)
    // ================================================================
    // Connect external debug module interface
 
-   let dbgShim <- mkAXI4LiteShim (reset_by toDbgReset);
+   let dbgShim <- mkAXI4LiteShim (reset_by porReset);
 
    rule rl_debug_module_read_req;
       let arFlit <- get (dbgShim.master.ar);
@@ -477,9 +476,9 @@ module mkCoreW_reset #(Reset toDbgReset)
       debug_module.dmi.write (truncate (awFlit.awaddr >> 2), wFlit.wdata);
    endrule
 
-   let fromDbgReset <- mkPulseWire (reset_by toDbgReset);
-   Reg #(UInt #(8)) ndm_reset_delay <- mkReg (0, reset_by toDbgReset);
-   Reg #(Bool) ndm_reset_restart_running <- mkReg (False, reset_by toDbgReset);
+   let fromDbgReset <- mkPulseWire (reset_by porReset);
+   Reg #(UInt #(8)) ndm_reset_delay <- mkReg (0, reset_by porReset);
+   Reg #(Bool) ndm_reset_restart_running <- mkReg (False, reset_by porReset);
    rule rl_debug_module_send_reset (ndm_reset_delay == 0);
       let restartRunning <- debug_module.ndm_reset_client.request.get;
       ndm_reset_delay <= 110;
