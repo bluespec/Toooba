@@ -1182,7 +1182,8 @@ module mkCore#(CoreId coreId)(Core);
 
      let ev_struct = HPMEvents{mab_EventsCore: tagged Valid core_evts, mab_EventsL1I: tagged Valid imem_evts,
                                mab_EventsL1D: tagged Valid dmem_evts, mab_EventsLL: tagged Valid llmem_evts,
-                               mab_EventsCacheCore: tagged Valid tgc_evts, mab_EventsTransExe: mab_trans_exe};
+                               mab_EventsCacheCore: tagged Valid tgc_evts, mab_EventsTransExe: mab_trans_exe,
+                               mab_AXI4_Slave_Events: tagged Invalid, mab_AXI4_Master_Events: tagged Invalid};
 
      let events = generateHPMVector(ev_struct);
 
