@@ -36,6 +36,7 @@ import Fabric_Defs :: *;
 import SoC_Map :: *;
 import CCTypes :: *;
 import ProcTypes :: *;
+import StatCounters::*;
 
 `ifdef INCLUDE_GDB_CONTROL
 import DM_CPU_Req_Rsp :: *;
@@ -129,7 +130,7 @@ interface Proc_IFC;
 `endif
 
 `ifdef PERFORMANCE_MONITORING
-    method Action events_tgc(Vector#(7, Bit#(1)) events);
+    method Action events_tgc(EventsCacheCore events);
 `endif
 
 endinterface

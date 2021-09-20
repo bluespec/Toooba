@@ -60,6 +60,7 @@ import RandomReplace::*;
 `ifdef PERFORMANCE_MONITORING
 import PerformanceMonitor::*;
 import BlueUtils::*;
+import StatCounters::*;
 `endif
 
 export ICRqStuck(..);
@@ -102,7 +103,7 @@ interface IBank#(
     method Action setPerfStatus(Bool stats);
     method Data getPerfData(L1IPerfType t);
 `ifdef PERFORMANCE_MONITORING
-    method EventsCache events;
+    method EventsL1I events;
 `endif
 endinterface
 
@@ -193,7 +194,7 @@ module mkIBank#(
     Count#(Data) ldMissLat <- mkCount(0);
 `endif
 `ifdef PERFORMANCE_MONITORING
-    Array #(Reg #(EventsCache)) perf_events <- mkDRegOR (2, unpack (0));
+    Array #(Reg #(EventsL1I)) perf_events <- mkDRegOR (2, unpack (0));
 `endif
     function Action incrReqCnt;
     action
@@ -203,7 +204,7 @@ module mkIBank#(
         end
 `endif
 `ifdef PERFORMANCE_MONITORING
-        EventsCache events = unpack (0);
+        EventsL1I events = unpack (0);
         events.evt_LD = 1;
         perf_events[0] <= events;
 `endif
@@ -221,7 +222,7 @@ module mkIBank#(
         end
 `endif
 `ifdef PERFORMANCE_MONITORING
-        EventsCache events = unpack (0);
+        EventsL1I events = unpack (0);
         events.evt_LD_MISS_LAT = saturating_truncate(lat);
         events.evt_LD_MISS = 1;
         perf_events[1] <= events;
@@ -838,7 +839,7 @@ module mkIBank#(
         endcase);
     endmethod
 `ifdef PERFORMANCE_MONITORING
-    method EventsCache events = perf_events[0];
+    method EventsL1I events = perf_events[0];
 `endif
 endmodule
 

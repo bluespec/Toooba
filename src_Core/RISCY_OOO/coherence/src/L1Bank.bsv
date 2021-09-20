@@ -62,6 +62,7 @@ import LatencyTimer::*;
 import RandomReplace::*;
 `ifdef PERFORMANCE_MONITORING
 import PerformanceMonitor::*;
+import StatCounters::*;
 import BlueUtils::*;
 `endif
 
@@ -108,7 +109,7 @@ interface L1Bank#(
     method Action setPerfStatus(Bool stats);
     method Data getPerfData(L1DPerfType t);
 `ifdef PERFORMANCE_MONITORING
-    method EventsCache events;
+    method EventsL1D events;
 `endif
 endinterface
 
@@ -212,7 +213,7 @@ module mkL1Bank#(
     Count#(Data) amoMissLat <- mkCount(0);
 `endif
 `ifdef PERFORMANCE_MONITORING
-    Array #(Reg #(EventsCache)) perf_events <- mkDRegOR (2, unpack (0));
+    Array #(Reg #(EventsL1D)) perf_events <- mkDRegOR (2, unpack (0));
 `endif
 function Action incrReqCnt(MemOp op);
 action
@@ -226,7 +227,7 @@ action
     end
 `endif
 `ifdef PERFORMANCE_MONITORING
-    EventsCache events = unpack (0);
+    EventsL1D events = unpack (0);
     case(op)
         Ld: events.evt_LD = 1;
         St: events.evt_ST = 1;
@@ -260,7 +261,7 @@ action
     end
 `endif
 `ifdef PERFORMANCE_MONITORING
-    EventsCache events = unpack (0);
+    EventsL1D events = unpack (0);
     case(op)
         Ld: begin
             events.evt_LD_MISS_LAT = saturating_truncate(lat);
@@ -1130,7 +1131,7 @@ endfunction
         endcase);
     endmethod
 `ifdef PERFORMANCE_MONITORING
-    method EventsCache events = perf_events[0];
+    method EventsL1D events = perf_events[0];
 `endif
 endmodule
 
@@ -1364,8 +1365,8 @@ module mkL1Cache#(
         return fold(\+ , d);
     endmethod
 `ifdef PERFORMANCE_MONITORING
-    method EventsCache events;
-        EventsCache ret = unpack(0);
+    method EventsL1D events;
+        EventsL1D ret = unpack(0);
         for(Integer i = 0; i < valueof(bankNum); i = i+1) begin
             ret = unpack(pack(ret) | pack(banks[i].events));
         end

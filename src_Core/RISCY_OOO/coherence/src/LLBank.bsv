@@ -53,6 +53,7 @@ import ConfigReg::*;
 import RandomReplace::*;
 `ifdef PERFORMANCE_MONITORING
 import PerformanceMonitor::*;
+import StatCounters::*;
 import BlueUtils::*;
 `endif
 
@@ -107,7 +108,7 @@ interface LLBank#(
     method Action setPerfStatus(Bool stats);
     method Data getPerfData(LLCPerfType t);
 `ifdef PERFORMANCE_MONITORING
-    method EventsCache events;
+    method EventsLL events;
 `endif
 endinterface
 
@@ -243,7 +244,7 @@ module mkLLBank#(
     Count#(Data) dmaStReqCnt <- mkCount(0);
 `endif
 `ifdef PERFORMANCE_MONITORING
-    Array #(Reg #(EventsCache)) perf_events <- mkDRegOR (2, unpack (0));
+    Array #(Reg #(EventsLL)) perf_events <- mkDRegOR (2, unpack (0));
 `endif
 function Action incrMissCnt(cRqIndexT idx, Bool isDma);
 action
@@ -261,7 +262,7 @@ action
     end
 `endif
 `ifdef PERFORMANCE_MONITORING
-    EventsCache events = unpack (0);
+    EventsLL events = unpack (0);
     events.evt_LD_MISS_LAT = saturating_truncate(lat); // Don't support seperate DMA counts.
     events.evt_LD_MISS = 1;
     perf_events[1] <= events;
@@ -643,7 +644,7 @@ endfunction
                 // don't deq info, do ld next time
                 doLdAfterReplace <= True;
 `ifdef PERFORMANCE_MONITORING
-                EventsCache events = unpack (0);
+                EventsLL events = unpack (0);
                 events.evt_ST_MISS = 1;
                 perf_events[0] <= events;
 `endif
@@ -1546,7 +1547,7 @@ endfunction
         endcase);
     endmethod
     `ifdef PERFORMANCE_MONITORING
-        method EventsCache events = perf_events[0];
+        method EventsLL events = perf_events[0];
     `endif
 endmodule
 

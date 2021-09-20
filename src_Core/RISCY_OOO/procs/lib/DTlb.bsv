@@ -56,6 +56,7 @@ import Ehr::*;
 import PerformanceMonitor::*;
 import CCTypes::*;
 import BlueUtils::*;
+import StatCounters::*;
 `endif
 
 export DTlbReq(..);
@@ -123,7 +124,7 @@ interface DTlb#(type instT);
     // performance
     interface Perf#(L1TlbPerfType) perf;
 `ifdef PERFORMANCE_MONITORING
-    method EventsCache events;
+    method EventsL1D events;
 `endif
 endinterface
 
@@ -244,7 +245,7 @@ module mkDTlb#(
     endrule
 `endif
 `ifdef PERFORMANCE_MONITORING
-    Array #(Reg #(EventsCache)) perf_events <- mkDRegOR (3, unpack (0));
+    Array #(Reg #(EventsL1D)) perf_events <- mkDRegOR (3, unpack (0));
 `endif
 
     // do flush: start when all misses resolve
@@ -257,7 +258,7 @@ module mkDTlb#(
         waitFlushP <= True;
         if(verbose) $display("[DTLB] flush begin");
 `ifdef PERFORMANCE_MONITORING
-        EventsCache ev = unpack(0);
+        EventsL1D ev = unpack(0);
         ev.evt_TLB_FLUSH = 1;
         perf_events[2] <= ev;
 `endif
@@ -368,7 +369,7 @@ module mkDTlb#(
         end
 `endif
 `ifdef PERFORMANCE_MONITORING
-        EventsCache ev = unpack(0);
+        EventsL1D ev = unpack(0);
         ev.evt_TLB_MISS_LAT = saturating_truncate(lat);
         ev.evt_TLB_MISS = 1;
         perf_events[0] <= ev;
@@ -564,7 +565,7 @@ module mkDTlb#(
         end
 `endif
 `ifdef PERFORMANCE_MONITORING
-        EventsCache ev = unpack(0);
+        EventsL1D ev = unpack(0);
         ev.evt_TLB = 1;
         perf_events[1] <= ev;
 `endif
@@ -657,6 +658,6 @@ module mkDTlb#(
         endmethod
     endinterface
 `ifdef PERFORMANCE_MONITORING
-    method EventsCache events = perf_events[0];
+    method EventsL1D events = perf_events[0];
 `endif
 endmodule

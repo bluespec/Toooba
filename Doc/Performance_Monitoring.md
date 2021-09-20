@@ -1,5 +1,7 @@
 # Performance Monitoring Module
 
+**PLEASE NOTE: THIS DOCUMENT IS DEPRECATED AND ONLY EXISTS FOR A PERIOD OF TRANSITION**. For the current mapping, see [here](https://github.com/CTSRD-CHERI/RISCV_HPM_Events/blob/master/counters.yaml).
+
 This overview is based on this [document](https://github.com/CTSRD-CHERI/Flute/blob/CHERI/Doc/Performance_Monitor/Performance_Monitoring.md).
 
 ## Usage

@@ -61,6 +61,7 @@ import CHERICC_Fat::*;
 import ISA_Decls_CHERI::*;
 `ifdef PERFORMANCE_MONITORING
 import BlueUtils::*;
+import StatCounters::*;
 `endif
 
 

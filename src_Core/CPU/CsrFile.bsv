@@ -60,6 +60,7 @@ import Cur_Cycle  :: *;
 
 `ifdef PERFORMANCE_MONITORING
 import PerformanceMonitor :: *;
+import StatCounters::*;
 `endif
 
 // ================================================================
