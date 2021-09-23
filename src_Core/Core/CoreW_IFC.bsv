@@ -150,11 +150,11 @@ interface CoreW_IFC_Synth #(numeric type t_n_interrupt_sources);
    // AXI4 Fabric interfaces
 
    // CPU IMem to Fabric master interface
-   interface AXI4_Master_Synth #(TAdd#(Wd_MId,1), Wd_Addr, Wd_Data,
+   interface AXI4_Master_Sig #(TAdd#(Wd_MId,1), Wd_Addr, Wd_Data,
                                  0, 0, 0, 0, 0) cpu_imem_master;
 
    // CPU DMem to Fabric master interface
-   interface AXI4_Master_Synth #(TAdd#(Wd_MId,1), Wd_Addr, Wd_Data,
+   interface AXI4_Master_Sig #(TAdd#(Wd_MId,1), Wd_Addr, Wd_Data,
                                  0, 0, 0, 0, 0) cpu_dmem_master;
 
    // ----------------------------------------------------------------

@@ -499,13 +499,13 @@ endmodule: mkCoreW
 module mkCoreW_Synth #(Reset dm_power_on_reset)
                       (CoreW_IFC_Synth #(N_External_Interrupt_Sources));
    let core <- mkCoreW (dm_power_on_reset);
-   let cpu_imem_master_synth <- toAXI4_Master_Synth (core.cpu_imem_master);
-   let cpu_dmem_master_synth <- toAXI4_Master_Synth (core.cpu_dmem_master);
+   let cpu_imem_master_sig <- toAXI4_Master_Sig (core.cpu_imem_master);
+   let cpu_dmem_master_sig <- toAXI4_Master_Sig (core.cpu_dmem_master);
 
    method set_verbosity = core.set_verbosity;
    method start = core.start;
-   interface cpu_imem_master = cpu_imem_master_synth;
-   interface cpu_dmem_master = cpu_dmem_master_synth;
+   interface cpu_imem_master = cpu_imem_master_sig;
+   interface cpu_dmem_master = cpu_dmem_master_sig;
    interface core_external_interrupt_sources = core.core_external_interrupt_sources;
    method nmi_req = core.nmi_req;
 `ifdef RVFI_DII
