@@ -212,7 +212,7 @@ interface Core;
 
 `ifdef PERFORMANCE_MONITORING
     method Action events_llc(EventsLL events);
-    method Action events_tgc(EventsCacheCore events);
+    method Action events_tgc(EventsTGC events);
 `endif
 endinterface
 
@@ -1150,7 +1150,7 @@ module mkCore#(CoreId coreId)(Core);
      // different fields than the TLB, which makes it safe to combine them
 
      Reg#(EventsLL) events_llc_reg <- mkRegU;
-     Reg#(EventsCacheCore) events_tgc_reg <- mkRegU;
+     Reg#(EventsTGC) events_tgc_reg <- mkRegU;
      rule report_events;
          EventsCore events = unpack(pack(commitStage.events));
          events.evt_REDIRECT = zeroExtend(pack(fetchStage.redirect_evt));
@@ -1160,7 +1160,7 @@ module mkCore#(CoreId coreId)(Core);
      EventsCore core_evts = unpack(pack(coreFix.memExeIfc.events) | pack(hpm_core_events[0]));
      EventsL1I imem_evts = unpack(pack(iMem.events) | pack(iTlb.events));
      EventsL1D dmem_evts = unpack(pack(dMem.events) | pack(dTlb.events));
-     EventsCacheCore tgc_evts = events_tgc_reg;
+     EventsTGC tgc_evts = events_tgc_reg;
      EventsLL llmem_evts = unpack(pack(events_llc_reg) | pack(l2Tlb.events));
      Maybe#(EventsTransExe) mab_trans_exe = tagged Invalid;
 
@@ -1182,7 +1182,7 @@ module mkCore#(CoreId coreId)(Core);
 
      let ev_struct = HPMEvents{mab_EventsCore: tagged Valid core_evts, mab_EventsL1I: tagged Valid imem_evts,
                                mab_EventsL1D: tagged Valid dmem_evts, mab_EventsLL: tagged Valid llmem_evts,
-                               mab_EventsCacheCore: tagged Valid tgc_evts, mab_EventsTransExe: mab_trans_exe,
+                               mab_EventsTGC: tagged Valid tgc_evts, mab_EventsTransExe: mab_trans_exe,
                                mab_AXI4_Slave_Events: tagged Invalid, mab_AXI4_Master_Events: tagged Invalid};
 
      let events = generateHPMVector(ev_struct);

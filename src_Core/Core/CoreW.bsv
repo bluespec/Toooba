@@ -60,6 +60,7 @@ import GetPut_Aux :: *;
 import Routable   :: *;
 import AXI4       :: *;
 import TagControllerAXI :: *;
+import CacheCore  :: *;
 
 // ================================================================
 // Project imports
@@ -178,7 +179,17 @@ module mkCoreW #(Reset dm_power_on_reset)
    mkConnection(proc.master0, tagController.slave, reset_by all_harts_reset);
 `ifdef PERFORMANCE_MONITORING
    rule report_tagController_events;
-      EventsCacheCore evts = tagController.events;
+      EventsCacheCore cache_core_evts = tagController.events;
+      EventsTGC evts = unpack(0);
+      evts.evt_WRITE = zeroExtend(pack(cache_core_evts.evt_WRITE));
+      evts.evt_WRITE_MISS = zeroExtend(pack(cache_core_evts.evt_WRITE_MISS));
+      evts.evt_READ = zeroExtend(pack(cache_core_evts.evt_READ));
+      evts.evt_READ_MISS = zeroExtend(pack(cache_core_evts.evt_READ_MISS));
+      evts.evt_EVICT = zeroExtend(pack(cache_core_evts.evt_EVICT));
+`ifdef USECAP
+      evts.evt_SET_TAG_WRITE = zeroExtend(pack(cache_core_evts.evt_SET_TAG_WRITE));
+      evts.evt_SET_TAG_READ = zeroExtend(pack(cache_core_evts.evt_SET_TAG_READ));
+`endif
       proc.events_tgc(evts);
    endrule
 `endif
