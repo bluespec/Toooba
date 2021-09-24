@@ -81,7 +81,9 @@ BLUESTUFF_DIRS = $(REPO)/libs/BlueStuff:$(REPO)/libs/BlueStuff/AXI:$(REPO)/libs/
 
 TAGCONTROLLER_DIRS = $(REPO)/libs/TagController/TagController:$(REPO)/libs/TagController/TagController/CacheCore
 
-BSC_PATH = -p $(CONTRIB_DIRS):$(ALL_RISCY_DIRS):$(CORE_DIRS):src_BSV:$(BLUESTUFF_DIRS):$(TAGCONTROLLER_DIRS):+
+RISCV_HPM_Events_DIR = $(REPO)/libs/RISCV_HPM_Events
+
+BSC_PATH = -p $(CONTRIB_DIRS):$(ALL_RISCY_DIRS):$(CORE_DIRS):src_BSV:$(BLUESTUFF_DIRS):$(TAGCONTROLLER_DIRS):$(RISCV_HPM_Events_DIR):+
 
 # ----------------
 # Top-level file and module
@@ -111,8 +113,24 @@ src_BSV/TagTableStructure.bsv: $(REPO)/libs/TagController/tagsparams.py
 	@echo "INFO: Re-generating CHERI tag controller parameters"
 	$^ -v -c $(CAPSIZE) -s $(TAGS_STRUCT:"%"=%) -a $(TAGS_ALIGN) --data-store-base-addr 0xc0000000 -b $@ 0xbfff8000 0x17ffff000
 	@echo "INFO: Re-generated CHERI tag controller parameters"
-compile_sim: tagsparams
-compile_synth: tagsparams
+
+
+.PHONY: generate_hpm_vector
+generate_hpm_vector: GenerateHPMVector.bsv
+GenerateHPMVector.bsv: $(RISCV_HPM_Events_DIR)/parse_counters.py
+	@echo "INFO: Re-generating GenerateHPMVector bluespec file"
+	$^ $(RISCV_HPM_Events_DIR)/counters.yaml Toooba -b $@
+	@echo "INFO: Re-generated GenerateHPMVector bluespec file"
+
+
+.PHONY: stat_counters
+stat_counters: StatCounters.bsv
+StatCounters.bsv: $(RISCV_HPM_Events_DIR)/parse_counters.py
+	@echo "INFO: Re-generating HPM events struct bluepsec file"
+	$^ $(RISCV_HPM_Events_DIR)/counters.yaml Toooba -s $@
+	@echo "INFO: Re-generated HPM events struct bluespec file"
+compile_sim: tagsparams stat_counters generate_hpm_vector
+compile_synth: tagsparams stat_counters generate_hpm_vector
 
 # ================================================================
 # Generate Verilog RTL from BSV sources (needs Bluespec 'bsc' compiler)
