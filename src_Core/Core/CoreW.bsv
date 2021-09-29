@@ -60,6 +60,7 @@ import GetPut_Aux :: *;
 import Routable   :: *;
 import AXI4       :: *;
 import TagControllerAXI :: *;
+import CacheCore  :: *;
 
 // ================================================================
 // Project imports
@@ -178,7 +179,17 @@ module mkCoreW #(Reset dm_power_on_reset)
    mkConnection(proc.master0, tagController.slave, reset_by all_harts_reset);
 `ifdef PERFORMANCE_MONITORING
    rule report_tagController_events;
-      EventsCacheCore evts = tagController.events;
+      EventsCacheCore cache_core_evts = tagController.events;
+      EventsTGC evts = unpack(0);
+      evts.evt_WRITE = zeroExtend(pack(cache_core_evts.evt_WRITE));
+      evts.evt_WRITE_MISS = zeroExtend(pack(cache_core_evts.evt_WRITE_MISS));
+      evts.evt_READ = zeroExtend(pack(cache_core_evts.evt_READ));
+      evts.evt_READ_MISS = zeroExtend(pack(cache_core_evts.evt_READ_MISS));
+      evts.evt_EVICT = zeroExtend(pack(cache_core_evts.evt_EVICT));
+`ifdef USECAP
+      evts.evt_SET_TAG_WRITE = zeroExtend(pack(cache_core_evts.evt_SET_TAG_WRITE));
+      evts.evt_SET_TAG_READ = zeroExtend(pack(cache_core_evts.evt_SET_TAG_READ));
+`endif
       proc.events_tgc(evts);
    endrule
 `endif
@@ -499,13 +510,13 @@ endmodule: mkCoreW
 module mkCoreW_Synth #(Reset dm_power_on_reset)
                       (CoreW_IFC_Synth #(N_External_Interrupt_Sources));
    let core <- mkCoreW (dm_power_on_reset);
-   let cpu_imem_master_synth <- toAXI4_Master_Synth (core.cpu_imem_master);
-   let cpu_dmem_master_synth <- toAXI4_Master_Synth (core.cpu_dmem_master);
+   let cpu_imem_master_sig <- toAXI4_Master_Sig (core.cpu_imem_master);
+   let cpu_dmem_master_sig <- toAXI4_Master_Sig (core.cpu_dmem_master);
 
    method set_verbosity = core.set_verbosity;
    method start = core.start;
-   interface cpu_imem_master = cpu_imem_master_synth;
-   interface cpu_dmem_master = cpu_dmem_master_synth;
+   interface cpu_imem_master = cpu_imem_master_sig;
+   interface cpu_dmem_master = cpu_dmem_master_sig;
    interface core_external_interrupt_sources = core.core_external_interrupt_sources;
    method nmi_req = core.nmi_req;
 `ifdef RVFI_DII
