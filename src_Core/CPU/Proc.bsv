@@ -79,7 +79,9 @@ import MMIOAddrs::*;
 import MMIOCore::*;
 import DramCommon::*;
 import Performance::*;
+`ifdef PERFORMANCE_MONITORING
 import StatCounters::*;
+`endif
 
 // ----------------
 // From Tooba

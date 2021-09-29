@@ -60,7 +60,9 @@ import RenameDebugIF::*;
 import CHERICap::*;
 import CHERICC_Fat::*;
 import ISA_Decls_CHERI::*;
+`ifdef PERFORMANCE_MONITORING
 import StatCounters::*;
+`endif
 
 `ifdef RVFI
 import RVFI_DII_Types::*;

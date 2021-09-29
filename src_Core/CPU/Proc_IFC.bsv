@@ -36,7 +36,9 @@ import Fabric_Defs :: *;
 import SoC_Map :: *;
 import CCTypes :: *;
 import ProcTypes :: *;
+`ifdef PERFORMANCE_MONITORING
 import StatCounters::*;
+`endif
 
 `ifdef INCLUDE_GDB_CONTROL
 import DM_CPU_Req_Rsp :: *;

@@ -1052,7 +1052,7 @@ function x addPc(x cap, Bit#(12) inc) provisos (Add#(f, 12, c), CHERICap::CHERIC
 typedef   8 Report_Width;
 typedef  64 Counter_Width;
 typedef  29 No_Of_Ctrs;
-
+`endif
 
 function Bit#(outWidth) hash(Bit#(inWidth) in)
     provisos(Add#(a__, inWidth, TMul#(TDiv#(inWidth, outWidth), outWidth)),

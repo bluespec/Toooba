@@ -68,7 +68,9 @@ import CacheCore  :: *;
 // ----------------
 // From RISCY-ooo
 import ProcTypes    :: *;
+`ifdef PERFORMANCE_MONITORING
 import StatCounters::*;
+`endif
 
 // ----------------
 // From Toooba

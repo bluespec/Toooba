@@ -59,7 +59,9 @@ import SelfInvL1Pipe::*;
 import SelfInvL1Bank::*;
 import SelfInvIPipe::*;
 import SelfInvIBank::*;
+`ifdef PERFORMANCE_MONITORING
 import StatCounters::*;
+`endif
 
 export L1Num;
 export LgL1WayNum;

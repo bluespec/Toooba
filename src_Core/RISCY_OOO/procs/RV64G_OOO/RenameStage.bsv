@@ -67,7 +67,9 @@ import SplitLSQ::*;
 import CHERICap::*;
 import CHERICC_Fat::*;
 import ISA_Decls_CHERI::*;
+`ifdef PERFORMANCE_MONITORING
 import StatCounters::*;
+`endif
 
 import Cur_Cycle :: *;
 

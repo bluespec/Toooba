@@ -55,7 +55,9 @@ import SelfInvLLBank::*;
 import L1CoCache::*;
 import LLCDmaConnect::*;
 import Performance::*;
+`ifdef PERFORMANCE_MONITORING
 import StatCounters::*;
+`endif
 
 // Last-Level
 
