@@ -112,8 +112,10 @@ import DM_CPU_Req_Rsp ::*;
 // ================================================================
 // The Core module
 
-typedef WindCoreMid #( // AXI manager 0 port parameters
-                       TAdd#(Wd_MId,1), Wd_Addr, Wd_Data, 0, 0, 0, 0, 0
+typedef WindCoreMid #( // AXI lite subordinate control port parameters
+                       21, 32, 0, 0, 0, 0, 0
+                       // AXI manager 0 port parameters
+                     , TAdd#(Wd_MId,1), Wd_Addr, Wd_Data, 0, 0, 0, 0, 0
                        // AXI manager 1 port parameters
                      , TAdd#(Wd_MId,1), Wd_Addr, Wd_Data, 0, 0, 0, 0, 0
                        // AXI subordinate 0 port parameters
@@ -240,6 +242,13 @@ module mkCoreW_reset #(Reset porReset)
    // into encoded byte vectors for transmission to the Tandem Verifier
    TV_Encode_IFC tv_encode <- mkTV_Encode;
 `endif
+
+   function do_release (restartRunning) = action
+      plic.set_addr_map (zeroExtend (soc_map.m_plic_addr_range.base),
+                         zeroExtend (rangeTop(soc_map.m_plic_addr_range)));
+      proc.start (restartRunning, soc_map_struct.pc_reset_value, 0, 0);
+      //proc.set_verbosity (verbosity);
+   endaction;
 
    // ================================================================
    // Hart-reset from DM
@@ -485,6 +494,14 @@ module mkCoreW_reset #(Reset porReset)
       ndm_reset_restart_running <= restartRunning;
       fromDbgReset.send;
    endrule
+   rule rl_debug_module_count_reset_delay (ndm_reset_delay > 1);
+      ndm_reset_delay <= ndm_reset_delay - 1;
+   endrule
+   rule rl_debug_module_ack_reset (ndm_reset_delay == 1);
+      debug_module.ndm_reset_client.response.put (ndm_reset_restart_running);
+      do_release (ndm_reset_restart_running);
+      ndm_reset_delay <= 0;
+   endrule
 
    // ================================================================
    // Connect external interrupts to the PLIC and Proc
@@ -517,16 +534,9 @@ module mkCoreW_reset #(Reset porReset)
    let f_ctrl_reqs <- mkFIFO1;
    let f_ctrl_rsps <- mkFIFO1;
 
-   function do_release = action
-      plic.set_addr_map (zeroExtend (soc_map.m_plic_addr_range.base),
-                         zeroExtend (rangeTop(soc_map.m_plic_addr_range)));
-      proc.start (True, soc_map_struct.pc_reset_value, 0, 0);
-      //proc.set_verbosity (verbosity);
-   endaction;
-
    rule rl_ctrl_req;
       case (f_ctrl_reqs.first) matches
-         tagged ReleaseReq: do_release;
+         tagged ReleaseReq: do_release (False);
          tagged StatusReq: $display ("StatusReq not supported in Toooba");
       endcase
       f_ctrl_reqs.deq;

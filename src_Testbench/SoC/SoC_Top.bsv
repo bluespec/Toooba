@@ -59,7 +59,7 @@ import SoC_Map     :: *;
 
 import WindCoreInterface :: *;
 import CoreW     :: *;
-import PLIC      :: *;    // For interface to PLIC interrupt sources, in CoreW_IFC
+import PLIC      :: *;
 
 import Boot_ROM       :: *;
 import Mem_Controller :: *;

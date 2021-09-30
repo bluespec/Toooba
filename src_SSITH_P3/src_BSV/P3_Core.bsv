@@ -44,7 +44,6 @@ import Fabric_Defs :: *;
 import PowerOnReset :: *;
 
 // The basic core
-import CoreW_IFC :: *;
 import CoreW     :: *;
 
 // External interrupt request interface

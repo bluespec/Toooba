@@ -92,7 +92,7 @@ library RTL can be found in the directory `src_bsc_lib_RTL`.
 **Bluespec BSV** source code (which was used to generate the Verilog RTL) can be found in:
 
 - `src_Core/`, for the CPU core, with sub-directories:
-   - `Core/`: the top-level of the CPU Core (specifically, the files CoreW_IFC.bsv and CoreW.bsv)
+   - `Core/`: the top-level of the CPU Core (specifically, CoreW.bsv)
    - `CPU/`: more CPU core sources
    - `RISCY_OOO/`: the bulk of the code, taken from MIT's riscy-ooo design, with local modifications.
    - `ISA/`:  generic types/constants/functions for the RISC-V ISA (not CPU-implementation-specific)
