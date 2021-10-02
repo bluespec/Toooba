@@ -127,15 +127,14 @@ endfunction
 
 // ================================================================
 
-module mkLLCDmaConnect #(
-    DmaServer#(LLCDmaReqId) llc,
-    // MemLoaderMemClient memLoader,    // REPLACED BY AXI4_Slave_interface
-    Vector#(CoreNum, TlbMemClient) tlb
-)(AXI4_Slave #(Wd_SId_2x3, Wd_Addr, Wd_Data,
-               Wd_AW_User, Wd_W_User, Wd_B_User,
-               Wd_AR_User, Wd_R_User)) provisos (
-    Alias#(dmaRqT, DmaRq#(LLCDmaReqId))
-);
+module mkLLCDmaConnect #( DmaServer#(LLCDmaReqId) llc
+                        // REPLACED BY AXI4_Slave_interface
+                        //, MemLoaderMemClient memLoader
+                        , Vector#(CoreNum, TlbMemClient) tlb )
+  (AXI4_Slave #( Wd_CoreW_Bus_SId, Wd_Addr, Wd_Data
+               , Wd_AW_User, Wd_W_User, Wd_B_User
+               , Wd_AR_User, Wd_R_User))
+  provisos (Alias #(dmaRqT, DmaRq #(LLCDmaReqId)));
     Bool verbose = False;
 
    Integer verbosity = 0;

@@ -115,11 +115,11 @@ import DM_CPU_Req_Rsp ::*;
 typedef WindCoreMid #( // AXI lite subordinate control port parameters
                        21, 32, 0, 0, 0, 0, 0
                        // AXI manager 0 port parameters
-                     , TAdd#(Wd_MId,1), Wd_Addr, Wd_Data, 0, 0, 0, 0, 0
+                     , TAdd #(Wd_MId, 1), Wd_Addr, Wd_Data, 0, 0, 0, 0, 0
                        // AXI manager 1 port parameters
-                     , TAdd#(Wd_MId,1), Wd_Addr, Wd_Data, 0, 0, 0, 0, 0
+                     , TAdd #(Wd_MId, 1), Wd_Addr, Wd_Data, 0, 0, 0, 0, 0
                        // AXI subordinate 0 port parameters
-                     , 0, 0, 0, 0, 0, 0, 0, 0
+                     , 4, 32, 128, 0, 0, 0, 0, 0
                        // Number of interrupt lines
                      , t_n_irq) CoreW_IFC #(numeric type t_n_irq);
 
@@ -200,14 +200,16 @@ module mkCoreW_reset #(Reset porReset)
    Proc_IFC proc <- mkProc (reset_by all_harts_reset);
 
    // handle uncached interface
-   let proc_uncached = prepend_AXI4_Master_id (0, zero_AXI4_Master_user (proc.master1));
+   let proc_uncached =
+       prepend_AXI4_Master_id (0, zero_AXI4_Master_user (proc.master1));
    // Bridge for uncached expernal bus transactions.
    let uncached_mem_shim <- mkAXI4ShimFF(reset_by all_harts_reset);
 
    // handle cached interface
    // AXI4 tagController
-   TagControllerAXI#(Wd_MId, Wd_Addr, Wd_Data) tagController <- mkTagControllerAXI(reset_by all_harts_reset); // TODO double check if reseting like this is good enough
-   mkConnection(proc.master0, tagController.slave, reset_by all_harts_reset);
+   TagControllerAXI #(Wd_MId, Wd_Addr, Wd_Data)
+     tagController <- mkTagControllerAXI (reset_by all_harts_reset); // TODO double check if reseting like this is good enough
+   mkConnection (proc.master0, tagController.slave, reset_by all_harts_reset);
 `ifdef PERFORMANCE_MONITORING
    rule report_tagController_events;
       EventsCacheCore cache_core_evts = tagController.events;
@@ -412,30 +414,44 @@ module mkCoreW_reset #(Reset porReset)
 
 
    // ================================================================
-   // Connect the local 2x3 fabric
+   // new internal AXI4 manager from interace subordinate port
+   AXI4_Shim #(4, 32, Wd_Data, 0, 0, 0, 0, 0)
+      subShim <- mkAXI4Shim;
+   AXI4_Slave #( 4, 32, 128, 0, 0, 0, 0, 0)
+      outerSubIfc <- toWider_AXI4_Slave (subShim.slave);
+   AXI4_Master #( Wd_CoreW_Bus_MId, Wd_Addr, Wd_Data
+                , Wd_AW_User, Wd_W_User, Wd_B_User
+                , Wd_AR_User, Wd_R_User) innerSubIfc =
+      prepend_AXI4_Master_addr (0 , zero_AXI4_Master_user (subShim.master));
 
-   // Masters on the local 2x3 fabric
-   Vector#(Num_Masters_2x3, AXI4_Master #(Wd_MId_2x3, Wd_Addr, Wd_Data,
-                                          Wd_AW_User, Wd_W_User, Wd_B_User,
-                                          Wd_AR_User, Wd_R_User))
-                                          master_vector = newVector;
+   // ================================================================
+   // Connect the local bus
+
+   // Masters on the local bus
+   Vector #( CoreW_Bus_Num_Masters
+           , AXI4_Master #( Wd_CoreW_Bus_MId, Wd_Addr, Wd_Data
+                          , Wd_AW_User, Wd_W_User, Wd_B_User
+                          , Wd_AR_User, Wd_R_User))
+      master_vector = newVector;
    //let master_vector = newVector;
    master_vector[cpu_uncached_master_num]     = proc_uncached;
    master_vector[debug_module_sba_master_num] = dm_master_local;
+   master_vector[sub_ifc_master_num]          = innerSubIfc;
 
-   // Slaves on the local 2x3 fabric
+   // Slaves on the local bus
    // default slave is forwarded out directly to the Core interface
-   Vector#(Num_Slaves_2x3, AXI4_Slave #(Wd_SId_2x3, Wd_Addr, Wd_Data,
-                                        Wd_AW_User, Wd_W_User, Wd_B_User,
-                                        Wd_AR_User, Wd_R_User))
-                                        slave_vector = newVector;
+   Vector #( CoreW_Bus_Num_Slaves
+           , AXI4_Slave #( Wd_CoreW_Bus_SId, Wd_Addr, Wd_Data
+                         , Wd_AW_User, Wd_W_User, Wd_B_User
+                         , Wd_AR_User, Wd_R_User))
+      slave_vector = newVector;
    //let slave_vector = newVector;
    slave_vector[default_slave_num] = uncached_mem_shim.slave;
    slave_vector[llc_slave_num]     = proc.debug_module_mem_server;
    slave_vector[plic_slave_num]    = zero_AXI4_Slave_user (plic.axi4_slave);
 
-   function Vector#(Num_Slaves_2x3, Bool) route_2x3 (Bit#(Wd_Addr) addr);
-      Vector#(Num_Slaves_2x3, Bool) res = replicate(False);
+   function Vector #(CoreW_Bus_Num_Slaves, Bool) route (Bit #(Wd_Addr) addr);
+      Vector #(CoreW_Bus_Num_Slaves, Bool) res = replicate(False);
       if (inRange(soc_map.m_mem0_controller_addr_range, addr))
         res[llc_slave_num] = True;
       else if (inRange(soc_map.m_plic_addr_range, addr))
@@ -447,7 +463,7 @@ module mkCoreW_reset #(Reset porReset)
       return res;
    endfunction
 
-   mkAXI4Bus (route_2x3, master_vector, slave_vector, reset_by all_harts_reset);
+   mkAXI4Bus (route, master_vector, slave_vector, reset_by all_harts_reset);
 
    // ================================================================
    // Connect external interrupt lines from PLIC to CPU
@@ -568,10 +584,10 @@ module mkCoreW_reset #(Reset porReset)
       // Cached master to Fabric master interface
       interface manager_0 = tagController.master;
       // Uncached master to Fabric master interface
-      interface manager_1 =
-         extendIDFields (zeroMasterUserFields (uncached_mem_shim.master), 0);
+      interface manager_1 = prepend_AXI4_Master_id
+            (0, zero_AXI4_Master_user (uncached_mem_shim.master));
       // TODO:
-      interface subordinate_0 = culDeSac;
+      interface subordinate_0 = outerSubIfc;
    endinterface;
 
 /*
@@ -596,21 +612,22 @@ module mkCoreW_reset #(Reset porReset)
 endmodule: mkCoreW_reset
 
 // ================================================================
-// 2x3 Fabric for this Core
+// internal bus for this Core
 // Masters: CPU DMem, Debug Module System Bus Access, External access
 
 // ----------------
 // Fabric port numbers for masters
 
-Master_Num_2x3  cpu_uncached_master_num     = 0;
-Master_Num_2x3  debug_module_sba_master_num = 1;
+CoreW_Bus_Master_Num cpu_uncached_master_num     = 0;
+CoreW_Bus_Master_Num debug_module_sba_master_num = 1;
+CoreW_Bus_Master_Num sub_ifc_master_num          = 2;
 
 // ----------------
 // Fabric port numbers for slaves
 
-Slave_Num_2x3  default_slave_num = 0;    // for I/O, uncached memory, etc.
-Slave_Num_2x3  plic_slave_num    = 1;    // PLIC mem-mapped registers
-Slave_Num_2x3  llc_slave_num     = 2;    // Normal cached memory (connects to coherent Last-Level Cache)
+CoreW_Bus_Slave_Num default_slave_num = 0;    // for I/O, uncached memory, etc.
+CoreW_Bus_Slave_Num plic_slave_num    = 1;    // PLIC mem-mapped registers
+CoreW_Bus_Slave_Num llc_slave_num     = 2;    // Normal cached memory (connects to coherent Last-Level Cache)
 
 // ================================================================
 

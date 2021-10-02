@@ -54,9 +54,9 @@ interface DM_System_Bus_IFC;
 
    // ----------------
    // Facing System
-   interface AXI4_Master #(Wd_MId_2x3, Wd_Addr, Wd_Data_Periph,
-                           Wd_AW_User, Wd_W_User, Wd_B_User,
-                           Wd_AR_User, Wd_R_User) master;
+   interface AXI4_Master #( Wd_CoreW_Bus_MId, Wd_Addr, Wd_Data_Periph
+                          , Wd_AW_User, Wd_W_User, Wd_B_User
+                          , Wd_AR_User, Wd_R_User) master;
 endinterface
 
 // ================================================================
@@ -283,7 +283,7 @@ module mkDM_System_Bus (DM_System_Bus_IFC);
    function Action fa_fabric_send_read_req (Bit #(64)  addr64);
       action
 	 Fabric_Addr fabric_addr = truncate (addr64);
-	 let rda = AXI4_ARFlit {arid:     fabric_2x3_default_mid,
+	 let rda = AXI4_ARFlit {arid:     fabric_corew_bus_default_mid,
 				araddr:   fabric_addr,
 				arlen:    0,                      // burst len = arlen+1
 				arsize:   fn_DM_sbaccess_to_AXI4_Size (rg_sbcs_sbaccess),
@@ -318,13 +318,13 @@ module mkDM_System_Bus (DM_System_Bus_IFC);
 		.fabric_data,
 		.fabric_strb,
 		.fabric_size} = fn_to_fabric_write_fields (rg_sbcs_sbaccess, sbaddress, data64);
-	
+
 	 // fabric_addr is always fabric-data-width aligned
 	 // fabric_data is properly lane-adjusted
 	 // fabric_strb identifies the lanes to be written
 	 // awsize is always the fabric width
 
-	 let wra = AXI4_AWFlit {awid:     fabric_2x3_default_mid,
+	 let wra = AXI4_AWFlit {awid:     fabric_corew_bus_default_mid,
 				awaddr:   fabric_addr,
 				awlen:    0,                      // burst len = awlen+1
 				awsize:   fabric_size,

@@ -66,9 +66,9 @@ interface MMIO_AXI4_Adapter_IFC;
    interface Server #(MMIOCRq, MMIODataPRs) core_side;
 
    // Fabric master interface for IO
-   interface AXI4_Master #(Wd_MId_2x3, Wd_Addr, Wd_Data,
-                           Wd_AW_User, Wd_W_User, Wd_B_User,
-                           Wd_AR_User, Wd_R_User) mmio_master;
+   interface AXI4_Master #( Wd_CoreW_Bus_MId, Wd_Addr, Wd_Data
+                          , Wd_AW_User, Wd_W_User, Wd_B_User
+                          , Wd_AR_User, Wd_R_User) mmio_master;
 endinterface
 
 // ================================================================
@@ -127,7 +127,7 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
       // necessary; the AXI4 fabric should return a DECERR for illegal
       // addrs; but not all AXI4 fabrics do the right thing.
       if (soc_map.m_is_IO_addr (req.addr, False)) begin
-         let mem_req_rd_addr = AXI4_ARFlit {arid:     fabric_2x3_default_mid,
+         let mem_req_rd_addr = AXI4_ARFlit {arid:     fabric_corew_bus_default_mid,
                                             araddr:   req.addr,
                                             arlen:    (burst) ? 1:0,           // burst len = arlen+1
                                             arsize:   size,
@@ -220,8 +220,8 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
          // on first flit...
          // ================
          if (first) begin
-            AXI4_AWFlit #(Wd_MId_2x3, Wd_Addr, Wd_AW_User)
-                mem_req_wr_addr = AXI4_AWFlit {awid:     fabric_2x3_default_mid,
+            AXI4_AWFlit #(Wd_CoreW_Bus_MId, Wd_Addr, Wd_AW_User)
+                mem_req_wr_addr = AXI4_AWFlit {awid:     fabric_corew_bus_default_mid,
                                                awaddr:   req.addr,
                                                awlen:    (burst) ? 1:0,           // burst len = awlen+1
                                                awsize:   size,
