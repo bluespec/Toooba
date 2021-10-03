@@ -119,7 +119,9 @@ typedef WindCoreMid #( // AXI lite subordinate control port parameters
                        // AXI manager 1 port parameters
                      , TAdd #(Wd_MId, 1), Wd_Addr, Wd_Data, 0, 0, 0, 0, 0
                        // AXI subordinate 0 port parameters
-                     , 4, 32, 128, 0, 0, 0, 0, 0
+                     , Wd_CoreW_Bus_MId, Wd_Addr, Wd_Data
+                     , Wd_AW_User, Wd_W_User, Wd_B_User
+                     , Wd_AR_User, Wd_R_User
                        // Number of interrupt lines
                      , t_n_irq) CoreW_IFC #(numeric type t_n_irq);
 
@@ -415,14 +417,7 @@ module mkCoreW_reset #(Reset porReset)
 
    // ================================================================
    // new internal AXI4 manager from interace subordinate port
-   AXI4_Shim #(4, 32, Wd_Data, 0, 0, 0, 0, 0)
-      subShim <- mkAXI4Shim;
-   AXI4_Slave #( 4, 32, 128, 0, 0, 0, 0, 0)
-      outerSubIfc <- toWider_AXI4_Slave (subShim.slave);
-   AXI4_Master #( Wd_CoreW_Bus_MId, Wd_Addr, Wd_Data
-                , Wd_AW_User, Wd_W_User, Wd_B_User
-                , Wd_AR_User, Wd_R_User) innerSubIfc =
-      prepend_AXI4_Master_addr (0 , zero_AXI4_Master_user (subShim.master));
+   let subShim <- mkAXI4Shim;
 
    // ================================================================
    // Connect the local bus
@@ -436,7 +431,7 @@ module mkCoreW_reset #(Reset porReset)
    //let master_vector = newVector;
    master_vector[cpu_uncached_master_num]     = proc_uncached;
    master_vector[debug_module_sba_master_num] = dm_master_local;
-   master_vector[sub_ifc_master_num]          = innerSubIfc;
+   master_vector[sub_ifc_master_num]          = subShim.master;
 
    // Slaves on the local bus
    // default slave is forwarded out directly to the Core interface
@@ -586,8 +581,7 @@ module mkCoreW_reset #(Reset porReset)
       // Uncached master to Fabric master interface
       interface manager_1 = prepend_AXI4_Master_id
             (0, zero_AXI4_Master_user (uncached_mem_shim.master));
-      // TODO:
-      interface subordinate_0 = outerSubIfc;
+      interface subordinate_0 = subShim.slave;
    endinterface;
 
 /*
