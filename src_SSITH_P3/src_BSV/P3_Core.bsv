@@ -70,10 +70,10 @@ interface P3_Core_IFC;
    // Core CPU interfaces
 
    // CPU IMem to Fabric master interface
-   interface AXI4_Master_Synth#(TAdd#(Wd_MId,1), Wd_Addr, Wd_Data,
+   interface AXI4_Master_Sig#(TAdd#(Wd_MId,1), Wd_Addr, Wd_Data,
                                 0, 0, 0, 0, 0)  master0;
 
-   interface AXI4_Master_Synth#(TAdd#(Wd_MId,1), Wd_Addr, Wd_Data,
+   interface AXI4_Master_Sig#(TAdd#(Wd_MId,1), Wd_Addr, Wd_Data,
                                 0, 0, 0, 0, 0)  master1;
 
    // External interrupt sources
@@ -293,16 +293,16 @@ module mkP3_Core (P3_Core_IFC);
 
    // ================================================================
    // INTERFACE
-   let master0_synth <- toAXI4_Master_Synth(corew.cpu_imem_master);
-   let master1_synth <- toAXI4_Master_Synth(corew.cpu_dmem_master);
+   let master0_sig <- toAXI4_Master_Sig(corew.cpu_imem_master);
+   let master1_sig <- toAXI4_Master_Sig(corew.cpu_dmem_master);
    // ----------------------------------------------------------------
    // Core CPU interfaces
 
    // CPU IMem to Fabric master interface
-   interface AXI4_Master_Synth master0 = master0_synth;
+   interface AXI4_Master_Sig master0 = master0_sig;
 
    // CPU DMem to Fabric master interface
-   interface AXI4_Master_Synth master1 = master1_synth;
+   interface AXI4_Master_Sig master1 = master1_sig;
 
    // External interrupts
    method  Action interrupt_reqs (Bit #(N_External_Interrupt_Sources) reqs);

@@ -45,7 +45,6 @@ import Fifos::*;
 import FIFO::*;
 import Types::*;
 import ProcTypes::*;
-import DReg::*;
 import CCTypes::*;
 import SynthParam::*;
 import Performance::*;
@@ -69,6 +68,7 @@ import CHERICC_Fat::*;
 import ISA_Decls_CHERI::*;
 `ifdef PERFORMANCE_MONITORING
 import StatCounters::*;
+import DReg::*;
 `endif
 
 import Cur_Cycle :: *;

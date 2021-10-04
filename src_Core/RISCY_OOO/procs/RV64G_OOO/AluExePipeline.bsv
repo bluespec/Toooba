@@ -44,7 +44,6 @@ import BuildVector::*;
 import Cntrs::*;
 import Types::*;
 import ProcTypes::*;
-import DReg::*;
 import SynthParam::*;
 import Exec::*;
 import Performance::*;
@@ -62,6 +61,7 @@ import ISA_Decls_CHERI::*;
 `ifdef PERFORMANCE_MONITORING
 import BlueUtils::*;
 import StatCounters::*;
+import DReg::*;
 `endif
 
 

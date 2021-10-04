@@ -119,7 +119,7 @@ src_BSV/TagTableStructure.bsv: $(REPO)/libs/TagController/tagsparams.py
 generate_hpm_vector: GenerateHPMVector.bsv
 GenerateHPMVector.bsv: $(RISCV_HPM_Events_DIR)/parse_counters.py
 	@echo "INFO: Re-generating GenerateHPMVector bluespec file"
-	$^ $(RISCV_HPM_Events_DIR)/counters.yaml Toooba -b $@
+	$^ $(RISCV_HPM_Events_DIR)/counters.yaml -m ProcTypes -b $@
 	@echo "INFO: Re-generated GenerateHPMVector bluespec file"
 
 
@@ -127,7 +127,7 @@ GenerateHPMVector.bsv: $(RISCV_HPM_Events_DIR)/parse_counters.py
 stat_counters: StatCounters.bsv
 StatCounters.bsv: $(RISCV_HPM_Events_DIR)/parse_counters.py
 	@echo "INFO: Re-generating HPM events struct bluepsec file"
-	$^ $(RISCV_HPM_Events_DIR)/counters.yaml Toooba -s $@
+	$^ $(RISCV_HPM_Events_DIR)/counters.yaml -m ProcTypes -s $@
 	@echo "INFO: Re-generated HPM events struct bluespec file"
 compile_sim: tagsparams stat_counters generate_hpm_vector
 compile_synth: tagsparams stat_counters generate_hpm_vector
