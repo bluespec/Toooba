@@ -624,7 +624,7 @@ module mkFetchStage(FetchStage);
                         end
                      end else if (!isValid(nextPc)) begin
                         // A Jr will jump; if we don't have a record, we should wait to prevent wasted work.
-                        nextPc = Valid (-1); // Dummy value to prevent progress.
+                        nextPc = Valid (0); // Dummy value to prevent progress.
                      end
                   end
 
