@@ -106,7 +106,7 @@ module mkDoubleSqrt(Server#(Tuple2#(Double, FpuRoundMode), Tuple2#(Double, FpuEx
 `ifdef USE_XILINX_FPU
     let fpu <- mkXilinxFpSqrt;
 `else
-    let int_sqrt <- mkSquareRooter(1); // [sizhuo] size in RVFpu: 3
+    let int_sqrt <- mkNonPipelinedSquareRooter(3); // [sizhuo] size in RVFpu: 3
     let fpu <- mkFloatingPointSquareRooter(int_sqrt);
 `endif
     return fpu;
@@ -344,7 +344,7 @@ function Tuple2#(Bit#(64), FpuException) float_to_int(
         // necessary for rounding and overflow detection.
         Bit#(TAdd#(66,m)) int_val = {64'b1, in.sfd, 2'b0}; // this is 2**m times larger than it should be - we will shift this to correct for that
         int_val = saturating_shift_right(int_val, fromInteger(valueOf(m)) + bias_exp - in_exp);
-        
+
         // do rounding
         // 00 : exact
         // 01 : < 0.5
@@ -963,4 +963,3 @@ module mkFpuExecPipeline(FpuExec);
         sqrtQ.specUpdate
     ));
 endmodule
-
