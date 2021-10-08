@@ -226,7 +226,7 @@ interface AluExePipeline;
 endinterface
 
 module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
-    Bool verbose = True;
+    Bool verbose = False;
     Integer verbosity = 0;
 
     // alu reservation station
@@ -323,7 +323,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
             end
         end
 
-        
+
 
         else if(x.dInst.iType == CJALR || x.dInst.iType == Jr) begin
             let res_targets = inIfc.checkTarget(ppc);
