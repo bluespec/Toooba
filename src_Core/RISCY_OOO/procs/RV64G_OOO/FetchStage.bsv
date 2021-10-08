@@ -630,6 +630,12 @@ module mkFetchStage(FetchStage);
                            // same reg: push
                            ras.ras[i].popPush(False, Valid (push_addr));
                         end
+<<<<<<< HEAD
+=======
+                     end else if (!isValid(nextPc)) begin
+                        // A Jr will jump; if we don't have a record, we should wait to prevent wasted work.
+                        nextPc = Valid (setAddrUnsafe(nullCap,{2'b01,?})); // Invalid virtual address to prevent progress.
+>>>>>>> 1b5a036c... Two fixes: do a proper "all bits are the same" function, as well as
                      end
                   end
                   if(verbose) begin
