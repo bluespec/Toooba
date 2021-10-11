@@ -100,7 +100,7 @@ function Vpn getVpn(Addr addr) = addr[38:12];
 function PageOffset getPageOffset(Addr addr) = truncate(addr);
 
 // All the upper bits should be equal for a valid SV39 virtual address.
-function Bool validVirtualAddress(Addr addr) = ((addr[63:39] ^ {addr[39],addr[63:40]}) == 0);
+function Bool validVirtualAddress(Addr addr) =  (addr[63:39] == {addr[39],addr[63:40]});
 
 function Addr getPTBaseAddr(Ppn basePpn);
     PageOffset offset = 0;
