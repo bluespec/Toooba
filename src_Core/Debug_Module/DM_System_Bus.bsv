@@ -197,8 +197,7 @@ module mkDM_System_Bus (DM_System_Bus_IFC);
    // ----------------------------------------------------------------
 
    // Interface to memory fabric
-   let master_xactor <- mkAXI4ShimFF;
-                       
+   let axiShim <- mkAXI4ShimFF;
 
    // ----------------------------------------------------------------
    // System Bus state
@@ -294,7 +293,7 @@ module mkDM_System_Bus (DM_System_Bus_IFC);
 				arqos:    fabric_default_qos,
 				arregion: fabric_default_region,
 				aruser:   fabric_default_aruser};
-	 master_xactor.slave.ar.put(rda);
+	 axiShim.slave.ar.put(rda);
 
 	 // Save read-address for byte-lane extraction from later response
 	 // (since rg_sbaddress may be incremented by then).
@@ -335,13 +334,13 @@ module mkDM_System_Bus (DM_System_Bus_IFC);
 				awqos:    fabric_default_qos,
 				awregion: fabric_default_region,
 				awuser:   fabric_default_awuser};
-	 master_xactor.slave.aw.put(wra);
+	 axiShim.slave.aw.put(wra);
 
 	 let wrd = AXI4_WFlit {wdata: fabric_data,
 			       wstrb: fabric_strb,
 			       wlast: True,
 			       wuser: fabric_default_wuser};
-	 master_xactor.slave.w.put(wrd);
+	 axiShim.slave.w.put(wrd);
 
 	 if (verbosity != 0) begin
 	    $display ("    DM_System_Bus.fa_fabric_send_write_req:");
@@ -507,7 +506,7 @@ module mkDM_System_Bus (DM_System_Bus_IFC);
    (* descending_urgency = "rl_sb_read_finish, write" *)
    rule rl_sb_read_finish (   (rg_sb_state == SB_READ_FINISH)
 			   && (rg_sbcs_sberror == DM_SBERROR_NONE));
-      let rdr <- get(master_xactor.slave.r);
+      let rdr <- get(axiShim.slave.r);
       if (verbosity != 0)
 	 $display ("DM_System_Bus.rule_sb_read_finish: rdr = ", fshow (rdr));
 
@@ -588,7 +587,7 @@ module mkDM_System_Bus (DM_System_Bus_IFC);
    // Consume write-responses
 
    rule rl_sb_write_response;
-      let wrr <- get(master_xactor.slave.b);
+      let wrr <- get(axiShim.slave.b);
       if (wrr.bresp != OKAY)
 	 rg_sbcs_sberror <= DM_SBERROR_OTHER;
    endrule
@@ -597,7 +596,7 @@ module mkDM_System_Bus (DM_System_Bus_IFC);
    // INTERFACE
 
    method Action reset;
-      master_xactor.clear;
+      axiShim.clear;
 
       rg_sb_state <= SB_NOTBUSY;
 
@@ -678,7 +677,7 @@ module mkDM_System_Bus (DM_System_Bus_IFC);
 
    // ----------------
    // Facing System
-   interface master = master_xactor.master;
+   interface master = axiShim.master;
 endmodule
 
 // ================================================================
