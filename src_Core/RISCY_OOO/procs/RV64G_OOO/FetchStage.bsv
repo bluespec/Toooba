@@ -155,6 +155,7 @@ typedef struct {
 typedef struct {
   PcCompressed pc;
   PcCompressed ppc;
+  Bool pred_jump;
   Bool decode_epoch;
   Epoch main_epoch;
   Instruction inst;
@@ -172,6 +173,7 @@ function InstrFromFetch3 fetch3_2_instC(Fetch3ToDecode in, Instruction inst, Bit
       ppc: fromMaybe(PcCompressed{lsb: in.pc.lsb + 2,
                                   idx: in.pc.idx + ((in.pc.lsb == -2) ? 1:0)}, // If we move to a new page, we will move to the next index in the compressed PC table.
                      in.ppc),
+      pred_jump: isValid(in.ppc),
       decode_epoch: in.decode_epoch,
       main_epoch: in.main_epoch,
       inst: inst,
@@ -630,14 +632,18 @@ module mkFetchStage(FetchStage);
                         end
                      end
                   end
-
                   if(verbose) begin
                      $display("Branch prediction: ", fshow(dInst.iType), " ; ", fshow(pc), " ; ",
-                              fshow(ppc), " ; ", fshow(pred_taken), " ; ", fshow(nextPc));
+                              fshow(ppc), " ; ", fshow(dir_pred.taken), " ; ", fshow(nextPc));
                   end
 
+                  // If we don't have a good guess about where we are going, don't proceed.
+                  if ((!isValid(nextPc)) && (!in.pred_jump)) begin
+                     // Invalid virtual address to ensure redirection.
+                     ppc = {2'b01,?};
+                     decode_epoch_local = !decode_epoch_local;
                   // check previous mispred
-                  if (nextPc matches tagged Valid .decode_pred_next_pc &&& (decode_pred_next_pc != ppc)) begin
+                  end if (nextPc matches tagged Valid .decode_pred_next_pc &&& (decode_pred_next_pc != ppc)) begin
                      if (verbose) $display("%x: ppc and decodeppc :  %h %h", pc, ppc, decode_pred_next_pc);
                      decode_epoch_local = !decode_epoch_local;
                      redirectPc = Valid (decode_pred_next_pc); // record redirect next pc
