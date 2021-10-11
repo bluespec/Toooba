@@ -75,7 +75,7 @@ module mkIntDivUnsignedSim(IntDivUnsignedImport);
 
     FIFO#(IntDivUser) userFF <- mkFIFO;
     Server#(Tuple2#(UInt#(128),UInt#(64)),Tuple2#(UInt#(64),UInt#(64)))
-      nonpipediv <- mkNonPipelinedDividerBlah (4);
+      nonpipediv <- mkNonPipelinedDivider (4);
 
     rule compute;
         dividendQ.deq;
