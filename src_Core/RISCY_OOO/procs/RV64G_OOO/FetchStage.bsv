@@ -224,6 +224,7 @@ typedef struct {
   Dii_Parcel_Id dii_pid;
 `endif
   PcCompressed ppc;
+  Bool pred_jump;
   Bool decode_epoch;
   Epoch main_epoch;
   Instruction inst;
@@ -244,6 +245,7 @@ function InstrFromFetch3 fetch3_2_instC(Fetch3ToDecode in, Instruction inst, Bit
       ppc: fromMaybe(PcCompressed{lsb: in.pc.lsb + 2,
                                   idx: in.pc.idx + ((in.pc.lsb == -2) ? 1:0)}, // If we move to a new page, we will move to the next index in the compressed PC table.
                      in.ppc),
+      pred_jump: isValid(in.ppc),
       decode_epoch: in.decode_epoch,
       main_epoch: in.main_epoch,
       inst: inst,
@@ -660,8 +662,8 @@ module mkFetchStage(FetchStage);
       for (Integer i = 0; i < valueof(SupSize); i=i+1) begin
          if (decodeIn[i] matches tagged Valid .in)  begin
             let cause = in.cause;
-            let pc = decompressPc(in.pc);
-            let ppc = decompressPc(in.ppc);
+            CapMem pc = decompressPc(in.pc);
+            CapMem ppc = decompressPc(in.ppc);
             pcBlocks.rPort[i].remove(in.pc.idx);
             if (verbose)
                $display("Decode: %0d in = ", i, fshow (in));
@@ -744,19 +746,20 @@ module mkFetchStage(FetchStage);
                            // same reg: push
                            ras.ras[i].popPush(False, Valid (push_addr));
                         end
-                     end else if (!isValid(nextPc)) begin
-                        // A Jr will jump; if we don't have a record, we should wait to prevent wasted work.
-                        nextPc = Valid (setAddrUnsafe(nullCap,{2'b01,?})); // Invalid virtual address to prevent progress.
                      end
                   end
-
                   if(verbose) begin
                      $display("Branch prediction: ", fshow(dInst.iType), " ; ", fshow(pc), " ; ",
                               fshow(ppc), " ; ", fshow(pred_taken), " ; ", fshow(nextPc));
                   end
 
+                  // If we don't have a good guess about where we are going, don't proceed.
+                  if ((!isValid(nextPc)) && (!in.pred_jump)) begin
+                     // Invalid virtual address to ensure redirection.
+                     ppc = setAddrUnsafe(nullCap, {2'b01,?});
+                     decode_epoch_local = !decode_epoch_local;
                   // check previous mispred
-                  if (nextPc matches tagged Valid .decode_pred_next_pc &&& (decode_pred_next_pc != ppc)) begin
+                  end if (nextPc matches tagged Valid .decode_pred_next_pc &&& (decode_pred_next_pc != ppc)) begin
                      if (verbose) $display("%x: ppc and decodeppc :  %h %h", pc, ppc, decode_pred_next_pc);
                      decode_epoch_local = !decode_epoch_local;
                      redirectPc = Valid (decode_pred_next_pc); // record redirect next pc
