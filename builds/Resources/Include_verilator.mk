@@ -18,7 +18,7 @@ Verilog_RTL:
 ifeq (,$(filter clean full_clean,$(MAKECMDGOALS)))
 include .depends.mk
 
-.depends.mk: TagTableStructure.bsv | build_dir Verilog_RTL
+.depends.mk: TagTableStructure.bsv StatCounters.bsv GenerateHPMVector.bsv | build_dir Verilog_RTL
 	if ! bluetcl -exec makedepend -verilog -elab  $(RTL_GEN_DIRS)  $(BSC_COMPILATION_FLAGS) -p $(BSC_PATH) -o $@ $(TOPFILE); then rm -f $@ && false; fi
 endif
 
