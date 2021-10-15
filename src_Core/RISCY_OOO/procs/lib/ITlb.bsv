@@ -300,7 +300,7 @@ module mkITlb(ITlb::ITlb);
                 else if (vm_info.sv39) begin
                     let vpn = getVpn(vaddr);
                     let trans_result = tlb.translate(vpn, vm_info.asid);
-                    if (!validVirtualAddress(vaddr)) hitQ.enq(tuple3(?, Valid (excInstPageFault), False));
+                    if (!validVirtualAddress(vaddr)) hitQ.enq(tuple2(?, Valid (InstPageFault)));
                     else if (trans_result.hit) begin
                         // TLB hit
                         let entry = trans_result.entry;

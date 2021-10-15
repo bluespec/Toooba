@@ -545,8 +545,8 @@ module mkFetchStage(FetchStage);
       for (Integer i = 0; i < valueof(SupSize); i=i+1) begin
          if (decodeIn[i] matches tagged Valid .in)  begin
             let cause = in.cause;
-            CapMem pc = decompressPc(in.pc);
-            CapMem ppc = decompressPc(in.ppc);
+            Addr pc = decompressPc(in.pc);
+            Addr ppc = decompressPc(in.ppc);
             pcBlocks.rPort[i].remove(in.pc.idx);
             if (verbose)
                $display("Decode: %0d in = ", i, fshow (in));
@@ -634,7 +634,7 @@ module mkFetchStage(FetchStage);
                   // If we don't have a good guess about where we are going, don't proceed.
                   if ((!isValid(nextPc)) && (!in.pred_jump)) begin
                      // Invalid virtual address to ensure redirection.
-                     ppc = setAddrUnsafe(nullCap, {2'b01,?});
+                     ppc = {2'b01,?};
                      decode_epoch_local = !decode_epoch_local;
                   // check previous mispred
                   end if (nextPc matches tagged Valid .decode_pred_next_pc &&& (decode_pred_next_pc != ppc)) begin
