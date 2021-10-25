@@ -47,9 +47,10 @@ import ClientServer::*;
 
 typedef enum {
     I = 2'd0,
-    S = 2'd1,
-    E = 2'd2,
-    M = 2'd3
+    T = 2'd1,
+    S = 2'd2,
+    E = 2'd3,
+    M = 2'd4
 } MESI deriving(Bits, Eq, FShow);
 typedef MESI Msi;
 
@@ -317,6 +318,7 @@ typedef struct {
     Addr addr;
     childT child; // from which LLC/Dir
     idT id; // ld req id and other info need encoding
+    Bool tag_req; // request for cap tags, not data
 } LdMemRq#(type idT, type childT) deriving(Bits, Eq, FShow);
 
 typedef struct { // LdMemRq id with more info encoded to handle DMA req in LLC

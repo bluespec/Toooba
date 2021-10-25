@@ -523,7 +523,7 @@ endfunction
         // send to pipeline
         pipeline.send(MRs (LLPipeMRsIn {
             addr: cRq.addr,
-            toState: cRq.toState == M ? M : E, // set upgrade state
+            toState: cRq.toState == M ? M : cRq.toState == T ? T : E, // set upgrade state
             data: respData,
             way: cSlot.way
         }));
@@ -578,7 +578,8 @@ endfunction
                     // child rq needs refill cache line, dma rq does not
                     refill: isRqFromC(cRq.id),
                     mshrIdx: n
-                }
+                },
+                tag_req: cRq.toState == T
             });
             toMQ.enq(msg);
             toMInfoQ.deq; // deq info
@@ -623,7 +624,8 @@ endfunction
                     id: LdMemRqId {
                         refill: True,
                         mshrIdx: n
-                    }
+                    },
+                    tag_req: cRq.toState == T
                 });
                 toMQ.enq(msg);
                 // whole thing is done, reset bit and deq info
