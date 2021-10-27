@@ -92,7 +92,7 @@ function Maybe#(MemInst) decodeMemInst(Instruction inst, Bool cap_mode);
         illegalInst = True;
     end
 
-    Bool capWidth = ((mem_func == St || mem_func == Amo) && funct3 == f3_SQ)
+    Bool capWidth = (mem_func != Ld && funct3 == f3_SQ)
                  || (opcode   == opcMiscMem && funct3 == f3_LQ);
 
     if (capWidth && amo_func != None && amo_func != Swap) begin
