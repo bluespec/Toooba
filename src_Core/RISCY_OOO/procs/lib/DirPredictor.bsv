@@ -63,6 +63,10 @@ typedef GShareTrainInfo DirPredTrainInfo;
 typedef TourTrainInfo DirPredTrainInfo;
 `endif
 
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
 (* synthesize *)
 module mkDirPredictor(DirPredictor#(DirPredTrainInfo));
 `ifdef DIR_PRED_BHT

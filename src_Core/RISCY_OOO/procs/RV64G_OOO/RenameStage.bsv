@@ -384,6 +384,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                 spec_bits: specTagManager.currentSpecBits
 `ifdef RVFI_DII
                                 , dii_pid: x.dii_pid
+                                , traceBundle: unpack(0)
 `endif
                                };
         rob.enqPort[0].enq(y);
@@ -595,6 +596,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                 spec_bits: spec_bits
 `ifdef RVFI_DII
                                 , dii_pid: x.dii_pid
+                                , traceBundle: unpack(0)
 `endif
                                };
         rob.enqPort[0].enq(y);
@@ -1147,6 +1149,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                                 spec_bits: spec_bits
 `ifdef RVFI_DII
                                                 , dii_pid: x.dii_pid
+                                                , traceBundle: unpack(0)
 `endif
                                                };
                         rob.enqPort[i].enq(y);

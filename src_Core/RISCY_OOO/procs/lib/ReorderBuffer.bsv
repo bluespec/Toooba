@@ -479,15 +479,7 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
             dii_pid: dii_pid,
 `endif
 `ifdef RVFI
-            traceBundle: case (ppc_vaddr_csrData[pvc_deq_port]) matches
-                            tagged VAddr .v: begin
-                                case (lsqTag) matches
-                                    tagged Ld .l: return traceBundle[traceBundle_deq_port];
-                                    default: return traceBundle[traceBundle_deq_port];
-                                endcase
-                            end
-                            default: return traceBundle[traceBundle_deq_port];
-                        endcase,
+            traceBundle: traceBundle[traceBundle_deq_port],
 `endif
             spec_bits: spec_bits[sb_deq_port]
         };
