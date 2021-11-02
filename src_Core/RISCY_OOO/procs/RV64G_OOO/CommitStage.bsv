@@ -710,6 +710,9 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         EventsCore events = unpack(0);
         events.evt_TRAP = 1;
         events_reg <= events;
+        if(trap matches tagged Interrupt .i) begin
+            events.evt_INTERRUPT = 1;
+        end
 `endif
         // checks
         doAssert(x.rob_inst_state == Executed, "must be executed");
