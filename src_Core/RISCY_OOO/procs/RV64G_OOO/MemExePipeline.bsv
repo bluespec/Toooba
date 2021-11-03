@@ -1353,11 +1353,12 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             inIfc.rob_setExecuted_doFinishMem_RegData (lsqDeqSt.instTag, resp);
 `endif
         end
+        Bool scFail = (lsqDeqSt.memFunc == Sc && resp != fromInteger(valueof(ScSuccVal)));
         inIfc.rob_setExecuted_deqLSQ(lsqDeqSt.instTag, Invalid, Invalid
 `ifdef RVFI
             , ExtraTraceBundle{
-                regWriteData: fromMemTaggedData(resp),
-                memByteEn: replicate(False)
+                regWriteData: truncate(pack(lsqDeqSt.stData)), // No space for register store value; have to infer from byte enables?
+                memByteEn: scFail ? replicate(False):unpack(truncate(pack(lsqDeqSt.shiftedBE) >> lsqDeqSt.paddr[3:0]))
             }
 `endif
         );

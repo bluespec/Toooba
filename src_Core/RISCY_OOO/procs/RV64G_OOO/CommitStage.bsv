@@ -225,6 +225,7 @@ function Maybe#(RVFI_DII_Execution#(DataSz,DataSz)) genRVFI(ToReorderBuffer rot,
                     tagged St .s: begin
                         wmask = rot.traceBundle.memByteEn;
                         wdata = rot.traceBundle.regWriteData;
+                        if (rot.iType == Sc) data = rot.traceBundle.memByteEn[0] ? 0:1;
                     end
                 endcase
             end
