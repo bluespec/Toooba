@@ -42,8 +42,6 @@ import Vector::*;
 import GlobalBrHistReg::*;
 import BrPred::*;
 import TourPred::*;
-import CHERICC_Fat::*;
-import CHERICap::*;
 
 export mkTourPredSecure;
 
@@ -75,7 +73,7 @@ typedef TExp#(LgGlobalVecSz) GlobalVecSz;
 typedef Bit#(GlobalVecSz) GlobalVecSelect;
 
 typedef struct {
-    CapMem pc;
+    Addr pc;
     Bool taken;
     TourTrainInfo train;
     Bool mispred;
@@ -105,8 +103,8 @@ module mkTourPredSecure(DirPredictor#(TourTrainInfo));
     Reg#(Bool) flushDone <- mkReg(True);
     Reg#(TabIndex) flushIndex <- mkReg(0);
 
-    function Tuple2#(TabIndex, LocalHistVecSelect) getPCIndex(CapMem pc);
-        PCIndex pcIdx = truncate(getAddr(pc) >> 2);
+    function Tuple2#(TabIndex, LocalHistVecSelect) getPCIndex(Addr pc);
+        PCIndex pcIdx = truncate(pc >> 2);
         TabIndex tabIdx = truncateLSB(pcIdx);
         LocalHistVecSelect sel = truncate(pcIdx);
         return tuple2(tabIdx, sel);
@@ -144,7 +142,7 @@ module mkTourPredSecure(DirPredictor#(TourTrainInfo));
     Vector#(SupSize, DirPred#(TourTrainInfo)) predIfc;
     for(Integer i = 0; i < valueof(SupSize); i = i+1) begin
         predIfc[i] = (interface DirPred;
-            method ActionValue#(DirPredResult#(TourTrainInfo)) pred(CapMem pc);
+            method ActionValue#(DirPredResult#(TourTrainInfo)) pred(Addr pc);
                 // get local history
                 let {localHistTabIdx, localHistVecSel} = getPCIndex(pc);
                 Vector#(LocalHistVecSz, TourLocalHist) localHistVec = localHistTab.sub(localHistTabIdx);
@@ -255,7 +253,7 @@ module mkTourPredSecure(DirPredictor#(TourTrainInfo));
 
     interface pred = predIfc;
 
-    method Action update(CapMem pc, Bool taken, TourTrainInfo train, Bool mispred);
+    method Action update(Addr pc, Bool taken, TourTrainInfo train, Bool mispred);
         updateEn.wset(TourUpdate {pc: pc, taken: taken, train: train, mispred: mispred});
     endmethod
 

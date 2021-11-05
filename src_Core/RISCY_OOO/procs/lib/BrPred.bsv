@@ -73,12 +73,12 @@ typedef struct {
 } DirPredResult#(type trainInfoT) deriving(Bits, Eq, FShow);
 
 interface DirPred#(type trainInfoT);
-    method ActionValue#(DirPredResult#(trainInfoT)) pred(CapMem pc);
+    method ActionValue#(DirPredResult#(trainInfoT)) pred(Addr pc);
 endinterface
 
 interface DirPredictor#(type trainInfoT);
     interface Vector#(SupSize, DirPred#(trainInfoT)) pred;
-    method Action update(CapMem pc, Bool taken, trainInfoT train, Bool mispred);
+    method Action update(Addr pc, Bool taken, trainInfoT train, Bool mispred);
     method Action flush;
     method Bool flush_done;
 endinterface

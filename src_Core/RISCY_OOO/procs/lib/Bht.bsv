@@ -39,8 +39,6 @@ import ProcTypes::*;
 import RegFile::*;
 import Vector::*;
 import BrPred::*;
-import CHERICC_Fat::*;
-import CHERICap::*;
 
 export BhtTrainInfo;
 export mkBht;
@@ -57,14 +55,14 @@ module mkBht(DirPredictor#(BhtTrainInfo));
     // mkRegFileWCF is the RegFile version of mkConfigReg
     RegFile#(BhtIndex, Bit#(2)) hist <- mkRegFileWCF(0,fromInteger(valueOf(BhtEntries)-1));
 
-    function BhtIndex getIndex(CapMem pc);
-        return truncate(getAddr(pc) >> 2);
+    function BhtIndex getIndex(Addr pc);
+        return truncate(pc >> 2);
     endfunction
 
     Vector#(SupSize, DirPred#(BhtTrainInfo)) predIfc;
     for(Integer i = 0; i < valueof(SupSize); i = i+1) begin
         predIfc[i] = (interface DirPred;
-            method ActionValue#(DirPredResult#(BhtTrainInfo)) pred(CapMem pc);
+            method ActionValue#(DirPredResult#(BhtTrainInfo)) pred(Addr pc);
                 let index = getIndex(pc);
                 Bit#(2) cnt = hist.sub(index);
                 Bool taken = cnt[1] == 1;
@@ -78,7 +76,7 @@ module mkBht(DirPredictor#(BhtTrainInfo));
 
     interface pred = predIfc;
 
-    method Action update(CapMem pc, Bool taken, BhtTrainInfo train, Bool mispred);
+    method Action update(Addr pc, Bool taken, BhtTrainInfo train, Bool mispred);
         let index = getIndex(pc);
         let current_hist = hist.sub(index);
         Bit#(2) next_hist;

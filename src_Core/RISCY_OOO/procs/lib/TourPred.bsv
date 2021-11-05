@@ -41,8 +41,6 @@ import Ehr::*;
 import Vector::*;
 import GlobalBrHistReg::*;
 import BrPred::*;
-import CHERICC_Fat::*;
-import CHERICap::*;
 
 export TourLocalHistSz;
 export TourLocalHist;
@@ -96,8 +94,8 @@ module mkTourPred(DirPredictor#(TourTrainInfo));
     Ehr#(TAdd#(1, SupSize), SupCnt) predCnt <- mkEhr(0);
     Ehr#(TAdd#(1, SupSize), Bit#(SupSize)) predRes <- mkEhr(0);
 
-    function PCIndex getPCIndex(CapMem pc);
-        return truncate(getAddr(pc) >> 2);
+    function PCIndex getPCIndex(Addr pc);
+        return truncate(pc >> 2);
     endfunction
 
     // common sat counter operations
@@ -120,7 +118,7 @@ module mkTourPred(DirPredictor#(TourTrainInfo));
     Vector#(SupSize, DirPred#(TourTrainInfo)) predIfc;
     for(Integer i = 0; i < valueof(SupSize); i = i+1) begin
         predIfc[i] = (interface DirPred;
-            method ActionValue#(DirPredResult#(TourTrainInfo)) pred(CapMem pc);
+            method ActionValue#(DirPredResult#(TourTrainInfo)) pred(Addr pc);
                 // get local history & prediction
                 TourLocalHist localHist = localHistTab.sub(getPCIndex(pc));
                 Bool localTaken = isTaken(localBht.sub(localHist));
@@ -166,7 +164,7 @@ module mkTourPred(DirPredictor#(TourTrainInfo));
 
     interface pred = predIfc;
 
-    method Action update(CapMem pc, Bool taken, TourTrainInfo train, Bool mispred);
+    method Action update(Addr pc, Bool taken, TourTrainInfo train, Bool mispred);
         // update history if mispred
         if(mispred) begin
             TourGlobalHist newHist = truncateLSB({pack(taken), train.globalHist});

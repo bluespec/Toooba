@@ -700,7 +700,7 @@ module mkFetchStage(FetchStage);
                   // direction predict
                   Bool pred_taken = False;
                   if(dInst.iType == Br) begin
-                     let pred_res <- dirPred.pred[i].pred(pc);
+                     let pred_res <- dirPred.pred[i].pred(getAddr(pc));
                      pred_taken = pred_res.taken;
                      dp_train = pred_res.train;
                   end
@@ -943,7 +943,7 @@ module mkFetchStage(FetchStage);
         //end
         if (iType == Br) begin
             // Train the direction predictor for all branches
-            dirPred.update(pc, taken, dpTrain, mispred);
+            dirPred.update(getAddr(pc), taken, dpTrain, mispred);
         end
         // train next addr pred when mispred
         if(mispred) begin
