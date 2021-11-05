@@ -54,8 +54,8 @@ export mkTourPred;
 // 4KB tournament predictor
 
 typedef 12 TourGlobalHistSz;
-typedef 10 TourLocalHistSz;
-typedef 10 PCIndexSz;
+typedef  4 TourLocalHistSz;
+typedef 12 PCIndexSz;
 
 typedef Bit#(TourGlobalHistSz) TourGlobalHist;
 typedef Bit#(TourLocalHistSz) TourLocalHist;
@@ -82,7 +82,7 @@ module mkTourPred(DirPredictor#(TourTrainInfo));
     // local history: MSB is the latest branch
     RegFile#(PCIndex, TourLocalHist) localHistTab <- mkRegFileWCF(0, maxBound);
     // local sat counters
-    RegFile#(TourLocalHist, Bit#(3)) localBht <- mkRegFileWCF(0, maxBound);
+    RegFile#(TourLocalHist, Bit#(2)) localBht <- mkRegFileWCF(0, maxBound);
     // global history reg
     TourGHistReg gHistReg <- mkTourGHistReg;
     // global sat counters
@@ -95,7 +95,7 @@ module mkTourPred(DirPredictor#(TourTrainInfo));
     Ehr#(TAdd#(1, SupSize), Bit#(SupSize)) predRes <- mkEhr(0);
 
     function PCIndex getPCIndex(Addr pc);
-        return truncate(pc >> 2);
+        return truncate(pc >> 1);
     endfunction
 
     // common sat counter operations
