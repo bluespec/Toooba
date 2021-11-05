@@ -710,10 +710,10 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 `ifdef PERFORMANCE_MONITORING
         EventsCore events = unpack(0);
         events.evt_TRAP = 1;
-        events_reg <= events;
         if(trap matches tagged Interrupt .i) begin
             events.evt_INTERRUPT = 1;
         end
+        events_reg <= events;
 `endif
         // checks
         doAssert(x.rob_inst_state == Executed, "must be executed");
