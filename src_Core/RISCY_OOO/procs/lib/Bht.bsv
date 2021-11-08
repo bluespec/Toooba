@@ -46,7 +46,7 @@ export mkBht;
 typedef Bit#(0) BhtTrainInfo; // no training info needs to be remembered
 
 // Local BHT Typedefs
-typedef 128 BhtEntries;
+typedef 2048 BhtEntries;
 typedef Bit#(TLog#(BhtEntries)) BhtIndex;
 
 (* synthesize *)
