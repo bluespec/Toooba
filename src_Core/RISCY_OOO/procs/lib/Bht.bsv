@@ -49,7 +49,7 @@ typedef Bit#(0) BhtTrainInfo; // no training info needs to be remembered
 typedef 2048 BhtEntries;
 typedef Bit#(TLog#(BhtEntries)) BhtIndex;
 
-(* synthesize *)
+//(* synthesize *)
 module mkBht(DirPredictor#(BhtTrainInfo));
     // Read and Write ordering doesn't matter since this is a predictor
     // mkRegFileWCF is the RegFile version of mkConfigReg
