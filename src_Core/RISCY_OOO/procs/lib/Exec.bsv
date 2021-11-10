@@ -424,6 +424,10 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
         capException = Invalid;
         boundsCheck = Invalid;
     end
+    if (dInst.capChecks.ccopytype_bypass && isValidCap(rVal1) && getKind(rVal1) == UNSEALED && !validAsType(rVal1, zeroExtend(getKind(rVal1).SEALED_WITH_TYPE))) begin
+        capException = Invalid;
+        boundsCheck = Invalid;
+    end
 
     cf.nextPc = setKind(cf.nextPc, UNSEALED);
     cf.mispredict = cf.nextPc != ppc;
