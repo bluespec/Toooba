@@ -1,39 +1,3 @@
-
-// Copyright (c) 2017 Massachusetts Institute of Technology
-//
-//-
-// RVFI_DII + CHERI modifications:
-//     Copyright (c) 2020 Jonathan Woodruff
-//     All rights reserved.
-//
-//     This software was developed by SRI International and the University of
-//     Cambridge Computer Laboratory (Department of Computer Science and
-//     Technology) under DARPA contract HR0011-18-C-0016 ("ECATS"), as part of the
-//     DARPA SSITH research programme.
-//
-//     This work was supported by NCSC programme grant 4212611/RFA 15971 ("SafeBet").
-//-
-//
-// Permission is hereby granted, free of charge, to any person
-// obtaining a copy of this software and associated documentation
-// files (the "Software"), to deal in the Software without
-// restriction, including without limitation the rights to use, copy,
-// modify, merge, publish, distribute, sublicense, and/or sell copies
-// of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be
-// included in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
-// BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
-// ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
-
 import Types::*;
 import ProcTypes::*;
 import RegFile::*;
@@ -54,8 +18,8 @@ export mkTourPred;
 // 4KB tournament predictor
 
 typedef 12 TourGlobalHistSz;
-typedef  4 TourLocalHistSz;
-typedef 12 PCIndexSz;
+typedef 10 TourLocalHistSz;
+typedef 10 PCIndexSz;
 
 typedef Bit#(TourGlobalHistSz) TourGlobalHist;
 typedef Bit#(TourLocalHistSz) TourLocalHist;
@@ -82,13 +46,13 @@ module mkTourPred(DirPredictor#(TourTrainInfo));
     // local history: MSB is the latest branch
     RegFile#(PCIndex, TourLocalHist) localHistTab <- mkRegFileWCF(0, maxBound);
     // local sat counters
-    RegFile#(TourLocalHist, Bit#(2)) localBht <- mkRegFileWCF(0, maxBound);
+    RegFile#(TourLocalHist, Int#(3)) localBht <- mkRegFileWCF(0, maxBound);
     // global history reg
     TourGHistReg gHistReg <- mkTourGHistReg;
     // global sat counters
-    RegFile#(TourGlobalHist, Bit#(2)) globalBht <- mkRegFileWCF(0, maxBound);
+    RegFile#(TourGlobalHist, Int#(2)) globalBht <- mkRegFileWCF(0, maxBound);
     // choice sat counters: large (taken) -- use local, small (not taken) -- use global
-    RegFile#(TourGlobalHist, Bit#(2)) choiceBht <- mkRegFileWCF(0, maxBound);
+    RegFile#(TourGlobalHist, Int#(2)) choiceBht <- mkRegFileWCF(0, maxBound);
 
     // EHR to record predict results in this cycle
     Ehr#(TAdd#(1, SupSize), SupCnt) predCnt <- mkEhr(0);
@@ -99,19 +63,9 @@ module mkTourPred(DirPredictor#(TourTrainInfo));
     endfunction
 
     // common sat counter operations
-    function Bool isTaken(Bit#(n) cnt) provisos(Add#(1, a__, n));
-        Bit#(1) msb = truncateLSB(cnt);
-        return msb == 1;
-    endfunction
-
-    function Bit#(n) updateCnt(Bit#(n) cnt, Bool taken);
-        if(taken) begin
-            return cnt == maxBound ? maxBound : cnt + 1;
-        end
-        else begin
-            return cnt == 0 ? 0 : cnt - 1;
-        end
-    endfunction
+    function Bool isTaken(Int#(n) cnt) = (cnt >= 0);
+    function Int#(n) updateCnt(Int#(n) cnt, Bool taken) =
+        boundedPlus(cnt, (taken) ? 1 : -1);
 
     TourGlobalHist curGHist = gHistReg.history; // global history: MSB is the latest branch
 
