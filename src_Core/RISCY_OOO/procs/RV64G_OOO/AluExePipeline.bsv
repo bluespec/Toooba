@@ -184,7 +184,7 @@ interface AluExeInput;
 `endif
     );
     // Fetch stage
-    method Action fetch_train_predictors(FetchTrainBP train);
+    method Action fetch_train_predictors(ToSpecFifo#(FetchTrainBP) train);
 
     // global broadcast methods
     // set aggressive sb & wake up inst in RS
@@ -472,14 +472,16 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
             inIfc.redirect(cast(x.controlFlow.nextPc), validValue(x.spec_tag), x.tag);
             // must be a branch, train branch predictor
             doAssert(x.iType == Jr || x.iType == CJALR || x.iType == CCall || x.iType == Br, "only jr, br, cjalr, and ccall can mispredict");
-            inIfc.fetch_train_predictors(FetchTrainBP {
-                pc: cast(x.controlFlow.pc),
-                nextPc: cast(x.controlFlow.nextPc),
-                iType: x.iType,
-                taken: x.controlFlow.taken,
-                dpTrain: x.dpTrain,
-                mispred: True,
-                isCompressed: x.isCompressed
+            inIfc.fetch_train_predictors(ToSpecFifo {
+                data: FetchTrainBP {
+                    pc: cast(x.controlFlow.pc),
+                    nextPc: cast(x.controlFlow.nextPc),
+                    iType: x.iType,
+                    taken: x.controlFlow.taken,
+                    dpTrain: x.dpTrain,
+                    mispred: True,
+                    isCompressed: x.isCompressed},
+                spec_bits: exeToFin.spec_bits
             });
 `ifdef PERF_COUNT
             // performance counter
@@ -501,14 +503,16 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
             // since we can only do 1 training in a cycle, split the rule
             // XXX not training JAL, reduce chance of conflicts
             if(x.iType == Jr || x.iType == CJALR || x.iType == CCall || x.iType == Br) begin
-                inIfc.fetch_train_predictors(FetchTrainBP {
-                    pc: cast(x.controlFlow.pc),
-                    nextPc: cast(x.controlFlow.nextPc),
-                    iType: x.iType,
-                    taken: x.controlFlow.taken,
-                    dpTrain: x.dpTrain,
-                    mispred: False,
-                    isCompressed: x.isCompressed
+                inIfc.fetch_train_predictors(ToSpecFifo {
+                    data: FetchTrainBP {
+                        pc: cast(x.controlFlow.pc),
+                        nextPc: cast(x.controlFlow.nextPc),
+                        iType: x.iType,
+                        taken: x.controlFlow.taken,
+                        dpTrain: x.dpTrain,
+                        mispred: False,
+                        isCompressed: x.isCompressed},
+                    spec_bits: exeToFin.spec_bits
                 });
             end
         end
