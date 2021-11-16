@@ -41,8 +41,10 @@ interface SpecFifo#(
     numeric type sbPortNum // specBits EHR port num
 );
     method Action enq(ToSpecFifo#(t) x);
+    method Bool notFull;
     method Action deq;
     method ToSpecFifo#(t) first;
+    method Bool notEmpty;
     interface SpeculationUpdate specUpdate;
 endinterface
 
@@ -155,6 +157,8 @@ module mkSpecFifo#(
         wrongSpec_enq_conflict.wset(?);
     endmethod
 
+    method Bool notFull = (empty_for_enq || enqP != deqP_for_enq);
+
     method Action deq if (valid[deqP][sched.validDeqPort]);
         valid[deqP][sched.validDeqPort] <= False;
         deqP <= getNextPtr(deqP);
@@ -168,6 +172,8 @@ module mkSpecFifo#(
             spec_bits: specBits[deqP][sched.sbDeqPort]
         };
     endmethod
+
+    method Bool notEmpty = (valid[deqP][sched.validDeqPort]);
 
     interface SpeculationUpdate specUpdate;
         method Action correctSpeculation(SpecBits mask);
@@ -301,6 +307,8 @@ module mkSpecFifoCF#(
         enqP <= getNextPtr(enqP);
     endmethod
 
+    method Bool notFull = (empty_for_enq || enqP != deqP_for_enq);
+
     method Action deq if (valid[1][deqP]);
         valid[1][deqP] <= False;
         deqP <= getNextPtr(deqP);
@@ -312,6 +320,8 @@ module mkSpecFifoCF#(
             spec_bits: specBits[1][deqP]
         };
     endmethod
+
+    method Bool notEmpty = (valid[1][deqP]);
 
     interface SpeculationUpdate specUpdate;
         method correctSpeculation = correctSpecF.enq;
@@ -372,4 +382,36 @@ module mkSpecFifo_SB_deq_enq_C_deq_enq#(Bool lazyEnq)(
     let m <- mkSpecFifo(sched, lazyEnq);
     // let m <- mkSpecFifoCF(lazyEnq);
     return m;
+endmodule
+
+module mkSpecFifoUG#(Bool lazyEnq)(
+    SpecFifo#(size, t, validPortNum, sbPortNum)
+) provisos (
+    Alias#(idxT, Bit#(TLog#(size))),
+    Bits#(t, _tsz),
+    FShow#(t)
+);
+    SpecFifo#(size, t, validPortNum, sbPortNum) m <- mkSpecFifoCF(lazyEnq);
+    RWire#(ToSpecFifo#(t)) first_w <- mkRWire;
+    RWire#(ToSpecFifo#(t)) enq_w <- mkRWire;
+    PulseWire deq_w <- mkPulseWire;
+
+    rule doFirst;
+        first_w.wset(m.first);
+    endrule
+
+    rule doDeq(deq_w);
+        m.deq;
+    endrule
+
+    rule doEnq(enq_w.wget matches tagged Valid .e);
+        m.enq(e);
+    endrule
+
+    method enq = enq_w.wset;
+    method notFull = m.notFull;
+    method deq = deq_w.send;
+    method ToSpecFifo#(t) first = fromMaybe(?,first_w.wget);
+    method notEmpty = m.notEmpty;
+    interface SpeculationUpdate specUpdate = m.specUpdate;
 endmodule

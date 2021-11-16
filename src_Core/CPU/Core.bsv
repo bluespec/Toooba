@@ -346,7 +346,7 @@ module mkCore#(CoreId coreId)(Core);
         for(Integer i = 0; i < valueof(FpuMulDivExeNum); i = i+1) begin
             fpuMulDivSpecUpdate[i] = fix.fpuMulDivExeIfc[i].specUpdate;
         end
-        Vector#(AluExeNum, SpecFifo#(NumInstTags, FetchTrainBP, 1, 1)) trainBPQ <- replicateM(mkSpecFifoCF(True));
+        Vector#(AluExeNum, SpecFifo#(TDiv#(`NUM_SPEC_TAGS,2), FetchTrainBP, 1, 1)) trainBPQ <- replicateM(mkSpecFifoUG(True));
         Vector#(AluExeNum, SpeculationUpdate) btqSpecUpdate;
         for(Integer i = 0; i < valueof(AluExeNum); i = i+1) begin
             btqSpecUpdate[i] = trainBPQ[i].specUpdate;
@@ -453,7 +453,7 @@ module mkCore#(CoreId coreId)(Core);
             endinterface);
             aluExe[i] <- mkAluExePipeline(aluExeInput);
             // truly call fetch method to train branch predictor
-            rule doFetchTrainBP(trainBPQ[i].first.spec_bits == 0);
+            rule doFetchTrainBP(trainBPQ[i].notEmpty && trainBPQ[i].first.spec_bits == 0);
                 let train = trainBPQ[i].first.data;
                 trainBPQ[i].deq;
                 fetchStage.train_predictors(
