@@ -73,7 +73,7 @@ module mkRas(ReturnAddrStack) provisos(NumAlias#(TExp#(TLog#(RasEntries)), RasEn
 
     rule doFlush(!flushDone);
         writeVReg(getVEhrPort(stack, valueof(SupSize)), replicate(0));
-        head[valueof(SupSize)] <= 0;
+        head[valueof(SupSize) + 1] <= 0;
         flushDone <= True;
     endrule
 `endif
@@ -101,7 +101,7 @@ module mkRas(ReturnAddrStack) provisos(NumAlias#(TExp#(TLog#(RasEntries)), RasEn
     end
 
     method Action setHead(RasIndex h);
-        head[valueof(SupSize) + 1] <= h;
+        head[valueof(SupSize)] <= h;
     endmethod
 
     interface ras = rasIfc;
