@@ -46,8 +46,10 @@ import GSelectPred::*;
 import GSharePred::*;
 import TourPred::*;
 import TourPredSecure::*;
+import Ras::*;
 
 export DirPredTrainInfo(..);
+export PredTrainInfo(..);
 export mkDirPredictor;
 
 `ifdef DIR_PRED_BHT
@@ -62,6 +64,11 @@ typedef GShareTrainInfo DirPredTrainInfo;
 `ifdef DIR_PRED_TOUR
 typedef TourTrainInfo DirPredTrainInfo;
 `endif
+
+typedef struct {
+    DirPredTrainInfo dir;
+    RasPredTrainInfo ras;
+} PredTrainInfo deriving(Bits, Eq, FShow);
 
 (* synthesize *)
 module mkDirPredictor(DirPredictor#(DirPredTrainInfo));

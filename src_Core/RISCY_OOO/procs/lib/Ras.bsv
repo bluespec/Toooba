@@ -46,25 +46,27 @@ import CHERICap::*;
 interface RAS;
     method CapMem first;
     // first pop, then push
-    method Action popPush(Bool pop, Maybe#(CapMem) pushAddr);
-endinterface
-
-interface ReturnAddrStack;
-    interface Vector#(SupSize, RAS) ras;
-    method Action flush;
-    method Bool flush_done;
+    method ActionValue#(RasIndex) popPush(Bool pop, Maybe#(CapMem) pushAddr);
 endinterface
 
 // Local RAS Typedefs SHOULD BE A POWER OF TWO.
-typedef 8 RasEntries;
+typedef 16 RasEntries;
 typedef Bit#(TLog#(RasEntries)) RasIndex;
+typedef RasIndex RasPredTrainInfo;
+
+interface ReturnAddrStack;
+    interface Vector#(SupSize, RAS) ras;
+    method Action setHead(RasIndex h);
+    method Action flush;
+    method Bool flush_done;
+endinterface
 
 (* synthesize *)
 module mkRas(ReturnAddrStack) provisos(NumAlias#(TExp#(TLog#(RasEntries)), RasEntries));
     Vector#(RasEntries, Ehr#(TAdd#(SupSize, 1), CapMem)) stack <- replicateM(mkEhr(nullCap));
     // head points past valid data
     // to gracefully overflow, head is allowed to overflow to 0 and overwrite the oldest data
-    Ehr#(TAdd#(SupSize, 1), RasIndex) head <- mkEhr(0);
+    Ehr#(TAdd#(SupSize, 2), RasIndex) head <- mkEhr(0);
 
 `ifdef SECURITY
     Reg#(Bool) flushDone <- mkReg(True);
@@ -82,7 +84,7 @@ module mkRas(ReturnAddrStack) provisos(NumAlias#(TExp#(TLog#(RasEntries)), RasEn
             method CapMem first;
                 return stack[head[i]][i];
             endmethod
-            method Action popPush(Bool pop, Maybe#(CapMem) pushAddr);
+            method ActionValue#(RasIndex) popPush(Bool pop, Maybe#(CapMem) pushAddr);
                 // first pop, then push
                 RasIndex h = head[i];
                 if(pop) begin
@@ -93,9 +95,14 @@ module mkRas(ReturnAddrStack) provisos(NumAlias#(TExp#(TLog#(RasEntries)), RasEn
                     stack[h][i] <= addr;
                 end
                 head[i] <= h;
+                return h;
             endmethod
         endinterface);
     end
+
+    method Action setHead(RasIndex h);
+        head[valueof(SupSize) + 1] <= h;
+    endmethod
 
     interface ras = rasIfc;
 

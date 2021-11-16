@@ -77,7 +77,7 @@ typedef struct {
     DecodedInst dInst;
     PhyRegs regs;
     InstTag tag;
-    DirPredTrainInfo dpTrain;
+    PredTrainInfo trainInfo;
     // specualtion
     Maybe#(SpecTag) spec_tag;
 } AluDispatchToRegRead deriving(Bits, Eq, FShow);
@@ -87,7 +87,7 @@ typedef struct {
     DecodedInst dInst;
     Maybe#(PhyDst) dst;
     InstTag tag;
-    DirPredTrainInfo dpTrain;
+    PredTrainInfo trainInfo;
     // src reg vals & pc & ppc
     CapPipe rVal1;
     CapPipe rVal2;
@@ -103,7 +103,7 @@ typedef struct {
     IType iType;
     Maybe#(PhyDst) dst;
     InstTag tag;
-    DirPredTrainInfo dpTrain;
+    PredTrainInfo trainInfo;
     Bool isCompressed;
     // result
     CapPipe data; // alu compute result
@@ -153,7 +153,7 @@ typedef struct {
     CapMem nextPc;
     IType iType;
     Bool taken;
-    DirPredTrainInfo dpTrain;
+    PredTrainInfo trainInfo;
     Bool mispred;
     Bool isCompressed;
 } FetchTrainBP deriving(Bits, Eq, FShow);
@@ -270,7 +270,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
                 dInst: x.data.dInst,
                 regs: x.regs,
                 tag: x.tag,
-                dpTrain: x.data.dpTrain,
+                trainInfo: x.data.trainInfo,
                 spec_tag: x.spec_tag
             },
             spec_bits: x.spec_bits
@@ -342,7 +342,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
                 dInst: x.dInst,
                 dst: x.regs.dst,
                 tag: x.tag,
-                dpTrain: x.dpTrain,
+                trainInfo: x.trainInfo,
                 rVal1: rVal1,
                 rVal2: rVal2,
                 pc: pc,
@@ -398,7 +398,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
                 iType: x.dInst.iType,
                 dst: x.dst,
                 tag: x.tag,
-                dpTrain: x.dpTrain,
+                trainInfo: x.trainInfo,
                 isCompressed: x.orig_inst[1:0] != 2'b11,
                 data: exec_result.data,
                 csrData: is_scr_or_csr ? CSRData (exec_result.csrData) : PPC (cast(exec_result.controlFlow.nextPc)),
@@ -478,7 +478,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
                     nextPc: cast(x.controlFlow.nextPc),
                     iType: x.iType,
                     taken: x.controlFlow.taken,
-                    dpTrain: x.dpTrain,
+                    trainInfo: x.trainInfo,
                     mispred: True,
                     isCompressed: x.isCompressed},
                 spec_bits: exeToFin.spec_bits
@@ -509,7 +509,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
                         nextPc: cast(x.controlFlow.nextPc),
                         iType: x.iType,
                         taken: x.controlFlow.taken,
-                        dpTrain: x.dpTrain,
+                        trainInfo: x.trainInfo,
                         mispred: False,
                         isCompressed: x.isCompressed},
                     spec_bits: exeToFin.spec_bits

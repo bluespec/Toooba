@@ -142,7 +142,7 @@ interface FetchStage;
     method Action done_flushing();
     method Action train_predictors(
         CapMem pc, CapMem next_pc, IType iType, Bool taken,
-        DirPredTrainInfo dpTrain, Bool mispred, Bool isCompressed
+        PredTrainInfo trainInfo, Bool mispred, Bool isCompressed
     );
 
     // security
@@ -277,7 +277,7 @@ typedef struct {
 `endif
   CapMem ppc;
   Epoch main_epoch;
-  DirPredTrainInfo dpTrain;
+  PredTrainInfo trainInfo;
   Instruction inst;
   DecodedInst dInst;
   Bit #(32) orig_inst;    // original 16b or 32b instruction ([1:0] will distinguish 16b or 32b)
@@ -693,7 +693,7 @@ module mkFetchStage(FetchStage);
 
                let dInst = decode_result.dInst;
                let regs = decode_result.regs;
-               DirPredTrainInfo dp_train = ?; // dir pred training bookkeeping
+               PredTrainInfo trainInfo = ?; // dir pred training bookkeeping
 
                // update predicted next pc
                if (!isValid(cause)) begin
@@ -702,7 +702,7 @@ module mkFetchStage(FetchStage);
                   if(dInst.iType == Br) begin
                      let pred_res <- dirPred.pred[i].pred(getAddr(pc));
                      pred_taken = pred_res.taken;
-                     dp_train = pred_res.train;
+                     trainInfo.dir = pred_res.train;
                   end
                   Maybe#(CapMem) nextPc = decodeBrPred(pc, dInst, pred_taken, (in.inst_kind == Inst_32b));
 
@@ -717,37 +717,41 @@ module mkFetchStage(FetchStage);
                   Bool dst_link = linkedR(regs.dst);
                   Bool src1_link = linkedR(regs.src1);
                   CapMem push_addr = addPc(pc, ((in.inst_kind == Inst_32b) ? 4 : 2));
+                  Maybe#(CapMem) m_push_addr = Invalid;
 
                   CapMem pop_addr = ras.ras[i].first;
+                  Bool pop = False;
                   if ((dInst.iType == J || dInst.iType == CJAL) && dst_link) begin
                      // rs1 is invalid, i.e., not link: push
-                     ras.ras[i].popPush(False, Valid (push_addr));
+                     m_push_addr = Valid (push_addr);
                   end
                   else if (dInst.iType == Jr || dInst.iType == CJALR) begin // jalr TODO CCALL could be push
                                                                             //           pop or nop (if to trampoline)
                                                                             //           Add hint to architecture?
                      if (!dst_link && src1_link) begin
                         // rd is link while rs1 is not: pop
+                        pop = True;
                         nextPc = Valid (pop_addr);
-                        ras.ras[i].popPush(True, Invalid);
                      end
                      else if (!src1_link && dst_link) begin
                         // rs1 is not link while rd is link: push
-                        ras.ras[i].popPush(False, Valid (push_addr));
+                        m_push_addr = Valid (push_addr);
                      end
                      else if (dst_link && src1_link) begin
                         // both rd and rs1 are links
                         if (regs.src1 != regs.dst) begin
                            // not same reg: first pop, then push
                            nextPc = Valid (pop_addr);
-                           ras.ras[i].popPush(True, Valid (push_addr));
+                           pop = True;
+                           m_push_addr = Valid (push_addr);
                         end
                         else begin
                            // same reg: push
-                           ras.ras[i].popPush(False, Valid (push_addr));
+                           m_push_addr = Valid (push_addr);
                         end
                      end
                   end
+                  trainInfo.ras <- ras.ras[i].popPush(pop, m_push_addr);
                   if(verbose) begin
                      $display("Branch prediction: ", fshow(dInst.iType), " ; ", fshow(pc), " ; ",
                               fshow(ppc), " ; ", fshow(pred_taken), " ; ", fshow(nextPc));
@@ -783,7 +787,7 @@ module mkFetchStage(FetchStage);
 `endif
                                         ppc: ppc,
                                         main_epoch: in.main_epoch,
-                                        dpTrain: dp_train,
+                                        trainInfo: trainInfo,
                                         inst: in.inst,
                                         dInst: dInst,
                                         orig_inst: in.orig_inst,
@@ -934,7 +938,7 @@ module mkFetchStage(FetchStage);
 
     method Action train_predictors(
         CapMem pc, CapMem next_pc, IType iType, Bool taken,
-        DirPredTrainInfo dpTrain, Bool mispred, Bool isCompressed
+        PredTrainInfo trainInfo, Bool mispred, Bool isCompressed
     );
         //if (iType == J || iType == CJAL || (iType == Br && next_pc < pc)) begin
         //    // Only train the next address predictor for jumps and backward branches
@@ -943,12 +947,14 @@ module mkFetchStage(FetchStage);
         //end
         if (iType == Br) begin
             // Train the direction predictor for all branches
-            dirPred.update(getAddr(pc), taken, dpTrain, mispred);
+            dirPred.update(getAddr(pc), taken, trainInfo.dir, mispred);
+            $display("Branch train PC: %x, taken: %x, mispred: %x", getAddr(pc), taken, mispred);
         end
         // train next addr pred when mispred
         if(mispred) begin
             let last_x16_pc = addPc(pc, (isCompressed ? 0 : 2));
             napTrainByExe.wset(TrainNAP {pc: last_x16_pc, nextPc: next_pc});
+            ras.setHead(trainInfo.ras);
         end
     endmethod
 

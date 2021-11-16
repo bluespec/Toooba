@@ -341,7 +341,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         let orig_inst = x.orig_inst;
         let ppc = x.ppc;
         let main_epoch = x.main_epoch;
-        let dpTrain = x.dpTrain;
+        let trainInfo = x.trainInfo;
         let inst = x.inst;
         let dInst = x.dInst;
         let arch_regs = x.regs;
@@ -481,7 +481,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         let dst = x.regs.dst;
         let ppc = x.ppc;
         let main_epoch = x.main_epoch;
-        let dpTrain = x.dpTrain;
+        let trainInfo = x.trainInfo;
         let inst = x.inst;
         let dInst = x.dInst;
         let arch_regs = x.regs;
@@ -540,7 +540,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         // send to ALU reservation station
         if (to_exec) begin
             reservationStationAlu[0].enq(ToReservationStation {
-                data: AluRSData {dInst: dInst, dpTrain: dpTrain},
+                data: AluRSData {dInst: dInst, trainInfo: trainInfo},
                 regs: phy_regs,
                 tag: inst_tag,
                 spec_bits: spec_bits,
@@ -663,7 +663,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         let orig_inst = x.orig_inst;
         let ppc = x.ppc;
         let main_epoch = x.main_epoch;
-        let dpTrain = x.dpTrain;
+        let trainInfo = x.trainInfo;
         let inst = x.inst;
         let dInst = x.dInst;
         let arch_regs = x.regs;
@@ -885,7 +885,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                 let orig_inst = x.orig_inst;
                 let ppc = x.ppc;
                 let main_epoch = x.main_epoch;
-                let dpTrain = x.dpTrain;
+                let trainInfo = x.trainInfo;
                 let inst = x.inst;
                 let dInst = x.dInst;
                 let arch_regs = x.regs;
@@ -1001,7 +1001,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                             // can process, send to ALU rs
                             aluExeUsed[k] = True; // mark resource used
                             reservationStationAlu[k].enq(ToReservationStation {
-                                data: AluRSData {dInst: dInst, dpTrain: dpTrain},
+                                data: AluRSData {dInst: dInst, trainInfo: trainInfo},
                                 regs: phy_regs,
                                 tag: inst_tag,
                                 spec_bits: spec_bits,

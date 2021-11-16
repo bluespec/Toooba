@@ -458,7 +458,7 @@ module mkCore#(CoreId coreId)(Core);
                 trainBPQ[i].deq;
                 fetchStage.train_predictors(
                     train.pc, train.nextPc, train.iType, train.taken,
-                    train.dpTrain, train.mispred, train.isCompressed
+                    train.trainInfo, train.mispred, train.isCompressed
                 );
             endrule
         end
