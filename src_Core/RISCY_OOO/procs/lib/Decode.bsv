@@ -1174,6 +1174,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             dInst.capChecks.check_low_src = Src1Type;
                             dInst.capChecks.check_high_src = Src1Type;
                             dInst.capChecks.check_inclusive = False;
+                            dInst.capChecks.ccopytype_bypass = True;
 
                             dInst.iType = Cap;
                             regs.dst = Valid(tagged Gpr rd);
