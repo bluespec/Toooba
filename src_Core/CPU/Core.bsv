@@ -453,7 +453,11 @@ module mkCore#(CoreId coreId)(Core);
             endinterface);
             aluExe[i] <- mkAluExePipeline(aluExeInput);
             // truly call fetch method to train branch predictor
-            rule doFetchTrainBP(trainBPQ[i].notEmpty && trainBPQ[i].first.spec_bits == 0);
+            Bool train_ready = True;
+`ifdef NO_SPEC_TRAINING
+            train_ready = (trainBPQ[i].first.spec_bits == 0);
+`endif
+            rule doFetchTrainBP(trainBPQ[i].notEmpty && train_ready);
                 let train = trainBPQ[i].first.data;
                 trainBPQ[i].deq;
                 fetchStage.train_predictors(
