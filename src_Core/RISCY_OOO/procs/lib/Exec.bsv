@@ -355,18 +355,31 @@ endfunction
 (* noinline *)
 function CapPipe brAddrCalc(CapPipe pc, CapPipe val, IType iType, Data imm, Bool taken, Bit #(32) orig_inst, Bool cap);
     CapPipe pcPlusN = addPc(pc, ((orig_inst [1:0] == 2'b11) ? 4 : 2));
-    if (!cap) val = setOffset(pc, getAddr(val)).value;
-    CapPipe branchTarget = incOffset(pc, imm).value;
-    CapPipe jumpTarget = incOffset(val, imm).value;
-    jumpTarget = setAddrUnsafe(jumpTarget, {truncateLSB(getAddr(jumpTarget)), 1'b0});
-    jumpTarget = setKind(jumpTarget, UNSEALED); // It is checked elsewhere that we have an unsealed cap already, or sentry if permitted
-    CapPipe targetAddr = (case (iType)
-            J, CJAL : branchTarget;
-            Jr,CCall,CJALR      : jumpTarget;
-            Br      : (taken? branchTarget : pcPlusN);
+
+    //if (!cap) val = setOffset(pc, getAddr(val)).value;
+    //CapPipe branchTarget = incOffset(pc, imm).value;
+    //CapPipe jumpTarget = incOffset(val, imm).value;
+
+    CapPipe nextPc = pc;
+    Data offset = imm;
+    Bool doInc = True;
+    if (iType==Jr || iType==CCall || iType ==CJALR) begin
+        if (cap) nextPc = val;
+        else begin
+          offset = getAddr(val) + imm;
+          doInc = False;
+        end
+    end
+    CapPipe targetAddr = modifyOffset(nextPc, offset, doInc).value;
+    // jumpTarget.address[0] = 1'b0;
+    targetAddr = setAddrUnsafe(targetAddr, {truncateLSB(getAddr(targetAddr)), 1'b0});
+    targetAddr = setKind(targetAddr, UNSEALED); // It is checked elsewhere that we have an unsealed cap already, or sentry if permitted
+
+    return (case (iType)
+            J, CJAL, Jr, CCall, CJALR: targetAddr;
+            Br      : (taken ? targetAddr : pcPlusN);
             default : pcPlusN;
         endcase);
-    return targetAddr;
 endfunction
 /*
 (* noinline *)
