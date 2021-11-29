@@ -362,6 +362,21 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
         // execution
         ExecResult exec_result = basicExec(x.dInst, x.rVal1, x.rVal2, cast(x.pc), cast(x.ppc), x.orig_inst);
 
+`ifdef RAS_HIT_TRACING
+        function Bool linkedR(Bit#(5) r);
+           Bool res = False;
+           if ((r == 1 || r == 5)) begin
+              res = True;
+           end
+           return res;
+        endfunction
+        if (linkedR(x.orig_inst[19:15]) && (x.orig_inst[19:15] != x.orig_inst[11:7])) begin
+            case (x.dInst.iType)
+                Jr, CJALR: $display("Jr/CJALR ra: PC: %x Mispredict: %x , %x vs %x src1: %d", getAddr(x.pc), exec_result.controlFlow.mispredict, getAddr(exec_result.controlFlow.nextPc), getAddr(x.ppc), x.orig_inst[19:15]);
+            endcase
+        end
+`endif
+
         if (verbosity > 0) begin
            $display ("AluExePipeline.doExeAlu: regToExe    = ", fshow (regToExe));
            $display ("AluExePipeline.doExeAlu: exec_result = ", fshow (exec_result));

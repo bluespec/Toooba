@@ -88,6 +88,7 @@ BSC_COMPILATION_FLAGS += \
 	-D MEM64 \
 	-D RISCV \
 	-D PERFORMANCE_MONITORING \
+	-D RAS_HIT_TRACING \
 	-D TSO_MM \
 	-keep-fires -aggressive-conditions -no-warn-action-shadowing -check-assert \
 	-suppress-warnings G0020 -steps-max-intervals 10000000   \
