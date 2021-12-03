@@ -524,7 +524,7 @@ module mkSupReorderBuffer#(
     // these are handled in mkReorderBufferRowEhr
 
     // wrong speculation: make wrong speculation conflict with enq
-    Vector#(SupSize, RWire#(void)) wrongSpec_enq_conflict <- replicateM(mkRWire);
+    Vector#(SupSize, PulseWire) wrongSpec_enq_conflict <- replicateM(mkPulseWire);
 
     // SupSize number of FIFOs
     Vector#(SupSize, Vector#(SingleScalarSize, ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum))) row <- replicateM(replicateM(mkRobRow));
@@ -890,12 +890,11 @@ module mkSupReorderBuffer#(
         Bool can_enq = can_enq_fifo[way];
         enqIfc[i] = (interface ROB_EnqPort;
             method Bool canEnq = can_enq;
-            method Action enq(ToReorderBuffer x) if(can_enq);
+            method Action enq(ToReorderBuffer x) if(can_enq
+                                                    && !wrongSpec_enq_conflict[i]); // make it conflict with wrong speculation
                 doAssert(getEnqPort(way) == fromInteger(i), "enq FIFO way matches enq port");
                 // record enq action, real action is applied later
                 enqEn[i].wset(x);
-                // make it conflict with wrong speculation
-                wrongSpec_enq_conflict[i].wset(?);
                 // ordering: sequence after many other methods
                 deq_SB_enq[i] <= False;
                 setExeAlu_SB_enq[i] <= False;
@@ -1084,7 +1083,7 @@ module mkSupReorderBuffer#(
             deq_SB_wrongSpec <= False;
             // make it conflict with enq
             for(Integer i = 0; i < valueof(SupSize); i = i+1) begin
-                wrongSpec_enq_conflict[i].wset(?);
+                wrongSpec_enq_conflict[i].send;
             end
         endmethod
     endinterface
