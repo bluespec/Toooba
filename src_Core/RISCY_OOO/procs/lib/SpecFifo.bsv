@@ -410,3 +410,140 @@ module mkSpecFifoUG#(Bool lazyEnq)(
     method notEmpty = m.notEmpty;
     interface SpeculationUpdate specUpdate = m.specUpdate;
 endmodule
+
+interface SearchableSpecFifo#(
+    numeric type size, type t,
+    numeric type validPortNum, // valid EHR port num
+    numeric type sbPortNum, // specBits EHR port num
+    type searchOut, type searchIn
+);
+    method Action enq(ToSpecFifo#(t) x);
+    method Action deq;
+    method ToSpecFifo#(t) first;
+    method Maybe#(searchOut) search(searchIn in);
+    interface SpeculationUpdate specUpdate;
+endinterface
+
+module mkSearchableSpecFifoCF#(
+    Bool lazyEnq, // whether we calculate enq guard lazily
+    Bool unguarded_insert, // only for probabalistic applications
+    function Maybe#(searchOut) search_f(searchIn w, t x)
+)(
+    SearchableSpecFifo#(size, t, validPortNum, sbPortNum, searchOut, searchIn)
+) provisos (
+    Alias#(idxT, Bit#(TLog#(size))),
+    Bits#(t, _tsz),
+    FShow#(t)
+);
+    // correct spec is always the last
+    Integer sbCorrectSpecPort = valueof(sbPortNum) - 1;
+
+    Ehr#(3, Vector#(size, Bool))             valid    <- mkEhr(replicate(False));
+    Vector#(size, Reg#(t))                   row      <- replicateM(mkConfigRegU);
+    Ehr#(3, Vector#(size, SpecBits))         specBits <- mkEhr(?);
+
+    FIFOF#(SpecBits)                     correctSpecF <- mkUGFIFOF;
+    FIFOF#(IncorrectSpeculation)       incorrectSpecF <- mkUGFIFOF;
+
+    Reg#(idxT) enqP <- mkConfigReg(0);
+    Ehr#(2, idxT) deqP_ehr <- mkEhr(0);
+    Reg#(idxT) deqP = deqP_ehr[0]; // port 0 is for deq and canon_deqP
+
+    function idxT getNextPtr(idxT p);
+        return p == fromInteger(valueOf(size) - 1) ? 0 : p + 1;
+    endfunction
+
+    Bool empty_for_canon = all( \== (False) , valid[0] );
+    rule canon_deqP(!valid[1][deqP] && (enqP != deqP || !empty_for_canon));
+        // element at deqP was killed, so increment deqP
+        deqP <= getNextPtr(deqP);
+    endrule
+
+    (* fire_when_enabled, no_implicit_conditions *)
+    rule canon_speculation;
+        Vector#(size, SpecBits) newSpecBits = specBits[0];
+        Vector#(size, Bool) newValid = valid[0];
+        // Fold in CorrectSpec update:
+        if (correctSpecF.notEmpty) begin
+            SpecBits mask = correctSpecF.first();
+            correctSpecF.deq();
+            // clear spec bits for all entries
+            for (Integer i=0; i<valueOf(size); i=i+1)
+                newSpecBits[i] = newSpecBits[i] & mask;
+        end
+        // Fold in IncorrectSpec update:
+        if (incorrectSpecF.notEmpty) begin
+            IncorrectSpeculation incSpec = incorrectSpecF.first();
+            incorrectSpecF.deq();
+            // clear entries
+            for (Integer i=0; i<valueOf(size); i=i+1)
+                if(incSpec.kill_all || newSpecBits[i][incSpec.specTag] == 1'b1)
+                    newValid[i] = False;
+        end
+        specBits[0] <= newSpecBits;
+        valid[0] <= newValid;
+    endrule
+
+    // calculate guard for enq, we can do aggressively or lazily
+    idxT deqP_for_enq = ?;
+    Bool empty_for_enq = ?;
+    Bool valid_for_enq = ?;
+    if(lazyEnq) begin
+        // use the stale deqP & valid before canon_deqP or deq fires
+        // because deq, canon_deqP, wrongSpec only set valid to false and move deqP forward
+        // this just makes enq fire less aggressively
+        Wire#(idxT) deqP_for_enq_wire <- mkBypassWire;
+        Wire#(Bool) empty_for_enq_wire <- mkBypassWire;
+        Wire#(Bool) valid_for_enq_wire <- mkBypassWire;
+        (* fire_when_enabled, no_implicit_conditions *)
+        rule setWireForEnq;
+            deqP_for_enq_wire <= deqP;
+            empty_for_enq_wire <= all( \== (False) , valid[1] );
+            valid_for_enq_wire <= valid[1][enqP];
+        endrule
+        deqP_for_enq = deqP_for_enq_wire;
+        empty_for_enq = empty_for_enq_wire;
+        valid_for_enq = valid_for_enq_wire;
+    end
+    else begin
+        deqP_for_enq = deqP_ehr[1]; // read up-to-date deqP
+        empty_for_enq = all( \== (False) , valid[2] );
+        valid_for_enq = valid[2][enqP];
+    end
+
+    method Action enq(ToSpecFifo#(t) x) if (empty_for_enq || enqP != deqP_for_enq);
+        // [sizhuo] I don't think valid bit needs to be checked here
+        doAssert(!valid_for_enq, "enq entry cannot be valid");
+        row[enqP] <= x.data;
+        valid[2][enqP] <= True;
+        specBits[2][enqP] <= x.spec_bits;
+        enqP <= getNextPtr(enqP);
+    endmethod
+
+    method Action deq if (valid[1][deqP]);
+        valid[1][deqP] <= False;
+        deqP <= getNextPtr(deqP);
+    endmethod
+
+    method ToSpecFifo#(t) first if (valid[1][deqP]);
+        return ToSpecFifo{
+            data: row[deqP],
+            spec_bits: specBits[1][deqP]
+        };
+    endmethod
+
+    method Maybe#(searchOut) search(searchIn in);
+        Maybe#(searchOut) ret = Invalid;
+        for(Integer i = 0; i < valueOf(size); i = i + 1)
+            if (valid[i][0])
+                if (search_f(in, row[i]) matches tagged Valid .y)
+                    ret = Valid(y);
+        return ret;
+    endmethod
+
+    interface SpeculationUpdate specUpdate;
+        method correctSpeculation = correctSpecF.enq;
+        method incorrectSpeculation(kill_all, specTag) =
+            incorrectSpecF.enq(IncorrectSpeculation{kill_all: kill_all, specTag: specTag});
+    endinterface
+endmodule
