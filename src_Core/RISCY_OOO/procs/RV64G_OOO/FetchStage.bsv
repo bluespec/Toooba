@@ -57,6 +57,7 @@ import CCTypes::*;
 import DefaultValue::*;
 import Ras::*;
 import EpochManager::*;
+import HasSpecBits::*;
 import Performance::*;
 import Vector::*;
 import Assert::*;
@@ -155,6 +156,9 @@ interface FetchStage;
 
     // performance
     interface Perf#(DecStagePerfType) perf;
+
+    // speculation update
+    interface SpeculationUpdate specUpdate;
 `ifdef PERFORMANCE_MONITORING
     method Bool redirect_evt;
 `endif
@@ -1013,6 +1017,15 @@ module mkFetchStage(FetchStage);
 `else
         method Bool respValid = perfReqQ.notEmpty;
 `endif
+    endinterface
+
+    interface SpeculationUpdate specUpdate;
+        method Action correctSpeculation(SpecBits sb);
+            nextAddrPred.specUpdate.correctSpeculation(sb);
+        endmethod
+        method Action incorrectSpeculation(Bool kill_all, SpecTag specTag);
+            nextAddrPred.specUpdate.incorrectSpeculation(kill_all, specTag);
+        endmethod
     endinterface
 
 `ifdef PERFORMANCE_MONITORING
