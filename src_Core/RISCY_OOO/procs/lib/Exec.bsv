@@ -5,6 +5,7 @@
 //     Copyright (c) 2020 Alexandre Joannou
 //     Copyright (c) 2020 Peter Rugg
 //     Copyright (c) 2020 Jonathan Woodruff
+//     Copyright (c) 2021 Marno van der Maas
 //     All rights reserved.
 //
 //     This software was developed by SRI International and the University of
@@ -434,6 +435,10 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
         capException = Invalid;
     end
     if (dInst.capChecks.ccseal_bypass && (!isValidCap(rVal2) || getAddr(rVal2) == -1 || getKind(rVal1) != UNSEALED || !isInBounds(rVal2, False)) && isValidCap(rVal1)) begin
+        capException = Invalid;
+        boundsCheck = Invalid;
+    end
+    if (dInst.capChecks.ccopytype_bypass && isValidCap(rVal2) && getKind(rVal2) == UNSEALED && (getKind(rVal1) matches tagged SEALED_WITH_TYPE .t ? !validAsType(rVal2, zeroExtend(t)) : True)) begin
         capException = Invalid;
         boundsCheck = Invalid;
     end
