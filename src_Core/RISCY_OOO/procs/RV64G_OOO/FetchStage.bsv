@@ -854,7 +854,7 @@ module mkFetchStage(FetchStage);
         // only when misprediction happens, i.e., train by dec is already at
         // wrong path.
         TrainNAP train = fromMaybe(validValue(napTrainByDec.wget), napTrainByExe.wget);
-        nextAddrPred.update(train.pc, train.nextPc, train.nextPc != addPc(train.pc, 2));
+        nextAddrPred.update(train.pc, train.nextPc, train.nextPc != addPc(train.pc, 2), ?);
     endrule
 
     // Security: we can flush when front end is empty, i.e.

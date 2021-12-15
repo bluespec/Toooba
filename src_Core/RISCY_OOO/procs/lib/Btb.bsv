@@ -42,6 +42,7 @@ import Map::*;
 import Vector::*;
 import CHERICC_Fat::*;
 import CHERICap::*;
+import SpecFifo::*;
 
 export NextAddrPred(..);
 export mkBtb;
@@ -49,7 +50,7 @@ export mkBtb;
 interface NextAddrPred#(numeric type hashSz);
     method Action put_pc(CapMem pc);
     interface Vector#(SupSizeX2, Maybe#(CapMem)) pred;
-    method Action update(CapMem pc, CapMem brTarget, Bool taken);
+    method Action update(CapMem pc, CapMem brTarget, Bool taken, SpecBits specBits);
     // security
     method Action flush;
     method Bool flush_done;
@@ -109,9 +110,23 @@ module mkBtbCore(NextAddrPred#(hashSz))
     function MapKeyIndex#(HashedTag#(hashSz),BtbIndex) lookupKey(CapMem pc) =
         MapKeyIndex{key: hash(getTag(pc)), index: getIndex(pc)};
 
+    Bool lazyEnq = True;
+    Bool unguarded_insert = True;
+    function Maybe#(CapMem) match_record(BtbAddr pc, BtbUpdate update);
+        if (update.taken && (getBtbAddr(update.pc) == pc)) return Valid(update.nextPc);
+        else return Invalid;
+    endfunction
+    SearchableSpecFifo#(4, BtbUpdate, CapMem, BtbAddr) updateQ <- mkSearchableSpecFifoCF(
+                                                                      lazyEnq,
+                                                                      unguarded_insert,
+                                                                      match_record
+                                                                  );
+
     // no flush, accept update
-    (* fire_when_enabled, no_implicit_conditions *)
-    rule canonUpdate(updateEn.wget matches tagged Valid .upd);
+    (* fire_when_enabled *)
+    rule canonUpdate;
+        BtbUpdate upd = updateQ.first.data;
+        updateQ.deq;
         let pc = upd.pc;
         let nextPc = upd.nextPc;
         let taken = upd.taken;
@@ -126,7 +141,6 @@ module mkBtbCore(NextAddrPred#(hashSz))
     endrule
 
     method Action put_pc(CapMem pc);
-        addr_reg <= pc;
         // Start SupSizeX2 BTB lookups, but ensure to lookup in the appropriate
         // bank for the alignment of each potential branch.
         for (Integer i = 0; i < valueOf(SupSizeX2); i = i + 1) begin
@@ -134,6 +148,7 @@ module mkBtbCore(NextAddrPred#(hashSz))
             fullRecords[a.bank].lookupStart(MapKeyIndex{key: hash(a.tag), index: a.index});
             compressedRecords[a.bank].lookupStart(MapKeyIndex{key: hash(a.tag), index: a.index});
         end
+        addr_reg <= pc;
     endmethod
 
     method Vector#(SupSizeX2, Maybe#(CapMem)) pred;
@@ -142,14 +157,16 @@ module mkBtbCore(NextAddrPred#(hashSz))
             if (fullRecords[i].lookupRead matches tagged Valid .r)
                 ppcs[i] = r.v ? Valid(r.d):Invalid;
             if (compressedRecords[i].lookupRead matches tagged Valid .r)
-                ppcs[i] = r.v ? Valid({truncateLSB(addr_reg),r.d}):Invalid;
+                ppcs[i] = r.v ? Valid({truncateLSB(pack(addr_reg)),r.d}):Invalid;
+            if (updateQ.search(getBtbAddr(addr_reg)) matches tagged Valid .next_pc)
+                ppcs[i] = Valid(next_pc);
         end
         ppcs = rotateBy(ppcs,unpack(-getBtbAddr(addr_reg).bank)); // Rotate firstBank down to zeroeth element.
         return ppcs;
     endmethod
 
-    method Action update(CapMem pc, CapMem nextPc, Bool taken);
-        updateEn.wset(BtbUpdate {pc: pc, nextPc: nextPc, taken: taken});
+    method Action update(CapMem pc, CapMem nextPc, Bool taken, SpecBits specBits);
+        updateQ.enq(ToSpecFifo {spec_bits: specBits, data: BtbUpdate {pc: pc, nextPc: nextPc, taken: taken}});
     endmethod
 
 `ifdef SECURITY

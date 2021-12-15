@@ -413,8 +413,6 @@ endmodule
 
 interface SearchableSpecFifo#(
     numeric type size, type t,
-    numeric type validPortNum, // valid EHR port num
-    numeric type sbPortNum, // specBits EHR port num
     type searchOut, type searchIn
 );
     method Action enq(ToSpecFifo#(t) x);
@@ -429,15 +427,12 @@ module mkSearchableSpecFifoCF#(
     Bool unguarded_insert, // only for probabalistic applications
     function Maybe#(searchOut) search_f(searchIn w, t x)
 )(
-    SearchableSpecFifo#(size, t, validPortNum, sbPortNum, searchOut, searchIn)
+    SearchableSpecFifo#(size, t, searchOut, searchIn)
 ) provisos (
     Alias#(idxT, Bit#(TLog#(size))),
     Bits#(t, _tsz),
     FShow#(t)
 );
-    // correct spec is always the last
-    Integer sbCorrectSpecPort = valueof(sbPortNum) - 1;
-
     Ehr#(3, Vector#(size, Bool))             valid    <- mkEhr(replicate(False));
     Vector#(size, Reg#(t))                   row      <- replicateM(mkConfigRegU);
     Ehr#(3, Vector#(size, SpecBits))         specBits <- mkEhr(?);
@@ -511,13 +506,16 @@ module mkSearchableSpecFifoCF#(
         valid_for_enq = valid[2][enqP];
     end
 
-    method Action enq(ToSpecFifo#(t) x) if (empty_for_enq || enqP != deqP_for_enq);
-        // [sizhuo] I don't think valid bit needs to be checked here
-        doAssert(!valid_for_enq, "enq entry cannot be valid");
-        row[enqP] <= x.data;
-        valid[2][enqP] <= True;
-        specBits[2][enqP] <= x.spec_bits;
-        enqP <= getNextPtr(enqP);
+    Bool notFull = empty_for_enq || enqP != deqP_for_enq;
+    method Action enq(ToSpecFifo#(t) x) if (notFull || unguarded_insert);
+        if (notFull) begin
+            // [sizhuo] I don't think valid bit needs to be checked here
+            doAssert(!valid_for_enq, "enq entry cannot be valid");
+            row[enqP] <= x.data;
+            valid[2][enqP] <= True;
+            specBits[2][enqP] <= x.spec_bits;
+            enqP <= getNextPtr(enqP);
+        end
     endmethod
 
     method Action deq if (valid[1][deqP]);
@@ -535,7 +533,7 @@ module mkSearchableSpecFifoCF#(
     method Maybe#(searchOut) search(searchIn in);
         Maybe#(searchOut) ret = Invalid;
         for(Integer i = 0; i < valueOf(size); i = i + 1)
-            if (valid[i][0])
+            if (valid[0][i])
                 if (search_f(in, row[i]) matches tagged Valid .y)
                     ret = Valid(y);
         return ret;
