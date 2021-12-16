@@ -42,7 +42,6 @@ import Map::*;
 import Vector::*;
 import CHERICC_Fat::*;
 import CHERICap::*;
-import SpecFifo::*;
 
 export NextAddrPred(..);
 export mkBtb;
@@ -50,7 +49,7 @@ export mkBtb;
 interface NextAddrPred#(numeric type hashSz);
     method Action put_pc(CapMem pc);
     interface Vector#(SupSizeX2, Maybe#(CapMem)) pred;
-    method Action update(CapMem pc, CapMem brTarget, Bool taken, SpecBits specBits);
+    method Action update(CapMem pc, CapMem brTarget, Bool taken);
     // security
     method Action flush;
     method Bool flush_done;
@@ -59,7 +58,6 @@ endinterface
 // Local BTB Typedefs
 typedef 1 PcLsbsIgnore;
 typedef 1024 BtbEntries;
-typedef Bit#(16) CompressedTarget;
 typedef 2 BtbAssociativity;
 typedef Bit#(TLog#(SupSizeX2)) BtbBank;
 // Total entries/lanes of superscalar lookup/associativity
@@ -96,11 +94,9 @@ module mkBtbCore(NextAddrPred#(hashSz))
         Add#(1, a__, TDiv#(tagSz, hashSz)),
     Add#(b__, tagSz, TMul#(TDiv#(tagSz, hashSz), hashSz)));
     // Read and Write ordering doesn't matter since this is a predictor
-    Reg#(CapMem) addr_reg <- mkRegU;
-    Vector#(SupSizeX2, MapSplit#(HashedTag#(hashSz), BtbIndex, VnD#(CapMem), 1))
-        fullRecords <- replicateM(mkMapLossyBRAM);
-    Vector#(SupSizeX2, MapSplit#(HashedTag#(hashSz), BtbIndex, VnD#(CompressedTarget), BtbAssociativity))
-        compressedRecords <- replicateM(mkMapLossyBRAM);
+    Reg#(BtbBank) firstBank_reg <- mkRegU;
+    Vector#(SupSizeX2, MapSplit#(HashedTag#(hashSz), BtbIndex, VnD#(CapMem), BtbAssociativity))
+        records <- replicateM(mkMapLossyBRAM);
     RWire#(BtbUpdate) updateEn <- mkRWire;
 
     function BtbAddr getBtbAddr(CapMem pc) = unpack(truncateLSB(getAddr(pc)));
@@ -110,73 +106,46 @@ module mkBtbCore(NextAddrPred#(hashSz))
     function MapKeyIndex#(HashedTag#(hashSz),BtbIndex) lookupKey(CapMem pc) =
         MapKeyIndex{key: hash(getTag(pc)), index: getIndex(pc)};
 
-    Bool lazyEnq = True;
-    Bool unguarded_insert = True;
-    function Maybe#(CapMem) match_record(BtbAddr pc, BtbUpdate update);
-        if (update.taken && (getBtbAddr(update.pc) == pc)) return Valid(update.nextPc);
-        else return Invalid;
-    endfunction
-    SearchableSpecFifo#(4, BtbUpdate, CapMem, BtbAddr) updateQ <- mkSearchableSpecFifoCF(
-                                                                      lazyEnq,
-                                                                      unguarded_insert,
-                                                                      match_record
-                                                                  );
-
     // no flush, accept update
-    (* fire_when_enabled *)
-    rule canonUpdate;
-        BtbUpdate upd = updateQ.first.data;
-        updateQ.deq;
+    (* fire_when_enabled, no_implicit_conditions *)
+    rule canonUpdate(updateEn.wget matches tagged Valid .upd);
         let pc = upd.pc;
         let nextPc = upd.nextPc;
         let taken = upd.taken;
         /*$display("MapUpdate in BTB - pc %x, bank: %x, taken: %x, next: %x, time: %t",
                   pc, getBank(pc), taken, nextPc, $time);*/
-        CompressedTarget shortMask = -1;
-        CapMem mask = ~zeroExtend(shortMask);
-        if ((pc&mask) == (nextPc&mask))
-            compressedRecords[getBank(pc)].update(lookupKey(pc), VnD{v:taken, d:truncate(nextPc)});
-        else
-            fullRecords[getBank(pc)].update(lookupKey(pc), VnD{v:taken, d:nextPc});
+        records[getBank(pc)].update(lookupKey(pc), VnD{v:taken, d:nextPc});
     endrule
 
     method Action put_pc(CapMem pc);
+        BtbAddr addr = getBtbAddr(pc);
+        firstBank_reg <= addr.bank;
         // Start SupSizeX2 BTB lookups, but ensure to lookup in the appropriate
         // bank for the alignment of each potential branch.
         for (Integer i = 0; i < valueOf(SupSizeX2); i = i + 1) begin
-            BtbAddr a = unpack(pack(getBtbAddr(pc)) + fromInteger(i));
-            fullRecords[a.bank].lookupStart(MapKeyIndex{key: hash(a.tag), index: a.index});
-            compressedRecords[a.bank].lookupStart(MapKeyIndex{key: hash(a.tag), index: a.index});
+            BtbAddr a = unpack(pack(addr) + fromInteger(i));
+            records[a.bank].lookupStart(MapKeyIndex{key: hash(a.tag), index: a.index});
         end
-        addr_reg <= pc;
     endmethod
 
     method Vector#(SupSizeX2, Maybe#(CapMem)) pred;
         Vector#(SupSizeX2, Maybe#(CapMem)) ppcs = replicate(Invalid);
-        for (Integer i = 0; i < valueOf(SupSizeX2); i = i + 1) begin
-            if (fullRecords[i].lookupRead matches tagged Valid .r)
-                ppcs[i] = r.v ? Valid(r.d):Invalid;
-            if (compressedRecords[i].lookupRead matches tagged Valid .r)
-                ppcs[i] = r.v ? Valid({truncateLSB(pack(addr_reg)),r.d}):Invalid;
-            if (updateQ.search(getBtbAddr(addr_reg)) matches tagged Valid .next_pc)
-                ppcs[i] = Valid(next_pc);
-        end
-        ppcs = rotateBy(ppcs,unpack(-getBtbAddr(addr_reg).bank)); // Rotate firstBank down to zeroeth element.
+        for (Integer i = 0; i < valueOf(SupSizeX2); i = i + 1)
+            if (records[i].lookupRead matches tagged Valid .record)
+                ppcs[i] = record.v ? Valid(record.d):Invalid;
+        ppcs = rotateBy(ppcs,unpack(-firstBank_reg)); // Rotate firstBank down to zeroeth element.
         return ppcs;
     endmethod
 
-    method Action update(CapMem pc, CapMem nextPc, Bool taken, SpecBits specBits);
-        updateQ.enq(ToSpecFifo {spec_bits: specBits, data: BtbUpdate {pc: pc, nextPc: nextPc, taken: taken}});
+    method Action update(CapMem pc, CapMem nextPc, Bool taken);
+        updateEn.wset(BtbUpdate {pc: pc, nextPc: nextPc, taken: taken});
     endmethod
 
 `ifdef SECURITY
     method Action flush method Action flush;
-        for (Integer i = 0; i < valueOf(SupSizeX2); i = i + 1) begin
-            fullRecords[i].clear;
-            compressedRecords[i].clear;
-        end
+        for (Integer i = 0; i < valueOf(SupSizeX2); i = i + 1) records[i].clear;
     endmethod
-    method flush_done = fullRecords[0].clearDone;
+    method flush_done = records[0].clearDone;
 `else
     method flush = noAction;
     method flush_done = True;
