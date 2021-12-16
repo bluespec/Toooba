@@ -43,7 +43,6 @@ import Vector::*;
 import CHERICC_Fat::*;
 import CHERICap::*;
 import SpecFifo::*;
-import HasSpecBits::*;
 
 export NextAddrPred(..);
 export mkBtb;
@@ -52,7 +51,6 @@ interface NextAddrPred#(numeric type hashSz);
     method Action put_pc(CapMem pc);
     interface Vector#(SupSizeX2, Maybe#(CapMem)) pred;
     method Action update(CapMem pc, CapMem brTarget, Bool taken, SpecBits specBits);
-    interface SpeculationUpdate specUpdate;
     // security
     method Action flush;
     method Bool flush_done;
@@ -170,8 +168,6 @@ module mkBtbCore(NextAddrPred#(hashSz))
     method Action update(CapMem pc, CapMem nextPc, Bool taken, SpecBits specBits);
         updateQ.enq(ToSpecFifo {spec_bits: specBits, data: BtbUpdate {pc: pc, nextPc: nextPc, taken: taken}});
     endmethod
-
-    interface SpeculationUpdate specUpdate = updateQ.specUpdate;
 
 `ifdef SECURITY
     method Action flush method Action flush;
