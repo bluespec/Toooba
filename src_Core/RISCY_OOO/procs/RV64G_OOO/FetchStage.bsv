@@ -62,6 +62,8 @@ import Vector::*;
 import Assert::*;
 import Cntrs::*;
 import ConfigReg::*;
+import HasSpecBits::*;
+import SpecFifo::*;
 import TlbTypes::*;
 import ITlb::*;
 import CCTypes::*;
@@ -131,7 +133,9 @@ interface FetchStage;
 
     // redirection methods
     method Action setWaitRedirect;
-    method Action redirect(CapMem pc
+    method Action redirect(
+        CapMem pc,
+        SpecBits specBits
 `ifdef RVFI_DII
         , Dii_Parcel_Id parcel_id
 `endif
@@ -144,6 +148,7 @@ interface FetchStage;
         CapMem pc, CapMem next_pc, IType iType, Bool taken,
         PredTrainInfo trainInfo, Bool mispred, Bool isCompressed
     );
+    interface SpeculationUpdate specUpdate;
 
     // security
     method Bool emptyForFlush;
@@ -336,7 +341,7 @@ module mkFetchStage(FetchStage);
     Integer verbosity = 0;
 
     // Basic State Elements
-    Reg#(Bool) started <- mkReg(False);
+    Reg#(Bool) started <- mkConfigReg(False);
 
     // Stall fetch when trap happens or system inst is renamed
     // All inst younger than the trap/system inst will be killed
@@ -364,7 +369,14 @@ module mkFetchStage(FetchStage);
     function CapMem decompressPc(PcCompressed p) = {pcBlocks.lookup(p.idx),p.lsb};
     // Epochs
     Ehr#(2, Bool) decode_epoch <- mkEhr(False);
-    Reg#(Epoch) f_main_epoch <- mkReg(0); // fetch estimate of main epoch
+    // fetch estimate of main epoch
+    Reg#(Epoch) f_main_epoch <- mkConfigReg(0);
+    SpecFifo#(2, Bit#(0), 1, 1) main_epoch_spec <- mkSpecFifoUG(True);
+    function Action set_main_epoch(Epoch e, SpecBits sb) = (action
+        f_main_epoch <= e;
+        if (main_epoch_spec.notEmpty) main_epoch_spec.deq;
+        main_epoch_spec.enq(ToSpecFifo{data: ?, spec_bits: sb});
+    endaction);
 
     // Pipeline Stage FIFOs
     Fifo#(2, Fetch1ToFetch2) f12f2 <- mkCFFifo;
@@ -549,12 +561,6 @@ module mkFetchStage(FetchStage);
                 $display("Fetch3: Nothing else from Fetch2");
         end
 
-        let drop_f22f3 =    f22f3.notEmpty
-                         && (   fetch3In.main_epoch != f_main_epoch
-                             || fetch3In.decode_epoch != decode_epoch[1]);
-
-        let parse_f22f3 = !drop_f22f3;
-
         // Get ICache/MMIO response if no exception
         // In case of exception, we still need to process at least inst_data[0]
         // (it will be turned to an exception later), so inst_data[0] must be
@@ -593,7 +599,15 @@ module mkFetchStage(FetchStage);
         end
     endrule: doFetch3
 
-   function Bool isCurrent(Fetch3ToDecode in) = (in.main_epoch == f_main_epoch && in.decode_epoch == decode_epoch[0]);
+   Bool delay_epoch = False;
+`ifdef NO_SPEC_REDIRECT
+   // Delay decode if the head of this buffer matches the current epoch;
+   // this means the source of this epoch is still speculative.
+   delay_epoch = (main_epoch_spec.first.spec_bits != 0);
+`endif
+   function Bool isCurrent(Fetch3ToDecode in) = (main_epoch_spec.notEmpty &&
+                                                 in.main_epoch == f_main_epoch &&
+                                                 in.decode_epoch == decode_epoch[0]);
 
    rule doDecodeFlush(f32d.deqS[0].canDeq && !isCurrent(f32d.deqS[0].first));
       for (Integer i = 0; i < valueOf(SupSizeX2); i = i + 1)
@@ -603,7 +617,12 @@ module mkFetchStage(FetchStage);
          end
    endrule: doDecodeFlush
 
-   rule doDecode(f32d.deqS[0].canDeq && isCurrent(f32d.deqS[0].first));
+   rule printStuff;
+      $display("main_epoch_spec.first.spec_bits: %x, main_epoch_spec.notEmpty: %x, isCurrent: %x, f_main_epoch: %x, next_epoch: %x",
+                main_epoch_spec.first.spec_bits, main_epoch_spec.notEmpty, isCurrent(f32d.deqS[0].first), f_main_epoch, f32d.deqS[0].first.main_epoch);
+   endrule
+
+   rule doDecode(f32d.deqS[0].canDeq && isCurrent(f32d.deqS[0].first) && !delay_epoch);
       Vector#(SupSize, Maybe#(InstrFromFetch3)) decodeIn = replicate(Invalid);
       // Express the incoming fragments as a vector of maybes.
       Vector#(SupSizeX2, Maybe#(Fetch3ToDecode)) frags;
@@ -886,6 +905,7 @@ module mkFetchStage(FetchStage);
         started <= True;
         waitForRedirect[0] <= False;
         waitForFlush[0] <= False;
+        set_main_epoch(0,0);
     endmethod
     method Action stop();
         started <= False;
@@ -895,18 +915,20 @@ module mkFetchStage(FetchStage);
         waitForRedirect[0] <= True;
     endmethod
     method Action redirect(
-        CapMem new_pc
+        CapMem new_pc,
+        SpecBits specBits
 `ifdef RVFI_DII
         , Dii_Parcel_Id dii_pid
 `endif
     );
-        if (verbose) $display("Redirect: newpc %h, old f_main_epoch %d, new f_main_epoch %d",new_pc,f_main_epoch,f_main_epoch+1);
+        //if (verbose)
+        $display("Redirect: newpc %h, old f_main_epoch %d, new f_main_epoch %d, specBits %x",new_pc,f_main_epoch,f_main_epoch+1, specBits);
         pc_reg[pc_redirect_port] <= new_pc;
 `ifdef RVFI_DII
         dii_pid_reg[pc_redirect_port] <= dii_pid;
         if (verbose) $display("%t Redirect: dii_pid_reg %d", $time(), dii_pid);
 `endif
-        f_main_epoch <= (f_main_epoch == fromInteger(valueOf(NumEpochs)-1)) ? 0 : f_main_epoch + 1;
+        set_main_epoch((f_main_epoch == fromInteger(valueOf(NumEpochs)-1)) ? 0 : f_main_epoch + 1, specBits);
         // redirect comes, stop stalling for redirect
         waitForRedirect[1] <= False;
         // this redirect may be caused by a trap/system inst in commit stage
@@ -957,6 +979,8 @@ module mkFetchStage(FetchStage);
             ras.setHead(trainInfo.ras);
         end
     endmethod
+
+    interface SpeculationUpdate specUpdate = main_epoch_spec.specUpdate;
 
     // security
     method Bool emptyForFlush;

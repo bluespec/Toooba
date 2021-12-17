@@ -194,7 +194,7 @@ interface AluExeInput;
     // write reg file & set conservative sb
     method Action writeRegFile(PhyRIndx dst, CapPipe data);
     // redirect
-    method Action redirect(CapMem new_pc, SpecTag spec_tag, InstTag inst_tag);
+    method Action redirect(CapMem new_pc, SpecTag spec_tag, InstTag inst_tag, SpecBits spec_bits);
     // spec update
     method Action correctSpec(SpecTag t);
 
@@ -484,7 +484,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
         if (x.controlFlow.mispredict) (* nosplit *) begin
             // wrong branch predictin, we must have spec tag
             doAssert(isValid(x.spec_tag), "mispredicted branch must have spec tag");
-            inIfc.redirect(cast(x.controlFlow.nextPc), validValue(x.spec_tag), x.tag);
+            inIfc.redirect(cast(x.controlFlow.nextPc), validValue(x.spec_tag), x.tag, exeToFin.spec_bits);
             // must be a branch, train branch predictor
             doAssert(x.iType == Jr || x.iType == CJALR || x.iType == CCall || x.iType == Br, "only jr, br, cjalr, and ccall can mispredict");
             inIfc.fetch_train_predictors(ToSpecFifo {

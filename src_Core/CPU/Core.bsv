@@ -353,7 +353,8 @@ module mkCore#(CoreId coreId)(Core);
         end
         GlobalSpecUpdate#(CorrectSpecPortNum, ConflictWrongSpecPortNum) globalSpecUpdate <- mkGlobalSpecUpdate(
             joinSpeculationUpdate(
-                append(append(append(vec(regRenamingTable.specUpdate,
+                append(append(append(vec(fetchStage.specUpdate,
+                                         regRenamingTable.specUpdate,
                                          specTagManager.specUpdate,
                                          fix.memExeIfc.specUpdate), aluSpecUpdate), fpuMulDivSpecUpdate), btqSpecUpdate)
             ),
@@ -417,15 +418,16 @@ module mkCore#(CoreId coreId)(Core);
                 method setRegReadyAggr = writeAggr(aluWrAggrPort(i));
                 interface sendBypass = sendBypassIfc;
                 method writeRegFile = writeCons(aluWrConsPort(i));
-                method Action redirect(CapMem new_pc, SpecTag spec_tag, InstTag inst_tag);
+                method Action redirect(CapMem new_pc, SpecTag spec_tag, InstTag inst_tag, SpecBits spec_bits);
                     if (verbose) begin
                         $display("[ALU redirect - %d] ", i, fshow(new_pc),
                                  "; ", fshow(spec_tag), "; ", fshow(inst_tag));
                     end
                     epochManager.incrementEpoch;
-                    fetchStage.redirect(new_pc
+                    fetchStage.redirect(new_pc,
+                                        spec_bits
 `ifdef RVFI_DII
-                    , inst_tag.dii_next_pid
+                                        , inst_tag.dii_next_pid
 `endif
                     );
                     globalSpecUpdate.incorrectSpec(False, spec_tag, inst_tag);
@@ -1447,7 +1449,7 @@ module mkCore#(CoreId coreId)(Core);
       l2Tlb.updateVMInfo(vmI, vmD);
 
       let startpc = csrf.dpc_read;
-      fetchStage.redirect (cast(startpc));
+      fetchStage.redirect (cast(startpc), 0);
       renameStage.debug_resume;
       commitStage.debug_resume;
 
