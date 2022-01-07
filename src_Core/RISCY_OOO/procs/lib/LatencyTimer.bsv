@@ -23,6 +23,7 @@
 
 import Vector::*;
 import Types::*;
+import ConfigReg::*;
 
 // a timer to track latency of multiple misses
 
@@ -39,8 +40,8 @@ module mkLatencyTimer(LatencyTimer#(num, timeWidth)) provisos(
     Alias#(idxT, Bit#(TLog#(num))),
     Alias#(timeT, Bit#(timeWidth))
 );
-    Reg#(Vector#(num, timeT)) timer <- mkReg(replicate(0));
-    Reg#(Vector#(num, Bool)) started <- mkReg(replicate(False)); // for checking purposes
+    Reg#(Vector#(num, timeT)) timer <- mkConfigReg(replicate(0));
+    Reg#(Vector#(num, Bool)) started <- mkConfigReg(replicate(False)); // for checking purposes
 
     RWire#(idxT) startEn <- mkRWire;
     RWire#(idxT) doneEn <- mkRWire;
