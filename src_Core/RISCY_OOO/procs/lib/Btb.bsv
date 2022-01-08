@@ -86,7 +86,7 @@ module mkBtbCore(NextAddrPred#(hashSz))
         fullRecords <- replicateM(mkMapLossyBRAM);
     Vector#(SupSizeX2, MapSplit#(HashedTag#(hashSz), BtbIndex, VnD#(CompressedTarget), BtbAssociativity))
         compressedRecords <- replicateM(mkMapLossyBRAM);
-    RWire#(BtbUpdate) updateEn <- mkRWire;
+    Reg#(Maybe#(BtbUpdate)) updateEn <- mkDReg(Invalid);
 
     function BtbAddr getBtbAddr(Addr pc) = unpack(truncateLSB(pc));
     function BtbBank getBank(Addr pc) = getBtbAddr(pc).bank;
