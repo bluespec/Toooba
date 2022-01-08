@@ -24,6 +24,7 @@
 import Types::*;
 import ProcTypes::*;
 import ConfigReg::*;
+import DReg::*;
 import Map::*;
 import Vector::*;
 
@@ -82,7 +83,7 @@ module mkBtbCore(NextAddrPred#(hashSz))
     Reg#(BtbBank) firstBank_reg <- mkRegU;
     Vector#(SupSizeX2, MapSplit#(HashedTag#(hashSz), BtbIndex, VnD#(Addr), BtbAssociativity))
         records <- replicateM(mkMapLossyBRAM);
-    RWire#(BtbUpdate) updateEn <- mkRWire;
+    Reg#(Maybe#(BtbUpdate)) updateEn <- mkDReg(Invalid);
 
     function BtbAddr getBtbAddr(Addr pc) = unpack(truncateLSB(pc));
     function BtbBank getBank(Addr pc) = getBtbAddr(pc).bank;
@@ -93,7 +94,7 @@ module mkBtbCore(NextAddrPred#(hashSz))
 
     // no flush, accept update
     (* fire_when_enabled, no_implicit_conditions *)
-    rule canonUpdate(updateEn.wget matches tagged Valid .upd);
+    rule canonUpdate(updateEn matches tagged Valid .upd);
         let pc = upd.pc;
         let nextPc = upd.nextPc;
         let taken = upd.taken;
@@ -123,7 +124,7 @@ module mkBtbCore(NextAddrPred#(hashSz))
     endmethod
 
     method Action update(Addr pc, Addr nextPc, Bool taken);
-        updateEn.wset(BtbUpdate {pc: pc, nextPc: nextPc, taken: taken});
+        updateEn <= Valid(BtbUpdate {pc: pc, nextPc: nextPc, taken: taken});
     endmethod
 
 `ifdef SECURITY
