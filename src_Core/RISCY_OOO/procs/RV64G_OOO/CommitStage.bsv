@@ -1,7 +1,7 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
 // Portions Copyright (c) 2019-2020 Bluespec, Inc.
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -9,10 +9,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -121,7 +121,7 @@ typedef struct {
 
 interface CommitStage;
     // performance
-    method Data getPerf(ComStagePerfType t); 
+    method Data getPerf(ComStagePerfType t);
     // deadlock check
     interface Get#(CommitStuck) commitInstStuck;
     interface Get#(CommitStuck) commitUserInstStuck;
@@ -391,6 +391,8 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
     // cycle handles trap, redirect and handles system consistency
     Reg#(Maybe#(CommitTrap)) commitTrap <- mkReg(Invalid); // saves new pc here
 
+    FIFO#(Addr) redirectQ <- mkFIFO;
+
     // maintain system consistency when system state (CSR) changes or for security
     function Action makeSystemConsistent(Bool flushTlb,
                                          Bool flushSecurity,
@@ -646,7 +648,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         begin
             // trap handling & redirect
             let trap_updates <- csrf.trap(trap.trap, trap.pc, trap.addr, trap.orig_inst);
-            inIfc.redirectPc(trap_updates.new_pc);
+            redirectQ.enq(trap_updates.new_pc);
 
 `ifdef INCLUDE_TANDEM_VERIF
             fa_to_TV (way0, rg_serial_num,
@@ -679,7 +681,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
         // kill everything, redirect, and increment epoch
         inIfc.killAll;
-        inIfc.redirectPc(x.pc);
+        redirectQ.enq(x.pc);
         inIfc.incrementEpoch;
 
         // the killed Ld should have claimed phy reg, we should not commit it;
@@ -782,7 +784,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 	   m_ret_updates = tagged Valid ret_updates;
 `endif
         end
-        inIfc.redirectPc(next_pc);
+        redirectQ.enq(next_pc);
 
 `ifdef INCLUDE_TANDEM_VERIF
         fa_to_TV (way0, rg_serial_num,
@@ -1098,6 +1100,11 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         events.evt_FENCE = fenceCnt;
         events_reg <= events;
 `endif
+    endrule
+
+    rule pass_redirect;
+        inIfc.redirectPc(redirectQ.first);
+        redirectQ.deq;
     endrule
 
    // ================================================================
