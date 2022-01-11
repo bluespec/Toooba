@@ -120,7 +120,8 @@ interface CommitInput;
     method Action setReconcileD; // recocile D$
     // redirect
     method Action killAll;
-    method Action redirectPc(CapMem trap_pc
+    method Action redirectPc(
+        CapMem trap_pc
 `ifdef RVFI_DII
         , Dii_Parcel_Id dii_pid
 `endif
@@ -158,6 +159,13 @@ typedef struct {
     Maybe#(Trap) trap;
     SpecBits specBits;
 } RenameErrInfo deriving(Bits, Eq, FShow);
+
+typedef struct {
+    CapMem trap_pc;
+`ifdef RVFI_DII
+    Dii_Parcel_Id dii_pid;
+`endif
+} RedirectInfo deriving(Bits, Eq, FShow);
 
 interface CommitStage;
     // performance
@@ -522,6 +530,8 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
     Reg#(Maybe#(CommitTrap)) commitTrap <- mkReg(Invalid); // saves new pc here
     Bool pauseCommit = isValid(commitTrap) || inIfc.pauseCommit;
 
+    FIFO#(RedirectInfo) redirectQ <- mkFIFO;
+
     // maintain system consistency when system state (CSR) changes or for security
     function Action makeSystemConsistent(Bool flushTlb,
                                          Bool flushSecurity,
@@ -783,11 +793,11 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
        // trap handling & redirect
        let trap_updates <- csrf.trap(trap.trap, cast(trap.pc), trap.addr, trap.orig_inst);
        CapPipe new_pc = cast(trap_updates.new_pcc);
-       inIfc.redirectPc(cast(new_pc)
+       redirectQ.enq(RedirectInfo{trap_pc: cast(new_pc)
 `ifdef RVFI_DII
-                        , trap.x.dii_pid + (is_16b_inst(trap.orig_inst) ? 1 : 2)
+                                  , dii_pid: trap.x.dii_pid + (is_16b_inst(trap.orig_inst) ? 1 : 2)
 `endif
-       );
+       });
 `ifdef RVFI
        Rvfi_Traces rvfis = replicate(tagged Invalid);
        rvfis[0] = genRVFI(trap.x, traceCnt, getTSB(), getAddr(new_pc));
@@ -828,11 +838,11 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
         // kill everything, redirect, and increment epoch
         inIfc.killAll;
-        inIfc.redirectPc(x.pc
-`ifdef RVFI_DII
-            , x.dii_pid
-`endif
-        );
+        redirectQ.enq(RedirectInfo{trap_pc: x.pc
+ `ifdef RVFI_DII
+                                   , dii_pid: x.dii_pid
+ `endif
+        });
         inIfc.incrementEpoch;
 
         // the killed Ld should have claimed phy reg, we should not commit it;
@@ -948,11 +958,12 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
            m_ret_updates = tagged Valid ret_updates;
 `endif
         end
-        inIfc.redirectPc(next_pc
-`ifdef RVFI_DII
-            , x.dii_pid + (is_16b_inst(x.orig_inst) ? 1 : 2)
-`endif
-        );
+        redirectQ.enq(RedirectInfo{trap_pc: next_pc
+ `ifdef RVFI_DII
+                                   , x.dii_pid + (is_16b_inst(x.orig_inst) ? 1 : 2)
+ `endif
+        });
+
 
 `ifdef RVFI
         Rvfi_Traces rvfis = replicate(tagged Invalid);
@@ -1344,6 +1355,15 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         rvfiQ.enq(rvfis);
         traceCnt <= traceCnt + zeroExtend(whichTrace);
 `endif
+    endrule
+
+    rule pass_redirect;
+        RedirectInfo ri <- toGet(redirectQ).get;
+        inIfc.redirectPc(ri.trap_pc
+`ifdef RVFI_DII
+                         , ri.rii_pid
+`endif
+        );
     endrule
 
    // ================================================================
