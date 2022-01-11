@@ -83,6 +83,8 @@ interface CommitInput;
     interface Vector#(SupSize, Put#(LdStQTag)) lsqSetAtCommit;
     // TLB has stopped processing now
     method Bool tlbNoPendingReq;
+    // Pause committing, probably for buffered wrongSpec
+    method Bool pauseCommit;
     // set flags
     method Action setFlushTlbs;
     method Action setUpdateVMInfo;
@@ -390,6 +392,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
     // we commit trap in two cycles: first cycle deq ROB and flush; second
     // cycle handles trap, redirect and handles system consistency
     Reg#(Maybe#(CommitTrap)) commitTrap <- mkReg(Invalid); // saves new pc here
+    Bool pauseCommit = isValid(commitTrap) || inIfc.pauseCommit;
 
     FIFO#(Addr) redirectQ <- mkFIFO;
 
@@ -524,7 +527,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 `ifdef INCLUDE_GDB_CONTROL
         (rg_run_state == RUN_STATE_RUNNING) &&&
 `endif
-        !isValid(commitTrap) &&&
+        !pauseCommit &&&
         rob.deqPort[0].deq_data.trap matches tagged Valid .trap
     );
         rob.deqPort[0].deq;
@@ -671,7 +674,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 `ifdef INCLUDE_GDB_CONTROL
        (rg_run_state == RUN_STATE_RUNNING) &&&
 `endif
-        !isValid(commitTrap) &&&
+        !pauseCommit &&&
         !isValid(rob.deqPort[0].deq_data.trap) &&&
         rob.deqPort[0].deq_data.ldKilled matches tagged Valid .killBy
     );
@@ -708,7 +711,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 `ifdef INCLUDE_GDB_CONTROL
        (rg_run_state == RUN_STATE_RUNNING) &&
 `endif
-        !isValid(commitTrap) &&
+        !pauseCommit &&
         !isValid(rob.deqPort[0].deq_data.trap) &&
         !isValid(rob.deqPort[0].deq_data.ldKilled) &&
         rob.deqPort[0].deq_data.rob_inst_state == Executed &&
@@ -857,7 +860,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
     // Lr/Sc/Amo/MMIO cannot proceed to executed until we notify LSQ that it
     // has reached the commit stage
     rule notifyLSQCommit(
-        !isValid(commitTrap) &&
+        !pauseCommit &&
         !isValid(rob.deqPort[0].deq_data.trap) &&
         !isValid(rob.deqPort[0].deq_data.ldKilled) &&
         rob.deqPort[0].deq_data.rob_inst_state != Executed &&
@@ -878,7 +881,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 `ifdef INCLUDE_GDB_CONTROL
        (rg_run_state == RUN_STATE_RUNNING) &&
 `endif
-        !isValid(commitTrap) &&
+        !pauseCommit &&
         !isValid(rob.deqPort[0].deq_data.trap) &&
         !isValid(rob.deqPort[0].deq_data.ldKilled) &&
         rob.deqPort[0].deq_data.rob_inst_state == Executed &&
