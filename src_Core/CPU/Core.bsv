@@ -223,6 +223,7 @@ interface CoreFixPoint;
     interface MemExePipeline memExeIfc;
     method Action killAll; // kill everything: used by commit stage
     interface Reg#(Bool) doStatsIfc;
+    method Bool pendingIncorrectSpec;
 endinterface
 
 `ifdef CONTRACTS_VERIFY
@@ -412,7 +413,7 @@ module mkCore#(CoreId coreId)(Core);
                 method setRegReadyAggr = writeAggr(aluWrAggrPort(i));
                 interface sendBypass = sendBypassIfc;
                 method writeRegFile = writeCons(aluWrConsPort(i));
-                method Action redirect(CapMem new_pc, SpecTag spec_tag, InstTag inst_tag);
+                method Action redirect(CapMem new_pc, SpecTag spec_tag, InstTag inst_tag, SpecBits spec_bits);
                     if (verbose) begin
                         $display("[ALU redirect - %d] ", i, fshow(new_pc),
                                  "; ", fshow(spec_tag), "; ", fshow(inst_tag));
@@ -423,7 +424,7 @@ module mkCore#(CoreId coreId)(Core);
                     , inst_tag.dii_next_pid
 `endif
                     );
-                    globalSpecUpdate.incorrectSpec(False, spec_tag, inst_tag);
+                    globalSpecUpdate.incorrectSpec(False, spec_tag, inst_tag, spec_bits);
                 endmethod
                 method correctSpec = globalSpecUpdate.correctSpec[finishAluCorrectSpecPort(i)].put;
                 method doStats = doStatsReg._read;
@@ -510,9 +511,10 @@ module mkCore#(CoreId coreId)(Core);
         interface fpuMulDivExeIfc = fpuMulDivExe;
         interface memExeIfc = memExe;
         method Action killAll;
-            globalSpecUpdate.incorrectSpec(True, ?, ?);
+            globalSpecUpdate.incorrectSpec(True, ?, ?, 0);
         endmethod
         interface doStatsIfc = doStatsReg;
+        method pendingIncorrectSpec = globalSpecUpdate.pendingIncorrectSpec;
     endmodule
     CoreFixPoint coreFix <- moduleFix(mkCoreFixPoint);
 
@@ -647,6 +649,7 @@ module mkCore#(CoreId coreId)(Core);
         method stbEmpty = stb.isEmpty;
         method stqEmpty = lsq.stqEmpty;
         method lsqSetAtCommit = lsq.setAtCommit;
+        method pauseCommit = coreFix.pendingIncorrectSpec;
         method tlbNoPendingReq = iTlb.noPendingReq && dTlb.noPendingReq;
 
         method setFlushTlbs;

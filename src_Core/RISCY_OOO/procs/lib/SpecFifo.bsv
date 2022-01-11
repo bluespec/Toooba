@@ -43,6 +43,7 @@ interface SpecFifo#(
     method Action enq(ToSpecFifo#(t) x);
     method Action deq;
     method ToSpecFifo#(t) first;
+    method Bool notEmpty;
     interface SpeculationUpdate specUpdate;
 endinterface
 
@@ -165,6 +166,8 @@ module mkSpecFifo#(
             spec_bits: specBits[deqP][sched.sbDeqPort]
         };
     endmethod
+
+    method Bool notEmpty = valid[deqP][sched.validDeqPort];
 
     interface SpeculationUpdate specUpdate;
         method Action correctSpeculation(SpecBits mask);
@@ -309,6 +312,8 @@ module mkSpecFifoCF#(
             spec_bits: specBits[1][deqP]
         };
     endmethod
+
+    method Bool notEmpty = valid[1][deqP];
 
     interface SpeculationUpdate specUpdate;
         method correctSpeculation = correctSpecF.enq;
