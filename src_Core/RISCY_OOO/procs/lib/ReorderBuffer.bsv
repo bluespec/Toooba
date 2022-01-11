@@ -674,7 +674,7 @@ module mkSupReorderBuffer#(
     Add#(1, a__, aluExeNum), Add#(1, b__, fpuMulDivExeNum)
 );
 
-    Bool verbose = False;
+    Bool verbose = True;
 
     // doCommit rule: deq < wrongSpec (overwrite deq in doCommit) < doRenaming rule: enq
     Integer valid_deq_port = 0;
@@ -756,6 +756,7 @@ module mkSupReorderBuffer#(
                 // move deqP & reset valid
                 deqP[i] <= getNextPtr(deqP[i]);
                 valid[i][deqP[i]][valid_deq_port] <= False;
+                $display("deq[%d][%d]", i, deqP[i]);
             end
         end
         // update firstDeqWay: find the first deq port that is not enabled
@@ -935,6 +936,9 @@ module mkSupReorderBuffer#(
                     end
                 endfunction
                 for(Integer i = 0; i < valueof(SingleScalarSize); i = i+1) begin
+                    if (in_kill_range(fromInteger(i)) != (row[w][i].dependsOn_wrongSpec(specTag) && valid[w][i][valid_wrongSpec_port]))
+                        $display("enqP: %d, enqPNext: %d, w: %d, i: %d, wrongSpec: %d, valid: %d, cur_cycle: %d",
+                            enqP[w], enqPNext[w], w, i, row[w][i].dependsOn_wrongSpec(specTag), valid[w][i][valid_wrongSpec_port], cur_cycle);
                     doAssert(
                         in_kill_range(fromInteger(i)) ==
                         (row[w][i].dependsOn_wrongSpec(specTag) && valid[w][i][valid_wrongSpec_port]),
