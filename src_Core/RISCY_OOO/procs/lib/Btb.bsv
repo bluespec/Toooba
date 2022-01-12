@@ -131,7 +131,10 @@ module mkBtbCore(NextAddrPred#(hashSz))
         // Start SupSizeX2 BTB lookups, but ensure to lookup in the appropriate
         // bank for the alignment of each potential branch.
         for (Integer i = 0; i < valueOf(SupSizeX2); i = i + 1) begin
-            BtbAddr a = unpack(pack(getBtbAddr(pc)) + fromInteger(i));
+            // Only add lower bits for timing.
+            BtbAddr a = getBtbAddr(pc);
+            a = unpack({a.tag, {a.index,a.bank} + fromInteger(i)});
+            //BtbAddr a = unpack(pack(getBtbAddr(pc)) + fromInteger(i));
             fullRecords[a.bank].lookupStart(MapKeyIndex{key: hash(a.tag), index: a.index});
             compressedRecords[a.bank].lookupStart(MapKeyIndex{key: hash(a.tag), index: a.index});
         end
