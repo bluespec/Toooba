@@ -380,6 +380,7 @@ module mkCore#(CoreId coreId)(Core);
                     fetchStage.redirect(new_pc);
                     globalSpecUpdate.incorrectSpec(False, spec_tag, inst_tag, spec_bits);
                 endmethod
+                method Bool pauseExecute = globalSpecUpdate.pendingIncorrectSpec;
                 method correctSpec = globalSpecUpdate.correctSpec[finishAluCorrectSpecPort(i)].put;
                 method doStats = doStatsReg._read;
             endinterface);

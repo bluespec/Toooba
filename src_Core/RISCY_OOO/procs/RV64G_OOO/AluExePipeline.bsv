@@ -154,6 +154,7 @@ interface AluExeInput;
     method Action writeRegFile(PhyRIndx dst, Data data);
     // redirect
     method Action redirect(Addr new_pc, SpecTag spec_tag, InstTag inst_tag, SpecBits spec_bits);
+    method Bool pauseExecute;
     // spec update
     method Action correctSpec(SpecTag t);
 
@@ -262,7 +263,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
         });
     endrule
 
-    rule doExeAlu;
+    rule doExeAlu(!inIfc.pauseExecute);
         regToExeQ.deq;
         let regToExe = regToExeQ.first;
         let x = regToExe.data;
@@ -305,7 +306,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
         });
     endrule
 
-    rule doFinishAlu;
+    rule doFinishAlu(!inIfc.pauseExecute);
         exeToFinQ.deq;
         let exeToFin = exeToFinQ.first;
         let x = exeToFin.data;
