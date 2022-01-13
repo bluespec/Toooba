@@ -114,6 +114,8 @@ module mkTourPred(DirPredictor#(TourTrainInfo));
     endfunction
 
     TourGlobalHist curGHist = gHistReg.history; // global history: MSB is the latest branch
+    Reg#(Vector#(SupSize, Bool)) globalTakenVec <- mkRegU;
+    Reg#(Vector#(SupSize, Bool)) useLocalVec <- mkRegU;
 
     Vector#(SupSize, DirPred#(TourTrainInfo)) predIfc;
     for(Integer i = 0; i < valueof(SupSize); i = i+1) begin
@@ -127,12 +129,11 @@ module mkTourPred(DirPredictor#(TourTrainInfo));
                 // all previous branch in this cycle must be not taken
                 // otherwise this branch should be on wrong path
                 // because all inst in same cycle are fetched consecutively
-                TourGlobalHist globalHist = curGHist >> predCnt[i];
                 // get global prediction
-                Bool globalTaken = isTaken(globalBht.sub(globalHist));
+                Bool globalTaken = globalTakenVec[predCnt[i]];
 
                 // make choice
-                Bool useLocal = isTaken(choiceBht.sub(globalHist));
+                Bool useLocal = useLocalVec[predCnt[i]];
                 Bool taken = useLocal ? localTaken : globalTaken;
 
                 // record prediction
@@ -145,7 +146,7 @@ module mkTourPred(DirPredictor#(TourTrainInfo));
                 return DirPredResult {
                     taken: taken,
                     train: TourTrainInfo {
-                        globalHist: globalHist,
+                        globalHist: curGHist >> predCnt[i],
                         localHist: localHist,
                         globalTaken: globalTaken,
                         localTaken: localTaken
@@ -158,6 +159,14 @@ module mkTourPred(DirPredictor#(TourTrainInfo));
     (* fire_when_enabled, no_implicit_conditions *)
     rule canonGlobalHist;
         gHistReg.addHistory(predRes[valueof(SupSize)], predCnt[valueof(SupSize)]);
+        // Buffer useLocalVec
+        // Reproduce next history; this would ideally be done in GlobalBrHistReg to avoid duplicating logic.
+        TourGlobalHist nHist = truncate({predRes[valueof(SupSize)], curGHist} >> predCnt[valueof(SupSize)]);
+        function Bool globalTakenLookup (Integer i) = isTaken(globalBht.sub(nHist >> i));
+        function Bool useLocalLookup (Integer i) = isTaken(choiceBht.sub(nHist >> i));
+        globalTakenVec <= genWith(globalTakenLookup);
+        useLocalVec <= genWith(useLocalLookup);
+        // Reset counters and prediction.
         predRes[valueof(SupSize)] <= 0;
         predCnt[valueof(SupSize)] <= 0;
     endrule
