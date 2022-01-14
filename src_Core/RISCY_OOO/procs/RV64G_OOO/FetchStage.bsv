@@ -658,15 +658,43 @@ module mkFetchStage(FetchStage);
       // Note that only 1 redirection may happen in a cycle
       Maybe#(IType) redirectInst = Invalid;
 `endif
+      // Vector functions to generate all PCs, predicted next PCs, decode all instructions,
+      // and perform direction prediction for all.  Taking these out of the following loop
+      // makes them unconditional, not depending on previous iterations, improving timing.
+      function t valid (Maybe#(t) v) = v.Valid;
+      function CapMem getPc(Integer i) = decompressPc(valid(decodeIn[i]).pc);
+      Vector#(SupSize, CapMem) pcs = genWith(getPc);
+      function CapMem getPpc(Integer i) = decompressPc(valid(decodeIn[i]).ppc);
+      Vector#(SupSize, CapMem) ppcs = genWith(getPpc);
+      function DecodeResult getDecodeResult(Integer i) = decode(valid(decodeIn[i]).inst, getFlags(pcs[i])==1);
+      Vector#(SupSize, DecodeResult) decode_results = genWith(getDecodeResult);
+      function DecodedInst getDInst(Integer i) = decode_results[i].dInst;
+      Vector#(SupSize, DecodedInst) dInsts = genWith(getDInst);
+      Vector#(SupSize, DirPredResult#(DirPredTrainInfo)) pred_ress =
+          replicate(DirPredResult{taken: False, train: ?});
+      Bool fetch_branch_misprediction = False;
+      for (Integer i = 0; i < valueof(SupSize); i=i+1) begin
+          if(dInsts[i].iType == Br && !fetch_branch_misprediction) begin
+             pred_ress[i] <- dirPred.pred[i].pred(getAddr(pcs[i]));
+             fetch_branch_misprediction = (pred_ress[i].taken != valid(decodeIn[i]).pred_jump);
+          end
+      end
+      function Maybe#(CapMem) getBranchNextPc(Integer i) =
+          decodeBrPred(pcs[i], dInsts[i], pred_ress[i].taken, (valid(decodeIn[i]).inst_kind == Inst_32b));
+      Vector#(SupSize, Maybe#(CapMem)) nextPcsBranch = genWith(getBranchNextPc);
 
       for (Integer i = 0; i < valueof(SupSize); i=i+1) begin
          if (decodeIn[i] matches tagged Valid .in)  begin
             let cause = in.cause;
-            CapMem pc = decompressPc(in.pc);
-            CapMem ppc = decompressPc(in.ppc);
+            CapMem pc = pcs[i];//decompressPc(in.pc);
+            CapMem ppc = ppcs[i];//decompressPc(in.ppc);
             pcBlocks.rPort[i].remove(in.pc.idx);
             if (verbose)
                $display("Decode: %0d in = ", i, fshow (in));
+
+            let decode_result = decode_results[i];//decode(in.inst, getFlags(pc)==1);    // Decode 32b inst, or 32b expansion of 16b inst
+            let dInst = dInsts[i];//decode_result.dInst;
+            let regs = decode_result.regs;
 
             // do decode and branch prediction
             // Drop here if does not match the decode_epoch.
@@ -684,28 +712,15 @@ module mkFetchStage(FetchStage);
             end else if (in.decode_epoch == decode_epoch_local) begin
                doAssert(in.main_epoch == f_main_epoch, "main epoch must match");
 
-               let decode_result = decode(in.inst, getFlags(pc)==1);    // Decode 32b inst, or 32b expansion of 16b inst
-
                // update cause if decode exception and no earlier (TLB) exception
                if (!isValid(cause)) begin
                   cause = decode_result.illegalInst ? tagged Valid excIllegalInst : tagged Invalid;
                end
 
-               let dInst = decode_result.dInst;
-               let regs = decode_result.regs;
-               DirPredTrainInfo dp_train = ?; // dir pred training bookkeeping
-
                // update predicted next pc
                if (!isValid(cause)) begin
                   // direction predict
-                  Bool pred_taken = False;
-                  if(dInst.iType == Br) begin
-                     let pred_res <- dirPred.pred[i].pred(getAddr(pc));
-                     pred_taken = pred_res.taken;
-                     dp_train = pred_res.train;
-                  end
-                  Maybe#(CapMem) nextPc = decodeBrPred(pc, dInst, pred_taken, (in.inst_kind == Inst_32b));
-
+                  Maybe#(CapMem) nextPc = nextPcsBranch[i];
                   // return address stack link reg is x1 or x5
                   function Bool linkedR(Maybe#(ArchRIndx) register);
                      Bool res = False;
@@ -750,7 +765,7 @@ module mkFetchStage(FetchStage);
                   end
                   if(verbose) begin
                      $display("Branch prediction: ", fshow(dInst.iType), " ; ", fshow(pc), " ; ",
-                              fshow(ppc), " ; ", fshow(pred_taken), " ; ", fshow(nextPc));
+                              fshow(ppc), " ; ", fshow(nextPc));
                   end
 
                   // If we don't have a good guess about where we are going, don't proceed.
@@ -783,7 +798,7 @@ module mkFetchStage(FetchStage);
 `endif
                                         ppc: ppc,
                                         main_epoch: in.main_epoch,
-                                        dpTrain: dp_train,
+                                        dpTrain: pred_ress[i].train,
                                         inst: in.inst,
                                         dInst: dInst,
                                         orig_inst: in.orig_inst,
