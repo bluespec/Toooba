@@ -37,6 +37,8 @@ export TourTrainInfo(..);
 export TourGHistReg(..);
 export mkTourGHistReg;
 export mkTourPred;
+export PCIndexSz;
+export PCIndex;
 
 // 4KB tournament predictor
 
@@ -53,6 +55,7 @@ typedef struct {
     TourLocalHist localHist;
     Bool globalTaken;
     Bool localTaken;
+    PCIndex pcIndex;
 } TourTrainInfo deriving(Bits, Eq, FShow);
 
 // global history reg
@@ -76,6 +79,9 @@ module mkTourPred(DirPredictor#(TourTrainInfo));
     RegFile#(TourGlobalHist, Bit#(2)) globalBht <- mkRegFileWCF(0, maxBound);
     // choice sat counters: large (taken) -- use local, small (not taken) -- use global
     RegFile#(TourGlobalHist, Bit#(2)) choiceBht <- mkRegFileWCF(0, maxBound);
+
+    // Lookup PC
+    Reg#(Addr) pc_reg <- mkRegU;
 
     // EHR to record predict results in this cycle
     Ehr#(TAdd#(1, SupSize), SupCnt) predCnt <- mkEhr(0);
@@ -107,9 +113,10 @@ module mkTourPred(DirPredictor#(TourTrainInfo));
     Vector#(SupSize, DirPred#(TourTrainInfo)) predIfc;
     for(Integer i = 0; i < valueof(SupSize); i = i+1) begin
         predIfc[i] = (interface DirPred;
-            method ActionValue#(DirPredResult#(TourTrainInfo)) pred(Addr pc);
+            method ActionValue#(DirPredResult#(TourTrainInfo)) pred;
+                PCIndex pcIndex = getPCIndex(offsetPc(pc_reg, i));
                 // get local history & prediction
-                TourLocalHist localHist = localHistTab.sub(getPCIndex(pc));
+                TourLocalHist localHist = localHistTab.sub(pcIndex);
                 Bool localTaken = isTaken(localBht.sub(localHist));
 
                 // get the global history
@@ -136,7 +143,8 @@ module mkTourPred(DirPredictor#(TourTrainInfo));
                         globalHist: curGHist >> predCnt[i],
                         localHist: localHist,
                         globalTaken: globalTaken,
-                        localTaken: localTaken
+                        localTaken: localTaken,
+                        pcIndex: pcIndex
                     }
                 };
             endmethod
@@ -158,16 +166,18 @@ module mkTourPred(DirPredictor#(TourTrainInfo));
         predCnt[valueof(SupSize)] <= 0;
     endrule
 
+    method nextPc = pc_reg._write;
+
     interface pred = predIfc;
 
-    method Action update(Addr pc, Bool taken, TourTrainInfo train, Bool mispred);
+    method Action update(Bool taken, TourTrainInfo train, Bool mispred);
         // update history if mispred
         if(mispred) begin
             TourGlobalHist newHist = truncateLSB({pack(taken), train.globalHist});
             gHistReg.redirect(newHist);
         end
         // update local history (assume only 1 branch for an PC in flight)
-        localHistTab.upd(getPCIndex(pc), truncateLSB({pack(taken), train.localHist}));
+        localHistTab.upd(train.pcIndex, truncateLSB({pack(taken), train.localHist}));
         // update local sat cnt
         let localCnt = localBht.sub(train.localHist);
         localBht.upd(train.localHist, updateCnt(localCnt, taken));

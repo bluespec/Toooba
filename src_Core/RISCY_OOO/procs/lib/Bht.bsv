@@ -29,18 +29,21 @@ import BrPred::*;
 
 export BhtTrainInfo;
 export mkBht;
-
-typedef Bit#(0) BhtTrainInfo; // no training info needs to be remembered
+export BhtEntries;
+export BhtIndex;
 
 // Local BHT Typedefs
 typedef 128 BhtEntries;
 typedef Bit#(TLog#(BhtEntries)) BhtIndex;
+
+typedef BhtIndex BhtTrainInfo;
 
 (* synthesize *)
 module mkBht(DirPredictor#(BhtTrainInfo));
     // Read and Write ordering doesn't matter since this is a predictor
     // mkRegFileWCF is the RegFile version of mkConfigReg
     RegFile#(BhtIndex, Bit#(2)) hist <- mkRegFileWCF(0,fromInteger(valueOf(BhtEntries)-1));
+    Reg#(Addr) pc_reg <- mkRegU;
 
     function BhtIndex getIndex(Addr pc);
         return truncate(pc >> 2);
@@ -49,22 +52,24 @@ module mkBht(DirPredictor#(BhtTrainInfo));
     Vector#(SupSize, DirPred#(BhtTrainInfo)) predIfc;
     for(Integer i = 0; i < valueof(SupSize); i = i+1) begin
         predIfc[i] = (interface DirPred;
-            method ActionValue#(DirPredResult#(BhtTrainInfo)) pred(Addr pc);
-                let index = getIndex(pc);
+            method ActionValue#(DirPredResult#(BhtTrainInfo)) pred;
+                let index = getIndex(offsetPc(pc_reg, i));
                 Bit#(2) cnt = hist.sub(index);
                 Bool taken = cnt[1] == 1;
                 return DirPredResult {
                     taken: taken,
-                    train: 0
+                    train: index
                 };
             endmethod
         endinterface);
     end
 
+    method nextPc = pc_reg._write;
+
     interface pred = predIfc;
 
-    method Action update(Addr pc, Bool taken, BhtTrainInfo train, Bool mispred);
-        let index = getIndex(pc);
+    method Action update(Bool taken, BhtTrainInfo train, Bool mispred);
+        let index = train;
         let current_hist = hist.sub(index);
         Bit#(2) next_hist;
         if(taken) begin

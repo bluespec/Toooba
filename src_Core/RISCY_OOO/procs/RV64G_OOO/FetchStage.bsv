@@ -275,6 +275,10 @@ module mkFetchStage(FetchStage);
     Integer pc_fetch3_port = 2;
     Integer pc_redirect_port = 3;
     Integer pc_final_port = 4;
+    // To track the next expected PC in Decode for early lookups for prediction.
+    Ehr#(TAdd#(SupSize, 2), Addr) decode_pc_reg <- mkEhr(?);
+    Integer decode_pc_redirect_port = valueOf(SupSize);
+    Integer decode_pc_final_port = valueOf(SupSize) + 1;
 
     // PC compression structure holding an indexed set of PC blocks so that only indexes need be tracked.
     IndexedMultiset#(PcIdx, PcMSB, SupSizeX2) pcBlocks <- mkIndexedMultisetQueue;
@@ -648,6 +652,7 @@ module mkFetchStage(FetchStage);
 `endif
                   end
                end // if (!isValid(cause))
+               decode_pc_reg[i] <= ppc;
                let out = FromFetchStage{pc: pc,
                                         ppc: ppc,
                                         main_epoch: in.main_epoch,
@@ -676,8 +681,8 @@ module mkFetchStage(FetchStage);
       end // for (Integer i = 0; i < valueof(SupSize); i=i+1)
 
       // update PC and epoch
-      if(redirectPc matches tagged Valid .nextPc) begin
-         pc_reg[pc_decode_port] <= nextPc;
+      if(redirectPc matches tagged Valid .rp) begin
+         pc_reg[pc_decode_port] <= rp;
       end
       decode_epoch[0] <= decode_epoch_local;
       // send training data for next addr pred
@@ -695,6 +700,10 @@ module mkFetchStage(FetchStage);
          endcase
       end
 `endif
+   endrule
+
+   rule reportDecodePc;
+       dirPred.nextPc(decode_pc_reg[decode_pc_final_port]);
    endrule
 
     // train next addr pred: we use a wire to catch outputs of napTrainByDecQ.
@@ -783,7 +792,7 @@ module mkFetchStage(FetchStage);
         //end
         if (iType == Br) begin
             // Train the direction predictor for all branches
-            dirPred.update(pc, taken, dpTrain, mispred);
+            dirPred.update(taken, dpTrain, mispred);
         end
         // train next addr pred when mispred
         if(mispred) begin
