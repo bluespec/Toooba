@@ -235,6 +235,14 @@ typedef struct {
   Bool mispred_first_half;
 } InstrFromFetch3 deriving(Bits, Eq, FShow);
 
+typedef struct {
+    CapMem pc;
+    CapMem ppc;
+    DecodeResult result;
+    DirPredResult#(DirPredTrainInfo) dir_pred;
+    Maybe#(CapMem) dir_ppc;
+} PreDecode deriving(Bits, Eq, FShow);
+
 function InstrFromFetch3 fetch3_2_instC(Fetch3ToDecode in, Instruction inst, Bit#(32) orig_inst) =
    InstrFromFetch3 {
       pc: in.pc,
@@ -662,42 +670,38 @@ module mkFetchStage(FetchStage);
       // Note that only 1 redirection may happen in a cycle
       Maybe#(IType) redirectInst = Invalid;
 `endif
-      // Vector functions to generate all PCs, predicted next PCs, decode all instructions,
-      // and perform direction predictions.  Taking these out of the following loop
-      // makes them unconditional, not depending on previous iterations, improving timing.
+      // A loop to prepare values for the main decode loop.
+      // These allow us to perform direction prediction with minimal dependencies
+      // between instructions to avoid a critical path.
       function t valid (Maybe#(t) v) = v.Valid;
-      function CapMem getPc(Integer i) = decompressPc(valid(decodeIn[i]).pc);
-      Vector#(SupSize, CapMem) pcs = genWith(getPc);
-      function CapMem getPpc(Integer i) = decompressPc(valid(decodeIn[i]).ppc);
-      Vector#(SupSize, CapMem) ppcs = genWith(getPpc);
-      function DecodeResult getDecodeResult(Integer i) = decode(valid(decodeIn[i]).inst, getFlags(pcs[i])==1);
-      Vector#(SupSize, DecodeResult) decode_results = genWith(getDecodeResult);
-      function DecodedInst getDInst(Integer i) = decode_results[i].dInst;
-      Vector#(SupSize, DecodedInst) dInsts = genWith(getDInst);
-      Vector#(SupSize, DirPredResult#(DirPredTrainInfo)) pred_ress =
-          replicate(DirPredResult{taken: False, train: ?});
+      Vector#(SupSize, PreDecode) pd = ?;
       Bool fetch_branch_misprediction = False;
       for (Integer i = 0; i < valueof(SupSize); i=i+1) begin
-          if(dInsts[i].iType == Br && !fetch_branch_misprediction) begin
-             pred_ress[i] <- dirPred.pred[i].pred;
-             fetch_branch_misprediction = (pred_ress[i].taken != valid(decodeIn[i]).pred_jump);
-          end
+         pd[i].pc = decompressPc(valid(decodeIn[i]).pc);
+         pd[i].ppc = decompressPc(valid(decodeIn[i]).ppc);
+         pd[i].result = decode(valid(decodeIn[i]).inst, getFlags(pd[i].pc)==1);
+         // Estimate when we won't use later instructions in the bundle to avoid
+         // poluting the global history. Depending on the full "local_epoch" logic
+         // in the main loop is too slow timing-wise.
+         if(pd[i].result.dInst.iType == Br && !fetch_branch_misprediction) begin
+            pd[i].dir_pred <- dirPred.pred[i].pred;
+            fetch_branch_misprediction = (pd[i].dir_pred.taken != valid(decodeIn[i]).pred_jump);
+         end
+         pd[i].dir_ppc = decodeBrPred(pd[i].pc, pd[i].result.dInst, pd[i].dir_pred.taken, (valid(decodeIn[i]).inst_kind == Inst_32b));
       end
-      function Maybe#(CapMem) getBranchNextPc(Integer i) =
-          decodeBrPred(pcs[i], dInsts[i], pred_ress[i].taken, (valid(decodeIn[i]).inst_kind == Inst_32b));
-      Vector#(SupSize, Maybe#(CapMem)) nextPcsBranch = genWith(getBranchNextPc);
 
       for (Integer i = 0; i < valueof(SupSize); i=i+1) begin
          if (decodeIn[i] matches tagged Valid .in)  begin
             let cause = in.cause;
-            CapMem pc = pcs[i];
-            CapMem ppc = ppcs[i];
+            PreDecode p = pd[i];
+            CapMem pc = p.pc;
+            CapMem ppc = p.ppc;
             pcBlocks.rPort[i].remove(in.pc.idx);
             if (verbose)
                $display("Decode: %0d in = ", i, fshow (in));
 
-            let decode_result = decode_results[i]; // Decode 32b inst, or 32b expansion of 16b inst
-            let dInst = dInsts[i];
+            let decode_result = p.result; // Decode 32b inst, or 32b expansion of 16b inst
+            let dInst = decode_result.dInst;
             let regs = decode_result.regs;
 
             // do decode and branch prediction
@@ -724,7 +728,7 @@ module mkFetchStage(FetchStage);
                // update predicted next pc
                if (!isValid(cause)) begin
                   // direction predict
-                  Maybe#(CapMem) nextPc = nextPcsBranch[i];
+                  Maybe#(CapMem) nextPc = p.dir_ppc;
                   // return address stack link reg is x1 or x5
                   function Bool linkedR(Maybe#(ArchRIndx) register);
                      Bool res = False;
@@ -803,7 +807,7 @@ module mkFetchStage(FetchStage);
 `endif
                                         ppc: ppc,
                                         main_epoch: in.main_epoch,
-                                        dpTrain: pred_ress[i].train,
+                                        dpTrain: p.dir_pred.train,
                                         inst: in.inst,
                                         dInst: dInst,
                                         orig_inst: in.orig_inst,
