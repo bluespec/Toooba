@@ -300,7 +300,8 @@ module mkITlb(ITlb::ITlb);
                 else if (vm_info.sv39) begin
                     let vpn = getVpn(vaddr);
                     let trans_result = tlb.translate(vpn, vm_info.asid);
-                    if (trans_result.hit) begin
+                    if (!validVirtualAddress(vaddr)) hitQ.enq(tuple2(?, Valid (InstPageFault)));
+                    else if (trans_result.hit) begin
                         // TLB hit
                         let entry = trans_result.entry;
                         // check permission

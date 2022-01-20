@@ -1,6 +1,6 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +8,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -49,7 +49,7 @@ typedef 44 PpnSz;
 typedef Bit#(PpnSz) Ppn;
 typedef 12 PageOffsetSz; // 4KB basic page
 typedef Bit#(PageOffsetSz) PageOffset;
-typedef 9 VpnIdxSz; // Vpn is broken down to 3 indexes to 3 levels of page table 
+typedef 9 VpnIdxSz; // Vpn is broken down to 3 indexes to 3 levels of page table
 typedef Bit#(VpnIdxSz) VpnIdx;
 typedef Bit#(2) PageWalkLevel; // 2: 1GB page, 1: 2MB page, 0: 4KB page
 typedef 3 NumPageWalkLevels;
@@ -86,6 +86,9 @@ typedef struct {
 function Vpn getVpn(Addr addr) = addr[38:12];
 
 function PageOffset getPageOffset(Addr addr) = truncate(addr);
+
+// All the upper bits should be equal for a valid SV39 virtual address.
+function Bool validVirtualAddress(Addr addr) =  (addr[63:39] == {addr[39],addr[63:40]});
 
 function Addr getPTBaseAddr(Ppn basePpn);
     PageOffset offset = 0;

@@ -464,7 +464,13 @@ module mkDTlb#(
         else if (vm_info.sv39) begin
             let vpn = getVpn(r.addr);
             let trans_result = tlb.translate(vpn, vm_info.asid);
-            if (trans_result.hit) begin
+            if (!validVirtualAddress(r.addr)) begin
+                // page fault
+                Exception fault = r.write ? StorePageFault : LoadPageFault;
+                pendWait[idx] <= None;
+                pendResp[idx] <= tuple2(?, Valid (fault));
+                if(verbose) $display("[DTLB] req invalid virtual address: idx %d; ", idx, fshow(r));
+            end else if (trans_result.hit) begin
                 // TLB hit
                 let entry = trans_result.entry;
                 // check permission

@@ -155,6 +155,7 @@ typedef struct {
 typedef struct {
   PcCompressed pc;
   PcCompressed ppc;
+  Bool pred_jump;
   Bool decode_epoch;
   Epoch main_epoch;
   Instruction inst;
@@ -172,6 +173,7 @@ function InstrFromFetch3 fetch3_2_instC(Fetch3ToDecode in, Instruction inst, Bit
       ppc: fromMaybe(PcCompressed{lsb: in.pc.lsb + 2,
                                   idx: in.pc.idx + ((in.pc.lsb == -2) ? 1:0)}, // If we move to a new page, we will move to the next index in the compressed PC table.
                      in.ppc),
+      pred_jump: isValid(in.ppc),
       decode_epoch: in.decode_epoch,
       main_epoch: in.main_epoch,
       inst: inst,
@@ -346,7 +348,7 @@ module mkFetchStage(FetchStage);
     // there is no FIFO between doFetch1 and TLB, when OOO commit stage wait
     // TLB idle to change VM CSR / signal flush TLB, there is no wrong path
     // request afterwards to race with the system code that manage paget table.
-    rule doFetch1(started && !(waitForRedirect[0]) && !(waitForFlush[0]));
+    rule doFetch1(started && !waitForRedirect[0] && !waitForFlush[0]);
         let pc = pc_reg[pc_fetch1_port];
 
         // Grab a chain of predictions from the BTB, which predicts targets for the next
@@ -543,8 +545,8 @@ module mkFetchStage(FetchStage);
       for (Integer i = 0; i < valueof(SupSize); i=i+1) begin
          if (decodeIn[i] matches tagged Valid .in)  begin
             let cause = in.cause;
-            let pc = decompressPc(in.pc);
-            let ppc = decompressPc(in.ppc);
+            Addr pc = decompressPc(in.pc);
+            Addr ppc = decompressPc(in.ppc);
             pcBlocks.rPort[i].remove(in.pc.idx);
             if (verbose)
                $display("Decode: %0d in = ", i, fshow (in));
@@ -624,14 +626,18 @@ module mkFetchStage(FetchStage);
                         end
                      end
                   end
-
                   if(verbose) begin
                      $display("Branch prediction: ", fshow(dInst.iType), " ; ", fshow(pc), " ; ",
                               fshow(ppc), " ; ", fshow(pred_taken), " ; ", fshow(nextPc));
                   end
 
+                  // If we don't have a good guess about where we are going, don't proceed.
+                  if ((!isValid(nextPc)) && (!in.pred_jump)) begin
+                     // Invalid virtual address to ensure redirection.
+                     ppc = {2'b01,?};
+                     decode_epoch_local = !decode_epoch_local;
                   // check previous mispred
-                  if (nextPc matches tagged Valid .decode_pred_next_pc &&& (decode_pred_next_pc != ppc)) begin
+                  end if (nextPc matches tagged Valid .decode_pred_next_pc &&& (decode_pred_next_pc != ppc)) begin
                      if (verbose) $display("%x: ppc and decodeppc :  %h %h", pc, ppc, decode_pred_next_pc);
                      decode_epoch_local = !decode_epoch_local;
                      redirectPc = Valid (decode_pred_next_pc); // record redirect next pc
