@@ -89,22 +89,7 @@ module mkSpecFifo#(
     Reg#(idxT) deqP = deqP_ehr[0]; // port 0 is for deq and canon_deqP
 
     // make incorrectSpeculation conflict with others
-    PulseWire dummyPulseWire = interface PulseWire;
-        method Bool _read = False;
-        method Action send = noAction;
-    endinterface;
-    PulseWire wrongSpec_enq_conflict = dummyPulseWire;
-    PulseWire wrongSpec_deq_conflict = dummyPulseWire;
-    PulseWire wrongSpec_canon_conflict = dummyPulseWire;
-    if(sched.wrongSpec_conflict_enq) begin
-        wrongSpec_enq_conflict <- mkPulseWire;
-    end
-    if(sched.wrongSpec_conflict_deq) begin
-        wrongSpec_deq_conflict <- mkPulseWire;
-    end
-    if(sched.wrongSpec_conflict_canon) begin
-        wrongSpec_canon_conflict <- mkPulseWire;
-    end
+    PulseWire wrongSpec_conflict <- mkPulseWire;
 
     function idxT getNextPtr(idxT p);
         return p == fromInteger(valueOf(size) - 1) ? 0 : p + 1;
@@ -112,7 +97,7 @@ module mkSpecFifo#(
 
     Bool empty_for_canon = all( \== (False) , readVEhr(sched.validDeqPort, valid) );
     rule canon_deqP(!valid[deqP][sched.validDeqPort] && (enqP != deqP || !empty_for_canon)
-                     && !wrongSpec_canon_conflict); // make conflict with incorrect spec
+                     && !wrongSpec_conflict); // make conflict with incorrect spec
         // element at deqP was killed, so increment deqP
         deqP <= getNextPtr(deqP);
     endrule
@@ -145,7 +130,7 @@ module mkSpecFifo#(
     end
 
     method Action enq(ToSpecFifo#(t) x) if ((empty_for_enq || enqP != deqP_for_enq)
-                                            && !wrongSpec_enq_conflict); // make conflict with incorrect spec
+                                            && !wrongSpec_conflict); // make conflict with incorrect spec
         // [sizhuo] I don't think valid bit needs to be checked here
         doAssert(!valid_for_enq, "enq entry cannot be valid");
         enqP <= getNextPtr(enqP);
@@ -155,7 +140,7 @@ module mkSpecFifo#(
     endmethod
 
     method Action deq if (valid[deqP][sched.validDeqPort]
-                          && !wrongSpec_deq_conflict); // make conflict with incorrect spec
+                          && !wrongSpec_conflict); // make conflict with incorrect spec
         valid[deqP][sched.validDeqPort] <= False;
         deqP <= getNextPtr(deqP);
     endmethod
@@ -195,9 +180,7 @@ module mkSpecFifo#(
             Vector#(size, Integer) idxVec = genVector;
             joinActions(map(incorrectSpec, idxVec));
             // make conflict with others
-            wrongSpec_enq_conflict.send;
-            wrongSpec_canon_conflict.send;
-            wrongSpec_deq_conflict.send;
+            wrongSpec_conflict.send;
         endmethod
     endinterface
 endmodule
@@ -229,12 +212,14 @@ module mkSpecFifoCF#(
     Reg#(idxT) enqP <- mkConfigReg(0);
     Ehr#(2, idxT) deqP_ehr <- mkEhr(0);
     Reg#(idxT) deqP = deqP_ehr[0]; // port 0 is for deq and canon_deqP
+    PulseWire enq_wr <- mkPulseWire;
+
 
     function idxT getNextPtr(idxT p);
         return p == fromInteger(valueOf(size) - 1) ? 0 : p + 1;
     endfunction
 
-    Bool empty_for_canon = all( \== (False) , valid[0] );
+    Bool empty_for_canon = all( \== (False) , valid[1] );
     rule canon_deqP(!valid[1][deqP] && (enqP != deqP || !empty_for_canon));
         // element at deqP was killed, so increment deqP
         deqP <= getNextPtr(deqP);
@@ -261,10 +246,16 @@ module mkSpecFifoCF#(
         valid[0] <= newValid;
     endrule
 
+    // Allow enq to schedule independently of deq.
+    rule enqValidCanon(enq_wr);
+        valid[2][enqP] <= True;
+    endrule
+
     // calculate guard for enq, we can do aggressively or lazily
     idxT deqP_for_enq = ?;
     Bool empty_for_enq = ?;
     Bool valid_for_enq = ?;
+    Integer enq_port = ?;
     if(lazyEnq) begin
         // use the stale deqP & valid before canon_deqP or deq fires
         // because deq, canon_deqP, wrongSpec only set valid to false and move deqP forward
@@ -281,19 +272,21 @@ module mkSpecFifoCF#(
         deqP_for_enq = deqP_for_enq_wire;
         empty_for_enq = empty_for_enq_wire;
         valid_for_enq = valid_for_enq_wire;
+        enq_port = 1;
     end
     else begin
         deqP_for_enq = deqP_ehr[1]; // read up-to-date deqP
         empty_for_enq = all( \== (False) , valid[2] );
         valid_for_enq = valid[2][enqP];
+        enq_port = 2;
     end
 
     method Action enq(ToSpecFifo#(t) x) if (empty_for_enq || enqP != deqP_for_enq);
         // [sizhuo] I don't think valid bit needs to be checked here
         doAssert(!valid_for_enq, "enq entry cannot be valid");
         row[enqP] <= x.data;
-        valid[2][enqP] <= True;
-        specBits[2][enqP] <= x.spec_bits;
+        enq_wr.send;
+        specBits[enq_port][enqP] <= x.spec_bits;
         enqP <= getNextPtr(enqP);
     endmethod
 

@@ -263,7 +263,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
         });
     endrule
 
-    rule doExeAlu(!inIfc.pauseExecute);
+    rule doExeAlu;
         regToExeQ.deq;
         let regToExe = regToExeQ.first;
         let x = regToExe.data;

@@ -1,6 +1,6 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +8,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -24,6 +24,7 @@
 `include "ProcConfig.bsv"
 import Vector::*;
 import Ehr::*;
+import ConfigReg::*;
 import Types::*;
 import ProcTypes::*;
 
@@ -53,8 +54,8 @@ endinterface
 
 (* synthesize *)
 module mkEpochManager(EpochManager);
-    Reg#(Epoch) curr_epoch <- mkReg(0);
-    Reg#(Epoch) prev_checked_epoch <- mkReg(0);
+    Reg#(Epoch) curr_epoch <- mkConfigReg(0);
+    Reg#(Epoch) prev_checked_epoch <- mkConfigReg(0);
     Epoch next_epoch = (curr_epoch== fromInteger(valueOf(NumEpochs)-1)) ? 0 : (curr_epoch+1);
 
     // epochs in the core are within range [prev_checked_epoch, curr_epoch]
@@ -130,4 +131,3 @@ module mkEpochManager(EpochManager);
         return next_epoch == prev_checked_epoch;
     endmethod
 endmodule
-
