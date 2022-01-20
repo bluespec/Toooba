@@ -957,7 +957,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         end
         redirectQ.enq(RedirectInfo{trap_pc: next_pc
  `ifdef RVFI_DII
-                                   , x.dii_pid + (is_16b_inst(x.orig_inst) ? 1 : 2)
+                                   , dii_pid: x.dii_pid + (is_16b_inst(x.orig_inst) ? 1 : 2)
  `endif
         });
 
@@ -1358,7 +1358,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         RedirectInfo ri <- toGet(redirectQ).get;
         inIfc.redirectPc(ri.trap_pc
 `ifdef RVFI_DII
-                         , ri.rii_pid
+                         , ri.dii_pid
 `endif
         );
     endrule
