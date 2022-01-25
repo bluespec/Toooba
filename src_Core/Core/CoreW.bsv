@@ -59,6 +59,7 @@ import Cur_Cycle  :: *;
 import GetPut_Aux :: *;
 import Routable   :: *;
 import AXI4       :: *;
+import AXI4_Utils :: *;
 import TagControllerAXI :: *;
 import CacheCore  :: *;
 
@@ -171,7 +172,7 @@ module mkCoreW #(Reset dm_power_on_reset)
    Proc_IFC proc <- mkProc (reset_by all_harts_reset);
 
    // handle uncached interface
-   let proc_uncached = extendIDFields (zeroMasterUserFields (proc.master1), 0);
+   let proc_uncached = prepend_AXI4_Master_id (0, zero_AXI4_Master_user (proc.master1));
    // Bridge for uncached expernal bus transactions.
    let uncached_mem_shim <- mkAXI4ShimFF(reset_by all_harts_reset);
 
@@ -388,7 +389,7 @@ module mkCoreW #(Reset dm_power_on_reset)
    //let slave_vector = newVector;
    slave_vector[default_slave_num] = uncached_mem_shim.slave;
    slave_vector[llc_slave_num]     = proc.debug_module_mem_server;
-   slave_vector[plic_slave_num]    = zeroSlaveUserFields (plic.axi4_slave);
+   slave_vector[plic_slave_num]    = zero_AXI4_Slave_user (plic.axi4_slave);
 
    function Vector#(Num_Slaves_2x3, Bool) route_2x3 (Bit#(Wd_Addr) addr);
       Vector#(Num_Slaves_2x3, Bool) res = replicate(False);
@@ -459,7 +460,7 @@ module mkCoreW #(Reset dm_power_on_reset)
    interface cpu_imem_master = tagController.master;
 
    // Uncached master to Fabric master interface
-   interface cpu_dmem_master = extendIDFields(zeroMasterUserFields(uncached_mem_shim.master), 0);
+   interface cpu_dmem_master = prepend_AXI4_Master_id(0, zero_AXI4_Master_user(uncached_mem_shim.master));
 
    // ----------------------------------------------------------------
    // External interrupt sources
