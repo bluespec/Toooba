@@ -235,14 +235,6 @@ typedef struct {
   Bool mispred_first_half;
 } InstrFromFetch3 deriving(Bits, Eq, FShow);
 
-typedef struct {
-    CapMem pc;
-    CapMem ppc;
-    DecodeResult result;
-    DirPredResult#(DirPredTrainInfo) dir_pred;
-    Maybe#(CapMem) dir_ppc;
-} PreDecode deriving(Bits, Eq, FShow);
-
 function InstrFromFetch3 fetch3_2_instC(Fetch3ToDecode in, Instruction inst, Bit#(32) orig_inst) =
    InstrFromFetch3 {
       pc: in.pc,
@@ -670,39 +662,24 @@ module mkFetchStage(FetchStage);
       // Note that only 1 redirection may happen in a cycle
       Maybe#(IType) redirectInst = Invalid;
 `endif
-      // A loop to prepare values for the main decode loop.
-      // These allow us to perform direction prediction with minimal dependencies
-      // between instructions to avoid a critical path.
-      function t valid (Maybe#(t) v) = v.Valid;
-      Vector#(SupSize, PreDecode) pd = ?;
-      Bool fetch_branch_misprediction = False;
+      Bool likely_epoch_change = False;
       for (Integer i = 0; i < valueof(SupSize); i=i+1) begin
-         pd[i].pc = decompressPc(valid(decodeIn[i]).pc);
-         pd[i].ppc = decompressPc(valid(decodeIn[i]).ppc);
-         pd[i].result = decode(valid(decodeIn[i]).inst, getFlags(pd[i].pc)==1);
-         // Estimate when we won't use later instructions in the bundle to avoid
-         // poluting the global history. Depending on the full "local_epoch" logic
-         // in the main loop is too slow timing-wise.
-         if(pd[i].result.dInst.iType == Br && !fetch_branch_misprediction) begin
-            pd[i].dir_pred <- dirPred.pred[i].pred;
-            fetch_branch_misprediction = (pd[i].dir_pred.taken != valid(decodeIn[i]).pred_jump);
+         CapMem pc = decompressPc(validValue(decodeIn[i]).pc);
+         CapMem ppc = decompressPc(validValue(decodeIn[i]).ppc);
+         let decode_result = decode(validValue(decodeIn[i]).inst, getFlags(pc)==1); // Decode 32b inst, or 32b expansion of 16b inst
+         let dInst = decode_result.dInst;
+         let regs = decode_result.regs;
+         DirPredResult#(DirPredTrainInfo) dir_pred = DirPredResult{taken: False, train: ?};
+         if(decode_result.dInst.iType == Br && !likely_epoch_change) begin
+            dir_pred <- dirPred.pred[i].pred;
+            likely_epoch_change = (dir_pred.taken != validValue(decodeIn[i]).pred_jump);
          end
-         pd[i].dir_ppc = decodeBrPred(pd[i].pc, pd[i].result.dInst, pd[i].dir_pred.taken, (valid(decodeIn[i]).inst_kind == Inst_32b));
-      end
-
-      for (Integer i = 0; i < valueof(SupSize); i=i+1) begin
+         Maybe#(CapMem) dir_ppc = decodeBrPred(pc, decode_result.dInst, dir_pred.taken, (validValue(decodeIn[i]).inst_kind == Inst_32b));
          if (decodeIn[i] matches tagged Valid .in)  begin
             let cause = in.cause;
-            PreDecode p = pd[i];
-            CapMem pc = p.pc;
-            CapMem ppc = p.ppc;
             pcBlocks.rPort[i].remove(in.pc.idx);
             if (verbose)
                $display("Decode: %0d in = ", i, fshow (in));
-
-            let decode_result = p.result; // Decode 32b inst, or 32b expansion of 16b inst
-            let dInst = decode_result.dInst;
-            let regs = decode_result.regs;
 
             // do decode and branch prediction
             // Drop here if does not match the decode_epoch.
@@ -728,7 +705,7 @@ module mkFetchStage(FetchStage);
                // update predicted next pc
                if (!isValid(cause)) begin
                   // direction predict
-                  Maybe#(CapMem) nextPc = p.dir_ppc;
+                  Maybe#(CapMem) nextPc = dir_ppc;
                   // return address stack link reg is x1 or x5
                   function Bool linkedR(Maybe#(ArchRIndx) register);
                      Bool res = False;
@@ -807,7 +784,7 @@ module mkFetchStage(FetchStage);
 `endif
                                         ppc: ppc,
                                         main_epoch: in.main_epoch,
-                                        dpTrain: p.dir_pred.train,
+                                        dpTrain: dir_pred.train,
                                         inst: in.inst,
                                         dInst: dInst,
                                         orig_inst: in.orig_inst,
