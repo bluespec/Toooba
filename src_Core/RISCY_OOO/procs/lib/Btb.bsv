@@ -104,7 +104,7 @@ module mkBtbCore(NextAddrPred#(hashSz))
         /*$display("MapUpdate in BTB - pc %x, bank: %x, taken: %x, next: %x, time: %t",
                   pc, getBank(pc), taken, nextPc, $time);*/
         CompressedTarget shortMask = -1;
-        CapMem mask = ~zeroExtend(shortMask);
+        Addr mask = ~zeroExtend(shortMask);
         if ((pc&mask) == (nextPc&mask))
             compressedRecords[getBank(pc)].update(lookupKey(pc), VnD{v:taken, d:truncate(nextPc)});
         else
@@ -125,8 +125,8 @@ module mkBtbCore(NextAddrPred#(hashSz))
         end
     endmethod
 
-    method Vector#(SupSizeX2, Maybe#(CapMem)) pred;
-        Vector#(SupSizeX2, Maybe#(CapMem)) ppcs = replicate(Invalid);
+    method Vector#(SupSizeX2, Maybe#(Addr)) pred;
+        Vector#(SupSizeX2, Maybe#(Addr)) ppcs = replicate(Invalid);
         for (Integer i = 0; i < valueOf(SupSizeX2); i = i + 1) begin
             if (fullRecords[i].lookupRead matches tagged Valid .r)
                 ppcs[i] = r.v ? Valid(r.d):Invalid;
