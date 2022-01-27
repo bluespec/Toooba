@@ -431,7 +431,7 @@ module mkFetchStage(FetchStage);
        end
     endrule
 
-// Break out of i$
+    // Break out of i$
     Vector#(SupSizeX2,Integer) indexes = genVector;
     function Bool f32d_lane_notFull(Integer i) = f32d.enqS[i].canEnq;
     rule doFetch3(all(f32d_lane_notFull, indexes));
@@ -539,12 +539,21 @@ module mkFetchStage(FetchStage);
       // Note that only 1 redirection may happen in a cycle
       Maybe#(IType) redirectInst = Invalid;
 `endif
-
+      Bool likely_epoch_change = False;
       for (Integer i = 0; i < valueof(SupSize); i=i+1) begin
+         Addr pc = decompressPc(validValue(decodeIn[i]).pc);
+         Addr ppc = decompressPc(validValue(decodeIn[i]).ppc);
+         let decode_result = decode(validValue(decodeIn[i]).inst, getFlags(pc)==1); // Decode 32b inst, or 32b expansion of 16b inst
+         let dInst = decode_result.dInst;
+         let regs = decode_result.regs;
+         DirPredResult#(DirPredTrainInfo) dir_pred = DirPredResult{taken: False, train: ?};
+         if(decode_result.dInst.iType == Br && !likely_epoch_change) begin
+            dir_pred <- dirPred.pred[i].pred;
+            likely_epoch_change = (dir_pred.taken != validValue(decodeIn[i]).pred_jump);
+         end
+         Maybe#(CapMem) dir_ppc = decodeBrPred(pc, decode_result.dInst, dir_pred.taken, (validValue(decodeIn[i]).inst_kind == Inst_32b));
          if (decodeIn[i] matches tagged Valid .in)  begin
             let cause = in.cause;
-            let pc = decompressPc(in.pc);
-            let ppc = decompressPc(in.ppc);
             pcBlocks.rPort[i].remove(in.pc.idx);
             if (verbose)
                $display("Decode: %0d in = ", i, fshow (in));
@@ -576,14 +585,7 @@ module mkFetchStage(FetchStage);
                // update predicted next pc
                if (!isValid(cause)) begin
                   // direction predict
-                  Bool pred_taken = False;
-                  if(dInst.iType == Br) begin
-                     let pred_res <- dirPred.pred[i].pred(pc);
-                     pred_taken = pred_res.taken;
-                     dp_train = pred_res.train;
-                  end
-                  Maybe#(Addr) nextPc = decodeBrPred(pc, dInst, pred_taken, (in.inst_kind == Inst_32b));
-
+                  Maybe#(CapMem) nextPc = dir_ppc;
                   // return address stack link reg is x1 or x5
                   function Bool linkedR(Maybe#(ArchRIndx) register);
                      Bool res = False;
@@ -649,7 +651,7 @@ module mkFetchStage(FetchStage);
                let out = FromFetchStage{pc: pc,
                                         ppc: ppc,
                                         main_epoch: in.main_epoch,
-                                        dpTrain: dp_train,
+                                        dpTrain: dir_pred.train,
                                         inst: in.inst,
                                         dInst: dInst,
                                         orig_inst: in.orig_inst,
