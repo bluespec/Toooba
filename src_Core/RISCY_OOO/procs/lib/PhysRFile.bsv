@@ -63,7 +63,7 @@ module mkRFile#(Bool lazy)( RFile#(wrNum, rdNum) ) provisos (
     // which must be 0 at all time
     // Using a mkRegOR here assumes there will be a single write per register per cycle.
     // As each register is allocated to a single instruction which will execute once, this should always be true.
-    Vector#(NumPhyReg, Vector#(ehrPortNum, Reg#(Data))) rfile <- replicateM(mkRegOR(?));
+    Vector#(NumPhyReg, Vector#(ehrPortNum, Reg#(Data))) rfile <- replicateM(mkRegOR(0));
 
     Vector#(NumPhyReg, Data) rdData = ?;
     if(lazy) begin
