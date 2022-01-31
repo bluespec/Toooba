@@ -47,6 +47,7 @@ import ProcTypes::*;
 import Vector::*;
 import Ehr::*;
 import ConfigReg::*;
+import SpecialRegs::*;
 
 interface RFileWr#(type d);
     method Action wr( PhyRIndx rindx, d data );
@@ -73,7 +74,9 @@ module mkRFile#(d defaultRegisterValue, Bool lazy)( RFile#(wrNum, rdNum, d) ) pr
 
     // phy reg init val must be 0: because x0 is renamed to phy reg 0,
     // which must be 0 at all time
-    Vector#(NumPhyReg, Ehr#(ehrPortNum, d)) rfile <- replicateM(mkEhr(defaultRegisterValue));
+    // Using a mkRegOR here assumes there will be a single write per register per cycle.
+    // As each register is allocated to a single instruction which will execute once, this should always be true.
+    Vector#(NumPhyReg, Vector#(ehrPortNum, Reg#(d))) rfile <- replicateM(mkRegOR(defaultRegisterValue));
 
     Vector#(NumPhyReg, d) rdData = ?;
     if(lazy) begin
