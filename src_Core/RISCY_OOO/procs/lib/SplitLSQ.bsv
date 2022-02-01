@@ -51,6 +51,7 @@ import StoreBuffer::*;
 import Exec::*;
 import FP_Utils::*;
 import CacheUtils::*; // For CLoadTags alignment
+import RegFile::*; // Just for the interface
 
 // I don't want to export auxiliary functions, so manually export all types
 export LdQMemFunc(..);
@@ -439,6 +440,8 @@ interface SplitLSQ;
     //     Sc/Amo/Fence, and flush L1 cache.
     method StQDeqEntry firstSt;
     method Action deqSt;
+    // method for reporting the physical address of an entry used for tracing.
+    interface Vector#(SupSize, RegFile#(LdStQTag, Addr)) lookupPAddr;
 `ifdef TSO_MM
     // Kill loads when a cache line is evicted (TSO only)
     method Action cacheEvict(LineAddr a);
@@ -949,7 +952,17 @@ module mkSplitLSQ(SplitLSQ);
 
     // make wrongSpec conflict with all others (but not correctSpec method and
     // findIssue)
-    PulseWire wrongSpec_conflict <- mkPulseWire;
+    RWire#(void) wrongSpec_hit_conflict <- mkRWire;
+    RWire#(void) wrongSpec_enqIss_conflict <- mkRWire;
+    RWire#(void) wrongSpec_enq_conflict <- mkRWire;
+    RWire#(void) wrongSpec_cacheEvict_conflict <- mkRWire;
+    RWire#(void) wrongSpec_update_conflict <- mkRWire;
+    RWire#(void) wrongSpec_issue_conflict <- mkRWire;
+    RWire#(void) wrongSpec_respLd_conflict <- mkRWire;
+    RWire#(void) wrongSpec_deqLd_conflict <- mkRWire;
+    RWire#(void) wrongSpec_deqSt_conflict <- mkRWire;
+    RWire#(void) wrongSpec_verify_conflict <- mkRWire;
+    RWire#(void) wrongSpec_wakeBySB_conflict <- mkRWire;
     // make wrongSpec more urgent than firstSt (resolve bsc error)
     Wire#(Bool) wrongSpec_urgent_firstSt <- mkDWire(True);
     Map#(Bit#(10),Bit#(6),Int#(3),2) ldKillMap <- mkMapLossy(minBound);
@@ -1135,7 +1148,7 @@ module mkSplitLSQ(SplitLSQ);
         end
     endrule
 
-    rule enqIssueQ(issueLdInfo.wget matches tagged Valid .info &&& !wrongSpec_conflict);
+    rule enqIssueQ(issueLdInfo.wget matches tagged Valid .info);
         if(verbose) begin
             $display("[LSQ - enqIss] ", fshow(info));
         end
@@ -1177,6 +1190,8 @@ module mkSplitLSQ(SplitLSQ);
             spec_bits: ld_specBits_enqIss[info.tag]
         });
         ld_inIssueQ_enqIss[info.tag] <= True;
+        // make conflict with incorrect spec
+        wrongSpec_enqIss_conflict.wset(?);
     endrule
 
     // Verify SQ entry one by one
@@ -1199,8 +1214,7 @@ module mkSplitLSQ(SplitLSQ);
     // NOTE that when SQ is full and all verified, verifyP will point to a
     // valid and verified entry
     rule verifySt(st_valid_verify[st_verifyP_verify] &&
-                  !st_verified_verify[st_verifyP_verify] &&
-                  !wrongSpec_conflict);
+                  !st_verified_verify[st_verifyP_verify]);
         StQTag verP = st_verifyP_verify;
 
         // check if the entry can be verified. We should not fire this rule if
@@ -1250,6 +1264,9 @@ module mkSplitLSQ(SplitLSQ);
         joinActions(map(setVerified, idxVec));
 
         if(verbose) $display("[LSQ - verifySt] st_verifyP %d", verP);
+
+        // make conflict with incorrect spec
+        wrongSpec_verify_conflict.wset(?);
     endrule
 
 `ifdef BSIM
@@ -1415,6 +1432,16 @@ module mkSplitLSQ(SplitLSQ);
         endinterface);
     end
 
+    RegFile#(LdStQTag, Addr) lookupAPAddr = (interface RegFile;
+            method Addr sub(LdStQTag t);
+                case (t) matches
+                    tagged Ld .l: return ld_paddr_deqLd[l];
+                    tagged St .s: return st_paddr_deqSt[s];
+                endcase
+            endmethod
+            method upd = ?;
+    endinterface);
+
     method ByteOrTagEn getOrigBE(LdStQTag t);
         return (case(t) matches
             tagged Ld .tag: (ld_byteOrTagEn[tag]);
@@ -1423,7 +1450,10 @@ module mkSplitLSQ(SplitLSQ);
         endcase);
     endmethod
 
-    method ActionValue#(LSQHitInfo) getHit(LdStQTag t) if (!wrongSpec_conflict);
+    method ActionValue#(LSQHitInfo) getHit(LdStQTag t);
+        // Conflict with wrong spec. This makes cache pipelineResp rule
+        // conflict with wrong spec, and can help avoid scheduling cycle.
+        wrongSpec_hit_conflict.wset(?);
         return (case(t) matches
             tagged Ld .tag: (LSQHitInfo {
                 waitWPResp: ld_waitWPResp_hit[tag],
@@ -1448,7 +1478,7 @@ module mkSplitLSQ(SplitLSQ);
                         MemInst mem_inst,
                         Maybe#(PhyDst) dst,
                         SpecBits spec_bits,
-                        Bit#(16) pc_hash) if(ld_can_enq_wire && !wrongSpec_conflict);
+                        Bit#(16) pc_hash) if(ld_can_enq_wire);
         if(verbose) begin
             $display("[LSQ - enqLd] enqP %d; ", ld_enqP,
                      "; ", fshow(inst_tag),
@@ -1501,12 +1531,14 @@ module mkSplitLSQ(SplitLSQ);
             ld_olderSt_enq[ld_enqP] <= Invalid;
             ld_olderStVerified_enq[ld_enqP] <= False;
         end
+        // make conflict with incorrect spec
+        wrongSpec_enq_conflict.wset(?);
     endmethod
 
     method Action enqSt(InstTag inst_tag,
                         MemInst mem_inst,
                         Maybe#(PhyDst) dst,
-                        SpecBits spec_bits) if(st_can_enq_wire && !wrongSpec_conflict);
+                        SpecBits spec_bits) if(st_can_enq_wire);
         if(verbose) begin
             $display("[LSQ - enqSt] enqP %d; ", st_enqP,
                      "; ", fshow(inst_tag),
@@ -1535,6 +1567,8 @@ module mkSplitLSQ(SplitLSQ);
         st_verified_enq[st_enqP] <= False;
         st_specBits_enq[st_enqP] <= spec_bits;
         st_atCommit_enq[st_enqP] <= False;
+        // make conflict with incorrect spec
+        wrongSpec_enq_conflict.wset(?);
     endmethod
 
     method Action updateData(StQTag t, MemTaggedData d);
@@ -1549,7 +1583,7 @@ module mkSplitLSQ(SplitLSQ);
     method ActionValue#(LSQUpdateAddrResult) updateAddr(
         LdStQTag lsqTag, Maybe#(Trap) fault,
         Bool allowCap, Addr pa, Bool mmio, ByteOrTagEn shift_be
-    ) if (!wrongSpec_conflict);
+    );
         // index vec for vector functions
         Vector#(LdQSize, LdQTag) idxVec = genWith(fromInteger);
 
@@ -1715,6 +1749,9 @@ module mkSplitLSQ(SplitLSQ);
             end
         end
 
+        // make conflict with incorrect spec
+        wrongSpec_update_conflict.wset(?);
+
         // return waiting for wp resp bit: for deciding whether the updating Ld
         // can be issued
         return LSQUpdateAddrResult {
@@ -1729,7 +1766,7 @@ module mkSplitLSQ(SplitLSQ);
     method ActionValue#(LSQIssueLdResult) issueLd(LdQTag tag,
                                                   Addr pa,
                                                   ByteOrTagEn shift_be,
-                                                  SBSearchRes sbRes) if (!wrongSpec_conflict);
+                                                  SBSearchRes sbRes);
         if(verbose) begin
             $display("[LSQ - issueLd] ", fshow(tag), "; ", fshow(pa),
                      "; ", fshow(shift_be), "; ", fshow(sbRes));
@@ -1998,6 +2035,9 @@ module mkSplitLSQ(SplitLSQ);
         end
 `endif
 
+        // make conflict with incorrect spec
+        wrongSpec_issue_conflict.wset(?);
+
         return issRes;
     endmethod
 
@@ -2014,7 +2054,7 @@ module mkSplitLSQ(SplitLSQ);
         return issueLdQ.first.data;
     endmethod
 
-    method ActionValue#(LSQRespLdResult) respLd(LdQTag t, MemTaggedData alignedData) if (!wrongSpec_conflict);
+    method ActionValue#(LSQRespLdResult) respLd(LdQTag t, MemTaggedData alignedData);
         let res = LSQRespLdResult {
             wrongPath: False,
             dst: Invalid,
@@ -2063,6 +2103,8 @@ module mkSplitLSQ(SplitLSQ);
             $display("[LSQ - respLd] ", fshow(t), "; ", fshow(alignedData),
                      "; ", fshow(res));
         end
+        // make conflict with incorrect spec
+        wrongSpec_respLd_conflict.wset(?);
         // return
         return res;
     endmethod
@@ -2087,7 +2129,7 @@ module mkSplitLSQ(SplitLSQ);
         };
     endmethod
 
-    method Action deqLd if(deqLdGuard && !wrongSpec_conflict);
+    method Action deqLd if(deqLdGuard);
         LdQTag deqP = ld_deqP_deqLd;
 
         if(verbose) $display("[LSQ - deqLd] deqP %d", deqP);
@@ -2134,6 +2176,9 @@ module mkSplitLSQ(SplitLSQ);
         endfunction
         Vector#(LdQSize, LdQTag) idxVec = genWith(fromInteger);
         joinActions(map(setReady, idxVec));
+
+        // make conflict with incorrect spec
+        wrongSpec_deqLd_conflict.wset(?);
     endmethod
 
     method StQDeqEntry firstSt if(deqStGuard && wrongSpec_urgent_firstSt);
@@ -2154,7 +2199,7 @@ module mkSplitLSQ(SplitLSQ);
         };
     endmethod
 
-    method Action deqSt if(deqStGuard && !wrongSpec_conflict);
+    method Action deqSt if(deqStGuard);
         StQTag deqP = st_deqP;
 
         if(verbose) $display("[LSQ - deqSt] deqP %d", deqP);
@@ -2202,10 +2247,15 @@ module mkSplitLSQ(SplitLSQ);
         endfunction
         Vector#(LdQSize, LdQTag) idxVec = genWith(fromInteger);
         joinActions(map(resetSt, idxVec));
+
+        // make conflict with incorrect spec
+        wrongSpec_deqSt_conflict.wset(?);
     endmethod
 
+    interface lookupPAddr = replicate(lookupAPAddr);
+
 `ifdef TSO_MM
-    method Action cacheEvict(LineAddr lineAddr) if (!wrongSpec_conflict);
+    method Action cacheEvict(LineAddr lineAddr);
         if(verbose) $display("[LSQ - cacheEvict] ", fshow(lineAddr));
         // kill a load if it satisfies the following conditions:
         // (1) valid
@@ -2235,11 +2285,14 @@ module mkSplitLSQ(SplitLSQ);
             doAssert(!ld_isMMIO_evict[killTag], "cannot kill MMIO");
             doAssert(ld_memFunc[killTag] == Ld, "can only kill Ld");
         end
+
+        // make conflict with incorrect spec
+        wrongSpec_cacheEvict_conflict.wset(?);
     endmethod
 
 `else
 
-    method Action wakeupLdStalledBySB(SBIndex sbIdx) if (!wrongSpec_conflict);
+    method Action wakeupLdStalledBySB(SBIndex sbIdx);
         if(verbose) begin
             $display("[LSQ - wakeupBySB] ", fshow(sbIdx));
         end
@@ -2254,6 +2307,8 @@ module mkSplitLSQ(SplitLSQ);
         endfunction
         Vector#(LdQSize, LdQTag) idxVec = genWith(fromInteger);
         joinActions(map(setReady, idxVec));
+        // make conflict with incorrect spec
+        wrongSpec_wakeBySB_conflict.wset(?);
     endmethod
 `endif
 
@@ -2398,7 +2453,17 @@ module mkSplitLSQ(SplitLSQ);
             end
 
             // make conflict with others
-            wrongSpec_conflict.send();
+            wrongSpec_hit_conflict.wset(?);
+            wrongSpec_enqIss_conflict.wset(?);
+            wrongSpec_enq_conflict.wset(?);
+            wrongSpec_update_conflict.wset(?);
+            wrongSpec_issue_conflict.wset(?);
+            wrongSpec_respLd_conflict.wset(?);
+            wrongSpec_deqLd_conflict.wset(?);
+            wrongSpec_deqSt_conflict.wset(?);
+            wrongSpec_verify_conflict.wset(?);
+            wrongSpec_cacheEvict_conflict.wset(?);
+            wrongSpec_wakeBySB_conflict.wset(?);
             // more urgent than firstSt
             wrongSpec_urgent_firstSt <= True;
         endmethod
