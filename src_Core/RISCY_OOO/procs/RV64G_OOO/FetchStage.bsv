@@ -352,7 +352,7 @@ module mkFetchStage(FetchStage);
     // there is no FIFO between doFetch1 and TLB, when OOO commit stage wait
     // TLB idle to change VM CSR / signal flush TLB, there is no wrong path
     // request afterwards to race with the system code that manage paget table.
-    rule doFetch1(started && !(waitForRedirect[0]) && !(waitForFlush[0]));
+    rule doFetch1(started && !waitForRedirect[0] && !waitForFlush[0]);
         let pc = pc_reg[pc_fetch1_port];
 
         // Grab a chain of predictions from the BTB, which predicts targets for the next
