@@ -1,6 +1,6 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +8,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -237,13 +237,13 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
             endmethod
         endinterface);
     end
-    
+
     Vector#(fpuMulDivExeNum, Row_setExecuted_doFinishFpuMulDiv) fpuMulDivExe;
     for(Integer i = 0; i < valueof(fpuMulDivExeNum); i = i+1) begin
         fpuMulDivExe[i] = (interface Row_setExecuted_doFinishFpuMulDiv;
             method Action set(Data dst_data, Bit#(5) new_fflags);
                 // inst is done
-                rob_inst_state[state_finishFpuMulDiv_port(i)] <= Executed; 
+                rob_inst_state[state_finishFpuMulDiv_port(i)] <= Executed;
 	        rg_dst_data <= dst_data;
                 // update fflags
                 fflags[fflags_finishFpuMulDiv_port(i)] <= new_fflags;
@@ -455,7 +455,7 @@ interface SupReorderBuffer#(numeric type aluExeNum, numeric type fpuMulDivExeNum
 
     interface Vector#(SupSize, ROB_DeqPort) deqPort;
 
-    // record that we have notified LSQ about inst reaching commit 
+    // record that we have notified LSQ about inst reaching commit
     method Action setLSQAtCommitNotified(InstTag x);
     // deqLSQ rules set ROB state
     method Action setExecuted_deqLSQ(InstTag x, Maybe#(Exception) cause, Maybe#(LdKilledBy) ld_killed);
@@ -513,7 +513,7 @@ module mkSupReorderBuffer#(
     Add#(1, a__, aluExeNum), Add#(1, b__, fpuMulDivExeNum)
 );
 
-    Bool verbose = True;
+    Bool verbose = False;
 
     // doCommit rule: deq < wrongSpec (overwrite deq in doCommit) < doRenaming rule: enq
     Integer valid_deq_port = 0;
@@ -595,7 +595,7 @@ module mkSupReorderBuffer#(
                 // move deqP & reset valid
                 deqP[i] <= getNextPtr(deqP[i]);
                 valid[i][deqP[i]][valid_deq_port] <= False;
-                $display("deq[%d][%d]", i, deqP[i]);
+                if (verbose) $display("deq[%d][%d]", i, deqP[i]);
             end
         end
         // update firstDeqWay: find the first deq port that is not enabled
@@ -775,7 +775,7 @@ module mkSupReorderBuffer#(
                     end
                 endfunction
                 for(Integer i = 0; i < valueof(SingleScalarSize); i = i+1) begin
-                    if (in_kill_range(fromInteger(i)) != (row[w][i].dependsOn_wrongSpec(specTag) && valid[w][i][valid_wrongSpec_port]))
+                    if (verbose && in_kill_range(fromInteger(i)) != (row[w][i].dependsOn_wrongSpec(specTag) && valid[w][i][valid_wrongSpec_port]))
                         $display("enqP: %d, enqPNext: %d, w: %d, i: %d, wrongSpec: %d, valid: %d, cur_cycle: %d",
                             enqP[w], enqPNext[w], w, i, row[w][i].dependsOn_wrongSpec(specTag), valid[w][i][valid_wrongSpec_port], cur_cycle);
                     doAssert(
