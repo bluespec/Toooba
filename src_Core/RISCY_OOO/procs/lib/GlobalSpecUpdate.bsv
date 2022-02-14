@@ -54,10 +54,8 @@ module mkGlobalSpecUpdate#(
 );
     // record correct spec tags
     Vector#(correctSpecPortNum, RWire#(SpecTag)) correctSpecTag <- replicateM(mkRWire);
-    // make wrong spec conflict with correct spec
-    Vector#(correctSpecPortNum, PulseWire) spec_conflict <- replicateM(mkPulseWire);
-    // let the caller of conflictWrongSpec to be conflict with wrong spec
-    Vector#(conflictWrongSpecPortNum, PulseWire) wrongSpec_conflict <- replicateM(mkPulseWire);
+    // make wrong spec conflict with correct spec and conflictWrongSpec
+    PulseWire spec_conflict <- mkPulseWire;
     // must be a single-element fifo to ensure all pushing rules cannot fire while we are waiting
     // to kill.
     SpecFifo#(2,IncorrectSpec,1,1) incorrectSpec_ff <- mkSpecFifoCF(True);
@@ -81,20 +79,14 @@ module mkGlobalSpecUpdate#(
         incorrectSpec_ff.specUpdate.incorrectSpeculation(x.kill_all, x.spec_tag);
         ifc.incorrectSpeculation(x.kill_all, x.spec_tag);
         rob.incorrectSpeculation(x.kill_all, x.spec_tag, x.inst_tag);
-        // conflict with correct spec
-        for(Integer i = 0; i < valueof(correctSpecPortNum); i = i+1) begin
-            spec_conflict[i].send;
-        end
-        // conflict with the caller of conflictWrongSpec
-        for(Integer i = 0; i < valueof(conflictWrongSpecPortNum); i = i+1) begin
-            wrongSpec_conflict[i].send;
-        end
+        // conflict with correct spec and conflictWrongSpec
+        spec_conflict.send;
     endrule
 
     Vector#(correctSpecPortNum, Put#(SpecTag)) correctVec = ?;
     for(Integer i = 0; i < valueof(correctSpecPortNum); i = i+1) begin
         correctVec[i] = (interface Put;
-            method Action put(SpecTag t) if (!spec_conflict[i]);
+            method Action put(SpecTag t) if (!spec_conflict);
                 correctSpecTag[i].wset(t);
             endmethod
         endinterface);
@@ -103,7 +95,7 @@ module mkGlobalSpecUpdate#(
     Vector#(conflictWrongSpecPortNum, Put#(void)) conflictWrongVec = ?;
     for(Integer i = 0; i < valueof(conflictWrongSpecPortNum); i = i+1) begin
         conflictWrongVec[i] = (interface Put;
-            method Action put(void x) if (!wrongSpec_conflict[i]);
+            method Action put(void x) if (!spec_conflict);
                 noAction;
             endmethod
         endinterface);

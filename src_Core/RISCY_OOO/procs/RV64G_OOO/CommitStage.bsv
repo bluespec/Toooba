@@ -60,6 +60,7 @@ import RenameDebugIF::*;
 import CHERICap::*;
 import CHERICC_Fat::*;
 import ISA_Decls_CHERI::*;
+import RegFile::*; // Just for the interface
 `ifdef PERFORMANCE_MONITORING
 import StatCounters::*;
 `endif
@@ -106,6 +107,8 @@ interface CommitInput;
     method Bool stqEmpty;
     // notify LSQ that inst has reached commit
     interface Vector#(SupSize, Put#(LdStQTag)) lsqSetAtCommit;
+    // method for getting translated addresses for tracing.
+    interface Vector#(SupSize, RegFile#(LdStQTag, Addr)) lookupPAddr;
     // TLB has stopped processing now
     method Bool tlbNoPendingReq;
     // Pause committing, probably for buffered wrongSpec
@@ -213,7 +216,7 @@ typedef struct {
     Data mtvec;
 } TraceStateBundle deriving(Bits, FShow);
 
-function Maybe#(RVFI_DII_Execution#(DataSz,DataSz)) genRVFI(ToReorderBuffer rot, Dii_Id traceCnt, TraceStateBundle tsb, Data next_pc);
+function Maybe#(RVFI_DII_Execution#(DataSz,DataSz)) genRVFI(ToReorderBuffer rot, Dii_Id traceCnt, TraceStateBundle tsb, Data next_pc, Addr paddr);
     Addr addr = 0;
     Data data = 0;
     Data wdata = 0;
@@ -230,6 +233,9 @@ function Maybe#(RVFI_DII_Execution#(DataSz,DataSz)) genRVFI(ToReorderBuffer rot,
         case (rot.ppc_vaddr_csrData) matches
             tagged VAddr .vaddr: begin
                 addr = vaddr;
+`ifdef PADDR_RVFI
+                addr = paddr;
+`endif
                 case (rot.lsqTag) matches
                     tagged Ld .l: rmask = rot.traceBundle.memByteEn;
                     tagged St .s: begin
@@ -800,7 +806,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
        });
 `ifdef RVFI
        Rvfi_Traces rvfis = replicate(tagged Invalid);
-       rvfis[0] = genRVFI(trap.x, traceCnt, getTSB(), getAddr(new_pc));
+       rvfis[0] = genRVFI(trap.x, traceCnt, getTSB(), getAddr(new_pc), inIfc.lookupPAddr[0].sub(trap.x.lsqTag));
        rvfiQ.enq(rvfis);
        traceCnt <= traceCnt + 1;
 `endif
@@ -969,7 +975,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         Rvfi_Traces rvfis = replicate(tagged Invalid);
         x.ppc_vaddr_csrData = tagged PPC next_pc;
         CapPipe cp = cast(next_pc);
-        rvfis[0] = genRVFI(x, traceCnt, getTSB(), getOffset(cp));
+        rvfis[0] = genRVFI(x, traceCnt, getTSB(), getOffset(cp), inIfc.lookupPAddr[0].sub(x.lsqTag));
         rvfiQ.enq(rvfis);
         traceCnt <= traceCnt + 1;
 `endif
@@ -1147,7 +1153,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                     if (verbose) $display("%t : [doCommitNormalInst - %d] ", $time(), i, fshow(inst_tag), " ; ", fshow(x));
 `ifdef RVFI
                     CapPipe pipePc = cast(x.pc);
-                    rvfis[i] = genRVFI(x, traceCnt + zeroExtend(whichTrace), getTSB(), getOffset(pipePc) + (is_16b_inst(x.orig_inst) ? 2:4));
+                    rvfis[i] = genRVFI(x, traceCnt + zeroExtend(whichTrace), getTSB(), getOffset(pipePc) + (is_16b_inst(x.orig_inst) ? 2:4), inIfc.lookupPAddr[i].sub(x.lsqTag));
                     whichTrace = whichTrace + 1;
 `endif
 

@@ -650,6 +650,7 @@ module mkCore#(CoreId coreId)(Core);
         method stbEmpty = stb.isEmpty;
         method stqEmpty = lsq.stqEmpty;
         method lsqSetAtCommit = lsq.setAtCommit;
+        method lookupPAddr = lsq.lookupPAddr;
         method pauseCommit = coreFix.pendingIncorrectSpec;
         method tlbNoPendingReq = iTlb.noPendingReq && dTlb.noPendingReq;
 

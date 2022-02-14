@@ -51,6 +51,7 @@ import StoreBuffer::*;
 import Exec::*;
 import FP_Utils::*;
 import CacheUtils::*; // For CLoadTags alignment
+import RegFile::*; // Just for the interface
 
 // I don't want to export auxiliary functions, so manually export all types
 export LdQMemFunc(..);
@@ -439,6 +440,8 @@ interface SplitLSQ;
     //     Sc/Amo/Fence, and flush L1 cache.
     method StQDeqEntry firstSt;
     method Action deqSt;
+    // method for reporting the physical address of an entry used for tracing.
+    interface Vector#(SupSize, RegFile#(LdStQTag, Addr)) lookupPAddr;
 `ifdef TSO_MM
     // Kill loads when a cache line is evicted (TSO only)
     method Action cacheEvict(LineAddr a);
@@ -1415,6 +1418,16 @@ module mkSplitLSQ(SplitLSQ);
         endinterface);
     end
 
+    RegFile#(LdStQTag, Addr) lookupAPAddr = (interface RegFile;
+            method Addr sub(LdStQTag t);
+                case (t) matches
+                    tagged Ld .l: return ld_paddr_deqLd[l];
+                    tagged St .s: return st_paddr_deqSt[s];
+                endcase
+            endmethod
+            method upd = ?;
+    endinterface);
+
     method ByteOrTagEn getOrigBE(LdStQTag t);
         return (case(t) matches
             tagged Ld .tag: (ld_byteOrTagEn[tag]);
@@ -2203,6 +2216,8 @@ module mkSplitLSQ(SplitLSQ);
         Vector#(LdQSize, LdQTag) idxVec = genWith(fromInteger);
         joinActions(map(resetSt, idxVec));
     endmethod
+
+    interface lookupPAddr = replicate(lookupAPAddr);
 
 `ifdef TSO_MM
     method Action cacheEvict(LineAddr lineAddr) if (!wrongSpec_conflict);
