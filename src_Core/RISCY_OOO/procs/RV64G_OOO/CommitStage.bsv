@@ -538,6 +538,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
     Bool pauseCommit = isValid(commitTrap) || inIfc.pauseCommit;
 
     FIFO#(RedirectInfo) redirectQ <- mkFIFO;
+    FIFO#(RedirectInfo) redirectQ2 <- mkFIFO; // Nasty hack to avoid killAll killing the epoch change in the Fetch stage.
 
     // maintain system consistency when system state (CSR) changes or for security
     function Action makeSystemConsistent(Bool flushTlb,
@@ -1364,8 +1365,13 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 `endif
     endrule
 
+    rule pre_pass_redirect;
+        redirectQ2.enq(redirectQ.first);
+        redirectQ.deq;
+    endrule
+
     rule pass_redirect;
-        RedirectInfo ri <- toGet(redirectQ).get;
+        RedirectInfo ri <- toGet(redirectQ2).get;
         inIfc.redirectPc(ri.trap_pc, 0
 `ifdef RVFI_DII
                          , ri.dii_pid
