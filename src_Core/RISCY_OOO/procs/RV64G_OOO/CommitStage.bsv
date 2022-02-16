@@ -60,6 +60,7 @@ import RenameDebugIF::*;
 import CHERICap::*;
 import CHERICC_Fat::*;
 import ISA_Decls_CHERI::*;
+import RegFile::*; // Just for the interface
 `ifdef PERFORMANCE_MONITORING
 import StatCounters::*;
 `endif
@@ -106,8 +107,12 @@ interface CommitInput;
     method Bool stqEmpty;
     // notify LSQ that inst has reached commit
     interface Vector#(SupSize, Put#(LdStQTag)) lsqSetAtCommit;
+    // method for getting translated addresses for tracing.
+    interface Vector#(SupSize, RegFile#(LdStQTag, Addr)) lookupPAddr;
     // TLB has stopped processing now
     method Bool tlbNoPendingReq;
+    // Pause committing, probably for buffered wrongSpec
+    method Bool pauseCommit;
     // set flags
     method Action setFlushTlbs;
     method Action setUpdateVMInfo;
@@ -212,7 +217,7 @@ typedef struct {
     Data mtvec;
 } TraceStateBundle deriving(Bits, FShow);
 
-function Maybe#(RVFI_DII_Execution#(DataSz,DataSz)) genRVFI(ToReorderBuffer rot, Dii_Id traceCnt, TraceStateBundle tsb, Data next_pc);
+function Maybe#(RVFI_DII_Execution#(DataSz,DataSz)) genRVFI(ToReorderBuffer rot, Dii_Id traceCnt, TraceStateBundle tsb, Data next_pc, Addr paddr);
     Addr addr = 0;
     Data data = 0;
     Data wdata = 0;
@@ -229,6 +234,9 @@ function Maybe#(RVFI_DII_Execution#(DataSz,DataSz)) genRVFI(ToReorderBuffer rot,
         case (rot.ppc_vaddr_csrData) matches
             tagged VAddr .vaddr: begin
                 addr = vaddr;
+`ifdef PADDR_RVFI
+                addr = paddr;
+`endif
                 case (rot.lsqTag) matches
                     tagged Ld .l: rmask = rot.traceBundle.memByteEn;
                     tagged St .s: begin
@@ -527,6 +535,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
     // we commit trap in two cycles: first cycle deq ROB and flush; second
     // cycle handles trap, redirect and handles system consistency
     Reg#(Maybe#(CommitTrap)) commitTrap <- mkReg(Invalid); // saves new pc here
+    Bool pauseCommit = isValid(commitTrap) || inIfc.pauseCommit;
 
     FIFO#(RedirectInfo) redirectQ <- mkFIFO;
 
@@ -661,7 +670,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 `ifdef INCLUDE_GDB_CONTROL
         (rg_run_state == RUN_STATE_RUNNING) &&&
 `endif
-        !isValid(commitTrap) &&&
+        !pauseCommit &&&
         rob.deqPort[0].deq_data.trap matches tagged Valid .trap
     );
         rob.deqPort[0].deq;
@@ -798,7 +807,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
        });
 `ifdef RVFI
        Rvfi_Traces rvfis = replicate(tagged Invalid);
-       rvfis[0] = genRVFI(trap.x, traceCnt, getTSB(), getAddr(new_pc));
+       rvfis[0] = genRVFI(trap.x, traceCnt, getTSB(), getAddr(new_pc), inIfc.lookupPAddr[0].sub(trap.x.lsqTag));
        rvfiQ.enq(rvfis);
        traceCnt <= traceCnt + 1;
 `endif
@@ -826,7 +835,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 `ifdef INCLUDE_GDB_CONTROL
        (rg_run_state == RUN_STATE_RUNNING) &&&
 `endif
-        !isValid(commitTrap) &&&
+        !pauseCommit &&&
         !isValid(rob.deqPort[0].deq_data.trap) &&&
         rob.deqPort[0].deq_data.ldKilled matches tagged Valid .killBy
     );
@@ -867,7 +876,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 `ifdef INCLUDE_GDB_CONTROL
        (rg_run_state == RUN_STATE_RUNNING) &&
 `endif
-        !isValid(commitTrap) &&
+        !pauseCommit &&
         !isValid(rob.deqPort[0].deq_data.trap) &&
         !isValid(rob.deqPort[0].deq_data.ldKilled) &&
         rob.deqPort[0].deq_data.rob_inst_state == Executed &&
@@ -958,7 +967,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         end
         redirectQ.enq(RedirectInfo{trap_pc: next_pc
  `ifdef RVFI_DII
-                                   , x.dii_pid + (is_16b_inst(x.orig_inst) ? 1 : 2)
+                                   , dii_pid: x.dii_pid + (is_16b_inst(x.orig_inst) ? 1 : 2)
  `endif
         });
 
@@ -967,7 +976,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         Rvfi_Traces rvfis = replicate(tagged Invalid);
         x.ppc_vaddr_csrData = tagged PPC next_pc;
         CapPipe cp = cast(next_pc);
-        rvfis[0] = genRVFI(x, traceCnt, getTSB(), getOffset(cp));
+        rvfis[0] = genRVFI(x, traceCnt, getTSB(), getOffset(cp), inIfc.lookupPAddr[0].sub(x.lsqTag));
         rvfiQ.enq(rvfis);
         traceCnt <= traceCnt + 1;
 `endif
@@ -1043,7 +1052,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
     // Lr/Sc/Amo/MMIO cannot proceed to executed until we notify LSQ that it
     // has reached the commit stage
     rule notifyLSQCommit(
-        !isValid(commitTrap) &&
+        !pauseCommit &&
         !isValid(rob.deqPort[0].deq_data.trap) &&
         !isValid(rob.deqPort[0].deq_data.ldKilled) &&
         rob.deqPort[0].deq_data.rob_inst_state != Executed &&
@@ -1064,7 +1073,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 `ifdef INCLUDE_GDB_CONTROL
        (rg_run_state == RUN_STATE_RUNNING) &&
 `endif
-        !isValid(commitTrap) &&
+        !pauseCommit &&
         !isValid(rob.deqPort[0].deq_data.trap) &&
         !isValid(rob.deqPort[0].deq_data.ldKilled) &&
         rob.deqPort[0].deq_data.rob_inst_state == Executed &&
@@ -1145,7 +1154,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                     if (verbose) $display("%t : [doCommitNormalInst - %d] ", $time(), i, fshow(inst_tag), " ; ", fshow(x));
 `ifdef RVFI
                     CapPipe pipePc = cast(x.pc);
-                    rvfis[i] = genRVFI(x, traceCnt + zeroExtend(whichTrace), getTSB(), getOffset(pipePc) + (is_16b_inst(x.orig_inst) ? 2:4));
+                    rvfis[i] = genRVFI(x, traceCnt + zeroExtend(whichTrace), getTSB(), getOffset(pipePc) + (is_16b_inst(x.orig_inst) ? 2:4), inIfc.lookupPAddr[i].sub(x.lsqTag));
                     whichTrace = whichTrace + 1;
 `endif
 
@@ -1359,7 +1368,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         RedirectInfo ri <- toGet(redirectQ).get;
         inIfc.redirectPc(ri.trap_pc, 0
 `ifdef RVFI_DII
-                         , ri.rii_pid
+                         , ri.dii_pid
 `endif
         );
     endrule

@@ -195,6 +195,8 @@ interface AluExeInput;
     method Action writeRegFile(PhyRIndx dst, CapPipe data);
     // redirect
     method Action redirect(CapMem new_pc, SpecTag spec_tag, InstTag inst_tag, SpecBits spec_bits);
+    // pending invalidation could pause execute/redirections.
+    method Bool pauseExecute;
     // spec update
     method Action correctSpec(SpecTag t);
 
@@ -354,7 +356,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
         });
     endrule
 
-    rule doExeAlu;
+    rule doExeAlu(!inIfc.pauseExecute);
         regToExeQ.deq;
         let regToExe = regToExeQ.first;
         let x = regToExe.data;
@@ -432,7 +434,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
         });
     endrule
 
-    rule doFinishAlu;
+    rule doFinishAlu(!inIfc.pauseExecute);
         exeToFinQ.deq;
         let exeToFin = exeToFinQ.first;
         let x = exeToFin.data;
@@ -498,6 +500,8 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
                     isCompressed: x.isCompressed},
                 spec_bits: exeToFin.spec_bits
             });
+            $display("alu mispredict pc¤: %x, nextPc: %x, %d",
+                     x.controlFlow.pc, x.controlFlow.nextPc, cur_cycle);
 `ifdef PERF_COUNT
             // performance counter
             if(inIfc.doStats) begin

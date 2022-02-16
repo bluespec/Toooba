@@ -46,6 +46,8 @@ export GShareGHistSz;
 export GShareGHist;
 export GShareTrainInfo;
 export mkGSharePred;
+export BhtIndexSz;
+export BhtIndex;
 
 // 16KB gshare predictor (to match BOOM evaluation paper)
 
@@ -60,6 +62,7 @@ typedef Bit#(BhtIndexSz) BhtIndex;
 // bookkeeping info a branch should keep for future training
 typedef struct {
     GShareGHist gHist;
+    BhtIndex index;
 } GShareTrainInfo deriving(Bits, Eq, FShow);
 
 // global history
@@ -82,6 +85,9 @@ module mkGSharePred(DirPredictor#(GShareTrainInfo));
     // EHR to record predict results in this cycle
     Ehr#(TAdd#(1, SupSize), Bit#(TLog#(TAdd#(SupSize, 1)))) predCnt <- mkEhr(0);
     Ehr#(TAdd#(1, SupSize), Bit#(SupSize)) predRes <- mkEhr(0);
+
+    // Lookup PC
+    Reg#(Addr) pc_reg <- mkRegU;
 
     function BhtIndex getIndex(Addr pc, GShareGHist gHist);
         Bit#(PCIndexSz) pcIdx = truncate(pc >> 2);
@@ -106,13 +112,14 @@ module mkGSharePred(DirPredictor#(GShareTrainInfo));
     Vector#(SupSize, DirPred#(GShareTrainInfo)) predIfc;
     for(Integer i = 0; i < valueof(SupSize); i = i+1) begin
         predIfc[i] = (interface DirPred;
-            method ActionValue#(DirPredResult#(GShareTrainInfo)) pred(Addr pc);
+            method ActionValue#(DirPredResult#(GShareTrainInfo)) pred;
                 // get the global history
                 // all previous branch in this cycle must be not taken
                 // otherwise this branch should be on wrong path
                 // because all inst in same cycle are fetched consecutively
                 GShareGHist gHist = curGHist >> predCnt[i];
-                Bool taken = isTaken(tab.sub(getIndex(pc, gHist)));
+                BhtIndex index = getIndex(offsetPc(pc_reg, i), gHist);
+                Bool taken = isTaken(tab.sub(index));
 
                 // record pred result
                 predCnt[i] <= predCnt[i] + 1;
@@ -124,7 +131,8 @@ module mkGSharePred(DirPredictor#(GShareTrainInfo));
                 return DirPredResult {
                     taken: taken,
                     train: GShareTrainInfo {
-                        gHist: gHist
+                        gHist: gHist,
+                        index: index
                     }
                 };
             endmethod
@@ -138,18 +146,19 @@ module mkGSharePred(DirPredictor#(GShareTrainInfo));
         predCnt[valueof(SupSize)] <= 0;
     endrule
 
+    method nextPc = pc_reg._write;
+
     interface pred = predIfc;
 
-    method Action update(Addr pc, Bool taken, GShareTrainInfo train, Bool mispred);
+    method Action update(Bool taken, GShareTrainInfo train, Bool mispred);
         // update history if mispred
         if(mispred) begin
             GShareGHist newHist = truncate({pack(taken), train.gHist} >> 1);
             globalHist.redirect(newHist);
         end
         // update sat cnt
-        let index = getIndex(pc, train.gHist);
-        Bit#(2) cnt = tab.sub(index);
-        tab.upd(index, updateCnt(cnt, taken));
+        Bit#(2) cnt = tab.sub(train.index);
+        tab.upd(train.index, updateCnt(cnt, taken));
     endmethod
 
     method flush = noAction;

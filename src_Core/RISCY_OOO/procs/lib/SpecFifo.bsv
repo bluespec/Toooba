@@ -25,7 +25,7 @@ import ProcTypes::*;
 import HasSpecBits::*;
 import Vector::*;
 import Ehr::*;
-import FIFOF::*;
+import DReg::*;
 import Assert::*;
 import Types::*;
 import ConfigReg::*;
@@ -168,7 +168,7 @@ module mkSpecFifo#(
         };
     endmethod
 
-    method Bool notEmpty = (valid[deqP][sched.validDeqPort]);
+    method Bool notEmpty = valid[deqP][sched.validDeqPort];
 
     interface SpeculationUpdate specUpdate;
         method Action correctSpeculation(SpecBits mask);
@@ -224,8 +224,8 @@ module mkSpecFifoCF#(
     Vector#(size, Reg#(t))                   row      <- replicateM(mkConfigRegU);
     Ehr#(3, Vector#(size, SpecBits))         specBits <- mkEhr(?);
 
-    FIFOF#(SpecBits)                     correctSpecF <- mkUGFIFOF;
-    FIFOF#(IncorrectSpeculation)       incorrectSpecF <- mkUGFIFOF;
+    Reg#(Maybe#(SpecBits))                correctSpec <- mkDReg(Invalid);
+    Reg#(Maybe#(IncorrectSpeculation))  incorrectSpec <- mkDReg(Invalid);
 
     Reg#(idxT) enqP <- mkConfigReg(0);
     Ehr#(2, idxT) deqP_ehr <- mkEhr(0);
@@ -246,17 +246,13 @@ module mkSpecFifoCF#(
         Vector#(size, SpecBits) newSpecBits = specBits[0];
         Vector#(size, Bool) newValid = valid[0];
         // Fold in CorrectSpec update:
-        if (correctSpecF.notEmpty) begin
-            SpecBits mask = correctSpecF.first();
-            correctSpecF.deq();
+        if (correctSpec matches tagged Valid .mask) begin
             // clear spec bits for all entries
             for (Integer i=0; i<valueOf(size); i=i+1)
                 newSpecBits[i] = newSpecBits[i] & mask;
         end
         // Fold in IncorrectSpec update:
-        if (incorrectSpecF.notEmpty) begin
-            IncorrectSpeculation incSpec = incorrectSpecF.first();
-            incorrectSpecF.deq();
+        if (incorrectSpec matches tagged Valid .incSpec) begin
             // clear entries
             for (Integer i=0; i<valueOf(size); i=i+1)
                 if(incSpec.kill_all || newSpecBits[i][incSpec.specTag] == 1'b1)
@@ -316,12 +312,12 @@ module mkSpecFifoCF#(
         };
     endmethod
 
-    method Bool notEmpty = (valid[1][deqP]);
+    method Bool notEmpty = valid[1][deqP];
 
     interface SpeculationUpdate specUpdate;
-        method correctSpeculation = correctSpecF.enq;
+        method correctSpeculation(mask) = correctSpec._write(Valid(mask));
         method incorrectSpeculation(kill_all, specTag) =
-            incorrectSpecF.enq(IncorrectSpeculation{kill_all: kill_all, specTag: specTag});
+            incorrectSpec._write(Valid(IncorrectSpeculation{kill_all: kill_all, specTag: specTag}));
     endinterface
 endmodule
 
@@ -437,8 +433,8 @@ module mkSearchableSpecFifoCF#(
     Vector#(size, Reg#(t))                   row      <- replicateM(mkConfigRegU);
     Ehr#(3, Vector#(size, SpecBits))         specBits <- mkEhr(?);
 
-    FIFOF#(SpecBits)                     correctSpecF <- mkUGFIFOF;
-    FIFOF#(IncorrectSpeculation)       incorrectSpecF <- mkUGFIFOF;
+    Reg#(Maybe#(SpecBits))                correctSpec <- mkDReg(Invalid);
+    Reg#(Maybe#(IncorrectSpeculation))  incorrectSpec <- mkDReg(Invalid);
 
     Reg#(idxT) enqP <- mkConfigReg(0);
     Ehr#(2, idxT) deqP_ehr <- mkEhr(0);
@@ -459,17 +455,13 @@ module mkSearchableSpecFifoCF#(
         Vector#(size, SpecBits) newSpecBits = specBits[0];
         Vector#(size, Bool) newValid = valid[0];
         // Fold in CorrectSpec update:
-        if (correctSpecF.notEmpty) begin
-            SpecBits mask = correctSpecF.first();
-            correctSpecF.deq();
+        if (correctSpec matches tagged Valid .mask) begin
             // clear spec bits for all entries
             for (Integer i=0; i<valueOf(size); i=i+1)
                 newSpecBits[i] = newSpecBits[i] & mask;
         end
         // Fold in IncorrectSpec update:
-        if (incorrectSpecF.notEmpty) begin
-            IncorrectSpeculation incSpec = incorrectSpecF.first();
-            incorrectSpecF.deq();
+        if (incorrectSpec matches tagged Valid .incSpec) begin
             // clear entries
             for (Integer i=0; i<valueOf(size); i=i+1)
                 if(incSpec.kill_all || newSpecBits[i][incSpec.specTag] == 1'b1)
@@ -540,8 +532,8 @@ module mkSearchableSpecFifoCF#(
     endmethod
 
     interface SpeculationUpdate specUpdate;
-        method correctSpeculation = correctSpecF.enq;
+        method correctSpeculation(mask) = correctSpec._write(Valid(mask));
         method incorrectSpeculation(kill_all, specTag) =
-            incorrectSpecF.enq(IncorrectSpeculation{kill_all: kill_all, specTag: specTag});
+            incorrectSpec._write(Valid(IncorrectSpeculation{kill_all: kill_all, specTag: specTag}));
     endinterface
 endmodule

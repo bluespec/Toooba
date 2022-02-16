@@ -167,6 +167,30 @@
 // ==== CORE SIZE ====
 //
 
+`ifdef CORE_MINI
+
+    // superscalar
+    `define sizeSup 2
+
+    // ROB
+    `define ROB_SIZE 32
+
+    // speculation
+    `define NUM_EPOCHS 4
+    `define NUM_SPEC_TAGS 4
+
+    // LSQ
+    `define LDQ_SIZE 8
+    `define STQ_SIZE 4
+    `define SB_SIZE 2
+
+    // reservation station sizes
+    `define RS_ALU_SIZE 8
+    `define RS_MEM_SIZE 4
+    `define RS_FPUMULDIV_SIZE 4
+
+`endif
+
 `ifdef CORE_TINY
 
     // superscalar

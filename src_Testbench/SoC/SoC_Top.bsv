@@ -204,7 +204,7 @@ module mkSoC_Top #(Reset dm_power_on_reset)
    route_vector[mem0_controller_slave_num] = soc_map.m_mem0_controller_addr_range;
 
    // Fabric to UART0
-   slave_vector[uart0_slave_num] = zeroSlaveUserFields(uart0.slave);
+   slave_vector[uart0_slave_num] = zero_AXI4_Slave_user(uart0.slave);
    route_vector[uart0_slave_num] = soc_map.m_uart0_addr_range;
 
 `ifdef INCLUDE_ACCEL0
