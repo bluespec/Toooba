@@ -104,6 +104,7 @@ typedef struct {
     Maybe#(PhyDst) dst;
     InstTag tag;
     PredTrainInfo trainInfo;
+    Bool link;
     Bool isCompressed;
     // result
     CapPipe data; // alu compute result
@@ -151,6 +152,7 @@ endmodule
 typedef struct {
     CapMem pc;
     CapMem nextPc;
+    Bool link;
     IType iType;
     Bool taken;
     PredTrainInfo trainInfo;
@@ -364,15 +366,12 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
         // execution
         ExecResult exec_result = basicExec(x.dInst, x.rVal1, x.rVal2, cast(x.pc), cast(x.ppc), x.orig_inst);
 
+        Bool link = (case (x.dInst.iType)
+                J, CJAL, CJALR, Jr: isValid(x.dst);
+                default: False;
+            endcase);
 `ifdef RAS_HIT_TRACING
-        function Bool linkedR(Bit#(5) r);
-           Bool res = False;
-           if ((r == 1 || r == 5)) begin
-              res = True;
-           end
-           return res;
-        endfunction
-        if (linkedR(x.orig_inst[19:15]) && (x.orig_inst[19:15] != x.orig_inst[11:7])) begin
+        if (link) begin
             case (x.dInst.iType)
                 Jr, CJALR: $display("Jr/CJALR ra: PC: %x Mispredict: %x , %x vs %x src1: %d", getAddr(x.pc), exec_result.controlFlow.mispredict, getAddr(exec_result.controlFlow.nextPc), getAddr(x.ppc), x.orig_inst[19:15]);
             endcase
@@ -416,6 +415,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
                 dst: x.dst,
                 tag: x.tag,
                 trainInfo: x.trainInfo,
+                link: link,
                 isCompressed: x.orig_inst[1:0] != 2'b11,
                 data: exec_result.data,
                 csrData: is_scr_or_csr ? CSRData (exec_result.csrData) : PPC (cast(exec_result.controlFlow.nextPc)),
@@ -493,6 +493,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
                 data: FetchTrainBP {
                     pc: cast(x.controlFlow.pc),
                     nextPc: cast(x.controlFlow.nextPc),
+                    link: x.link,
                     iType: x.iType,
                     taken: x.controlFlow.taken,
                     trainInfo: x.trainInfo,
@@ -526,6 +527,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
                     data: FetchTrainBP {
                         pc: cast(x.controlFlow.pc),
                         nextPc: cast(x.controlFlow.nextPc),
+                        link: x.link,
                         iType: x.iType,
                         taken: x.controlFlow.taken,
                         trainInfo: x.trainInfo,

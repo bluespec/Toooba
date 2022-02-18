@@ -45,8 +45,7 @@ import CHERICap::*;
 
 interface RAS;
     method CapMem first;
-    // first pop, then push
-    method ActionValue#(RasIndex) popPush(Bool pop, Maybe#(CapMem) pushAddr);
+    method ActionValue#(RasIndex) pop(Bool doPop);
 endinterface
 
 // Local RAS Typedefs SHOULD BE A POWER OF TWO.
@@ -56,6 +55,7 @@ typedef RasIndex RasPredTrainInfo;
 
 interface ReturnAddrStack;
     interface Vector#(SupSize, RAS) ras;
+    method Action push(CapMem pushAddr);
     method Action setHead(RasIndex h);
     method Action flush;
     method Bool flush_done;
@@ -63,16 +63,16 @@ endinterface
 
 (* synthesize *)
 module mkRas(ReturnAddrStack) provisos(NumAlias#(TExp#(TLog#(RasEntries)), RasEntries));
-    Vector#(RasEntries, Ehr#(TAdd#(SupSize, 1), CapMem)) stack <- replicateM(mkEhr(nullCap));
+    Vector#(RasEntries, Ehr#(2, CapMem)) stack <- replicateM(mkEhr(nullCap));
     // head points past valid data
     // to gracefully overflow, head is allowed to overflow to 0 and overwrite the oldest data
-    Ehr#(TAdd#(SupSize, 2), RasIndex) head <- mkEhr(0);
+    Ehr#(TAdd#(SupSize, 3), RasIndex) head <- mkEhr(0);
 
 `ifdef SECURITY
     Reg#(Bool) flushDone <- mkReg(True);
 
     rule doFlush(!flushDone);
-        writeVReg(getVEhrPort(stack, valueof(SupSize)), replicate(0));
+        writeVReg(getVEhrPort(stack, 0), replicate(0));
         head[valueof(SupSize) + 1] <= 0;
         flushDone <= True;
     endrule
@@ -82,26 +82,29 @@ module mkRas(ReturnAddrStack) provisos(NumAlias#(TExp#(TLog#(RasEntries)), RasEn
     for(Integer i = 0; i < valueof(SupSize); i = i+1) begin
         rasIfc[i] = (interface RAS;
             method CapMem first;
-                return stack[head[i]][i];
+                return stack[head[i]][0];
             endmethod
-            method ActionValue#(RasIndex) popPush(Bool pop, Maybe#(CapMem) pushAddr);
-                // first pop, then push
+            method ActionValue#(RasIndex) pop(Bool doPop);
                 RasIndex h = head[i];
-                if(pop) begin
-                    h = h - 1;
+                if (doPop) begin
+                    head[i] <= head[i] - 1;
+                    $display("RAS pop head<-%d, val:%x", head[i] - 1, stack[head[i]][0]);
                 end
-                if(pushAddr matches tagged Valid .addr) begin
-                    h = h + 1;
-                    stack[h][i] <= addr;
-                end
-                head[i] <= h;
                 return h;
             endmethod
         endinterface);
     end
 
+    method Action push(CapMem pushAddr);
+        Reg#(RasIndex) h = head[valueof(SupSize) + 2];
+        stack[h+1][1] <= pushAddr;
+        $display("RAS push head<-%d, val:%x", h+1, pushAddr);
+        h <= h+1;
+    endmethod
+
     method Action setHead(RasIndex h);
         head[valueof(SupSize)] <= h;
+        $display("RAS fixup head<-%d", h);
     endmethod
 
     interface ras = rasIfc;

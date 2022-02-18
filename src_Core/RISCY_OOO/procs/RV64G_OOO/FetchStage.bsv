@@ -145,7 +145,7 @@ interface FetchStage;
 `endif
     method Action done_flushing();
     method Action train_predictors(
-        CapMem pc, CapMem next_pc, IType iType, Bool taken,
+        CapMem pc, CapMem next_pc, IType iType, Bool taken, Bool link,
         PredTrainInfo trainInfo, Bool mispred, Bool isCompressed
     );
     interface SpeculationUpdate specUpdate;
@@ -728,51 +728,29 @@ module mkFetchStage(FetchStage);
                   // direction predict
                   Maybe#(CapMem) nextPc = dir_ppc;
                   // return address stack link reg is x1 or x5
-                  function Bool linkedR(Maybe#(ArchRIndx) register);
-                     Bool res = False;
-                     if (register matches tagged Valid .r &&& (r == tagged Gpr 1 || r == tagged Gpr 5)) begin
-                        res = True;
-                     end
-                     return res;
-                  endfunction
                   Bool dst_link = linkedR(regs.dst);
                   Bool src1_link = linkedR(regs.src1);
-                  CapMem push_addr = addPc(pc, ((in.inst_kind == Inst_32b) ? 4 : 2));
-                  Maybe#(CapMem) m_push_addr = Invalid;
 
                   CapMem pop_addr = ras.ras[i].first;
-                  Bool pop = False;
-                  if ((dInst.iType == J || dInst.iType == CJAL) && dst_link) begin
-                     // rs1 is invalid, i.e., not link: push
-                     m_push_addr = Valid (push_addr);
-                  end
-                  else if (dInst.iType == Jr || dInst.iType == CJALR) begin // jalr TODO CCALL could be push
+                  Bool doPop = False;
+                  if (dInst.iType == Jr || dInst.iType == CJALR) begin // jalr TODO CCALL could be push
                                                                             //           pop or nop (if to trampoline)
                                                                             //           Add hint to architecture?
                      if (!dst_link && src1_link) begin
                         // rd is link while rs1 is not: pop
-                        pop = True;
+                        doPop = True;
                         nextPc = Valid (pop_addr);
-                     end
-                     else if (!src1_link && dst_link) begin
-                        // rs1 is not link while rd is link: push
-                        m_push_addr = Valid (push_addr);
                      end
                      else if (dst_link && src1_link) begin
                         // both rd and rs1 are links
                         if (regs.src1 != regs.dst) begin
                            // not same reg: first pop, then push
                            nextPc = Valid (pop_addr);
-                           pop = True;
-                           m_push_addr = Valid (push_addr);
-                        end
-                        else begin
-                           // same reg: push
-                           m_push_addr = Valid (push_addr);
+                           doPop = True;
                         end
                      end
                   end
-                  trainInfo.ras <- ras.ras[i].popPush(pop, m_push_addr);
+                  trainInfo.ras <- ras.ras[i].pop(doPop);
                   if(verbose) begin
                      $display("Branch prediction: ", fshow(dInst.iType), " ; ", fshow(pc), " ; ",
                               fshow(ppc), " ; ", fshow(nextPc));
@@ -967,7 +945,7 @@ module mkFetchStage(FetchStage);
     endmethod
 
     method Action train_predictors(
-        CapMem pc, CapMem next_pc, IType iType, Bool taken,
+        CapMem pc, CapMem next_pc, IType iType, Bool taken, Bool link,
         PredTrainInfo trainInfo, Bool mispred, Bool isCompressed
     );
         //if (iType == J || iType == CJAL || (iType == Br && next_pc < pc)) begin
@@ -975,6 +953,7 @@ module mkFetchStage(FetchStage);
         //    // next_pc != pc + 4 is a substitute for taken
         //    nextAddrPred.update(pc, next_pc, taken);
         //end
+        if (link) ras.push(addPc(pc, isCompressed ? 2 : 4));
         if (iType == Br) begin
             // Train the direction predictor for all branches
             dirPred.update(taken, trainInfo.dir, mispred);

@@ -465,7 +465,7 @@ module mkCore#(CoreId coreId)(Core);
                 let train = trainBPQ[i].first.data;
                 trainBPQ[i].deq;
                 fetchStage.train_predictors(
-                    train.pc, train.nextPc, train.iType, train.taken,
+                    train.pc, train.nextPc, train.iType, train.taken, train.link,
                     train.trainInfo, train.mispred, train.isCompressed
                 );
             endrule

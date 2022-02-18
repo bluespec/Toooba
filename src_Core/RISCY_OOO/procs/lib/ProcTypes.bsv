@@ -664,6 +664,14 @@ typedef struct {
     Maybe#(ImmData) imm;
 } DecodedInst deriving(Bits, Eq, FShow);
 
+function Bool linkedR(Maybe#(ArchRIndx) register);
+   Bool res = False;
+   if (register matches tagged Valid .r &&& (r == tagged Gpr 1 || r == tagged Gpr 5)) begin
+      res = True;
+   end
+   return res;
+endfunction
+
 function Maybe#(Data) getDInstImm(DecodedInst dInst);
     return dInst.imm matches tagged Valid .d ? Valid (signExtend(d)) : Invalid;
 endfunction
