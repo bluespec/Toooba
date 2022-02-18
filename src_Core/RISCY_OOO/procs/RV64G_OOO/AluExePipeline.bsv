@@ -371,7 +371,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
                 default: False;
             endcase);
 `ifdef RAS_HIT_TRACING
-        if (link) begin
+        if (linkedR(Valid(tagged Gpr x.orig_inst[19:15])) && (x.orig_inst[19:15] != x.orig_inst[11:7])) begin
             case (x.dInst.iType)
                 Jr, CJALR: $display("Jr/CJALR ra: PC: %x Mispredict: %x , %x vs %x src1: %d", getAddr(x.pc), exec_result.controlFlow.mispredict, getAddr(exec_result.controlFlow.nextPc), getAddr(x.ppc), x.orig_inst[19:15]);
             endcase
