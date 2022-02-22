@@ -480,6 +480,11 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
 `endif
 `endif
 
+        let train_spec_bits = 0;
+`ifdef NO_SPEC_TRAINING
+        train_spec_bits = exeToFin.spec_bits;
+`endif
+
         // handle spec tags for branch predictions
         // TODO what happens here if we trap?
         (* split *)
@@ -499,7 +504,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
                     trainInfo: x.trainInfo,
                     mispred: True,
                     isCompressed: x.isCompressed},
-                spec_bits: exeToFin.spec_bits
+                spec_bits: train_spec_bits
             });
             $display("alu mispredict pc¤: %x, nextPc: %x, %d",
                      x.controlFlow.pc, x.controlFlow.nextPc, cur_cycle);
@@ -533,7 +538,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
                         trainInfo: x.trainInfo,
                         mispred: False,
                         isCompressed: x.isCompressed},
-                    spec_bits: exeToFin.spec_bits
+                    spec_bits: train_spec_bits
                 });
             end
         end

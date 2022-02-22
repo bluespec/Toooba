@@ -349,6 +349,8 @@ module mkFetchStage(FetchStage);
     // So we stall until the next redirection happens
     // The next redirect is either by the trap/system inst or an older one
     Ehr#(2, Bool) waitForRedirect <- mkEhr(False);
+    Reg#(Bit#(32)) execute_redirect_count <- mkReg(0);
+    Reg#(Bit#(32)) decode_redirect_count <- mkReg(0);
 
     // Stall fetch during the flush triggered by the procesing trap/system inst in commit stage
     // We stall until the flush is done
@@ -379,7 +381,11 @@ module mkFetchStage(FetchStage);
     function Action set_main_epoch(Epoch e, SpecBits sb) = (action
         f_main_epoch <= e;
         if (main_epoch_spec.notEmpty) main_epoch_spec.deq;
+`ifdef NO_SPEC_REDIRECT
         main_epoch_spec.enq(ToSpecFifo{data: ?, spec_bits: sb});
+`else
+        main_epoch_spec.enq(ToSpecFifo{data: ?, spec_bits: 0});
+`endif
     endaction);
 
     // Pipeline Stage FIFOs
@@ -683,6 +689,7 @@ module mkFetchStage(FetchStage);
       Maybe#(IType) redirectInst = Invalid;
 `endif
       Bool likely_epoch_change = False;
+      Maybe#(CapMem) m_push_addr = Invalid;
       for (Integer i = 0; i < valueof(SupSize); i=i+1) begin
          CapMem pc = decompressPc(validValue(decodeIn[i]).pc);
          CapMem ppc = decompressPc(validValue(decodeIn[i]).ppc);
@@ -733,8 +740,13 @@ module mkFetchStage(FetchStage);
                   Bool src1_link = linkedR(regs.src1);
 
                   CapMem pop_addr = ras.ras[i].first;
+                  CapMem push_addr = addPc(pc, ((in.inst_kind == Inst_32b) ? 4 : 2));
                   Bool doPop = False;
-                  if (dInst.iType == Jr || dInst.iType == CJALR) begin // jalr TODO CCALL could be push
+                  if ((dInst.iType == J || dInst.iType == CJAL) && dst_link) begin
+                     // rs1 is invalid, i.e., not link: push
+                     m_push_addr = Valid (push_addr);
+                  end
+                  else if (dInst.iType == Jr || dInst.iType == CJALR) begin // jalr TODO CCALL could be push
                                                                             //           pop or nop (if to trampoline)
                                                                             //           Add hint to architecture?
                      if (!dst_link && src1_link) begin
@@ -742,12 +754,21 @@ module mkFetchStage(FetchStage);
                         doPop = True;
                         nextPc = Valid (pop_addr);
                      end
+                     else if (!src1_link && dst_link) begin
+                        // rs1 is not link while rd is link: push
+                        m_push_addr = Valid (push_addr);
+                     end
                      else if (dst_link && src1_link) begin
                         // both rd and rs1 are links
                         if (regs.src1 != regs.dst) begin
                            // not same reg: first pop, then push
                            nextPc = Valid (pop_addr);
                            doPop = True;
+                           m_push_addr = Valid (push_addr);
+                        end
+                        else begin
+                           // same reg: push
+                           m_push_addr = Valid (push_addr);
                         end
                      end
                   end
@@ -757,13 +778,16 @@ module mkFetchStage(FetchStage);
                               fshow(ppc), " ; ", fshow(nextPc));
                   end
 
+`ifdef NO_SPEC_STRAIGHT_PATH
                   // If we don't have a good guess about where we are going, don't proceed.
                   if ((!isValid(nextPc)) && (!in.pred_jump)) begin
                      // Invalid virtual address to ensure redirection.
                      ppc = setAddrUnsafe(nullCap, {2'b01,?});
                      decode_epoch_local = !decode_epoch_local;
                   // check previous mispred
-                  end if (nextPc matches tagged Valid .decode_pred_next_pc &&& (decode_pred_next_pc != ppc)) begin
+                  end
+`endif
+                  if (nextPc matches tagged Valid .decode_pred_next_pc &&& (decode_pred_next_pc != ppc)) begin
                      if (verbose) $display("%x: ppc and decodeppc :  %h %h", pc, ppc, decode_pred_next_pc);
                      decode_epoch_local = !decode_epoch_local;
                      redirectPc = Valid (decode_pred_next_pc); // record redirect next pc
@@ -812,9 +836,14 @@ module mkFetchStage(FetchStage);
          end // if (decodeIn[i] matches tagged Valid .in)
       end // for (Integer i = 0; i < valueof(SupSize); i=i+1)
 
+`ifndef NO_SPEC_RSB_PUSH
+      if (m_push_addr matches tagged Valid .pc) ras.push(pc);
+`endif
+
       // update PC and epoch
       if(redirectPc matches tagged Valid .rp) begin
          pc_reg[pc_decode_port] <= rp;
+         decode_redirect_count <= decode_redirect_count + 1;
       end
 `ifdef RVFI_DII
       doAssert(isValid(redirectPc) == isValid(redirectDiiPid), "PC and DII redirections always happen together");
@@ -842,6 +871,10 @@ module mkFetchStage(FetchStage);
 
    rule reportDecodePc;
        dirPred.nextPc(decode_pc_reg[decode_pc_final_port]);
+   endrule
+
+   rule displayRedirects;
+        $display("%d : dr: %d er: %d", cur_cycle, decode_redirect_count, execute_redirect_count);
    endrule
 
     // train next addr pred: we use a wire to catch outputs of napTrainByDecQ.
@@ -924,6 +957,7 @@ module mkFetchStage(FetchStage);
 `ifdef PERFORMANCE_MONITORING
         redirect_evt_reg <= True;
 `endif
+        execute_redirect_count <= execute_redirect_count + 1;
     endmethod
 
 `ifdef INCLUDE_GDB_CONTROL
@@ -954,7 +988,9 @@ module mkFetchStage(FetchStage);
         //    // next_pc != pc + 4 is a substitute for taken
         //    nextAddrPred.update(pc, next_pc, taken);
         //end
+`ifdef NO_SPEC_RSB_PUSH
         if (link) ras.push(addPc(pc, isCompressed ? 2 : 4));
+`endif
         if (iType == Br) begin
             // Train the direction predictor for all branches
             dirPred.update(taken, trainInfo.dir, mispred);
@@ -964,7 +1000,9 @@ module mkFetchStage(FetchStage);
         if(mispred) begin
             let last_x16_pc = addPc(pc, (isCompressed ? 0 : 2));
             napTrainByExe.wset(TrainNAP {pc: last_x16_pc, nextPc: next_pc});
+`ifdef SPEC_RSB_FIXUP
             if (!rasFixupDelay) ras.setHead(trainInfo.ras);
+`endif
         end
         rasFixupDelay <= link;
     endmethod

@@ -142,8 +142,8 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
     SplitLSQ lsq = inIfc.lsqIfc;
 
     // performance counter
-`ifdef PERF_COUNT
     Count#(Data) supRenameCnt <- mkCount(0);
+`ifdef PERF_COUNT
 `ifdef SECURITY
     Count#(Data) specNoneCycles <- mkCount(0);
     Count#(Data) specNonMemCycles <- mkCount(0);
@@ -818,6 +818,10 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         return rdy[idx] ? Valid (idx) : Invalid;
     endfunction
 
+    rule displayRenameCount;
+        $display("%d : rc:%d", cur_cycle, supRenameCnt);
+    endrule
+
     // rename correct path inst
     rule doRenaming(
         !inIfc.pendingMMIOPRq // stall when MMIO pRq is pending
@@ -1189,6 +1193,8 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                 supRenameCnt.incr(1);
             end
         end
+`else
+        supRenameCnt.incr(zeroExtend(renameCnt));
 `endif
 `ifdef PERFORMANCE_MONITORING
         EventsTransExe events = unpack(0);
