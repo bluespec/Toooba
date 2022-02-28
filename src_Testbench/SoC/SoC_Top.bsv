@@ -209,7 +209,7 @@ module mkSoC_Top #(Reset dm_power_on_reset)
 
 `ifdef INCLUDE_ACCEL0
    // Fabric to accel0
-   slave_vector[accel0_slave_num] = zeroSlaveUserFields (accel0.slave);
+   slave_vector[accel0_slave_num] = zero_AXI4_Slave_user(accel0.slave);
    route_vector[accel0_slave_num] = soc_map.m_accel0_addr_range;
 `endif
 
