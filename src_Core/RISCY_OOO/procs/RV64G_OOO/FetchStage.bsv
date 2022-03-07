@@ -240,6 +240,31 @@ typedef struct {
   Bool mispred_first_half;
 } InstrFromFetch3 deriving(Bits, Eq, FShow);
 
+function Bool popInst(DecodeResult dr);
+    let dInst = dr.dInst;
+    Bool doPop = False;
+    Bool dst_link = linkedR(dr.regs.dst);
+    Bool src1_link = linkedR(dr.regs.src1);
+    if (dr.dInst.iType == Jr || dr.dInst.iType == CJALR) begin // jalr TODO CCALL could be push
+                                                              //           pop or nop (if to trampoline)
+                                                              //           Add hint to architecture?
+       if (!dst_link && src1_link) begin
+          // rd is link while rs1 is not: pop
+          doPop = True;
+       end
+       else if (!src1_link && dst_link) begin
+          doPop = doPop; // Nothing
+       end
+       else if (dst_link && src1_link) begin
+          // both rd and rs1 are links
+          if (dr.regs.src1 != dr.regs.dst) begin
+             doPop = True;
+          end
+       end
+    end
+    return doPop;
+endfunction
+
 function InstrFromFetch3 fetch3_2_instC(Fetch3ToDecode in, Instruction inst, Bit#(32) orig_inst) =
    InstrFromFetch3 {
       pc: in.pc,
@@ -610,12 +635,6 @@ module mkFetchStage(FetchStage);
         end
     endrule: doFetch3
 
-   Bool delay_epoch = False;
-`ifdef NO_SPEC_REDIRECT
-   // Delay decode if the head of this buffer matches the current epoch;
-   // this means the source of this epoch is still speculative.
-   delay_epoch = (main_epoch_spec.first.spec_bits != 0);
-`endif
    function Bool isCurrent(Fetch3ToDecode in) = (main_epoch_spec.notEmpty &&
                                                  in.main_epoch == f_main_epoch &&
                                                  in.decode_epoch == decode_epoch[0]);
@@ -633,44 +652,63 @@ module mkFetchStage(FetchStage);
                 main_epoch_spec.first.spec_bits, main_epoch_spec.notEmpty, isCurrent(f32d.deqS[0].first), f_main_epoch, f32d.deqS[0].first.main_epoch);
    endrule
 
-   rule doDecode(f32d.deqS[0].canDeq && isCurrent(f32d.deqS[0].first) && !delay_epoch);
-      Vector#(SupSize, Maybe#(InstrFromFetch3)) decodeIn = replicate(Invalid);
-      // Express the incoming fragments as a vector of maybes.
-      Vector#(SupSizeX2, Maybe#(Fetch3ToDecode)) frags;
-      for (Integer i = 0; i < valueOf(SupSizeX2); i = i + 1)
-         frags[i] = (f32d.deqS[i].canDeq) ? Valid (f32d.deqS[i].first) : Invalid;
-      // Pick as up to SupSize instructions from the f32d SupFifo.
-      // Stop picking when we have SupSize instructions or when we have exhausted the ports on the instruction fragment FIFO.
-      Maybe#(Bit#(TLog#(SupSizeX2))) m_used_frag_count = Invalid;
-      Bit#(TLog#(SupSize)) pick_count = 0;
-      Bool prev_frag_available = False;
-      for (Integer i = 0; i < valueOf(SupSizeX2) && !isValid(decodeIn[valueOf(SupSize) - 1]); i = i + 1) begin
-         Maybe#(InstrFromFetch3) new_pick = Invalid;
-         if (frags[i] matches tagged Valid .frag) begin
-            Fetch3ToDecode prev_frag = (i != 0) ? validValue(frags[i-1]) : ?;
-            if (prev_frag_available &&& !is_16b_inst(prev_frag.inst_frag)) begin // 2nd half of 32-bit instruction
-               new_pick = tagged Valid fetch3s_2_inst(frag, prev_frag);
-               if (!validValue(new_pick).mispred_first_half) begin
-                  doAssert(getAddr(decompressPc(prev_frag.pc))+2 == getAddr(decompressPc(frag.pc)), "Attached fragments with non-contigious PCs");
-`ifdef RVFI_DII
-                  doAssert(prev_frag.dii_pid+1 == frag.dii_pid, "Attached fragments with non-contigious DII IDs");
-`endif
-               end
-            end else if (is_16b_inst(frag.inst_frag) || isValid(frag.cause)) begin // 16-bit instruction
-               new_pick = tagged Valid fetch3_2_instC(frag,
-                                                      fv_decode_C (misa, misa_mxl_64, getFlags(decompressPc(frag.pc))==1, frag.inst_frag),
-                                                      zeroExtend(frag.inst_frag));
-            end
+   Vector#(SupSize, Maybe#(InstrFromFetch3)) decodeIn = replicate(Invalid);
+   // Express the incoming fragments as a vector of maybes.
+   Vector#(SupSizeX2, Maybe#(Fetch3ToDecode)) frags;
+   for (Integer i = 0; i < valueOf(SupSizeX2); i = i + 1)
+      frags[i] = (f32d.deqS[i].canDeq) ? Valid (f32d.deqS[i].first) : Invalid;
+   // Pick as up to SupSize instructions from the f32d SupFifo.
+   // Stop picking when we have SupSize instructions or when we have exhausted the ports on the instruction fragment FIFO.
+   Maybe#(Bit#(TLog#(SupSizeX2))) m_used_frag_count = Invalid;
+   Bit#(TLog#(SupSize)) pick_count = 0;
+   Bool prev_frag_available = False;
+   for (Integer i = 0; i < valueOf(SupSizeX2) && !isValid(decodeIn[valueOf(SupSize) - 1]); i = i + 1) begin
+      Maybe#(InstrFromFetch3) new_pick = Invalid;
+      if (frags[i] matches tagged Valid .frag) begin
+         Fetch3ToDecode prev_frag = (i != 0) ? validValue(frags[i-1]) : ?;
+         if (prev_frag_available &&& !is_16b_inst(prev_frag.inst_frag)) begin // 2nd half of 32-bit instruction
+            new_pick = tagged Valid fetch3s_2_inst(frag, prev_frag);
+            /*if (!validValue(new_pick).mispred_first_half) begin
+               doAssert(getAddr(decompressPc(prev_frag.pc))+2 == getAddr(decompressPc(frag.pc)), "Attached fragments with non-contigious PCs");
+   `ifdef RVFI_DII
+               doAssert(prev_frag.dii_pid+1 == frag.dii_pid, "Attached fragments with non-contigious DII IDs");
+   `endif
+            end*/
+         end else if (is_16b_inst(frag.inst_frag) || isValid(frag.cause)) begin // 16-bit instruction
+            new_pick = tagged Valid fetch3_2_instC(frag,
+                                                   fv_decode_C (misa, misa_mxl_64, getFlags(decompressPc(frag.pc))==1, frag.inst_frag),
+                                                   zeroExtend(frag.inst_frag));
          end
-         decodeIn[pick_count] = new_pick;
-         if (isValid(new_pick)) begin
-            if (verbose)
-               $display("Decode: picked instruction %d, next frag %d :", pick_count, i, fshow(decodeIn[pick_count]));
-            pick_count = pick_count + truncate(8'b1);
-            m_used_frag_count = tagged Valid fromInteger(i);
-            prev_frag_available = False;
-         end else prev_frag_available = isValid(frags[i]);
       end
+      decodeIn[pick_count] = new_pick;
+      if (isValid(new_pick)) begin
+         //if (verbose)
+         //    $display("Decode: picked instruction %d, next frag %d :", pick_count, i, fshow(decodeIn[pick_count]));
+         pick_count = pick_count + truncate(8'b1);
+         m_used_frag_count = tagged Valid fromInteger(i);
+         prev_frag_available = False;
+      end else prev_frag_available = isValid(frags[i]);
+   end
+   Bool anyReturns = False;
+   Vector#(SupSize, DecodeResult) decodeResults = ?;
+   for (Integer i = 0; i < valueOf(SupSize); i = i + 1) begin
+      CapMem pc = decompressPc(validValue(decodeIn[i]).pc);
+      decodeResults[i] = decode(validValue(decodeIn[i]).inst, getFlags(pc)==1); // Decode 32b inst, or 32b expansion of 16b inst
+      if (popInst(decodeResults[i])) anyReturns = True;
+   end
+
+   Bool delay_epoch = False;
+`ifdef NO_SPEC_REDIRECT
+   // Delay decode if the head of this buffer matches the current epoch;
+   // this means the source of this epoch is still speculative.
+   delay_epoch = (main_epoch_spec.first.spec_bits != 0);
+`endif
+`ifdef NO_SPEC_RSB_PUSH
+   Bool delayForPop = ras.pendingPush && anyReturns;
+   delay_epoch = delay_epoch || delayForPop;
+`endif
+
+   rule doDecode(f32d.deqS[0].canDeq && isCurrent(f32d.deqS[0].first) && !delay_epoch);
       if (m_used_frag_count matches tagged Valid .used_frag_count) begin
          for (Integer i = 0; i < valueOf(SupSizeX2) && fromInteger(i) <= used_frag_count; i = i + 1) f32d.deqS[i].deq;
          if (verbose)
@@ -693,12 +731,12 @@ module mkFetchStage(FetchStage);
       for (Integer i = 0; i < valueof(SupSize); i=i+1) begin
          CapMem pc = decompressPc(validValue(decodeIn[i]).pc);
          CapMem ppc = decompressPc(validValue(decodeIn[i]).ppc);
-         let decode_result = decode(validValue(decodeIn[i]).inst, getFlags(pc)==1); // Decode 32b inst, or 32b expansion of 16b inst
+         let decode_result = decodeResults[i]; // Decode 32b inst, or 32b expansion of 16b inst
          let dInst = decode_result.dInst;
          let regs = decode_result.regs;
          PredTrainInfo trainInfo = ?; // dir pred training bookkeeping
          DirPredResult#(DirPredTrainInfo) pred_res = DirPredResult{taken: False, train: ?};
-         if(decode_result.dInst.iType == Br && !likely_epoch_change) begin
+         if(dInst.iType == Br && !likely_epoch_change) begin
             pred_res <- dirPred.pred[i].pred;
             trainInfo.dir = pred_res.train;
             likely_epoch_change = (pred_res.taken != validValue(decodeIn[i]).pred_jump);
@@ -836,8 +874,11 @@ module mkFetchStage(FetchStage);
          end // if (decodeIn[i] matches tagged Valid .in)
       end // for (Integer i = 0; i < valueof(SupSize); i=i+1)
 
-`ifndef NO_SPEC_RSB_PUSH
-      if (m_push_addr matches tagged Valid .pc) ras.push(pc);
+      if (m_push_addr matches tagged Valid .pc)
+`ifdef NO_SPEC_RSB_PUSH
+         ras.willPush;
+`else
+         ras.push(pc);
 `endif
 
       // update PC and epoch
