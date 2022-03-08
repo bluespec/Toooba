@@ -705,6 +705,9 @@ module mkFetchStage(FetchStage);
 `endif
 `ifdef NO_SPEC_RSB_PUSH
    Bool delayForPop = ras.pendingPush && anyReturns;
+   rule showDelayForPop(delayForPop);
+      $display("RAS delayForPop; ras.pendingPush: %x, anyReturns: %x    %d", ras.pendingPush, anyReturns, cur_cycle);
+   endrule
    delay_epoch = delay_epoch || delayForPop;
 `endif
 
