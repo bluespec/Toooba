@@ -199,7 +199,7 @@ typedef struct {
     Addr addr;
     Trap trap;
     Bit #(32) orig_inst;
-`ifdef RVFI_DII
+`ifdef RVFI
     ToReorderBuffer x;
 `endif
 } CommitTrap deriving(Bits, FShow);
@@ -686,7 +686,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
             pc: x.pc,
             addr: vaddr,
             orig_inst: x.orig_inst
-`ifdef RVFI_DII
+`ifdef RVFI
             , x: x
 `endif
         });

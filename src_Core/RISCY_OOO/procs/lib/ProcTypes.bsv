@@ -46,7 +46,7 @@ import MemoryTypes::*;
 import CHERICap::*;
 import CHERICC_Fat::*;
 import ISA_Decls_CHERI::*;
-`ifdef RVFI_DII
+`ifdef RVFI
 import GetPut::*;
 import RVFI_DII_Types::*;
 `endif
@@ -86,8 +86,10 @@ typedef struct {
 `endif
 } InstTag deriving(Bits, Eq, FShow);
 
-`ifdef RVFI_DII
+`ifdef RVFI
 typedef Vector#(SupSize, Maybe#(RVFI_DII_Execution #(64, 64))) Rvfi_Traces;
+`endif
+`ifdef RVFI_DII
 typedef Vector#(TMul#(SupSize, 2), RVFI_DII_Parcel_Resp) Dii_Parcel_Resps;
 typedef Vector#(TMul#(SupSize, 2), Bit#(16)) Dii_Parcels;
 

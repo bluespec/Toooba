@@ -260,7 +260,7 @@ module mkFpuMulDivExePipeline#(FpuMulDivExeInput inIfc)(FpuMulDivExePipeline);
                               data,
 `endif
                               fflags
-`ifdef RVFI_DII
+`ifdef RVFI
                               , ExtraTraceBundle{regWriteData: data, memByteEn: ?}
 `endif
         );
