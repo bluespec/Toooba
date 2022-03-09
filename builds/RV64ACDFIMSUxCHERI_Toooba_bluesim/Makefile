@@ -4,6 +4,11 @@ REPO ?= ../..
 ARCH ?= RV64ACDFIMSUxCHERI
 
 # ================================================================
+# Path to RISCY-OOO sources not included in Common
+
+EXTRA_DIRS = $(RISCY_HOME)/../../src_Verifier:$(RISCY_HOME)/../../src_Verifier/BSV-RVFI-DII
+
+# ================================================================
 # RISC-V config macros passed into Bluespec 'bsc' compiler
 
 # Default ISA test
