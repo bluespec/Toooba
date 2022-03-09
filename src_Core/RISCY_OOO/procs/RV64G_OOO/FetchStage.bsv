@@ -470,7 +470,6 @@ module mkFetchStage(FetchStage);
 `ifdef PERFORMANCE_MONITORING
     Reg#(Bool) redirect_evt_reg <- mkDReg(False);
 `endif
-    Reg#(Bool) rasFixupDelay <- mkRegU;
 
     rule updatePcInBtb;
         nextAddrPred.put_pc(pc_reg[pc_final_port]);
@@ -1045,10 +1044,9 @@ module mkFetchStage(FetchStage);
             let last_x16_pc = addPc(pc, (isCompressed ? 0 : 2));
             napTrainByExe.wset(TrainNAP {pc: last_x16_pc, nextPc: next_pc});
 `ifdef SPEC_RSB_FIXUP
-            if (!rasFixupDelay) ras.setHead(trainInfo.ras);
+            ras.setHead(trainInfo.ras);
 `endif
         end
-        rasFixupDelay <= link;
     endmethod
 
     interface SpeculationUpdate specUpdate = main_epoch_spec.specUpdate;

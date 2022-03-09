@@ -69,15 +69,6 @@ module mkRas(ReturnAddrStack) provisos(NumAlias#(TExp#(TLog#(RasEntries)), RasEn
     // head points past valid data
     // to gracefully overflow, head is allowed to overflow to 0 and overwrite the oldest data
     Ehr#(TAdd#(SupSize, 3), RasIndex) head <- mkEhr(0);
-    Ehr#(4, UInt#(3)) pendingPushReg <- mkEhr(0);
-
-    Reg#(Bit#(6)) pendingPushDelay <- mkReg(0);
-    rule updatePendingPushDelay;
-       if (pendingPushDelay > 60 || pendingPushReg[2] == 0) begin
-          pendingPushReg[2] <= 0;
-          pendingPushDelay <= 0;
-       end else pendingPushDelay <= pendingPushDelay + 1;
-    endrule
 
 `ifdef SECURITY
     Reg#(Bool) flushDone <- mkReg(True);
@@ -92,13 +83,7 @@ module mkRas(ReturnAddrStack) provisos(NumAlias#(TExp#(TLog#(RasEntries)), RasEn
     Vector#(SupSize, RAS) rasIfc;
     for(Integer i = 0; i < valueof(SupSize); i = i+1) begin
         rasIfc[i] = (interface RAS;
-            method CapMem first;
-                // If pendingPush is not zero, just take whetever was in the memory, as it is more likely
-                // to be correct than an unsynchronised entry (in case we keep calling the same function).
-                RasIndex pendingOffset = zeroExtend(pack(pendingPushReg[0]));
-                RasIndex h = head[i] + pendingOffset;
-                return  stack[h][0];
-            endmethod
+            method CapMem first = stack[head[i]][0];
             method ActionValue#(RasIndex) pop(Bool doPop);
                 RasIndex h = head[i];
                 if (doPop) begin
@@ -111,22 +96,27 @@ module mkRas(ReturnAddrStack) provisos(NumAlias#(TExp#(TLog#(RasEntries)), RasEn
     end
 
     method Action willPush;
-        pendingPushReg[0]._write(pendingPushReg[0] + 1);
-        $display("RAS willPushReg<-%d", pendingPushReg[0] + 1);
+        Reg#(RasIndex) h = head[valueof(SupSize) + 2];
+        h <= h+1;
+        $display("RAS head<-%d", h + 1);
     endmethod
-    method Bool pendingPush = (pendingPushReg[0] > 0 && pendingPushDelay < 6);
+    method Bool pendingPush = False;//(pendingPushReg[0] > 0 && pendingPushDelay < 6);
 
     method Action push(CapMem pushAddr);
+`ifdef NO_SPEC_RSB_PUSH
+        stack[head[0]][1] <= pushAddr;
+        $display("RAS push stack[%d] <- %x", head[0], pushAddr);
+`else
         Reg#(RasIndex) h = head[valueof(SupSize) + 2];
-        stack[h+1][1] <= pushAddr;
-        $display("RAS push head<-%d, val:%x, willPushReg<-%d", h+1, pushAddr, boundedMinus(pendingPushReg[1], 1));
         h <= h+1;
-        if (pendingPushReg[1] != 0) pendingPushReg[1] <= boundedMinus(pendingPushReg[1], 1);
+        stack[h+1][1] <= pushAddr;
+        $display("RAS push stack[%d] <- %x", head[0], pushAddr);
+        $display("RAS head<-%d", h + 1);
+`endif
     endmethod
 
     method Action setHead(RasIndex h);
         head[valueof(SupSize)] <= h;
-        pendingPushReg[3] <= 0;
         $display("RAS fixup head<-%d", h);
     endmethod
 
