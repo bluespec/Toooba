@@ -58,6 +58,7 @@ interface ReturnAddrStack;
     method Action willPush;
     method Bool pendingPush;
     method Action push(CapMem pushAddr);
+    method Action write(CapMem pushAddr, RasIndex h);
     method Action setHead(RasIndex h);
     method Action flush;
     method Bool flush_done;
@@ -87,32 +88,30 @@ module mkRas(ReturnAddrStack) provisos(NumAlias#(TExp#(TLog#(RasEntries)), RasEn
             method ActionValue#(RasIndex) pop(Bool doPop);
                 RasIndex h = head[i];
                 if (doPop) begin
-                    head[i] <= head[i] - 1;
+                    h = h - 1;
                     $display("RAS pop head<-%d, val:%x", head[i] - 1, stack[head[i]][0]);
                 end
+                head[i] <= h;
                 return h;
             endmethod
         endinterface);
     end
 
-    method Action willPush;
-        Reg#(RasIndex) h = head[valueof(SupSize) + 2];
-        h <= h+1;
-        $display("RAS head<-%d", h + 1);
-    endmethod
     method Bool pendingPush = False;//(pendingPushReg[0] > 0 && pendingPushDelay < 6);
 
     method Action push(CapMem pushAddr);
-`ifdef NO_SPEC_RSB_PUSH
-        stack[head[0]][1] <= pushAddr;
-        $display("RAS push stack[%d] <- %x", head[0], pushAddr);
-`else
         Reg#(RasIndex) h = head[valueof(SupSize) + 2];
-        h <= h+1;
+`ifndef NO_SPEC_RSB_PUSH
         stack[h+1][1] <= pushAddr;
-        $display("RAS push stack[%d] <- %x", head[0], pushAddr);
-        $display("RAS head<-%d", h + 1);
+        $display("RAS push stack[%d] <- %x", h+1, pushAddr);
 `endif
+        h <= h+1;
+        $display("RAS head<-%d", h + 1);
+    endmethod
+
+    method Action write(CapMem pushAddr, RasIndex h);
+        stack[h][1] <= pushAddr;
+        $display("RAS write stack[%d] <- %x", h, pushAddr);
     endmethod
 
     method Action setHead(RasIndex h);

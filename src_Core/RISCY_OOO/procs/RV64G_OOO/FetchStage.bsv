@@ -845,6 +845,7 @@ module mkFetchStage(FetchStage);
 `endif
                   end
                end // if (!isValid(cause))
+               if (isValid(m_push_addr)) trainInfo.ras = trainInfo.ras + 1;
                decode_pc_reg[i] <= getAddr(ppc);
                let out = FromFetchStage{pc: pc,
 `ifdef RVFI_DII
@@ -876,12 +877,7 @@ module mkFetchStage(FetchStage);
          end // if (decodeIn[i] matches tagged Valid .in)
       end // for (Integer i = 0; i < valueof(SupSize); i=i+1)
 
-      if (m_push_addr matches tagged Valid .pc)
-`ifdef NO_SPEC_RSB_PUSH
-         ras.willPush;
-`else
-         ras.push(pc);
-`endif
+      if (m_push_addr matches tagged Valid .pc) ras.push(pc);
 
       // update PC and epoch
       if(redirectPc matches tagged Valid .rp) begin
@@ -1032,7 +1028,7 @@ module mkFetchStage(FetchStage);
         //    nextAddrPred.update(pc, next_pc, taken);
         //end
 `ifdef NO_SPEC_RSB_PUSH
-        if (link) ras.push(addPc(pc, isCompressed ? 2 : 4));
+        if (link) ras.write(addPc(pc, isCompressed ? 2 : 4), trainInfo.ras);
 `endif
         if (iType == Br) begin
             // Train the direction predictor for all branches
