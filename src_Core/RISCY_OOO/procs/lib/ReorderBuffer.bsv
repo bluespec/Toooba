@@ -674,7 +674,7 @@ module mkSupReorderBuffer#(
     Add#(1, a__, aluExeNum), Add#(1, b__, fpuMulDivExeNum)
 );
 
-    Bool verbose = True;
+    Bool verbose = False;
 
     // doCommit rule: deq < wrongSpec (overwrite deq in doCommit) < doRenaming rule: enq
     Integer valid_deq_port = 0;
@@ -756,7 +756,6 @@ module mkSupReorderBuffer#(
                 // move deqP & reset valid
                 deqP[i] <= getNextPtr(deqP[i]);
                 valid[i][deqP[i]][valid_deq_port] <= False;
-                $display("deq[%d][%d]", i, deqP[i]);
             end
         end
         // update firstDeqWay: find the first deq port that is not enabled

@@ -744,7 +744,7 @@ module mkCore#(CoreId coreId)(Core);
     rule drop;
         let packets <- commitStage.rvfi.get();
         for (Integer i = 0; i < valueOf(SupSize); i = i+1) begin
-            if (isValid(packets[i])) $display("%t: RVFI ", $time, fshow(packets[i].Valid));
+            if (isValid(packets[i])) $display("%d: RVFI ", cur_cycle, fshow(packets[i].Valid));
         end
     endrule
 `endif
