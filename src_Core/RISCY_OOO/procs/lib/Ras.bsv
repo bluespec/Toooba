@@ -55,7 +55,6 @@ typedef RasIndex RasPredTrainInfo;
 
 interface ReturnAddrStack;
     interface Vector#(SupSize, RAS) ras;
-    method Action willPush;
     method Bool pendingPush;
     method Action push(CapMem pushAddr);
     method Action write(CapMem pushAddr, RasIndex h);
@@ -67,10 +66,20 @@ endinterface
 (* synthesize *)
 module mkRas(ReturnAddrStack) provisos(NumAlias#(TExp#(TLog#(RasEntries)), RasEntries));
     Vector#(RasEntries, Ehr#(2, CapMem)) stack <- replicateM(mkEhr(nullCap));
+    Vector#(RasEntries, Ehr#(3, Bool)) valids <- replicateM(mkEhr(False));
     // head points past valid data
     // to gracefully overflow, head is allowed to overflow to 0 and overwrite the oldest data
     Ehr#(TAdd#(SupSize, 3), RasIndex) head <- mkEhr(0);
 
+    Bool invalidHead = !(valids[head[0]][0]);
+    Reg#(Bit#(6)) delay <- mkReg(0);
+    rule resetValidHead(invalidHead);
+        if (delay < 10) delay <= delay + 1;
+        else begin
+            valids[head[0]][2] <= True;
+            delay <= 0;
+        end
+    endrule
 `ifdef SECURITY
     Reg#(Bool) flushDone <- mkReg(True);
 
@@ -97,10 +106,11 @@ module mkRas(ReturnAddrStack) provisos(NumAlias#(TExp#(TLog#(RasEntries)), RasEn
         endinterface);
     end
 
-    method Bool pendingPush = False;//(pendingPushReg[0] > 0 && pendingPushDelay < 6);
+    method Bool pendingPush = invalidHead;
 
     method Action push(CapMem pushAddr);
         Reg#(RasIndex) h = head[valueof(SupSize) + 2];
+        valids[h+1][0] <= False;
 `ifndef NO_SPEC_RSB_PUSH
         stack[h+1][1] <= pushAddr;
         $display("RAS push stack[%d] <- %x", h+1, pushAddr);
@@ -111,6 +121,7 @@ module mkRas(ReturnAddrStack) provisos(NumAlias#(TExp#(TLog#(RasEntries)), RasEn
 
     method Action write(CapMem pushAddr, RasIndex h);
         stack[h][1] <= pushAddr;
+        valids[h][1] <= True;
         $display("RAS write stack[%d] <- %x", h, pushAddr);
     endmethod
 
