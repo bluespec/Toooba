@@ -74,7 +74,7 @@ module mkRas(ReturnAddrStack) provisos(NumAlias#(TExp#(TLog#(RasEntries)), RasEn
     Bool invalidHead = !(valids[head[0]][0]);
     Reg#(Bit#(6)) delay <- mkReg(0);
     rule resetValidHead;
-        if (delay < 10 && invalidHead) delay <= delay + 1;
+        if (delay < 32 && invalidHead) delay <= delay + 1;
         else begin
             valids[head[0]][2] <= True;
             delay <= 0;
