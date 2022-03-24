@@ -782,7 +782,6 @@ endfunction
         Bool enough_cs_to_hit = enoughCacheState(ram.info.cs, procRq.toState);
         // check if cs is not I
         Bool cs_valid = ram.info.cs > I;
-        Bool enough_cs_no_replace = ram.info.cs >= S || (ram.info.cs >= T && procRq.toState == T);
         if(ram.info.owner matches tagged Valid .cOwner) begin
             if(cOwner != n) begin
                 // owner is another cRq, so must just go through tag match
@@ -822,15 +821,9 @@ endfunction
                     cRqScEarlyFail(True);
                 end
                 else begin
-                   if (enough_cs_no_replace) begin
-                      if (verbose)
-                       $display("%t L1 %m pipelineResp: cRq: own by itself, miss no replace", $time);
-                      cRqMissNoReplacement;
-                   end else begin
-                      if (verbose)
-                       $display("%t L1 %m pipelineResp: cRq: own by itself, replace as upgrade from tag only", $time);
-                      cRqReplacement;
-                   end
+                  if (verbose)
+                   $display("%t L1 %m pipelineResp: cRq: own by itself, miss no replace", $time);
+                  cRqMissNoReplacement;
                 end
             end
         end
@@ -880,7 +873,7 @@ endfunction
                    if (verbose)
                     $display("%t L1 %m pipelineResp: cRq: no owner, miss no replace", $time);
                     // Req parent, no replacement needed
-                    cRqMissNoReplacement; // XXX might we need to replace here (based on tag)?
+                    cRqMissNoReplacement;
                 end
             end
         end

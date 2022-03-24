@@ -276,7 +276,7 @@ module mkLLPipe(
     );
     actionvalue
         doAssert(toState > oldCs, "should truly upgrade cs");
-        doAssert((oldCs == I) && dataV, "LLC mRs always has data");
+        doAssert((oldCs == I || (oldCs == T && toState >= S)) && dataV, "LLC mRs always has data");
         return UpdateByUpCs {cs: toState};
     endactionvalue
     endfunction
