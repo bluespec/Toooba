@@ -506,8 +506,9 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
                     isCompressed: x.isCompressed},
                 spec_bits: train_spec_bits
             });
-            $display("alu mispredict pc¤: %x, nextPc: %x, %d",
-                     x.controlFlow.pc, x.controlFlow.nextPc, cur_cycle);
+            if (verbose)
+                $display("alu mispredict pc: %x, nextPc: %x, %d",
+                         x.controlFlow.pc, x.controlFlow.nextPc, cur_cycle);
 `ifdef PERF_COUNT
             // performance counter
             if(inIfc.doStats) begin

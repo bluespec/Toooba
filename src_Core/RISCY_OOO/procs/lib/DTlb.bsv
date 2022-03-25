@@ -287,10 +287,11 @@ module mkDTlb#(
         end
         else if(pRs.entry matches tagged Valid .en) begin
             // check permission
-            $display("dPRs: vm_info: ", fshow(vm_info),
-                     "      en     : ", fshow(en),
-                     "      r      : ", fshow(r)
-                     );
+            if (verbose)
+                $display("dPRs: vm_info: ", fshow(vm_info),
+                         "      en     : ", fshow(en),
+                         "      r      : ", fshow(r)
+                         );
             let permCheck = hasVMPermission(vm_info,
                                             en.pteType,
                                             en.pteUpperType,

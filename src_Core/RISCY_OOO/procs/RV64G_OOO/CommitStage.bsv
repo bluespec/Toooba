@@ -200,7 +200,7 @@ typedef struct {
     Addr addr;
     Trap trap;
     Bit #(32) orig_inst;
-`ifdef RVFI_DII
+`ifdef RVFI
     ToReorderBuffer x;
 `endif
 } CommitTrap deriving(Bits, FShow);
@@ -290,7 +290,7 @@ deriving (Eq, FShow, Bits);
 module mkCommitStage#(CommitInput inIfc)(CommitStage);
     Bool verbose = False;
 
-    Integer verbosity = 1;   // Bluespec: for lightweight verbosity trace
+    Integer verbosity = 0;   // Bluespec: for lightweight verbosity trace
 
     // Used to inform tandem-verifier about program order.
     // 0 is used to indicate we've just come out of reset
@@ -688,7 +688,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
             pc: x.pc,
             addr: vaddr,
             orig_inst: x.orig_inst
-`ifdef RVFI_DII
+`ifdef RVFI
             , x: x
 `endif
         });

@@ -523,7 +523,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         });
     endrule
 
-`ifdef RVFI_DII
+`ifdef RVFI
     Vector#(TExp#(SizeOf#(LdStQTag)), Reg#(Data)) memData <- replicateM(mkReg(?));
 `endif
 
@@ -538,9 +538,8 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         CapPipe data = x.rVal2;
         MemTaggedData toMemData = unpack(pack(toMem(data)));
 
-`ifdef RVFI_DII
+`ifdef RVFI
         memData[pack(x.ldstq_tag)] <= getAddr(data);
-        $display("%t : memData[%x] <= %x", $time(), pack(x.ldstq_tag), getAddr(data));
 `endif
 
         // get shifted data and BE
@@ -856,7 +855,6 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
 `ifdef RVFI
             LdStQTag idx = tagged Ld tag;
             memData[pack(idx)] <= truncate(pack(res.data)); // TODO use fromMem?
-            $display("%t : memData[%x] <= %x", $time(), pack(idx), res.data);
 `endif
         end
         if(res.wrongPath) begin

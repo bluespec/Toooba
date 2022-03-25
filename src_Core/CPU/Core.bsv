@@ -748,7 +748,17 @@ module mkCore#(CoreId coreId)(Core);
     CommitStage commitStage <- mkCommitStage(commitInput);
 
 `ifdef RVFI
-    mkConnection(commitStage.rvfi, rvfi_bridge.rvfi);
+    // XXX Currently RVFI can only be connected to the outside world
+    // via the RVFI_DII bridge i.e. when DII is also being used.
+    rule drop;
+        let packets <- commitStage.rvfi.get();
+        for (Integer i = 0; i < valueOf(SupSize); i = i+1) begin
+            if (isValid(packets[i])) $display("%d: RVFI ", cur_cycle, fshow(packets[i].Valid));
+        end
+`ifdef RVFI_DII
+        rvfi_bridge.rvfi.put(packets);
+`endif
+    endrule
 `endif
 
     // send rob enq time to reservation stations

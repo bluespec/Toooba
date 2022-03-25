@@ -756,7 +756,6 @@ module mkSupReorderBuffer#(
                 // move deqP & reset valid
                 deqP[i] <= getNextPtr(deqP[i]);
                 valid[i][deqP[i]][valid_deq_port] <= False;
-                $display("deq[%d][%d]", i, deqP[i]);
             end
         end
         // update firstDeqWay: find the first deq port that is not enabled

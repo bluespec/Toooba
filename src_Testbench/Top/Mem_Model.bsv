@@ -81,7 +81,7 @@ typedef Bit#(TSub#(TSub#(TLog#(TSub#(Zeroed_1_end, Zeroed_1_start)), LogZMWidth)
 (* synthesize *)
 module mkMem_Model (Mem_Model_IFC);
 
-    Integer verbosity = 1;    // 0 = quiet; 1 = verbose
+    Integer verbosity = 0;    // 0 = quiet; 1 = verbose
 
     Raw_Mem_Addr alloc_size = fromInteger(valueOf(TDiv#(TMul#(Bytes_Per_Mem,8), Bits_per_Raw_Mem_Word))); //(raw mem words)
 
