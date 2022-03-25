@@ -69,9 +69,9 @@ module mkTourPred(DirPredictor#(TourTrainInfo));
     endfunction
 
     // common sat counter operations
-    function Bool isTaken(Int#(n) cnt) = (cnt >= 0);
+    function Bool isTaken(Int#(n) cnt) = (cnt < 0);
     function Int#(n) updateCnt(Int#(n) cnt, Bool taken) =
-        boundedPlus(cnt, (taken) ? 1 : -1);
+        boundedPlus(cnt, (taken) ? -1 : 1);
 
     TourGlobalHist curGHist = gHistReg.history; // global history: MSB is the latest branch
     Reg#(Vector#(SupSize, Bool)) globalTakenVec <- mkRegU;
