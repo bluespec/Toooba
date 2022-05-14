@@ -49,6 +49,8 @@ interface RAS;
 endinterface
 
 // Local RAS Typedefs SHOULD BE A POWER OF TWO.
+typedef 2 NUM_RAS_STACK_IFCS;
+typedef 3 NUM_RAS_VALIDS_IFCS;
 typedef 16 RasEntries;
 typedef Bit#(TLog#(RasEntries)) RasIndex;
 typedef RasIndex RasPredTrainInfo;
@@ -65,8 +67,8 @@ endinterface
 
 (* synthesize *)
 module mkRas(ReturnAddrStack) provisos(NumAlias#(TExp#(TLog#(RasEntries)), RasEntries));
-    Vector#(RasEntries, Ehr#(2, CapMem)) stack <- replicateM(mkEhr(nullCap));
-    Vector#(RasEntries, Ehr#(3, Bool)) valids <- replicateM(mkEhr(False));
+    Vector#(RasEntries, Ehr#(NUM_RAS_STACK_IFCS, CapMem)) stack <- replicateM(mkEhr(nullCap));
+    Vector#(RasEntries, Ehr#(NUM_RAS_VALIDS_IFCS, Bool)) valids <- replicateM(mkEhr(False));
     // head points past valid data
     // to gracefully overflow, head is allowed to overflow to 0 and overwrite the oldest data
     Ehr#(TAdd#(SupSize, 3), RasIndex) head <- mkEhr(0);
