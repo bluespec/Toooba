@@ -320,7 +320,7 @@ function Data capInspect(CapPipe a, CapPipe b, CapInspectFunc func);
                        tagged SEALED_WITH_TYPE .t: zeroExtend(t);
                    endcase
                tagged ToPtr                  :
-                   (isValidCap(a) ? (getAddr(a) - getBase(b)) : 0);
+                   (isValidCap(a) && isValidCap(b) ? (getAddr(a) - getBase(b)) : 0);
                default: ?;
         endcase);
     return res;

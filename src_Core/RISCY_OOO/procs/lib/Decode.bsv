@@ -1194,7 +1194,6 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                         end
                         f7_cap_CToPtr: begin
                             dInst.capChecks.src1_unsealed = True;
-                            dInst.capChecks.src2_tag = True;
 
                             dInst.iType = Cap;
                             regs.dst = Valid(tagged Gpr rd);
