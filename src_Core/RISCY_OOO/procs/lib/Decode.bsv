@@ -957,7 +957,6 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                     dInst.capFunc = CapModify (ModifyOffset (IncOffset));
                 end
                 f3_cap_CSetBoundsImmediate: begin
-                    dInst.capChecks.src1_tag = True;
                     dInst.capChecks.src1_unsealed = True;
 
                     dInst.capChecks.check_enable = True;
@@ -998,7 +997,6 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             dInst.capFunc = CapModify (SpecialRW (scrType));
                         end
                         f7_cap_CSetBounds: begin
-                            dInst.capChecks.src1_tag = True;
                             dInst.capChecks.src1_unsealed = True;
 
                             dInst.capChecks.check_enable = True;
@@ -1014,7 +1012,6 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             dInst.capFunc = CapModify (SetBounds (SetBounds));
                         end
                         f7_cap_CSetBoundsExact: begin
-                            dInst.capChecks.src1_tag = True;
                             dInst.capChecks.src1_unsealed = True;
                             dInst.capChecks.cap_exact = True;
 
@@ -1058,7 +1055,6 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             dInst.capFunc = CapModify (ModifyOffset (IncOffset));
                         end
                         f7_cap_CSeal: begin
-                            dInst.capChecks.src1_tag = True;
                             dInst.capChecks.src2_tag = True;
                             dInst.capChecks.src1_unsealed = True;
                             dInst.capChecks.src2_unsealed = True;
@@ -1078,8 +1074,6 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             dInst.capFunc = CapModify (Seal);
                         end
                         f7_cap_CCSeal: begin
-                            dInst.capChecks.src1_tag = True;
-
                             dInst.capChecks.src1_unsealed = True;
                             dInst.capChecks.src2_unsealed = True;
                             dInst.capChecks.src2_addr_valid_type = True;
@@ -1131,7 +1125,6 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             endcase
                         end
                         f7_cap_CUnseal: begin
-                            dInst.capChecks.src1_tag = True;
                             dInst.capChecks.src2_tag = True;
                             dInst.capChecks.src1_sealed_with_type = True;
                             dInst.capChecks.src2_unsealed = True;
@@ -1166,7 +1159,6 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             dInst.capFunc = CapInspect (SetEqualExact);
                         end
                         f7_cap_CCopyType: begin
-                            dInst.capChecks.src2_tag = True;
                             dInst.capChecks.src2_unsealed = True;
 
                             dInst.capChecks.check_enable = True;
@@ -1183,7 +1175,6 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             dInst.capFunc = CapModify (SetAddr (Src1Type));
                         end
                         f7_cap_CAndPerm: begin
-                            dInst.capChecks.src1_tag = True;
                             dInst.capChecks.src1_unsealed = True;
 
                             dInst.iType = Cap;
@@ -1218,7 +1209,6 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             dInst.capFunc = CapInspect (ToPtr);
                         end
                         f7_cap_CFromPtr: begin
-                            dInst.capChecks.src2_tag = True;
                             dInst.capChecks.src2_unsealed = True;
                             dInst.capChecks.cfromptr_bypass = True;
 
@@ -1238,7 +1228,6 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             dInst.execFunc = Alu (Sub);
                         end
                         f7_cap_CBuildCap: begin
-                            dInst.capChecks.src2_tag = True;
                             dInst.capChecks.src2_unsealed = True;
                             dInst.capChecks.src1_perm_subset_src2 = True;
                             dInst.capChecks.src1_derivable = True;
@@ -1349,7 +1338,6 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                                     dInst.capFunc = CapInspect (GetAddr);
                                 end
                                 f5rs2_cap_CSealEntry: begin
-                                    dInst.capChecks.src1_tag = True;
                                     dInst.capChecks.src1_unsealed = True;
                                     dInst.capChecks.src1_permit_x = True;
 

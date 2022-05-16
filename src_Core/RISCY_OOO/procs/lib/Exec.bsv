@@ -274,7 +274,7 @@ function Tuple2#(CapPipe,Bool) capModify(CapPipe a, CapPipe b, CapModifyFunc fun
             tagged FromPtr                :
                 t(getAddr(a) == 0 ? nullCap : setOffset(b, getAddr(a)).value);
             tagged BuildCap               :
-                t(setKind(setValidCap(a, True), getKind(a)==SENTRY ? SENTRY : UNSEALED));
+                t(setKind(setValidCap(a, isValidCap(b)), getKind(a)==SENTRY ? SENTRY : UNSEALED));
             tagged Move                   :
                 t(a);
             tagged ClearTag               :
