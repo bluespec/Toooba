@@ -608,20 +608,6 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         Maybe#(Trap) cause = Invalid;
         if (expCause matches tagged Valid .c) cause = Valid(Exception(c));
 
-`ifdef RVFI_DII
-        // TestRIG expects us throw an access fault for any memory access outside of a 8 MiB memory at 0x8000000.
-        if (!isValid(cause) && (paddr < 'h80000000 || paddr >= 'h80800000)) begin
-            case(x.mem_func)
-                Ld, Lr: begin
-                    cause = Valid(Exception(excLoadAccessFault));
-                end
-                default: begin
-                    cause = Valid(Exception(excStoreAccessFault));
-                end
-            endcase
-        end
-`endif
-
         if(verbose) $display("[doFinishMem] ", fshow(dTlbResp));
         if(isValid(cause) && verbose) $display("  [doFinishMem - dTlb response] PAGEFAULT!");
 
@@ -643,6 +629,20 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
                 end
             endcase
         end
+
+`ifdef RVFI_DII
+        // TestRIG expects us throw an access fault for any memory access outside of a 8 MiB memory at 0x8000000.
+        if (!isValid(cause) && (paddr < 'h80000000 || paddr >= 'h80800000)) begin
+            case(x.mem_func)
+                Ld, Lr: begin
+                    cause = Valid(Exception(excLoadAccessFault));
+                end
+                default: begin
+                    cause = Valid(Exception(excStoreAccessFault));
+                end
+            endcase
+        end
+`endif
 
         // check if addr is MMIO (only valid in case of no page fault)
         Bool isMMIO = inIfc.isMMIOAddr(paddr);
