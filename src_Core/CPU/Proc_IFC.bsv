@@ -2,7 +2,7 @@
 //
 //-
 // RVFI_DII + CHERI modifications:
-//     Copyright (c) 2020 Alexandre Joannou
+//     Copyright (c) 2020-2022 Alexandre Joannou
 //     Copyright (c) 2020 Peter Rugg
 //     Copyright (c) 2020 Jonathan Woodruff
 //     All rights reserved.
@@ -13,6 +13,13 @@
 //     DARPA SSITH research programme.
 //
 //     This work was supported by NCSC programme grant 4212611/RFA 15971 ("SafeBet").
+//
+// This material is based upon work supported by the DoD Information Analysis
+// Center Program Management Office (DoD IAC PMO), sponsored by the Defense
+// Technical Information Center (DTIC) under Contract No. FA807518D0004.  Any
+// opinions, findings and conclusions or recommendations expressed in this
+// material are those of the author(s) and do not necessarily reflect the views
+// of the Air Force Installation Contracting Agency (AFICA).
 //-
 
 package Proc_IFC;
