@@ -57,7 +57,11 @@ module mkSTLPred(STLPred);
     endmethod
 
     method Bool pred(Bit#(16) pc_hash);
+`ifdef NO_SPEC_STL
         return fromMaybe(minBound, ldKillMap.lookup(unpack(pc_hash))) == maxBound;
+`else
+        return True;
+`endif
     endmethod
-    
+
 endmodule
