@@ -431,6 +431,12 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
     Maybe#(BoundsCheck) boundsCheck = prepareBoundsCheck(rVal1, aluVal2, pcc,
                                                          nullCap, 0, 0, // These three are only used in the memory pipe
                                                          dInst.capChecks);
+    if (boundsCheck matches tagged Valid .check &&& capException matches tagged Invalid) begin
+        if (!(                         (check.check_low  >= check.authority_base) &&
+              (check.check_inclusive ? (check.check_high <= check.authority_top )
+                                     : (check.check_high <  check.authority_top ))))
+            capException = Valid(CSR_XCapCause{cheri_exc_reg: check.authority_idx, cheri_exc_code: cheriExcLengthViolation});
+    end
     if (dInst.capChecks.cfromptr_bypass && getAddr(rVal1) == 0) begin
         capException = Invalid;
     end
@@ -442,6 +448,7 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
         capException = Invalid;
         boundsCheck = Invalid;
     end
+    if (isValid(capException)) cap_alu_result = setValidCap(cap_alu_result, False);
 
     cf.nextPc = setKind(cf.nextPc, UNSEALED);
     cf.mispredict = cf.nextPc != ppc;
