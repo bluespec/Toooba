@@ -90,7 +90,7 @@ BSC_COMPILATION_FLAGS += \
 	-D PERFORMANCE_MONITORING \
 	-D RAS_HIT_TRACING \
 	-D TSO_MM \
-	-D NO_SPEC_STRAIGHT_PATH -D SPEC_RSB_FIXUP -D NO_SPEC_STL \
+	-D NO_SPEC_STRAIGHT_PATH -D SPEC_RSB_FIXUP -D NO_SPEC_STL -D MELTDOWN_CF \
 	-keep-fires -aggressive-conditions -no-warn-action-shadowing -check-assert \
 	-suppress-warnings G0020 -steps-max-intervals 10000000   \
 	-steps-warn-interval 1000000 \
