@@ -817,10 +817,6 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         return rdy[idx] ? Valid (idx) : Invalid;
     endfunction
 
-    rule displayRenameCount;
-        $display("%d : rc:%d", cur_cycle, supRenameCnt);
-    endrule
-
     // rename correct path inst
     rule doRenaming(
         !inIfc.pendingMMIOPRq // stall when MMIO pRq is pending

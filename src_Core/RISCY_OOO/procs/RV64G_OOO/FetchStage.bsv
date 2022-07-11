@@ -646,11 +646,6 @@ module mkFetchStage(FetchStage);
          end
    endrule: doDecodeFlush
 
-   rule printStuff;
-      $display("main_epoch_spec.first.spec_bits: %x, main_epoch_spec.notEmpty: %x, isCurrent: %x, f_main_epoch: %x, next_epoch: %x",
-                main_epoch_spec.first.spec_bits, main_epoch_spec.notEmpty, isCurrent(f32d.deqS[0].first), f_main_epoch, f32d.deqS[0].first.main_epoch);
-   endrule
-
    Vector#(SupSize, Maybe#(InstrFromFetch3)) decodeIn = replicate(Invalid);
    // Express the incoming fragments as a vector of maybes.
    Vector#(SupSizeX2, Maybe#(Fetch3ToDecode)) frags;
@@ -910,10 +905,6 @@ module mkFetchStage(FetchStage);
 
    rule reportDecodePc;
        dirPred.nextPc(decode_pc_reg[decode_pc_final_port]);
-   endrule
-
-   rule displayRedirects;
-        $display("%d : dr: %d er: %d", cur_cycle, decode_redirect_count, execute_redirect_count);
    endrule
 
     // train next addr pred: we use a wire to catch outputs of napTrainByDecQ.
