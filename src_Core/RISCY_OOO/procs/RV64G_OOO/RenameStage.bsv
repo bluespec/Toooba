@@ -384,6 +384,8 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                 spec_bits: specTagManager.currentSpecBits
 `ifdef RVFI_DII
                                 , dii_pid: x.dii_pid
+`endif
+`ifdef RVFI
                                 , traceBundle: unpack(0)
 `endif
                                };
@@ -596,6 +598,8 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                 spec_bits: spec_bits
 `ifdef RVFI_DII
                                 , dii_pid: x.dii_pid
+`endif
+`ifdef RVFI
                                 , traceBundle: unpack(0)
 `endif
                                };
@@ -1147,6 +1151,8 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                                 spec_bits: spec_bits
 `ifdef RVFI_DII
                                                 , dii_pid: x.dii_pid
+`endif
+`ifdef RVFI
                                                 , traceBundle: unpack(0)
 `endif
                                                };
