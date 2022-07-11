@@ -178,6 +178,8 @@ module mkDualClockBramFIFOF#(Clock srcClock, Reset srcReset, Clock dstClock, Res
    method first = syncFifo.first;
    method notFull = syncFifo.notFull;
    method notEmpty = syncFifo.notEmpty;
+   // Required by FIFOF interface, but SyncFIFOIfc does not implement a ``clear'' method
+   method clear = noAction;
 endmodule
 module mkDualClockBramFIFO#(Clock srcClock, Reset srcReset, Clock dstClock, Reset dstReset)(FIFO#(t))
    provisos (Bits#(t,sizet),
@@ -187,5 +189,7 @@ module mkDualClockBramFIFO#(Clock srcClock, Reset srcReset, Clock dstClock, Rese
    method enq = syncFifo.enq;
    method deq = syncFifo.deq;
    method first = syncFifo.first;
+   // Required by FIFO interface, but SyncFIFOIfc does not implement a ``clear'' method
+   method clear = noAction;
 endmodule
 `endif
