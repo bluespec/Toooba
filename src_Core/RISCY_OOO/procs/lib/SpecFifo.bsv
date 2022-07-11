@@ -155,6 +155,8 @@ module mkSpecFifo#(
         specBits[enqP][sched.sbEnqPort] <= x.spec_bits;
     endmethod
 
+    method Bool notFull = (empty_for_enq || enqP != deqP_for_enq);
+
     method Action deq if (valid[deqP][sched.validDeqPort]
                           && !wrongSpec_deq_conflict); // make conflict with incorrect spec
         valid[deqP][sched.validDeqPort] <= False;
