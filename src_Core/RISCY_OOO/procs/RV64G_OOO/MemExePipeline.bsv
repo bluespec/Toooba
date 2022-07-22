@@ -1470,7 +1470,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
 `ifdef RVFI
             , ExtraTraceBundle{
                 regWriteData: fromMemTaggedData(resp),
-                memByteEn: replicate(False)
+                memByteEn: unpack(truncate(pack(lsqDeqSt.shiftedBE) >> lsqDeqSt.paddr[3:0]))
             }
 `endif
         );
