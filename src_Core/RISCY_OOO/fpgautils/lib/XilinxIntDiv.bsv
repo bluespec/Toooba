@@ -2,7 +2,7 @@ import FIFOF::*;
 import FIFO::*;
 
 import WaitAutoReset::*;
-import NonPipelinedMath::*;
+import Divide::*;
 import ClientServer::*;
 import GetPut::*;
 
