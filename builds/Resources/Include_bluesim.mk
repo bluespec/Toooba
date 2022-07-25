@@ -15,7 +15,7 @@ build_dir:
 ifeq (,$(filter clean full_clean,$(MAKECMDGOALS)))
 include .depends.mk
 
-BSC_COMPILATION_FLAGS += -D RVFI
+# BSC_COMPILATION_FLAGS += -D RVFI
 
 .depends.mk: TagTableStructure.bsv StatCounters.bsv GenerateHPMVector.bsv | build_dir
 	if ! bluetcl -exec makedepend -elab -sim  $(TMP_DIRS)  $(RTL_GEN_DIRS)  $(BSC_COMPILATION_FLAGS)  -p $(BSC_PATH) -o $@ $(TOPFILE); then rm -f $@ && false; fi
