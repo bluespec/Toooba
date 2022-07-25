@@ -22,7 +22,20 @@
 // #define MAX_MEM_SIZE (((uint64_t) 0x400) * ((uint64_t) 0x400) * ((uint64_t) 0x400))
 #define MAX_MEM_SIZE ((uint64_t) 0x90000000)
 
-uint8_t mem_buf [MAX_MEM_SIZE];
+// ================================================================
+// Min and max byte addrs for various mem sizes
+
+#define BASE_ADDR_B  0x80000000lu
+
+// For 16 MB memory at 0x_8000_0000
+#define MIN_MEM_ADDR_16MB  BASE_ADDR_B
+#define MAX_MEM_ADDR_16MB  (BASE_ADDR_B + 0x1000000lu)
+
+// For 1 GB memory at 0x_8000_0000
+#define MIN_MEM_ADDR_1GB  BASE_ADDR_B
+#define MAX_MEM_ADDR_1GB  (BASE_ADDR_B + 0x40000000lu)
+
+uint8_t mem_buf [MAX_MEM_ADDR_1GB-MIN_MEM_ADDR_1GB];
 
 // Features of the ELF binary
 int       bitwidth;
@@ -165,8 +178,8 @@ void c_mem_load_elf (char *elf_filename,
 		exit (1);
 	    }
 
-	    if (shdr.sh_type != SHT_NOBITS) {
-		memcpy (& (mem_buf [shdr.sh_addr]), data->d_buf, data->d_size);
+	    if (shdr.sh_type != SHT_NOBITS && shdr.sh_addr!=0) {
+		memcpy (& (mem_buf [shdr.sh_addr-MIN_MEM_ADDR_1GB]), data->d_buf, data->d_size);
 	    }
 	    fprintf (stdout, "addr %16" PRIx64 " to addr %16" PRIx64 "; size 0x%8lx (= %0ld) bytes\n",
 		     shdr.sh_addr, shdr.sh_addr + data->d_size, data->d_size, data->d_size);
@@ -241,19 +254,6 @@ void c_mem_load_elf (char *elf_filename,
 }
 
 // ================================================================
-// Min and max byte addrs for various mem sizes
-
-#define BASE_ADDR_B  0x80000000lu
-
-// For 16 MB memory at 0x_8000_0000
-#define MIN_MEM_ADDR_16MB  BASE_ADDR_B
-#define MAX_MEM_ADDR_16MB  (BASE_ADDR_B + 0x1000000lu)
-
-// For 1 GB memory at 0x_8000_0000
-#define MIN_MEM_ADDR_1GB  BASE_ADDR_B
-#define MAX_MEM_ADDR_1GB  (BASE_ADDR_B + 0x40000000lu)
-
-// ================================================================
 
 // Write out from word containing addr1 to word containing addr2
 void write_mem_hex_file (FILE *fp, uint64_t addr1, uint64_t addr2)
@@ -275,7 +275,7 @@ void write_mem_hex_file (FILE *fp, uint64_t addr1, uint64_t addr2)
     uint64_t addr;
     for (addr = a1; addr < a2; addr += bytes_per_raw_mem_word) {
 	for (int j = (bytes_per_raw_mem_word - 1); j >= 0; j--)
-	    fprintf (fp, "%02x", mem_buf [addr+j]);
+	    fprintf (fp, "%02x", mem_buf [addr+j-MIN_MEM_ADDR_1GB]);
 	fprintf (fp, "    // raw_mem addr %08" PRIx64 ";  byte addr %08" PRIx64 "\n",
 		 ((addr - BASE_ADDR_B) / bytes_per_raw_mem_word),
 		 (addr  - BASE_ADDR_B));
