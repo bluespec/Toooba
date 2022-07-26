@@ -30,6 +30,10 @@
 `include "ProcConfig.bsv"
 import Map::*;
 
+typedef Bit#(10) StlPredKey;
+typedef Bit#(6) StlPredIndex;
+typedef Int#(3) StlPredValue;
+typedef 2 StlPredAssociativity;
 
 interface STLPred;
     method Action update(Bit#(16) pc_hash, Bool waited, Bool killedLd);
@@ -37,7 +41,7 @@ interface STLPred;
 endinterface
 
 module mkSTLPred(STLPred);
-    Map#(Bit#(10),Bit#(6),Int#(3),2) ldKillMap <- mkMapLossy(minBound);
+    Map#(StlPredKey,StlPredIndex,StlPredValue,StlPredAssociativity) ldKillMap <- mkMapLossy(minBound);
     Reg#(Bit#(16)) rand_count <- mkReg(0);
 
     rule inc_rand_count;
