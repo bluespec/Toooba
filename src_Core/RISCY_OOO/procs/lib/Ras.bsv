@@ -100,7 +100,7 @@ module mkRas(ReturnAddrStack) provisos(NumAlias#(TExp#(TLog#(RasEntries)), RasEn
                 RasIndex h = head[i];
                 if (doPop) begin
                     h = h - 1;
-                    $display("RAS pop head<-%d, val:%x", head[i] - 1, stack[head[i]][0]);
+                    //$display("RAS pop head<-%d, val:%x", head[i] - 1, stack[head[i]][0]);
                 end
                 head[i] <= h;
                 return h;
@@ -115,21 +115,21 @@ module mkRas(ReturnAddrStack) provisos(NumAlias#(TExp#(TLog#(RasEntries)), RasEn
         valids[h+1][0] <= False;
 `ifndef NO_SPEC_RSB_PUSH
         stack[h+1][1] <= pushAddr;
-        $display("RAS push stack[%d] <- %x", h+1, pushAddr);
+        //$display("RAS push stack[%d] <- %x", h+1, pushAddr);
 `endif
         h <= h+1;
-        $display("RAS head<-%d", h + 1);
+        //$display("RAS head<-%d", h + 1);
     endmethod
 
     method Action write(CapMem pushAddr, RasIndex h);
         stack[h][1] <= pushAddr;
         valids[h][1] <= True;
-        $display("RAS write stack[%d] <- %x", h, pushAddr);
+        //$display("RAS write stack[%d] <- %x", h, pushAddr);
     endmethod
 
     method Action setHead(RasIndex h);
         head[valueof(SupSize)] <= h;
-        $display("RAS fixup head<-%d", h);
+        //$display("RAS fixup head<-%d", h);
     endmethod
 
     interface ras = rasIfc;
