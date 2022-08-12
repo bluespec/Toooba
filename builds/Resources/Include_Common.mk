@@ -96,7 +96,7 @@ BSC_COMPILATION_FLAGS += \
 	-D RISCV \
 	-D PERFORMANCE_MONITORING \
 	-D RAS_HIT_TRACING \
-	-D TSO_MM \
+	-D TSO_MM -D RVFI\
 	-D NO_SPEC_TRAINING -D NO_SPEC_REDIRECT -D NO_SPEC_STRAIGHT_PATH -D SPEC_RSB_FIXUP -D MELTDOWN_CF \
 	-keep-fires -aggressive-conditions -no-warn-action-shadowing -check-assert \
 	-suppress-warnings G0020 -steps-max-intervals 10000000   \
