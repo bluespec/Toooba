@@ -912,7 +912,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
 `ifdef RVFI
             , ExtraTraceBundle{
                 regWriteData: memData[pack(lsqDeqIdx)],
-                memByteEn: replicate(False)
+                memByteEn: unpack(truncate(pack(lsqDeqLd.shiftedBE) >> lsqDeqLd.paddr[3:0]))
             }
 `endif
         );
@@ -1016,7 +1016,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
 `ifdef RVFI
             , ExtraTraceBundle{
                 regWriteData: truncate(pack(resp)), // TODO use fromMem?
-                memByteEn: replicate(False)
+                memByteEn: unpack(truncate(pack(lsqDeqLd.shiftedBE) >> lsqDeqLd.paddr[3:0]))
             }
 `endif
         );
@@ -1104,7 +1104,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
 `ifdef RVFI
             , ExtraTraceBundle{
                 regWriteData: truncate(pack(resp)), // TODO use fromMem?
-                memByteEn: replicate(False)
+                memByteEn: unpack(truncate(pack(lsqDeqLd.shiftedBE) >> lsqDeqLd.paddr[3:0]))
             }
 `endif
         );
