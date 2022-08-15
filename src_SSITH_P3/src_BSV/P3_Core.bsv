@@ -32,7 +32,9 @@ import Vector        :: *;
 
 import GetPut_Aux :: *;
 import Routable   :: *;
-import AXI4       :: *;
+import BlueAXI4   :: *;
+import SourceSink :: *;
+import WindCoreInterface :: *;
 import Semi_FIFOF :: *;
 import Cur_Cycle  :: *;
 
@@ -159,67 +161,12 @@ module mkP3_Core (P3_Core_IFC);
    // ================================================================
    // CoreW
    //     CPU + Near_Mem_IO (CLINT) + PLIC + Debug module (optional) + TV (optional)
-   CoreW_IFC #(N_External_Interrupt_Sources)  corew <- mkCoreW (dm_power_on_reset,
-								reset_by ndm_reset);
-
-   // ================================================================
-   // Tie-offs (not used in SSITH GFE)
-
-   // Set core's verbosity
-   rule rl_never (False);
-      corew.set_verbosity (?, ?);
-   endrule
-
-   // Tie-offs
-   rule rl_always (True);
-      // Non-maskable interrupt request.
-      corew.nmi_req (False);
-   endrule
+   Tuple2 #( PulseWire
+           , CoreW_IFC #(N_External_Interrupt_Sources)) both
+     <- mkCoreW_reset (dm_power_on_reset, reset_by ndm_reset);
+   match {.otherRst, .corew} = both;
 
 `ifdef INCLUDE_GDB_CONTROL
-   // ================================================================
-   // NDM reset (reset for non-DebugModule)
-
-   Reg #(Bit #(8))  rg_ndm_reset_delay <- mkReg (0);
-   Reg #(Bool)      rg_running         <- mkRegU;
-
-   // Get an NDM-reset request from the Debug Module, assert ndm-reset,
-   // and then wait for a suitable delay.
-   rule rl_ndm_reset (rg_ndm_reset_delay == 0);
-      let x <- corew.ndm_reset_client.request.get;
-      rg_running <= x;
-      ndm_reset_controller.assertReset;
-      rg_ndm_reset_delay <= fromInteger (ndm_reset_duration + 100);    // NOTE: heuristic
-
-      $display ("%0d: %m.rl_ndm_reset: asserting NDM reset (for non-DebugModule) for %0d cycles",
-		cur_cycle, ndm_reset_duration);
-   endrule
-
-   // Wait for suitable delay, then send ack response to Debug Module for NDM-reset request
-   rule rl_ndm_reset_wait (rg_ndm_reset_delay != 0);
-      if (rg_ndm_reset_delay == 1) begin
-	 Bool is_running = rg_running;
-         // Restart the corew
-         corew.start (rg_running, 0, 0);
-	 corew.ndm_reset_client.response.put (is_running);
-	 $display ("%0d: %m.rl_ndm_reset_wait: sent NDM reset ack (for non-DebugModule) to Debug Module",
-		   cur_cycle);
-      end
-      rg_ndm_reset_delay <= rg_ndm_reset_delay - 1;
-   endrule
-
-   // ================================================================
-   // Start the corew a suitable time after a PoR
-   UInt#(8) initial_wait = 100; // heuristic -- better to wait till "all out of reset" received from corew
-   Reg #(UInt#(8)) rg_corew_start_after_por <- mkReg(initial_wait);
-   rule rl_step_0 (rg_corew_start_after_por != 0);
-      let n = rg_corew_start_after_por - 1;
-      rg_corew_start_after_por <= n;
-      if (n==0) corew.start (True, 0, 0); // initial start leaves proc running
-   endrule
-   // ================================================================
-
-
 
    // ================================================================
    // Instantiate JTAG TAP controller,
@@ -260,23 +207,40 @@ module mkP3_Core (P3_Core_IFC);
       w_dmi_rsp_response <= response;
    endrule
 
-   (* preempts = "rl_dmi_req_cpu, rl_dmi_rsp_cpu" *)
+   (* preempts = "rl_dmi_req_cpu, rl_dmi_read_rsp_cpu" *)
    rule rl_dmi_req_cpu;
       match {.addr, .data, .op} = bus_dmi_req.out.first;
       bus_dmi_req.out.deq;
       case (op)
-	 1: corew.dmi.read_addr(addr);
+	 1: corew.debug_subordinate.ar.put(AXI4Lite_ARFlit {
+                                             araddr: zeroExtend (addr) << 2
+                                           , arprot: ?
+                                           , aruser: ?
+                                           });
 	 2: begin
-	       corew.dmi.write(addr, data);
+	       corew.debug_subordinate.aw.put(AXI4Lite_AWFlit {
+                                                awaddr: zeroExtend (addr) << 2
+                                              , awprot: ?
+                                              , awuser: ?
+                                              });
+	       corew.debug_subordinate.w.put(AXI4Lite_WFlit {
+                                               wdata: data
+                                             , wstrb: ~0
+                                             , wuser: ?
+                                             });
 	       bus_dmi_rsp.in.enq(tuple2(?, 0));
 	    end
 	 default: bus_dmi_rsp.in.enq(tuple2(?, 2));
       endcase
    endrule
 
-   rule rl_dmi_rsp_cpu;
-      let data <- corew.dmi.read_data;
-      bus_dmi_rsp.in.enq(tuple2(data, 0));
+   rule rl_dmi_read_rsp_cpu;
+      let rflit <- get (corew.debug_subordinate.r);
+      bus_dmi_rsp.in.enq(tuple2(rflit.rdata, 0));
+   endrule
+
+   rule rl_dmi_write_rsp_drain;
+      corew.debug_subordinate.b.drop;
    endrule
 
    // ================================================================
@@ -292,8 +256,8 @@ module mkP3_Core (P3_Core_IFC);
 
    // ================================================================
    // INTERFACE
-   let master0_sig <- toAXI4_Master_Sig(corew.cpu_imem_master);
-   let master1_sig <- toAXI4_Master_Sig(corew.cpu_dmem_master);
+   let master0_sig <- toAXI4_Master_Sig (corew.manager_0);
+   let master1_sig <- toAXI4_Master_Sig (corew.manager_1);
    // ----------------------------------------------------------------
    // Core CPU interfaces
 
@@ -305,10 +269,8 @@ module mkP3_Core (P3_Core_IFC);
 
    // External interrupts
    method  Action interrupt_reqs (Bit #(N_External_Interrupt_Sources) reqs);
-      for (Integer j = 0; j < valueOf (N_External_Interrupt_Sources); j = j + 1) begin
-	 Bool req_j = unpack (reqs [j]);
-	 corew.core_external_interrupt_sources [j].m_interrupt_req (req_j);
-      end
+      for (Integer j = 0; j < valueOf (N_External_Interrupt_Sources); j = j + 1)
+	 corew.irq[j].put (unpack (reqs [j]));
    endmethod
 
 `ifdef INCLUDE_GDB_CONTROL

@@ -16,7 +16,7 @@ compile: compile_sim compile_synth
 
 # ================================================================
 
-REPO ?= ..
+REPO ?= $(CURDIR)/..
 ARCH ?= RV64ACDFIMSUxCHERI
 
 # ================================================================
@@ -29,7 +29,7 @@ BSC_COMPILATION_FLAGS += \
 	-D ISA_I  -D ISA_M  -D ISA_A  -D ISA_F  -D ISA_D  -D ISA_FD_DIV  -D ISA_C  \
 	-D CheriBusBytes=8 \
 	-D CheriMasterIDWidth=1 \
-	-D CheriTransactionIDWidth=5 \
+	-D CheriTransactionIDWidth=6 \
 	-D PERFORMANCE_MONITORING \
 	-D SHIFT_BARREL    \
 	-D MULT_SERIAL    \
@@ -63,32 +63,31 @@ CORE_NUM = 2
 include $(REPO)/builds/Resources/Include_RISCY_Config.mk
 
 # ================================================================
-# Path to RISCY-OOO sources
-
-RISCY_HOME ?= ../src_Core/RISCY_OOO
-
-RISCY_DIRS = $(RISCY_HOME)/procs/RV64G_OOO:$(RISCY_HOME)/procs/lib:$(RISCY_HOME)/coherence/src:$(RISCY_HOME)/fpgautils/lib
-
-CONNECTAL_DIRS = $(RISCY_HOME)/connectal/bsv:$(RISCY_HOME)/connectal/tests/spi:$(RISCY_HOME)/connectal/lib/bsv
-
-CHERI_DIRS = $(RISCY_HOME)/../../libs/cheri-cap-lib
-
-# ALL_RISCY_DIRS = $(RISCY_DIRS)
-ALL_RISCY_DIRS = $(RISCY_DIRS):$(CONNECTAL_DIRS):$(CHERI_DIRS)
-
-# ================================================================
 # Search path for bsc for .bsv files
+COREDIR ?= $(REPO)
+COREW_DIRS = $(CURDIR)/src_BSV:$(COREDIR)/src_Core/Core:$(COREDIR)/src_Core/CPU:$(COREDIR)/src_Core/ISA:$(COREDIR)/src_Core/PLIC:$(COREDIR)/src_Core/Debug_Module:$(COREDIR)/src_Core/BSV_Additional_Libs:$(COREDIR)/src_Core/RISCY_OOO/procs/RV64G_OOO:$(COREDIR)/src_Core/RISCY_OOO/procs/lib:$(COREDIR)/src_Core/RISCY_OOO/coherence/src:$(COREDIR)/src_Core/RISCY_OOO/fpgautils/lib
+WINDCOREIFCDIR ?= $(COREDIR)/libs/WindCoreInterface
+CHERICAPLIBDIR ?= $(COREDIR)/libs/cheri-cap-lib
+TAGCONTROLLERDIR ?= $(COREDIR)/libs/TagController
+RISCVHPMEVENTSDIR ?= $(COREDIR)/libs/RISCV_HPM_Events
+TAGCONTROLLER_DIRS = $(TAGCONTROLLERDIR)/TagController:$(TAGCONTROLLERDIR)/TagController/CacheCore
+BLUESTUFFDIR ?= $(COREDIR)/libs/BlueStuff
+BLUEAXI4DIR = $(BLUESTUFFDIR)/BlueAXI4
+BLUEAXI4DIRS = $(BLUEAXI4DIR):$(BLUEAXI4DIR)/AXI4:$(BLUEAXI4DIR)/AXI4Lite:$(BLUEAXI4DIR)/AXI4Stream:$(BLUEAXI4DIR)/BlueUnixBridges
+BLUEUNIXBRIDGESDIR = $(BLUEAXI4DIR)/BlueUnixBridges
+BLUEBASICSDIR = $(BLUESTUFFDIR)/BlueBasics
+BLUEUTILSDIR = $(BLUESTUFFDIR)/BlueUtils
+BLUESTUFF_DIRS = $(BLUESTUFFDIR):$(BLUEAXI4DIRS):$(BLUEBASICSDIR):$(BLUEUTILSDIR):$(BLUESTUFFDIR)/Stratix10ChipID
 
-CONTRIB_DIRS = %/Libraries/Bus
-CORE_DIRS = $(REPO)/src_Core/CPU:$(REPO)/src_Core/ISA:$(REPO)/src_Core/Core:$(REPO)/src_Core/PLIC:$(REPO)/src_Core/Debug_Module:$(REPO)/src_Core/BSV_Additional_Libs
-
-BLUESTUFF_DIRS = $(REPO)/libs/BlueStuff:$(REPO)/libs/BlueStuff/AXI:$(REPO)/libs/BlueStuff/BlueUtils:$(REPO)/libs/BlueStuff/BlueBasics
-
-TAGCONTROLLER_DIRS = $(REPO)/libs/TagController/TagController:$(REPO)/libs/TagController/TagController/CacheCore
-
-RISCV_HPM_Events_DIR = $(REPO)/libs/RISCV_HPM_Events
-
-BSC_PATH = -p $(CONTRIB_DIRS):$(ALL_RISCY_DIRS):$(CORE_DIRS):src_BSV:$(BLUESTUFF_DIRS):$(TAGCONTROLLER_DIRS):$(RISCV_HPM_Events_DIR):+
+# search path for bsc imports
+ifdef BSC_CONTRIB_DIR
+BSC_CONTRIB_LIB_DIR = $(BSC_CONTRIB_DIR)/lib/Libraries
+else
+BSC_CONTRIB_LIB_DIR = %/Libraries
+endif
+BSC_CONTRIB_DIRS = $(BSC_CONTRIB_LIB_DIR)/Bus
+BSVPATH = +:$(BSC_CONTRIB_DIRS):$(WINDCOREIFCDIR):$(RISCVHPMEVENTSDIR):$(CHERICAPLIBDIR):$(TAGCONTROLLER_DIRS):$(COREW_DIRS):$(BLUESTUFF_DIRS)
+BSC_PATH = -p $(BSVPATH)
 
 # ----------------
 # Top-level file and module
@@ -122,17 +121,17 @@ src_BSV/TagTableStructure.bsv: $(REPO)/libs/TagController/tagsparams.py
 
 .PHONY: generate_hpm_vector
 generate_hpm_vector: GenerateHPMVector.bsv
-GenerateHPMVector.bsv: $(RISCV_HPM_Events_DIR)/parse_counters.py
+GenerateHPMVector.bsv: $(RISCVHPMEVENTSDIR)/parse_counters.py
 	@echo "INFO: Re-generating GenerateHPMVector bluespec file"
-	$^ $(RISCV_HPM_Events_DIR)/counters.yaml -m ProcTypes -b $@
+	$^ $(RISCVHPMEVENTSDIR)/counters.yaml -m ProcTypes -b $@
 	@echo "INFO: Re-generated GenerateHPMVector bluespec file"
 
 
 .PHONY: stat_counters
 stat_counters: StatCounters.bsv
-StatCounters.bsv: $(RISCV_HPM_Events_DIR)/parse_counters.py
+StatCounters.bsv: $(RISCVHPMEVENTSDIR)/parse_counters.py
 	@echo "INFO: Re-generating HPM events struct bluepsec file"
-	$^ $(RISCV_HPM_Events_DIR)/counters.yaml -m ProcTypes -s $@
+	$^ $(RISCVHPMEVENTSDIR)/counters.yaml -m ProcTypes -s $@
 	@echo "INFO: Re-generated HPM events struct bluespec file"
 compile_sim: tagsparams stat_counters generate_hpm_vector
 compile_synth: tagsparams stat_counters generate_hpm_vector
