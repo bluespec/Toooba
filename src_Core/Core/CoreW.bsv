@@ -258,7 +258,6 @@ module mkCoreW_reset #(Reset porReset)
       plic.set_addr_map (zeroExtend (soc_map.m_plic_addr_range.base),
                          zeroExtend (rangeTop(soc_map.m_plic_addr_range)));
       proc.start (restartRunning, soc_map_struct.pc_reset_value, 0, 0);
-      //proc.set_verbosity (verbosity);
    endaction;
 
    // ================================================================
@@ -435,7 +434,6 @@ module mkCoreW_reset #(Reset porReset)
                           , Wd_AW_User, Wd_W_User, Wd_B_User
                           , Wd_AR_User, Wd_R_User))
       master_vector = newVector;
-   //let master_vector = newVector;
    master_vector[cpu_uncached_master_num]     = proc_uncached;
    master_vector[debug_module_sba_master_num] = dm_master_local;
    master_vector[sub_ifc_master_num]          = subShim.master;
@@ -447,7 +445,6 @@ module mkCoreW_reset #(Reset porReset)
                          , Wd_AW_User, Wd_W_User, Wd_B_User
                          , Wd_AR_User, Wd_R_User))
       slave_vector = newVector;
-   //let slave_vector = newVector;
    slave_vector[default_slave_num] = uncached_mem_shim.slave;
    slave_vector[llc_slave_num]     = proc.debug_module_mem_server;
    slave_vector[plic_slave_num]    = zero_AXI4_Slave_user (plic.axi4_slave);
@@ -541,8 +538,6 @@ module mkCoreW_reset #(Reset porReset)
       method put = writeReg (nmirq_reg);
    endinterface;
    rule rl_connect_nmirq;
-      // TODO: fixup; passing const False for now
-      //proc.non_maskable_interrupt_req (False);
       proc.non_maskable_interrupt_req (nmirq_reg);
    endrule
 
