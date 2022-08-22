@@ -79,10 +79,18 @@
 `define LOG_L2_TLB_4KB_WAYS 2 // L2 4KB TLB log ways (4 ways)
 
 // FMA bookkeeping FIFO: add 1 to allow simultaneous enq/deq
+`ifdef USE_XILINX_FPU
 `define BOOKKEEPING_FP_FMA_SIZE TAdd#(`XILINX_FP_FMA_LATENCY, 1)
+`else
+`define BOOKKEEPING_FP_FMA_SIZE 4
+`endif
 // INT MUL bookkeeping FIFO: add 1 to allow simultaneous enq/deq, another 1
 // because of internal flow control in MUL unit
+`ifdef USE_XILINX_FPU
 `define BOOKKEEPING_INT_MUL_SIZE TAdd#(`XILINX_INT_MUL_LATENCY, 2)
+`else
+`define BOOKKEEPING_INT_MUL_SIZE 4
+`endif
 
 // non-blocking DTLB
 `define DTLB_REQ_NUM 4

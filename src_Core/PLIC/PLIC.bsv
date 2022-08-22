@@ -98,8 +98,8 @@ interface PLIC_IFC #(numeric type  t_n_external_sources,
    method Action set_addr_map (Bit #(64)  addr_base, Bit #(64)  addr_lim);
 
    // Memory-mapped access
-   interface AXI4_Slave #( Wd_SId_2x3, Wd_Addr, Wd_Data, 0, 0, 0, 0, 0)
-      axi4_slave;
+   interface AXI4_Slave #( Wd_CoreW_Bus_SId, Wd_Addr, Wd_Data
+                         , 0, 0, 0, 0, 0) axi4_slave;
 
    // sources
    interface Vector #(t_n_external_sources, PLIC_Source_IFC)  v_sources;

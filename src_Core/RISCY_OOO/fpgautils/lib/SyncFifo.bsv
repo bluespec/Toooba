@@ -24,7 +24,9 @@
 import Clocks::*;
 import FIFOF::*;
 import Assert::*;
+`ifdef USE_CONNECTAL_BRAM_SYNC_FIFO
 import ConnectalBramFifo::*;
+`endif
 import BRAMFIFO::*;
 import XilinxSyncFifo::*;
 import ResetGuard::*;

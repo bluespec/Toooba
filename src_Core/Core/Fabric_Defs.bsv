@@ -35,17 +35,17 @@ import ISA_Decls_CHERI :: *;
 // ================================================================
 // Core local Fabric parameters
 
-typedef 2  Num_Masters_2x3;
-typedef 3  Num_Slaves_2x3;
+typedef 3  CoreW_Bus_Num_Masters;
+typedef 3  CoreW_Bus_Num_Slaves;
 
-typedef Bit#(TLog #(Num_Masters_2x3))  Master_Num_2x3;
-typedef Bit#(TLog #(Num_Slaves_2x3))  Slave_Num_2x3;
+typedef Bit#(TLog #(CoreW_Bus_Num_Masters))  CoreW_Bus_Master_Num;
+typedef Bit#(TLog #(CoreW_Bus_Num_Slaves))   CoreW_Bus_Slave_Num;
 
 // ----------------
 // Width of fabric 'Id' buses
-typedef 4 Wd_MId_2x3;
-typedef TAdd#(Wd_MId_2x3, TLog#(Num_Masters_2x3)) Wd_SId_2x3;
-typedef Wd_SId_2x3 Wd_MId;
+typedef 4 Wd_CoreW_Bus_MId;
+typedef TAdd#(Wd_CoreW_Bus_MId, TLog#(CoreW_Bus_Num_Masters)) Wd_CoreW_Bus_SId;
+typedef Wd_CoreW_Bus_SId Wd_MId;
 
 // ----------------
 // Width of fabric 'addr' buses
@@ -104,7 +104,7 @@ Integer  zlsbs_aligned_fabric_addr = valueOf (ZLSBs_Aligned_Fabric_Addr);
 
 // ================================================================
 // AXI4 defaults for this project
-Bit#(Wd_MId_2x3) fabric_2x3_default_mid = 0;
+Bit#(Wd_CoreW_Bus_MId) fabric_corew_bus_default_mid = 0;
 Bit#(Wd_MId)     fabric_default_mid     = 0;
 AXI4_Burst       fabric_default_burst   = INCR;
 AXI4_Lock        fabric_default_lock    = NORMAL;

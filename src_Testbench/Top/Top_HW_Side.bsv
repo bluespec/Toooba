@@ -51,6 +51,9 @@ import GetPut_Aux :: *;
 // ================================================================
 // Project imports
 
+import WindCoreInterface :: *;
+import AXI4Lite :: *;
+import SourceSink :: *;
 import ISA_Decls      :: *;
 import TV_Info        :: *;
 import SoC_Top        :: *;
@@ -104,16 +107,7 @@ module mkPre_Top_HW_Side (Toooba_RVFI_DII_Server);
    // - on power-on, and
    // - when the Debug Module requests an NDM reset (for non-DebugModule).
 
-`ifdef INCLUDE_GDB_CONTROL
-   let clk <- exposeCurrentClock;
-   Bool    initial_reset_val  = False;
-   Integer ndm_reset_duration = 10;    // NOTE: assuming 10 cycle reset enough for NDM
-   let ndm_reset_controller <- mkReset(ndm_reset_duration, initial_reset_val, clk);
-
-   let ndm_reset <- mkResetEither (power_on_reset, ndm_reset_controller.new_rst);
-`else
    let ndm_reset = power_on_reset;
-`endif
 
    // ================================================================
    // STATE
@@ -140,7 +134,6 @@ module mkPre_Top_HW_Side (Toooba_RVFI_DII_Server);
 	 Bool v2 <- $test$plusargs ("v2");
 	 Bit #(4)  verbosity = ((v2 ? 2 : (v1 ? 1 : 0)));
 	 Bit #(64) logdelay  = 0;    // # of instructions after which to set verbosity
-	 soc_top.set_verbosity  (verbosity, logdelay);
 
 	 // ----------------
 	 // Load optional tohost and fromhost addrs from symbol-table file
@@ -163,36 +156,6 @@ module mkPre_Top_HW_Side (Toooba_RVFI_DII_Server);
 	 soc_top.start (tohost_addr, fromhost_addr);
       endaction
    endfunction
-
-   // ================================================================
-
-`ifdef INCLUDE_GDB_CONTROL
-   // ================================================================
-   // NDM reset from DM
-
-   Reg #(Bit #(8))  rg_ndm_reset_delay <- mkReg (0);
-
-   rule rl_ndm_reset (rg_ndm_reset_delay == 0);
-      let x <- soc_top.ndm_reset_client.request.get;
-      ndm_reset_controller.assertReset;
-      rg_ndm_reset_delay <= fromInteger (ndm_reset_duration + 200);    // NOTE: heuristic
-
-      $display ("%0d: %m.rl_ndm_reset: asserting NDM reset (for non-DebugModule) for %0d cycles",
-		cur_cycle, ndm_reset_duration);
-   endrule
-
-   rule rl_ndm_reset_wait (rg_ndm_reset_delay != 0);
-      if (rg_ndm_reset_delay == 1) begin
-	 fa_reset_actions;
-	 Bool is_running = True;
-	 soc_top.ndm_reset_client.response.put (is_running);
-	 $display ("%0d: %m.rl_ndm_reset_wait: sent NDM reset ack (for non-DebugModule) to Debug Module",
-		   cur_cycle);
-      end
-      rg_ndm_reset_delay <= rg_ndm_reset_delay - 1;
-   endrule
-   // ================================================================
-`endif
 
    // ================================================================
    // BEHAVIOR
@@ -376,7 +339,8 @@ module mkPre_Top_HW_Side (Toooba_RVFI_DII_Server);
 
    rule rl_handle_external_req_read_request (req.op == external_control_req_op_read_control_fabric);
       f_external_control_reqs.deq;
-      soc_top.dmi.read_addr (truncate (req.arg1));
+      soc_top.debug_subordinate.ar.put(AXI4Lite_ARFlit { araddr: truncate (req.arg1)
+                                                       , arprot: ?, aruser: ? });
       if (dmi_verbosity != 0) begin
 	 $display ("%0d: %m.rl_handle_external_req_read_request", cur_cycle);
          $display ("    ", fshow (req));
@@ -384,8 +348,8 @@ module mkPre_Top_HW_Side (Toooba_RVFI_DII_Server);
    endrule
 
    rule rl_handle_external_req_read_response;
-      let x <- soc_top.dmi.read_data;
-      let rsp = Control_Rsp {status: external_control_rsp_status_ok, result: signExtend (x)};
+      let x <- get (soc_top.debug_subordinate.r);
+      let rsp = Control_Rsp {status: external_control_rsp_status_ok, result: signExtend (x.rdata)};
       f_external_control_rsps.enq (rsp);
       if (dmi_verbosity != 0) begin
 	 $display ("%0d: %m.rl_handle_external_req_read_response", cur_cycle);
@@ -395,7 +359,10 @@ module mkPre_Top_HW_Side (Toooba_RVFI_DII_Server);
 
    rule rl_handle_external_req_write (req.op == external_control_req_op_write_control_fabric);
       f_external_control_reqs.deq;
-      soc_top.dmi.write (truncate (req.arg1), truncate (req.arg2));
+      soc_top.debug_subordinate.aw.put(AXI4Lite_AWFlit { awaddr: truncate (req.arg1)
+                                                       , awprot: ?, awuser: ? });
+      soc_top.debug_subordinate.w.put(AXI4Lite_WFlit { wdata: truncate (req.arg2)
+                                                     , wstrb: ~0, wuser: ? });
       // let rsp = Control_Rsp {status: external_control_rsp_status_ok, result: 0};
       // f_external_control_rsps.enq (rsp);
       if (dmi_verbosity != 0) begin
@@ -403,6 +370,8 @@ module mkPre_Top_HW_Side (Toooba_RVFI_DII_Server);
          $display ("    ", fshow (req));
       end
    endrule
+
+   rule rl_drain_debug_write_rsps; soc_top.debug_subordinate.b.drop; endrule
 
    rule rl_handle_external_req_err (   (req.op != external_control_req_op_read_control_fabric)
 				    && (req.op != external_control_req_op_write_control_fabric));

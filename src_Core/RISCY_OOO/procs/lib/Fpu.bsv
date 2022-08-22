@@ -95,7 +95,8 @@ module mkDoubleDiv(Server#(Tuple3#(Double, Double, FpuRoundMode), Tuple2#(Double
 `ifdef USE_XILINX_FPU
     let fpu <- mkXilinxFpDiv;
 `else
-    let int_div <- mkNonPipelinedDivider(3); // [sizhuo] size in RVFpu: 2
+    //let int_div <- mkDivider(1); // [sizhuo] size in RVFpu: 2
+    let int_div <- mkNonPipelinedDivider(3);
     let fpu <- mkFloatingPointDivider(int_div);
 `endif
     return fpu;

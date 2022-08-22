@@ -2,6 +2,9 @@ import FIFOF::*;
 import FIFO::*;
 
 import WaitAutoReset::*;
+import Divide::*;
+import ClientServer::*;
+import GetPut::*;
 
 export XilinxIntDiv(..);
 export mkXilinxIntDiv;
@@ -70,22 +73,23 @@ module mkIntDivUnsignedSim(IntDivUnsignedImport);
     FIFO#(Bit#(64)) divisorQ <- mkFIFO;
     FIFOF#(Tuple2#(Bit#(128), IntDivUser)) respQ <- mkSizedFIFOF(2);
 
+    FIFO#(IntDivUser) userFF <- mkFIFO;
+    Server#(Tuple2#(UInt#(128),UInt#(64)),Tuple2#(UInt#(64),UInt#(64)))
+      nonpipediv <- mkNonPipelinedDivider (4);
+
     rule compute;
         dividendQ.deq;
         divisorQ.deq;
         let {dividend, user} = dividendQ.first;
         let divisor = divisorQ.first;
+        nonpipediv.request.put(tuple2(unpack(zeroExtend(dividend)), unpack(divisor)));
+        userFF.enq(user);
+    endrule
 
-        // Be careful to avoid divide-by-zero in bluesim's C++, which turns
-        //   res = cond ? exp1 : exp2
-        // into
-        //   tmp1 = exp1; tmp2 = exp2; res = cond ? tmp1 : tmp2
-        // so we must give a fake non-zero input even if it looks unused.
-        UInt#(64) a = unpack(dividend);
-        UInt#(64) b = divisor == 0 ? 1 : unpack(divisor);
-        Bit#(64) q = divisor == 0 ? maxBound : pack(a / b);
-        Bit#(64) r = divisor == 0 ? dividend : pack(a % b);
-        respQ.enq(tuple2({q, r}, user));
+    rule getResult;
+       let {qq, rr} <- nonpipediv.response.get;
+       let user <- toGet(userFF).get;
+       respQ.enq(tuple2({pack(qq), pack(rr)}, user));
     endrule
 
     method Action enqDividend(Bit#(64) dividend, IntDivUser user);
@@ -124,6 +128,9 @@ module mkXilinxIntDiv(XilinxIntDiv#(tagT)) provisos (
     Bits#(tagT, tagSz), Add#(tagSz, a__, 8)
 );
 `ifdef BSIM
+`define NO_XILINX
+`endif
+`ifdef NO_XILINX
     IntDivUnsignedImport divIfc <- mkIntDivUnsignedSim;
 `else
     IntDivUnsignedImport divIfc <- mkIntDivUnsignedImport;

@@ -2,7 +2,7 @@
 //
 //-
 // RVFI_DII + CHERI modifications:
-//     Copyright (c) 2020 Alexandre Joannou
+//     Copyright (c) 2020-2022 Alexandre Joannou
 //     Copyright (c) 2020 Peter Rugg
 //     Copyright (c) 2020 Jonathan Woodruff
 //     All rights reserved.
@@ -13,6 +13,13 @@
 //     DARPA SSITH research programme.
 //
 //     This work was supported by NCSC programme grant 4212611/RFA 15971 ("SafeBet").
+//
+// This material is based upon work supported by the DoD Information Analysis
+// Center Program Management Office (DoD IAC PMO), sponsored by the Defense
+// Technical Information Center (DTIC) under Contract No. FA807518D0004.  Any
+// opinions, findings and conclusions or recommendations expressed in this
+// material are those of the author(s) and do not necessarily reflect the views
+// of the Air Force Installation Contracting Agency (AFICA).
 //-
 
 package CoreW;
@@ -46,6 +53,7 @@ package CoreW;
 // BSV library imports
 
 import Vector       :: *;
+import FIFO         :: *;
 import FIFOF        :: *;
 import GetPut       :: *;
 import ClientServer :: *;
@@ -59,7 +67,8 @@ import Cur_Cycle  :: *;
 import GetPut_Aux :: *;
 import Routable   :: *;
 import AXI4       :: *;
-import AXI4_Utils :: *;
+import AXI4Lite   :: *;
+import SourceSink :: *;
 import TagControllerAXI :: *;
 import CacheCore  :: *;
 
@@ -84,9 +93,9 @@ import SoC_Map      :: *;
 import Debug_Module  :: *;
 `endif
 
-import CoreW_IFC    :: *;
-import Proc_IFC     :: *;
-import Proc         :: *;
+import WindCoreInterface :: *;
+import Proc_IFC          :: *;
+import Proc              :: *;
 
 import PLIC                :: *;
 import PLIC_16_CoreNumX2_7 :: *;
@@ -110,9 +119,37 @@ import DM_CPU_Req_Rsp ::*;
 // ================================================================
 // The Core module
 
-(* synthesize *)
-module mkCoreW #(Reset dm_power_on_reset)
-               (CoreW_IFC #(N_External_Interrupt_Sources));
+typedef WindCoreMid #( // AXI lite subordinate control port parameters
+                       21, 32, 0, 0, 0, 0, 0
+                       // AXI manager 0 port parameters
+                     , TAdd #(Wd_MId, 1), Wd_Addr, Wd_Data, 0, 0, 0, 0, 0
+                       // AXI manager 1 port parameters
+                     , TAdd #(Wd_MId, 1), Wd_Addr, Wd_Data, 0, 0, 0, 0, 0
+                       // AXI subordinate 0 port parameters
+                     , Wd_CoreW_Bus_MId, Wd_Addr, Wd_Data
+                     , Wd_AW_User, Wd_W_User, Wd_B_User
+                     , Wd_AR_User, Wd_R_User
+                       // Number of interrupt lines
+                     , t_n_irq) CoreW_IFC #(numeric type t_n_irq);
+
+//(* synthesize *)
+module mkCoreW (CoreW_IFC #(t_n_irq));
+   Clock clk <- exposeCurrentClock;
+   Reset rst <- exposeCurrentReset;
+   let newRst <- mkReset (0, True, clk, reset_by rst);
+   match {.otherRst, .ifc} <- mkCoreW_reset ( rst
+                                            , reset_by newRst.new_rst);
+   rule rl_forward_debug_reset (otherRst);
+      newRst.assertReset;
+   endrule
+   return ifc;
+endmodule
+
+// The interface to this module is a convenience to avoid exposing the reset
+// hacks to the nicer outer interface, and not have to use a large amount of
+// reset_by to decouple the debug module from the rest...
+module mkCoreW_reset #(Reset porReset)
+                      (Tuple2#(PulseWire, CoreW_IFC #(t_n_irq)));
 
    // ================================================================
    // Notes on 'reset'
@@ -121,7 +158,7 @@ module mkCoreW #(Reset dm_power_on_reset)
    // 'non-debug-module reset', or 'ndm-reset': it resets everything
    // in mkCoreW other than the optional RISC-V Debug Module (DM).
 
-   // DM is reset ONLY by 'dm_power_on_reset' (parameter of this module).
+   // DM is reset ONLY by 'porReset' (parameter of this module).
    // This is expected to be performed exactly once, on power-up.
 
    // Note: DM has an internal functionality that the DM spec calls
@@ -172,14 +209,16 @@ module mkCoreW #(Reset dm_power_on_reset)
    Proc_IFC proc <- mkProc (reset_by all_harts_reset);
 
    // handle uncached interface
-   let proc_uncached = prepend_AXI4_Master_id (0, zero_AXI4_Master_user (proc.master1));
+   let proc_uncached =
+       prepend_AXI4_Master_id (0, zero_AXI4_Master_user (proc.master1));
    // Bridge for uncached expernal bus transactions.
    let uncached_mem_shim <- mkAXI4ShimFF(reset_by all_harts_reset);
 
    // handle cached interface
    // AXI4 tagController
-   TagControllerAXI#(Wd_MId, Wd_Addr, Wd_Data) tagController <- mkTagControllerAXI(reset_by all_harts_reset); // TODO double check if reseting like this is good enough
-   mkConnection(proc.master0, tagController.slave, reset_by all_harts_reset);
+   TagControllerAXI #(Wd_MId, Wd_Addr, Wd_Data)
+     tagController <- mkTagControllerAXI (reset_by all_harts_reset); // TODO double check if reseting like this is good enough
+   mkConnection (proc.master0, tagController.slave, reset_by all_harts_reset);
 `ifdef PERFORMANCE_MONITORING
    rule report_tagController_events;
       EventsCacheCore cache_core_evts = tagController.events;
@@ -198,11 +237,11 @@ module mkCoreW #(Reset dm_power_on_reset)
 `endif
 
    // PLIC (Platform-Level Interrupt Controller)
-   PLIC_IFC_16_CoreNumX2_7  plic <- mkPLIC_16_CoreNumX2_7;
+   PLIC_IFC_16_CoreNumX2_7  plic <- mkPLIC_16_CoreNumX2_7 (reset_by all_harts_reset);
 
 `ifdef INCLUDE_GDB_CONTROL
    // Debug Module
-   Debug_Module_IFC  debug_module <- mkDebug_Module (reset_by dm_power_on_reset);
+   Debug_Module_IFC  debug_module <- mkDebug_Module (reset_by porReset);
 `endif
 
 `ifdef INCLUDE_TANDEM_VERIF
@@ -215,9 +254,16 @@ module mkCoreW #(Reset dm_power_on_reset)
    TV_Encode_IFC tv_encode <- mkTV_Encode;
 `endif
 
+   function do_release (restartRunning) = action
+      plic.set_addr_map (zeroExtend (soc_map.m_plic_addr_range.base),
+                         zeroExtend (rangeTop(soc_map.m_plic_addr_range)));
+      proc.start (restartRunning, soc_map_struct.pc_reset_value, 0, 0);
+   endaction;
+
    // ================================================================
    // Hart-reset from DM
 
+   Bool start_running = False;
 `ifdef INCLUDE_GDB_CONTROL
    Reg #(Bit #(8))  rg_harts_reset_delay <- mkReg (0);
    Reg #(Bit #(64)) rg_tohost_addr       <- mkReg (0);
@@ -225,36 +271,43 @@ module mkCoreW #(Reset dm_power_on_reset)
 
    for (Integer core = 0; core < valueOf(CoreNum); core = core + 1)
       rule rl_dm_harts_reset (rg_harts_reset_delay == 0);
-	 let x <- debug_module.harts_reset_client[core].request.get;
-	 dm_harts_reset_controller[core].assertReset;
-	 rg_harts_reset_delay <= fromInteger (hart_reset_duration + 200);    // NOTE: heuristic
-
-	 $display ("%0d: %m.rl_dm_harts_reset: asserting harts reset for %0d cycles",
+         let x <- debug_module.harts_reset_client[core].request.get;
+         dm_harts_reset_controller[core].assertReset;
+         rg_harts_reset_delay <= fromInteger (hart_reset_duration + 200);    // NOTE: heuristic
+         $display ("%0d: %m.rl_dm_harts_reset: asserting harts reset for %0d cycles",
                 cur_cycle, hart_reset_duration);
-   endrule
+      endrule
 
    rule rl_dm_harts_reset_wait (rg_harts_reset_delay != 0);
       if (rg_harts_reset_delay == 1) begin
          let pc = soc_map_struct.pc_reset_value;
-         Bool is_running = True;
-	 proc.start (is_running, pc, rg_tohost_addr, rg_fromhost_addr);
+         proc.start (start_running, pc, rg_tohost_addr, rg_fromhost_addr);
          // We reset all the harts, so we indicate this to the DM, even though it's possible only one hart was requested to reset
          for (Integer core = 0; core < valueOf(CoreNum); core = core + 1)
-	    debug_module.harts_reset_client[core].response.put (is_running);
-	 $display ("%0d: %m.rl_dm_harts_reset_wait: proc.start (pc %0h, tohostAddr %0h, fromhostAddr %0h",
+         debug_module.harts_reset_client[core].response.put (start_running);
+         $display ("%0d: %m.rl_dm_harts_reset_wait: proc.start (pc %0h, tohostAddr %0h, fromhostAddr %0h",
                    cur_cycle, pc, rg_tohost_addr, rg_fromhost_addr);
       end
       rg_harts_reset_delay <= rg_harts_reset_delay - 1;
    endrule
 
 `endif
+   // ================================================================
+   // Start the proc a suitable time after a PoR
+   UInt#(8) initial_wait = 100; // heuristic -- better to wait till "all out of reset" received from corew
+   Reg #(UInt#(8)) rg_corew_start_after_por <- mkReg(initial_wait, reset_by porReset);
+   rule rl_step_0 (rg_corew_start_after_por != 0);
+      let n = rg_corew_start_after_por - 1;
+      rg_corew_start_after_por <= n;
+      if (n==0) do_release(start_running);
+   endrule
 
 `ifdef INCLUDE_GDB_CONTROL
    // ================================================================
    // Direct DM-to-CPU connections for run-control and other misc requests
 
-   mkConnection (debug_module.harts_client_run_halt, proc.harts_run_halt_server);
-   mkConnection (debug_module.harts_get_other_req,   proc.harts_put_other_req);
+   mkConnection (debug_module.harts_client_run_halt, proc.harts_run_halt_server, reset_by porReset);
+   mkConnection (debug_module.harts_get_other_req,   proc.harts_put_other_req, reset_by porReset);
 `endif
 
 `ifdef INCLUDE_TANDEM_VERIF
@@ -335,15 +388,15 @@ module mkCoreW #(Reset dm_power_on_reset)
    // BEGIN SECTION: DM, no TV
 
    // Connect DM's GPR interface directly to CPU
-   mkConnection (debug_module.harts_gpr_mem_client, proc.harts_gpr_mem_server);
+   mkConnection (debug_module.harts_gpr_mem_client, proc.harts_gpr_mem_server, reset_by porReset);
 
 `ifdef ISA_F_OR_D
    // Connect DM's FPR interface directly to CPU
-   mkConnection (debug_module.harts_fpr_mem_client, proc.harts_fpr_mem_server);
+   mkConnection (debug_module.harts_fpr_mem_client, proc.harts_fpr_mem_server, reset_by porReset);
 `endif
 
    // Connect DM's CSR interface directly to CPU
-   mkConnection (debug_module.harts_csr_mem_client, proc.harts_csr_mem_server);
+   mkConnection (debug_module.harts_csr_mem_client, proc.harts_csr_mem_server, reset_by porReset);
 
    // DM's bus master is directly the bus master
    let dm_master_local = debug_module.master;
@@ -369,30 +422,35 @@ module mkCoreW #(Reset dm_power_on_reset)
 
 
    // ================================================================
-   // Connect the local 2x3 fabric
+   // new internal AXI4 manager from interace subordinate port
+   let subShim <- mkAXI4Shim;
 
-   // Masters on the local 2x3 fabric
-   Vector#(Num_Masters_2x3, AXI4_Master #(Wd_MId_2x3, Wd_Addr, Wd_Data,
-                                          Wd_AW_User, Wd_W_User, Wd_B_User,
-                                          Wd_AR_User, Wd_R_User))
-                                          master_vector = newVector;
-   //let master_vector = newVector;
+   // ================================================================
+   // Connect the local bus
+
+   // Masters on the local bus
+   Vector #( CoreW_Bus_Num_Masters
+           , AXI4_Master #( Wd_CoreW_Bus_MId, Wd_Addr, Wd_Data
+                          , Wd_AW_User, Wd_W_User, Wd_B_User
+                          , Wd_AR_User, Wd_R_User))
+      master_vector = newVector;
    master_vector[cpu_uncached_master_num]     = proc_uncached;
    master_vector[debug_module_sba_master_num] = dm_master_local;
+   master_vector[sub_ifc_master_num]          = subShim.master;
 
-   // Slaves on the local 2x3 fabric
+   // Slaves on the local bus
    // default slave is forwarded out directly to the Core interface
-   Vector#(Num_Slaves_2x3, AXI4_Slave #(Wd_SId_2x3, Wd_Addr, Wd_Data,
-                                        Wd_AW_User, Wd_W_User, Wd_B_User,
-                                        Wd_AR_User, Wd_R_User))
-                                        slave_vector = newVector;
-   //let slave_vector = newVector;
+   Vector #( CoreW_Bus_Num_Slaves
+           , AXI4_Slave #( Wd_CoreW_Bus_SId, Wd_Addr, Wd_Data
+                         , Wd_AW_User, Wd_W_User, Wd_B_User
+                         , Wd_AR_User, Wd_R_User))
+      slave_vector = newVector;
    slave_vector[default_slave_num] = uncached_mem_shim.slave;
    slave_vector[llc_slave_num]     = proc.debug_module_mem_server;
    slave_vector[plic_slave_num]    = zero_AXI4_Slave_user (plic.axi4_slave);
 
-   function Vector#(Num_Slaves_2x3, Bool) route_2x3 (Bit#(Wd_Addr) addr);
-      Vector#(Num_Slaves_2x3, Bool) res = replicate(False);
+   function Vector #(CoreW_Bus_Num_Slaves, Bool) route (Bit #(Wd_Addr) addr);
+      Vector #(CoreW_Bus_Num_Slaves, Bool) res = replicate(False);
       if (inRange(soc_map.m_mem0_controller_addr_range, addr))
         res[llc_slave_num] = True;
       else if (inRange(soc_map.m_plic_addr_range, addr))
@@ -404,7 +462,7 @@ module mkCoreW #(Reset dm_power_on_reset)
       return res;
    endfunction
 
-   mkAXI4Bus (route_2x3, master_vector, slave_vector);
+   mkAXI4Bus (route, master_vector, slave_vector, reset_by all_harts_reset);
 
    // ================================================================
    // Connect external interrupt lines from PLIC to CPU
@@ -423,76 +481,114 @@ module mkCoreW #(Reset dm_power_on_reset)
    endrule
 
    // ================================================================
+   // Connect external debug module interface
+
+   let dbgShim <- mkAXI4LiteShim (reset_by porReset);
+
+   rule rl_debug_module_read_req;
+      let arFlit <- get (dbgShim.master.ar);
+      debug_module.dmi.read_addr (truncate (arFlit.araddr >> 2));
+   endrule
+   rule rl_debug_module_read_rsp;
+      let x <- debug_module.dmi.read_data;
+      dbgShim.master.r.put(AXI4Lite_RFlit { rdata: x, rresp: OKAY, ruser: ?});
+   endrule
+   rule rl_debug_module_write_req;
+      let awFlit <- get (dbgShim.master.aw);
+      let wFlit <- get (dbgShim.master.w);
+      dbgShim.master.b.put(defaultValue);
+      debug_module.dmi.write (truncate (awFlit.awaddr >> 2), wFlit.wdata);
+   endrule
+
+   let fromDbgReset <- mkPulseWire (reset_by porReset);
+   Reg #(UInt #(8)) ndm_reset_delay <- mkReg (0, reset_by porReset);
+   Reg #(Bool) ndm_reset_restart_running <- mkReg (False, reset_by porReset);
+   rule rl_debug_module_send_reset (ndm_reset_delay == 0);
+      let restartRunning <- debug_module.ndm_reset_client.request.get;
+      ndm_reset_delay <= 110;
+      ndm_reset_restart_running <= restartRunning;
+      fromDbgReset.send;
+   endrule
+   rule rl_debug_module_count_reset_delay (ndm_reset_delay > 1);
+      ndm_reset_delay <= ndm_reset_delay - 1;
+   endrule
+   rule rl_debug_module_ack_reset (ndm_reset_delay == 1);
+      debug_module.ndm_reset_client.response.put (ndm_reset_restart_running);
+      do_release (ndm_reset_restart_running);
+      ndm_reset_delay <= 0;
+   endrule
+
+   // ================================================================
+   // Connect external interrupts to the PLIC and Proc
+
+   Vector #(t_n_irq, Reg #(Bool)) irq_reg
+      <- replicateM (mkReg (False));
+   Vector #(t_n_irq, Put #(Bool)) irq_ifc;
+   for (Integer i = 0; i < valueof (t_n_irq); i = i + 1) begin
+      irq_ifc [i] = interface Put;
+         method put = writeReg (irq_reg[i]);
+      endinterface;
+      rule rl_connect_irq;
+         plic.v_sources[i].m_interrupt_req (irq_reg[i]);
+      endrule
+   end
+
+   let nmirq_reg <- mkReg (False);
+   let nmirq_ifc = interface Put;
+      method put = writeReg (nmirq_reg);
+   endinterface;
+   rule rl_connect_nmirq;
+      proc.non_maskable_interrupt_req (nmirq_reg);
+   endrule
+
+   // ================================================================
+   // Connect other control and status signals
+
+   let f_ctrl_reqs <- mkFIFO1;
+   let f_ctrl_rsps <- mkFIFO1;
+
+   rule rl_ctrl_req;
+      case (f_ctrl_reqs.first) matches
+         tagged ReleaseReq: do_release (False);
+         tagged StatusReq: $display ("StatusReq not supported in Toooba");
+      endcase
+      f_ctrl_reqs.deq;
+   endrule
+
+   rule rl_ctrl_rsp;
+      f_ctrl_rsps.enq (StatusRsp(?));
+   endrule
+
+   // ================================================================
    // INTERFACE
 
-   // ----------------------------------------------------------------
-   // Debugging: set core's verbosity, htif addrs
+   let ifc = interface CoreW_IFC;
+      // debug related signals
+      // ---------------------
+      interface debug_subordinate = dbgShim.slave;
 
-   method Action  set_verbosity (Bit #(4)  verbosity, Bit #(64)  logdelay);
-      // Warning: ignoring logdelay
-      proc.set_verbosity (verbosity);
-   endmethod
+      // interrupt related signals
+      // -------------------------
+      interface irq = irq_ifc;
+      interface nmirq = nmirq_ifc;
 
-   // ----------------------------------------------------------------
-   // Start
+      // other control and status signals
+      // --------------------------------
+      interface controlStatusServer = toGPServer (f_ctrl_reqs, f_ctrl_rsps);
 
-   method Action start (Bool is_running, Bit #(64) tohost_addr, Bit #(64) fromhost_addr);
-      plic.set_addr_map (zeroExtend (soc_map.m_plic_addr_range.base),
-                         zeroExtend (rangeTop(soc_map.m_plic_addr_range)));
+      // memory interfaces
+      // -----------------
+      // Cached master to Fabric master interface
+      interface manager_0 = tagController.master;
+      // Uncached master to Fabric master interface
+      interface manager_1 = prepend_AXI4_Master_id
+            (0, zero_AXI4_Master_user (uncached_mem_shim.master));
+      interface subordinate_0 = subShim.slave;
+   endinterface;
 
-      let pc = soc_map_struct.pc_reset_value;
-      proc.start (is_running, pc, tohost_addr, fromhost_addr);
-
-`ifdef INCLUDE_GDB_CONTROL
-      // Save for potential future use by rl_dm_harts_reset
-      rg_tohost_addr   <= tohost_addr;
-      rg_fromhost_addr <= fromhost_addr;
-`endif
-
-      $display ("%0d: %m.method start: proc.start (pc %0h, tohostAddr %0h, fromhostAddr %0h)",
-                cur_cycle, pc, tohost_addr, fromhost_addr);
-   endmethod
-
-   // ----------------------------------------------------------------
-   // AXI4 Fabric interfaces
-
-   // Cached master to Fabric master interface
-   interface cpu_imem_master = tagController.master;
-
-   // Uncached master to Fabric master interface
-   interface cpu_dmem_master = prepend_AXI4_Master_id(0, zero_AXI4_Master_user(uncached_mem_shim.master));
-
-   // ----------------------------------------------------------------
-   // External interrupt sources
-
-   interface core_external_interrupt_sources = plic.v_sources;
-
-   // ----------------------------------------------------------------
-   // Non-maskable interrupt request
-
-   method Action nmi_req (Bool set_not_clear);
-      // TODO: fixup; passing const False for now
-      proc.non_maskable_interrupt_req (False);
-   endmethod
-
+/*
 `ifdef RVFI_DII
    interface Toooba_RVFI_DII_Server rvfi_dii_server = proc.rvfi_dii_server;
-`endif
-
-`ifdef INCLUDE_GDB_CONTROL
-   // ----------------------------------------------------------------
-   // Optional DM interfaces
-
-   // ----------------
-   // DMI (Debug Module Interface) facing remote debugger
-
-   interface DMI dmi = debug_module.dmi;
-
-   // ----------------
-   // Facing Platform
-
-   // Non-Debug-Module Reset (reset all except DM)
-   interface Client ndm_reset_client = debug_module.ndm_reset_client;
 `endif
 
 `ifdef INCLUDE_TANDEM_VERIF
@@ -506,50 +602,28 @@ module mkCoreW #(Reset dm_power_on_reset)
       endmethod
    endinterface
 `endif
+*/
 
-endmodule: mkCoreW
-
-(* synthesize *)
-module mkCoreW_Synth #(Reset dm_power_on_reset)
-                      (CoreW_IFC_Synth #(N_External_Interrupt_Sources));
-   let core <- mkCoreW (dm_power_on_reset);
-   let cpu_imem_master_sig <- toAXI4_Master_Sig (core.cpu_imem_master);
-   let cpu_dmem_master_sig <- toAXI4_Master_Sig (core.cpu_dmem_master);
-
-   method set_verbosity = core.set_verbosity;
-   method start = core.start;
-   interface cpu_imem_master = cpu_imem_master_sig;
-   interface cpu_dmem_master = cpu_dmem_master_sig;
-   interface core_external_interrupt_sources = core.core_external_interrupt_sources;
-   method nmi_req = core.nmi_req;
-`ifdef RVFI_DII
-   interface rvfi_dii_server = core.rvfi_dii_server;
-`endif
-`ifdef INCLUDE_GDB_CONTROL
-   interface dmi = core.dmi;
-   interface ndm_reset_client = core.ndm_reset_client;
-`endif
-`ifdef INCLUDE_TANDEM_VERIF
-   interface tv_verifier_info_get = core.tv_verifier_info_get;
-`endif
-endmodule
+   return tuple2 (fromDbgReset, ifc);
+endmodule: mkCoreW_reset
 
 // ================================================================
-// 2x3 Fabric for this Core
+// internal bus for this Core
 // Masters: CPU DMem, Debug Module System Bus Access, External access
 
 // ----------------
 // Fabric port numbers for masters
 
-Master_Num_2x3  cpu_uncached_master_num     = 0;
-Master_Num_2x3  debug_module_sba_master_num = 1;
+CoreW_Bus_Master_Num cpu_uncached_master_num     = 0;
+CoreW_Bus_Master_Num debug_module_sba_master_num = 1;
+CoreW_Bus_Master_Num sub_ifc_master_num          = 2;
 
 // ----------------
 // Fabric port numbers for slaves
 
-Slave_Num_2x3  default_slave_num = 0;    // for I/O, uncached memory, etc.
-Slave_Num_2x3  plic_slave_num    = 1;    // PLIC mem-mapped registers
-Slave_Num_2x3  llc_slave_num     = 2;    // Normal cached memory (connects to coherent Last-Level Cache)
+CoreW_Bus_Slave_Num default_slave_num = 0;    // for I/O, uncached memory, etc.
+CoreW_Bus_Slave_Num plic_slave_num    = 1;    // PLIC mem-mapped registers
+CoreW_Bus_Slave_Num llc_slave_num     = 2;    // Normal cached memory (connects to coherent Last-Level Cache)
 
 // ================================================================
 

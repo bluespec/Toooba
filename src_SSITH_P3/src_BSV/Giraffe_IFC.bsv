@@ -14,8 +14,8 @@
 
 package Giraffe_IFC;
 
-import AXI4 ::*;
-import Bus ::*;
+import Bus         ::*;
+import BlueAXI4    ::*;
 import Connectable ::*;
 
 `include "Giraffe.defines"
