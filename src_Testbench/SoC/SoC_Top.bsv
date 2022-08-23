@@ -93,7 +93,7 @@ import Debug_Module     :: *;
 interface SoC_Top_IFC;
 
 `ifdef INCLUDE_GDB_CONTROL
-  interface AXI4Lite_Slave #(7, 32, 0, 0, 0, 0, 0) debug_subordinate;
+  interface AXI4Lite_Slave #(21, 32, 0, 0, 0, 0, 0) debug_subordinate;
 `endif
 
 `ifdef INCLUDE_TANDEM_VERIF

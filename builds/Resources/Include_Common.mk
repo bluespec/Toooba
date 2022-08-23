@@ -90,7 +90,7 @@ BSC_COMPILATION_FLAGS += \
 	-D FABRIC64    \
 	-D CheriBusBytes=8 \
 	-D CheriMasterIDWidth=1 \
-	-D CheriTransactionIDWidth=5 \
+	-D CheriTransactionIDWidth=6 \
 	-D CAP128 -D BLUESIM \
 	-D MEM64 \
 	-D RISCV \
