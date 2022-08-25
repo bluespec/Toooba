@@ -257,13 +257,13 @@ module mkCoreW_reset #(Reset porReset)
    function do_release (restartRunning) = action
       plic.set_addr_map (zeroExtend (soc_map.m_plic_addr_range.base),
                          zeroExtend (rangeTop(soc_map.m_plic_addr_range)));
-      proc.start (restartRunning, soc_map_struct.pc_reset_value, 0, 0);
+      proc.start (restartRunning, soc_map_struct.pc_reset_value, 'h80001000, 0);
    endaction;
 
    // ================================================================
    // Hart-reset from DM
 
-   Bool start_running = False;
+   Bool start_running = True;
 `ifdef INCLUDE_GDB_CONTROL
    Reg #(Bit #(8))  rg_harts_reset_delay <- mkReg (0);
    Reg #(Bit #(64)) rg_tohost_addr       <- mkReg (0);
@@ -480,10 +480,12 @@ module mkCoreW_reset #(Reset porReset)
       proc.s_external_interrupt_req (seips);
    endrule
 
+`ifdef INCLUDE_GDB_CONTROL
    // ================================================================
    // Connect external debug module interface
 
    let dbgShim <- mkAXI4LiteShim (reset_by porReset);
+   let dbgSub = dbgShim.slave;
 
    rule rl_debug_module_read_req;
       let arFlit <- get (dbgShim.master.ar);
@@ -500,14 +502,14 @@ module mkCoreW_reset #(Reset porReset)
       debug_module.dmi.write (truncate (awFlit.awaddr >> 2), wFlit.wdata);
    endrule
 
-   let fromDbgReset <- mkPulseWire (reset_by porReset);
+   let innerReset <- mkPulseWire (reset_by porReset);
    Reg #(UInt #(8)) ndm_reset_delay <- mkReg (0, reset_by porReset);
    Reg #(Bool) ndm_reset_restart_running <- mkReg (False, reset_by porReset);
    rule rl_debug_module_send_reset (ndm_reset_delay == 0);
       let restartRunning <- debug_module.ndm_reset_client.request.get;
       ndm_reset_delay <= 110;
       ndm_reset_restart_running <= restartRunning;
-      fromDbgReset.send;
+      innerReset.send;
    endrule
    rule rl_debug_module_count_reset_delay (ndm_reset_delay > 1);
       ndm_reset_delay <= ndm_reset_delay - 1;
@@ -517,6 +519,10 @@ module mkCoreW_reset #(Reset porReset)
       do_release (ndm_reset_restart_running);
       ndm_reset_delay <= 0;
    endrule
+`else
+   let dbgSub <- mkError_AXI4Lite_Slave (reset_by porReset);
+   let innerReset <- mkPulseWire (reset_by porReset);
+`endif
 
    // ================================================================
    // Connect external interrupts to the PLIC and Proc
@@ -565,7 +571,7 @@ module mkCoreW_reset #(Reset porReset)
    let ifc = interface CoreW_IFC;
       // debug related signals
       // ---------------------
-      interface debug_subordinate = dbgShim.slave;
+      interface debug_subordinate = dbgSub;
 
       // interrupt related signals
       // -------------------------
@@ -604,7 +610,7 @@ module mkCoreW_reset #(Reset porReset)
 `endif
 */
 
-   return tuple2 (fromDbgReset, ifc);
+   return tuple2 (innerReset, ifc);
 endmodule: mkCoreW_reset
 
 // ================================================================
