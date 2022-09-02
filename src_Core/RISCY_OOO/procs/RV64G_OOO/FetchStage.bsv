@@ -970,7 +970,7 @@ module mkFetchStage(FetchStage);
         , Dii_Parcel_Id dii_pid
 `endif
     );
-        //if (verbose)
+        if (verbose)
         $display("Redirect: newpc %h, old f_main_epoch %d, new f_main_epoch %d, specBits %x",new_pc,f_main_epoch,f_main_epoch+1, specBits);
         pc_reg[pc_redirect_port] <= new_pc;
 `ifdef RVFI_DII
