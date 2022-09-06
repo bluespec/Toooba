@@ -176,7 +176,7 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
    Reg#(DataAlignedAddr) fromHostAddr <- mkReg(0);
 
    // state machine
-   Reg#(MMIOPlatformState) state <- mkReg(Init);
+   Reg#(MMIOPlatformState) state <- mkReg (SelectReq);
 
    // current req (valid when state != Init && state != SelectReq
    Reg #(MMIOPlatformReq) curReq     <- mkRegU;
@@ -1031,10 +1031,9 @@ module mkMMIOPlatform #(Vector#(CoreNum, MMIOCoreToPlatform) cores,
    // ================================================================
    // INTERFACE
 
-    method Action start(Addr toHost, Addr fromHost) if(state == Init);
+    method Action start(Addr toHost, Addr fromHost);
         toHostAddr <= getDataAlignedAddr(toHost);
         fromHostAddr <= getDataAlignedAddr(fromHost);
-        state <= SelectReq;
     endmethod
 
     method ActionValue#(Data) to_host;

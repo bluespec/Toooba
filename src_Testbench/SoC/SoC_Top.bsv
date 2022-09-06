@@ -335,11 +335,13 @@ module mkSoC_Top #(Reset dm_power_on_reset)
 
    // Start CPU execution
    // For ISA tests: watch memory writes to <tohost> addr
-   method Action start (Fabric_Addr  tohost_addr, Fabric_Addr  fromhost_addr);
+   method Action start (Fabric_Addr tohost_addr, Fabric_Addr fromhost_addr)
+      if (rg_state == SOC_IDLE);
       Bool watch_tohost = (tohost_addr != 0);
       mem0_controller.set_watch_tohost (watch_tohost, tohost_addr);
       Bool is_running = True;
-      corew.controlStatusServer.request.put (ReleaseReq);
+      corew.controlStatusServer.request.put
+        (ReleaseAndSetToHostAddrReq (tohost_addr));
       $display ("%0d: %m.method start (tohost %0h, fromhost %0h)",
                 cur_cycle, tohost_addr, fromhost_addr);
    endmethod

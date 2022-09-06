@@ -254,19 +254,39 @@ module mkCoreW_reset #(Reset porReset)
    TV_Encode_IFC tv_encode <- mkTV_Encode;
 `endif
 
-   function do_release (restartRunning) = action
+   Reg #(Bit #(64)) rg_tohost_addr <- mkReg (0);
+   function do_release (restartRunning, to_host_addr) = action
+      $display ( "%0d: %m do_release(restartRunning: "
+               , cur_cycle, fshow (restartRunning), ", to_host_addr: %0h)"
+               , to_host_addr );
+      rg_tohost_addr <= to_host_addr;
       plic.set_addr_map (zeroExtend (soc_map.m_plic_addr_range.base),
                          zeroExtend (rangeTop(soc_map.m_plic_addr_range)));
-      proc.start (restartRunning, soc_map_struct.pc_reset_value, 'h80001000, 0);
+      proc.start ( restartRunning
+                 , soc_map_struct.pc_reset_value
+                 , to_host_addr
+                 , 0 );
    endaction;
+
+   // ================================================================
+   // Start the proc a suitable time after a PoR
+   Bool start_running = False;
+   UInt#(8) initial_wait = 100; // heuristic -- better to wait till "all out of reset" received from corew
+   Reg #(UInt#(8)) rg_corew_start_after_por <- mkReg(initial_wait, reset_by porReset);
+   rule rl_step_0 (rg_corew_start_after_por != 0);
+      let n = rg_corew_start_after_por - 1;
+      rg_corew_start_after_por <= n;
+      if (n==0) begin
+        $display ("%0d: %m.rl_step_0, n = 0, do_release", cur_cycle);
+        do_release(start_running, rg_tohost_addr);
+      end
+   endrule
 
    // ================================================================
    // Hart-reset from DM
 
-   Bool start_running = True;
 `ifdef INCLUDE_GDB_CONTROL
    Reg #(Bit #(8))  rg_harts_reset_delay <- mkReg (0);
-   Reg #(Bit #(64)) rg_tohost_addr       <- mkReg (0);
    Reg #(Bit #(64)) rg_fromhost_addr     <- mkReg (0);
 
    for (Integer core = 0; core < valueOf(CoreNum); core = core + 1)
@@ -292,15 +312,6 @@ module mkCoreW_reset #(Reset porReset)
    endrule
 
 `endif
-   // ================================================================
-   // Start the proc a suitable time after a PoR
-   UInt#(8) initial_wait = 100; // heuristic -- better to wait till "all out of reset" received from corew
-   Reg #(UInt#(8)) rg_corew_start_after_por <- mkReg(initial_wait, reset_by porReset);
-   rule rl_step_0 (rg_corew_start_after_por != 0);
-      let n = rg_corew_start_after_por - 1;
-      rg_corew_start_after_por <= n;
-      if (n==0) do_release(start_running);
-   endrule
 
 `ifdef INCLUDE_GDB_CONTROL
    // ================================================================
@@ -516,7 +527,7 @@ module mkCoreW_reset #(Reset porReset)
    endrule
    rule rl_debug_module_ack_reset (ndm_reset_delay == 1);
       debug_module.ndm_reset_client.response.put (ndm_reset_restart_running);
-      do_release (ndm_reset_restart_running);
+      do_release (ndm_reset_restart_running, rg_tohost_addr);
       ndm_reset_delay <= 0;
    endrule
 `else
@@ -554,8 +565,11 @@ module mkCoreW_reset #(Reset porReset)
    let f_ctrl_rsps <- mkFIFO1;
 
    rule rl_ctrl_req;
+      $display ("%0d: %m.rl_ctrl_req", cur_cycle);
       case (f_ctrl_reqs.first) matches
-         tagged ReleaseReq: do_release (False);
+         tagged ReleaseReq: do_release (True, rg_tohost_addr);
+         tagged ReleaseAndSetToHostAddrReq .tohost_addr:
+           do_release (True, tohost_addr);
          tagged StatusReq: $display ("StatusReq not supported in Toooba");
       endcase
       f_ctrl_reqs.deq;
