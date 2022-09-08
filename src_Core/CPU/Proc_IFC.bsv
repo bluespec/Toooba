@@ -120,6 +120,7 @@ interface Proc_IFC;
 `ifdef INCLUDE_GDB_CONTROL
    interface Vector #(CoreNum, Server #(Bool, Bool))                                 harts_run_halt_server;
    interface Vector #(CoreNum, Server #(DM_CPU_Req #(5,  XLEN), DM_CPU_Rsp #(XLEN))) harts_gpr_mem_server;
+   interface Vector #(CoreNum, Get #(Bool))                                          harts_is_running;
 `ifdef ISA_F
    interface Vector #(CoreNum, Server #(DM_CPU_Req #(5,  FLEN), DM_CPU_Rsp #(FLEN))) harts_fpr_mem_server;
 `endif

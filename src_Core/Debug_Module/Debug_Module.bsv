@@ -116,6 +116,7 @@ interface Debug_Module_IFC;
    interface Vector #(CoreNum, Client #(Bool, Bool)) harts_reset_client;
    interface Vector #(CoreNum, Client #(Bool, Bool)) harts_client_run_halt;
    interface Vector #(CoreNum, Get #(Bit #(4)))      harts_get_other_req;
+   interface Vector #(CoreNum, Put #(Bool))          harts_is_running;
 
    // GPR access
    interface Vector #(CoreNum, Client #(DM_CPU_Req #(5,  XLEN), DM_CPU_Rsp #(XLEN))) harts_gpr_mem_client;
@@ -311,6 +312,7 @@ module mkDebug_Module (Debug_Module_IFC);
    interface harts_reset_client    = dm_run_control.harts_reset_client;
    interface harts_client_run_halt = dm_run_control.harts_client_run_halt;
    interface harts_get_other_req   = dm_run_control.harts_get_other_req;
+   interface harts_is_running      = dm_run_control.harts_is_running;
 
    // GPR access
    interface harts_gpr_mem_client = dm_abstract_commands.harts_gpr_mem_client;

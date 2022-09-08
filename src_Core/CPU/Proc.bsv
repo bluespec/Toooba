@@ -263,6 +263,7 @@ module mkProc (Proc_IFC);
    endinterface;
    function proj_run_halt_server (x) = x.hart_run_halt_server;
    function proj_gpr_mem_server (x) = x.hart_gpr_mem_server;
+   function proj_core_is_running (x) = x.core_is_running;
 `ifdef ISA_F
    function proj_fpr_mem_server (x) = x.hart_fpr_mem_server;
 `endif
@@ -346,6 +347,8 @@ module mkProc (Proc_IFC);
    interface harts_put_other_req = replicate(emptyPut);
 
    interface harts_gpr_mem_server  = map(proj_gpr_mem_server, core);
+
+   interface harts_is_running = map (proj_core_is_running, core);
 `ifdef ISA_F
    interface harts_fpr_mem_server  = map(proj_fpr_mem_server, core);
 `endif

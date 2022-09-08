@@ -60,6 +60,7 @@ interface DM_Run_Control_IFC;
    interface Vector #(CoreNum, Client #(Bool, Bool)) harts_reset_client;
    interface Vector #(CoreNum, Client #(Bool, Bool)) harts_client_run_halt;
    interface Vector #(CoreNum, Get #(Bit #(4)))      harts_get_other_req;
+   interface Vector #(CoreNum, Put #(Bool))          harts_is_running;
 
    // ----------------
    // Facing Platform: Non-Debug-Module Reset (reset all except DM)
@@ -323,7 +324,7 @@ module mkDM_Run_Control (DM_Run_Control_IFC);
       rule rl_harts_reset_rsp;
 	 Bool running <- pop (f_harts_reset_rsps[core]);
 	 rg_harts_hasreset[core] <= False;
-	 rg_harts_running[core]  <= running;
+	 //rg_harts_running[core]  <= running;
 
 	 if (verbosity != 0)
 	    $display ("%0d: %m.rl_harts_reset_rsp: hart %0d running = ", cur_cycle, core, fshow (running));
@@ -332,7 +333,7 @@ module mkDM_Run_Control (DM_Run_Control_IFC);
    // Response from system for NDM reset
    rule rl_ndm_reset_rsp;
       Bool running <- pop (f_ndm_reset_rsps);
-      writeVReg(rg_harts_running, replicate(running));
+      //writeVReg(rg_harts_running, replicate(running));
       rg_ndm_reset_pending <= False;
 
       if (verbosity != 0)
@@ -343,7 +344,7 @@ module mkDM_Run_Control (DM_Run_Control_IFC);
    // Response from system for run/halt request
       rule rl_harts_run_rsp (! f_ndm_reset_rsps.notEmpty);
 	 let running <- pop (f_harts_run_halt_rsps[core]);
-	 rg_harts_running[core] <= running;
+	 //rg_harts_running[core] <= running;
       if (running)
 	    rg_harts_resumeack[core] <= True;
 
@@ -367,7 +368,7 @@ module mkDM_Run_Control (DM_Run_Control_IFC);
       mapM_(proj_clear, f_harts_reset_reqs);
       mapM_(proj_clear, f_harts_reset_rsps);
 
-      writeVReg(rg_harts_running, replicate(True));    // Safe approximation of whether the CPU is running or not
+      //writeVReg(rg_harts_running, replicate(True));    // Safe approximation of whether the CPU is running or not
       mapM_(proj_clear, f_harts_run_halt_reqs);
       mapM_(proj_clear, f_harts_run_halt_rsps);
 
@@ -427,6 +428,7 @@ module mkDM_Run_Control (DM_Run_Control_IFC);
    interface harts_reset_client    = zipWith(toGPClient, f_harts_reset_reqs, f_harts_reset_rsps);
    interface harts_client_run_halt = zipWith(toGPClient, f_harts_run_halt_reqs, f_harts_run_halt_rsps);
    interface harts_get_other_req   = map (toGet, f_harts_other_reqs);
+   interface harts_is_running      = map (toPut, rg_harts_running);
 
    // ----------------
    // Facing Platform: Non-Debug-Module Reset (reset all except DM)

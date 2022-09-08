@@ -270,7 +270,6 @@ module mkCoreW_reset #(Reset porReset)
 
    // ================================================================
    // Start the proc a suitable time after a PoR
-   Bool start_running = False;
    UInt#(8) initial_wait = 100; // heuristic -- better to wait till "all out of reset" received from corew
    Reg #(UInt#(8)) rg_corew_start_after_por <- mkReg(initial_wait, reset_by porReset);
    rule rl_step_0 (rg_corew_start_after_por != 0);
@@ -278,7 +277,7 @@ module mkCoreW_reset #(Reset porReset)
       rg_corew_start_after_por <= n;
       if (n==0) begin
         $display ("%0d: %m.rl_step_0, n = 0, do_release", cur_cycle);
-        do_release(start_running, rg_tohost_addr);
+        do_release (True, rg_tohost_addr);
       end
    endrule
 
@@ -286,14 +285,16 @@ module mkCoreW_reset #(Reset porReset)
    // Hart-reset from DM
 
 `ifdef INCLUDE_GDB_CONTROL
-   Reg #(Bit #(8))  rg_harts_reset_delay <- mkReg (0);
-   Reg #(Bit #(64)) rg_fromhost_addr     <- mkReg (0);
+   Reg #(Bool)      rg_harts_reset_running <- mkReg (False);
+   Reg #(Bit #(8))  rg_harts_reset_delay   <- mkReg (0);
+   Reg #(Bit #(64)) rg_fromhost_addr       <- mkReg (0);
 
    for (Integer core = 0; core < valueOf(CoreNum); core = core + 1)
       rule rl_dm_harts_reset (rg_harts_reset_delay == 0);
          let x <- debug_module.harts_reset_client[core].request.get;
          dm_harts_reset_controller[core].assertReset;
          rg_harts_reset_delay <= fromInteger (hart_reset_duration + 200);    // NOTE: heuristic
+         rg_harts_reset_running <= x;
          $display ("%0d: %m.rl_dm_harts_reset: asserting harts reset for %0d cycles",
                 cur_cycle, hart_reset_duration);
       endrule
@@ -301,10 +302,10 @@ module mkCoreW_reset #(Reset porReset)
    rule rl_dm_harts_reset_wait (rg_harts_reset_delay != 0);
       if (rg_harts_reset_delay == 1) begin
          let pc = soc_map_struct.pc_reset_value;
-         proc.start (start_running, pc, rg_tohost_addr, rg_fromhost_addr);
+         proc.start (rg_harts_reset_running, pc, rg_tohost_addr, rg_fromhost_addr);
          // We reset all the harts, so we indicate this to the DM, even though it's possible only one hart was requested to reset
          for (Integer core = 0; core < valueOf(CoreNum); core = core + 1)
-         debug_module.harts_reset_client[core].response.put (start_running);
+         debug_module.harts_reset_client[core].response.put (?);
          $display ("%0d: %m.rl_dm_harts_reset_wait: proc.start (pc %0h, tohostAddr %0h, fromhostAddr %0h",
                    cur_cycle, pc, rg_tohost_addr, rg_fromhost_addr);
       end
@@ -319,6 +320,7 @@ module mkCoreW_reset #(Reset porReset)
 
    mkConnection (debug_module.harts_client_run_halt, proc.harts_run_halt_server, reset_by porReset);
    mkConnection (debug_module.harts_get_other_req,   proc.harts_put_other_req, reset_by porReset);
+   mkConnection (debug_module.harts_is_running,      proc.harts_is_running, reset_by porReset);
 `endif
 
 `ifdef INCLUDE_TANDEM_VERIF
@@ -526,7 +528,7 @@ module mkCoreW_reset #(Reset porReset)
       ndm_reset_delay <= ndm_reset_delay - 1;
    endrule
    rule rl_debug_module_ack_reset (ndm_reset_delay == 1);
-      debug_module.ndm_reset_client.response.put (ndm_reset_restart_running);
+      debug_module.ndm_reset_client.response.put (?);
       do_release (ndm_reset_restart_running, rg_tohost_addr);
       ndm_reset_delay <= 0;
    endrule
