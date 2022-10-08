@@ -3,6 +3,37 @@
 // This program reads an ELF file and outputs a Verilog hex memory
 // image file (suitable for reading using $readmemh).
 
+// Modifications for CHERI as well as compiling on APPLE devices:
+
+	/*-
+	 * Copyright (c) 2022 Jonathan Woodruff
+	 * Copyright (c) 2022 Franz Fuchs
+	 * All rights reserved.
+	 *
+	 * This software was developed by the University of  Cambridge
+	 * Department of Computer Science and Technology under the
+	 * SIPP (Secure IoT Processor Platform with Remote Attestation)
+	 * project funded by EPSRC: EP/S030868/1
+	 *
+	 * @BERI_LICENSE_HEADER_START@
+	 *
+	 * Licensed to BERI Open Systems C.I.C. (BERI) under one or more contributor
+	 * license agreements.  See the NOTICE file distributed with this work for
+	 * additional information regarding copyright ownership.  BERI licenses this
+	 * file to you under the BERI Hardware-Software License, Version 1.0 (the
+	 * "License"); you may not use this file except in compliance with the
+	 * License.  You may obtain a copy of the License at:
+	 *
+	 *   http://www.beri-open-systems.org/legal/license-1-0.txt
+	 *
+	 * Unless required by applicable law or agreed to in writing, Work distributed
+	 * under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+	 * CONDITIONS OF ANY KIND, either express or implied.  See the License for the
+	 * specific language governing permissions and limitations under the License.
+	 *
+	 * @BERI_LICENSE_HEADER_END@
+	 */
+
 // ================================================================
 // Standard C includes
 
@@ -12,7 +43,14 @@
 #include <inttypes.h>
 #include <string.h>
 #include <fcntl.h>
+
+#ifdef __APPLE__
+#include <libelf/gelf.h>
+#include <vector>
+#else
 #include <gelf.h>
+#endif
+
 
 // ================================================================
 // Memory buffer into which we load the ELF file before
@@ -35,7 +73,12 @@
 #define MIN_MEM_ADDR_1GB  BASE_ADDR_B
 #define MAX_MEM_ADDR_1GB  (BASE_ADDR_B + 0x40000000lu)
 
+#ifdef __APPLE__
+std::vector<uint8_t> mem_buf(MAX_MEM_ADDR_1GB-MIN_MEM_ADDR_1GB,0);
+#else
 uint8_t mem_buf [MAX_MEM_ADDR_1GB-MIN_MEM_ADDR_1GB];
+#endif
+
 
 // Features of the ELF binary
 int       bitwidth;
