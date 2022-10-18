@@ -240,11 +240,13 @@ endfunction
 (* noinline *)
 function Tuple2#(CapPipe,Bool) capModify(CapPipe a, CapPipe b, CapModifyFunc func);
     function t (x) = tuple2(x, ?);
+    let a_mut = setValidCap(a, isValidCap(a) && getKind(a) == UNSEALED);
+    let b_mut = setValidCap(b, isValidCap(b) && getKind(b) == UNSEALED);
     Tuple2#(CapPipe, Bool) res = (case(func) matches
             tagged ModifyOffset .offsetOp :
-                t(modifyOffset(a, getAddr(b), offsetOp == IncOffset).value);
+                t(modifyOffset(a_mut, getAddr(b), offsetOp == IncOffset).value);
             tagged SetBounds .boundsOp    :
-                setBoundsALU(a, getAddr(b), boundsOp);
+                setBoundsALU(a_mut, getAddr(b), boundsOp);
             tagged SpecialRW .scrType     :
                 t(case (scrType) matches
                       tagged TCC: b;
@@ -258,23 +260,25 @@ function Tuple2#(CapPipe,Bool) capModify(CapPipe a, CapPipe b, CapModifyFunc fun
                 else if (addrSource == Src1Type && (getKind(a) == SENTRY  )) return t(nullWithAddr(otype_sentry_ext));
                 else if (addrSource == Src1Type && (getKind(a) == RES0    )) return t(nullWithAddr(otype_res0_ext));
                 else if (addrSource == Src1Type && (getKind(a) == RES1    )) return t(nullWithAddr(otype_res1_ext));
-                else return t(setAddr(b, (addrSource == Src1Type) ? zeroExtend(getKind(a).SEALED_WITH_TYPE) : getAddr(a) ).value);
+                else return t(setAddr(b_mut, (addrSource == Src1Type) ? zeroExtend(getKind(a).SEALED_WITH_TYPE) : getAddr(a) ).value);
             tagged SealEntry              :
-                t(setKind(a, SENTRY));
+                t(setKind(a_mut, SENTRY));
             tagged Seal                   :
+                t(setKind(a_mut, SEALED_WITH_TYPE (truncate(getAddr(b)))));
+            tagged CSeal                  :
                 t((validAsType(b, getAddr(b)) && isValidCap(b) && getKind(a) == UNSEALED) ?
-                     setKind(a, SEALED_WITH_TYPE (truncate(getAddr(b))))
+                     setKind(a_mut, SEALED_WITH_TYPE (truncate(getAddr(b))))
                    : a);
             tagged Unseal .src            :
                 t(setKind(((src == Src1) ? a:b), UNSEALED));
             tagged AndPerm                :
-                t(setPerms(a, pack(getPerms(a)) & truncate(getAddr(b))));
+                t(setPerms(a_mut, pack(getPerms(a)) & truncate(getAddr(b))));
             tagged SetFlags               :
-                t(setFlags(a, truncate(getAddr(b))));
+                t(setFlags(a_mut, truncate(getAddr(b))));
             tagged FromPtr                :
-                t(getAddr(a) == 0 ? nullCap : setOffset(b, getAddr(a)).value);
+                t(getAddr(a_mut) == 0 ? nullCap : setOffset(b, getAddr(a)).value);
             tagged BuildCap               :
-                t(setKind(setValidCap(a, isValidCap(b)), getKind(a)==SENTRY ? SENTRY : UNSEALED));
+                t(setKind(setValidCap(a_mut, isValidCap(b_mut)), getKind(a)==SENTRY ? SENTRY : UNSEALED));
             tagged Move                   :
                 t(a);
             tagged ClearTag               :
