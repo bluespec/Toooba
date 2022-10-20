@@ -1072,6 +1072,9 @@ module mkSupReorderBuffer#(
                     way: way,
                     ptr: enqP[way],
                     t: enqTime + fromInteger(i)
+`ifdef RVFI_DII
+                    , dii_next_pid: ?
+`endif
                 };
             endmethod
         endinterface);
@@ -1104,6 +1107,9 @@ module mkSupReorderBuffer#(
                     way: way,
                     ptr: deqP[way],
                     t: deqTime + fromInteger(i)
+`ifdef RVFI_DII
+                    , dii_next_pid: ?
+`endif
                 };
             endmethod
         endinterface);
