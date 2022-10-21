@@ -638,7 +638,11 @@ module mkCoreW_reset #(Reset porReset)
 `endif
 */
 
+`ifdef RVFI_DII
    return tuple3 (innerReset, proc.rvfi_dii_server, ifc);
+`else
+   return tuple2 (innerReset, ifc);
+`endif
 endmodule: mkCoreW_reset
 
 // ================================================================
