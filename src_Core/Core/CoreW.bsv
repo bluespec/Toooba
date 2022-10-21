@@ -133,23 +133,39 @@ typedef WindCoreMid #( // AXI lite subordinate control port parameters
                      , t_n_irq) CoreW_IFC #(numeric type t_n_irq);
 
 //(* synthesize *)
+`ifdef RVFI_DII
+module mkCoreW (Tuple2#(Toooba_RVFI_DII_Server, CoreW_IFC #(t_n_irq)));
+`else
 module mkCoreW (CoreW_IFC #(t_n_irq));
+`endif
    Clock clk <- exposeCurrentClock;
    Reset rst <- exposeCurrentReset;
    let newRst <- mkReset (0, True, clk, reset_by rst);
-   match {.otherRst, .ifc} <- mkCoreW_reset ( rst
-                                            , reset_by newRst.new_rst);
+   match {.otherRst
+`ifdef RVFI_DII
+          , .rvfi
+`endif
+          , .ifc} 
+     <- mkCoreW_reset ( rst, reset_by newRst.new_rst);
    rule rl_forward_debug_reset (otherRst);
       newRst.assertReset;
    endrule
+`ifdef RVFI_DII
+   return tuple2(rvfi, ifc);
+`else
    return ifc;
+`endif
 endmodule
 
 // The interface to this module is a convenience to avoid exposing the reset
 // hacks to the nicer outer interface, and not have to use a large amount of
 // reset_by to decouple the debug module from the rest...
 module mkCoreW_reset #(Reset porReset)
+`ifdef RVFI_DII
+                      (Tuple3#(PulseWire, Toooba_RVFI_DII_Server, CoreW_IFC #(t_n_irq)));
+`else
                       (Tuple2#(PulseWire, CoreW_IFC #(t_n_irq)));
+`endif
 
    // ================================================================
    // Notes on 'reset'
@@ -609,10 +625,6 @@ module mkCoreW_reset #(Reset porReset)
    endinterface;
 
 /*
-`ifdef RVFI_DII
-   interface Toooba_RVFI_DII_Server rvfi_dii_server = proc.rvfi_dii_server;
-`endif
-
 `ifdef INCLUDE_TANDEM_VERIF
    // ----------------------------------------------------------------
    // Optional TV interface
@@ -626,7 +638,7 @@ module mkCoreW_reset #(Reset porReset)
 `endif
 */
 
-   return tuple2 (innerReset, ifc);
+   return tuple3 (innerReset, proc.rvfi_dii_server, ifc);
 endmodule: mkCoreW_reset
 
 // ================================================================

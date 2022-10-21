@@ -143,7 +143,12 @@ module mkSoC_Top #(Reset dm_power_on_reset)
    // Core: CPU + Near_Mem_IO (CLINT) + PLIC + Debug module (optional) + TV (optional)
    // The Debug Module has its own RST_N reset signal (which comes
    // from outside this module as a paramter)
-   CoreW_IFC #(N_External_Interrupt_Sources)  corew <- mkCoreW;
+`ifdef RVFI_DII
+   match {.core_rvfi_dii_server , .coreifc} <- mkCoreW;
+   CoreW_IFC #(N_External_Interrupt_Sources) corew = coreifc;
+`else
+   CoreW_IFC #(N_External_Interrupt_Sources) corew <- mkCoreW;
+`endif
 
    // SoC Boot ROM
    Boot_ROM_IFC  boot_rom <- mkBoot_ROM;
@@ -318,7 +323,7 @@ module mkSoC_Top #(Reset dm_power_on_reset)
    // To tandem verifier
    interface tv_verifier_info_get = corew.tv_verifier_info_get;
 `elsif RVFI_DII
-   interface rvfi_dii_server = corew.rvfi_dii_server;
+   interface rvfi_dii_server = core_rvfi_dii_server;
 `endif
 
    // External real memory
