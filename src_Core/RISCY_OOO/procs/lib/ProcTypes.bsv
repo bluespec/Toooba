@@ -301,7 +301,7 @@ typedef enum {
 } ModifyOffsetFunc deriving(Bits, Eq, FShow);
 
 typedef enum {
-    SetBounds, CRRL, CRAM
+    SetBoundsExact, SetBoundsRounding, CRRL, CRAM
 } SetBoundsFunc deriving(Bits, Eq, FShow);
 
 typedef enum {

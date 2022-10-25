@@ -955,17 +955,11 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                     dInst.capFunc = CapModify (ModifyOffset (IncOffset));
                 end
                 f3_cap_CSetBoundsImmediate: begin
-                    dInst.capChecks.check_enable = True;
-                    dInst.capChecks.check_authority_src = Src1;
-                    dInst.capChecks.check_low_src = Src1Addr;
-                    dInst.capChecks.check_high_src = ResultTop;
-                    dInst.capChecks.check_inclusive = True;
-
                     dInst.iType = Cap;
                     regs.dst = Valid(tagged Gpr rd);
                     regs.src1 = Valid(tagged Gpr rs1);
                     dInst.imm = Valid (immIunsigned);
-                    dInst.capFunc = CapModify (SetBounds (SetBounds));
+                    dInst.capFunc = CapModify (SetBounds (SetBoundsRounding));
                 end
                 f3_cap_ThreeOp: begin
                     case (funct7)
@@ -993,32 +987,18 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             dInst.capFunc = CapModify (SpecialRW (scrType));
                         end
                         f7_cap_CSetBounds: begin
-                            dInst.capChecks.check_enable = True;
-                            dInst.capChecks.check_authority_src = Src1;
-                            dInst.capChecks.check_low_src = Src1Addr;
-                            dInst.capChecks.check_high_src = ResultTop;
-                            dInst.capChecks.check_inclusive = True;
-
                             dInst.iType = Cap;
                             regs.dst = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs1);
                             regs.src2 = Valid(tagged Gpr rs2);
-                            dInst.capFunc = CapModify (SetBounds (SetBounds));
+                            dInst.capFunc = CapModify (SetBounds (SetBoundsRounding));
                         end
                         f7_cap_CSetBoundsExact: begin
-                            dInst.capChecks.cap_exact = True;
-
-                            dInst.capChecks.check_enable = True;
-                            dInst.capChecks.check_authority_src = Src1;
-                            dInst.capChecks.check_low_src = Src1Addr;
-                            dInst.capChecks.check_high_src = ResultTop;
-                            dInst.capChecks.check_inclusive = True;
-
                             dInst.iType = Cap;
                             regs.dst = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs1);
                             regs.src2 = Valid(tagged Gpr rs2);
-                            dInst.capFunc = CapModify (SetBounds (SetBounds));
+                            dInst.capFunc = CapModify (SetBounds (SetBoundsExact));
                         end
                         f7_cap_CSetOffset: begin
                             dInst.iType = Cap;
