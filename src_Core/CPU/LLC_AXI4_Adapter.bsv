@@ -70,7 +70,7 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
             Add#(SizeOf#(Line), 0, TAdd#(512, 4))); // assert Line sz = 512 + 4 tags
 
    // Verbosity: 0: quiet; 1: LLC transactions; 2: loop detail
-   Integer verbosity = 0;
+   Integer verbosity = 2;
    Reg #(Bit #(4)) cfg_verbosity <- mkConfigReg (fromInteger (verbosity));
 
    // ================================================================
@@ -87,11 +87,10 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
    // Send a read-request into the fabric
    function Action fa_fabric_send_read_req (Fabric_Addr  addr);
       action
-         AXI4_Size size = 8;
          let mem_req_rd_addr = AXI4_ARFlit {arid:     fabric_default_mid,
                                             araddr:   addr,
-                                            arlen:    7,           // burst len = arlen+1
-                                            arsize:   8,
+                                            arlen:    0,           // burst len = arlen+1
+                                            arsize:   64,
                                             arburst:  INCR,
                                             arlock:   fabric_default_lock,
                                             arcache:  fabric_default_arcache,
@@ -135,83 +134,53 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
 
    rule rl_handle_read_rsps;
       let mem_rsp <- get(masterPortShim.slave.r);
-
       if (cfg_verbosity > 1) begin
          $display ("%0d: LLC_AXI4_Adapter.rl_handle_read_rsps: beat %0d ", cur_cycle, rg_rd_rsp_beat);
          $display ("    ", fshow (mem_rsp));
       end
-
       if (mem_rsp.rresp != OKAY) begin
          // TODO: need to raise a non-maskable interrupt (NMI) here
          $display ("%0d: LLC_AXI4_Adapter.rl_handle_read_rsp: fabric response error; exit", cur_cycle);
          $display ("    ", fshow (mem_rsp));
          $finish (1);
       end
-
-      // Shift next 64 bits from fabric into the cache line being assembled
-      let new_cline_tag = { mem_rsp.ruser, pack(rg_cline.tag) [3:1] };
-      let new_cline_data = { mem_rsp.rdata, pack(rg_cline.data) [511:64] };
-      let new_cline = CLine { tag: rg_rd_rsp_beat[0] == 0 ? unpack(new_cline_tag) : rg_cline.tag
-                            , data: unpack(new_cline_data) };
-
-      if (mem_rsp.rlast) begin
-         let ldreq <- pop (f_pending_reads);
-         MemRsMsg #(idT, childT) resp = MemRsMsg {data:  new_cline,
-                                                  child: ldreq.child,
-                                                  id:    ldreq.id};
-
-         llc.rsFromM.enq (resp);
-
-         if (cfg_verbosity > 1)
-            $display ("    Response to LLC: ", fshow (resp));
-
-         rg_rd_rsp_beat <= 0;
-         rg_cline <= unpack(0);
-      end else begin
-         rg_rd_rsp_beat <= rg_rd_rsp_beat + 1;
-         rg_cline <= new_cline;
-      end
+      let new_cline = CLine { tag: unpack(mem_rsp.ruser)
+                            , data: unpack(mem_rsp.rdata) };
+      let ldreq <- pop (f_pending_reads);
+      MemRsMsg #(idT, childT) resp = MemRsMsg {data:  new_cline,
+                                              child: ldreq.child,
+                                              id:    ldreq.id};
+      llc.rsFromM.enq (resp);
+      if (cfg_verbosity > 1)
+        $display ("    Response to LLC: ", fshow (resp));
    endrule
 
    // ================================================================
    // Handle write requests and responses
 
-   // Each 512b cache line takes 8 beats, each handling 64 bits
-   Reg #(Bit #(3)) rg_wr_req_beat <- mkReg (0);
-
    rule rl_handle_write_req (llc.toM.first matches tagged Wb .wb);
-      if ((cfg_verbosity > 0) && (rg_wr_req_beat == 0)) begin
+      if (cfg_verbosity > 0) begin
          $display ("%d: LLC_AXI4_Adapter.rl_handle_write_req: Wb request from LLC to memory:", cur_cycle);
          $display ("    ", fshow (wb));
       end
 
-      // on first flit...
-      // ================
-      if (rg_wr_req_beat == 0) begin
-         // send AXI4 AW flit
-         masterPortShim.slave.aw.put (AXI4_AWFlit {
-           awid:     fabric_default_mid,
-           awaddr:   { wb.addr [63:6], 6'h0 },
-           awlen:    7, // burst len = awlen+1
-           awsize:   8,
-           awburst:  INCR,
-           awlock:   fabric_default_lock,
-           awcache:  fabric_default_awcache,
-           awprot:   fabric_default_prot,
-           awqos:    fabric_default_qos,
-           awregion: fabric_default_region,
-           awuser:   0});
-         // Expect a fabric response
-         ctr_wr_rsps_pending.incr;
-      end
+      // send AXI4 AW flit
+      masterPortShim.slave.aw.put (AXI4_AWFlit {
+        awid:     fabric_default_mid,
+        awaddr:   { wb.addr [63:6], 6'h0 },
+        awlen:    0, // burst len = awlen+1
+        awsize:   64,
+        awburst:  INCR,
+        awlock:   fabric_default_lock,
+        awcache:  fabric_default_awcache,
+        awprot:   fabric_default_prot,
+        awqos:    fabric_default_qos,
+        awregion: fabric_default_region,
+        awuser:   0});
+      // Expect a fabric response
+      ctr_wr_rsps_pending.incr;
+      llc.toM.deq;
 
-      // on last flit...
-      // ===============
-      if (rg_wr_req_beat == 7) begin
-         llc.toM.deq;
-         rg_wr_req_beat <= 0;
-      end else // increment flit counter
-         rg_wr_req_beat <= rg_wr_req_beat + 1;
 
       // on each flit ...
       // ================
@@ -219,10 +188,10 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
       Vector #(4, MemTaggedData) line_data = clineToMemTaggedDataVector(wb.data);
       // send AXI4 W flit
       masterPortShim.slave.w.put(AXI4_WFlit {
-        wdata:  line_data[rg_wr_req_beat[2:1]].data[rg_wr_req_beat[0]],
-        wstrb:  line_strb[rg_wr_req_beat],
-        wlast:  rg_wr_req_beat == 7,
-        wuser:  pack(line_data[rg_wr_req_beat[2:1]].tag)});
+        wdata:  pack(wb.data.data),
+        wstrb:  pack(wb.byteEn),
+        wlast:  True,
+        wuser:  pack(wb.data.tag)});
    endrule
 
    // ----------------
