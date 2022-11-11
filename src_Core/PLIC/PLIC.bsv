@@ -385,9 +385,8 @@ module mkPLIC (PLIC_IFC #(t_n_external_sources, t_n_targets, t_max_priority))
 	 rdata = { rdata [31:0], 32'h0 };
 
       // Send read-response to bus
-      Fabric_Data x = truncate (rdata);
       let rdr = AXI4_RFlit {rid:   rda.arid,
-			    rdata: x,
+			    rdata: rdata,
 			    rresp: rresp,
 			    rlast: True,
 			    ruser: rda.aruser}; // XXX This requires that Wd_AR_User == Wd_R_User

@@ -124,9 +124,9 @@ typedef WindCoreMid #( // AXI lite subordinate control port parameters
                        // AXI manager 0 port parameters
                      , TAdd #(Wd_MId, 1), Wd_Addr, Wd_Data, 0, 0, 0, 0, 0
                        // AXI manager 1 port parameters
-                     , TAdd #(Wd_MId, 1), Wd_Addr, Wd_Data, 0, 0, 0, 0, 0
+                     , TAdd #(Wd_MId, 1), Wd_Addr, Wd_Data_Periph, 0, 0, 0, 0, 0
                        // AXI subordinate 0 port parameters
-                     , Wd_CoreW_Bus_MId, Wd_Addr, Wd_Data
+                     , Wd_CoreW_Bus_MId, Wd_Addr, Wd_Data_Periph
                      , Wd_AW_User, Wd_W_User, Wd_B_User
                      , Wd_AR_User, Wd_R_User
                        // Number of interrupt lines
@@ -233,8 +233,10 @@ module mkCoreW_reset #(Reset porReset)
    // handle cached interface
    // AXI4 tagController
    TagControllerAXI #(Wd_MId, Wd_Addr, Wd_Data)
-     tagController <- mkTagControllerAXI (reset_by all_harts_reset); // TODO double check if reseting like this is good enough
+   //  tagController <- mkTagControllerAXI (reset_by all_harts_reset); // TODO double check if reseting like this is good enough
+       tagController <- mkFakeTagControllerAXI (reset_by all_harts_reset);
    mkConnection (proc.master0, tagController.slave, reset_by all_harts_reset);
+/*
 `ifdef PERFORMANCE_MONITORING
    rule report_tagController_events;
       EventsCacheCore cache_core_evts = tagController.events;
@@ -251,7 +253,7 @@ module mkCoreW_reset #(Reset porReset)
       proc.events_tgc(evts);
    endrule
 `endif
-
+*/
    // PLIC (Platform-Level Interrupt Controller)
    PLIC_IFC_16_CoreNumX2_7  plic <- mkPLIC_16_CoreNumX2_7 (reset_by all_harts_reset);
 
@@ -459,7 +461,7 @@ module mkCoreW_reset #(Reset porReset)
 
    // Masters on the local bus
    Vector #( CoreW_Bus_Num_Masters
-           , AXI4_Master #( Wd_CoreW_Bus_MId, Wd_Addr, Wd_Data
+           , AXI4_Master #( Wd_CoreW_Bus_MId, Wd_Addr, Wd_Data_Periph
                           , Wd_AW_User, Wd_W_User, Wd_B_User
                           , Wd_AR_User, Wd_R_User))
       master_vector = newVector;
@@ -470,7 +472,7 @@ module mkCoreW_reset #(Reset porReset)
    // Slaves on the local bus
    // default slave is forwarded out directly to the Core interface
    Vector #( CoreW_Bus_Num_Slaves
-           , AXI4_Slave #( Wd_CoreW_Bus_SId, Wd_Addr, Wd_Data
+           , AXI4_Slave #( Wd_CoreW_Bus_SId, Wd_Addr, Wd_Data_Periph
                          , Wd_AW_User, Wd_W_User, Wd_B_User
                          , Wd_AR_User, Wd_R_User))
       slave_vector = newVector;

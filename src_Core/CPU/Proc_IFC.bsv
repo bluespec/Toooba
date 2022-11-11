@@ -79,7 +79,7 @@ interface Proc_IFC;
                            Wd_AR_User, Wd_R_User) master0;
 
    // Fabric master interface for IO (from MMIOPlatform)
-   interface AXI4_Master #( Wd_CoreW_Bus_MId, Wd_Addr, Wd_Data
+   interface AXI4_Master #( Wd_CoreW_Bus_MId, Wd_Addr, Wd_Data_Periph
                           , Wd_AW_User, Wd_W_User, Wd_B_User
                           , Wd_AR_User, Wd_R_User) master1;
 
@@ -106,7 +106,7 @@ interface Proc_IFC;
    // ----------------
    // Coherent port into LLC (used by Debug Module, DMA engines, ... to read/write memory)
 
-   interface AXI4_Slave #( Wd_CoreW_Bus_SId, Wd_Addr, Wd_Data
+   interface AXI4_Slave #( Wd_CoreW_Bus_SId, Wd_Addr, Wd_Data_Periph
                          , Wd_AW_User, Wd_W_User, Wd_B_User
                          , Wd_AR_User, Wd_R_User) debug_module_mem_server;
 
