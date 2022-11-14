@@ -1518,7 +1518,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         dMem.procReq.req(ProcRq {
             id: zeroExtend(lsqTag),
             addr: addr,
-            toState: multicore ? S : E, // in case of single core, just fetch to E
+            toState: loadTags ? T : (multicore ? S : E), // in case of single core, just fetch to E
             op: Ld,
             byteEn: ?,
             data: ?,

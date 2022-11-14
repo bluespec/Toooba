@@ -318,7 +318,7 @@ module mkL1Pipe(
     );
     actionvalue
         doAssert(toState > oldCs, "should truly upgrade cs");
-        doAssert((oldCs == I) == dataV, "valid resp data for upgrade from I");
+        doAssert((oldCs < S) == dataV, "valid resp data when data already up to date");
         return UpdateByUpCs {cs: toState};
     endactionvalue
     endfunction
