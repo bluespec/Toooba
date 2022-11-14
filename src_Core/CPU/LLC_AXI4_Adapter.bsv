@@ -85,19 +85,19 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
    // Functions to interact with the fabric
 
    // Send a read-request into the fabric
-   function Action fa_fabric_send_read_req (Fabric_Addr  addr);
+   function Action fa_fabric_send_read_req (Fabric_Addr  addr, Bool tag_req);
       action
          let mem_req_rd_addr = AXI4_ARFlit {arid:     fabric_default_mid,
                                             araddr:   addr,
                                             arlen:    0,           // burst len = arlen+1
-                                            arsize:   64,
+                                            arsize:   tag_req ? 1 : 64,
                                             arburst:  INCR,
                                             arlock:   fabric_default_lock,
                                             arcache:  fabric_default_arcache,
                                             arprot:   fabric_default_prot,
                                             arqos:    fabric_default_qos,
                                             arregion: fabric_default_region,
-                                            aruser:   fabric_default_aruser};
+                                            aruser:   pack(tag_req)};
 
          masterPortShim.slave.ar.put(mem_req_rd_addr);
 
@@ -127,7 +127,7 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
       end
 
       Addr  line_addr = {ld.addr [63:6], 6'h0 };                      // Addr of containing cache line
-      fa_fabric_send_read_req (line_addr);
+      fa_fabric_send_read_req (line_addr, ld.tag_req);
       f_pending_reads.enq (ld);
       llc.toM.deq;
    endrule
@@ -150,6 +150,9 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
       MemRsMsg #(idT, childT) resp = MemRsMsg {data:  new_cline,
                                               child: ldreq.child,
                                               id:    ldreq.id};
+      if (ldreq.tag_req) begin
+        resp.data = CLine { tag: unpack(truncate(mem_rsp.rdata)), data: ?};
+      end
       llc.rsFromM.enq (resp);
       if (cfg_verbosity > 1)
         $display ("    Response to LLC: ", fshow (resp));

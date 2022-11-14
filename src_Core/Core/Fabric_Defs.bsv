@@ -73,7 +73,7 @@ typedef 512  Wd_Data;
 // Width of fabric 'user' datapaths. Carry capability tags on data lines.
 typedef 0 Wd_AW_User;
 typedef 0 Wd_B_User;
-typedef 0 Wd_AR_User;
+typedef 1 Wd_AR_User;
 typedef TMax#(TDiv#(Wd_Data, CLEN),1) Wd_W_User;
 typedef TMax#(TDiv#(Wd_Data, CLEN),1) Wd_R_User;
 
