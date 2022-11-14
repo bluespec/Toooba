@@ -234,7 +234,7 @@ module mkCoreW_reset #(Reset porReset)
    // AXI4 tagController
    TagControllerAXI #(Wd_MId, Wd_Addr, Wd_Data)
    //  tagController <- mkTagControllerAXI (reset_by all_harts_reset); // TODO double check if reseting like this is good enough
-       tagController <- mkFakeTagControllerAXI (reset_by all_harts_reset);
+       tagController <- mkNullTagControllerAXI (reset_by all_harts_reset);
    mkConnection (proc.master0, tagController.slave, reset_by all_harts_reset);
 /*
 `ifdef PERFORMANCE_MONITORING
