@@ -127,8 +127,8 @@ typedef WindCoreMid #( // AXI lite subordinate control port parameters
                      , TAdd #(Wd_MId, 1), Wd_Addr, Wd_Data_Periph, 0, 0, 0, 0, 0
                        // AXI subordinate 0 port parameters
                      , Wd_CoreW_Bus_MId, Wd_Addr, Wd_Data_Periph
-                     , Wd_AW_User, Wd_W_User, Wd_B_User
-                     , Wd_AR_User, Wd_R_User
+                     , Wd_AW_User_Periph, Wd_W_User_Periph, Wd_B_User_Periph
+                     , Wd_AR_User_Periph, Wd_R_User_Periph
                        // Number of interrupt lines
                      , t_n_irq) CoreW_IFC #(numeric type t_n_irq);
 
@@ -225,8 +225,10 @@ module mkCoreW_reset #(Reset porReset)
    Proc_IFC proc <- mkProc (reset_by all_harts_reset);
 
    // handle uncached interface
-   let proc_uncached =
-       prepend_AXI4_Master_id (0, zero_AXI4_Master_user (proc.master1));
+   AXI4_Master #( Wd_CoreW_Bus_MId, Wd_Addr, Wd_Data_Periph
+                , Wd_AW_User_Periph, Wd_W_User_Periph, Wd_B_User_Periph
+                , Wd_AR_User_Periph, Wd_R_User_Periph ) proc_uncached =
+     prepend_AXI4_Master_id (0, zero_AXI4_Master_user (proc.master1));
    // Bridge for uncached expernal bus transactions.
    let uncached_mem_shim <- mkAXI4ShimFF(reset_by all_harts_reset);
 
@@ -364,7 +366,10 @@ module mkCoreW_reset #(Reset porReset)
    // Create a tap for DM's memory-writes to the bus, and merge-in the trace data.
    DM_Mem_Tap_IFC dm_mem_tap <- mkDM_Mem_Tap;
    mkConnection (debug_module.master, dm_mem_tap.slave);
-   let dm_master_local = dm_mem_tap.master;
+   AXI4_Master #( Wd_CoreW_Bus_MId, Wd_Addr, Wd_Data_Periph
+                , Wd_AW_User_Periph, Wd_W_User_Periph, Wd_B_User_Periph
+                , Wd_AR_User_Periph, Wd_R_User_Periph )
+     dm_master_local = dm_mem_tap.master;
 
    rule rl_merge_dm_mem_trace_data;
       let tmp <- dm_mem_tap.trace_data_out.get;
@@ -430,7 +435,10 @@ module mkCoreW_reset #(Reset porReset)
    mkConnection (debug_module.harts_csr_mem_client, proc.harts_csr_mem_server, reset_by porReset);
 
    // DM's bus master is directly the bus master
-   let dm_master_local = debug_module.master;
+   AXI4_Master #( Wd_CoreW_Bus_MId, Wd_Addr, Wd_Data_Periph
+                , Wd_AW_User_Periph, Wd_W_User_Periph, Wd_B_User_Periph
+                , Wd_AR_User_Periph, Wd_R_User_Periph )
+     dm_master_local = debug_module.master;
 
    // END SECTION: DM, no TV
    // ================================================================
@@ -441,7 +449,10 @@ module mkCoreW_reset #(Reset porReset)
    // BEGIN SECTION: no DM
 
    // No DM, so 'DM bus master' is AXI4 dummy
-   let dm_master_local = culDeSac;
+   AXI4_Master #( Wd_CoreW_Bus_MId, Wd_Addr, Wd_Data_Periph
+                , Wd_AW_User_Periph, Wd_W_User_Periph, Wd_B_User_Periph
+                , Wd_AR_User_Periph, Wd_R_User_Periph )
+     dm_master_local = culDeSac;
 
 `ifdef INCLUDE_TANDEM_VERIF
    // TV, no DM: stub out the dm input to TV
@@ -462,8 +473,9 @@ module mkCoreW_reset #(Reset porReset)
    // Masters on the local bus
    Vector #( CoreW_Bus_Num_Masters
            , AXI4_Master #( Wd_CoreW_Bus_MId, Wd_Addr, Wd_Data_Periph
-                          , Wd_AW_User, Wd_W_User, Wd_B_User
-                          , Wd_AR_User, Wd_R_User))
+                          , Wd_AW_User_Periph, Wd_W_User_Periph
+                          , Wd_B_User_Periph
+                          , Wd_AR_User_Periph, Wd_R_User_Periph ))
       master_vector = newVector;
    master_vector[cpu_uncached_master_num]     = proc_uncached;
    master_vector[debug_module_sba_master_num] = dm_master_local;
@@ -473,8 +485,8 @@ module mkCoreW_reset #(Reset porReset)
    // default slave is forwarded out directly to the Core interface
    Vector #( CoreW_Bus_Num_Slaves
            , AXI4_Slave #( Wd_CoreW_Bus_SId, Wd_Addr, Wd_Data_Periph
-                         , Wd_AW_User, Wd_W_User, Wd_B_User
-                         , Wd_AR_User, Wd_R_User))
+                         , Wd_AW_User_Periph, Wd_W_User_Periph, Wd_B_User_Periph
+                         , Wd_AR_User_Periph, Wd_R_User_Periph ))
       slave_vector = newVector;
    slave_vector[default_slave_num] = uncached_mem_shim.slave;
    slave_vector[llc_slave_num]     = proc.debug_module_mem_server;

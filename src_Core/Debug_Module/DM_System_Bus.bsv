@@ -55,8 +55,8 @@ interface DM_System_Bus_IFC;
    // ----------------
    // Facing System
    interface AXI4_Master #( Wd_CoreW_Bus_MId, Wd_Addr, Wd_Data_Periph
-                          , Wd_AW_User, Wd_W_User, Wd_B_User
-                          , Wd_AR_User, Wd_R_User) master;
+                          , Wd_AW_User_Periph, Wd_W_User_Periph, Wd_B_User_Periph
+                          , Wd_AR_User_Periph, Wd_R_User_Periph) master;
 endinterface
 
 // ================================================================
@@ -292,7 +292,7 @@ module mkDM_System_Bus (DM_System_Bus_IFC);
 				arprot:   fabric_default_prot,
 				arqos:    fabric_default_qos,
 				arregion: fabric_default_region,
-				aruser:   fabric_default_aruser};
+				aruser:   fabric_default_aruser_periph};
 	 axiShim.slave.ar.put(rda);
 
 	 // Save read-address for byte-lane extraction from later response
@@ -333,13 +333,13 @@ module mkDM_System_Bus (DM_System_Bus_IFC);
 				awprot:   fabric_default_prot,
 				awqos:    fabric_default_qos,
 				awregion: fabric_default_region,
-				awuser:   fabric_default_awuser};
+				awuser:   fabric_default_awuser_periph};
 	 axiShim.slave.aw.put(wra);
 
 	 let wrd = AXI4_WFlit {wdata: fabric_data,
 			       wstrb: fabric_strb,
 			       wlast: True,
-			       wuser: fabric_default_wuser};
+			       wuser: fabric_default_wuser_periph};
 	 axiShim.slave.w.put(wrd);
 
 	 if (verbosity != 0) begin

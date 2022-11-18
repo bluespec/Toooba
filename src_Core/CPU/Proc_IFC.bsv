@@ -107,8 +107,9 @@ interface Proc_IFC;
    // Coherent port into LLC (used by Debug Module, DMA engines, ... to read/write memory)
 
    interface AXI4_Slave #( Wd_CoreW_Bus_SId, Wd_Addr, Wd_Data_Periph
-                         , Wd_AW_User, Wd_W_User, Wd_B_User
-                         , Wd_AR_User, Wd_R_User) debug_module_mem_server;
+                         , Wd_AW_User_Periph, Wd_W_User_Periph, Wd_B_User_Periph
+                         , Wd_AR_User_Periph, Wd_R_User_Periph)
+     debug_module_mem_server;
 
 `ifdef RVFI_DII
    interface Toooba_RVFI_DII_Server rvfi_dii_server;

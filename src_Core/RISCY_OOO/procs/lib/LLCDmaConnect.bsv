@@ -132,8 +132,8 @@ module mkLLCDmaConnect #( DmaServer#(LLCDmaReqId) llc
                         //, MemLoaderMemClient memLoader
                         , Vector#(CoreNum, TlbMemClient) tlb )
   (AXI4_Slave #( Wd_CoreW_Bus_SId, Wd_Addr, Wd_Data_Periph
-               , Wd_AW_User, Wd_W_User, Wd_B_User
-               , Wd_AR_User, Wd_R_User))
+               , Wd_AW_User_Periph, Wd_W_User_Periph, Wd_B_User_Periph
+               , Wd_AR_User_Periph, Wd_R_User_Periph ))
   provisos (Alias #(dmaRqT, DmaRq #(LLCDmaReqId)));
     Bool verbose = False;
 
