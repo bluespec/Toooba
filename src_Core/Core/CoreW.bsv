@@ -225,20 +225,21 @@ module mkCoreW_reset #(Reset porReset)
    Proc_IFC proc <- mkProc (reset_by all_harts_reset);
 
    // handle uncached interface
-   AXI4_Master #( Wd_CoreW_Bus_MId, Wd_Addr, Wd_Data_Periph
-                , Wd_AW_User_Periph, Wd_W_User_Periph, Wd_B_User_Periph
-                , Wd_AR_User_Periph, Wd_R_User_Periph ) proc_uncached =
-     prepend_AXI4_Master_id (0, zero_AXI4_Master_user (proc.master1));
+   AXI4_Master #( Wd_CoreW_Bus_MId, Wd_Addr, Wd_Data_Periph, 0, 0, 0, 0, 0)
+       proc_uncached = prepend_AXI4_Master_id (0, zero_AXI4_Master_user (proc.master1));
    // Bridge for uncached expernal bus transactions.
    let uncached_mem_shim <- mkAXI4ShimFF(reset_by all_harts_reset);
 
    // handle cached interface
    // AXI4 tagController
    TagControllerAXI #(Wd_MId, Wd_Addr, Wd_Data)
-   //  tagController <- mkTagControllerAXI (reset_by all_harts_reset); // TODO double check if reseting like this is good enough
-       tagController <- mkNullTagControllerAXI (reset_by all_harts_reset);
+     tagController <- mkTagControllerAXI (reset_by all_harts_reset); // TODO double check if reseting like this is good enough
    mkConnection (proc.master0, tagController.slave, reset_by all_harts_reset);
-/*
+   AXI4_Shim#(TAdd #(Wd_MId, 1), Wd_Addr, Wd_Data, 0, 0, 0, 0, 0)
+      tag_controller_deburster <- mkBurstToNoBurst;
+   mkConnection (tagController.master, tag_controller_deburster.slave, reset_by all_harts_reset);
+
+
 `ifdef PERFORMANCE_MONITORING
    rule report_tagController_events;
       EventsCacheCore cache_core_evts = tagController.events;
@@ -255,7 +256,7 @@ module mkCoreW_reset #(Reset porReset)
       proc.events_tgc(evts);
    endrule
 `endif
-*/
+
    // PLIC (Platform-Level Interrupt Controller)
    PLIC_IFC_16_CoreNumX2_7  plic <- mkPLIC_16_CoreNumX2_7 (reset_by all_harts_reset);
 
@@ -489,7 +490,7 @@ module mkCoreW_reset #(Reset porReset)
                          , Wd_AR_User_Periph, Wd_R_User_Periph ))
       slave_vector = newVector;
    slave_vector[default_slave_num] = uncached_mem_shim.slave;
-   slave_vector[llc_slave_num]     = proc.debug_module_mem_server;
+   slave_vector[llc_slave_num]     = zero_AXI4_Slave_user (proc.debug_module_mem_server);
    slave_vector[plic_slave_num]    = zero_AXI4_Slave_user (plic.axi4_slave);
 
    function Vector #(CoreW_Bus_Num_Slaves, Bool) route (Bit #(Wd_Addr) addr);
@@ -631,7 +632,7 @@ module mkCoreW_reset #(Reset porReset)
       // memory interfaces
       // -----------------
       // Cached master to Fabric master interface
-      interface manager_0 = tagController.master;
+      interface manager_0 = tag_controller_deburster.master;
       // Uncached master to Fabric master interface
       interface manager_1 = prepend_AXI4_Master_id
             (0, zero_AXI4_Master_user (uncached_mem_shim.master));
