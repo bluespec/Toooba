@@ -73,9 +73,9 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
             Bits#(childT, childSz),
             FShow#(ToMemMsg#(idT, childT)),
             FShow#(MemRsMsg#(idT, childT)),
-            Add#(SizeOf#(Line), 0, TAdd#(512, 4)),
-            Add#(c__, TAdd#(1, TAdd#(idSz, childSz)), Wd_MId) // LLC_AXI_ID must fit into the external ID.
-           ); // assert Line sz = 512 + 4 tags
+            Add#(SizeOf#(Line), 0, TAdd#(512, 4)), // assert Line sz = 512 + 4 tags
+            Add#(a__, SizeOf#(LLC_AXI_ID#(idT, childT)), Wd_MId) // LLC_AXI_ID must fit into the external ID.
+           );
 
    // Verbosity: 0: quiet; 1: LLC transactions; 2: loop detail
    Integer verbosity = 2;

@@ -27,7 +27,7 @@ BSC_COMPILATION_FLAGS += \
 	-D ISA_PRIV_M  -D ISA_PRIV_S  -D ISA_PRIV_U  \
 	-D SV39 \
 	-D ISA_I  -D ISA_M  -D ISA_A  -D ISA_F  -D ISA_D  -D ISA_FD_DIV  -D ISA_C  \
-	-D CheriBusBytes=8 \
+	-D CheriBusBytes=64 \
 	-D CheriMasterIDWidth=1 \
 	-D CheriTransactionIDWidth=6 \
 	-D PERFORMANCE_MONITORING \
@@ -36,7 +36,7 @@ BSC_COMPILATION_FLAGS += \
 	-D Near_Mem_Caches    \
 	-D FABRIC64    \
 	-D CAP128 \
-	-D MEM64 \
+	-D MEM512 \
 	-D RISCV \
 	-D NO_SPEC_TRAINING -D NO_SPEC_REDIRECT -D NO_SPEC_STRAIGHT_PATH -D SPEC_RSB_FIXUP -D NO_SPEC_RSB_PUSH -D NO_SPEC_STL \
 	-D TSO_MM \

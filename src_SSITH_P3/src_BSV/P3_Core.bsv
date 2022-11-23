@@ -71,10 +71,10 @@ interface P3_Core_IFC;
    // Core CPU interfaces
 
    // CPU IMem to Fabric master interface
-   interface AXI4_Master_Sig#(TAdd#(Wd_MId,1), Wd_Addr, Wd_Data,
+   interface AXI4_Master_Sig#(TAdd#(Wd_MId,1), Wd_Addr, Wd_Data_Periph,
                                 0, 0, 0, 0, 0)  master0;
 
-   interface AXI4_Master_Sig#(TAdd#(Wd_MId,1), Wd_Addr, Wd_Data,
+   interface AXI4_Master_Sig#(TAdd#(Wd_MId,1), Wd_Addr, Wd_Data_Periph,
                                 0, 0, 0, 0, 0)  master1;
 
    // External interrupt sources
@@ -165,6 +165,16 @@ module mkP3_Core (P3_Core_IFC);
            , CoreW_IFC #(N_External_Interrupt_Sources)) both
      <- mkCoreW_reset (dm_power_on_reset, reset_by ndm_reset);
    match {.otherRst, .corew} = both;
+   // AXI4 Narrower Master in front of cached memory master
+   AXI4_Shim#(TAdd#(Wd_MId,1), Wd_Addr, Wd_Data_Periph, 0, 0, 0, 0, 0)
+      manager_0_narrow <- mkAXI4ShimFF;
+   AXI4_Slave #(TAdd#(Wd_MId,1), Wd_Addr, TDiv#(Wd_Data,4), 0, 0, 0, 0, 0)
+      manager_0_wide_a <- toWider_AXI4_Slave(manager_0_narrow.slave);
+   AXI4_Slave #(TAdd#(Wd_MId,1), Wd_Addr, TDiv#(Wd_Data,2), 0, 0, 0, 0, 0)
+      manager_0_wide_b <- toWider_AXI4_Slave(manager_0_wide_a);
+   AXI4_Slave #(TAdd#(Wd_MId,1), Wd_Addr, Wd_Data, 0, 0, 0, 0, 0)
+      manager_0_wide   <- toWider_AXI4_Slave(manager_0_wide_b);
+   mkConnection(corew.manager_0,manager_0_wide);
 
 `ifdef INCLUDE_GDB_CONTROL
 
@@ -256,7 +266,7 @@ module mkP3_Core (P3_Core_IFC);
 
    // ================================================================
    // INTERFACE
-   let master0_sig <- toAXI4_Master_Sig (corew.manager_0);
+   let master0_sig <- toAXI4_Master_Sig (manager_0_narrow.master);
    let master1_sig <- toAXI4_Master_Sig (corew.manager_1);
    // ----------------------------------------------------------------
    // Core CPU interfaces
