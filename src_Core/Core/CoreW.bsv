@@ -314,7 +314,7 @@ module mkCoreW_reset #(Reset porReset)
       rule rl_dm_harts_reset (rg_harts_reset_delay == 0);
          let x <- debug_module.harts_reset_client[core].request.get;
          dm_harts_reset_controller[core].assertReset;
-         rg_harts_reset_delay <= fromInteger (hart_reset_duration + 200);    // NOTE: heuristic
+         rg_harts_reset_delay <= fromInteger (hart_reset_duration + 200); // NOTE: heuristic
          rg_harts_reset_running <= x;
          $display ("%0d: %m.rl_dm_harts_reset: asserting harts reset for %0d cycles",
                 cur_cycle, hart_reset_duration);
