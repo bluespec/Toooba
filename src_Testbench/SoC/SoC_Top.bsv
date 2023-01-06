@@ -46,8 +46,8 @@ import Vector        :: *;
 import Cur_Cycle   :: *;
 import GetPut_Aux  :: *;
 import Routable    :: *;
-import AXI4        :: *;
-import AXI4Lite    :: *;
+import BlueBasics  :: *;
+import BlueAXI4    :: *;
 
 // ================================================================
 // Project imports
@@ -163,15 +163,13 @@ module mkSoC_Top #(Reset dm_power_on_reset)
       mem0_controller_axi4_deburster <- mkBurstToNoBurst;
 
    // AXI4 Narrower Master in front of cached memory master
-   AXI4_Shim#(TAdd#(Wd_MId,1), Wd_Addr, Wd_Data_Periph, 0, 0, 0, 0, 0)
-      manager_0_narrow <- mkAXI4ShimFF;
-   AXI4_Slave #(TAdd#(Wd_MId,1), Wd_Addr, TDiv#(Wd_Data,4), 0, 0, 0, 0, 0)
-      manager_0_wide_a <- toWider_AXI4_Slave(manager_0_narrow.slave);
-   AXI4_Slave #(TAdd#(Wd_MId,1), Wd_Addr, TDiv#(Wd_Data,2), 0, 0, 0, 0, 0)
-      manager_0_wide_b <- toWider_AXI4_Slave(manager_0_wide_a);
-   AXI4_Slave #(TAdd#(Wd_MId,1), Wd_Addr, Wd_Data, 0, 0, 0, 0, 0)
-      manager_0_wide   <- toWider_AXI4_Slave(manager_0_wide_b);
-   mkConnection(corew.manager_0,manager_0_wide);
+   NumProxy #(4) proxyInDepth = error ("don't look inside a proxy");
+   NumProxy #(4) proxyOutDepth = error ("don't look inside a proxy");
+   Tuple2 #( AXI4_Slave #(TAdd#(Wd_MId,1), Wd_Addr, Wd_Data, 0, 0, 0, 0, 0)
+           , AXI4_Master #(TAdd#(Wd_MId,1), Wd_Addr, Wd_Data_Periph, 0, 0, 0, 0, 0) )
+     wideS_narrowM <- mkAXI4DataWidthShim_WideToNarrow (proxyInDepth, proxyOutDepth);
+   match {.wideS, .narrowM} = wideS_narrowM;
+   mkConnection(corew.manager_0, wideS);
 
    // SoC IPs
    UART_IFC   uart0  <- mkUART;
@@ -190,7 +188,7 @@ module mkSoC_Top #(Reset dm_power_on_reset)
       master_vector = newVector;
 
    // CPU IMem master to fabric
-   master_vector[imem_master_num] = manager_0_narrow.master;
+   master_vector[imem_master_num] = narrowM;
 
    // CPU DMem master to fabric
    master_vector[dmem_master_num] = corew.manager_1;
