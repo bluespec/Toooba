@@ -238,10 +238,23 @@ function CapPipe specialRWALU(CapPipe cap, CapPipe oldCap, SpecialRWFunc scrType
     return res;
 endfunction
 
+function Tuple2#(Data, Bool) extractType(CapPipe a);
+    if      (getKind(a) == UNSEALED) return tuple2(otype_unsealed_ext, True);
+    else if (getKind(a) == SENTRY  ) return tuple2(otype_sentry_ext, True);
+    else if (getKind(a) == RES0    ) return tuple2(otype_res0_ext, True);
+    else if (getKind(a) == RES1    ) return tuple2(otype_res1_ext, True);
+    else return tuple2(zeroExtend(getKind(a).SEALED_WITH_TYPE), False);
+endfunction
+
+function CapPipe clearTagIf(CapPipe a, Bool cond);
+    return setValidCap(a, isValidCap(a) && !cond);
+endfunction
+
 (* noinline *)
 function CapPipe capModify(CapPipe a, CapPipe b, CapModifyFunc func);
     let a_mut = setValidCap(a, isValidCap(a) && getKind(a) == UNSEALED);
     let b_mut = setValidCap(b, isValidCap(b) && getKind(b) == UNSEALED);
+    match {.a_type, .a_res} = extractType(a);
     CapPipe res = (case(func) matches
             tagged ModifyOffset .offsetOp :
                 modifyOffset(a_mut, getAddr(b), offsetOp == IncOffset).value;
@@ -256,11 +269,7 @@ function CapPipe capModify(CapPipe a, CapPipe b, CapModifyFunc func);
                       tagged EPC ._: nullWithAddr(getOffset(b));
                    endcase
             tagged SetAddr .addrSource    :
-                if      (addrSource == Src1Type && (getKind(a) == UNSEALED)) return nullWithAddr(otype_unsealed_ext);
-                else if (addrSource == Src1Type && (getKind(a) == SENTRY  )) return nullWithAddr(otype_sentry_ext);
-                else if (addrSource == Src1Type && (getKind(a) == RES0    )) return nullWithAddr(otype_res0_ext);
-                else if (addrSource == Src1Type && (getKind(a) == RES1    )) return nullWithAddr(otype_res1_ext);
-                else return setAddr(b_mut, (addrSource == Src1Type) ? zeroExtend(getKind(a).SEALED_WITH_TYPE) : getAddr(a) ).value;
+                clearTagIf(setAddr(b_mut, (addrSource == Src1Type) ? a_type : getAddr(a) ).value, a_res);
             tagged SealEntry              :
                 setKind(a_mut, SENTRY);
             tagged Seal                   :
@@ -316,13 +325,7 @@ function Data capInspect(CapPipe a, CapPipe b, CapInspectFunc func);
                tagged GetPerm                :
                    zeroExtend(getPerms(a));
                tagged GetType                :
-                   case (getKind(a)) matches
-                       tagged UNSEALED: otype_unsealed_ext;
-                       tagged SENTRY: otype_sentry_ext;
-                       tagged RES0: otype_res0_ext;
-                       tagged RES1: otype_res1_ext;
-                       tagged SEALED_WITH_TYPE .t: zeroExtend(t);
-                   endcase
+                   tpl_1(extractType(a));
                tagged ToPtr                  :
                    (isValidCap(a) && isValidCap(b) ? (getAddr(a) - getBase(b)) : 0);
                default: ?;
