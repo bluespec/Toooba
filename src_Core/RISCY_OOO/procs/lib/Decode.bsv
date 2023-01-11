@@ -1023,7 +1023,6 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                         end
                         f7_cap_CSeal: begin
                             dInst.capChecks.src2_tag = True;
-                            dInst.capChecks.src2_unsealed = True;
                             dInst.capChecks.src2_permit_seal = True;
                             dInst.capChecks.src2_addr_valid_type = True;
 
@@ -1040,7 +1039,6 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             dInst.capFunc = CapModify (Seal);
                         end
                         f7_cap_CCSeal: begin
-                            dInst.capChecks.src2_unsealed = True;
                             dInst.capChecks.src2_addr_valid_type = True;
                             dInst.capChecks.src2_permit_seal = True;
                             dInst.capChecks.ccseal_bypass = True;
@@ -1092,7 +1090,6 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                         f7_cap_CUnseal: begin
                             dInst.capChecks.src2_tag = True;
                             dInst.capChecks.src1_sealed_with_type = True;
-                            dInst.capChecks.src2_unsealed = True;
                             dInst.capChecks.src2_points_to_src1_type = True;
                             dInst.capChecks.src2_permit_unseal = True;
 

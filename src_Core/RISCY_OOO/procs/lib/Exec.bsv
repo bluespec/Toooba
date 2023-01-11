@@ -273,13 +273,13 @@ function CapPipe capModify(CapPipe a, CapPipe b, CapModifyFunc func);
             tagged SealEntry              :
                 setKind(a_mut, SENTRY);
             tagged Seal                   :
-                setKind(a_mut, SEALED_WITH_TYPE (truncate(getAddr(b))));
+                clearTagIf(setKind(a_mut, SEALED_WITH_TYPE (truncate(getAddr(b)))), getKind(b) != UNSEALED);
             tagged CSeal                  :
                 ((validAsType(b, getAddr(b)) && isValidCap(b) && getKind(a) == UNSEALED) ?
                       setKind(a_mut, SEALED_WITH_TYPE (truncate(getAddr(b))))
                     : a);
             tagged Unseal .src            :
-                setKind(((src == Src1) ? a:b), UNSEALED);
+                clearTagIf(setKind(((src == Src1) ? a:b), UNSEALED), (src == Src1) && (getKind(b) != UNSEALED));
             tagged AndPerm                :
                 setPerms(a_mut, pack(getPerms(a)) & truncate(getAddr(b)));
             tagged SetFlags               :
