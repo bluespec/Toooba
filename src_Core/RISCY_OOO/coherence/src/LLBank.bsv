@@ -51,6 +51,7 @@ import LatencyTimer::*;
 import Cntrs::*;
 import ConfigReg::*;
 import RandomReplace::*;
+import Prefetcher::*;
 `ifdef PERFORMANCE_MONITORING
 import PerformanceMonitor::*;
 import StatCounters::*;
@@ -186,7 +187,7 @@ module mkLLBank#(
     Add#(cRqNum, b__, wayNum)
 );
 
-   Bool verbose = False;
+   Bool verbose = True;
 
     LLCRqMshr#(cRqNum, wayT, tagT, Vector#(childNum, DirPend), cRqT) cRqMshr <- mkLLMshr;
 
@@ -228,12 +229,21 @@ module mkLLBank#(
 
     // performance
     LatencyTimer#(cRqNum, 10) latTimer <- mkLatencyTimer; // max 1K cycle latency
+
+    Count#(Bit#(32)) addedCRqs <- mkCount(0);
+    Count#(Bit#(32)) removedCRqs <- mkCount(0);
+
+    Vector#(cRqNum, Reg#(Bool)) cRqIsPrefetch <- replicateM(mkReg(?));
+    Prefetcher dataPrefetcher <- mkLLDPrefetcher;
+    Prefetcher instrPrefetcher <- mkLLIPrefetcher;
 `ifdef PERF_COUNT
-    Reg#(Bool) doStats <- mkConfigReg(False);
+    Reg#(Bool) doStats <- mkConfigReg(True);
     Count#(Data) dmaMemLdCnt <- mkCount(0);
     Count#(Data) dmaMemLdLat <- mkCount(0);
     Count#(Data) normalMemLdCnt <- mkCount(0);
     Count#(Data) normalMemLdLat <- mkCount(0);
+    Count#(Data) instructionLdCnt <- mkCount(0);
+    Count#(Data) instructionLdLat <- mkCount(0);
     Count#(Data) mshrBlocks <- mkCount(0);
     Count#(Data) downRespCnt <- mkCount(0);
     Count#(Data) downRespDataCnt <- mkCount(0);
@@ -246,7 +256,7 @@ module mkLLBank#(
 `ifdef PERFORMANCE_MONITORING
     Array #(Reg #(EventsLL)) perf_events <- mkDRegOR (2, unpack (0));
 `endif
-function Action incrMissCnt(cRqIndexT idx, Bool isDma);
+function Action incrMissCnt(cRqIndexT idx, Bool isDma, Bool isInstructionAccess);
 action
     let lat <- latTimer.done(idx);
 `ifdef PERF_COUNT
@@ -254,6 +264,10 @@ action
         if(isDma) begin
             dmaMemLdCnt.incr(1);
             dmaMemLdLat.incr(zeroExtend(lat));
+        end
+        else if (isInstructionAccess) begin
+            instructionLdCnt.incr(1);
+            instructionLdLat.incr(zeroExtend(lat));
         end
         else begin
             normalMemLdCnt.incr(1);
@@ -329,6 +343,7 @@ endfunction
         // later cRq to same addr needs to be appended after this one
         // send to pipeline
         cRqT req = cRqMshr.transfer.getRq(n);
+        cRqIsPrefetch[n] <= False;
         pipeline.send(CRq (LLPipeCRqIn {
             addr: req.addr,
             mshrIdx: n
@@ -389,12 +404,71 @@ endfunction
             addr: cRq.addr,
             mshrIdx: n
         }));
+        cRqIsPrefetch[n] <= False;
         // change round robin
         flipPriorNewCRqSrc;
        if (verbose)
         $display("%t LL %m cRqTransfer_new_child: ", $time,
             fshow(n), " ; ",
             fshow(r), " ; ",
+            fshow(cRq)
+        );
+    endrule
+
+    // insert new cRq from child to MSHR and send to pipeline
+    rule createDataPrefetchRq(newCRqSrc == Valid (Child));
+        Addr addr <- dataPrefetcher.getNextPrefetchAddr;
+        cRqT cRq = LLRq {
+            addr: addr,
+            fromState: I,
+            toState: E,
+            canUpToE: True,
+            child: 0,
+            byteEn: ?,
+            id: Child (?)
+        };
+        // setup new MSHR entry
+        cRqIndexT n <- cRqMshr.transfer.getEmptyEntryInit(cRq, Invalid);
+        // send to pipeline
+        pipeline.send(CRq (LLPipeCRqIn {
+            addr: cRq.addr,
+            mshrIdx: n
+        }));
+        cRqIsPrefetch[n] <= True;
+        // change round robin
+        flipPriorNewCRqSrc;
+       if (verbose)
+        $display("%t LL %m createDataPrefetchRq: ", $time,
+            fshow(n), " ; ",
+            fshow(cRq)
+        );
+    endrule
+
+    // insert new cRq from child to MSHR and send to pipeline
+    rule createInstrPrefetchRq(newCRqSrc == Valid (Child));
+        Addr addr <- instrPrefetcher.getNextPrefetchAddr;
+        cRqT cRq = LLRq {
+            addr: addr,
+            fromState: I,
+            toState: S,
+            canUpToE: True,
+            child: 1,
+            byteEn: ?,
+            id: Child (?)
+        };
+        // setup new MSHR entry
+        cRqIndexT n <- cRqMshr.transfer.getEmptyEntryInit(cRq, Invalid);
+        // send to pipeline
+        pipeline.send(CRq (LLPipeCRqIn {
+            addr: cRq.addr,
+            mshrIdx: n
+        }));
+        cRqIsPrefetch[n] <= True;
+        // change round robin
+        flipPriorNewCRqSrc;
+       if (verbose)
+        $display("%t LL %m createInstrPrefetchRq: ", $time,
+            fshow(n), " ; ",
             fshow(cRq)
         );
     endrule
@@ -467,7 +541,7 @@ endfunction
         !cRqRetryIndexQ.notEmpty && newCRqSrc == Valid (Dma) && doStats
     );
         dmaRqT r = rqFromDmaQ.first;
-        Bool write = r.byteEn != replicate(False);
+        Bool write = r.byteEn != replicate(replicate(False));
         cRqT cRq = LLRq {
             addr: r.addr,
             fromState: I,
@@ -534,7 +608,8 @@ endfunction
             fshow(cSlot), " ; "
         );
         // performance counter: normal miss lat and cnt
-        incrMissCnt(n, False);
+        // Check lowest bit of child ID to determine if this was an ICache access
+        incrMissCnt(n, False, cRq.child[0] == 1);
     endrule
 
     // this mem resp is just for a DMA req, won't go into pipeline to refill cache
@@ -547,7 +622,7 @@ endfunction
         cRqMshr.mRsDeq.setData(mRs.id.mshrIdx, Valid (mRs.data));
         rsLdToDmaIndexQ_mRsDeq.enq(mRs.id.mshrIdx);
         // performance counter: dma miss lat and cnt
-        incrMissCnt(mRs.id.mshrIdx, True);
+        incrMissCnt(mRs.id.mshrIdx, True, False);
     endrule
 
     // send rd/wr to mem
@@ -709,7 +784,7 @@ endfunction
     endrule
 
     // send upgrade resp to child
-    rule sendRsToC(rsToCIndexQ.notEmpty);
+    rule sendRsToC(rsToCIndexQ.notEmpty && !cRqIsPrefetch[rsToCIndexQ.first.cRqId]);
         // send upgrade resp to child
         rsToCIndexQ.deq;
         cRqIndexT n = rsToCIndexQ.first.cRqId;
@@ -743,6 +818,13 @@ endfunction
             end
         end
 `endif
+    endrule
+
+    rule discardPrefetchRqResult(rsToCIndexQ.notEmpty && cRqIsPrefetch[rsToCIndexQ.first.cRqId]);
+        let n = rsToCIndexQ.first.cRqId;
+        $display("%t LL %m discardPrefetchRqResult: ", $time, fshow(n));
+        rsToCIndexQ.deq;
+        cRqMshr.sendRsToDmaC.releaseEntry(n);
     endrule
 
     // send downgrade req to child
@@ -886,7 +968,11 @@ endfunction
         cRqMshr.pipelineResp.setData(n, ram.info.dir[cRq.child] <= T ? Valid (ram.line) : Invalid);
         // update child dir
         dirT newDir = ram.info.dir;
-        newDir[cRq.child] = toState;
+        if (!cRqIsPrefetch[n]) begin
+            //Only update dir if not a prefetch request, since
+            //Prerefetch request results don't get handed down to children,
+            newDir[cRq.child] = toState;
+        end
         // update cs (may have E -> M)
         Msi newCs = ram.info.cs;
         if(toState == M) begin
@@ -910,6 +996,14 @@ endfunction
             },
             line: ram.line // use line in ram
         }, True); // hit, so update rep info
+        if (!cRqIsPrefetch[n]) begin
+            if (cRq.child[0] == 1) begin
+                instrPrefetcher.reportHit(cRq.addr);
+            end
+            else begin
+                dataPrefetcher.reportHit(cRq.addr);
+            end
+        end
     endaction
     endfunction
 
@@ -1103,6 +1197,14 @@ endfunction
                 },
                 line: ram.line
             }, False);
+            if (!cRqIsPrefetch[n]) begin
+                if (cRq.child[0] == 1) begin
+                    instrPrefetcher.reportMiss(cRq.addr);
+                end
+                else begin
+                    dataPrefetcher.reportMiss(cRq.addr);
+                end
+            end
         endaction
         endfunction
 
@@ -1170,6 +1272,14 @@ endfunction
                     waitP: False,
                     dirPend: dirPend
                 });
+            end
+            if (!cRqIsPrefetch[n]) begin
+                if (cRq.child[0] == 1) begin
+                    instrPrefetcher.reportMiss(cRq.addr);
+                end
+                else begin
+                    dataPrefetcher.reportMiss(cRq.addr);
+                end
             end
         endaction
         endfunction
@@ -1538,6 +1648,8 @@ endfunction
             LLCDmaMemLdLat: dmaMemLdLat;
             LLCNormalMemLdCnt: normalMemLdCnt;
             LLCNormalMemLdLat: normalMemLdLat;
+            LLCInstructionLdCnt: instructionLdCnt;
+            LLCInstructionLdLat: instructionLdLat;
             LLCMshrBlockCycles: mshrBlocks;
             LLCDownRespCnt: downRespCnt;
             LLCDownRespDataCnt: downRespDataCnt;
