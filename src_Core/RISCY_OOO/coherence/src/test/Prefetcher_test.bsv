@@ -104,6 +104,70 @@ module mkMultiWindowPrefetcherTest(Empty);
     );
 endmodule
 
+module mkSingleWindowTargetPrefetcherTest(Empty);
+    //let p <- mkMultipleWindowPrefetcher;
+    //TODO pass in value of cachelinesinrange
+    let p <- mkSingleWindowTargetPrefetcher;
+    mkAutoFSM(
+        seq
+            // ----- Send misses and stuff to one window -----
+            action
+                p.reportMiss('h80000040);
+            endaction
+            action
+                let x <- p.getNextPrefetchAddr;
+                doAssert(x == 'h80000080, "test fail!");
+            endaction
+            action
+                let x <- p.getNextPrefetchAddr;
+                doAssert(x == 'h800000c0, "test fail!");
+            endaction
+            action
+                p.reportHit('h800000c0); //Report hit inside window
+            endaction
+            action
+                let x <- p.getNextPrefetchAddr;
+                doAssert(x == 'h80000100, "test fail!");
+            endaction
+            action
+                p.reportHit('h80004000); //Report hit outside window
+            endaction
+            action
+                let x <- p.getNextPrefetchAddr; //Previous window still recommended
+                doAssert(x == 'h80000140, "test fail!");
+            endaction
+            action
+                p.reportMiss('h80000140); //Report miss inside window
+            endaction
+            action
+                let x <- p.getNextPrefetchAddr; //Previous window still recommended
+                doAssert(x == 'h80000180, "test fail!");
+            endaction
+            action
+                p.reportMiss('h81000000); //Report miss somewhere far away
+            endaction
+            action
+                let x <- p.getNextPrefetchAddr; //New window allocated and recommended
+                doAssert(x == 'h81000040, "test fail!");
+            endaction
+            action
+                p.reportMiss('h80000100); //Report miss back home
+            endaction
+            action
+                let x <- p.getNextPrefetchAddr; 
+                doAssert(x == 'h80000140, "test fail!");
+            endaction
+            action
+                let x <- p.getNextPrefetchAddr; //target address recommended
+                doAssert(x == 'h81000000, "test fail!");
+            endaction
+            action
+                let x <- p.getNextPrefetchAddr; 
+                doAssert(x == 'h80000180, "test fail!"); // window addresss recommended
+            endaction
+        endseq
+    );
+endmodule
 
 module mkStridePCPrefetcher2Test(Empty);
     //let p <- mkMultipleWindowPrefetcher;

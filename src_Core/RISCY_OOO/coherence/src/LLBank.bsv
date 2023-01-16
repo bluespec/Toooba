@@ -415,8 +415,9 @@ endfunction
         );
     endrule
 
-    // insert new cRq from child to MSHR and send to pipeline
-    rule createDataPrefetchRq(newCRqSrc == Valid (Child));
+    // create new request from data prefetcher and send to pipeline
+    // Rule only fires when no work from child and DMA
+    rule createDataPrefetchRq(newCRqSrc == Invalid);
         Addr addr <- dataPrefetcher.getNextPrefetchAddr;
         cRqT cRq = LLRq {
             addr: addr,
@@ -444,8 +445,9 @@ endfunction
         );
     endrule
 
-    // insert new cRq from child to MSHR and send to pipeline
-    rule createInstrPrefetchRq(newCRqSrc == Valid (Child));
+    // create new request from instruction prefetcher and send to pipeline
+    // Rule only fires when no work from child and DMA
+    rule createInstrPrefetchRq(newCRqSrc == Invalid);
         Addr addr <- instrPrefetcher.getNextPrefetchAddr;
         cRqT cRq = LLRq {
             addr: addr,
@@ -609,7 +611,9 @@ endfunction
         );
         // performance counter: normal miss lat and cnt
         // Check lowest bit of child ID to determine if this was an ICache access
-        incrMissCnt(n, False, cRq.child[0] == 1);
+        if (!cRqIsPrefetch[n]) begin
+            incrMissCnt(n, False, cRq.child[0] == 1);
+        end
     endrule
 
     // this mem resp is just for a DMA req, won't go into pipeline to refill cache

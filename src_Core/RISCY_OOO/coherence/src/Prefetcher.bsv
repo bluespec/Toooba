@@ -129,7 +129,7 @@ module mkNextLinePrefetcherBackwards(Prefetcher)
 endmodule
 
 module mkSingleWindowPrefetcher(Prefetcher);
-    Integer cacheLinesInRange = 3;
+    Integer cacheLinesInRange = 2;
     Reg#(LineAddr) rangeEnd <- mkReg(0); //Points to one CLine after end of range
     Reg#(LineAddr) nextToAsk <- mkReg(0);
     method Action reportHit(Addr hitAddr);
@@ -195,8 +195,7 @@ provisos(
 
     function ActionValue#(Maybe#(windowIdxT)) getMatchingWindow(Addr addr) = 
     actionvalue
-        //Finds the first window that contains addr, 
-        //and moves it to the front of the LRU shift reg
+        //Finds the first window that contains addr
         let cl = getLineAddr(addr);
         function Bool pred(StreamEntry se);
             //TODO < gives 100 cycles less??????
@@ -266,6 +265,89 @@ provisos(
         return retAddr; 
     endmethod
 
+endmodule
+
+typedef 64 TargetTableSize;
+typedef struct {
+    Bit#(targetTableTagBits) tag;
+    LineAddr target;
+} TargetEntry#(numeric type targetTableTagBits) deriving (Bits, Eq, FShow);
+
+module mkSingleWindowTargetPrefetcher(Prefetcher) provisos
+(
+    NumAlias#(targetTableIdxBits, TLog#(TargetTableSize)),
+    NumAlias#(targetTableTagBits, TSub#(32, targetTableIdxBits)),
+    Alias#(targetEntryT, TargetEntry#(targetTableTagBits))
+);
+    Integer cacheLinesInRange = 2;
+    Reg#(LineAddr) rangeEnd <- mkReg(0); //Points to one CLine after end of range
+    Reg#(LineAddr) nextToAsk <- mkReg(0);
+    Reg#(LineAddr) lastChildRequest <- mkReg(0);
+    Vector#(TargetTableSize, Reg#(Maybe#(targetEntryT))) targetTable <- replicateM(mkReg(Invalid));
+    method Action reportHit(Addr hitAddr);
+        let cl = getLineAddr(hitAddr);
+        if (rangeEnd - fromInteger(cacheLinesInRange) - 1 < cl && cl < rangeEnd) begin
+            let nextEnd = cl + fromInteger(cacheLinesInRange) + 1;
+            rangeEnd <= nextEnd;
+            if (nextToAsk <= cl) nextToAsk <= cl + 1;
+            $display("%t Prefetcher reportHit %h, moving window end to %h", $time, hitAddr, Addr'{nextEnd, '0});
+        end
+        /*
+        else if (rangeEnd - fromInteger(cacheLinesInRange) - 1 != cl) begin
+            //If hit outside window, reallocate window (test!)
+            nextToAsk <= cl + 1;
+            rangeEnd <= cl + fromInteger(cacheLinesInRange) + 1;
+            $display("%t Prefetcher reportHit %h, allocate new window", $time, hitAddr);
+        end
+        */
+        if (cl != lastChildRequest + 1 && cl != lastChildRequest && cl != lastChildRequest - 1) begin
+            //Add entry to target table
+            targetEntryT entry;
+            entry.tag = lastChildRequest[31:valueOf(targetTableIdxBits)];
+            entry.target = cl;
+            Bit#(targetTableIdxBits) idx = truncate(lastChildRequest);
+            targetTable[idx] <= tagged Valid entry;
+            $display("%t Prefetcher reportHit %h, add target entry from %h", $time, hitAddr, Addr'{lastChildRequest, '0});
+        end
+        lastChildRequest <= cl;
+    endmethod
+    method Action reportMiss(Addr missAddr);
+        $display("%t Prefetcher reportMiss %h", $time, missAddr);
+        let cl = getLineAddr(missAddr);
+        nextToAsk <= cl + 1;
+        rangeEnd <= cl + fromInteger(cacheLinesInRange) + 1;
+        if (cl != lastChildRequest + 1 && cl != lastChildRequest && cl != lastChildRequest - 1) begin
+            //Add entry to target table
+            $display("%t Prefetcher reportMiss %h, add target entry from %h", $time, missAddr, Addr'{lastChildRequest, '0});
+            targetEntryT entry;
+            entry.tag = lastChildRequest[31:valueOf(targetTableIdxBits)];
+            entry.target = cl;
+            Bit#(targetTableIdxBits) idx = truncate(lastChildRequest);
+            targetTable[idx] <= tagged Valid entry;
+        end
+        lastChildRequest <= cl;
+    endmethod
+    method ActionValue#(Addr) getNextPrefetchAddr if (nextToAsk != rangeEnd);
+        Addr retAddr;
+        let lastAsked = nextToAsk-1;
+        Bit#(targetTableIdxBits) idx = truncate(lastAsked);
+        if (targetTable[idx] matches tagged Valid .entry 
+            &&& entry.tag == (lastAsked)[31:valueOf(targetTableIdxBits)]) begin
+            //If have valid entry for the last requested cline, prefetch the stored target first
+            //Reset table entry, so on further calls we prefetch the next successive clines
+            //If we actually take the jump, the table entry will be restored
+            targetTable[idx] <= Invalid; 
+            retAddr = {entry.target, '0};
+            $display("%t Prefetcher getNextPrefetchAddr requesting target entry %h", $time, retAddr);
+        end
+        else begin
+            //If no table entry, prefetch further in window
+            nextToAsk <= nextToAsk + 1;
+            retAddr = {nextToAsk, '0}; //extend cache line address to regular address
+            $display("%t Prefetcher getNextPrefetchAddr requesting next-line %h", $time, retAddr);
+        end
+        return retAddr; 
+    endmethod
 endmodule
 
 interface PCPrefetcher;
@@ -514,7 +596,8 @@ module mkL1IPrefetcher(Prefetcher);
     //let m <- mkNextLinePrefetcher;
     //let m <- mkMultiWindowPrefetcher;
     //let m <- mkNextLineOnAllPrefetcher;
-    let m <- mkDoNothingPrefetcher;
+    //let m <- mkDoNothingPrefetcher;
+    let m <- mkSingleWindowTargetPrefetcher;
     return m;
 endmodule
 
@@ -527,16 +610,18 @@ endmodule
 
 module mkLLIPrefetcher(Prefetcher);
     //let m <- mkNextLineOnMissPrefetcher;
-    let m <- mkMultiWindowPrefetcher;
+    //let m <- mkMultiWindowPrefetcher;
+    //let m <- mkSingleWindowPrefetcher;
+    //let m <- mkSingleWindowTargetPrefetcher;
     //let m <- mkStridePCPrefetcher2;
     //let m <- mkPrintPrefetcher;
-    //let m <- mkDoNothingPrefetcher;
+    let m <- mkDoNothingPrefetcher;
     return m;
 endmodule
 
 module mkLLDPrefetcher(Prefetcher);
     //let m <- mkNextLineOnAllPrefetcher;
-    let m <- mkPrintPrefetcher;
-    //let m <- mkDoNothingPrefetcher;
+    //let m <- mkPrintPrefetcher;
+    let m <- mkDoNothingPrefetcher;
     return m;
 endmodule
