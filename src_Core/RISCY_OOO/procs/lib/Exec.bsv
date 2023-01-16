@@ -255,6 +255,8 @@ function CapPipe capModify(CapPipe a, CapPipe b, CapModifyFunc func);
     let a_mut = setValidCap(a, isValidCap(a) && getKind(a) == UNSEALED);
     let b_mut = setValidCap(b, isValidCap(b) && getKind(b) == UNSEALED);
     match {.a_type, .a_res} = extractType(a);
+    Bool sealPassthrough = !isValidCap(b) || getKind(a) != UNSEALED || !isInBounds(b, False) || getAddr(b) == otype_unsealed_ext;
+    Bool sealIllegal = getKind(b) != UNSEALED || !getHardPerms(b).permitSeal || !validAsType(b, getAddr(b));
     CapPipe res = (case(func) matches
             tagged ModifyOffset .offsetOp :
                 modifyOffset(a_mut, getAddr(b), offsetOp == IncOffset).value;
@@ -273,11 +275,11 @@ function CapPipe capModify(CapPipe a, CapPipe b, CapModifyFunc func);
             tagged SealEntry              :
                 setKind(a_mut, SENTRY);
             tagged Seal                   :
-                clearTagIf(setKind(a_mut, SEALED_WITH_TYPE (truncate(getAddr(b)))), getKind(b) != UNSEALED);
+                clearTagIf( setKind(a_mut, SEALED_WITH_TYPE (truncate(getAddr(b))))
+                          , sealPassthrough || sealIllegal);
             tagged CSeal                  :
-                ((validAsType(b, getAddr(b)) && isValidCap(b) && getKind(a) == UNSEALED) ?
-                      setKind(a_mut, SEALED_WITH_TYPE (truncate(getAddr(b))))
-                    : a);
+                (sealPassthrough ? a :
+                     clearTagIf(setKind(a_mut, SEALED_WITH_TYPE (truncate(getAddr(b)))), sealIllegal));
             tagged Unseal .src            :
                 clearTagIf(setKind(((src == Src1) ? a:b), UNSEALED), (src == Src1) && (getKind(b) != UNSEALED));
             tagged AndPerm                :
@@ -438,10 +440,6 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
                                                          dInst.capChecks);
     if (dInst.capChecks.cfromptr_bypass && getAddr(rVal1) == 0) begin
         capException = Invalid;
-    end
-    if (dInst.capChecks.ccseal_bypass && (!isValidCap(rVal2) || getAddr(rVal2) == -1 || getKind(rVal1) != UNSEALED || !isInBounds(rVal2, False)) && isValidCap(rVal1)) begin
-        capException = Invalid;
-        boundsCheck = Invalid;
     end
 
     cf.nextPc = setKind(cf.nextPc, UNSEALED);
