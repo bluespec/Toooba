@@ -350,6 +350,151 @@ module mkSingleWindowTargetPrefetcher(Prefetcher) provisos
     endmethod
 endmodule
 
+module mkMultiWindowTargetPrefetcher(Prefetcher)
+provisos(
+    Alias#(windowIdxT, Bit#(TLog#(NumWindows))),
+    NumAlias#(targetTableIdxBits, TLog#(TargetTableSize)),
+    NumAlias#(targetTableTagBits, TSub#(32, targetTableIdxBits)),
+    Alias#(targetEntryT, TargetEntry#(targetTableTagBits))
+);
+    Integer cacheLinesInRange = 2;
+    Vector#(NumWindows, Reg#(StreamEntry)) streams 
+        <- replicateM(mkReg(StreamEntry {rangeEnd: '0, nextToAsk: '0}));
+    Vector#(NumWindows, Reg#(windowIdxT)) shiftReg <- genWithM(compose(mkReg, fromInteger));
+    Reg#(LineAddr) lastChildRequest <- mkReg(0);
+    Vector#(TargetTableSize, Reg#(Maybe#(targetEntryT))) targetTable <- replicateM(mkReg(Invalid));
+    //rest is TODO 
+    //function 
+    function Action moveWindowToFront(windowIdxT window) = 
+    action
+        if (shiftReg[0] == window) begin
+        end
+        else if (shiftReg[1] == window) begin
+            shiftReg[0] <= window;
+            shiftReg[1] <= shiftReg[0];
+        end
+        else if (shiftReg[2] == window) begin
+            shiftReg[0] <= window;
+            shiftReg[1] <= shiftReg[0];
+            shiftReg[2] <= shiftReg[1];
+        end
+        else if (shiftReg[3] == window) begin
+            shiftReg[0] <= window;
+            shiftReg[1] <= shiftReg[0];
+            shiftReg[2] <= shiftReg[1];
+            shiftReg[3] <= shiftReg[2];
+        end
+    endaction;
+
+    function ActionValue#(Maybe#(windowIdxT)) getMatchingWindow(LineAddr cl) = 
+    actionvalue
+        //Finds the first window that contains cache line
+        function Bool pred(StreamEntry se);
+            //TODO < gives 100 cycles less??????
+            return (se.rangeEnd - fromInteger(cacheLinesInRange) - 1 <= cl 
+                && cl < se.rangeEnd);
+        endfunction
+        //Find first window that contains cache line cl
+        if (findIndex(pred, readVReg(streams)) matches tagged Valid .idx) begin
+            return Valid(pack(idx));
+        end
+        else begin
+            return Invalid;
+        end
+    endactionvalue;
+
+    method Action reportHit(Addr hitAddr);
+        //Check if any stream line matches request
+        //if so, advance that stream line
+        //also advance LRU shift reg
+        let cl = getLineAddr(hitAddr);
+        let idxMaybe <- getMatchingWindow(cl);
+        if (idxMaybe matches tagged Valid .idx) begin
+            moveWindowToFront(pack(idx)); //Update window as just used
+            let newRangeEnd = getLineAddr(hitAddr) + fromInteger(cacheLinesInRange) + 1;
+            streams[idx].rangeEnd <= newRangeEnd;
+            $display("%t Prefetcher reportHit %h, moving window end to %h for window idx %h", 
+                $time, hitAddr, Addr'{newRangeEnd, '0}, idx);
+        end
+        else begin
+            $display("%t Prefetcher reportHit %h, no matching window found.", 
+                $time, hitAddr);
+        end
+        if (cl != lastChildRequest + 1 && cl != lastChildRequest && cl != lastChildRequest - 1) begin
+            //Add entry to target table
+            targetEntryT entry;
+            entry.tag = lastChildRequest[31:valueOf(targetTableIdxBits)];
+            entry.target = cl;
+            Bit#(targetTableIdxBits) idx = truncate(lastChildRequest);
+            targetTable[idx] <= tagged Valid entry;
+            $display("%t Prefetcher reportHit %h, add target entry from %h", $time, hitAddr, Addr'{lastChildRequest, '0});
+        end
+        lastChildRequest <= cl;
+    endmethod
+
+    method Action reportMiss(Addr missAddr);
+        //Check if any stream line matches request
+        //If so, advance that stream line and advance LRU shift reg
+        //Otherwise, allocate new stream line, and shift LRU reg completely,
+        let cl = getLineAddr(missAddr);
+        let idxMaybe <- getMatchingWindow(cl);
+        if (idxMaybe matches tagged Valid .idx) begin
+            moveWindowToFront(pack(idx)); //Update window as just used
+            let newRangeEnd = getLineAddr(missAddr) + fromInteger(cacheLinesInRange) + 1;
+            //Also refresh nextToAsk on miss
+            streams[idx] <= 
+                StreamEntry {nextToAsk: getLineAddr(missAddr) + 1, 
+                            rangeEnd: newRangeEnd};
+            $display("%t Prefetcher reportMiss %h, moving window end to %h for window idx %h", 
+                $time, missAddr, Addr'{newRangeEnd, '0}, idx);
+        end
+        else begin
+            $display("%t Prefetcher reportMiss %h, allocating new stream, idx %h", $time, missAddr, shiftReg[3]);
+            streams[shiftReg[3]] <= 
+                StreamEntry {nextToAsk: getLineAddr(missAddr) + 1,
+                            rangeEnd: getLineAddr(missAddr) + fromInteger(cacheLinesInRange) + 1};
+            shiftReg[0] <= shiftReg[3];
+            shiftReg[1] <= shiftReg[0];
+            shiftReg[2] <= shiftReg[1];
+            shiftReg[3] <= shiftReg[2];
+        end
+        if (cl != lastChildRequest + 1 && cl != lastChildRequest && cl != lastChildRequest - 1) begin
+            //Add entry to target table
+            $display("%t Prefetcher reportMiss %h, add target entry from %h", $time, missAddr, Addr'{lastChildRequest, '0});
+            targetEntryT entry;
+            entry.tag = lastChildRequest[31:valueOf(targetTableIdxBits)];
+            entry.target = cl;
+            Bit#(targetTableIdxBits) idx = truncate(lastChildRequest);
+            targetTable[idx] <= tagged Valid entry;
+        end
+        lastChildRequest <= cl;
+    endmethod
+
+    method ActionValue#(Addr) getNextPrefetchAddr 
+        if (streams[shiftReg[0]].nextToAsk != streams[shiftReg[0]].rangeEnd);
+
+        Addr retAddr;
+        let lastAsked = streams[shiftReg[0]].nextToAsk-1;
+        Bit#(targetTableIdxBits) idx = truncate(lastAsked);
+        if (targetTable[idx] matches tagged Valid .entry 
+            &&& entry.tag == (lastAsked)[31:valueOf(targetTableIdxBits)]) begin
+            //If have valid entry for the last requested cline, prefetch the stored target first
+            //Reset table entry, so on further calls we prefetch the next successive clines
+            //If we actually take the jump, the table entry will be restored
+            targetTable[idx] <= Invalid; 
+            retAddr = {entry.target, '0};
+            $display("%t Prefetcher getNextPrefetchAddr requesting target entry %h", $time, retAddr);
+        end
+        else begin
+            streams[shiftReg[0]].nextToAsk <= streams[shiftReg[0]].nextToAsk + 1;
+            retAddr = Addr'{streams[shiftReg[0]].nextToAsk, '0}; //extend cache line address to regular address
+            $display("%t Prefetcher getNextPrefetchAddr requesting %h from window idx %h", $time, retAddr, shiftReg[0]);
+        end
+        return retAddr; 
+    endmethod
+
+endmodule
+
 interface PCPrefetcher;
     method Action reportAccess(Addr addr, Bit#(16) pcHash, HitOrMiss hitMiss);
     method ActionValue#(Addr) getNextPrefetchAddr();
