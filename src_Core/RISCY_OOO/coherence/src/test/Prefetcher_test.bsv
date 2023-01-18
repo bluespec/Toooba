@@ -2,6 +2,46 @@ import Prefetcher::*;
 import StmtFSM::*;
 import Types::*;
 
+module mkTargetTableTest(Empty);
+    TargetTable#(64, 16) t <- mkTargetTable;
+    mkAutoFSM(
+        seq
+            // ----- Send misses and stuff to one window -----
+            action
+                t.set('h8000, 'h800a); // goes in short table
+            endaction
+            action
+                t.set('h8000, 'h80008000); // goes in long table
+            endaction
+            action
+                let x <- t.getAndRemove('h8000); // comes from short table
+                doAssert(x == Valid('h800a), "test fail!");
+            endaction
+            action
+                let x <- t.getAndRemove('h8000); // comes from long table
+                doAssert(x == Valid('h80008000), "test fail!");
+            endaction
+            action
+                t.set('h80000000, 'h21230000); // goes in long table
+            endaction
+            action
+                let x <- t.getAndRemove('h80000000); // comes from long table
+                doAssert(x == Valid('h21230000), "test fail!");
+            endaction
+            action
+                t.set('h7000, 'h6fde); // goes in short table backwards
+            endaction
+            action
+                let x <- t.getAndRemove('h7000); // get from short table
+                doAssert(x == Valid('h6fde), "test fail!");
+            endaction
+            action
+                let x <- t.getAndRemove('h7000); // get from short table
+                doAssert(x == Invalid, "test fail!"); //entry was removed!
+            endaction
+        endseq
+    );
+endmodule
 
 module mkMultiWindowPrefetcherTest(Empty);
     //let p <- mkMultipleWindowPrefetcher;

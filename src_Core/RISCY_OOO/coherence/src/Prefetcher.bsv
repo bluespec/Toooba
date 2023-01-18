@@ -3,6 +3,7 @@ import CacheUtils::*;
 import CCTypes::*;
 import Types::*;
 import Vector::*;
+import ProcTypes::*;
 
 interface Prefetcher;
     method Action reportHit(Addr hitAddr);
@@ -267,23 +268,86 @@ provisos(
 
 endmodule
 
-typedef 64 TargetTableSize;
 typedef struct {
-    Bit#(targetTableTagBits) tag;
+    Bit#(tagBits) tag;
+    Bit#(distanceBits) distance;
+} NarrowTargetEntry#(numeric type tagBits, numeric type distanceBits) deriving (Bits, Eq, FShow);
+
+typedef struct {
+    Bit#(tagBits) tag;
     LineAddr target;
-} TargetEntry#(numeric type targetTableTagBits) deriving (Bits, Eq, FShow);
+} WideTargetEntry#(numeric type tagBits) deriving (Bits, Eq, FShow);
+
+interface TargetTable#(numeric type narrowTableSize, numeric type wideTableSize);
+    method Action set(LineAddr prevAddr, LineAddr currAddr);
+    method ActionValue#(Maybe#(LineAddr)) getAndRemove(LineAddr addr);
+endinterface
+
+module mkTargetTable(TargetTable#(narrowTableSize, wideTableSize)) provisos
+(
+    NumAlias#(narrowTableIdxBits, TLog#(narrowTableSize)),
+    NumAlias#(wideTableIdxBits, TLog#(wideTableSize)),
+    NumAlias#(narrowTableTagBits, TSub#(32, narrowTableIdxBits)),
+    NumAlias#(wideTableTagBits, TSub#(32, wideTableIdxBits)),
+    NumAlias#(narrowDistanceBits, 10),
+    NumAlias#(narrowMaxDistanceAbs, TExp#(TSub#(narrowDistanceBits, 1))),
+    Alias#(narrowTargetEntryT, NarrowTargetEntry#(narrowTableTagBits, narrowDistanceBits)),
+    Alias#(wideTargetEntryT, WideTargetEntry#(wideTableTagBits)),
+    Add#(a__, TLog#(narrowTableSize), 32),
+    Add#(b__, TLog#(narrowTableSize), 58),
+    Add#(c__, TLog#(wideTableSize), 32),
+    Add#(d__, TLog#(wideTableSize), 58)
+);
+    Vector#(narrowTableSize, Reg#(Maybe#(narrowTargetEntryT))) narrowTable <- replicateM(mkReg(Invalid));
+    Vector#(wideTableSize, Reg#(Maybe#(wideTargetEntryT))) wideTable <- replicateM(mkReg(Invalid));
+    method Action set(LineAddr prevAddr, LineAddr currAddr);
+        let distance = currAddr - prevAddr;
+        Bit#(32) prevAddrHash = hash(prevAddr);
+        if (abs(distance) < fromInteger(valueOf(narrowMaxDistanceAbs))) begin
+            //Store in narrow table
+            narrowTargetEntryT entry;
+            entry.tag = prevAddrHash[31:valueOf(narrowTableIdxBits)];
+            entry.distance = truncate(distance);
+            Bit#(narrowTableIdxBits) idx = truncate(prevAddrHash);
+            narrowTable[idx] <= tagged Valid entry;
+        end
+        else begin
+            //Store in wide table
+            wideTargetEntryT entry;
+            entry.tag = prevAddrHash[31:valueOf(wideTableIdxBits)];
+            entry.target = currAddr;
+            Bit#(wideTableIdxBits) idx = truncate(prevAddrHash);
+            wideTable[idx] <= tagged Valid entry;
+        end
+    endmethod
+    method ActionValue#(Maybe#(LineAddr)) getAndRemove(LineAddr addr);
+        Bit#(narrowTableIdxBits) narrowIdx = truncate(addr);
+        Bit#(wideTableIdxBits) wideIdx = truncate(addr);
+        if (narrowTable[narrowIdx] matches tagged Valid .entry 
+            &&& entry.tag == addr[31:valueOf(narrowTableIdxBits)]) begin
+            narrowTable[narrowIdx] <= Invalid; 
+            $display("%t found narrow table entry %h", $time, addr + signExtend(pack(entry.distance)));
+            return Valid(addr + signExtend(pack(entry.distance)));
+        end
+        else if (wideTable[wideIdx] matches tagged Valid .entry 
+            &&& entry.tag == addr[31:valueOf(wideTableIdxBits)]) begin
+            wideTable[wideIdx] <= Invalid; 
+            $display("%t found wide table entry %h", $time, entry.target);
+            return Valid(entry.target);
+        end
+        else
+            return Invalid;
+    endmethod
+endmodule
+
 
 module mkSingleWindowTargetPrefetcher(Prefetcher) provisos
-(
-    NumAlias#(targetTableIdxBits, TLog#(TargetTableSize)),
-    NumAlias#(targetTableTagBits, TSub#(32, targetTableIdxBits)),
-    Alias#(targetEntryT, TargetEntry#(targetTableTagBits))
-);
+();
     Integer cacheLinesInRange = 2;
     Reg#(LineAddr) rangeEnd <- mkReg(0); //Points to one CLine after end of range
     Reg#(LineAddr) nextToAsk <- mkReg(0);
     Reg#(LineAddr) lastChildRequest <- mkReg(0);
-    Vector#(TargetTableSize, Reg#(Maybe#(targetEntryT))) targetTable <- replicateM(mkReg(Invalid));
+    TargetTable#(64, 8) targetTable <- mkTargetTable;
     method Action reportHit(Addr hitAddr);
         let cl = getLineAddr(hitAddr);
         if (rangeEnd - fromInteger(cacheLinesInRange) - 1 < cl && cl < rangeEnd) begin
@@ -301,13 +365,8 @@ module mkSingleWindowTargetPrefetcher(Prefetcher) provisos
         end
         */
         if (cl != lastChildRequest + 1 && cl != lastChildRequest && cl != lastChildRequest - 1) begin
-            //Add entry to target table
-            targetEntryT entry;
-            entry.tag = lastChildRequest[31:valueOf(targetTableIdxBits)];
-            entry.target = cl;
-            Bit#(targetTableIdxBits) idx = truncate(lastChildRequest);
-            targetTable[idx] <= tagged Valid entry;
-            $display("%t Prefetcher reportHit %h, add target entry from %h", $time, hitAddr, Addr'{lastChildRequest, '0});
+            $display("%t Prefetcher reportHit %h, add target entry from addr %h", $time, hitAddr, Addr'{lastChildRequest, '0});
+            targetTable.set(lastChildRequest, cl);
         end
         lastChildRequest <= cl;
     endmethod
@@ -317,33 +376,26 @@ module mkSingleWindowTargetPrefetcher(Prefetcher) provisos
         nextToAsk <= cl + 1;
         rangeEnd <= cl + fromInteger(cacheLinesInRange) + 1;
         if (cl != lastChildRequest + 1 && cl != lastChildRequest && cl != lastChildRequest - 1) begin
-            //Add entry to target table
-            $display("%t Prefetcher reportMiss %h, add target entry from %h", $time, missAddr, Addr'{lastChildRequest, '0});
-            targetEntryT entry;
-            entry.tag = lastChildRequest[31:valueOf(targetTableIdxBits)];
-            entry.target = cl;
-            Bit#(targetTableIdxBits) idx = truncate(lastChildRequest);
-            targetTable[idx] <= tagged Valid entry;
+            $display("%t Prefetcher add target entry from %h", $time, Addr'{lastChildRequest, '0});
+            targetTable.set(lastChildRequest, cl);
         end
         lastChildRequest <= cl;
     endmethod
     method ActionValue#(Addr) getNextPrefetchAddr if (nextToAsk != rangeEnd);
         Addr retAddr;
         let lastAsked = nextToAsk-1;
-        Bit#(targetTableIdxBits) idx = truncate(lastAsked);
-        if (targetTable[idx] matches tagged Valid .entry 
-            &&& entry.tag == (lastAsked)[31:valueOf(targetTableIdxBits)]) begin
+        let entryMaybe <- targetTable.getAndRemove(lastAsked);
+        if (entryMaybe matches tagged Valid .cl) begin
             //If have valid entry for the last requested cline, prefetch the stored target first
             //Reset table entry, so on further calls we prefetch the next successive clines
             //If we actually take the jump, the table entry will be restored
-            targetTable[idx] <= Invalid; 
-            retAddr = {entry.target, '0};
+            retAddr = {cl, '0};
             $display("%t Prefetcher getNextPrefetchAddr requesting target entry %h", $time, retAddr);
         end
         else begin
             //If no table entry, prefetch further in window
             nextToAsk <= nextToAsk + 1;
-            retAddr = {nextToAsk, '0}; //extend cache line address to regular address
+            retAddr = {nextToAsk, '0}; 
             $display("%t Prefetcher getNextPrefetchAddr requesting next-line %h", $time, retAddr);
         end
         return retAddr; 
@@ -352,19 +404,14 @@ endmodule
 
 module mkMultiWindowTargetPrefetcher(Prefetcher)
 provisos(
-    Alias#(windowIdxT, Bit#(TLog#(NumWindows))),
-    NumAlias#(targetTableIdxBits, TLog#(TargetTableSize)),
-    NumAlias#(targetTableTagBits, TSub#(32, targetTableIdxBits)),
-    Alias#(targetEntryT, TargetEntry#(targetTableTagBits))
+    Alias#(windowIdxT, Bit#(TLog#(NumWindows)))
 );
     Integer cacheLinesInRange = 2;
     Vector#(NumWindows, Reg#(StreamEntry)) streams 
         <- replicateM(mkReg(StreamEntry {rangeEnd: '0, nextToAsk: '0}));
     Vector#(NumWindows, Reg#(windowIdxT)) shiftReg <- genWithM(compose(mkReg, fromInteger));
     Reg#(LineAddr) lastChildRequest <- mkReg(0);
-    Vector#(TargetTableSize, Reg#(Maybe#(targetEntryT))) targetTable <- replicateM(mkReg(Invalid));
-    //rest is TODO 
-    //function 
+    TargetTable#(64, 8) targetTable <- mkTargetTable;
     function Action moveWindowToFront(windowIdxT window) = 
     action
         if (shiftReg[0] == window) begin
@@ -419,15 +466,21 @@ provisos(
         else begin
             $display("%t Prefetcher reportHit %h, no matching window found.", 
                 $time, hitAddr);
+            /*
+            test: allocate new window on hit too (mostly for target prefetching)
+            streams[shiftReg[3]] <= 
+                StreamEntry {nextToAsk: getLineAddr(missAddr) + 1,
+                            rangeEnd: getLineAddr(missAddr) + fromInteger(cacheLinesInRange) + 1};
+            shiftReg[0] <= shiftReg[3];
+            shiftReg[1] <= shiftReg[0];
+            shiftReg[2] <= shiftReg[1];
+            shiftReg[3] <= shiftReg[2];
+            */
         end
         if (cl != lastChildRequest + 1 && cl != lastChildRequest && cl != lastChildRequest - 1) begin
             //Add entry to target table
-            targetEntryT entry;
-            entry.tag = lastChildRequest[31:valueOf(targetTableIdxBits)];
-            entry.target = cl;
-            Bit#(targetTableIdxBits) idx = truncate(lastChildRequest);
-            targetTable[idx] <= tagged Valid entry;
             $display("%t Prefetcher reportHit %h, add target entry from %h", $time, hitAddr, Addr'{lastChildRequest, '0});
+            targetTable.set(lastChildRequest, cl);
         end
         lastChildRequest <= cl;
     endmethod
@@ -461,11 +514,7 @@ provisos(
         if (cl != lastChildRequest + 1 && cl != lastChildRequest && cl != lastChildRequest - 1) begin
             //Add entry to target table
             $display("%t Prefetcher reportMiss %h, add target entry from %h", $time, missAddr, Addr'{lastChildRequest, '0});
-            targetEntryT entry;
-            entry.tag = lastChildRequest[31:valueOf(targetTableIdxBits)];
-            entry.target = cl;
-            Bit#(targetTableIdxBits) idx = truncate(lastChildRequest);
-            targetTable[idx] <= tagged Valid entry;
+            targetTable.set(lastChildRequest, cl);
         end
         lastChildRequest <= cl;
     endmethod
@@ -475,14 +524,12 @@ provisos(
 
         Addr retAddr;
         let lastAsked = streams[shiftReg[0]].nextToAsk-1;
-        Bit#(targetTableIdxBits) idx = truncate(lastAsked);
-        if (targetTable[idx] matches tagged Valid .entry 
-            &&& entry.tag == (lastAsked)[31:valueOf(targetTableIdxBits)]) begin
+        let clMaybe <- targetTable.getAndRemove(lastAsked);
+        if (clMaybe matches tagged Valid .cl) begin
             //If have valid entry for the last requested cline, prefetch the stored target first
             //Reset table entry, so on further calls we prefetch the next successive clines
             //If we actually take the jump, the table entry will be restored
-            targetTable[idx] <= Invalid; 
-            retAddr = {entry.target, '0};
+            retAddr = {cl, '0};
             $display("%t Prefetcher getNextPrefetchAddr requesting target entry %h", $time, retAddr);
         end
         else begin
@@ -618,7 +665,7 @@ provisos(
 endmodule
 
 typedef struct {
-    Bit#(12) lastAddr; //TODO maybe store less bits here?
+    Bit#(12) lastAddr; 
     Bit#(13) stride;
     StrideState state;
     Bit#(4) cLinesPrefetched; //Stores how many cache lines have been prefetched for this instruction
