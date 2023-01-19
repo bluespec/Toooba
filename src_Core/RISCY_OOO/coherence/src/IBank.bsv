@@ -513,7 +513,7 @@ module mkIBank#(
             line: ram.line
         }, True); // hit, so update rep info
         if (!cRqIsPrefetch[n]) begin
-            prefetcher.reportHit(req.addr);
+            prefetcher.reportAccess(req.addr, HIT);
         end
         prefetchRqDone[n] <= True;
         // process req to get superscalar inst read results
@@ -576,7 +576,7 @@ module mkIBank#(
                 line: ram.line
             }, False);
             if (!cRqIsPrefetch[n]) begin
-                prefetcher.reportMiss(procRq.addr);
+                prefetcher.reportAccess(procRq.addr, MISS);
             end
         endaction
         endfunction
@@ -606,7 +606,7 @@ module mkIBank#(
                 waitP: True
             });
             if (!cRqIsPrefetch[n]) begin
-                prefetcher.reportMiss(procRq.addr);
+                prefetcher.reportAccess(procRq.addr, MISS);
             end
             // send replacement resp to parent
             rsToPIndexQ.enq(CRq (n));

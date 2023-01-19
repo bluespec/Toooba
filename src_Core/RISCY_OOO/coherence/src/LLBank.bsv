@@ -1002,10 +1002,10 @@ endfunction
         }, True); // hit, so update rep info
         if (!cRqIsPrefetch[n]) begin
             if (cRq.child[0] == 1) begin
-                instrPrefetcher.reportHit(cRq.addr);
+                instrPrefetcher.reportAccess(cRq.addr, HIT);
             end
             else begin
-                dataPrefetcher.reportHit(cRq.addr);
+                dataPrefetcher.reportAccess(cRq.addr, HIT);
             end
         end
     endaction
@@ -1203,10 +1203,10 @@ endfunction
             }, False);
             if (!cRqIsPrefetch[n]) begin
                 if (cRq.child[0] == 1) begin
-                    instrPrefetcher.reportMiss(cRq.addr);
+                    instrPrefetcher.reportAccess(cRq.addr, MISS);
                 end
                 else begin
-                    dataPrefetcher.reportMiss(cRq.addr);
+                    dataPrefetcher.reportAccess(cRq.addr, MISS);
                 end
             end
         endaction
@@ -1279,10 +1279,10 @@ endfunction
             end
             if (!cRqIsPrefetch[n]) begin
                 if (cRq.child[0] == 1) begin
-                    instrPrefetcher.reportMiss(cRq.addr);
+                    instrPrefetcher.reportAccess(cRq.addr, MISS);
                 end
                 else begin
-                    dataPrefetcher.reportMiss(cRq.addr);
+                    dataPrefetcher.reportAccess(cRq.addr, MISS);
                 end
             end
         endaction

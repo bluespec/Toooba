@@ -5,77 +5,61 @@ import Types::*;
 import Vector::*;
 import ProcTypes::*;
 
+typedef enum {
+    HIT = 1'b0, MISS = 1'b1
+} HitOrMiss deriving (Bits, Eq, FShow);
+
 interface Prefetcher;
-    method Action reportHit(Addr hitAddr);
-    method Action reportMiss(Addr missAddr);
+    (* always_ready *)
+    method Action reportAccess(Addr addr, HitOrMiss hitMiss);
     method ActionValue#(Addr) getNextPrefetchAddr();
     //method Action flush;
     //method Bool flush_done;
 endinterface
 
-module mkTestPrefetcher(Prefetcher);
-    Reg#(Addr) lastMissAddr <- mkReg(0);
-    Reg#(Bit#(2)) reqSent <- mkReg(0);
-    method Action reportHit(Addr hitAddr);
-        $display("%t I Prefetcher reportHit %h", $time, hitAddr);
-    endmethod
-    method Action reportMiss(Addr missAddr);
-        $display("%t I Prefetcher reportMiss %h", $time, missAddr);
-        if (missAddr == 'h0000000080000040)
-            lastMissAddr <= missAddr;
-    endmethod
-    method ActionValue#(Addr) getNextPrefetchAddr if (reqSent < 2 && lastMissAddr == 'h0000000080000040);
-        $display("%t I Prefetcher getNextPrefetchAddr", $time);
-        reqSent <= reqSent + 1;
-        if (reqSent == 0)  begin
-            return 64'h0000000080000080;
-        end
-        else begin
-            return 64'h00000000800000c0;
-        end
-    endmethod
-endmodule
-
 module mkDoNothingPrefetcher(Prefetcher);
-    method Action reportHit(Addr hitAddr);
-    endmethod
-    method Action reportMiss(Addr missAddr);
+    method Action reportAccess(Addr addr, HitOrMiss hitMiss);
     endmethod
     method ActionValue#(Addr) getNextPrefetchAddr if (False);
-        return 64'h0000000080000080;
+        return 64'h0;
     endmethod
 endmodule
 
 module mkPrintPrefetcher(Prefetcher);
-    method Action reportHit(Addr hitAddr);
-        $display("%t PrintPrefetcher reportHit %h", $time, hitAddr);
-    endmethod
-    method Action reportMiss(Addr missAddr);
-        $display("%t PrintPrefetcher reportMiss %h", $time, missAddr);
+    method Action reportAccess(Addr addr, HitOrMiss hitMiss);
+        if (hitMiss == HIT) begin
+            $display("%t PrintPrefetcher report HIT %h", $time, addr);
+        end
+        else begin
+            $display("%t PrintPrefetcher report MISS %h", $time, addr);
+        end
     endmethod
     method ActionValue#(Addr) getNextPrefetchAddr if (False);
-        return 64'h0000000080000080;
+        return 64'h0;
     endmethod
 endmodule
 
-typedef 3 INextLinesOnMiss;
-typedef 0 DNextLinesOnMiss;
-
 module mkNextLineOnMissPrefetcher(Prefetcher)
     provisos (
-        Alias#(rqCntT, Bit#(TLog#(TAdd#(INextLinesOnMiss, 1))))
+        NumAlias#(nextLinesOnMiss, 3),
+        Alias#(rqCntT, Bit#(TLog#(TAdd#(nextLinesOnMiss, 1))))
     );
     Reg#(Addr) lastMissAddr <- mkReg(0);
-    Reg#(rqCntT) sentRequestCounter <- mkReg(fromInteger(valueOf(INextLinesOnMiss)));
-    method Action reportHit(Addr hitAddr);
-        $display("%t Prefetcher reportHit %h", $time, hitAddr);
+    Reg#(rqCntT) sentRequestCounter <- mkReg(fromInteger(valueOf(nextLinesOnMiss)));
+
+    method Action reportAccess(Addr addr, HitOrMiss hitMiss);
+        if (hitMiss == HIT) begin
+            $display("%t Prefetcher report HIT %h", $time, addr);
+        end
+        else begin
+            $display("%t Prefetcher report MISS %h", $time, addr);
+            lastMissAddr <= addr;
+            sentRequestCounter <= 0;
+        end
     endmethod
-    method Action reportMiss(Addr missAddr);
-        $display("%t Prefetcher reportMiss %h", $time, missAddr);
-        lastMissAddr <= missAddr;
-        sentRequestCounter <= 0;
-    endmethod
-    method ActionValue#(Addr) getNextPrefetchAddr if (sentRequestCounter < fromInteger(valueOf(INextLinesOnMiss)));
+    method ActionValue#(Addr) getNextPrefetchAddr if 
+        (sentRequestCounter < fromInteger(valueOf(nextLinesOnMiss)));
+
         sentRequestCounter <= sentRequestCounter + 1;
         let addrToRequest = lastMissAddr + (zeroExtend(sentRequestCounter) + 1)*fromInteger(valueOf(DataSz));
         $display("%t Prefetcher getNextPrefetchAddr requesting %h", $time, addrToRequest);
@@ -85,45 +69,29 @@ endmodule
 
 module mkNextLineOnAllPrefetcher(Prefetcher)
     provisos (
-        Alias#(rqCntT, Bit#(TLog#(TAdd#(INextLinesOnMiss, 1))))
+        NumAlias#(nextLinesOnAccess, 3),
+        Alias#(rqCntT, Bit#(TLog#(TAdd#(nextLinesOnAccess, 1))))
     );
-    Reg#(Addr) lastMissAddr <- mkReg(0);
-    Reg#(rqCntT) sentRequestCounter <- mkReg(fromInteger(valueOf(INextLinesOnMiss)));
-    method Action reportHit(Addr hitAddr);
-        $display("%t Prefetcher reportHit %h", $time, hitAddr);
-        lastMissAddr <= hitAddr;
-        sentRequestCounter <= 0;
-    endmethod
-    method Action reportMiss(Addr missAddr);
-        $display("%t Prefetcher reportMiss %h", $time, missAddr);
-        lastMissAddr <= missAddr;
-        sentRequestCounter <= 0;
-    endmethod
-    method ActionValue#(Addr) getNextPrefetchAddr if (sentRequestCounter < fromInteger(valueOf(INextLinesOnMiss)));
-        sentRequestCounter <= sentRequestCounter + 1;
-        let addrToRequest = lastMissAddr + (zeroExtend(sentRequestCounter) + 1)*fromInteger(valueOf(DataSz));
-        $display("%t Prefetcher getNextPrefetchAddr requesting %h", $time, addrToRequest);
-        return addrToRequest;
-    endmethod
-endmodule
+    Reg#(Addr) lastAccessAddr <- mkReg(0);
+    Reg#(rqCntT) sentRequestCounter <- mkReg(fromInteger(valueOf(nextLinesOnAccess)));
 
-module mkNextLinePrefetcherBackwards(Prefetcher)
-    provisos (
-        Alias#(rqCntT, Bit#(TLog#(TAdd#(DNextLinesOnMiss, 1))))
-    );
-    Reg#(Addr) lastMissAddr <- mkReg(0);
-    Reg#(rqCntT) sentRequestCounter <- mkReg(fromInteger(valueOf(DNextLinesOnMiss)));
-    method Action reportHit(Addr hitAddr);
-        $display("%t Prefetcher reportHit %h", $time, hitAddr);
+    method Action reportAccess(Addr addr, HitOrMiss hitMiss);
+        if (hitMiss == HIT) begin
+            $display("%t Prefetcher report HIT %h", $time, addr);
+            lastAccessAddr <= addr;
+            sentRequestCounter <= 0;
+        end
+        else begin
+            $display("%t Prefetcher report MISS %h", $time, addr);
+            lastAccessAddr <= addr;
+            sentRequestCounter <= 0;
+        end
     endmethod
-    method Action reportMiss(Addr missAddr);
-        $display("%t Prefetcher reportMiss %h", $time, missAddr);
-        lastMissAddr <= missAddr;
-        sentRequestCounter <= 0;
-    endmethod
-    method ActionValue#(Addr) getNextPrefetchAddr if (sentRequestCounter < fromInteger(valueOf(DNextLinesOnMiss)));
+    method ActionValue#(Addr) getNextPrefetchAddr if 
+        (sentRequestCounter < fromInteger(valueOf(nextLinesOnAccess)));
+
         sentRequestCounter <= sentRequestCounter + 1;
-        let addrToRequest = lastMissAddr - (zeroExtend(sentRequestCounter) + 1)*fromInteger(valueOf(DataSz));
+        let addrToRequest = lastAccessAddr + (zeroExtend(sentRequestCounter) + 1)*fromInteger(valueOf(DataSz));
         $display("%t Prefetcher getNextPrefetchAddr requesting %h", $time, addrToRequest);
         return addrToRequest;
     endmethod
@@ -133,19 +101,22 @@ module mkSingleWindowPrefetcher(Prefetcher);
     Integer cacheLinesInRange = 2;
     Reg#(LineAddr) rangeEnd <- mkReg(0); //Points to one CLine after end of range
     Reg#(LineAddr) nextToAsk <- mkReg(0);
-    method Action reportHit(Addr hitAddr);
-        let cl = getLineAddr(hitAddr);
-        if (rangeEnd - fromInteger(cacheLinesInRange) - 1 < cl && cl < rangeEnd) begin
+    method Action reportAccess(Addr addr, HitOrMiss hitMiss);
+        let cl = getLineAddr(addr);
+        if (hitMiss == HIT && 
+            rangeEnd - fromInteger(cacheLinesInRange) - 1 < cl && 
+            cl < rangeEnd) begin
+
             let nextEnd = cl + fromInteger(cacheLinesInRange) + 1;
-            $display("%t Prefetcher reportHit %h, moving window end to %h", $time, hitAddr, Addr'{nextEnd, '0});
+            $display("%t Prefetcher report HIT %h, moving window end to %h", $time, addr, Addr'{nextEnd, '0});
             rangeEnd <= nextEnd;
         end
-    endmethod
-    method Action reportMiss(Addr missAddr);
-        $display("%t Prefetcher reportMiss %h", $time, missAddr);
-        nextToAsk <= getLineAddr(missAddr) + 1;
-        rangeEnd <= getLineAddr(missAddr) + fromInteger(cacheLinesInRange) + 1;
-        //LgLineSzBytes
+        else begin
+            $display("%t Prefetcher report MISS %h", $time, addr);
+            //Reset window
+            nextToAsk <= getLineAddr(addr) + 1;
+            rangeEnd <= getLineAddr(addr) + fromInteger(cacheLinesInRange) + 1;
+        end
     endmethod
     method ActionValue#(Addr) getNextPrefetchAddr if (nextToAsk != rangeEnd);
         nextToAsk <= nextToAsk + 1;
@@ -161,18 +132,16 @@ typedef struct {
     LineAddr nextToAsk;
 } StreamEntry deriving (Bits);
 
-typedef 4 NumWindows;
-
 module mkMultiWindowPrefetcher(Prefetcher)
 provisos(
-    Alias#(windowIdxT, Bit#(TLog#(NumWindows)))
+    NumAlias#(numWindows, 4),
+    Alias#(windowIdxT, Bit#(TLog#(numWindows)))
 );
     Integer cacheLinesInRange = 2;
-    Vector#(NumWindows, Reg#(StreamEntry)) streams 
+    Vector#(numWindows, Reg#(StreamEntry)) streams 
         <- replicateM(mkReg(StreamEntry {rangeEnd: '0, nextToAsk: '0}));
-    Vector#(NumWindows, Reg#(windowIdxT)) shiftReg <- genWithM(compose(mkReg, fromInteger));
+    Vector#(numWindows, Reg#(windowIdxT)) shiftReg <- genWithM(compose(mkReg, fromInteger));
 
-    //function 
     function Action moveWindowToFront(windowIdxT window) = 
     action
         if (shiftReg[0] == window) begin
@@ -212,44 +181,33 @@ provisos(
         end
     endactionvalue;
 
-    method Action reportHit(Addr hitAddr);
-        //Check if any stream line matches request
-        //if so, advance that stream line
-        //also advance LRU shift reg
-        let idxMaybe <- getMatchingWindow(hitAddr);
-        if (idxMaybe matches tagged Valid .idx) begin
-            moveWindowToFront(pack(idx)); //Update window as just used
-            let newRangeEnd = getLineAddr(hitAddr) + fromInteger(cacheLinesInRange) + 1;
-            streams[idx].rangeEnd <= newRangeEnd;
-            $display("%t Prefetcher reportHit %h, moving window end to %h for window idx %h", 
-                $time, hitAddr, Addr'{newRangeEnd, '0}, idx);
-        end
-        else begin
-            $display("%t Prefetcher reportHit %h, no matching window found.", 
-                $time, hitAddr);
-        end
-    endmethod
-
-    method Action reportMiss(Addr missAddr);
+    method Action reportAccess(Addr addr, HitOrMiss hitMiss);
         //Check if any stream line matches request
         //If so, advance that stream line and advance LRU shift reg
-        //Otherwise, allocate new stream line, and shift LRU reg completely,
-        let idxMaybe <- getMatchingWindow(missAddr);
+        //Otherwise if miss, allocate new stream line, and shift LRU reg completely,
+        let idxMaybe <- getMatchingWindow(addr);
         if (idxMaybe matches tagged Valid .idx) begin
             moveWindowToFront(pack(idx)); //Update window as just used
-            let newRangeEnd = getLineAddr(missAddr) + fromInteger(cacheLinesInRange) + 1;
-            //Also refresh nextToAsk on miss
-            streams[idx] <= 
-                StreamEntry {nextToAsk: getLineAddr(missAddr) + 1, 
-                            rangeEnd: newRangeEnd};
-            $display("%t Prefetcher reportMiss %h, moving window end to %h for window idx %h", 
-                $time, missAddr, Addr'{newRangeEnd, '0}, idx);
+            let newRangeEnd = getLineAddr(addr) + fromInteger(cacheLinesInRange) + 1;
+            if (hitMiss == HIT) begin
+                $display("%t Prefetcher report HIT %h, moving window end to %h for window idx %h", 
+                    $time, addr, Addr'{newRangeEnd, '0}, idx);
+                streams[idx].rangeEnd <= newRangeEnd;
+            end
+            else if (hitMiss == MISS) begin
+                //Also reset nextToAsk on miss
+                $display("%t Prefetcher report MISS %h, moving window end to %h for window idx %h", 
+                    $time, addr, Addr'{newRangeEnd, '0}, idx);
+                streams[idx] <= 
+                    StreamEntry {nextToAsk: getLineAddr(addr) + 1, 
+                                rangeEnd: newRangeEnd};
+            end
         end
-        else begin
-            $display("%t Prefetcher reportMiss %h, allocating new stream, idx %h", $time, missAddr, shiftReg[3]);
+        else if (hitMiss == MISS) begin
+            $display("%t Prefetcher report MISS %h, allocating new window, idx %h", $time, addr, shiftReg[3]);
             streams[shiftReg[3]] <= 
-                StreamEntry {nextToAsk: getLineAddr(missAddr) + 1,
-                            rangeEnd: getLineAddr(missAddr) + fromInteger(cacheLinesInRange) + 1};
+                StreamEntry {nextToAsk: getLineAddr(addr) + 1,
+                            rangeEnd: getLineAddr(addr) + fromInteger(cacheLinesInRange) + 1};
             shiftReg[0] <= shiftReg[3];
             shiftReg[1] <= shiftReg[0];
             shiftReg[2] <= shiftReg[1];
@@ -340,7 +298,6 @@ module mkTargetTable(TargetTable#(narrowTableSize, wideTableSize)) provisos
     endmethod
 endmodule
 
-
 module mkSingleWindowTargetPrefetcher(Prefetcher) provisos
 ();
     Integer cacheLinesInRange = 2;
@@ -348,39 +305,31 @@ module mkSingleWindowTargetPrefetcher(Prefetcher) provisos
     Reg#(LineAddr) nextToAsk <- mkReg(0);
     Reg#(LineAddr) lastChildRequest <- mkReg(0);
     TargetTable#(64, 8) targetTable <- mkTargetTable;
-    method Action reportHit(Addr hitAddr);
-        let cl = getLineAddr(hitAddr);
-        if (rangeEnd - fromInteger(cacheLinesInRange) - 1 < cl && cl < rangeEnd) begin
+    //If hit outside window, reallocate window (test!)
+    method Action reportAccess(Addr addr, HitOrMiss hitMiss);
+        let cl = getLineAddr(addr);
+        if (hitMiss == HIT && 
+            rangeEnd - fromInteger(cacheLinesInRange) - 1 < cl && 
+            cl < rangeEnd) begin
+
             let nextEnd = cl + fromInteger(cacheLinesInRange) + 1;
+            $display("%t Prefetcher report HIT %h, moving window end to %h", $time, addr, Addr'{nextEnd, '0});
             rangeEnd <= nextEnd;
-            if (nextToAsk <= cl) nextToAsk <= cl + 1;
-            $display("%t Prefetcher reportHit %h, moving window end to %h", $time, hitAddr, Addr'{nextEnd, '0});
         end
-        /*
-        else if (rangeEnd - fromInteger(cacheLinesInRange) - 1 != cl) begin
-            //If hit outside window, reallocate window (test!)
+        else if (hitMiss == MISS) begin
+            $display("%t Prefetcher report MISS %h", $time, addr);
+            //Reset window
             nextToAsk <= cl + 1;
             rangeEnd <= cl + fromInteger(cacheLinesInRange) + 1;
-            $display("%t Prefetcher reportHit %h, allocate new window", $time, hitAddr);
         end
-        */
+
         if (cl != lastChildRequest + 1 && cl != lastChildRequest && cl != lastChildRequest - 1) begin
-            $display("%t Prefetcher reportHit %h, add target entry from addr %h", $time, hitAddr, Addr'{lastChildRequest, '0});
+            $display("%t Prefetcher add target entry from addr %h to addr %h", $time, Addr'{lastChildRequest, '0}, addr);
             targetTable.set(lastChildRequest, cl);
         end
         lastChildRequest <= cl;
     endmethod
-    method Action reportMiss(Addr missAddr);
-        $display("%t Prefetcher reportMiss %h", $time, missAddr);
-        let cl = getLineAddr(missAddr);
-        nextToAsk <= cl + 1;
-        rangeEnd <= cl + fromInteger(cacheLinesInRange) + 1;
-        if (cl != lastChildRequest + 1 && cl != lastChildRequest && cl != lastChildRequest - 1) begin
-            $display("%t Prefetcher add target entry from %h", $time, Addr'{lastChildRequest, '0});
-            targetTable.set(lastChildRequest, cl);
-        end
-        lastChildRequest <= cl;
-    endmethod
+
     method ActionValue#(Addr) getNextPrefetchAddr if (nextToAsk != rangeEnd);
         Addr retAddr;
         let lastAsked = nextToAsk-1;
@@ -404,12 +353,13 @@ endmodule
 
 module mkMultiWindowTargetPrefetcher(Prefetcher)
 provisos(
-    Alias#(windowIdxT, Bit#(TLog#(NumWindows)))
+    NumAlias#(numWindows, 4),
+    Alias#(windowIdxT, Bit#(TLog#(numWindows)))
 );
     Integer cacheLinesInRange = 2;
-    Vector#(NumWindows, Reg#(StreamEntry)) streams 
+    Vector#(numWindows, Reg#(StreamEntry)) streams 
         <- replicateM(mkReg(StreamEntry {rangeEnd: '0, nextToAsk: '0}));
-    Vector#(NumWindows, Reg#(windowIdxT)) shiftReg <- genWithM(compose(mkReg, fromInteger));
+    Vector#(numWindows, Reg#(windowIdxT)) shiftReg <- genWithM(compose(mkReg, fromInteger));
     Reg#(LineAddr) lastChildRequest <- mkReg(0);
     TargetTable#(64, 8) targetTable <- mkTargetTable;
     function Action moveWindowToFront(windowIdxT window) = 
@@ -449,71 +399,46 @@ provisos(
             return Invalid;
         end
     endactionvalue;
+    // test: allocate new window on hit too (mostly for target prefetching)
 
-    method Action reportHit(Addr hitAddr);
-        //Check if any stream line matches request
-        //if so, advance that stream line
-        //also advance LRU shift reg
-        let cl = getLineAddr(hitAddr);
-        let idxMaybe <- getMatchingWindow(cl);
-        if (idxMaybe matches tagged Valid .idx) begin
-            moveWindowToFront(pack(idx)); //Update window as just used
-            let newRangeEnd = getLineAddr(hitAddr) + fromInteger(cacheLinesInRange) + 1;
-            streams[idx].rangeEnd <= newRangeEnd;
-            $display("%t Prefetcher reportHit %h, moving window end to %h for window idx %h", 
-                $time, hitAddr, Addr'{newRangeEnd, '0}, idx);
-        end
-        else begin
-            $display("%t Prefetcher reportHit %h, no matching window found.", 
-                $time, hitAddr);
-            /*
-            test: allocate new window on hit too (mostly for target prefetching)
-            streams[shiftReg[3]] <= 
-                StreamEntry {nextToAsk: getLineAddr(missAddr) + 1,
-                            rangeEnd: getLineAddr(missAddr) + fromInteger(cacheLinesInRange) + 1};
-            shiftReg[0] <= shiftReg[3];
-            shiftReg[1] <= shiftReg[0];
-            shiftReg[2] <= shiftReg[1];
-            shiftReg[3] <= shiftReg[2];
-            */
-        end
-        if (cl != lastChildRequest + 1 && cl != lastChildRequest && cl != lastChildRequest - 1) begin
-            //Add entry to target table
-            $display("%t Prefetcher reportHit %h, add target entry from %h", $time, hitAddr, Addr'{lastChildRequest, '0});
-            targetTable.set(lastChildRequest, cl);
-        end
-        lastChildRequest <= cl;
-    endmethod
-
-    method Action reportMiss(Addr missAddr);
+    method Action reportAccess(Addr addr, HitOrMiss hitMiss);
         //Check if any stream line matches request
         //If so, advance that stream line and advance LRU shift reg
-        //Otherwise, allocate new stream line, and shift LRU reg completely,
-        let cl = getLineAddr(missAddr);
+        //Otherwise if miss, allocate new stream line, and shift LRU reg completely,
+        let cl = getLineAddr(addr);
+        // Update window prefetcher
         let idxMaybe <- getMatchingWindow(cl);
         if (idxMaybe matches tagged Valid .idx) begin
             moveWindowToFront(pack(idx)); //Update window as just used
-            let newRangeEnd = getLineAddr(missAddr) + fromInteger(cacheLinesInRange) + 1;
-            //Also refresh nextToAsk on miss
-            streams[idx] <= 
-                StreamEntry {nextToAsk: getLineAddr(missAddr) + 1, 
-                            rangeEnd: newRangeEnd};
-            $display("%t Prefetcher reportMiss %h, moving window end to %h for window idx %h", 
-                $time, missAddr, Addr'{newRangeEnd, '0}, idx);
+            let newRangeEnd = getLineAddr(addr) + fromInteger(cacheLinesInRange) + 1;
+            if (hitMiss == HIT) begin
+                $display("%t Prefetcher report HIT %h, moving window end to %h for window idx %h", 
+                    $time, addr, Addr'{newRangeEnd, '0}, idx);
+                streams[idx].rangeEnd <= newRangeEnd;
+            end
+            else if (hitMiss == MISS) begin
+                //Also reset nextToAsk on miss
+                $display("%t Prefetcher report MISS %h, moving window end to %h for window idx %h", 
+                    $time, addr, Addr'{newRangeEnd, '0}, idx);
+                streams[idx] <= 
+                    StreamEntry {nextToAsk: getLineAddr(addr) + 1, 
+                                rangeEnd: newRangeEnd};
+            end
         end
-        else begin
-            $display("%t Prefetcher reportMiss %h, allocating new stream, idx %h", $time, missAddr, shiftReg[3]);
+        else if (hitMiss == MISS) begin
+            $display("%t Prefetcher report MISS %h, allocating new window, idx %h", $time, addr, shiftReg[3]);
             streams[shiftReg[3]] <= 
-                StreamEntry {nextToAsk: getLineAddr(missAddr) + 1,
-                            rangeEnd: getLineAddr(missAddr) + fromInteger(cacheLinesInRange) + 1};
+                StreamEntry {nextToAsk: getLineAddr(addr) + 1,
+                            rangeEnd: getLineAddr(addr) + fromInteger(cacheLinesInRange) + 1};
             shiftReg[0] <= shiftReg[3];
             shiftReg[1] <= shiftReg[0];
             shiftReg[2] <= shiftReg[1];
             shiftReg[3] <= shiftReg[2];
         end
+
+        // Update target prefetcher
         if (cl != lastChildRequest + 1 && cl != lastChildRequest && cl != lastChildRequest - 1) begin
-            //Add entry to target table
-            $display("%t Prefetcher reportMiss %h, add target entry from %h", $time, missAddr, Addr'{lastChildRequest, '0});
+            $display("%t Prefetcher add target entry from addr %h to addr %h", $time, Addr'{lastChildRequest, '0}, addr);
             targetTable.set(lastChildRequest, cl);
         end
         lastChildRequest <= cl;
@@ -543,6 +468,7 @@ provisos(
 endmodule
 
 interface PCPrefetcher;
+    (* always_ready *)
     method Action reportAccess(Addr addr, Bit#(16) pcHash, HitOrMiss hitMiss);
     method ActionValue#(Addr) getNextPrefetchAddr();
 endinterface
@@ -558,9 +484,9 @@ endmodule
 module mkPrintPCPrefetcher(PCPrefetcher);
     method Action reportAccess(Addr addr, Bit#(16) pcHash, HitOrMiss hitMiss);
         if (hitMiss == HIT)
-            $display("%t PCPrefetcher reportHit %h", $time, addr);
+            $display("%t PCPrefetcher report HIT %h", $time, addr);
         else
-            $display("%t PCPrefetcher reportMiss %h", $time, addr);
+            $display("%t PCPrefetcher report MISS %h", $time, addr);
     endmethod
     method ActionValue#(Addr) getNextPrefetchAddr if (False);
         return 64'h0000000080000080;
@@ -571,115 +497,23 @@ typedef enum {
   EMPTY = 2'b00, INIT = 2'b01, TRANSIENT = 2'b10, STEADY = 2'b11
 } StrideState deriving (Bits, Eq, FShow);
 
-typedef enum {
-    HIT = 1'b0, MISS = 1'b1
-} HitOrMiss deriving (Bits, Eq, FShow);
-
-typedef struct {
-    Addr lastAddr; //TODO maybe store less bits here?
-    Bit#(13) stride;
-    StrideState state;
-    Bit#(4) lastPrefetch; //Stores how many strides ahead of lastAddr was the last prefetch done
-} StrideEntry deriving (Bits, Eq, FShow);
-
-typedef 8 HistoryLen;
-typedef 64 StrideTableSize;
-typedef 4 StridesAheadToPrefetch;
-module mkStridePCPrefetcher(PCPrefetcher)
-provisos(
-    Alias#(strideTableIndexT, Bit#(TLog#(StrideTableSize)))
-    );
-    Reg#(Vector#(HistoryLen, strideTableIndexT)) historyVec <- mkReg(replicate(?));
-    Vector#(StrideTableSize, Reg#(StrideEntry)) strideTable <- replicateM(mkReg(unpack(0)));
-
-    function Maybe#(strideTableIndexT) getNextPrefetchIndex;
-        function Bool canPrefetch(strideTableIndexT idx);
-            return (strideTable[idx].state == STEADY && 
-                strideTable[idx].lastPrefetch != fromInteger(valueof(StridesAheadToPrefetch)));
-        endfunction
-
-        //Find first entry that allows more prefetches
-        case (find(canPrefetch, historyVec)) matches 
-            tagged Valid .idx: return Valid(pack(idx));
-            Invalid: return Invalid;
-        endcase
-    endfunction
-
-    method ActionValue#(Addr) getNextPrefetchAddr if 
-        (getNextPrefetchIndex() matches tagged Valid .idx);
-        //could store some most recent table entries,
-        //then check if any of those entries can be prefetched more
-
-        //could just store the recent table entries in a circular buffer with duplication 
-        // since shouldn't have duplicates within one loop iteration
-        // but we need to access all entries (or have rule that discards first entry, it we can't prefetch for it)
-        Reg#(StrideEntry) se = strideTable[idx];
-        se.lastPrefetch <= se.lastPrefetch + 1;
-        return se.lastAddr + (signExtend(se.stride) * zeroExtend(se.lastPrefetch + 1));
-    endmethod
-    method Action reportAccess(Addr addr, Bit#(16) pcHash, HitOrMiss hitMiss);
-        //Find slot in vector
-        //if miss and slot empty
-        //if slot init, put address, stride and move to transit
-        //if slot transit or steady, verify stride, and move to steady
-        //    also put last_prefetched
-        //if stride wrong, move to transit
-        strideTableIndexT index = truncate(pcHash);
-        Reg#(StrideEntry) se = strideTable[index];
-        StrideEntry seNext = se;
-        $writeh("Prefetcher: ",
-            fshow(hitMiss), " ", addr,
-            ". Entry state is ", fshow(se.state));
-
-        if (hitMiss == MISS && se.state == EMPTY) begin
-            seNext.lastAddr = addr;
-            seNext.state = INIT;
-            $display(", allocate entry");
-        end 
-        else if (se.state == INIT) begin
-            seNext.stride = truncate(addr - se.lastAddr);
-            seNext.state = TRANSIENT;
-            seNext.lastAddr = addr;
-            $display(", set stride to %h", seNext.stride);
-        end
-        else if (se.state == TRANSIENT || se.state == STEADY) begin
-            if (truncate(addr - se.lastAddr) == se.stride) begin
-                case (se.state)
-                    TRANSIENT: seNext.lastPrefetch = 0;
-                    STEADY: seNext.lastPrefetch = (seNext.lastPrefetch == 0) ? 0 : se.lastPrefetch - 1;
-                endcase
-                seNext.state = STEADY;
-                seNext.lastAddr = addr;
-                historyVec <= shiftInAt0(historyVec, index);
-                $display(", stride %h is confirmed!", seNext.stride);
-            end
-            else begin
-                seNext.state = TRANSIENT;
-                seNext.stride = truncate(addr - se.lastAddr);
-                seNext.lastAddr = addr;
-                $display(", old stride is broken! New stride: %h", seNext.stride);
-            end
-        end
-        se <= seNext;
-    endmethod
-endmodule
-
 typedef struct {
     Bit#(12) lastAddr; 
     Bit#(13) stride;
     StrideState state;
     Bit#(4) cLinesPrefetched; //Stores how many cache lines have been prefetched for this instruction
-} StrideEntry2 deriving (Bits, Eq, FShow);
+} StrideEntry deriving (Bits, Eq, FShow);
 
-typedef 3 CLinesAheadToPrefetch;
-
-module mkStridePCPrefetcher2(PCPrefetcher)
+module mkStridePCPrefetcher(PCPrefetcher)
 provisos(
+    NumAlias#(historyLen, 8),
+    NumAlias#(strideTableSize, 64),
+    NumAlias#(cLinesAheadToPrefetch, 3), // TODO fetch more if have repeatedly hit an entry, and if stride big
     Alias#(strideTableIndexT, Bit#(TLog#(StrideTableSize))),
     Alias#(historyVecIndexT, Bit#(TLog#(HistoryLen)))
     );
     Reg#(Vector#(HistoryLen, Tuple2#(strideTableIndexT, Addr))) historyVec <- mkReg(replicate(?));
-    Vector#(StrideTableSize, Reg#(StrideEntry2)) strideTable <- replicateM(mkReg(unpack(0)));
+    Vector#(StrideTableSize, Reg#(StrideEntry)) strideTable <- replicateM(mkReg(unpack(0)));
 
     function Maybe#(historyVecIndexT) getNextPrefetchHistoryIndex;
         function Bool canPrefetch(Tuple2#(strideTableIndexT, Addr) entry);
@@ -696,29 +530,6 @@ provisos(
         endcase
     endfunction
 
-    method ActionValue#(Addr) getNextPrefetchAddr if 
-        (getNextPrefetchHistoryIndex() matches tagged Valid .historyIdx);
-        match {.strideIdx, .fullAddr} = historyVec[historyIdx];
-        Reg#(StrideEntry2) se = strideTable[strideIdx];
-        se.cLinesPrefetched <= se.cLinesPrefetched + 1;
-        Bit#(13) strideToUse;
-        Bit#(13) cLineSize = fromInteger(valueof(DataSz));
-        if (se.stride[12] == 1 && se.stride > -cLineSize) begin
-            //stride is negative and jumps less than one cline
-            strideToUse = -cLineSize;
-        end
-        else if (se.stride[12] == 0 && se.stride < cLineSize) begin
-            //stride is positive and jumps less than one cline
-            strideToUse = cLineSize;
-        end
-        else
-            strideToUse = se.stride;
-
-        let reqAddr = fullAddr + 
-            (signExtend(strideToUse) * zeroExtend(se.cLinesPrefetched + 1));
-        $display("%t Stride Prefetcher getNextPrefetchAddr requesting %h for entry %h", $time, reqAddr, strideIdx);
-        return reqAddr;
-    endmethod
     method Action reportAccess(Addr addr, Bit#(16) pcHash, HitOrMiss hitMiss);
         //Find slot in vector
         //if miss and slot empty
@@ -727,8 +538,8 @@ provisos(
         //    also put last_prefetched
         //if stride wrong, move to transit
         strideTableIndexT index = truncate(pcHash);
-        Reg#(StrideEntry2) se = strideTable[index];
-        StrideEntry2 seNext = se;
+        Reg#(StrideEntry) se = strideTable[index];
+        StrideEntry seNext = se;
         Bit#(13) observedStride = {1'b0, addr[11:0]} - {1'b0, se.lastAddr};
         $writeh("%t Stride Prefetcher reportAccess ", $time,
             fshow(hitMiss), " ", addr,
@@ -780,7 +591,30 @@ provisos(
         se <= seNext;
     endmethod
 
+    method ActionValue#(Addr) getNextPrefetchAddr if 
+        (getNextPrefetchHistoryIndex() matches tagged Valid .historyIdx);
+        match {.strideIdx, .fullAddr} = historyVec[historyIdx];
+        Reg#(StrideEntry) se = strideTable[strideIdx];
+        se.cLinesPrefetched <= se.cLinesPrefetched + 1;
+        Bit#(13) strideToUse;
+        Bit#(13) cLineSize = fromInteger(valueof(DataSz));
+        if (se.stride[12] == 1 && se.stride > -cLineSize) begin
+            //stride is negative and jumps less than one cline
+            strideToUse = -cLineSize;
+        end
+        else if (se.stride[12] == 0 && se.stride < cLineSize) begin
+            //stride is positive and jumps less than one cline
+            strideToUse = cLineSize;
+        end 
+        else begin
+            strideToUse = se.stride;
+        end
 
+        let reqAddr = fullAddr + 
+            (signExtend(strideToUse) * zeroExtend(se.cLinesPrefetched + 1));
+        $display("%t Stride Prefetcher getNextPrefetchAddr requesting %h for entry %h", $time, reqAddr, strideIdx);
+        return reqAddr;
+    endmethod
 
 endmodule
 
@@ -788,8 +622,10 @@ module mkL1IPrefetcher(Prefetcher);
     //let m <- mkNextLinePrefetcher;
     //let m <- mkMultiWindowPrefetcher;
     //let m <- mkNextLineOnAllPrefetcher;
-    //let m <- mkDoNothingPrefetcher;
-    let m <- mkSingleWindowTargetPrefetcher;
+    let m <- mkDoNothingPrefetcher;
+    //let m <- mkSingleWindowTargetPrefetcher;
+    //let m <- mkMultiWindowTargetPrefetcher;
+    //module mkMultiWindowPrefetcher(Integer cacheLinesInRange)(Prefetcher)
     return m;
 endmodule
 
@@ -803,11 +639,12 @@ endmodule
 module mkLLIPrefetcher(Prefetcher);
     //let m <- mkNextLineOnMissPrefetcher;
     //let m <- mkMultiWindowPrefetcher;
+    let m <- mkMultiWindowTargetPrefetcher;
     //let m <- mkSingleWindowPrefetcher;
     //let m <- mkSingleWindowTargetPrefetcher;
     //let m <- mkStridePCPrefetcher2;
     //let m <- mkPrintPrefetcher;
-    let m <- mkDoNothingPrefetcher;
+    //let m <- mkDoNothingPrefetcher;
     return m;
 endmodule
 

@@ -51,7 +51,7 @@ module mkMultiWindowPrefetcherTest(Empty);
         seq
             // ----- Send misses and stuff to one window -----
             action
-                p.reportMiss('h80000040);
+                p.reportAccess('h80000040, MISS);
             endaction
             action
                 let x <- p.getNextPrefetchAddr;
@@ -62,21 +62,21 @@ module mkMultiWindowPrefetcherTest(Empty);
                 doAssert(x == 'h800000c0, "test fail!");
             endaction
             action
-                p.reportHit('h800000c0); //Report hit inside window
+                p.reportAccess('h800000c0, HIT); //Report hit inside window
             endaction
             action
                 let x <- p.getNextPrefetchAddr;
                 doAssert(x == 'h80000100, "test fail!");
             endaction
             action
-                p.reportHit('h80004000); //Report hit outside window
+                p.reportAccess('h80004000, HIT); //Report hit outside window
             endaction
             action
                 let x <- p.getNextPrefetchAddr; //Previous window still recommended
                 doAssert(x == 'h80000140, "test fail!");
             endaction
             action
-                p.reportMiss('h80000140); //Report miss inside window
+                p.reportAccess('h80000140, MISS); //Report miss inside window
             endaction
             action
                 let x <- p.getNextPrefetchAddr; //Previous window still recommended
@@ -85,28 +85,28 @@ module mkMultiWindowPrefetcherTest(Empty);
 
             // -----  Allocate other windows ----- 
             action
-                p.reportMiss('h70000000); //Report miss outside window
+                p.reportAccess('h70000000, MISS); //Report miss outside window
             endaction
             action
                 let x <- p.getNextPrefetchAddr; //new window recommended
                 doAssert(x == 'h70000040, "test fail!");
             endaction
             action
-                p.reportMiss('h90000000); //Report miss outside window
+                p.reportAccess('h90000000, MISS); //Report miss outside window
             endaction
             action
                 let x <- p.getNextPrefetchAddr; //new window recommended
                 doAssert(x == 'h90000040, "test fail!");
             endaction
             action
-                p.reportMiss('h60000000); //Report miss outside window
+                p.reportAccess('h60000000, MISS); //Report miss outside window
             endaction
             action
                 let x <- p.getNextPrefetchAddr; //new window recommended
                 doAssert(x == 'h60000040, "test fail!");
             endaction
             action
-                p.reportHit('h80000180); //Report hit inside oldest window
+                p.reportAccess('h80000180, HIT); //Report hit inside oldest window
             endaction
             action
                 let x <- p.getNextPrefetchAddr; //oldest window recommended
@@ -115,7 +115,7 @@ module mkMultiWindowPrefetcherTest(Empty);
 
             // ----- Trigger window deletion -----
             action
-                p.reportMiss('h50000000); //Report miss outside window,
+                p.reportAccess('h50000000, MISS); //Report miss outside window,
                 //discard window with 'h70..
             endaction
             action
@@ -123,7 +123,7 @@ module mkMultiWindowPrefetcherTest(Empty);
                 doAssert(x == 'h50000040, "test fail!");
             endaction
             action
-                p.reportHit('h70000040); //Report hit inside now deleted window
+                p.reportAccess('h70000040, HIT); //Report hit inside now deleted window
             endaction
             action
                 let x <- p.getNextPrefetchAddr; //most recent window still recommended
@@ -132,7 +132,7 @@ module mkMultiWindowPrefetcherTest(Empty);
 
             // ----- Reorder some more windows around
             action
-                p.reportMiss('h800001c0); //Report hit inside now deleted window
+                p.reportAccess('h800001c0, MISS); //Report hit inside now deleted window
             endaction
             action
                 let x <- p.getNextPrefetchAddr; //most recent window still recommended
@@ -152,7 +152,7 @@ module mkMultiWindowTargetPrefetcherTest(Empty);
         seq
             // ----- Send misses and stuff to one window -----
             action
-                p.reportMiss('h80000040);
+                p.reportAccess('h80000040, MISS);
             endaction
             action
                 let x <- p.getNextPrefetchAddr;
@@ -163,21 +163,21 @@ module mkMultiWindowTargetPrefetcherTest(Empty);
                 doAssert(x == 'h800000c0, "test fail!");
             endaction
             action
-                p.reportHit('h800000c0); //Report hit inside window
+                p.reportAccess('h800000c0, HIT); //Report hit inside window
             endaction
             action
                 let x <- p.getNextPrefetchAddr;
                 doAssert(x == 'h80000100, "test fail!");
             endaction
             action
-                p.reportHit('h80004000); //Report hit outside window
+                p.reportAccess('h80004000, HIT); //Report hit outside window
             endaction
             action
                 let x <- p.getNextPrefetchAddr; //Previous window still recommended
                 doAssert(x == 'h80000140, "test fail!");
             endaction
             action
-                p.reportMiss('h80000140); //Report miss inside window
+                p.reportAccess('h80000140, MISS); //Report miss inside window
             endaction
             action
                 let x <- p.getNextPrefetchAddr; //Previous window still recommended
@@ -186,28 +186,28 @@ module mkMultiWindowTargetPrefetcherTest(Empty);
 
             // -----  Allocate other windows ----- 
             action
-                p.reportMiss('h70000000); //Report miss outside window
+                p.reportAccess('h70000000, MISS); //Report miss outside window
             endaction
             action
                 let x <- p.getNextPrefetchAddr; //new window recommended
                 doAssert(x == 'h70000040, "test fail!");
             endaction
             action
-                p.reportMiss('h90000000); //Report miss outside window
+                p.reportAccess('h90000000, MISS); //Report miss outside window
             endaction
             action
                 let x <- p.getNextPrefetchAddr; //new window recommended
                 doAssert(x == 'h90000040, "test fail!");
             endaction
             action
-                p.reportMiss('h60000000); //Report miss outside window
+                p.reportAccess('h60000000, MISS); //Report miss outside window
             endaction
             action
                 let x <- p.getNextPrefetchAddr; //new window recommended
                 doAssert(x == 'h60000040, "test fail!");
             endaction
             action
-                p.reportHit('h80000180); //Report hit inside oldest window
+                p.reportAccess('h80000180, HIT); //Report hit inside oldest window
             endaction
             action
                 let x <- p.getNextPrefetchAddr; //oldest window recommended
@@ -216,7 +216,7 @@ module mkMultiWindowTargetPrefetcherTest(Empty);
 
             // ----- Trigger window deletion -----
             action
-                p.reportMiss('h50000000); //Report miss outside window,
+                p.reportAccess('h50000000, MISS); //Report miss outside window,
                 //discard window with 'h70..
             endaction
             action
@@ -224,7 +224,7 @@ module mkMultiWindowTargetPrefetcherTest(Empty);
                 doAssert(x == 'h50000040, "test fail!");
             endaction
             action
-                p.reportHit('h70000040); //Report hit inside now deleted window
+                p.reportAccess('h70000040, HIT); //Report hit inside now deleted window
             endaction
             action
                 let x <- p.getNextPrefetchAddr; //most recent window still recommended
@@ -233,7 +233,7 @@ module mkMultiWindowTargetPrefetcherTest(Empty);
 
             // ----- Reorder some more windows around
             action
-                p.reportMiss('h800001c0); //Report hit inside now deleted window
+                p.reportAccess('h800001c0, MISS); //Report hit inside now deleted window
             endaction
             action
                 let x <- p.getNextPrefetchAddr; 
@@ -242,14 +242,14 @@ module mkMultiWindowTargetPrefetcherTest(Empty);
 
             // ------ Test saving and prefetching target clines
             action
-                p.reportMiss('h81000000); //Report miss somewhere far away
+                p.reportAccess('h81000000, MISS); //Report miss somewhere far away
             endaction
             action
                 let x <- p.getNextPrefetchAddr; //New window allocated and recommended
                 doAssert(x == 'h81000040, "test fail!");
             endaction
             action
-                p.reportMiss('h80000180); //Report miss back home
+                p.reportAccess('h80000180, MISS); //Report miss back home
             endaction
             action
                 let x <- p.getNextPrefetchAddr; //new window recommended
@@ -279,7 +279,7 @@ module mkSingleWindowTargetPrefetcherTest(Empty);
         seq
             // ----- Send misses and stuff to one window -----
             action
-                p.reportMiss('h80000040);
+                p.reportAccess('h80000040, MISS);
             endaction
             action
                 let x <- p.getNextPrefetchAddr;
@@ -290,35 +290,35 @@ module mkSingleWindowTargetPrefetcherTest(Empty);
                 doAssert(x == 'h800000c0, "test fail!");
             endaction
             action
-                p.reportHit('h800000c0); //Report hit inside window
+                p.reportAccess('h800000c0, HIT); //Report hit inside window
             endaction
             action
                 let x <- p.getNextPrefetchAddr;
                 doAssert(x == 'h80000100, "test fail!");
             endaction
             action
-                p.reportHit('h80004000); //Report hit outside window
+                p.reportAccess('h80004000, HIT); //Report hit outside window
             endaction
             action
                 let x <- p.getNextPrefetchAddr; //Previous window still recommended
                 doAssert(x == 'h80000140, "test fail!");
             endaction
             action
-                p.reportMiss('h80000140); //Report miss inside window
+                p.reportAccess('h80000140, MISS); //Report miss inside window
             endaction
             action
                 let x <- p.getNextPrefetchAddr; //Previous window still recommended
                 doAssert(x == 'h80000180, "test fail!");
             endaction
             action
-                p.reportMiss('h81000000); //Report miss somewhere far away
+                p.reportAccess('h81000000, MISS); //Report miss somewhere far away
             endaction
             action
                 let x <- p.getNextPrefetchAddr; //New window allocated and recommended
                 doAssert(x == 'h81000040, "test fail!");
             endaction
             action
-                p.reportMiss('h80000100); //Report miss back home
+                p.reportAccess('h80000100, MISS); //Report miss back home
             endaction
             action
                 let x <- p.getNextPrefetchAddr; 
@@ -336,10 +336,10 @@ module mkSingleWindowTargetPrefetcherTest(Empty);
     );
 endmodule
 
-module mkStridePCPrefetcher2Test(Empty);
+module mkStridePCPrefetcherTest(Empty);
     //let p <- mkMultipleWindowPrefetcher;
     //TODO pass in value of cachelinesinrange
-    let p <- mkStridePCPrefetcher2;
+    let p <- mkStridePCPrefetcher;
     mkAutoFSM(
         seq
             // ----- Send misses and stuff to one window -----
@@ -402,78 +402,6 @@ module mkStridePCPrefetcher2Test(Empty);
             action
                 let x <- p.getNextPrefetchAddr;
                 doAssert(x == 'h90000600, "test fail!");
-            endaction
-        endseq
-    );
-endmodule
-
-
-module mkStridePCPrefetcherTest(Empty);
-    //let p <- mkMultipleWindowPrefetcher;
-    //TODO pass in value of cachelinesinrange
-    let p <- mkStridePCPrefetcher;
-    mkAutoFSM(
-        seq
-            // ----- Send misses and stuff to one window -----
-            action
-                p.reportAccess('h80000040, 'h0069, MISS);
-            endaction
-            action
-                p.reportAccess('h80000080, 'h0069, HIT);
-            endaction
-            action
-                p.reportAccess('h800000a0, 'h0069, HIT);
-            endaction
-            action
-                p.reportAccess('h800000c0, 'h0069, MISS);
-            endaction
-            action
-                let x <- p.getNextPrefetchAddr;
-                doAssert(x == 'h80000100, "test fail!");
-            endaction
-            action
-                let x <- p.getNextPrefetchAddr;
-                doAssert(x == 'h80000140, "test fail!");
-            endaction
-            action
-                p.reportAccess('h800000e0, 'h0069, MISS);
-            endaction
-            action
-                let x <- p.getNextPrefetchAddr;
-                doAssert(x == 'h80000180, "test fail!");
-            endaction
-            action
-                p.reportAccess('h80000100, 'h0069, MISS);
-            endaction
-            action
-                p.reportAccess('h80000120, 'h0069, MISS);
-            endaction
-            action
-                p.reportAccess('h80000140, 'h0069, MISS);
-            endaction
-            action
-                let x <- p.getNextPrefetchAddr;
-                doAssert(x == 'h80000160, "test fail!");
-            endaction
-            action
-                p.reportAccess('h90000040, 'h0000, MISS);
-            endaction
-            action
-                p.reportAccess('h90000140, 'h0000, MISS);
-            endaction
-            action
-                p.reportAccess('h90000240, 'h0000, MISS);
-            endaction
-            action
-                let x <- p.getNextPrefetchAddr;
-                doAssert(x == 'h90000340, "test fail!");
-            endaction
-            action
-                p.reportAccess('h80000160, 'h0069, MISS);
-            endaction
-            action
-                let x <- p.getNextPrefetchAddr;
-                doAssert(x == 'h80000180, "test fail!");
             endaction
         endseq
     );
