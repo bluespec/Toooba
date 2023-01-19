@@ -406,3 +406,51 @@ module mkStridePCPrefetcherTest(Empty);
         endseq
     );
 endmodule
+
+module mkMarkovPrefetcherTest(Empty);
+    //let p <- mkMultipleWindowPrefetcher;
+    //TODO pass in value of cachelinesinrange
+    let p <- mkMarkovPrefetcher;
+    mkAutoFSM(
+        seq
+            // ----- Send misses and stuff to one window -----
+            action
+                p.reportAccess('h80000000, MISS);
+            endaction
+            action
+                p.reportAccess('h80000700, MISS); 
+            endaction
+            action
+                p.reportAccess('h90000000, MISS); 
+            endaction
+            action
+                p.reportAccess('ha0000000, MISS); 
+            endaction
+            action
+                p.reportAccess('h80000000, HIT); //back to start
+            endaction
+            action
+                let x <- p.getNextPrefetchAddr; 
+                doAssert(x == 'h80000700, "test fail!");
+            endaction
+            action
+                let x <- p.getNextPrefetchAddr; 
+                doAssert(x == 'h90000000, "test fail!");
+            endaction
+            action
+                p.reportAccess('h80000700, HIT); 
+            endaction
+            action
+                p.reportAccess('ha0000000, HIT); 
+            endaction
+            action
+                let x <- p.getNextPrefetchAddr; 
+                doAssert(x == 'h80000000, "test fail!");
+            endaction
+            action
+                let x <- p.getNextPrefetchAddr; 
+                doAssert(x == 'h80000700, "test fail!");
+            endaction
+        endseq
+    );
+endmodule

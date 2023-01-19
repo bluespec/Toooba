@@ -1,4 +1,5 @@
 import ISA_Decls   :: *;
+import Ehr::*;
 import CacheUtils::*;
 import CCTypes::*;
 import Types::*;
@@ -256,8 +257,8 @@ module mkTargetTable(TargetTable#(narrowTableSize, wideTableSize)) provisos
     Add#(c__, TLog#(wideTableSize), 32),
     Add#(d__, TLog#(wideTableSize), 58)
 );
-    Vector#(narrowTableSize, Reg#(Maybe#(narrowTargetEntryT))) narrowTable <- replicateM(mkReg(Invalid));
-    Vector#(wideTableSize, Reg#(Maybe#(wideTargetEntryT))) wideTable <- replicateM(mkReg(Invalid));
+    Vector#(narrowTableSize, Ehr#(2, Maybe#(narrowTargetEntryT))) narrowTable <- replicateM(mkEhr(Invalid));
+    Vector#(wideTableSize, Ehr#(2, Maybe#(wideTargetEntryT))) wideTable <- replicateM(mkEhr(Invalid));
     method Action set(LineAddr prevAddr, LineAddr currAddr);
         let distance = currAddr - prevAddr;
         Bit#(32) prevAddrHash = hash(prevAddr);
@@ -267,7 +268,7 @@ module mkTargetTable(TargetTable#(narrowTableSize, wideTableSize)) provisos
             entry.tag = prevAddrHash[31:valueOf(narrowTableIdxBits)];
             entry.distance = truncate(distance);
             Bit#(narrowTableIdxBits) idx = truncate(prevAddrHash);
-            narrowTable[idx] <= tagged Valid entry;
+            narrowTable[idx][1] <= tagged Valid entry;
         end
         else begin
             //Store in wide table
@@ -275,22 +276,22 @@ module mkTargetTable(TargetTable#(narrowTableSize, wideTableSize)) provisos
             entry.tag = prevAddrHash[31:valueOf(wideTableIdxBits)];
             entry.target = currAddr;
             Bit#(wideTableIdxBits) idx = truncate(prevAddrHash);
-            wideTable[idx] <= tagged Valid entry;
+            wideTable[idx][1] <= tagged Valid entry;
         end
     endmethod
     method ActionValue#(Maybe#(LineAddr)) getAndRemove(LineAddr addr);
         Bit#(narrowTableIdxBits) narrowIdx = truncate(addr);
         Bit#(wideTableIdxBits) wideIdx = truncate(addr);
-        if (narrowTable[narrowIdx] matches tagged Valid .entry 
+        if (narrowTable[narrowIdx][0] matches tagged Valid .entry 
             &&& entry.tag == addr[31:valueOf(narrowTableIdxBits)]) begin
-            narrowTable[narrowIdx] <= Invalid; 
-            $display("%t found narrow table entry %h", $time, addr + signExtend(pack(entry.distance)));
+            narrowTable[narrowIdx][0] <= Invalid; 
+            //$display("%t found narrow table entry %h", $time, addr + signExtend(pack(entry.distance)));
             return Valid(addr + signExtend(pack(entry.distance)));
         end
-        else if (wideTable[wideIdx] matches tagged Valid .entry 
+        else if (wideTable[wideIdx][0] matches tagged Valid .entry 
             &&& entry.tag == addr[31:valueOf(wideTableIdxBits)]) begin
-            wideTable[wideIdx] <= Invalid; 
-            $display("%t found wide table entry %h", $time, entry.target);
+            wideTable[wideIdx][0] <= Invalid; 
+            //$display("%t found wide table entry %h", $time, entry.target);
             return Valid(entry.target);
         end
         else
@@ -467,11 +468,75 @@ provisos(
 
 endmodule
 
+module mkMarkovPrefetcher(Prefetcher) provisos
+(
+    NumAlias#(maxChainLength, 2),
+    Alias#(chainLengthT, Bit#(TLog#(TAdd#(maxChainLength,1))))
+);
+    Reg#(LineAddr) lastLastChildRequest <- mkReg(0);
+    Reg#(LineAddr) lastChildRequest <- mkReg(0);
+    TargetTable#(64, 8) targetTable <- mkTargetTable;
+
+    // Stores how many prefetches we can still do in the current chain
+    Reg#(chainLengthT) chainNumberToPrefetch <- mkReg(0); 
+    Reg#(LineAddr) chainNextToPrefetch <- mkReg(?);
+
+    method Action reportAccess(Addr addr, HitOrMiss hitMiss);
+        let cl = getLineAddr(addr);
+        if (cl != lastChildRequest + 1 && cl != lastChildRequest && cl != lastChildRequest - 1) begin
+            $display("%t Prefetcher report %s add target entry from addr %h to addr %h", 
+                $time, hitMiss == HIT ? "HIT" : "MISS", Addr'{lastChildRequest, '0}, addr);
+            targetTable.set(lastChildRequest, cl);
+        end
+        lastChildRequest <= cl;
+        lastLastChildRequest <= lastChildRequest;
+
+        if (lastLastChildRequest != cl) begin 
+            //Don't start markov chain if its very recent
+            let x <- targetTable.getAndRemove(cl);
+            if (x matches tagged Valid .nextCl) begin
+                //Start new prefetch chain
+                $display("%t Prefetcher start new chain with %h", $time, addr);
+                chainNextToPrefetch <= nextCl;
+                chainNumberToPrefetch <= fromInteger(valueOf(maxChainLength));
+            end
+        end
+    endmethod
+
+    method ActionValue#(Addr) getNextPrefetchAddr if 
+        (chainNumberToPrefetch != 0);
+        
+        let x <- targetTable.getAndRemove(chainNextToPrefetch);
+        if (x matches tagged Valid .nextCl) begin
+            chainNumberToPrefetch <= chainNumberToPrefetch - 1;
+            chainNextToPrefetch <= nextCl;
+        end
+        else begin
+            //End chain here
+            chainNumberToPrefetch <= 0;
+        end
+        Addr retAddr = {chainNextToPrefetch, '0};
+        $display("%t Prefetcher getNextPrefetchAddr requesting chain entry %h", $time, retAddr);
+        return retAddr; 
+    endmethod
+endmodule
+
 interface PCPrefetcher;
     (* always_ready *)
     method Action reportAccess(Addr addr, Bit#(16) pcHash, HitOrMiss hitMiss);
     method ActionValue#(Addr) getNextPrefetchAddr();
 endinterface
+
+module mkMarkovPCPrefetcher(PCPrefetcher);
+    let m <- mkMarkovPrefetcher;
+    method Action reportAccess(Addr addr, Bit#(16) pcHash, HitOrMiss hitMiss);
+        m.reportAccess(addr, hitMiss);
+    endmethod
+    method ActionValue#(Addr) getNextPrefetchAddr;
+        let x <- m.getNextPrefetchAddr;
+        return x;
+    endmethod
+endmodule
 
 module mkDoNothingPCPrefetcher(PCPrefetcher);
     method Action reportAccess(Addr addr, Bit#(16) pcHash, HitOrMiss hitMiss);
@@ -509,18 +574,18 @@ provisos(
     NumAlias#(historyLen, 8),
     NumAlias#(strideTableSize, 64),
     NumAlias#(cLinesAheadToPrefetch, 3), // TODO fetch more if have repeatedly hit an entry, and if stride big
-    Alias#(strideTableIndexT, Bit#(TLog#(StrideTableSize))),
-    Alias#(historyVecIndexT, Bit#(TLog#(HistoryLen)))
+    Alias#(strideTableIndexT, Bit#(TLog#(strideTableSize))),
+    Alias#(historyVecIndexT, Bit#(TLog#(historyLen)))
     );
-    Reg#(Vector#(HistoryLen, Tuple2#(strideTableIndexT, Addr))) historyVec <- mkReg(replicate(?));
-    Vector#(StrideTableSize, Reg#(StrideEntry)) strideTable <- replicateM(mkReg(unpack(0)));
+    Reg#(Vector#(historyLen, Tuple2#(strideTableIndexT, Addr))) historyVec <- mkReg(replicate(?));
+    Vector#(strideTableSize, Reg#(StrideEntry)) strideTable <- replicateM(mkReg(unpack(0)));
 
     function Maybe#(historyVecIndexT) getNextPrefetchHistoryIndex;
         function Bool canPrefetch(Tuple2#(strideTableIndexT, Addr) entry);
             strideTableIndexT idx = tpl_1(entry);
             return (strideTable[idx].state == STEADY && 
                 strideTable[idx].cLinesPrefetched != 
-                    fromInteger(valueof(CLinesAheadToPrefetch)));
+                    fromInteger(valueof(cLinesAheadToPrefetch)));
         endfunction
 
         //Find first entry that allows more prefetches
@@ -632,24 +697,26 @@ endmodule
 module mkL1DPrefetcher(PCPrefetcher);
     //let m <- mkNextLineOnAllPrefetcher;
     //let m <- mkStridePCPrefetcher2;
-    let m <- mkDoNothingPCPrefetcher;
+    //let m <- mkDoNothingPCPrefetcher;
+    let m <- mkMarkovPCPrefetcher;
     return m;
 endmodule
 
 module mkLLIPrefetcher(Prefetcher);
     //let m <- mkNextLineOnMissPrefetcher;
     //let m <- mkMultiWindowPrefetcher;
-    let m <- mkMultiWindowTargetPrefetcher;
+    //let m <- mkMultiWindowTargetPrefetcher;
     //let m <- mkSingleWindowPrefetcher;
     //let m <- mkSingleWindowTargetPrefetcher;
     //let m <- mkStridePCPrefetcher2;
     //let m <- mkPrintPrefetcher;
-    //let m <- mkDoNothingPrefetcher;
+    let m <- mkDoNothingPrefetcher;
     return m;
 endmodule
 
 module mkLLDPrefetcher(Prefetcher);
     //let m <- mkNextLineOnAllPrefetcher;
+    //let m <- mkMarkovPrefetcher;
     //let m <- mkPrintPrefetcher;
     let m <- mkDoNothingPrefetcher;
     return m;
