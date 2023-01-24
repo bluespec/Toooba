@@ -254,6 +254,7 @@ typedef struct {
     Bool canUpToE; // meaningful to upgrade to E if toState is S
     idT id; // slot id in child cache
     childT child; // from which child
+    Bool isPrefetchRq;
 } CRqMsg#(type idT, type childT) deriving(Bits, Eq, FShow);
 
 typedef struct {

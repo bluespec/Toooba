@@ -143,7 +143,7 @@ module mkIBank#(
     Add#(TAdd#(tagSz, indexSz), TAdd#(lgBankNum, LgLineSzBytes), AddrSz)
 );
 
-    Bool verbose = False;
+    Bool verbose = True;
 
     ICRqMshr#(cRqNum, wayT, tagT, procRqT, resultT) cRqMshr <- mkICRqMshrLocal;
 
@@ -171,6 +171,7 @@ module mkIBank#(
     Vector#(cRqNum, Reg#(Bool)) prefetchRqDone <- replicateM(mkReg(?));
 
     let prefetcher <- mkL1IPrefetcher;
+    let llcPrefetcher <- mkLLIPrefetcherInL1I;
 
 `ifdef DEBUG_ICACHE
     // id for each cRq, incremented when each new req comes
@@ -249,7 +250,6 @@ module mkIBank#(
     // cRq may come at every cycle, so we must make cRq has lower priority than pRq/pRs
     // otherwise the whole system may deadlock/livelock
     // we stop accepting cRq when we need to flush for security
-    (* descending_urgency = "createPrefetchRq, cRqTransfer" *)
     rule cRqTransfer(flushDone);
         Addr addr <- toGet(rqFromCQ).get;
 `ifdef DEBUG_ICACHE
@@ -310,7 +310,7 @@ module mkIBank#(
     endrule
 
     //(* descending_urgency = "createPrefetchRq, pRsTransfer, cRqTransfer" *)
-    //(* descending_urgency = "createPrefetchRq, pRqTransfer, cRqTransfer" *)
+    (* descending_urgency = "pRqTransfer, cRqTransfer, createPrefetchRq" *)
     rule createPrefetchRq(flushDone);
         Addr addr <- prefetcher.getNextPrefetchAddr;
         procRqT r = ProcRqToI {addr: addr};
@@ -421,6 +421,25 @@ module mkIBank#(
         doAssert(req.toState == I, "I$ only has downgrade req to I");
     endrule
 
+    (* descending_urgency = "sendRqToP, sendPrefetchRqToP" *)
+    rule sendPrefetchRqToP;
+        let addr <- llcPrefetcher.getNextPrefetchAddr;
+        cRqToPT cRqToP = CRqMsg {
+            addr: addr,
+            fromState: ?,
+            toState: S,
+            canUpToE: False,
+            id: 0,
+            child: ?,
+            isPrefetchRq: True
+        };
+        rqToPQ.enq(cRqToP);
+        if (verbose)
+            $display("%t I %m sendPrefetchRqToP: ", $time,
+                fshow(cRqToP)
+            );
+    endrule
+
     rule sendRqToP;
         rqToPIndexQ.deq;
         cRqIdxT n = rqToPIndexQ.first;
@@ -432,7 +451,8 @@ module mkIBank#(
             toState: S, // I$ upgrade to S
             canUpToE: False,
             id: slot.way,
-            child: ?
+            child: ?,
+            isPrefetchRq: False
         };
         rqToPQ.enq(cRqToP);
        if (verbose)
@@ -514,6 +534,7 @@ module mkIBank#(
         }, True); // hit, so update rep info
         if (!cRqIsPrefetch[n]) begin
             prefetcher.reportAccess(req.addr, HIT);
+            llcPrefetcher.reportAccess(req.addr, HIT);
         end
         prefetchRqDone[n] <= True;
         // process req to get superscalar inst read results
@@ -577,6 +598,7 @@ module mkIBank#(
             }, False);
             if (!cRqIsPrefetch[n]) begin
                 prefetcher.reportAccess(procRq.addr, MISS);
+                llcPrefetcher.reportAccess(procRq.addr, MISS);
             end
         endaction
         endfunction
@@ -607,6 +629,7 @@ module mkIBank#(
             });
             if (!cRqIsPrefetch[n]) begin
                 prefetcher.reportAccess(procRq.addr, MISS);
+                llcPrefetcher.reportAccess(procRq.addr, MISS);
             end
             // send replacement resp to parent
             rsToPIndexQ.enq(CRq (n));

@@ -26,6 +26,14 @@ module mkDoNothingPrefetcher(Prefetcher);
     endmethod
 endmodule
 
+module mkAlwaysRequestPrefetcher(Prefetcher);
+    method Action reportAccess(Addr addr, HitOrMiss hitMiss);
+    endmethod
+    method ActionValue#(Addr) getNextPrefetchAddr;
+        return 64'h80000040;
+    endmethod
+endmodule
+
 module mkPrintPrefetcher(Prefetcher);
     method Action reportAccess(Addr addr, HitOrMiss hitMiss);
         if (hitMiss == HIT) begin
@@ -203,6 +211,90 @@ provisos(
                     StreamEntry {nextToAsk: getLineAddr(addr) + 1, 
                                 rangeEnd: newRangeEnd};
             end
+        end
+        else if (hitMiss == MISS) begin
+            $display("%t Prefetcher report MISS %h, allocating new window, idx %h", $time, addr, shiftReg[3]);
+            streams[shiftReg[3]] <= 
+                StreamEntry {nextToAsk: getLineAddr(addr) + 1,
+                            rangeEnd: getLineAddr(addr) + fromInteger(cacheLinesInRange) + 1};
+            shiftReg[0] <= shiftReg[3];
+            shiftReg[1] <= shiftReg[0];
+            shiftReg[2] <= shiftReg[1];
+            shiftReg[3] <= shiftReg[2];
+        end
+    endmethod
+
+    method ActionValue#(Addr) getNextPrefetchAddr 
+        if (streams[shiftReg[0]].nextToAsk != streams[shiftReg[0]].rangeEnd);
+
+        streams[shiftReg[0]].nextToAsk <= streams[shiftReg[0]].nextToAsk + 1;
+        let retAddr = Addr'{streams[shiftReg[0]].nextToAsk, '0}; //extend cache line address to regular address
+        $display("%t Prefetcher getNextPrefetchAddr requesting %h from window idx %h", $time, retAddr, shiftReg[0]);
+        return retAddr; 
+    endmethod
+
+endmodule
+
+module mkMultiWindowCrossCachePrefetcher(Prefetcher)
+provisos(
+    NumAlias#(numWindows, 4),
+    Alias#(windowIdxT, Bit#(TLog#(numWindows)))
+);
+    Integer cacheLinesInRange = 2;
+    Vector#(numWindows, Reg#(StreamEntry)) streams 
+        <- replicateM(mkReg(StreamEntry {rangeEnd: '0, nextToAsk: '0}));
+    Vector#(numWindows, Reg#(windowIdxT)) shiftReg <- genWithM(compose(mkReg, fromInteger));
+
+    function Action moveWindowToFront(windowIdxT window) = 
+    action
+        if (shiftReg[0] == window) begin
+        end
+        else if (shiftReg[1] == window) begin
+            shiftReg[0] <= window;
+            shiftReg[1] <= shiftReg[0];
+        end
+        else if (shiftReg[2] == window) begin
+            shiftReg[0] <= window;
+            shiftReg[1] <= shiftReg[0];
+            shiftReg[2] <= shiftReg[1];
+        end
+        else if (shiftReg[3] == window) begin
+            shiftReg[0] <= window;
+            shiftReg[1] <= shiftReg[0];
+            shiftReg[2] <= shiftReg[1];
+            shiftReg[3] <= shiftReg[2];
+        end
+    endaction;
+
+    function ActionValue#(Maybe#(windowIdxT)) getMatchingWindow(Addr addr) = 
+    actionvalue
+        //Finds the first window that contains addr
+        let cl = getLineAddr(addr);
+        function Bool pred(StreamEntry se);
+            //TODO < gives 100 cycles less??????
+            return (se.rangeEnd - fromInteger(cacheLinesInRange) - 1 <= cl 
+                && cl < se.rangeEnd);
+        endfunction
+        //Find first window that contains cache line cl
+        if (findIndex(pred, readVReg(streams)) matches tagged Valid .idx) begin
+            return Valid(pack(idx));
+        end
+        else begin
+            return Invalid;
+        end
+    endactionvalue;
+
+    method Action reportAccess(Addr addr, HitOrMiss hitMiss);
+        //Check if any stream line matches request
+        //If so, advance that stream line and advance LRU shift reg
+        //Otherwise if miss, allocate new stream line, and shift LRU reg completely,
+        let idxMaybe <- getMatchingWindow(addr);
+        if (idxMaybe matches tagged Valid .idx) begin
+            moveWindowToFront(pack(idx)); //Update window as just used
+            let newRangeEnd = getLineAddr(addr) + fromInteger(cacheLinesInRange) + 1;
+            $display("%t Prefetcher report access %h, moving window end to %h for window idx %h", 
+                $time, addr, Addr'{newRangeEnd, '0}, idx);
+            streams[idx].rangeEnd <= newRangeEnd;
         end
         else if (hitMiss == MISS) begin
             $display("%t Prefetcher report MISS %h, allocating new window, idx %h", $time, addr, shiftReg[3]);
@@ -521,19 +613,53 @@ module mkMarkovPrefetcher(Prefetcher) provisos
     endmethod
 endmodule
 
+module mkBlockPrefetcher(Prefetcher) provisos (
+    NumAlias#(numLinesEachWay, 2),
+    Alias#(lineCountT, Bit#(TLog#(TAdd#(numLinesEachWay, 1))))
+);
+    Reg#(Bool) nextIsForward <- mkReg(?);
+    Reg#(LineAddr) prefetchAround <- mkReg(?);
+    Reg#(lineCountT) linesEachWayPrefetched <- mkReg(?);
+    method Action reportAccess(Addr addr, HitOrMiss hitMiss);
+        if (hitMiss == MISS) begin
+            $display("%t Prefetcher report MISS %h", $time, addr);
+            nextIsForward <= True;
+            prefetchAround <= getLineAddr(addr);
+            linesEachWayPrefetched <= 0;
+        end
+        else 
+            $display("%t Prefetcher report HIT %h", $time, addr);
+    endmethod
+    method ActionValue#(Addr) getNextPrefetchAddr if (linesEachWayPrefetched != fromInteger(valueOf(numLinesEachWay)));
+        nextIsForward <= !nextIsForward;
+        if (nextIsForward) begin
+            Addr retAddr = {prefetchAround + (extend(linesEachWayPrefetched)+1), 0};
+            $display("%t Prefetcher getNextPrefetchAddr requesting forward %h", $time, retAddr);
+            return retAddr;
+        end
+        else begin
+            Addr retAddr = {prefetchAround - (extend(linesEachWayPrefetched)+1), 0};
+            $display("%t Prefetcher getNextPrefetchAddr requesting backward %h", $time, retAddr);
+            linesEachWayPrefetched <= linesEachWayPrefetched + 1;
+            return retAddr;
+        end
+    endmethod
+
+endmodule
+
 interface PCPrefetcher;
     (* always_ready *)
     method Action reportAccess(Addr addr, Bit#(16) pcHash, HitOrMiss hitMiss);
     method ActionValue#(Addr) getNextPrefetchAddr();
 endinterface
 
-module mkMarkovPCPrefetcher(PCPrefetcher);
-    let m <- mkMarkovPrefetcher;
+module mkPCPrefetcherAdapter#(module#(Prefetcher) mkPrefetcher)(PCPrefetcher);
+    let p <- mkPrefetcher;
     method Action reportAccess(Addr addr, Bit#(16) pcHash, HitOrMiss hitMiss);
-        m.reportAccess(addr, hitMiss);
+        p.reportAccess(addr, hitMiss);
     endmethod
     method ActionValue#(Addr) getNextPrefetchAddr;
-        let x <- m.getNextPrefetchAddr;
+        let x <- p.getNextPrefetchAddr;
         return x;
     endmethod
 endmodule
@@ -687,18 +813,21 @@ module mkL1IPrefetcher(Prefetcher);
     //let m <- mkNextLinePrefetcher;
     //let m <- mkMultiWindowPrefetcher;
     //let m <- mkNextLineOnAllPrefetcher;
-    let m <- mkDoNothingPrefetcher;
+    //let m <- mkDoNothingPrefetcher;
+    let m <- mkAlwaysRequestPrefetcher;
     //let m <- mkSingleWindowTargetPrefetcher;
     //let m <- mkMultiWindowTargetPrefetcher;
-    //module mkMultiWindowPrefetcher(Integer cacheLinesInRange)(Prefetcher)
     return m;
 endmodule
 
-module mkL1DPrefetcher(PCPrefetcher);
-    //let m <- mkNextLineOnAllPrefetcher;
-    //let m <- mkStridePCPrefetcher2;
-    //let m <- mkDoNothingPCPrefetcher;
-    let m <- mkMarkovPCPrefetcher;
+module mkLLIPrefetcherInL1I(Prefetcher);
+    //let m <- mkNextLineOnMissPrefetcher;
+    //let m <- mkMultiWindowPrefetcher;
+    //let m <- mkMultiWindowTargetPrefetcher;
+    //let m <- mkSingleWindowPrefetcher;
+    //let m <- mkSingleWindowTargetPrefetcher;
+    //let m <- mkPrintPrefetcher;
+    let m <- mkDoNothingPrefetcher;
     return m;
 endmodule
 
@@ -708,9 +837,28 @@ module mkLLIPrefetcher(Prefetcher);
     //let m <- mkMultiWindowTargetPrefetcher;
     //let m <- mkSingleWindowPrefetcher;
     //let m <- mkSingleWindowTargetPrefetcher;
-    //let m <- mkStridePCPrefetcher2;
     //let m <- mkPrintPrefetcher;
     let m <- mkDoNothingPrefetcher;
+    return m;
+endmodule
+
+module mkL1DPrefetcher(PCPrefetcher);
+    //let m <- mkNextLineOnAllPrefetcher;
+    //let m <- mkStridePCPrefetcher;
+    let m <- mkDoNothingPCPrefetcher;
+    //let m <- mkPCPrefetcherAdapter(mkAlwaysRequestPrefetcher);
+    //let m <- mkMarkovPCPrefetcher;
+    //let m <- mkPCPrefetcherAdapter(mkBlockPrefetcher);
+    return m;
+endmodule
+
+module mkLLDPrefetcherInL1D(PCPrefetcher);
+    //let m <- mkNextLineOnAllPrefetcher;
+    //let m <- mkStridePCPrefetcher;
+    let m <- mkDoNothingPCPrefetcher;
+    //let m <- mkPCPrefetcherAdapter(mkAlwaysRequestPrefetcher);
+    //let m <- mkMarkovPCPrefetcher;
+    //let m <- mkPCPrefetcherAdapter(mkBlockPrefetcher);
     return m;
 endmodule
 
@@ -718,6 +866,8 @@ module mkLLDPrefetcher(Prefetcher);
     //let m <- mkNextLineOnAllPrefetcher;
     //let m <- mkMarkovPrefetcher;
     //let m <- mkPrintPrefetcher;
-    let m <- mkDoNothingPrefetcher;
+    let m <- mkAlwaysRequestPrefetcher;
+    //let m <- mkDoNothingPrefetcher;
+    //let m <- mkBlockPrefetcher;
     return m;
 endmodule

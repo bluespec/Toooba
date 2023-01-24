@@ -45,7 +45,8 @@ module mkL1LLConnect#(
                 toState: r.toState,
                 canUpToE: r.canUpToE,
                 id: r.id,
-                child: child
+                child: child,
+                isPrefetchRq: r.isPrefetchRq
             }
         };
     endfunction

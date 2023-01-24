@@ -189,6 +189,7 @@ module mkL1Bank#(
 
     Vector#(cRqNum, Reg#(Bool)) cRqIsPrefetch <- replicateM(mkReg(?));
     let prefetcher <- mkL1DPrefetcher;
+    let llcPrefetcher <- mkLLDPrefetcherInL1D;
 
     // security flush
 `ifdef SECURITY_CACHES
@@ -491,6 +492,24 @@ endfunction
         );
     endrule
 
+    (* descending_urgency = "sendRqToP, sendPrefetchRqToP" *)
+    rule sendPrefetchRqToP;
+        let addr <- llcPrefetcher.getNextPrefetchAddr;
+        cRqToPT cRqToP = CRqMsg {
+            addr: addr,
+            fromState: ?,
+            toState: M,
+            canUpToE: True,
+            id: 0,
+            child: ?,
+            isPrefetchRq: True
+        };
+        rqToPQ.enq(cRqToP);
+        if (verbose)
+            $display("%t L1 %m sendPrefetchRqToP: ", $time,
+                fshow(cRqToP)
+            );
+    endrule
     rule sendRqToP;
         rqToPIndexQ.deq;
         cRqIdxT n = rqToPIndexQ.first;
@@ -502,7 +521,8 @@ endfunction
             toState: req.toState,
             canUpToE: True,
             id: slot.way,
-            child: ?
+            child: ?,
+            isPrefetchRq: False
         };
         rqToPQ.enq(cRqToP);
        if (verbose)
@@ -620,6 +640,7 @@ endfunction
             }, True); // hit, so update rep info
             if (!cRqIsPrefetch[n]) begin
                 prefetcher.reportAccess(req.addr, req.pcHash, HIT);
+                llcPrefetcher.reportAccess(req.addr, req.pcHash, HIT);
             end
            if (verbose)
             $display("%t L1 %m pipelineResp: Hit func: update ram: ", $time,
@@ -773,6 +794,7 @@ endfunction
             }, False);
             if (!cRqIsPrefetch[n]) begin
                 prefetcher.reportAccess(procRq.addr, procRq.pcHash, MISS);
+                llcPrefetcher.reportAccess(procRq.addr, procRq.pcHash, MISS);
             end
         endaction
         endfunction
@@ -801,6 +823,7 @@ endfunction
             cRqMshr.pipelineResp.setData(n, ram.info.cs == M ? Valid (ram.line) : Invalid);
             if (!cRqIsPrefetch[n]) begin
                 prefetcher.reportAccess(procRq.addr, procRq.pcHash, MISS);
+                llcPrefetcher.reportAccess(procRq.addr, procRq.pcHash, MISS);
             end
             // send replacement resp to parent
             rsToPIndexQ.enq(CRq (n));

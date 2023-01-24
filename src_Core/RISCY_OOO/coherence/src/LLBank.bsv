@@ -343,7 +343,6 @@ endfunction
         // later cRq to same addr needs to be appended after this one
         // send to pipeline
         cRqT req = cRqMshr.transfer.getRq(n);
-        cRqIsPrefetch[n] <= False;
         pipeline.send(CRq (LLPipeCRqIn {
             addr: req.addr,
             mshrIdx: n
@@ -404,7 +403,7 @@ endfunction
             addr: cRq.addr,
             mshrIdx: n
         }));
-        cRqIsPrefetch[n] <= False;
+        cRqIsPrefetch[n] <= r.isPrefetchRq;
         // change round robin
         flipPriorNewCRqSrc;
        if (verbose)
@@ -513,6 +512,7 @@ endfunction
         // setup new MSHR entry and data
         cRqIndexT n <- cRqMshr.transfer.getEmptyEntryInit(cRq, write ? Valid (r.data) : Invalid);
         // send to pipeline
+        cRqIsPrefetch[n] <= False;
         pipeline.send(CRq (LLPipeCRqIn {
             addr: cRq.addr,
             mshrIdx: n
@@ -576,8 +576,15 @@ endfunction
 `endif
     endrule
 
+    rule discardPrefetchRqResult(rsToCIndexQ.notEmpty && cRqIsPrefetch[rsToCIndexQ.first.cRqId]);
+        let n = rsToCIndexQ.first.cRqId;
+        $display("%t LL %m discardPrefetchRqResult: ", $time, fshow(n));
+        rsToCIndexQ.deq;
+        cRqMshr.sendRsToDmaC.releaseEntry(n);
+    endrule
+
     // mem resp for child req, will refill cache, send it to pipeline
-    (* descending_urgency = "mRsTransfer, cRsTransfer, cRqTransfer_retry, cRqTransfer_new_child, cRqTransfer_new_dma" *)
+    (* descending_urgency = "mRsTransfer, cRsTransfer, discardPrefetchRqResult, cRqTransfer_retry, cRqTransfer_new_child, cRqTransfer_new_dma, createInstrPrefetchRq, createDataPrefetchRq" *)
 `ifdef PERF_COUNT
     // stop mshr block stats when other higher priority req is being sent to
     // pipeline
@@ -822,13 +829,6 @@ endfunction
             end
         end
 `endif
-    endrule
-
-    rule discardPrefetchRqResult(rsToCIndexQ.notEmpty && cRqIsPrefetch[rsToCIndexQ.first.cRqId]);
-        let n = rsToCIndexQ.first.cRqId;
-        $display("%t LL %m discardPrefetchRqResult: ", $time, fshow(n));
-        rsToCIndexQ.deq;
-        cRqMshr.sendRsToDmaC.releaseEntry(n);
     endrule
 
     // send downgrade req to child
@@ -1136,7 +1136,9 @@ endfunction
         function Vector#(childNum, DirPend) getDirPendNonCompatForChild;
             function DirPend initPend(childT i);
                 if(i == cRq.child) begin
-                    return ram.info.dir[i] <= cRq.fromState ? Invalid : Waiting (cRq.fromState);
+                    //For prefetch requests into L2, ignore what state the line is in L1
+                    if (cRqIsPrefetch[n]) return Invalid;
+                    else return ram.info.dir[i] <= cRq.fromState ? Invalid : Waiting (cRq.fromState);
                 end
                 else begin
                     Msi compatState = toCompat(cRq.toState);
