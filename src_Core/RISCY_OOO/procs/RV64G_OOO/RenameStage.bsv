@@ -63,6 +63,7 @@ import ReservationStationAlu::*;
 import ReservationStationMem::*;
 import ReservationStationFpuMulDiv::*;
 import SplitLSQ::*;
+import ConfigReg::*;
 import CHERICap::*;
 import CHERICC_Fat::*;
 import ISA_Decls_CHERI::*;
@@ -199,7 +200,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
    // Is set to Valid intrDebugStep on dcsr[stepbit]==1 and one instruction has been processed.
    //     Note (step): 1st instruction is guaranteed architectural, cannot possibly be speculative.
    //     Note (step): 1st instruction may trap; we halt pointing at the trap vector
-   Reg #(Maybe #(Interrupt)) rg_m_halt_req <- mkReg (tagged Invalid);
+   Reg #(Maybe #(Interrupt)) rg_m_halt_req <- mkConfigReg (tagged Invalid);
 
    function Action fa_step_check;
       action
@@ -1234,7 +1235,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
 `endif
 
 `ifdef INCLUDE_GDB_CONTROL
-   method Action debug_halt_req () if (rg_m_halt_req == tagged Invalid);
+   method Action debug_halt_req ();
       rg_m_halt_req <= tagged Valid intrDebugHalt;
       if (verbosity >= 1)
          $display ("%0d: %m.renameStage.renameStage.debug_halt_req", cur_cycle);
