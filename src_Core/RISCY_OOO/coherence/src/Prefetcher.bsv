@@ -1,4 +1,8 @@
 import ISA_Decls   :: *;
+import RWBramCore::*;
+import FIFO::*;
+import FIFOF::*;
+import SpecialFIFOs :: *;
 import Ehr::*;
 import CacheUtils::*;
 import CCTypes::*;
@@ -809,6 +813,148 @@ provisos(
 
 endmodule
 
+module mkBRAMStridePCPrefetcher(PCPrefetcher)
+provisos(
+    NumAlias#(strideTableSize, 64),
+    NumAlias#(cLinesAheadToPrefetch, 3), // TODO fetch more if have repeatedly hit an entry, and if stride big
+    Alias#(strideTableIndexT, Bit#(TLog#(strideTableSize)))
+    );
+    //Vector#(strideTableSize, Reg#(StrideEntry)) strideTable <- replicateM(mkReg(unpack(0)));
+    RWBramCore#(strideTableIndexT, StrideEntry) strideTable <- mkRWBramCoreForwarded;
+    FIFOF#(Tuple3#(Addr, Bit#(16), HitOrMiss)) memAccesses <- mkSizedBypassFIFOF(8);
+    Reg#(Tuple3#(Addr, Bit#(16), HitOrMiss)) rdRespEntry <- mkReg(?);
+
+    FIFO#(Addr) addrToPrefetch <- mkSizedFIFO(8);
+    FIFO#(Tuple3#(StrideEntry, Addr, Bit#(16))) strideEntryForPrefetch <- mkBypassFIFO();
+    Reg#(Maybe#(Bit#(4))) cLinesPrefetchedLatest <- mkReg(?);
+    PulseWire holdReadReq <- mkPulseWire;
+
+    rule sendReadReq if (!holdReadReq);
+        match {.addr, .pcHash, .hitMiss} = memAccesses.first;
+        $display("%t Sending read req for %h!", $time, pcHash);
+        strideTable.rdReq(truncate(pcHash));
+        rdRespEntry <= memAccesses.first;
+        memAccesses.deq;
+    endrule
+
+
+    rule updateStrideEntry;
+        //Find slot in vector
+        //if miss and slot empty
+        //if slot init, put address, stride and move to transit
+        //if slot transit or steady, verify stride, and move to steady
+        //    also put last_prefetched
+        //if stride wrong, move to transit
+        match {.addr, .pcHash, .hitMiss} = rdRespEntry;
+        strideTableIndexT index = truncate(pcHash);
+        StrideEntry se = strideTable.rdResp;
+        strideTable.deqRdResp;
+        StrideEntry seNext = se;
+        Bit#(13) observedStride = {1'b0, addr[11:0]} - {1'b0, se.lastAddr};
+        $writeh("%t Stride Prefetcher updateStrideEntry ", $time,
+            fshow(hitMiss), " ", addr,
+            ". Entry ", index, " state is ", fshow(se.state));
+        if (se.state == EMPTY) begin
+            if (hitMiss == MISS) begin 
+                seNext.lastAddr = truncate(addr);
+                seNext.state = INIT;
+                $display(", allocate entry");
+            end
+            else begin
+                $display(", ignore");
+            end
+        end 
+        else if (se.state == INIT && observedStride != 0) begin
+            seNext.stride = observedStride;
+            seNext.state = TRANSIENT;
+            seNext.lastAddr = truncate(addr);
+            $display(", set stride to %h", seNext.stride);
+        end
+        else if ((se.state == TRANSIENT || se.state == STEADY) && observedStride != 0) begin
+            if (observedStride == se.stride) begin
+                if (se.state == TRANSIENT) begin
+                    //Here we transition from TRANSIENT to STEADY, so init this field
+                    seNext.cLinesPrefetched = 0;
+                end
+                else begin
+                    //state == STEADY
+                    if (se.lastAddr[11:6] != addr[11:6]) begin
+                        //This means we have crossed a cache line since last access
+                        seNext.cLinesPrefetched = 
+                            (se.cLinesPrefetched == 0) ? 0 : se.cLinesPrefetched - 1;
+                    end
+                end
+                seNext.state = STEADY;
+                seNext.lastAddr = truncate(addr);
+                $display(", stride %h is confirmed!", seNext.stride);
+            end
+            else begin
+                seNext.state = TRANSIENT;
+                seNext.stride = observedStride;
+                seNext.lastAddr = truncate(addr);
+                $display(", old stride is broken! New stride: %h", seNext.stride);
+            end
+        end
+        else
+            $display("");
+        
+        strideEntryForPrefetch.enq(tuple3(seNext, addr, pcHash));
+    endrule
+
+    rule createPrefetchRequests;
+        match {.se, .addr, .pcHash} = strideEntryForPrefetch.first;
+        //If this rule is looping, then we'll have a valid cLinesPrefetchedLatest
+        Bit#(4) cLinesPrefetched = fromMaybe(se.cLinesPrefetched, cLinesPrefetchedLatest);
+
+        if (se.state == STEADY && 
+            cLinesPrefetched != 
+            fromInteger(valueof(cLinesAheadToPrefetch))) begin
+            //can prefetch
+            
+            Bit#(13) strideToUse;
+            Bit#(13) cLineSize = fromInteger(valueof(DataSz));
+            if (se.stride[12] == 1 && se.stride > -cLineSize) begin
+                //stride is negative and jumps less than one cline
+                strideToUse = -cLineSize;
+            end
+            else if (se.stride[12] == 0 && se.stride < cLineSize) begin
+                //stride is positive and jumps less than one cline
+                strideToUse = cLineSize;
+            end 
+            else begin
+                strideToUse = se.stride;
+            end
+
+            let reqAddr = addr + 
+                (signExtend(strideToUse) * zeroExtend(cLinesPrefetched + 1));
+
+            addrToPrefetch.enq(reqAddr);
+            // We will still be processing this StrideEntry next cycle, 
+            // so hold off any potential read requests until we do a writeback
+            holdReadReq.send();
+            cLinesPrefetchedLatest <= Valid(cLinesPrefetched + 1);
+            $display("%t Stride Prefetcher getNextPrefetchAddr requesting %h for entry %h", $time, reqAddr, pcHash[7:0]);
+        end
+        else begin
+            //cant prefetch
+            $display("%t Stride Prefetcher no possible prefetch for entry %h", $time, strideTableIndexT'(truncate(pcHash)));
+            strideEntryForPrefetch.deq;
+            se.cLinesPrefetched = cLinesPrefetched;
+            cLinesPrefetchedLatest <= Invalid;
+            strideTable.wrReq(truncate(pcHash), se);
+        end
+    endrule
+
+    method Action reportAccess(Addr addr, Bit#(16) pcHash, HitOrMiss hitMiss);
+        memAccesses.enq(tuple3 (addr, pcHash, hitMiss));
+    endmethod
+
+    method ActionValue#(Addr) getNextPrefetchAddr;
+        addrToPrefetch.deq;
+        return addrToPrefetch.first;
+    endmethod
+
+endmodule
 module mkL1IPrefetcher(Prefetcher);
     //let m <- mkNextLinePrefetcher;
     //let m <- mkMultiWindowPrefetcher;
