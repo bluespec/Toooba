@@ -301,6 +301,7 @@ provisos(
             streams[idx].rangeEnd <= newRangeEnd;
         end
         else if (hitMiss == MISS) begin
+            //A miss in L1 is not necessarily a miss in L2, so this might create a window for lines already in L2
             $display("%t Prefetcher report MISS %h, allocating new window, idx %h", $time, addr, shiftReg[3]);
             streams[shiftReg[3]] <= 
                 StreamEntry {nextToAsk: getLineAddr(addr) + 1,
@@ -395,6 +396,153 @@ module mkTargetTable(TargetTable#(narrowTableSize, wideTableSize)) provisos
     endmethod
 endmodule
 
+interface TargetTableBRAM#(numeric type narrowTableSize, numeric type wideTableSize);
+    method Action writeReq(LineAddr prevAddr, LineAddr currAddr);
+    method Action readReq(LineAddr addr);
+    method ActionValue#(Maybe#(LineAddr)) readRespAndClear();
+endinterface
+
+module mkTargetTableBRAM(TargetTableBRAM#(narrowTableSize, wideTableSize)) provisos
+(
+    NumAlias#(narrowTableIdxBits, TLog#(narrowTableSize)),
+    NumAlias#(wideTableIdxBits, TLog#(wideTableSize)),
+    NumAlias#(narrowTableTagBits, TSub#(32, narrowTableIdxBits)),
+    NumAlias#(wideTableTagBits, TSub#(32, wideTableIdxBits)),
+    NumAlias#(narrowDistanceBits, 10),
+    NumAlias#(narrowMaxDistanceAbs, TExp#(TSub#(narrowDistanceBits, 1))),
+    Alias#(narrowTargetEntryT, NarrowTargetEntry#(narrowTableTagBits, narrowDistanceBits)),
+    Alias#(wideTargetEntryT, WideTargetEntry#(wideTableTagBits)),
+    Add#(a__, TLog#(narrowTableSize), 32),
+    Add#(b__, TLog#(narrowTableSize), 58),
+    Add#(c__, TLog#(wideTableSize), 32),
+    Add#(d__, TLog#(wideTableSize), 58)
+);
+    RWBramCore#(Bit#(narrowTableIdxBits), Maybe#(narrowTargetEntryT)) narrowTable <- mkRWBramCoreForwarded;
+    RWBramCore#(Bit#(wideTableIdxBits), Maybe#(wideTargetEntryT)) wideTable <- mkRWBramCoreForwarded;
+    Reg#(LineAddr) readReqLineAddr <- mkReg(?); 
+
+    method Action writeReq(LineAddr prevAddr, LineAddr currAddr);
+        let distance = currAddr - prevAddr;
+        Bit#(32) prevAddrHash = hash(prevAddr);
+        if (abs(distance) < fromInteger(valueOf(narrowMaxDistanceAbs))) begin
+            //Store in narrow table
+            narrowTargetEntryT entry;
+            entry.tag = prevAddrHash[31:valueOf(narrowTableIdxBits)];
+            entry.distance = truncate(distance);
+            Bit#(narrowTableIdxBits) idx = truncate(prevAddrHash);
+            narrowTable.wrReq(idx, tagged Valid entry);
+        end
+        else begin
+            //Store in wide table
+            wideTargetEntryT entry;
+            entry.tag = prevAddrHash[31:valueOf(wideTableIdxBits)];
+            entry.target = currAddr;
+            Bit#(wideTableIdxBits) idx = truncate(prevAddrHash);
+            wideTable.wrReq(idx, tagged Valid entry);
+        end
+    endmethod
+
+    method Action readReq(LineAddr addr);
+        Bit#(narrowTableIdxBits) narrowIdx = truncate(addr);
+        narrowTable.rdReq(narrowIdx);
+        Bit#(wideTableIdxBits) wideIdx = truncate(addr);
+        wideTable.rdReq(wideIdx);
+        readReqLineAddr <= addr;
+    endmethod
+
+    method ActionValue#(Maybe#(LineAddr)) readRespAndClear();
+        // Returns the read response and if a table had a hit, 
+        // sends a write request to clear the entry in that table
+        narrowTable.deqRdResp;
+        wideTable.deqRdResp;
+        let addr = readReqLineAddr;
+        Bit#(narrowTableIdxBits) narrowIdx = truncate(addr);
+        Bit#(wideTableIdxBits) wideIdx = truncate(addr);
+        if (narrowTable.rdResp matches tagged Valid .entry 
+            &&& entry.tag == addr[31:valueOf(narrowTableIdxBits)]) begin
+            narrowTable.wrReq(narrowIdx, Invalid); 
+            $display("%t found narrow table entry %h", $time, addr + signExtend(pack(entry.distance)));
+            return Valid(addr + signExtend(pack(entry.distance)));
+        end
+        else if (wideTable.rdResp matches tagged Valid .entry 
+            &&& entry.tag == addr[31:valueOf(wideTableIdxBits)]) begin
+            wideTable.wrReq(wideIdx, Invalid); 
+            $display("%t found wide table entry %h", $time, entry.target);
+            return Valid(entry.target);
+        end
+        else begin
+            return Invalid;
+        end
+        
+    endmethod
+endmodule
+
+module mkBRAMSingleWindowTargetPrefetcher(Prefetcher) provisos
+();
+    Integer cacheLinesInRange = 2;
+    Reg#(LineAddr) rangeEnd <- mkReg(0); //Points to one CLine after end of range
+    Reg#(LineAddr) nextToAsk <- mkReg(0);
+    Reg#(LineAddr) lastChildRequest <- mkReg(0);
+    TargetTableBRAM#(64, 8) targetTable <- mkTargetTableBRAM;
+    FIFOF#(LineAddr) targetTableReadResp <- mkBypassFIFOF;
+
+    rule sendReadReq;
+        let lastAsked = nextToAsk-1;
+        targetTable.readReq(lastAsked);
+    endrule
+
+    rule getReadResp;
+        let res <- targetTable.readRespAndClear();
+        if (res matches tagged Valid .cline) begin
+            //Reset table entry, so on further calls we prefetch the next successive clines
+            //If we actually take the jump, the table entry will be restored
+            targetTableReadResp.enq(cline);
+        end
+    endrule
+
+    method Action reportAccess(Addr addr, HitOrMiss hitMiss);
+        let cl = getLineAddr(addr);
+        if (hitMiss == HIT && 
+            rangeEnd - fromInteger(cacheLinesInRange) - 1 < cl && 
+            cl < rangeEnd) begin
+
+            let nextEnd = cl + fromInteger(cacheLinesInRange) + 1;
+            $display("%t Prefetcher report HIT %h, moving window end to %h", $time, addr, Addr'{nextEnd, '0});
+            rangeEnd <= nextEnd;
+        end
+        else if (hitMiss == MISS) begin
+            $display("%t Prefetcher report MISS %h", $time, addr);
+            //Reset window
+            nextToAsk <= cl + 1;
+            rangeEnd <= cl + fromInteger(cacheLinesInRange) + 1;
+        end
+
+        if (cl != lastChildRequest + 1 && cl != lastChildRequest && cl != lastChildRequest - 1) begin
+            $display("%t Prefetcher add target entry from addr %h to addr %h", $time, Addr'{lastChildRequest, '0}, addr);
+            targetTable.writeReq(lastChildRequest, cl);
+        end
+        lastChildRequest <= cl;
+    endmethod
+
+    method ActionValue#(Addr) getNextPrefetchAddr if (targetTableReadResp.notEmpty || nextToAsk != rangeEnd);
+        Addr retAddr;
+        if (targetTableReadResp.notEmpty) begin
+            //If have valid table entry for some of the last requested clines, 
+            // prefetch the stored target first
+            retAddr = {targetTableReadResp.first, '0};
+            targetTableReadResp.deq();
+            $display("%t Prefetcher getNextPrefetchAddr requesting target entry %h", $time, retAddr);
+        end
+        else begin
+            //If no table entry, prefetch further in window
+            nextToAsk <= nextToAsk + 1;
+            retAddr = {nextToAsk, '0}; 
+            $display("%t Prefetcher getNextPrefetchAddr requesting next-line %h", $time, retAddr);
+        end
+        return retAddr; 
+    endmethod
+endmodule
+
 module mkSingleWindowTargetPrefetcher(Prefetcher) provisos
 ();
     Integer cacheLinesInRange = 2;
@@ -448,6 +596,138 @@ module mkSingleWindowTargetPrefetcher(Prefetcher) provisos
     endmethod
 endmodule
 
+module mkBRAMMultiWindowTargetPrefetcher(Prefetcher)
+provisos(
+    NumAlias#(numWindows, 4),
+    Alias#(windowIdxT, Bit#(TLog#(numWindows)))
+);
+    Integer cacheLinesInRange = 2;
+    Vector#(numWindows, Reg#(StreamEntry)) streams 
+        <- replicateM(mkReg(StreamEntry {rangeEnd: '0, nextToAsk: '0}));
+    Vector#(numWindows, Reg#(windowIdxT)) shiftReg <- genWithM(compose(mkReg, fromInteger));
+    Reg#(LineAddr) lastChildRequest <- mkReg(0);
+
+    TargetTableBRAM#(64, 8) targetTable <- mkTargetTableBRAM;
+    FIFOF#(LineAddr) targetTableReadResp <- mkBypassFIFOF;
+
+    rule sendReadReq;
+        let lastAsked = streams[shiftReg[0]].nextToAsk-1;
+        targetTable.readReq(lastAsked);
+    endrule
+
+    rule getReadResp;
+        let res <- targetTable.readRespAndClear();
+        if (res matches tagged Valid .cline) begin
+            //Reset table entry, so on further calls we prefetch the next successive clines
+            //If we actually take the jump, the table entry will be restored
+            targetTableReadResp.enq(cline);
+        end
+    endrule
+
+    function Action moveWindowToFront(windowIdxT window) = 
+    action
+        if (shiftReg[0] == window) begin
+        end
+        else if (shiftReg[1] == window) begin
+            shiftReg[0] <= window;
+            shiftReg[1] <= shiftReg[0];
+        end
+        else if (shiftReg[2] == window) begin
+            shiftReg[0] <= window;
+            shiftReg[1] <= shiftReg[0];
+            shiftReg[2] <= shiftReg[1];
+        end
+        else if (shiftReg[3] == window) begin
+            shiftReg[0] <= window;
+            shiftReg[1] <= shiftReg[0];
+            shiftReg[2] <= shiftReg[1];
+            shiftReg[3] <= shiftReg[2];
+        end
+    endaction;
+
+    function ActionValue#(Maybe#(windowIdxT)) getMatchingWindow(LineAddr cl) = 
+    actionvalue
+        //Finds the first window that contains cache line
+        function Bool pred(StreamEntry se);
+            //TODO < gives 100 cycles less??????
+            return (se.rangeEnd - fromInteger(cacheLinesInRange) - 1 <= cl 
+                && cl < se.rangeEnd);
+        endfunction
+        //Find first window that contains cache line cl
+        if (findIndex(pred, readVReg(streams)) matches tagged Valid .idx) begin
+            return Valid(pack(idx));
+        end
+        else begin
+            return Invalid;
+        end
+    endactionvalue;
+    // test: allocate new window on hit too (mostly for target prefetching)
+
+    method Action reportAccess(Addr addr, HitOrMiss hitMiss);
+        //Check if any stream line matches request
+        //If so, advance that stream line and advance LRU shift reg
+        //Otherwise if miss, allocate new stream line, and shift LRU reg completely,
+        let cl = getLineAddr(addr);
+        // Update window prefetcher
+        let idxMaybe <- getMatchingWindow(cl);
+        if (idxMaybe matches tagged Valid .idx) begin
+            moveWindowToFront(pack(idx)); //Update window as just used
+            let newRangeEnd = getLineAddr(addr) + fromInteger(cacheLinesInRange) + 1;
+            if (hitMiss == HIT) begin
+                $display("%t Prefetcher report HIT %h, moving window end to %h for window idx %h", 
+                    $time, addr, Addr'{newRangeEnd, '0}, idx);
+                streams[idx].rangeEnd <= newRangeEnd;
+            end
+            else if (hitMiss == MISS) begin
+                //Also reset nextToAsk on miss
+                $display("%t Prefetcher report MISS %h, moving window end to %h for window idx %h", 
+                    $time, addr, Addr'{newRangeEnd, '0}, idx);
+                streams[idx] <= 
+                    StreamEntry {nextToAsk: getLineAddr(addr) + 1, 
+                                rangeEnd: newRangeEnd};
+            end
+        end
+        else if (hitMiss == MISS) begin
+            $display("%t Prefetcher report MISS %h, allocating new window, idx %h", $time, addr, shiftReg[3]);
+            streams[shiftReg[3]] <= 
+                StreamEntry {nextToAsk: getLineAddr(addr) + 1,
+                            rangeEnd: getLineAddr(addr) + fromInteger(cacheLinesInRange) + 1};
+            shiftReg[0] <= shiftReg[3];
+            shiftReg[1] <= shiftReg[0];
+            shiftReg[2] <= shiftReg[1];
+            shiftReg[3] <= shiftReg[2];
+        end
+
+        // Update target prefetcher
+        if (cl != lastChildRequest + 1 && cl != lastChildRequest && cl != lastChildRequest - 1) begin
+            $display("%t Prefetcher add target entry from addr %h to addr %h", $time, Addr'{lastChildRequest, '0}, addr);
+            targetTable.writeReq(lastChildRequest, cl);
+        end
+        lastChildRequest <= cl;
+    endmethod
+
+    method ActionValue#(Addr) getNextPrefetchAddr 
+        if (targetTableReadResp.notEmpty || streams[shiftReg[0]].nextToAsk != streams[shiftReg[0]].rangeEnd);
+
+        Addr retAddr;
+        let lastAsked = streams[shiftReg[0]].nextToAsk-1;
+        if (targetTableReadResp.notEmpty) begin
+            //If have valid table entry for some of the last requested clines, 
+            // prefetch the stored target first
+            retAddr = {targetTableReadResp.first, '0};
+            targetTableReadResp.deq();
+            $display("%t Prefetcher getNextPrefetchAddr requesting target entry %h", $time, retAddr);
+        end
+        else begin
+            streams[shiftReg[0]].nextToAsk <= streams[shiftReg[0]].nextToAsk + 1;
+            retAddr = Addr'{streams[shiftReg[0]].nextToAsk, '0}; //extend cache line address to regular address
+            $display("%t Prefetcher getNextPrefetchAddr requesting %h from window idx %h", $time, retAddr, shiftReg[0]);
+        end
+        return retAddr; 
+    endmethod
+
+endmodule
+
 module mkMultiWindowTargetPrefetcher(Prefetcher)
 provisos(
     NumAlias#(numWindows, 4),
@@ -459,6 +739,7 @@ provisos(
     Vector#(numWindows, Reg#(windowIdxT)) shiftReg <- genWithM(compose(mkReg, fromInteger));
     Reg#(LineAddr) lastChildRequest <- mkReg(0);
     TargetTable#(64, 8) targetTable <- mkTargetTable;
+
     function Action moveWindowToFront(windowIdxT window) = 
     action
         if (shiftReg[0] == window) begin
@@ -560,6 +841,66 @@ provisos(
             $display("%t Prefetcher getNextPrefetchAddr requesting %h from window idx %h", $time, retAddr, shiftReg[0]);
         end
         return retAddr; 
+    endmethod
+
+endmodule
+
+module mkBRAMMarkovPrefetcher(Prefetcher) provisos
+(
+    NumAlias#(maxChainLength, 2),
+    Alias#(chainLengthT, Bit#(TLog#(TAdd#(maxChainLength,1))))
+);
+    Reg#(LineAddr) lastLastChildRequest <- mkReg(0);
+    Reg#(LineAddr) lastChildRequest <- mkReg(0);
+    TargetTableBRAM#(64, 8) targetTable <- mkTargetTableBRAM;
+    FIFOF#(LineAddr) targetTableReadResp <- mkBypassFIFOF;
+
+    // Stores how many prefetches we can still do in the current chain
+    Reg#(chainLengthT) chainNumberToPrefetch <- mkReg(0); 
+    Reg#(LineAddr) chainNextToLookup <- mkReg(?);
+
+    rule sendReadReq (chainNumberToPrefetch != 0);
+        targetTable.readReq(chainNextToLookup);
+    endrule
+
+    (* descending_urgency = "getReadResp, sendReadReq" *)
+    (* execution_order = "getReadResp, sendReadReq" *)
+    rule getReadResp;
+        let res <- targetTable.readRespAndClear();
+        if (res matches tagged Valid .cline) begin
+            targetTableReadResp.enq(cline);
+            chainNextToLookup <= cline;
+            chainNumberToPrefetch <= chainNumberToPrefetch - 1;
+        end
+        else begin
+            chainNumberToPrefetch <= 0;
+        end
+    endrule
+
+    method ActionValue#(Addr) getNextPrefetchAddr;
+        targetTableReadResp.deq();
+        let cline = targetTableReadResp.first;
+        Addr retAddr = {cline, '0};
+        $display("%t Prefetcher getNextPrefetchAddr requesting chain entry %h", $time, retAddr);
+        return retAddr; 
+    endmethod
+
+    method Action reportAccess(Addr addr, HitOrMiss hitMiss);
+        let cl = getLineAddr(addr);
+        if (cl != lastChildRequest + 1 && cl != lastChildRequest && cl != lastChildRequest - 1) begin
+            $display("%t Prefetcher report %s add target entry from addr %h to addr %h", 
+                $time, hitMiss == HIT ? "HIT" : "MISS", Addr'{lastChildRequest, '0}, addr);
+            targetTable.writeReq(lastChildRequest, cl);
+        end
+        lastChildRequest <= cl;
+        lastLastChildRequest <= lastChildRequest;
+
+        if (lastLastChildRequest != cl) begin 
+            //Don't start markov chain if its very recent
+            //$display("%t Prefetcher start new chain with %h", $time, addr);
+            chainNextToLookup <= cl;
+            chainNumberToPrefetch <= fromInteger(valueOf(maxChainLength));
+        end
     endmethod
 
 endmodule
