@@ -177,6 +177,11 @@ module mkP3_Core (P3_Core_IFC);
 
 `ifdef INCLUDE_GDB_CONTROL
 
+   (* no_implicit_conditions, fire_when_enabled *)
+   rule rl_forward_debug_reset (otherRst);
+     ndm_reset_controller.assertReset();
+   endrule
+
    // ================================================================
    // Instantiate JTAG TAP controller,
    // connect to corew.dmi;
