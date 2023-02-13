@@ -237,6 +237,7 @@ module mkProc (Proc_IFC);
       endrule
    end
 
+/*
    // ================================================================
    // Send and print perf requests 
 
@@ -320,6 +321,7 @@ module mkProc (Proc_IFC);
          end
       endrule
    end
+*/
 
    // ================================================================
    // Print out values written 'tohost'

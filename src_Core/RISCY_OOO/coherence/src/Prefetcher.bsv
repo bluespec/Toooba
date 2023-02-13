@@ -1297,64 +1297,118 @@ provisos(
 
 endmodule
 module mkL1IPrefetcher(Prefetcher);
-    //let m <- mkNextLinePrefetcher;
-    //let m <- mkMultiWindowPrefetcher;
-    //let m <- mkNextLineOnAllPrefetcher;
-    //let m <- mkDoNothingPrefetcher;
-    let m <- mkAlwaysRequestPrefetcher;
-    //let m <- mkSingleWindowTargetPrefetcher;
-    //let m <- mkMultiWindowTargetPrefetcher;
+`ifdef INSTR_PREFETCHER_IN_L1
+    `ifdef INSTR_PREFETCHER_NEXT_LINE_ON_ALL
+        let m <-  mkNextLineOnAllPrefetcher;
+    `elsif INSTR_PREFETCHER_NEXT_LINE_ON_MISS
+        let m <-  mkNextLineOnMissPrefetcher;
+    `elsif INSTR_PREFETCHER_SINGLE_WINDOW
+        let m <-  mkSingleWindowPrefetcher;
+    `elsif INSTR_PREFETCHER_SINGLE_WINDOW_TARGET
+        let m <-  mkBRAMSingleWindowTargetPrefetcher;
+    `elsif INSTR_PREFETCHER_MULTI_WINDOW
+        let m <-  mkMultiWindowPrefetcher;
+    `elsif INSTR_PREFETCHER_MULTI_WINDOW_TARGET
+        let m <-  mkBRAMMultiWindowTargetPrefetcher;
+    `endif
+    //let m <- mkAlwaysRequestPrefetcher;
+    //let m <- mkPrintPrefetcher;
+`else
+    let m <- mkDoNothingPrefetcher;
+`endif
     return m;
 endmodule
 
 module mkLLIPrefetcherInL1I(Prefetcher);
-    //let m <- mkNextLineOnMissPrefetcher;
-    //let m <- mkMultiWindowPrefetcher;
-    //let m <- mkMultiWindowTargetPrefetcher;
-    //let m <- mkSingleWindowPrefetcher;
-    //let m <- mkSingleWindowTargetPrefetcher;
+`ifdef INSTR_PREFETCHER_IN_L1LL
+    `ifdef INSTR_PREFETCHER_NEXT_LINE_ON_ALL
+        let m <-  mkNextLineOnAllPrefetcher;
+    `elsif INSTR_PREFETCHER_NEXT_LINE_ON_MISS
+        let m <-  mkNextLineOnMissPrefetcher;
+    `elsif INSTR_PREFETCHER_SINGLE_WINDOW
+        let m <-  mkSingleWindowPrefetcher;
+    `elsif INSTR_PREFETCHER_SINGLE_WINDOW_TARGET
+        let m <-  mkBRAMSingleWindowTargetPrefetcher;
+    `elsif INSTR_PREFETCHER_MULTI_WINDOW
+        let m <-  mkMultiWindowPrefetcher;
+    `elsif INSTR_PREFETCHER_MULTI_WINDOW_TARGET
+        let m <-  mkBRAMMultiWindowTargetPrefetcher;
+    `endif
+    //let m <- mkAlwaysRequestPrefetcher;
     //let m <- mkPrintPrefetcher;
+`else
     let m <- mkDoNothingPrefetcher;
+`endif
     return m;
 endmodule
 
 module mkLLIPrefetcher(Prefetcher);
-    //let m <- mkNextLineOnMissPrefetcher;
-    //let m <- mkMultiWindowPrefetcher;
-    //let m <- mkMultiWindowTargetPrefetcher;
-    //let m <- mkSingleWindowPrefetcher;
-    //let m <- mkSingleWindowTargetPrefetcher;
+`ifdef INSTR_PREFETCHER_IN_LL
+    `ifdef INSTR_PREFETCHER_NEXT_LINE_ON_ALL
+        let m <-  mkNextLineOnAllPrefetcher;
+    `elsif INSTR_PREFETCHER_NEXT_LINE_ON_MISS
+        let m <-  mkNextLineOnMissPrefetcher;
+    `elsif INSTR_PREFETCHER_SINGLE_WINDOW
+        let m <-  mkSingleWindowPrefetcher;
+    `elsif INSTR_PREFETCHER_SINGLE_WINDOW_TARGET
+        let m <-  mkBRAMSingleWindowTargetPrefetcher;
+    `elsif INSTR_PREFETCHER_MULTI_WINDOW
+        let m <-  mkMultiWindowPrefetcher;
+    `elsif INSTR_PREFETCHER_MULTI_WINDOW_TARGET
+        let m <-  mkBRAMMultiWindowTargetPrefetcher;
+    `endif
+    //let m <- mkAlwaysRequestPrefetcher;
     //let m <- mkPrintPrefetcher;
+`else
     let m <- mkDoNothingPrefetcher;
+`endif
     return m;
 endmodule
 
 module mkL1DPrefetcher(PCPrefetcher);
-    //let m <- mkNextLineOnAllPrefetcher;
-    //let m <- mkStridePCPrefetcher;
-    let m <- mkDoNothingPCPrefetcher;
+`ifdef DATA_PREFETCHER_IN_L1
+    `ifdef DATA_PREFETCHER_BLOCK
+        let m <- mkPCPrefetcherAdapter(mkBlockPrefetcher);
+    `elsif DATA_PREFETCHER_STRIDE
+        let m <- mkBRAMStridePCPrefetcher;
+    `elsif DATA_PREFETCHER_MARKOV
+        let m <- mkPCPrefetcherAdapter(mkBRAMMarkovPrefetcher);
+    `endif
     //let m <- mkPCPrefetcherAdapter(mkAlwaysRequestPrefetcher);
-    //let m <- mkMarkovPCPrefetcher;
-    //let m <- mkPCPrefetcherAdapter(mkBlockPrefetcher);
+`else 
+    let m <- mkPCPrefetcherAdapter(mkDoNothingPrefetcher);
+`endif
     return m;
 endmodule
 
 module mkLLDPrefetcherInL1D(PCPrefetcher);
-    //let m <- mkNextLineOnAllPrefetcher;
-    //let m <- mkStridePCPrefetcher;
-    let m <- mkDoNothingPCPrefetcher;
+`ifdef DATA_PREFETCHER_IN_L1LL
+    `ifdef DATA_PREFETCHER_BLOCK
+        let m <- mkPCPrefetcherAdapter(mkBlockPrefetcher);
+    `elsif DATA_PREFETCHER_STRIDE
+        let m <- mkBRAMStridePCPrefetcher;
+    `elsif DATA_PREFETCHER_MARKOV
+        let m <- mkPCPrefetcherAdapter(mkBRAMMarkovPrefetcher);
+    `endif
     //let m <- mkPCPrefetcherAdapter(mkAlwaysRequestPrefetcher);
-    //let m <- mkMarkovPCPrefetcher;
-    //let m <- mkPCPrefetcherAdapter(mkBlockPrefetcher);
+`else 
+    let m <- mkPCPrefetcherAdapter(mkDoNothingPrefetcher);
+`endif
     return m;
 endmodule
 
 module mkLLDPrefetcher(Prefetcher);
-    //let m <- mkNextLineOnAllPrefetcher;
-    //let m <- mkMarkovPrefetcher;
-    //let m <- mkPrintPrefetcher;
-    let m <- mkAlwaysRequestPrefetcher;
-    //let m <- mkDoNothingPrefetcher;
-    //let m <- mkBlockPrefetcher;
+`ifdef DATA_PREFETCHER_IN_LL
+    `ifdef DATA_PREFETCHER_BLOCK
+        let m <- mkBlockPrefetcher;
+    `elsif DATA_PREFETCHER_STRIDE
+        doAssert(False, "Illegal data prefetcher type for LL cache!")
+    `elsif DATA_PREFETCHER_MARKOV
+        let m <- mkBRAMMarkovPrefetcher;
+    `endif
+    //let m <- mkPCPrefetcherAdapter(mkAlwaysRequestPrefetcher);
+`else 
+    let m <- mkDoNothingPrefetcher;
+`endif
     return m;
 endmodule
