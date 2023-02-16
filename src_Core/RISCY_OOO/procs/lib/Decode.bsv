@@ -519,6 +519,8 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
             dInst.csr = tagged Invalid;
             dInst.execFunc = tagged Br AT;
 
+            if (funct3 != 0) illegalInst = True;
+
             dInst.capChecks.check_enable = True;
             dInst.capChecks.check_low_src = Src1Addr;
             dInst.capChecks.check_high_src = Src1AddrPlus2;
@@ -542,14 +544,18 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
 
         opcBranch: begin
             dInst.iType = Br;
-            dInst.execFunc = tagged Br (case(funct3)
-                fnBEQ: Eq;
-                fnBNE: Neq;
-                fnBLT: Lt;
-                fnBLTU: Ltu;
-                fnBGE: Ge;
-                fnBGEU: Geu;
-            endcase);
+            ExecFunc execFunc = ?;
+            {illegalInst, execFunc} = case(funct3)
+                fnBEQ:   tuple2(False, Br(Eq));
+                fnBNE:   tuple2(False, Br(Neq));
+                fnBLT:   tuple2(False, Br(Lt));
+                fnBLTU:  tuple2(False, Br(Ltu));
+                fnBGE:   tuple2(False, Br(Ge));
+                fnBGEU:  tuple2(False, Br(Geu));
+                default: tuple2(True,  Br(?));
+            endcase;
+            dInst.execFunc = execFunc;
+
             regs.dst  = Invalid;
             regs.src1 = Valid(tagged Gpr rs1);
             regs.src2 = Valid(tagged Gpr rs2);
