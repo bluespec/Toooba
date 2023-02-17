@@ -32,7 +32,6 @@ import Vector        :: *;
 
 import GetPut_Aux :: *;
 import Routable   :: *;
-import BlueBasics :: *;
 import BlueAXI4   :: *;
 import SourceSink :: *;
 import WindCoreInterface :: *;
@@ -167,13 +166,15 @@ module mkP3_Core (P3_Core_IFC);
      <- mkCoreW_reset (dm_power_on_reset, reset_by ndm_reset);
    match {.otherRst, .corew} = both;
    // AXI4 Narrower Master in front of cached memory master
-   NumProxy #(4) proxyInDepth = error ("don't look inside a proxy");
-   NumProxy #(4) proxyOutDepth = error ("don't look inside a proxy");
-   Tuple2 #( AXI4_Slave #(TAdd#(Wd_MId,1), Wd_Addr, Wd_Data, 0, 0, 0, 0, 0)
-           , AXI4_Master #(TAdd#(Wd_MId,1), Wd_Addr, Wd_Data_Periph, 0, 0, 0, 0, 0) )
-     wideS_narrowM <- mkAXI4DataWidthShim_WideToNarrow (proxyInDepth, proxyOutDepth);
-   match {.wideS, .narrowM} = wideS_narrowM;
-   mkConnection(corew.manager_0, wideS);
+   AXI4_Shim#(TAdd#(Wd_MId,1), Wd_Addr, Wd_Data_Periph, 0, 0, 0, 0, 0)
+      manager_0_narrow <- mkAXI4ShimFF;
+   AXI4_Slave #(TAdd#(Wd_MId,1), Wd_Addr, TDiv#(Wd_Data,4), 0, 0, 0, 0, 0)
+      manager_0_wide_a <- toWider_AXI4_Slave(manager_0_narrow.slave);
+   AXI4_Slave #(TAdd#(Wd_MId,1), Wd_Addr, TDiv#(Wd_Data,2), 0, 0, 0, 0, 0)
+      manager_0_wide_b <- toWider_AXI4_Slave(manager_0_wide_a);
+   AXI4_Slave #(TAdd#(Wd_MId,1), Wd_Addr, Wd_Data, 0, 0, 0, 0, 0)
+      manager_0_wide   <- toWider_AXI4_Slave(manager_0_wide_b);
+   mkConnection(corew.manager_0,manager_0_wide);
 
 `ifdef INCLUDE_GDB_CONTROL
 
@@ -270,7 +271,7 @@ module mkP3_Core (P3_Core_IFC);
 
    // ================================================================
    // INTERFACE
-   let master0_sig <- toAXI4_Master_Sig (narrowM);
+   let master0_sig <- toAXI4_Master_Sig (manager_0_narrow.master);
    let master1_sig <- toAXI4_Master_Sig (corew.manager_1);
    // ----------------------------------------------------------------
    // Core CPU interfaces
