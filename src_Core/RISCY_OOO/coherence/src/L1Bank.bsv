@@ -370,7 +370,7 @@ endfunction
         procRqT r = ProcRq {
             id: ?, //Or maybe do 0 here
             addr: addr,
-            toState: M, 
+            toState: S, 
             op: Ld,
             byteEn: ?,
             data: ?,
