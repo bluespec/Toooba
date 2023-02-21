@@ -54,7 +54,7 @@ endmodule
 
 module mkNextLineOnMissPrefetcher(Prefetcher)
     provisos (
-        NumAlias#(nextLinesOnMiss, 3),
+        NumAlias#(nextLinesOnMiss, 2),
         Alias#(rqCntT, Bit#(TLog#(TAdd#(nextLinesOnMiss, 1))))
     );
     Reg#(Addr) lastMissAddr <- mkReg(0);
