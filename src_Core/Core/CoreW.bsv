@@ -147,6 +147,7 @@ module mkCoreW (CoreW_IFC #(t_n_irq));
 `endif
           , .ifc} 
      <- mkCoreW_reset ( rst, reset_by newRst.new_rst);
+   (* no_implicit_conditions, fire_when_enabled *)
    rule rl_forward_debug_reset (otherRst);
       newRst.assertReset;
    endrule
