@@ -959,12 +959,12 @@ module mkMarkovPrefetcher(Prefetcher) provisos
 endmodule
 
 module mkBlockPrefetcher(Prefetcher) provisos (
-    NumAlias#(numLinesEachWay, 2),
+    NumAlias#(numLinesEachWay, 1),
     Alias#(lineCountT, Bit#(TLog#(TAdd#(numLinesEachWay, 1))))
 );
     Reg#(Bool) nextIsForward <- mkReg(?);
     Reg#(LineAddr) prefetchAround <- mkReg(?);
-    Reg#(lineCountT) linesEachWayPrefetched <- mkReg(?);
+    Reg#(lineCountT) linesEachWayPrefetched <- mkReg(fromInteger(valueOf(numLinesEachWay)));
     method Action reportAccess(Addr addr, HitOrMiss hitMiss);
         if (hitMiss == MISS) begin
             $display("%t Prefetcher report MISS %h", $time, addr);
