@@ -48,6 +48,10 @@ import SourceSink :: *;
 import Fabric_Defs  :: *;
 import SoC_Map      :: *;
 
+import VnD :: *;
+import Bag :: *;
+import ProcTypes :: *;
+
 // ================================================================
 
 interface LLC_AXI4_Adapter_IFC;
@@ -66,6 +70,9 @@ typedef struct {
     idT id; // slot id in child cache
     childT child; // from which child
 } LLC_AXI_ID#(type idT, type childT) deriving(Bits, Eq, FShow);
+
+typedef 16 OutstandingWrites;
+typedef 16 WriteAddressHashW;
 
 module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
                           (LLC_AXI4_Adapter_IFC)
@@ -87,7 +94,9 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
    let masterPortShim <- mkAXI4ShimFF;
 
    // For discarding write-responses
-   CreditCounter_IFC #(4) ctr_wr_rsps_pending <- mkCreditCounter; // 16 outstanding writes.
+   CreditCounter_IFC #(TLog#(OutstandingWrites)) ctr_wr_rsps_pending <- mkCreditCounter; // 16 outstanding writes.
+
+   Bag#(OutstandingWrites, Bit#(Wd_MId), Bit#(WriteAddressHashW)) outstandingWrites <- mkSmallBag;
 
    // ================================================================
    // Functions to interact with the fabric
@@ -120,7 +129,7 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
    // ================================================================
    // Handle read requests and responses
 
-   rule rl_handle_read_req (llc.toM.first matches tagged Ld .ld);
+   rule rl_handle_read_req (llc.toM.first matches tagged Ld .ld &&& !outstandingWrites.dataMatch(hash(ld.addr[63:6])));
       if ((cfg_verbosity > 0)) begin
          $display ("%0d: LLC_AXI4_Adapter.rl_handle_read_req: Ld request from LLC to memory",
                    cur_cycle);
@@ -161,7 +170,7 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
    // ================================================================
    // Handle write requests and responses
    Reg#(Bit#(Wd_MId)) wid_reg <- mkRegU;
-   rule rl_handle_write_req (llc.toM.first matches tagged Wb .wb);
+   rule rl_handle_write_req (llc.toM.first matches tagged Wb .wb &&& !outstandingWrites.isMember(wid_reg).v);
       if (cfg_verbosity > 0) begin
          $display ("%d: LLC_AXI4_Adapter.rl_handle_write_req: Wb request from LLC to memory:", cur_cycle);
          $display ("    ", fshow (wb));
@@ -182,6 +191,7 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
         awuser:   0});
       // Expect a fabric response
       ctr_wr_rsps_pending.incr;
+      outstandingWrites.insert(wid_reg, hash(wb.addr[63:6]));
       wid_reg <= wid_reg + 1; // Best effort to use unique IDs to allow reordering in the fabric.
       llc.toM.deq;
 
@@ -209,6 +219,7 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
       end
 
       ctr_wr_rsps_pending.decr;
+      outstandingWrites.remove(wr_resp.bid);
 
       if (wr_resp.bresp != OKAY) begin
          // TODO: need to raise a non-maskable interrupt (NMI) here
@@ -222,7 +233,9 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
    // INTERFACE
 
    method Action reset;
-      ctr_wr_rsps_pending.clear;
+      error("Reset called for LLC AXI4 adapter");
+      // XXX resetting this module would cause wedges unless the surrounding
+      // fabric was also fully reset
    endmethod
 
    // Fabric interface for memory
