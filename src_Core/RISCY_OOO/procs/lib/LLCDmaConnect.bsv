@@ -141,9 +141,13 @@ module mkLLCDmaConnect #( DmaServer#(LLCDmaReqId) llc
    // ================================================================
    // Write transactions from the external client (e.g., Debug Module)
 
+   let internal_aw_ff <- mkFIFO;
+
    rule rl_client_st;
       let wr_addr <- get (slavePortShim.master.aw);
       let wr_data <- get (slavePortShim.master.w);
+
+      internal_aw_ff.enq(wr_addr);
 
       if (verbosity >= 2) begin
          $display ("%0d: %m.rl_client_st for addr %0h", cur_cycle, wr_addr.awaddr);
@@ -157,6 +161,11 @@ module mkLLCDmaConnect #( DmaServer#(LLCDmaReqId) llc
                            data:   setDataAt(unpack(0), getCLineDataSel(wr_addr.awaddr), wr_data.wdata),
                            id:     tagged Client};    // TODO: change uniformly to  wr_addr.awid
       llc.memReq.enq (req);
+   endrule
+
+   rule rl_client_st_rsp(llc.respSt.first matches tagged Client);
+      llc.respSt.deq;
+      let wr_addr <- get (internal_aw_ff);
 
       // Send response to external client
       slavePortShim.master.b.put(AXI4_BFlit{
@@ -169,8 +178,12 @@ module mkLLCDmaConnect #( DmaServer#(LLCDmaReqId) llc
    // ================================================================
    // Read transactions from the external memory client (e.g., Debug Module)
 
+   let internal_ar_ff <- mkFIFO;
+
    rule rl_client_ld_req;
-      let line_addr = fn_align_addr_to_line (slavePortShim.master.ar.peek.araddr);
+      let rd_addr <- get (slavePortShim.master.ar);
+      internal_ar_ff.enq(rd_addr);
+      let line_addr = fn_align_addr_to_line (rd_addr.araddr);
       dmaRqT req =  DmaRq {addr:   line_addr,
                            byteEn: replicate(replicate(False)), // all False means 'read'
                            data:   ?,
@@ -187,7 +200,7 @@ module mkLLCDmaConnect #( DmaServer#(LLCDmaReqId) llc
       let resp = llc.respLd.first;
       llc.respLd.deq;
 
-      let rd_addr <- get (slavePortShim.master.ar);
+      let rd_addr <- get (internal_ar_ff);
       let dword = getDataAt( resp.data
                            , getCLineDataSel(rd_addr.araddr));
 
