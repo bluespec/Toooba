@@ -124,7 +124,7 @@ module mkSingleWindowPrefetcher(Prefetcher);
             $display("%t Prefetcher report HIT %h, moving window end to %h", $time, addr, Addr'{nextEnd, '0});
             rangeEnd <= nextEnd;
         end
-        else begin
+        else if (hitMiss == MISS) begin
             $display("%t Prefetcher report MISS %h", $time, addr);
             //Reset window
             nextToAsk <= getLineAddr(addr) + 1;
