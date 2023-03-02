@@ -139,6 +139,34 @@ module mkSingleWindowPrefetcher(Prefetcher);
     endmethod
 endmodule
 
+module mkSingleWindowL1LLPrefetcher(Prefetcher);
+    Integer cacheLinesInRange = 2;
+    Reg#(LineAddr) rangeEnd <- mkReg(0); //Points to one CLine after end of range
+    Reg#(LineAddr) nextToAsk <- mkReg(0);
+    method Action reportAccess(Addr addr, HitOrMiss hitMiss);
+        let cl = getLineAddr(addr);
+        if (rangeEnd - fromInteger(cacheLinesInRange) - 1 <= cl && 
+            cl < rangeEnd) begin
+
+            let nextEnd = cl + fromInteger(cacheLinesInRange) + 1;
+            $display("%t Prefetcher report HIT %h, moving window end to %h", $time, addr, Addr'{nextEnd, '0});
+            rangeEnd <= nextEnd;
+        end
+        else if (hitMiss == MISS) begin
+            $display("%t Prefetcher report MISS %h", $time, addr);
+            //Reset window
+            nextToAsk <= getLineAddr(addr) + 1;
+            rangeEnd <= getLineAddr(addr) + fromInteger(cacheLinesInRange) + 1;
+        end
+    endmethod
+    method ActionValue#(Addr) getNextPrefetchAddr if (nextToAsk != rangeEnd);
+        nextToAsk <= nextToAsk + 1;
+        let retAddr = Addr'{nextToAsk, '0}; //extend cache line address to regular address
+        $display("%t Prefetcher getNextPrefetchAddr requesting %h", $time, retAddr);
+        return retAddr; 
+    endmethod
+endmodule
+
 
 typedef struct {
     LineAddr rangeEnd;
@@ -1326,7 +1354,7 @@ module mkLLIPrefetcherInL1I(Prefetcher);
     `elsif INSTR_PREFETCHER_NEXT_LINE_ON_MISS
         let m <-  mkNextLineOnMissPrefetcher;
     `elsif INSTR_PREFETCHER_SINGLE_WINDOW
-        let m <-  mkSingleWindowPrefetcher;
+        let m <-  mkSingleWindowL1LLPrefetcher;
     `elsif INSTR_PREFETCHER_SINGLE_WINDOW_TARGET
         let m <-  mkBRAMSingleWindowTargetPrefetcher;
     `elsif INSTR_PREFETCHER_MULTI_WINDOW
