@@ -1,6 +1,7 @@
 import ISA_Decls   :: *;
 import RWBramCore::*;
 import FIFO::*;
+import Fifos::*;
 import FIFOF::*;
 import SpecialFIFOs :: *;
 import Ehr::*;
@@ -1193,7 +1194,7 @@ provisos(
     FIFOF#(Tuple3#(Addr, Bit#(16), HitOrMiss)) memAccesses <- mkSizedBypassFIFOF(8);
     Reg#(Tuple3#(Addr, Bit#(16), HitOrMiss)) rdRespEntry <- mkReg(?);
 
-    FIFO#(Addr) addrToPrefetch <- mkSizedFIFO(8);
+    Fifo#(8, Addr) addrToPrefetch <- mkOverflowPipelineFifo;
     FIFO#(Tuple3#(StrideEntry, Addr, Bit#(16))) strideEntryForPrefetch <- mkBypassFIFO();
     Reg#(Maybe#(Bit#(4))) cLinesPrefetchedLatest <- mkReg(?);
     PulseWire holdReadReq <- mkPulseWire;

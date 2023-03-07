@@ -1,7 +1,7 @@
 import Prefetcher::*;
 import StmtFSM::*;
 import Types::*;
-
+import Fifos::*;
 module mkTargetTableTest(Empty);
     TargetTable#(64, 16) t <- mkTargetTable;
     mkAutoFSM(
@@ -824,6 +824,83 @@ module mkMarkovPrefetcherTest(Empty);
             action
                 let x <- p.getNextPrefetchAddr; 
                 doAssert(x == 'h80000700, "test fail!");
+            endaction
+        endseq
+    );
+endmodule
+
+module mkOverflowPipelineFifoTest(Empty);
+    //let p <- mkMultipleWindowPrefetcher;
+    Fifo#(4, Bit#(8)) p <- mkOverflowPipelineFifo;
+    mkAutoFSM(
+        seq
+            // ----- Send misses and stuff to one window -----
+            action
+                p.enq('h01);
+            endaction
+            action
+                p.enq('h02);
+            endaction
+            action
+                p.enq('h03);
+            endaction
+            action
+                p.enq('h04);
+            endaction
+            action
+                let x = p.first; 
+                p.deq;
+                doAssert(x == 'h01, "test fail!");
+            endaction
+            action
+                p.enq('h05);
+                let x = p.first; 
+                p.deq;
+                doAssert(x == 'h02, "test fail!");
+            endaction
+            action
+                p.enq('h06);
+            endaction
+            action
+                p.enq('h07);
+                let x = p.first; 
+                p.deq;
+                doAssert(x == 'h03, "test fail!");
+            endaction
+            action
+                p.enq('h08);
+            endaction
+            action
+                p.enq('h09);
+                let x = p.first; 
+                p.deq;
+                doAssert(x == 'h05, "test fail!");
+            endaction
+            action
+                let x = p.first; 
+                p.deq;
+                doAssert(x == 'h06, "test fail!");
+            endaction
+            action
+                let x = p.first; 
+                p.deq;
+                doAssert(x == 'h07, "test fail!");
+            endaction
+            action
+                let x = p.first; 
+                p.deq;
+                doAssert(x == 'h08, "test fail!");
+            endaction
+            action
+                let x = p.first; 
+                p.deq;
+                doAssert(x == 'h09, "test fail!");
+            endaction
+            action
+                doAssert(!p.notEmpty, "test fail!");
+            endaction
+            action
+                $display("test done!");
             endaction
         endseq
     );
