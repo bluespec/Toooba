@@ -498,7 +498,7 @@ endfunction
         cRqToPT cRqToP = CRqMsg {
             addr: addr,
             fromState: ?,
-            toState: M,
+            toState: S,
             canUpToE: True,
             id: 0,
             child: ?,
