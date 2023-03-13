@@ -1186,7 +1186,7 @@ endmodule
 module mkBRAMStridePCPrefetcher(PCPrefetcher)
 provisos(
     NumAlias#(strideTableSize, 64),
-    NumAlias#(cLinesAheadToPrefetch, 3), // TODO fetch more if have repeatedly hit an entry, and if stride big
+    NumAlias#(cLinesAheadToPrefetch, 4), // TODO fetch more if have repeatedly hit an entry, and if stride big
     Alias#(strideTableIndexT, Bit#(TLog#(strideTableSize)))
     );
     //Vector#(strideTableSize, Reg#(StrideEntry)) strideTable <- replicateM(mkReg(unpack(0)));
