@@ -1185,7 +1185,7 @@ endmodule
 
 module mkBRAMStridePCPrefetcher(PCPrefetcher)
 provisos(
-    NumAlias#(strideTableSize, 64),
+    NumAlias#(strideTableSize, 512),
     NumAlias#(cLinesAheadToPrefetch, 2), // TODO fetch more if have repeatedly hit an entry, and if stride big
     Alias#(strideTableIndexT, Bit#(TLog#(strideTableSize)))
     );
