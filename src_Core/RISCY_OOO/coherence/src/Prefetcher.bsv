@@ -428,7 +428,7 @@ endmodule
 interface TargetTableBRAM#(numeric type narrowTableSize, numeric type wideTableSize);
     method Action writeReq(LineAddr prevAddr, LineAddr currAddr);
     method Action readReq(LineAddr addr);
-    method ActionValue#(Maybe#(LineAddr)) readRespAndClear();
+    method ActionValue#(Maybe#(LineAddr)) readResp(Bool clearEntry);
 endinterface
 
 module mkTargetTableBRAM(TargetTableBRAM#(narrowTableSize, wideTableSize)) provisos
@@ -479,7 +479,7 @@ module mkTargetTableBRAM(TargetTableBRAM#(narrowTableSize, wideTableSize)) provi
         readReqLineAddr <= addr;
     endmethod
 
-    method ActionValue#(Maybe#(LineAddr)) readRespAndClear();
+    method ActionValue#(Maybe#(LineAddr)) readResp(Bool clearEntry);
         // Returns the read response and if a table had a hit, 
         // sends a write request to clear the entry in that table
         narrowTable.deqRdResp;
@@ -489,13 +489,17 @@ module mkTargetTableBRAM(TargetTableBRAM#(narrowTableSize, wideTableSize)) provi
         Bit#(wideTableIdxBits) wideIdx = truncate(addr);
         if (narrowTable.rdResp matches tagged Valid .entry 
             &&& entry.tag == addr[31:valueOf(narrowTableIdxBits)]) begin
-            narrowTable.wrReq(narrowIdx, Invalid); 
+            if (clearEntry) begin
+                narrowTable.wrReq(narrowIdx, Invalid); 
+            end
             $display("%t found narrow table entry %h", $time, addr + signExtend(pack(entry.distance)));
             return Valid(addr + signExtend(pack(entry.distance)));
         end
         else if (wideTable.rdResp matches tagged Valid .entry 
             &&& entry.tag == addr[31:valueOf(wideTableIdxBits)]) begin
-            wideTable.wrReq(wideIdx, Invalid); 
+            if (clearEntry) begin
+                wideTable.wrReq(wideIdx, Invalid); 
+            end
             $display("%t found wide table entry %h", $time, entry.target);
             return Valid(entry.target);
         end
@@ -521,7 +525,7 @@ module mkBRAMSingleWindowTargetPrefetcher(Prefetcher) provisos
     endrule
 
     rule getReadResp;
-        let res <- targetTable.readRespAndClear();
+        let res <- targetTable.readResp(True);
         if (res matches tagged Valid .cline) begin
             //Reset table entry, so on further calls we prefetch the next successive clines
             //If we actually take the jump, the table entry will be restored
@@ -645,7 +649,7 @@ provisos(
     endrule
 
     rule getReadResp;
-        let res <- targetTable.readRespAndClear();
+        let res <- targetTable.readResp(True);
         if (res matches tagged Valid .cline) begin
             //Reset table entry, so on further calls we prefetch the next successive clines
             //If we actually take the jump, the table entry will be restored
@@ -881,7 +885,7 @@ module mkBRAMMarkovPrefetcher(Prefetcher) provisos
 );
     Reg#(LineAddr) lastLastChildRequest <- mkReg(0);
     Reg#(LineAddr) lastChildRequest <- mkReg(0);
-    TargetTableBRAM#(64, 8) targetTable <- mkTargetTableBRAM;
+    TargetTableBRAM#(1024, 64) targetTable <- mkTargetTableBRAM;
     FIFOF#(LineAddr) targetTableReadResp <- mkBypassFIFOF;
 
     // Stores how many prefetches we can still do in the current chain
@@ -889,19 +893,22 @@ module mkBRAMMarkovPrefetcher(Prefetcher) provisos
     Reg#(LineAddr) chainNextToLookup <- mkReg(?);
 
     rule sendReadReq (chainNumberToPrefetch != 0);
+        $display ("%t Prefetcher send read req for  %h", $time, Addr'{chainNextToLookup, '0});
         targetTable.readReq(chainNextToLookup);
     endrule
 
     (* descending_urgency = "getReadResp, sendReadReq" *)
     (* execution_order = "getReadResp, sendReadReq" *)
     rule getReadResp;
-        let res <- targetTable.readRespAndClear();
+        let res <- targetTable.readResp(False);
         if (res matches tagged Valid .cline) begin
             targetTableReadResp.enq(cline);
             chainNextToLookup <= cline;
             chainNumberToPrefetch <= chainNumberToPrefetch - 1;
+            $display("%t Prefetcher found read resp data! %h", $time, Addr'{cline, '0});
         end
         else begin
+            $display("%t Prefetcher found read resp invalid!", $time);
             chainNumberToPrefetch <= 0;
         end
     endrule
@@ -916,15 +923,16 @@ module mkBRAMMarkovPrefetcher(Prefetcher) provisos
 
     method Action reportAccess(Addr addr, HitOrMiss hitMiss);
         let cl = getLineAddr(addr);
-        if (cl != lastChildRequest + 1 && cl != lastChildRequest && cl != lastChildRequest - 1) begin
+        if (hitMiss == MISS && cl != lastChildRequest) begin
+            //Test only tracking misses, to avoid double noise of too many requests, many to the same location
             $display("%t Prefetcher report %s add target entry from addr %h to addr %h", 
-                $time, hitMiss == HIT ? "HIT" : "MISS", Addr'{lastChildRequest, '0}, addr);
+                $time, hitMiss == HIT ? "HIT" : "MISS", Addr'{lastChildRequest, '0}, Addr'{cl, '0});
             targetTable.writeReq(lastChildRequest, cl);
+            lastChildRequest <= cl;
+            lastLastChildRequest <= lastChildRequest;
         end
-        lastChildRequest <= cl;
-        lastLastChildRequest <= lastChildRequest;
 
-        if (lastLastChildRequest != cl) begin 
+        if (hitMiss == MISS) begin 
             //Don't start markov chain if its very recent
             //$display("%t Prefetcher start new chain with %h", $time, addr);
             chainNextToLookup <= cl;
