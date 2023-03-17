@@ -1284,7 +1284,7 @@ module mkL1DPrefetcher(PCPrefetcher);
     `elsif DATA_PREFETCHER_STRIDE
         let m <- mkBRAMStridePCPrefetcher;
     `elsif DATA_PREFETCHER_STRIDE_ADAPTIVE
-        let m <- mkBRAMStridePCPrefetcher;
+        let m <- mkBRAMStrideAdaptivePCPrefetcher;
     `elsif DATA_PREFETCHER_MARKOV
         let m <- mkPCPrefetcherAdapter(mkBRAMMarkovPrefetcher);
     `endif
@@ -1302,7 +1302,7 @@ module mkLLDPrefetcherInL1D(PCPrefetcher);
     `elsif DATA_PREFETCHER_STRIDE
         let m <- mkBRAMStridePCPrefetcher;
     `elsif DATA_PREFETCHER_STRIDE_ADAPTIVE
-        let m <- mkBRAMStridePCPrefetcher;
+        let m <- mkBRAMStrideAdaptivePCPrefetcher;
     `elsif DATA_PREFETCHER_MARKOV
         let m <- mkPCPrefetcherAdapter(mkBRAMMarkovPrefetcher);
     `endif
