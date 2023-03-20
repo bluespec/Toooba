@@ -77,7 +77,7 @@ endif
 ifeq (,$(filter $(DATA_PREFETCHER_LOCATION),NONE L1 L1LL LL))
 	$(error unsupported DATA_PREFETCHER_LOCATION)
 endif
-ifeq (,$(filter $(DATA_PREFETCHER_TYPE),MARKOV BLOCK STRIDE))
+ifeq (,$(filter $(DATA_PREFETCHER_TYPE),MARKOV BLOCK STRIDE STRIDE_ADAPTIVE))
 	$(error unsupported DATA_PREFETCHER_TYPE)
 endif
 
