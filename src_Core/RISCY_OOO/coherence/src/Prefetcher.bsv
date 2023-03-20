@@ -435,9 +435,9 @@ module mkTargetTableBRAM(TargetTableBRAM#(narrowTableSize, wideTableSize)) provi
 (
     NumAlias#(narrowTableIdxBits, TLog#(narrowTableSize)),
     NumAlias#(wideTableIdxBits, TLog#(wideTableSize)),
-    NumAlias#(narrowTableTagBits, TSub#(32, narrowTableIdxBits)),
-    NumAlias#(wideTableTagBits, TSub#(32, wideTableIdxBits)),
-    NumAlias#(narrowDistanceBits, 10),
+    NumAlias#(narrowTableTagBits, TSub#(24, narrowTableIdxBits)),
+    NumAlias#(wideTableTagBits, TSub#(24, wideTableIdxBits)),
+    NumAlias#(narrowDistanceBits, 16),
     NumAlias#(narrowMaxDistanceAbs, TExp#(TSub#(narrowDistanceBits, 1))),
     Alias#(narrowTargetEntryT, NarrowTargetEntry#(narrowTableTagBits, narrowDistanceBits)),
     Alias#(wideTargetEntryT, WideTargetEntry#(wideTableTagBits)),
@@ -456,7 +456,7 @@ module mkTargetTableBRAM(TargetTableBRAM#(narrowTableSize, wideTableSize)) provi
         if (abs(distance) < fromInteger(valueOf(narrowMaxDistanceAbs))) begin
             //Store in narrow table
             narrowTargetEntryT entry;
-            entry.tag = prevAddrHash[31:valueOf(narrowTableIdxBits)];
+            entry.tag = prevAddrHash[23:valueOf(narrowTableIdxBits)];
             entry.distance = truncate(distance);
             Bit#(narrowTableIdxBits) idx = truncate(prevAddrHash);
             narrowTable.wrReq(idx, tagged Valid entry);
@@ -464,7 +464,7 @@ module mkTargetTableBRAM(TargetTableBRAM#(narrowTableSize, wideTableSize)) provi
         else begin
             //Store in wide table
             wideTargetEntryT entry;
-            entry.tag = prevAddrHash[31:valueOf(wideTableIdxBits)];
+            entry.tag = prevAddrHash[23:valueOf(wideTableIdxBits)];
             entry.target = currAddr;
             Bit#(wideTableIdxBits) idx = truncate(prevAddrHash);
             wideTable.wrReq(idx, tagged Valid entry);
@@ -488,7 +488,7 @@ module mkTargetTableBRAM(TargetTableBRAM#(narrowTableSize, wideTableSize)) provi
         Bit#(narrowTableIdxBits) narrowIdx = truncate(addr);
         Bit#(wideTableIdxBits) wideIdx = truncate(addr);
         if (narrowTable.rdResp matches tagged Valid .entry 
-            &&& entry.tag == addr[31:valueOf(narrowTableIdxBits)]) begin
+            &&& entry.tag == addr[23:valueOf(narrowTableIdxBits)]) begin
             if (clearEntry) begin
                 narrowTable.wrReq(narrowIdx, Invalid); 
             end
@@ -496,7 +496,7 @@ module mkTargetTableBRAM(TargetTableBRAM#(narrowTableSize, wideTableSize)) provi
             return Valid(addr + signExtend(pack(entry.distance)));
         end
         else if (wideTable.rdResp matches tagged Valid .entry 
-            &&& entry.tag == addr[31:valueOf(wideTableIdxBits)]) begin
+            &&& entry.tag == addr[23:valueOf(wideTableIdxBits)]) begin
             if (clearEntry) begin
                 wideTable.wrReq(wideIdx, Invalid); 
             end
@@ -715,7 +715,7 @@ module mkBRAMMarkovPrefetcher(Prefetcher) provisos
 );
     Reg#(LineAddr) lastLastChildRequest <- mkReg(0);
     Reg#(LineAddr) lastChildRequest <- mkReg(0);
-    TargetTableBRAM#(1024, 64) targetTable <- mkTargetTableBRAM;
+    TargetTableBRAM#(65536, 4096) targetTable <- mkTargetTableBRAM;
     FIFOF#(LineAddr) targetTableReadResp <- mkBypassFIFOF;
 
     // Stores how many prefetches we can still do in the current chain
