@@ -597,3 +597,78 @@ module mkOverflowPipelineFifoTest(Empty);
         endseq
     );
 endmodule
+
+module mkStride2PCPrefetcherTest(Empty);
+    //paremeter - 2 ahead
+    let p <- mkStride2PCPrefetcher;
+    mkAutoFSM(
+        seq
+            // ----- Send misses and stuff to one window -----
+            action $display("%t", $time); p.reportAccess('h80000040, 'h0069, MISS); endaction
+            action p.reportAccess('h80000080, 'h0069, HIT); endaction
+            action p.reportAccess('h800000a0, 'h0069, HIT); endaction
+            action p.reportAccess('h800000c0, 'h0069, MISS); endaction
+            action p.reportAccess('h800000e0, 'h0069, MISS); endaction
+            action
+                let x <- p.getNextPrefetchAddr;
+                doAssert(x == 'h80000120, "test fail!");
+            endaction
+            action p.reportAccess('h80000100, 'h0069, HIT); endaction
+            action p.reportAccess('h80000120, 'h0069, HIT); endaction
+            action p.reportAccess('h80000140, 'h0069, HIT); endaction
+            action
+                let x <- p.getNextPrefetchAddr;
+                doAssert(x == 'h80000160, "test fail!");
+            endaction
+            action
+                let x <- p.getNextPrefetchAddr;
+                doAssert(x == 'h80000180, "test fail!");
+            endaction
+            action
+                let x <- p.getNextPrefetchAddr;
+                doAssert(x == 'h800001c0, "test fail!");
+            endaction
+            action p.reportAccess('h900001f0, 'h006a, MISS); endaction
+            action p.reportAccess('h900001c0, 'h006a, HIT); endaction
+            action p.reportAccess('h90000190, 'h006a, HIT); endaction
+            action p.reportAccess('h90000160, 'h006a, HIT); endaction
+            action
+                let x <- p.getNextPrefetchAddr;
+                doAssert(x == 'h90000120, "test fail!");
+            endaction
+            action
+                let x <- p.getNextPrefetchAddr;
+                doAssert(x == 'h900000e0, "test fail!");
+            endaction
+            action p.reportAccess('h90000100, 'h006b, MISS); endaction
+            action p.reportAccess('h90000200, 'h006b, MISS); endaction
+            action p.reportAccess('h90000300, 'h006b, MISS); endaction
+            action p.reportAccess('h90000400, 'h006b, MISS); endaction
+            action
+                let x <- p.getNextPrefetchAddr;
+                doAssert(x == 'h90000500, "test fail!");
+            endaction
+            action
+                let x <- p.getNextPrefetchAddr;
+                doAssert(x == 'h90000600, "test fail!");
+            endaction
+            action p.reportAccess('ha0000420, 'h006b, MISS); endaction
+            action p.reportAccess('ha0000520, 'h006b, MISS); endaction
+            action
+                let x <- p.getNextPrefetchAddr;
+                doAssert(x == 'ha0000620, "test fail!");
+            endaction
+            action
+                let x <- p.getNextPrefetchAddr;
+                doAssert(x == 'ha0000720, "test fail!");
+            endaction
+
+            action p.reportAccess('h90000130, 'h006a, HIT); endaction
+            // -- use older entry
+            action
+                let x <- p.getNextPrefetchAddr;
+                doAssert(x == 'h900000b0, "test fail!");
+            endaction
+        endseq
+    );
+endmodule

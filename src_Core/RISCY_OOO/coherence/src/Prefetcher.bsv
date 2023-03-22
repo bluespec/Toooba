@@ -1065,6 +1065,184 @@ provisos(
 endmodule
 
 typedef enum {
+  EMPTY = 3'd0, INIT = 3'd1, TRANSIENT = 3'd2, STEADY = 3'd3, NO_PRED = 3'd4
+} StrideState2 deriving (Bits, Eq, FShow);
+
+typedef struct {
+    Bit#(12) lastAddr; 
+    Bit#(13) stride;
+    Bit#(4) cLinesPrefetched; //Stores how many cache lines have been prefetched for this instruction
+    StrideState2 state;
+} StrideEntry2 deriving (Bits, Eq, FShow);
+
+module mkStride2PCPrefetcher(PCPrefetcher)
+provisos(
+    NumAlias#(strideTableSize, 512),
+    NumAlias#(cLinesAheadToPrefetch, 2), // TODO fetch more if have repeatedly hit an entry, and if stride big
+    Alias#(strideTableIndexT, Bit#(TLog#(strideTableSize)))
+    );
+    RWBramCore#(strideTableIndexT, StrideEntry2) strideTable <- mkRWBramCoreForwarded;
+    FIFOF#(Tuple3#(Addr, Bit#(16), HitOrMiss)) memAccesses <- mkSizedBypassFIFOF(8);
+    Reg#(Tuple3#(Addr, Bit#(16), HitOrMiss)) rdRespEntry <- mkReg(?);
+
+    Fifo#(8, Addr) addrToPrefetch <- mkOverflowPipelineFifo;
+    FIFO#(Tuple3#(StrideEntry2, Addr, Bit#(16))) strideEntryForPrefetch <- mkBypassFIFO();
+    Reg#(Maybe#(Bit#(4))) cLinesPrefetchedLatest <- mkReg(?);
+    PulseWire holdReadReq <- mkPulseWire;
+
+    rule sendReadReq if (!holdReadReq);
+        match {.addr, .pcHash, .hitMiss} = memAccesses.first;
+        $display("%t Sending read req for %h!", $time, pcHash);
+        strideTable.rdReq(truncate(pcHash));
+        rdRespEntry <= memAccesses.first;
+        memAccesses.deq;
+    endrule
+
+
+    rule updateStrideEntry;
+        //Find slot in vector
+        //if miss and slot empty
+        //if slot init, put address, stride and move to transit
+        //if slot transit or steady, verify stride, and move to steady
+        //    also put last_prefetched
+        //if stride wrong, move to transit
+        match {.addr, .pcHash, .hitMiss} = rdRespEntry;
+        strideTableIndexT index = truncate(pcHash);
+        StrideEntry2 se = strideTable.rdResp;
+        strideTable.deqRdResp;
+        StrideEntry2 seNext = se;
+        Bit#(13) observedStride = {1'b0, addr[11:0]} - {1'b0, se.lastAddr};
+        $writeh("%t Stride Prefetcher updateStrideEntry ", $time,
+            fshow(hitMiss), " ", addr,
+            ". Entry ", index, " state is ", fshow(se.state));
+        if (se.state == EMPTY) begin
+            if (hitMiss == MISS) begin 
+                seNext.lastAddr = truncate(addr);
+                seNext.state = INIT;
+                $display(", allocate entry");
+            end
+            else begin
+                $display(", ignore");
+            end
+        end 
+        else if (se.state == INIT && observedStride != 0) begin
+            if (se.stride == observedStride) begin
+                //fast track to steady
+                seNext.state = STEADY;
+                $display(", stride matches so fast track back to STEADY");
+            end
+            else begin
+                seNext.stride = observedStride;
+                seNext.state = TRANSIENT;
+                $display(", stride doesn't match, so set to %h", seNext.stride);
+            end
+            seNext.lastAddr = truncate(addr);
+        end
+        else if (se.state == TRANSIENT && observedStride != 0) begin
+            if (observedStride == se.stride) begin
+                //stride confimed, move to steady
+                seNext.cLinesPrefetched = 0;
+                seNext.state = STEADY;
+                $display(", stride %h is confirmed!", seNext.stride);
+            end
+            else begin
+                //We're seeing random accesses, go to no pred
+                seNext.state = NO_PRED;
+                seNext.stride = observedStride;
+                $display(", we have a random stride (%h), go to NO_PRED", seNext.stride);
+            end
+            seNext.lastAddr = truncate(addr);
+        end
+        else if (se.state == STEADY && observedStride != 0) begin
+            if (observedStride == se.stride) begin
+                if (se.lastAddr[11:6] != addr[11:6]) begin
+                    //This means we have crossed a cache line since last access
+                    seNext.cLinesPrefetched = 
+                        (se.cLinesPrefetched == 0) ? 0 : se.cLinesPrefetched - 1;
+                end
+                $display(", stride %h stays confirmed!", seNext.stride);
+            end
+            else begin
+                //We jump to some other random location, so reset number of lines prefetched
+                seNext.cLinesPrefetched = 0;
+                seNext.state = INIT;
+                $display(", random jump! Move to INIT, don't reset stride");
+            end
+            seNext.lastAddr = truncate(addr);
+        end
+        else if (se.state == NO_PRED && observedStride != 0) begin
+            if (observedStride == se.stride) begin
+                seNext.state = TRANSIENT;
+                $display(", have repeated stride: %h, move to TRANSIENT", seNext.stride);
+            end
+            else begin
+                seNext.stride = observedStride;
+                $display(", have random stride: %h", seNext.stride);
+            end
+            seNext.lastAddr = truncate(addr);
+        end
+        else
+            $display("");
+        
+        strideEntryForPrefetch.enq(tuple3(seNext, addr, pcHash));
+    endrule
+
+    rule createPrefetchRequests;
+        match {.se, .addr, .pcHash} = strideEntryForPrefetch.first;
+        //If this rule is looping, then we'll have a valid cLinesPrefetchedLatest
+        Bit#(4) cLinesPrefetched = fromMaybe(se.cLinesPrefetched, cLinesPrefetchedLatest);
+
+        if (se.state == STEADY && 
+            cLinesPrefetched != 
+            fromInteger(valueof(cLinesAheadToPrefetch))) begin
+            //can prefetch
+            
+            Bit#(13) strideToUse;
+            Bit#(13) cLineSize = fromInteger(valueof(DataSz));
+            if (se.stride[12] == 1 && se.stride > -cLineSize) begin
+                //stride is negative and jumps less than one cline
+                strideToUse = -cLineSize;
+            end
+            else if (se.stride[12] == 0 && se.stride < cLineSize) begin
+                //stride is positive and jumps less than one cline
+                strideToUse = cLineSize;
+            end 
+            else begin
+                strideToUse = se.stride;
+            end
+
+            let reqAddr = addr + 
+                (signExtend(strideToUse) * zeroExtend(cLinesPrefetched + 1));
+
+            addrToPrefetch.enq(reqAddr);
+            // We will still be processing this StrideEntry next cycle, 
+            // so hold off any potential read requests until we do a writeback
+            holdReadReq.send();
+            cLinesPrefetchedLatest <= Valid(cLinesPrefetched + 1);
+            $display("%t Stride Prefetcher getNextPrefetchAddr requesting %h for entry %h", $time, reqAddr, pcHash[7:0]);
+        end
+        else begin
+            //cant prefetch
+            $display("%t Stride Prefetcher no possible prefetch for entry %h", $time, strideTableIndexT'(truncate(pcHash)));
+            strideEntryForPrefetch.deq;
+            se.cLinesPrefetched = cLinesPrefetched;
+            cLinesPrefetchedLatest <= Invalid;
+            strideTable.wrReq(truncate(pcHash), se);
+        end
+    endrule
+
+    method Action reportAccess(Addr addr, Bit#(16) pcHash, HitOrMiss hitMiss);
+        memAccesses.enq(tuple3 (addr, pcHash, hitMiss));
+    endmethod
+
+    method ActionValue#(Addr) getNextPrefetchAddr;
+        addrToPrefetch.deq;
+        return addrToPrefetch.first;
+    endmethod
+
+endmodule
+
+typedef enum {
     EMPTY = 3'd0, INIT = 3'd1, TRANSIENT = 3'd2, STEADY1 = 3'd3, 
     STEADY2 = 3'd4, STEADY3 = 3'd5, STEADY4 = 4'd6, STEADYLAST = 3'd7
 } StrideStateAdaptive deriving (Bits, Eq, FShow);
@@ -1349,7 +1527,8 @@ module mkL1DPrefetcher(PCPrefetcher);
     `ifdef DATA_PREFETCHER_BLOCK
         let m <- mkPCPrefetcherAdapter(mkBlockPrefetcher);
     `elsif DATA_PREFETCHER_STRIDE
-        let m <- mkBRAMStridePCPrefetcher;
+        //let m <- mkBRAMStridePCPrefetcher;
+        let m <- mkStride2PCPrefetcher;
     `elsif DATA_PREFETCHER_STRIDE_ADAPTIVE
         let m <- mkBRAMStrideAdaptivePCPrefetcher;
     `elsif DATA_PREFETCHER_MARKOV
