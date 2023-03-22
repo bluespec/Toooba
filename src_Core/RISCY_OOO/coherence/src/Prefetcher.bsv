@@ -772,6 +772,73 @@ module mkBRAMMarkovPrefetcher(Prefetcher) provisos
 
 endmodule
 
+module mkBRAMMarkovOnHitPrefetcher(Prefetcher) provisos
+(
+    NumAlias#(maxChainLength, 2),
+    NumAlias#(numLastRequests, 16),
+    Alias#(chainLengthT, Bit#(TLog#(TAdd#(maxChainLength,1))))
+);
+    Reg#(LineAddr) lastLastChildRequest <- mkReg(0);
+    Reg#(LineAddr) lastChildRequest <- mkReg(0);
+    Reg#(Vector#(numLastRequests, Bit#(32))) lastAddrRequests <- mkReg(replicate(0));
+    TargetTableBRAM#(65536, 4096) targetTable <- mkTargetTableBRAM;
+    FIFOF#(LineAddr) targetTableReadResp <- mkBypassFIFOF;
+
+    // Stores how many prefetches we can still do in the current chain
+    Reg#(chainLengthT) chainNumberToPrefetch <- mkReg(0); 
+    Reg#(LineAddr) chainNextToLookup <- mkReg(?);
+
+    rule sendReadReq (chainNumberToPrefetch != 0);
+        $display ("%t Prefetcher send read req for  %h", $time, Addr'{chainNextToLookup, '0});
+        targetTable.readReq(chainNextToLookup);
+    endrule
+
+    (* descending_urgency = "getReadResp, sendReadReq" *)
+    (* execution_order = "getReadResp, sendReadReq" *)
+    rule getReadResp;
+        let res <- targetTable.readResp(False);
+        if (res matches tagged Valid .cline) begin
+            targetTableReadResp.enq(cline);
+            chainNextToLookup <= cline;
+            chainNumberToPrefetch <= chainNumberToPrefetch - 1;
+            $display("%t Prefetcher found read resp data! %h", $time, Addr'{cline, '0});
+        end
+        else begin
+            $display("%t Prefetcher found read resp invalid!", $time);
+            chainNumberToPrefetch <= 0;
+        end
+    endrule
+
+    method ActionValue#(Addr) getNextPrefetchAddr;
+        targetTableReadResp.deq();
+        let cline = targetTableReadResp.first;
+        Addr retAddr = {cline, '0};
+        $display("%t Prefetcher getNextPrefetchAddr requesting chain entry %h", $time, retAddr);
+        return retAddr; 
+    endmethod
+
+    method Action reportAccess(Addr addr, HitOrMiss hitMiss);
+        let cl = getLineAddr(addr);
+        if (hitMiss == MISS && cl != lastChildRequest) begin
+            //Test only tracking misses, to avoid double noise of too many requests, many to the same location
+            $display("%t Prefetcher report %s add target entry from addr %h to addr %h", 
+                $time, hitMiss == HIT ? "HIT" : "MISS", Addr'{lastChildRequest, '0}, Addr'{cl, '0});
+            targetTable.writeReq(lastChildRequest, cl);
+            lastChildRequest <= cl;
+            lastLastChildRequest <= lastChildRequest;
+        end
+
+        if (!elem(hash(cl), lastAddrRequests)) begin 
+            //Don't start markov chain if we started a markov chain with that address recently
+            $display("%t Prefetcher start new chain with %h", $time, addr);
+            lastAddrRequests <= shiftInAt0(lastAddrRequests, hash(cl));
+            chainNextToLookup <= cl;
+            chainNumberToPrefetch <= fromInteger(valueOf(maxChainLength));
+        end
+    endmethod
+
+endmodule
+
 module mkBlockPrefetcher(Prefetcher) provisos (
     NumAlias#(numLinesEachWay, 1),
     Alias#(lineCountT, Bit#(TLog#(TAdd#(numLinesEachWay, 1))))
@@ -1287,6 +1354,8 @@ module mkL1DPrefetcher(PCPrefetcher);
         let m <- mkBRAMStrideAdaptivePCPrefetcher;
     `elsif DATA_PREFETCHER_MARKOV
         let m <- mkPCPrefetcherAdapter(mkBRAMMarkovPrefetcher);
+    `elsif DATA_PREFETCHER_MARKOV_ON_HIT
+        let m <- mkPCPrefetcherAdapter(mkBRAMMarkovOnHitPrefetcher);
     `endif
     //let m <- mkPCPrefetcherAdapter(mkAlwaysRequestPrefetcher);
 `else 
@@ -1305,6 +1374,8 @@ module mkLLDPrefetcherInL1D(PCPrefetcher);
         let m <- mkBRAMStrideAdaptivePCPrefetcher;
     `elsif DATA_PREFETCHER_MARKOV
         let m <- mkPCPrefetcherAdapter(mkBRAMMarkovPrefetcher);
+    `elsif DATA_PREFETCHER_MARKOV_ON_HIT
+        let m <- mkPCPrefetcherAdapter(mkBRAMMarkovOnHitPrefetcher);
     `endif
     //let m <- mkPCPrefetcherAdapter(mkAlwaysRequestPrefetcher);
 `else 
@@ -1323,6 +1394,8 @@ module mkLLDPrefetcher(Prefetcher);
         doAssert(False, "Illegal data prefetcher type for LL cache!")
     `elsif DATA_PREFETCHER_MARKOV
         let m <- mkBRAMMarkovPrefetcher;
+    `elsif DATA_PREFETCHER_MARKOV_ON_HIT
+        let m <- mkBRAMMarkovOnHitPrefetcher;
     `endif
     //let m <- mkPCPrefetcherAdapter(mkAlwaysRequestPrefetcher);
 `else 
