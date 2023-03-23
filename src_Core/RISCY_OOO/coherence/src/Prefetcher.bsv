@@ -774,8 +774,8 @@ endmodule
 
 module mkBRAMMarkovOnHitPrefetcher(Prefetcher) provisos
 (
-    NumAlias#(maxChainLength, 2),
-    NumAlias#(numLastRequests, 16),
+    NumAlias#(maxChainLength, 1),
+    NumAlias#(numLastRequests, 32),
     Alias#(chainLengthT, Bit#(TLog#(TAdd#(maxChainLength,1))))
 );
     Reg#(LineAddr) lastLastChildRequest <- mkReg(0);
