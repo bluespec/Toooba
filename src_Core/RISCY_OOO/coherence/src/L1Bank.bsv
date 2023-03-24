@@ -191,6 +191,12 @@ module mkL1Bank#(
     let prefetcher <- mkL1DPrefetcher;
     let llcPrefetcher <- mkLLDPrefetcherInL1D;
 
+    Count#(Bit#(8)) addedCRqs <- mkCount(0);
+    Count#(Bit#(8)) removedCRqs <- mkCount(0);
+
+    Count#(Bit#(64)) currentFullCacheCycles <- mkCount(0);
+    Reg#(Bit#(64)) lastReportedFullCacheCycles <- mkReg(0);
+
     // security flush
 `ifdef SECURITY_CACHES
     Reg#(Bool) flushDone <- mkReg(True);
@@ -233,9 +239,12 @@ action
 `endif
 `ifdef PERFORMANCE_MONITORING
     EventsL1D events = unpack (0);
+    events.evt_ST = saturating_truncate(currentFullCacheCycles - lastReportedFullCacheCycles);
+    lastReportedFullCacheCycles <= currentFullCacheCycles;
+    $display("Reporting full cache cycles: %d", events.evt_ST);
     case(op)
         Ld: events.evt_LD = 1;
-        St: events.evt_ST = 1;
+        //St: events.evt_ST = 1;
         Lr, Sc, Amo: events.evt_AMO = 1;
     endcase
     perf_events[0] <= events;
@@ -305,6 +314,7 @@ endfunction
             mshrIdx: n
         }));
         cRqIsPrefetch[n] <= False;
+        addedCRqs.incr(1);
        if (verbose)
         $display("%t L1 %m cRqTransfer_retry: ", $time,
             fshow(n), " ; ",
@@ -318,6 +328,7 @@ endfunction
     rule cRqTransfer_new(!cRqRetryIndexQ.notEmpty && flushDone);
         procRqT r <- toGet(rqFromCQ).get;
         cRqIdxT n <- cRqMshr.cRqTransfer.getEmptyEntryInit(r);
+        addedCRqs.incr(1);
         // send to pipeline
         pipeline.send(CRq (L1PipeRqIn {
             addr: r.addr,
@@ -363,6 +374,14 @@ endfunction
     endrule
 
 
+    rule print_cRqIndexQ_len;
+        //$display("L1D cRqIndexQ length= %d", addedCRqs-removedCRqs);
+    endrule
+
+    rule incrFullCacheCycles (addedCRqs - removedCRqs == 8);
+        currentFullCacheCycles.incr(1);
+    endrule
+
     (* descending_urgency = "pRsTransfer, cRqTransfer_retry, cRqTransfer_new, createPrefetchRq" *)
     (* descending_urgency = "pRqTransfer, cRqTransfer_retry, cRqTransfer_new, createPrefetchRq" *)
     rule createPrefetchRq(flushDone);
@@ -379,6 +398,7 @@ endfunction
             pcHash: ?
         };
         cRqIdxT n <- cRqMshr.cRqTransfer.getEmptyEntryInit(r);
+        addedCRqs.incr(1);
         // send to pipeline
         pipeline.send(CRq (L1PipeRqIn {
             addr: r.addr,
@@ -649,6 +669,7 @@ endfunction
             );
             // release MSHR entry
             cRqMshr.pipelineResp.releaseEntry(n);
+            removedCRqs.incr(1);
         end
         else begin
             processAmo <= Valid (AmoHitInfo {
@@ -711,6 +732,7 @@ endfunction
         );
         // release MSHR entry
         cRqMshr.pipelineResp.releaseEntry(n);
+        removedCRqs.incr(1);
         // reset state
         processAmo <= Invalid;
     endrule
@@ -752,6 +774,7 @@ endfunction
             end
             // release MSHR entry
             cRqMshr.pipelineResp.releaseEntry(n);
+            removedCRqs.incr(1);
            if (verbose)
             $display("%t L1 %m pipelineResp: Sc early fail func: ", $time,
                 fshow(resetOwner), " ; ",
