@@ -239,12 +239,12 @@ action
 `endif
 `ifdef PERFORMANCE_MONITORING
     EventsL1D events = unpack (0);
-    events.evt_ST_MISS = saturating_truncate(currentFullCacheCycles - lastReportedFullCacheCycles);
+    events.evt_ST = saturating_truncate(currentFullCacheCycles - lastReportedFullCacheCycles);
     lastReportedFullCacheCycles <= currentFullCacheCycles;
-    $display("Reporting full cache cycles: %d", events.evt_ST_MISS);
+    $display("Reporting full cache cycles: %d", events.evt_ST);
     case(op)
         Ld: events.evt_LD = 1;
-        St: events.evt_ST = 1;
+        //St: events.evt_ST = 1;
         Lr, Sc, Amo: events.evt_AMO = 1;
     endcase
     perf_events[0] <= events;
@@ -283,7 +283,7 @@ action
         end
         St: begin
             events.evt_ST_MISS_LAT = saturating_truncate(lat);
-            //events.evt_ST_MISS = 1;
+            events.evt_ST_MISS = 1;
         end
         Lr, Sc, Amo: begin
             events.evt_AMO_MISS_LAT = saturating_truncate(lat);
