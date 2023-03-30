@@ -774,14 +774,14 @@ endmodule
 
 module mkBRAMMarkovOnHitPrefetcher(Prefetcher) provisos
 (
-    NumAlias#(maxChainLength, 1),
+    NumAlias#(maxChainLength, 2),
     NumAlias#(numLastRequests, 32),
     Alias#(chainLengthT, Bit#(TLog#(TAdd#(maxChainLength,1))))
 );
     Reg#(LineAddr) lastLastChildRequest <- mkReg(0);
     Reg#(LineAddr) lastChildRequest <- mkReg(0);
     Reg#(Vector#(numLastRequests, Bit#(32))) lastAddrRequests <- mkReg(replicate(0));
-    TargetTableBRAM#(65536, 4096) targetTable <- mkTargetTableBRAM;
+    TargetTableBRAM#(2048, 128) targetTable <- mkTargetTableBRAM;
     FIFOF#(LineAddr) targetTableReadResp <- mkBypassFIFOF;
 
     // Stores how many prefetches we can still do in the current chain
