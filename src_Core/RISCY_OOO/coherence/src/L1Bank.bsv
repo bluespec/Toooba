@@ -197,6 +197,9 @@ module mkL1Bank#(
     Count#(Bit#(64)) currentFullCacheCycles <- mkCount(0);
     Reg#(Bit#(64)) lastReportedFullCacheCycles <- mkReg(0);
 
+    Count#(Bit#(64)) sentPrefetchReq <- mkCount(0);
+    Reg#(Bit#(64)) lastReportedSentPrefetchReq <- mkReg(0);
+
     // security flush
 `ifdef SECURITY_CACHES
     Reg#(Bool) flushDone <- mkReg(True);
@@ -276,6 +279,9 @@ action
 `endif
 `ifdef PERFORMANCE_MONITORING
     EventsL1D events = unpack (0);
+    events.evt_ST_MISS = saturating_truncate(sentPrefetchReq - lastReportedSentPrefetchReq);
+    lastReportedSentPrefetchReq <= sentPrefetchReq;
+    $display("Reporting sent prefetch req: %d", events.evt_ST_MISS);
     case(op)
         Ld: begin
             events.evt_LD_MISS_LAT = saturating_truncate(lat);
@@ -283,7 +289,7 @@ action
         end
         St: begin
             events.evt_ST_MISS_LAT = saturating_truncate(lat);
-            events.evt_ST_MISS = 1;
+            //events.evt_ST_MISS = 1;
         end
         Lr, Sc, Amo: begin
             events.evt_AMO_MISS_LAT = saturating_truncate(lat);
@@ -384,8 +390,9 @@ endfunction
 
     (* descending_urgency = "pRsTransfer, cRqTransfer_retry, cRqTransfer_new, createPrefetchRq" *)
     (* descending_urgency = "pRqTransfer, cRqTransfer_retry, cRqTransfer_new, createPrefetchRq" *)
-    rule createPrefetchRq(flushDone);
+    rule createPrefetchRq(flushDone && addedCRqs - removedCRqs < 6);
         Addr addr <- prefetcher.getNextPrefetchAddr;
+        sentPrefetchReq.incr(1);
         procRqT r = ProcRq {
             id: ?, //Or maybe do 0 here
             addr: addr,
