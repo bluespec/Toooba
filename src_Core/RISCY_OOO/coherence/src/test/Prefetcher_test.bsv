@@ -1,4 +1,5 @@
 import Prefetcher::*;
+import RWBramCore::*;
 import StmtFSM::*;
 import Types::*;
 import Fifos::*;
@@ -94,6 +95,182 @@ module mkTargetTableBRAMTest(Empty);
             action
                 let x <- t.readResp(True); // get from short table
                 doAssert(x == Invalid, "test fail!"); //entry was removed!
+            endaction
+        endseq
+    );
+endmodule
+
+module mkTargetTableDoubleTest(Empty);
+    TargetTableDouble#(2048, 128) t <- mkTargetTableDouble;
+    mkAutoFSM(
+        seq
+            // ----- Send misses and stuff to one window -----
+            action
+                t.sendReadWriteReq('h8000, MISS); // goes in short table
+            endaction
+            action let x <- t.readResp(); endaction
+            action
+                t.sendReadWriteReq('h800a, MISS); // goes in short table
+            endaction
+            action let x <- t.readResp(); endaction
+            action
+                t.sendReadWriteReq('h8080000b, MISS); // goes in long table
+            endaction
+            action let x <- t.readResp(); endaction
+            action
+                t.sendReadWriteReq('h8000, MISS); // comes from short table
+            endaction
+            action
+                let x <- t.readResp(); 
+                doAssert(x == tuple2(Valid('h800a), Invalid), "test fail!");
+            endaction
+            action
+                t.sendReadWriteReq('h800a, MISS); // comes from long table
+            endaction
+            action
+                let x <- t.readResp(); 
+                doAssert(x == tuple2(Valid('h8080000b), Invalid), "test fail!");
+            endaction
+
+
+            action
+                t.sendReadWriteReq('h8000, MISS); 
+            endaction
+            action let x <- t.readResp(); endaction
+            action
+                t.sendReadWriteReq('h2123000c, MISS); 
+            endaction
+            action let x <- t.readResp(); endaction
+            action
+                t.sendReadWriteReq('h8000, HIT); 
+            endaction
+            action
+                let x <- t.readResp(); 
+                doAssert(x == tuple2(Valid('h2123000c), Valid('h800a)), "test fail!");
+            endaction
+            action
+                t.sendReadWriteReq('h8000, MISS); 
+            endaction
+            action let x <- t.readResp(); endaction
+            action
+                t.sendReadWriteReq('h2123000c, MISS); 
+            endaction
+            action let x <- t.readResp(); endaction
+            action
+                t.sendReadWriteReq('h8000, MISS); 
+            endaction
+            action
+                let x <- t.readResp();
+                doAssert(x == tuple2(Valid('h2123000c), Valid('h800a)), "test fail!");
+            endaction
+
+
+            /// ---- Add third entry (narrow) 8003
+            action
+                t.sendReadWriteReq('h8003, MISS); 
+            endaction
+            action let x <- t.readResp(); endaction
+            action
+                t.sendReadWriteReq('h8000, MISS); 
+            endaction
+            action
+                //wide entry is moved to LRU
+                let x <- t.readResp();
+                doAssert(x == tuple2(Valid('h8003), Valid('h2123000c)), "test fail!");
+            endaction
+            action
+                t.sendReadWriteReq('h8003, MISS); 
+            endaction
+            action let x <- t.readResp(); endaction
+            action
+                t.sendReadWriteReq('h8000, MISS); 
+            endaction
+            action
+                let x <- t.readResp();
+                doAssert(x == tuple2(Valid('h8003), Valid('h2123000c)), "test fail!");
+            endaction
+            //refresh 21230000
+            action
+                t.sendReadWriteReq('h2123000c, MISS); 
+            endaction
+            action let x <- t.readResp(); endaction
+
+            action
+                t.sendReadWriteReq('h8000, MISS); 
+            endaction
+            action
+                let x <- t.readResp();
+                doAssert(x == tuple2(Valid('h2123000c), Valid('h8003)), "test fail!");
+            endaction
+
+            /// ---- Add another entry (wide) 2123000d
+            action
+                t.sendReadWriteReq('h2123000d, MISS); 
+            endaction
+            action let x <- t.readResp(); endaction
+            action
+                t.sendReadWriteReq('h8000, MISS); 
+            endaction
+            action
+                //wide entry is moved to LRU
+                let x <- t.readResp();
+                doAssert(x == tuple2(Valid('h2123000d), Valid('h2123000c)), "test fail!");
+            endaction
+
+
+            /// ---- Add fifth entry (narrow) 8004
+            action
+                t.sendReadWriteReq('h8004, MISS); 
+            endaction
+            action let x <- t.readResp(); endaction
+            action
+                t.sendReadWriteReq('h8000, MISS); 
+            endaction
+            action
+                //wide entry is moved to LRU
+                let x <- t.readResp();
+                doAssert(x == tuple2(Valid('h8004), Valid('h2123000d)), "test fail!");
+            endaction
+            // --- Add a sixth narrow entry 8005
+            action
+                t.sendReadWriteReq('h8005, MISS); 
+            endaction
+            action let x <- t.readResp(); endaction
+            action
+                t.sendReadWriteReq('h8000, MISS); 
+            endaction
+            action
+                //wide entry is moved to LRU
+                let x <- t.readResp();
+                doAssert(x == tuple2(Valid('h8005), Valid('h8004)), "test fail!");
+            endaction
+
+
+            action 
+                t.sendReadWriteReq('h7004, MISS); // get from short table 
+            endaction
+
+            action
+                let x <- t.readResp(); 
+                doAssert(x == tuple2(Invalid, Invalid), "test fail!");
+            endaction
+            action
+                t.sendReadWriteReq('h6fde, MISS); // get from short table
+            endaction
+            action let x <- t.readResp(); endaction
+            action
+                t.sendReadWriteReq('h7004, MISS); // get from short table
+            endaction
+            action
+                let x <- t.readResp();
+                doAssert(x == tuple2(Valid('h6fde), Invalid), "test fail!");
+            endaction
+            action
+                t.sendReadWriteReq('h200, HIT); // get from short table
+            endaction
+            action
+                let x <- t.readResp();
+                doAssert(x == tuple2(Invalid, Invalid), "test fail!"); //entry was removed!
             endaction
         endseq
     );
@@ -213,10 +390,6 @@ module mkBRAMMultiWindowTargetPrefetcherTest(Empty);
                 doAssert(x == 'h50000000, "test fail!");
             endaction
             action
-                let x <- p.getNextPrefetchAddr; //target address recommended
-                doAssert(x == 'h81000000, "test fail!");
-            endaction
-            action
                 let x <- p.getNextPrefetchAddr; 
                 doAssert(x == 'h80000200, "test fail!"); // window addresss recommended
             endaction
@@ -225,6 +398,8 @@ module mkBRAMMultiWindowTargetPrefetcherTest(Empty);
 endmodule
 
 module mkBRAMSingleWindowTargetPrefetcherTest(Empty);
+    //2 ahead
+    //remember last 2 target table requests.
     let p <- mkBRAMSingleWindowTargetPrefetcher;
     mkAutoFSM(
         seq
@@ -262,24 +437,21 @@ module mkBRAMSingleWindowTargetPrefetcherTest(Empty);
                 doAssert(x == 'h80000180, "test fail!");
             endaction
             action
-                p.reportAccess('h81000000, MISS); //Report miss somewhere far away
+                p.reportAccess('h81000200, MISS); //Report miss somewhere far away
             endaction
             action
                 let x <- p.getNextPrefetchAddr; //New window allocated and recommended
-                doAssert(x == 'h81000040, "test fail!");
+                doAssert(x == 'h81000240, "test fail!");
             endaction
             action
                 p.reportAccess('h80000180, MISS); //Report miss back home
             endaction
+            action endaction
             action
                 p.reportAccess('h82000000, MISS); //Report miss far away 2
             endaction
             action
-                p.reportAccess('h80000100, MISS); //Report miss back home
-            endaction
-            action
-                let x <- p.getNextPrefetchAddr; 
-                doAssert(x == 'h80000140, "test fail!");
+                p.reportAccess('h80000140, MISS); //Report miss back home
             endaction
             action
                 let x <- p.getNextPrefetchAddr; 
@@ -287,11 +459,17 @@ module mkBRAMSingleWindowTargetPrefetcherTest(Empty);
             endaction
             action
                 let x <- p.getNextPrefetchAddr; //target address recommended
-                doAssert(x == 'h81000000, "test fail!");
+                doAssert(x == 'h81000200, "test fail!");
             endaction
             action
-                let x <- p.getNextPrefetchAddr; //target address recommended
-                doAssert(x == 'h82000000, "test fail!");
+                p.reportAccess('h80000140, HIT); //Report miss back home
+            endaction
+            action
+                p.reportAccess('h81000200, HIT); 
+            endaction
+            action
+                let x <- p.getNextPrefetchAddr; //target addresss recommended
+                doAssert(x == 'h800001c0, "test fail!");
             endaction
         endseq
     );
@@ -372,6 +550,7 @@ module mkBRAMStridePCPrefetcherTest(Empty);
 endmodule
 
 module mkBRAMStrideAdaptivePCPrefetcherTest(Empty);
+    // config is 2 - 3 - 5
     let p <- mkBRAMStrideAdaptivePCPrefetcher;
     mkAutoFSM(
         seq
@@ -470,6 +649,74 @@ module mkBRAMStrideAdaptivePCPrefetcherTest(Empty);
             endaction
             action p.reportAccess('h800000b0, 'h0069, MISS); endaction
             action p.reportAccess('h800000b8, 'h0069, MISS); endaction
+        endseq
+    );
+endmodule
+
+module mkMarkovOnHit2PrefetcherTest(Empty);
+    //let p <- mkMultipleWindowPrefetcher;
+    //TODO pass in value of cachelinesinrange
+    let p <- mkMarkovOnHit2Prefetcher;
+    mkAutoFSM(
+        seq
+            // ----- Send misses and stuff to one window -----
+            action
+                p.reportAccess('h80010000, MISS);
+            endaction
+            action
+                p.reportAccess('h80010700, MISS); 
+            endaction
+            action
+                p.reportAccess('h90010000, MISS); 
+            endaction
+            action
+                p.reportAccess('ha0010300, MISS); 
+            endaction
+            action
+                p.reportAccess('h80010000, MISS); //back to start
+            endaction
+            action
+                let x <- p.getNextPrefetchAddr; 
+                doAssert(x == 'h80010700, "test fail!");
+            endaction
+
+            //Add second target
+            action
+                p.reportAccess('h80010900, MISS); 
+            endaction
+            action
+                p.reportAccess('h80010000, MISS); //back to start
+            endaction
+            action
+                let x <- p.getNextPrefetchAddr; 
+                doAssert(x == 'h80010900, "test fail!");
+            endaction
+            action
+                let x <- p.getNextPrefetchAddr; 
+                doAssert(x == 'h80010700, "test fail!");
+            endaction
+
+            action
+                p.reportAccess('ha0010300, MISS); 
+            endaction
+            action
+                let x <- p.getNextPrefetchAddr; 
+                doAssert(x == 'h80010000, "test fail!");
+            endaction
+            action
+                p.reportAccess('ha0010200, MISS); 
+            endaction
+            action
+                p.reportAccess('ha0010300, MISS); 
+            endaction
+            action
+                let x <- p.getNextPrefetchAddr; 
+                doAssert(x == 'ha0010200, "test fail!");
+            endaction
+            action
+                let x <- p.getNextPrefetchAddr; 
+                doAssert(x == 'h80010000, "test fail!");
+            endaction
         endseq
     );
 endmodule
@@ -598,6 +845,77 @@ module mkOverflowPipelineFifoTest(Empty);
     );
 endmodule
 
+module mkOverflowBypassFifoTest(Empty);
+    Fifo#(4, Bit#(8)) p <- mkOverflowBypassFifo;
+    mkAutoFSM(
+        seq
+            action
+                p.enq('h01);
+            endaction
+            action
+                p.enq('h02);
+            endaction
+            action
+                p.enq('h03);
+            endaction
+            action
+                p.enq('h04);
+            endaction
+            action
+                let x = p.first; 
+                p.deq;
+                doAssert(x == 'h01, "test fail!");
+            endaction
+            action
+                p.enq('h05);
+                let x = p.first; 
+                p.deq;
+                doAssert(x == 'h02, "test fail!");
+            endaction
+            action
+                p.enq('h06);
+            endaction
+            action
+                p.enq('h07);
+                let x = p.first; 
+                p.deq;
+                $display("found %x", x);
+                doAssert(x == 'h04, "test fail!");
+            endaction
+            action
+                p.enq('h08);
+            endaction
+            action
+                p.enq('h09);
+                let x = p.first; 
+                p.deq;
+                doAssert(x == 'h06, "test fail!");
+            endaction
+            action
+                let x = p.first; 
+                p.deq;
+                doAssert(x == 'h07, "test fail!");
+            endaction
+            action
+                let x = p.first; 
+                p.deq;
+                doAssert(x == 'h08, "test fail!");
+            endaction
+            action
+                let x = p.first; 
+                p.deq;
+                doAssert(x == 'h09, "test fail!");
+            endaction
+            action
+                doAssert(!p.notEmpty, "test fail!");
+            endaction
+            action
+                $display("test done!");
+            endaction
+        endseq
+    );
+endmodule
+
 module mkStride2PCPrefetcherTest(Empty);
     //paremeter - 2 ahead
     let p <- mkStride2PCPrefetcher;
@@ -668,6 +986,65 @@ module mkStride2PCPrefetcherTest(Empty);
             action
                 let x <- p.getNextPrefetchAddr;
                 doAssert(x == 'h900000b0, "test fail!");
+            endaction
+        endseq
+    );
+endmodule
+
+module mkPrefetcherVectorTest(Empty);
+    //config - 2 lines
+    PrefetcherVector#(3) p <- mkPrefetcherVector(mkNextLineOnMissPrefetcher);
+    mkAutoFSM(
+        seq
+            action p.reportAccess(1, 'h90000000, MISS); endaction
+            action p.reportAccess(0, 'h80000000, MISS); endaction
+            action
+                let x <- p.getNextPrefetchAddr;
+                $display("%t Got %x", $time, x);
+                doAssert(x == tuple2('h90000040, 1), "test fail!");
+            endaction
+            action
+                let x <- p.getNextPrefetchAddr;
+                $display("%t Got %x", $time, x);
+                doAssert(x == tuple2('h90000080, 1), "test fail!");
+            endaction
+            action p.reportAccess(0, 'h40000000, MISS); endaction
+            action p.reportAccess(1, 'h50000000, MISS); endaction
+            action
+                let x <- p.getNextPrefetchAddr;
+                $display("%t Got %x", $time, x);
+                doAssert(x == tuple2('h80000040, 0), "test fail!");
+            endaction
+            action
+                let x <- p.getNextPrefetchAddr;
+                $display("%t Got %x", $time, x);
+                doAssert(x == tuple2('h40000040, 0), "test fail!");
+            endaction
+            action
+                let x <- p.getNextPrefetchAddr;
+                $display("%t Got %x", $time, x);
+                doAssert(x == tuple2('h50000040, 1), "test fail!");
+            endaction
+            action
+                let x <- p.getNextPrefetchAddr;
+                $display("%t Got %x", $time, x);
+                doAssert(x == tuple2('h40000080, 0), "test fail!");
+            endaction
+            action
+                let x <- p.getNextPrefetchAddr;
+                $display("%t Got %x", $time, x);
+                doAssert(x == tuple2('h50000080, 1), "test fail!");
+            endaction
+            action p.reportAccess(2, 'ha0000000, MISS); endaction
+            action
+                let x <- p.getNextPrefetchAddr;
+                $display("%t Got %x", $time, x);
+                doAssert(x == tuple2('ha0000040, 2), "test fail!");
+            endaction
+            action
+                let x <- p.getNextPrefetchAddr;
+                $display("%t Got %x", $time, x);
+                doAssert(x == tuple2('ha0000080, 2), "test fail!");
             endaction
         endseq
     );
