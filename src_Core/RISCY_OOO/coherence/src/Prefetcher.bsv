@@ -446,8 +446,8 @@ module mkTargetTableBRAM(TargetTableBRAM#(narrowTableSize, wideTableSize)) provi
     Add#(c__, TLog#(wideTableSize), 32),
     Add#(d__, TLog#(wideTableSize), 58)
 );
-    RWBramCore#(Bit#(narrowTableIdxBits), Maybe#(narrowTargetEntryT)) narrowTable <- mkRWBramCoreForwarded;
-    RWBramCore#(Bit#(wideTableIdxBits), Maybe#(wideTargetEntryT)) wideTable <- mkRWBramCoreForwarded;
+    RWBramCore#(Bit#(narrowTableIdxBits), Maybe#(narrowTargetEntryT)) narrowTable <- mkRWBramCore;
+    RWBramCore#(Bit#(wideTableIdxBits), Maybe#(wideTargetEntryT)) wideTable <- mkRWBramCore;
     Reg#(LineAddr) readReqLineAddr <- mkReg(?); 
 
     method Action writeReq(LineAddr prevAddr, LineAddr currAddr);
@@ -472,9 +472,10 @@ module mkTargetTableBRAM(TargetTableBRAM#(narrowTableSize, wideTableSize)) provi
     endmethod
 
     method Action readReq(LineAddr addr);
-        Bit#(narrowTableIdxBits) narrowIdx = truncate(addr);
+        Bit#(32) addrHash = hash(addr);
+        Bit#(narrowTableIdxBits) narrowIdx = truncate(addrHash);
         narrowTable.rdReq(narrowIdx);
-        Bit#(wideTableIdxBits) wideIdx = truncate(addr);
+        Bit#(wideTableIdxBits) wideIdx = truncate(addrHash);
         wideTable.rdReq(wideIdx);
         readReqLineAddr <= addr;
     endmethod
@@ -485,20 +486,21 @@ module mkTargetTableBRAM(TargetTableBRAM#(narrowTableSize, wideTableSize)) provi
         narrowTable.deqRdResp;
         wideTable.deqRdResp;
         let addr = readReqLineAddr;
-        Bit#(narrowTableIdxBits) narrowIdx = truncate(addr);
-        Bit#(wideTableIdxBits) wideIdx = truncate(addr);
+        Bit#(32) addrHash = hash(addr);
+        Bit#(narrowTableIdxBits) narrowIdx = truncate(addrHash);
+        Bit#(wideTableIdxBits) wideIdx = truncate(addrHash);
         if (narrowTable.rdResp matches tagged Valid .entry 
-            &&& entry.tag == addr[23:valueOf(narrowTableIdxBits)]) begin
+            &&& entry.tag == addrHash[23:valueOf(narrowTableIdxBits)]) begin
             if (clearEntry) begin
-                narrowTable.wrReq(narrowIdx, Invalid); 
+                //narrowTable.wrReq(narrowIdx, Invalid); 
             end
             $display("%t found narrow table entry %h", $time, addr + signExtend(pack(entry.distance)));
             return Valid(addr + signExtend(pack(entry.distance)));
         end
         else if (wideTable.rdResp matches tagged Valid .entry 
-            &&& entry.tag == addr[23:valueOf(wideTableIdxBits)]) begin
+            &&& entry.tag == addrHash[23:valueOf(wideTableIdxBits)]) begin
             if (clearEntry) begin
-                wideTable.wrReq(wideIdx, Invalid); 
+                //wideTable.wrReq(wideIdx, Invalid); 
             end
             $display("%t found wide table entry %h", $time, entry.target);
             return Valid(entry.target);
@@ -511,30 +513,37 @@ module mkTargetTableBRAM(TargetTableBRAM#(narrowTableSize, wideTableSize)) provi
 endmodule
 
 module mkBRAMSingleWindowTargetPrefetcher(Prefetcher) provisos
-();
-    Integer cacheLinesInRange = 2;
+(
+    NumAlias#(numLastRequests, 16)
+);
+    Integer cacheLinesInRange = 1;
     Reg#(LineAddr) rangeEnd <- mkReg(0); //Points to one CLine after end of range
     Reg#(LineAddr) nextToAsk <- mkReg(0);
+
     Reg#(LineAddr) lastChildRequest <- mkReg(0);
-    TargetTableBRAM#(64, 8) targetTable <- mkTargetTableBRAM;
+    TargetTableBRAM#(1024, 128) targetTable <- mkTargetTableBRAM;
     FIFOF#(LineAddr) targetTableReadResp <- mkBypassFIFOF;
 
+    Reg#(Vector#(numLastRequests, Bit#(32))) lastTargetRequests <- mkReg(replicate(0));
+
     rule sendReadReq;
-        let lastAsked = nextToAsk-1;
-        targetTable.readReq(lastAsked);
+        if (!elem(hash(lastChildRequest), lastTargetRequests)) begin 
+            targetTable.readReq(lastChildRequest);
+            $display("%t Prefetcher sending target read request for %h", $time, lastChildRequest);
+            lastTargetRequests <= shiftInAt0(lastTargetRequests, hash(lastChildRequest));
+        end
     endrule
 
     rule getReadResp;
-        let res <- targetTable.readResp(True);
+        let res <- targetTable.readResp(False);
         if (res matches tagged Valid .cline) begin
-            //Reset table entry, so on further calls we prefetch the next successive clines
-            //If we actually take the jump, the table entry will be restored
             targetTableReadResp.enq(cline);
         end
     endrule
 
     method Action reportAccess(Addr addr, HitOrMiss hitMiss);
         let cl = getLineAddr(addr);
+        $display("%t prefecher reportAccess", $time);
         if (hitMiss == HIT && 
             rangeEnd - fromInteger(cacheLinesInRange) - 1 < cl && 
             cl < rangeEnd) begin
@@ -550,7 +559,8 @@ module mkBRAMSingleWindowTargetPrefetcher(Prefetcher) provisos
             rangeEnd <= cl + fromInteger(cacheLinesInRange) + 1;
         end
 
-        if (cl != lastChildRequest + 1 && cl != lastChildRequest && cl != lastChildRequest - 1) begin
+        if (hitMiss == MISS && cl != lastChildRequest + 1 && cl != lastChildRequest && cl != lastChildRequest - 1) begin
+            //Try only recording table entries on a miss!
             $display("%t Prefetcher add target entry from addr %h to addr %h", $time, Addr'{lastChildRequest, '0}, addr);
             targetTable.writeReq(lastChildRequest, cl);
         end
@@ -579,6 +589,7 @@ endmodule
 module mkBRAMMultiWindowTargetPrefetcher(Prefetcher)
 provisos(
     NumAlias#(numWindows, 4),
+    NumAlias#(numLastRequests, 16),
     Alias#(windowIdxT, Bit#(TLog#(numWindows)))
 );
     Integer cacheLinesInRange = 2;
@@ -589,17 +600,19 @@ provisos(
 
     TargetTableBRAM#(64, 8) targetTable <- mkTargetTableBRAM;
     FIFOF#(LineAddr) targetTableReadResp <- mkBypassFIFOF;
+    Reg#(Vector#(numLastRequests, Bit#(32))) lastTargetRequests <- mkReg(replicate(0));
 
     rule sendReadReq;
-        let lastAsked = streams[shiftReg[0]].nextToAsk-1;
-        targetTable.readReq(lastAsked);
+        if (!elem(hash(lastChildRequest), lastTargetRequests)) begin 
+            targetTable.readReq(lastChildRequest);
+            $display("%t Prefetcher sending target read request for %h", $time, lastChildRequest);
+            lastTargetRequests <= shiftInAt0(lastTargetRequests, hash(lastChildRequest));
+        end
     endrule
 
     rule getReadResp;
-        let res <- targetTable.readResp(True);
+        let res <- targetTable.readResp(False);
         if (res matches tagged Valid .cline) begin
-            //Reset table entry, so on further calls we prefetch the next successive clines
-            //If we actually take the jump, the table entry will be restored
             targetTableReadResp.enq(cline);
         end
     endrule
@@ -679,7 +692,7 @@ provisos(
         end
 
         // Update target prefetcher
-        if (cl != lastChildRequest + 1 && cl != lastChildRequest && cl != lastChildRequest - 1) begin
+        if (hitMiss == MISS && cl != lastChildRequest + 1 && cl != lastChildRequest && cl != lastChildRequest - 1) begin
             $display("%t Prefetcher add target entry from addr %h to addr %h", $time, Addr'{lastChildRequest, '0}, addr);
             targetTable.writeReq(lastChildRequest, cl);
         end
