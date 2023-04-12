@@ -1466,6 +1466,40 @@ provisos(
 
 endmodule
 
+
+interface PrefetcherVector#(numeric type size);
+    method ActionValue#(Tuple2#(Addr, Bit#(TLog#(size)))) getNextPrefetchAddr;
+    method Action reportAccess(Bit#(TLog#(size)) idx, Addr addr, HitOrMiss hitMiss);
+endinterface
+
+module mkPrefetcherVector#(module#(Prefetcher) mkPrefetcher)
+(
+    PrefetcherVector#(size)
+) provisos (
+    Alias#(idxT, Bit#(TLog#(size)))
+);
+    Vector#(size, Prefetcher) prefetchers <- replicateM(mkPrefetcher);
+    Fifo#(1, Tuple2#(Addr, idxT)) prefetchRq <- mkBypassFifo;
+
+    function XBarDstInfo#(Bit#(0),Tuple2#(Addr, idxT)) convertPrefetchRq(idxT item, Addr a);
+        return XBarDstInfo { 
+            idx: 0,
+            data: tuple2(a, item)
+        };
+    endfunction
+    function Get#(Addr) reqGet(Prefetcher p) = toGet(p.getNextPrefetchAddr);
+    mkXBar(convertPrefetchRq, map(reqGet, prefetchers), vec(toPut(prefetchRq)));
+
+    method ActionValue#(Tuple2#(Addr, idxT)) getNextPrefetchAddr;
+        prefetchRq.deq;
+        return prefetchRq.first;
+    endmethod
+
+    method Action reportAccess(idxT idx, Addr addr, HitOrMiss hitMiss);
+        prefetchers[idx].reportAccess(addr, hitMiss);
+    endmethod
+endmodule
+
 module mkL1IPrefetcher(Prefetcher);
 `ifdef INSTR_PREFETCHER_IN_L1
     `ifdef INSTR_PREFETCHER_NEXT_LINE_ON_ALL
