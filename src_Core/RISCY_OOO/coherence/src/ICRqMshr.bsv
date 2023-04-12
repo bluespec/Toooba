@@ -143,6 +143,14 @@ interface ICRqMshr_sendRsToC#(
     method Maybe#(resultT) getResult(Bit#(TLog#(cRqNum)) n);
 endinterface
 
+interface ICRqMshr_prefetcher#(
+    numeric type cRqNum,
+    type resultT
+);
+    method Action releaseEntry(Bit#(TLog#(cRqNum)) n);
+    method Maybe#(resultT) getResult(Bit#(TLog#(cRqNum)) n);
+endinterface
+
 interface ICRqMshr#(
     numeric type cRqNum, 
     type wayT,
@@ -155,6 +163,9 @@ interface ICRqMshr#(
 
     // port for sendRsToC
     interface ICRqMshr_sendRsToC#(cRqNum, resultT) sendRsToC;
+
+    // port for prefetcher
+    interface ICRqMshr_prefetcher#(cRqNum, resultT) prefetcher;
 
     // port for sendRsToP_cRq
     interface ICRqMshr_sendRsToP_cRq#(cRqNum, wayT, tagT, reqT) sendRsToP_cRq;
@@ -192,7 +203,8 @@ module mkICRqMshrSafe#(
 
     // EHR ports
     // We put pipelineResp < transfer to cater for deq < enq of cache pipeline
-    Integer cRqTransfer_port = 2;
+    Integer cRqTransfer_port = 3;
+    Integer prefetcher_port = 2;
     Integer sendRsToC_port = 1; // create a bypass behavior from pipelineResp to sendRsToC (to save a cycle)
     Integer pipelineResp_port = 0;
     Integer sendRqToP_port = 0; // sendRqToP is read only
@@ -200,15 +212,15 @@ module mkICRqMshrSafe#(
     Integer flush_port = 0; // flush port is read only
 
     // MSHR entry state
-    Vector#(cRqNum, Ehr#(3, ICRqState)) stateVec <- replicateM(mkEhr(Empty));
+    Vector#(cRqNum, Ehr#(4, ICRqState)) stateVec <- replicateM(mkEhr(Empty));
     // cRq req contents
-    Vector#(cRqNum, Ehr#(3, reqT)) reqVec <- replicateM(mkEhr(?));
+    Vector#(cRqNum, Ehr#(4, reqT)) reqVec <- replicateM(mkEhr(?));
     // cRq mshr slots
-    Vector#(cRqNum, Ehr#(3, slotT)) slotVec <- replicateM(mkEhr(defaultValue));
+    Vector#(cRqNum, Ehr#(4, slotT)) slotVec <- replicateM(mkEhr(defaultValue));
     // result
-    Vector#(cRqNum, Ehr#(3, Maybe#(resultT))) resultVec <- replicateM(mkEhr(Invalid));
+    Vector#(cRqNum, Ehr#(4, Maybe#(resultT))) resultVec <- replicateM(mkEhr(Invalid));
     // successor valid bit
-    Vector#(cRqNum, Ehr#(3, Bool)) succValidVec <- replicateM(mkEhr(False));
+    Vector#(cRqNum, Ehr#(4, Bool)) succValidVec <- replicateM(mkEhr(False));
     // successor MSHR index
     RegFile#(cRqIndexT, cRqIndexT) succFile <- mkRegFile(0, fromInteger(valueOf(cRqNum) - 1));
     // empty entry FIFO
@@ -270,6 +282,20 @@ module mkICRqMshrSafe#(
 
         method Maybe#(resultT) getResult(Bit#(TLog#(cRqNum)) n);
             return resultVec[n][sendRsToC_port];
+        endmethod
+    endinterface
+
+    interface ICRqMshr_prefetcher prefetcher;
+        method Action releaseEntry(cRqIndexT n) if(inited);
+            emptyEntryQ.enq(n);
+            stateVec[n][prefetcher_port] <= Empty;
+`ifdef CHECK_DEADLOCK
+            checker.releaseEntry(n);
+`endif
+        endmethod
+
+        method Maybe#(resultT) getResult(Bit#(TLog#(cRqNum)) n);
+            return resultVec[n][prefetcher_port];
         endmethod
     endinterface
 

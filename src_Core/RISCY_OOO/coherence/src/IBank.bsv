@@ -168,7 +168,6 @@ module mkIBank#(
     FIFO#(cRqIdxT) cRqIndexQ <- mkSizedFIFO(valueof(cRqNum));
     FIFO#(cRqIdxT) prefetchIndexQ <- mkSizedFIFO(valueof(cRqNum));
     Vector#(cRqNum, Reg#(Bool)) cRqIsPrefetch <- replicateM(mkReg(?));
-    Vector#(cRqNum, Reg#(Bool)) prefetchRqDone <- replicateM(mkReg(?));
 
     let prefetcher <- mkL1IPrefetcher;
     let llcPrefetcher <- mkLLIPrefetcherInL1I;
@@ -323,7 +322,6 @@ module mkIBank#(
         // enq to indexQ for in order resp
         prefetchIndexQ.enq(n);
         cRqIsPrefetch[n] <= True;
-        prefetchRqDone[n] <= False;
         addedCRqs.incr(1);
         // performance counter: cRq type
         //incrReqCnt; TODO make separate counter for prefetch requests
@@ -536,7 +534,6 @@ module mkIBank#(
             prefetcher.reportAccess(req.addr, HIT);
             llcPrefetcher.reportAccess(req.addr, HIT);
         end
-        prefetchRqDone[n] <= True;
         // process req to get superscalar inst read results
         // set MSHR entry as Done & save inst results
         let instResult = readInst(ram.line, req.addr);
@@ -773,11 +770,10 @@ module mkIBank#(
     endrule
     
     rule discardPrefetchRqResult(
-            //cRqMshr.sendRsToC.getResult(prefetchIndexQ.first) matches tagged Valid .inst);
-            prefetchRqDone[prefetchIndexQ.first]);
+            cRqMshr.prefetcher.getResult(prefetchIndexQ.first) matches tagged Valid .inst);
         prefetchIndexQ.deq;
         removedCRqs.incr(1);
-        cRqMshr.sendRsToC.releaseEntry(prefetchIndexQ.first); // release MSHR entry
+        cRqMshr.prefetcher.releaseEntry(prefetchIndexQ.first); // release MSHR entry
         if (verbose)
         $display("%t I %m discardPrefetchRqResult: ", $time,
             fshow(prefetchIndexQ.first)
