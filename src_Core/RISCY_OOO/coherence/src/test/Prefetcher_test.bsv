@@ -1049,3 +1049,34 @@ module mkPrefetcherVectorTest(Empty);
         endseq
     );
 endmodule
+
+module mkSimpleStridePCPrefetcherTest(Empty);
+    //paremeter - 2 ahead
+    let p <- mkSimpleStridePCPrefetcher;
+    mkAutoFSM(
+        seq
+            // ----- Send misses and stuff to one window -----
+            action $display("%t", $time); p.reportAccess('h80000040, 'h0069, MISS); endaction
+            action p.reportAccess('h80000080, 'h0069, HIT); endaction
+            action p.reportAccess('h800000a0, 'h0069, HIT); endaction
+            action p.reportAccess('h800000c0, 'h0069, MISS); endaction
+            action p.reportAccess('h800000e0, 'h0069, MISS); endaction
+            action
+                let x <- p.getNextPrefetchAddr;
+                doAssert(x == 'h80000120, "test fail!");
+            endaction
+            action
+                let x <- p.getNextPrefetchAddr;
+                doAssert(x == 'h80000160, "test fail!");
+            endaction
+            action p.reportAccess('h80000400, 'h0069, MISS); endaction
+            action p.reportAccess('h80000300, 'h0069, MISS); endaction
+            action p.reportAccess('h80000200, 'h0069, MISS); endaction
+            action p.reportAccess('h80000100, 'h0069, MISS); endaction
+            action
+                let x <- p.getNextPrefetchAddr;
+                doAssert(x == 'h80000000, "test fail!");
+            endaction
+        endseq
+    );
+endmodule

@@ -1529,6 +1529,81 @@ provisos(
 
 endmodule
 
+typedef struct {
+    Addr lastAddr; 
+    Bit#(13) stride;
+    Bit#(2) confidence;
+} SimpleStrideEntry deriving (Bits, Eq, FShow);
+
+//10 minutes of planning
+//25 minutes of implementation
+//30 minutes of writing tests and fixing bugs
+module mkSimpleStridePCPrefetcher(PCPrefetcher)
+provisos(
+    NumAlias#(strideTableSize, 512),
+    NumAlias#(cLinesAheadToPrefetch, 2), 
+    NumAlias#(minConfidenceToPrefetch, 2),
+    Alias#(strideTableIndexT, Bit#(TLog#(strideTableSize)))
+    );
+    Vector#(strideTableSize, Reg#(SimpleStrideEntry)) strideTable <- replicateM(mkReg(unpack(0)));
+
+    Reg#(Addr) addrToPrefetch <- mkReg(0);
+    Reg#(Bit#(13)) strideToPrefetch <- mkReg(0);
+    Ehr#(2, Bit#(3)) prefetchesIssued <- mkEhr(fromInteger(valueOf(cLinesAheadToPrefetch)));
+
+    method Action reportAccess(Addr addr, Bit#(16) pcHash, HitOrMiss hitMiss);
+        $display("%t report access %x %x", $time, addr, pcHash);
+        strideTableIndexT idx = truncate(pcHash);
+        SimpleStrideEntry entry = strideTable[idx];
+        Bit#(13) calc_stride = truncate(addr - entry.lastAddr);
+        $display("found stride %x", entry.stride);
+        entry.lastAddr = addr;
+        if (calc_stride == entry.stride) begin
+            if (entry.confidence != 2'd3) begin
+                entry.confidence = entry.confidence + 1;
+            end
+        end
+        else begin
+            if (entry.confidence > 0) begin
+                entry.confidence = entry.confidence - 1;
+            end
+            if (entry.confidence < fromInteger(valueOf(minConfidenceToPrefetch))) begin
+                entry.stride = calc_stride;
+                entry.confidence = 0;
+            end
+        end
+        
+        if (entry.confidence >= fromInteger(valueOf(minConfidenceToPrefetch))) begin
+            prefetchesIssued[1] <= 0;
+            addrToPrefetch <= addr;
+            strideToPrefetch <= entry.stride;
+        end
+        strideTable[idx] <= entry;
+    endmethod
+
+    method ActionValue#(Addr) getNextPrefetchAddr 
+            if (prefetchesIssued[0] < fromInteger(valueOf(cLinesAheadToPrefetch)));
+        
+        Bit#(13) strideToUse;
+        Bit#(13) cLineSize = fromInteger(valueof(DataSz));
+        if (abs(strideToPrefetch) < cLineSize) begin
+            strideToUse = (strideToPrefetch[12] == 1) ? -cLineSize : cLineSize;
+        end
+        else begin
+            strideToUse = strideToPrefetch;
+        end
+
+        prefetchesIssued[0] <= prefetchesIssued[0] + 1; 
+        let reqAddr = addrToPrefetch + 
+            (signExtend(strideToUse) * zeroExtend(prefetchesIssued[0] + 1));
+
+        check(reqAddr[63:12] == addrToPrefetch[63:12]);
+        $display("%t getprefetchaddr ret %x", $time, reqAddr);
+        return reqAddr;
+    endmethod
+
+endmodule
+
 typedef enum {
     EMPTY = 3'd0, INIT = 3'd1, TRANSIENT = 3'd2, STEADY1 = 3'd3, 
     STEADY2 = 3'd4, STEADY3 = 3'd5, STEADY4 = 4'd6, STEADYLAST = 3'd7
