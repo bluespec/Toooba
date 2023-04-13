@@ -1352,7 +1352,7 @@ provisos(
 endmodule
 
 typedef enum {
-  EMPTY = 3'd0, INIT = 3'd1, TRANSIENT = 3'd2, STEADY = 3'd3, NO_PRED = 3'd4
+  INIT = 2'd0, TRANSIENT = 2'd1, STEADY = 2'd2, NO_PRED = 2'd3
 } StrideState2 deriving (Bits, Eq, FShow);
 
 typedef struct {
@@ -1402,17 +1402,7 @@ provisos(
         $writeh("%t Stride Prefetcher updateStrideEntry ", $time,
             fshow(hitMiss), " ", addr,
             ". Entry ", index, " state is ", fshow(se.state));
-        if (se.state == EMPTY) begin
-            if (hitMiss == MISS) begin 
-                seNext.lastAddr = truncate(addr);
-                seNext.state = INIT;
-                $display(", allocate entry");
-            end
-            else begin
-                $display(", ignore");
-            end
-        end 
-        else if (se.state == INIT && observedStride != 0) begin
+        if (se.state == INIT && observedStride != 0) begin
             if (se.stride == observedStride) begin
                 //fast track to steady
                 seNext.state = STEADY;

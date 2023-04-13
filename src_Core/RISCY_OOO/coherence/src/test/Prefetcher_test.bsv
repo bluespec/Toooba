@@ -952,7 +952,11 @@ module mkStride2PCPrefetcherTest(Empty);
             action p.reportAccess('h90000160, 'h006a, HIT); endaction
             action
                 let x <- p.getNextPrefetchAddr;
-                doAssert(x == 'h90000120, "test fail!");
+                doAssert(x == 'h90000150, "test fail!");
+            endaction
+            action
+                let x <- p.getNextPrefetchAddr;
+                doAssert(x == 'h90000110, "test fail!");
             endaction
             action
                 let x <- p.getNextPrefetchAddr;
@@ -961,14 +965,13 @@ module mkStride2PCPrefetcherTest(Empty);
             action p.reportAccess('h90000100, 'h006b, MISS); endaction
             action p.reportAccess('h90000200, 'h006b, MISS); endaction
             action p.reportAccess('h90000300, 'h006b, MISS); endaction
-            action p.reportAccess('h90000400, 'h006b, MISS); endaction
             action
                 let x <- p.getNextPrefetchAddr;
-                doAssert(x == 'h90000500, "test fail!");
+                doAssert(x == 'h90000400, "test fail!");
             endaction
             action
                 let x <- p.getNextPrefetchAddr;
-                doAssert(x == 'h90000600, "test fail!");
+                doAssert(x == 'h90000500, "test fail!");
             endaction
             action p.reportAccess('ha0000420, 'h006b, MISS); endaction
             action p.reportAccess('ha0000520, 'h006b, MISS); endaction
