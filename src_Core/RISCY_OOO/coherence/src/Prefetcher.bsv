@@ -1358,7 +1358,7 @@ typedef enum {
 typedef struct {
     Bit#(12) lastAddr; 
     Bit#(13) stride;
-    Bit#(4) cLinesPrefetched; //Stores how many cache lines have been prefetched for this instruction
+    Bit#(2) cLinesPrefetched; //Stores how many cache lines have been prefetched for this instruction
     StrideState2 state;
 } StrideEntry2 deriving (Bits, Eq, FShow);
 
@@ -1374,7 +1374,7 @@ provisos(
 
     Fifo#(8, Addr) addrToPrefetch <- mkOverflowPipelineFifo;
     FIFO#(Tuple3#(StrideEntry2, Addr, Bit#(16))) strideEntryForPrefetch <- mkBypassFIFO();
-    Reg#(Maybe#(Bit#(4))) cLinesPrefetchedLatest <- mkReg(?);
+    Reg#(Maybe#(Bit#(2))) cLinesPrefetchedLatest <- mkReg(?);
     PulseWire holdReadReq <- mkPulseWire;
 
     rule sendReadReq if (!holdReadReq);
@@ -1467,7 +1467,7 @@ provisos(
     rule createPrefetchRequests;
         match {.se, .addr, .pcHash} = strideEntryForPrefetch.first;
         //If this rule is looping, then we'll have a valid cLinesPrefetchedLatest
-        Bit#(4) cLinesPrefetched = fromMaybe(se.cLinesPrefetched, cLinesPrefetchedLatest);
+        Bit#(2) cLinesPrefetched = fromMaybe(se.cLinesPrefetched, cLinesPrefetchedLatest);
 
         if (se.state == STEADY && 
             cLinesPrefetched != 
