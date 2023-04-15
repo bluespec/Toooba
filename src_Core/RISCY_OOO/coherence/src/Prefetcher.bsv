@@ -1513,7 +1513,7 @@ endmodule
 
 typedef struct {
     Addr lastAddr; 
-    Bit#(13) stride;
+    Int#(13) stride;
     Bit#(2) confidence;
 } SimpleStrideEntry deriving (Bits, Eq, FShow);
 
@@ -1530,14 +1530,14 @@ provisos(
     Vector#(strideTableSize, Reg#(SimpleStrideEntry)) strideTable <- replicateM(mkReg(unpack(0)));
 
     Reg#(Addr) addrToPrefetch <- mkReg(0);
-    Reg#(Bit#(13)) strideToPrefetch <- mkReg(0);
+    Reg#(Int#(13)) strideToPrefetch <- mkReg(0);
     Ehr#(2, Bit#(3)) prefetchesIssued <- mkEhr(fromInteger(valueOf(cLinesAheadToPrefetch)));
 
     method Action reportAccess(Addr addr, Bit#(16) pcHash, HitOrMiss hitMiss);
         $display("%t report access %x %x", $time, addr, pcHash);
         strideTableIndexT idx = truncate(pcHash);
         SimpleStrideEntry entry = strideTable[idx];
-        Bit#(13) calc_stride = truncate(addr - entry.lastAddr);
+        Int#(13) calc_stride = unpack(truncate(addr - entry.lastAddr));
         $display("found stride %x", entry.stride);
         entry.lastAddr = addr;
         if (calc_stride == entry.stride) begin
@@ -1566,18 +1566,15 @@ provisos(
     method ActionValue#(Addr) getNextPrefetchAddr 
             if (prefetchesIssued[0] < fromInteger(valueOf(cLinesAheadToPrefetch)));
         
-        Bit#(13) strideToUse;
-        Bit#(13) cLineSize = fromInteger(valueof(DataSz));
+        Int#(13) strideToUse = strideToPrefetch;
+        Int#(13) cLineSize = fromInteger(valueof(DataSz));
         if (abs(strideToPrefetch) < cLineSize) begin
-            strideToUse = (strideToPrefetch[12] == 1) ? -cLineSize : cLineSize;
-        end
-        else begin
-            strideToUse = strideToPrefetch;
+            strideToUse = (strideToPrefetch < 0) ? -cLineSize : cLineSize;
         end
 
         prefetchesIssued[0] <= prefetchesIssued[0] + 1; 
         let reqAddr = addrToPrefetch + 
-            (signExtend(strideToUse) * zeroExtend(prefetchesIssued[0] + 1));
+            (pack(signExtend(strideToUse)) * zeroExtend(prefetchesIssued[0] + 1));
 
         check(reqAddr[63:12] == addrToPrefetch[63:12]);
         $display("%t getprefetchaddr ret %x", $time, reqAddr);
