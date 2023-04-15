@@ -1357,7 +1357,7 @@ typedef enum {
 
 typedef struct {
     Bit#(12) lastAddr; 
-    Bit#(13) stride;
+    Int#(13) stride;
     Bit#(2) cLinesPrefetched; //Stores how many cache lines have been prefetched for this instruction
     StrideState2 state;
 } StrideEntry2 deriving (Bits, Eq, FShow);
@@ -1398,7 +1398,7 @@ provisos(
         StrideEntry2 se = strideTable.rdResp;
         strideTable.deqRdResp;
         StrideEntry2 seNext = se;
-        Bit#(13) observedStride = {1'b0, addr[11:0]} - {1'b0, se.lastAddr};
+        Int#(13) observedStride = unpack({1'b0, addr[11:0]} - {1'b0, se.lastAddr});
         $writeh("%t Stride Prefetcher updateStrideEntry ", $time,
             fshow(hitMiss), " ", addr,
             ". Entry ", index, " state is ", fshow(se.state));
@@ -1473,23 +1473,15 @@ provisos(
             cLinesPrefetched != 
             fromInteger(valueof(cLinesAheadToPrefetch))) begin
             //can prefetch
-            
-            Bit#(13) strideToUse;
-            Bit#(13) cLineSize = fromInteger(valueof(DataSz));
-            if (se.stride[12] == 1 && se.stride > -cLineSize) begin
-                //stride is negative and jumps less than one cline
-                strideToUse = -cLineSize;
-            end
-            else if (se.stride[12] == 0 && se.stride < cLineSize) begin
-                //stride is positive and jumps less than one cline
-                strideToUse = cLineSize;
-            end 
-            else begin
-                strideToUse = se.stride;
+
+            Int#(13) cLineSize = fromInteger(valueof(DataSz));
+            Int#(13) strideToUse = se.stride;
+            if (abs(strideToUse) < cLineSize) begin
+                strideToUse = (strideToUse < 0) ? -cLineSize : cLineSize; 
             end
 
-            let reqAddr = addr + 
-                (signExtend(strideToUse) * zeroExtend(cLinesPrefetched + 1));
+            Bit#(13) jumpDist = pack(strideToUse) * zeroExtend(cLinesPrefetched+1);
+            let reqAddr = addr + signExtend(jumpDist);
 
             addrToPrefetch.enq(reqAddr);
             // We will still be processing this StrideEntry next cycle, 
