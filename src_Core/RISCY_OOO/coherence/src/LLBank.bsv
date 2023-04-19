@@ -52,6 +52,7 @@ import Cntrs::*;
 import ConfigReg::*;
 import RandomReplace::*;
 import Prefetcher::*;
+import ProcTypes::*;
 `ifdef PERFORMANCE_MONITORING
 import PerformanceMonitor::*;
 import StatCounters::*;
@@ -184,7 +185,8 @@ module mkLLBank#(
     FShow#(dmaRqIdT),
     Add#(tagSz, a__, AddrSz),
     // make sure: cRqNum <= wayNum
-    Add#(cRqNum, b__, wayNum)
+    Add#(cRqNum, b__, wayNum),
+    Add#(TLog#(TDiv#(childNum,2)), c__, TLog#(childNum))
 );
 
    Bool verbose = True;
@@ -234,8 +236,9 @@ module mkLLBank#(
     Count#(Bit#(32)) removedCRqs <- mkCount(0);
 
     Vector#(cRqNum, Reg#(Bool)) cRqIsPrefetch <- replicateM(mkReg(?));
-    Prefetcher dataPrefetcher <- mkLLDPrefetcher;
-    Prefetcher instrPrefetcher <- mkLLIPrefetcher;
+    PrefetcherVector#(TDiv#(childNum, 2)) dataPrefetchers <- mkPrefetcherVector(mkLLDPrefetcher);
+    PrefetcherVector#(TDiv#(childNum, 2)) instrPrefetchers <- mkPrefetcherVector(mkLLIPrefetcher);
+
 `ifdef PERF_COUNT
     Reg#(Bool) doStats <- mkConfigReg(True);
     Count#(Data) dmaMemLdCnt <- mkCount(0);
@@ -417,13 +420,16 @@ endfunction
     // create new request from data prefetcher and send to pipeline
     // Rule only fires when no work from child and DMA
     rule createDataPrefetchRq(newCRqSrc == Invalid);
-        Addr addr <- dataPrefetcher.getNextPrefetchAddr;
+        let x <- dataPrefetchers.getNextPrefetchAddr;
+        match {.addr, .cacheIdx} = x;
+        //Request from L1D of cacheIdx-th core
+        childT child = {cacheIdx, '0};
         cRqT cRq = LLRq {
             addr: addr,
             fromState: I,
             toState: E,
             canUpToE: True,
-            child: 0,
+            child: child, 
             byteEn: ?,
             id: Child (?)
         };
@@ -447,13 +453,16 @@ endfunction
     // create new request from instruction prefetcher and send to pipeline
     // Rule only fires when no work from child and DMA
     rule createInstrPrefetchRq(newCRqSrc == Invalid);
-        Addr addr <- instrPrefetcher.getNextPrefetchAddr;
+        let x <- instrPrefetchers.getNextPrefetchAddr;
+        match {.addr, .cacheIdx} = x;
+        //Request from L1D of cacheIdx-th core
+        childT child = {cacheIdx, '1};
         cRqT cRq = LLRq {
             addr: addr,
             fromState: I,
             toState: S,
             canUpToE: True,
-            child: 1,
+            child: child,
             byteEn: ?,
             id: Child (?)
         };
@@ -1002,10 +1011,12 @@ endfunction
         }, True); // hit, so update rep info
         if (!cRqIsPrefetch[n]) begin
             if (cRq.child[0] == 1) begin
-                instrPrefetcher.reportAccess(cRq.addr, HIT);
+                instrPrefetchers.reportAccess(
+                        truncateLSB(cRq.child), cRq.addr, HIT);
             end
             else begin
-                dataPrefetcher.reportAccess(cRq.addr, HIT);
+                dataPrefetchers.reportAccess(
+                        truncateLSB(cRq.child), cRq.addr, HIT);
             end
         end
     endaction
@@ -1205,10 +1216,12 @@ endfunction
             }, False);
             if (!cRqIsPrefetch[n]) begin
                 if (cRq.child[0] == 1) begin
-                    instrPrefetcher.reportAccess(cRq.addr, MISS);
+                    instrPrefetchers.reportAccess(
+                            truncateLSB(cRq.child), cRq.addr, MISS);
                 end
                 else begin
-                    dataPrefetcher.reportAccess(cRq.addr, MISS);
+                    dataPrefetchers.reportAccess(
+                            truncateLSB(cRq.child), cRq.addr, MISS);
                 end
             end
         endaction
@@ -1281,10 +1294,12 @@ endfunction
             end
             if (!cRqIsPrefetch[n]) begin
                 if (cRq.child[0] == 1) begin
-                    instrPrefetcher.reportAccess(cRq.addr, MISS);
+                    instrPrefetchers.reportAccess(
+                            truncateLSB(cRq.child), cRq.addr, MISS);
                 end
                 else begin
-                    dataPrefetcher.reportAccess(cRq.addr, MISS);
+                    dataPrefetchers.reportAccess(
+                            truncateLSB(cRq.child), cRq.addr, MISS);
                 end
             end
         endaction

@@ -1,4 +1,6 @@
 import ISA_Decls   :: *;
+import CrossBar::*;
+import GetPut::*;
 import RWBramCore::*;
 import FIFO::*;
 import Fifos::*;
@@ -9,6 +11,7 @@ import CacheUtils::*;
 import CCTypes::*;
 import Types::*;
 import Vector::*;
+import BuildVector::*;
 import ProcTypes::*;
 
 typedef enum {
@@ -446,8 +449,8 @@ module mkTargetTableBRAM(TargetTableBRAM#(narrowTableSize, wideTableSize)) provi
     Add#(c__, TLog#(wideTableSize), 32),
     Add#(d__, TLog#(wideTableSize), 58)
 );
-    RWBramCore#(Bit#(narrowTableIdxBits), Maybe#(narrowTargetEntryT)) narrowTable <- mkRWBramCoreForwarded;
-    RWBramCore#(Bit#(wideTableIdxBits), Maybe#(wideTargetEntryT)) wideTable <- mkRWBramCoreForwarded;
+    RWBramCore#(Bit#(narrowTableIdxBits), Maybe#(narrowTargetEntryT)) narrowTable <- mkRWBramCore;
+    RWBramCore#(Bit#(wideTableIdxBits), Maybe#(wideTargetEntryT)) wideTable <- mkRWBramCore;
     Reg#(LineAddr) readReqLineAddr <- mkReg(?); 
 
     method Action writeReq(LineAddr prevAddr, LineAddr currAddr);
@@ -472,9 +475,10 @@ module mkTargetTableBRAM(TargetTableBRAM#(narrowTableSize, wideTableSize)) provi
     endmethod
 
     method Action readReq(LineAddr addr);
-        Bit#(narrowTableIdxBits) narrowIdx = truncate(addr);
+        Bit#(32) addrHash = hash(addr);
+        Bit#(narrowTableIdxBits) narrowIdx = truncate(addrHash);
         narrowTable.rdReq(narrowIdx);
-        Bit#(wideTableIdxBits) wideIdx = truncate(addr);
+        Bit#(wideTableIdxBits) wideIdx = truncate(addrHash);
         wideTable.rdReq(wideIdx);
         readReqLineAddr <= addr;
     endmethod
@@ -485,20 +489,21 @@ module mkTargetTableBRAM(TargetTableBRAM#(narrowTableSize, wideTableSize)) provi
         narrowTable.deqRdResp;
         wideTable.deqRdResp;
         let addr = readReqLineAddr;
-        Bit#(narrowTableIdxBits) narrowIdx = truncate(addr);
-        Bit#(wideTableIdxBits) wideIdx = truncate(addr);
+        Bit#(32) addrHash = hash(addr);
+        Bit#(narrowTableIdxBits) narrowIdx = truncate(addrHash);
+        Bit#(wideTableIdxBits) wideIdx = truncate(addrHash);
         if (narrowTable.rdResp matches tagged Valid .entry 
-            &&& entry.tag == addr[23:valueOf(narrowTableIdxBits)]) begin
+            &&& entry.tag == addrHash[23:valueOf(narrowTableIdxBits)]) begin
             if (clearEntry) begin
-                narrowTable.wrReq(narrowIdx, Invalid); 
+                //narrowTable.wrReq(narrowIdx, Invalid); 
             end
             $display("%t found narrow table entry %h", $time, addr + signExtend(pack(entry.distance)));
             return Valid(addr + signExtend(pack(entry.distance)));
         end
         else if (wideTable.rdResp matches tagged Valid .entry 
-            &&& entry.tag == addr[23:valueOf(wideTableIdxBits)]) begin
+            &&& entry.tag == addrHash[23:valueOf(wideTableIdxBits)]) begin
             if (clearEntry) begin
-                wideTable.wrReq(wideIdx, Invalid); 
+                //wideTable.wrReq(wideIdx, Invalid); 
             end
             $display("%t found wide table entry %h", $time, entry.target);
             return Valid(entry.target);
@@ -510,31 +515,253 @@ module mkTargetTableBRAM(TargetTableBRAM#(narrowTableSize, wideTableSize)) provi
     endmethod
 endmodule
 
+interface TargetTableDouble#(numeric type narrowTableSize, numeric type wideTableSize);
+    method Action sendReadWriteReq(LineAddr addr, HitOrMiss hitMiss);
+    method ActionValue#(Tuple2#(Maybe#(LineAddr), Maybe#(LineAddr))) readResp();
+endinterface
+
+module mkTargetTableDouble(TargetTableDouble#(narrowTableSize, wideTableSize)) provisos
+(
+    NumAlias#(narrowTableIdxBits, TLog#(narrowTableSize)),
+    NumAlias#(wideTableIdxBits, TLog#(wideTableSize)),
+    NumAlias#(narrowTableTagBits, TSub#(24, narrowTableIdxBits)),
+    NumAlias#(wideTableTagBits, TSub#(24, wideTableIdxBits)),
+    NumAlias#(narrowDistanceBits, 10),
+    NumAlias#(narrowMaxDistanceAbs, TExp#(TSub#(narrowDistanceBits, 1))),
+    Alias#(narrowTargetEntryT, NarrowTargetEntry#(narrowTableTagBits, narrowDistanceBits)),
+    Alias#(wideTargetEntryT, WideTargetEntry#(wideTableTagBits)),
+    Add#(a__, TLog#(narrowTableSize), 32),
+    Add#(b__, TLog#(narrowTableSize), 58),
+    Add#(c__, TLog#(wideTableSize), 32),
+    Add#(d__, TLog#(wideTableSize), 58)
+);
+
+    //on any request, read all 4 tables. get prefetches. if it's a miss save both MRU entries.
+    //on a miss, perform a regular table write to the MRU table. if it's a narrow write, write the old MRU narrow entry to the LRU narrow table.
+    //one method, readReq, with parameter isMiss. sends read requests to all 4 tables.
+    //also saves read address
+    //one method setMRU.
+    // sends a write request with the previous miss address to the current miss address.
+    // if narrow table write, then also write the old MRU narrow entry to the LRU narrow table.
+    //one method, getPrefetches, which also saves all results if isMiss true.
+    RWBramCore#(Bit#(narrowTableIdxBits), Maybe#(narrowTargetEntryT)) narrowTableMRU <- mkRWBramCoreForwarded;
+    RWBramCore#(Bit#(wideTableIdxBits), Maybe#(wideTargetEntryT)) wideTableMRU <- mkRWBramCoreForwarded;
+    RWBramCore#(Bit#(narrowTableIdxBits), Maybe#(narrowTargetEntryT)) narrowTableLRU <- mkRWBramCoreForwarded;
+    RWBramCore#(Bit#(wideTableIdxBits), Maybe#(wideTargetEntryT)) wideTableLRU <- mkRWBramCoreForwarded;
+    Reg#(LineAddr) readReqLineAddr <- mkReg(0); 
+    Reg#(HitOrMiss) readReqHitMiss <- mkReg(HIT);
+
+    Reg#(LineAddr) lastMissAddr <- mkReg(0);
+    Reg#(Maybe#(wideTargetEntryT)) lastMissWideMRUEntry <- mkReg(unpack(0));
+    Reg#(Maybe#(narrowTargetEntryT)) lastMissNarrowMRUEntry <- mkReg(unpack(0));
+    Reg#(Maybe#(wideTargetEntryT)) lastMissWideLRUEntry <- mkReg(unpack(0));
+    Reg#(Maybe#(narrowTargetEntryT)) lastMissNarrowLRUEntry <- mkReg(unpack(0));
+
+    function Bool narrowTagMatch(Bit#(32) addrHash, narrowTargetEntryT narrow);
+        return narrow.tag == addrHash[23:valueOf(narrowTableIdxBits)];
+    endfunction
+
+    function Bool narrowTagMatchMaybe(Bit#(32) addrHash, Maybe#(narrowTargetEntryT) narrowMaybe);
+        if (narrowMaybe matches tagged Valid .narrow &&& narrowTagMatch(addrHash, narrow))
+            return True;
+        else
+            return False;
+    endfunction
+
+    function Bool wideTagMatch(Bit#(32) addrHash, wideTargetEntryT wide);
+        return wide.tag == addrHash[23:valueOf(wideTableIdxBits)];
+    endfunction
+
+    function Bool wideTagMatchMaybe(Bit#(32) addrHash, Maybe#(wideTargetEntryT) wideMaybe);
+        if (wideMaybe matches tagged Valid .wide &&& wideTagMatch(addrHash, wide))
+            return True;
+        else 
+            return False;
+    endfunction
+
+
+    function ActionValue#(Maybe#(LineAddr))
+        checkReadResp(LineAddr addr, Bit#(32) addrHash, Maybe#(narrowTargetEntryT) narrowWrapped, Maybe#(wideTargetEntryT) wideWrapped);
+    actionvalue
+        if (narrowWrapped matches tagged Valid .narrow
+            &&& narrowTagMatch(addrHash, narrow)) begin
+            //$display("%t found narrow table entry %h", $time, addr + signExtend(pack(narrow.distance)));
+            return Valid(addr + signExtend(pack(narrow.distance)));
+        end
+        else if (wideWrapped matches tagged Valid .wide
+            &&& wideTagMatch(addrHash, wide)) begin
+            //$display("%t found wide table entry %h", $time, wide.target);
+            return Valid(wide.target);
+        end
+        else
+            return Invalid;
+    endactionvalue
+    endfunction
+
+    function Action updateTables(
+                                Bit#(32) lastMissAddrHash,
+                                Bit#(idxBits) idx,
+                                RWBramCore#(Bit#(idxBits), Maybe#(otherEntryT)) otherMRU,
+                                RWBramCore#(Bit#(idxBits), Maybe#(otherEntryT)) otherLRU,
+                                function Bool otherTagMatch(Bit#(32) addrHash, Maybe#(otherEntryT) entry),
+                                function Bool myTagMatch(Bit#(32) addrHash, Maybe#(myEntryT) entry),
+                                Maybe#(otherEntryT) otherMRUEntry,
+                                Maybe#(otherEntryT) otherLRUEntry,
+                                Maybe#(myEntryT) myMRUEntry
+                                );
+    action
+    //Am inserting a new table entry into "my" table.
+    //So need to re-order the entries in the "other" table.
+    //To maintain the property that can't have both a narrow and wide entry in the same recency table.
+        if (otherTagMatch(lastMissAddrHash, otherMRUEntry)) begin
+            //If MRU other entry matches
+            if (otherTagMatch(lastMissAddrHash, otherLRUEntry)) begin
+                //If LRU other entry matches
+                // Shift other down
+                otherMRU.wrReq(idx, Invalid);
+                otherLRU.wrReq(idx, otherMRUEntry);
+            end
+            else begin
+                //If LRU other entry doesnt match
+                // Switch other entries around
+                otherMRU.wrReq(idx, otherLRUEntry);
+                otherLRU.wrReq(idx, otherMRUEntry);
+            end
+        end
+        else begin
+            //If other MRU entry doesn't match
+            if (otherTagMatch(lastMissAddrHash, otherLRUEntry) &&
+                myTagMatch(lastMissAddrHash, myMRUEntry)) begin
+
+                //will shift my MRU entry down, so
+                // invalidate other LRU entry
+                otherLRU.wrReq(idx, Invalid);
+            end
+        end
+    endaction
+    endfunction
+
+    function Action writeMissEntry(LineAddr currAddr);
+    action
+        let distance = currAddr - lastMissAddr;
+        Bit#(32) lastMissAddrHash = hash(lastMissAddr);
+        $display("%t Recording miss from %x to %x", $time, lastMissAddr, currAddr);
+        if (abs(distance) < fromInteger(valueOf(narrowMaxDistanceAbs))) begin
+            //Store lastMissAddr -> currAddr in narrow MRU table
+
+            Bit#(narrowTableIdxBits) idx = truncate(lastMissAddrHash);
+            narrowTargetEntryT entry;
+            entry.tag = lastMissAddrHash[23:valueOf(narrowTableIdxBits)];
+            entry.distance = truncate(distance);
+
+            if (Valid(entry) != lastMissNarrowMRUEntry) begin
+                //$display("%t Recording miss -- modifying narrow table", $time);
+                //Maintain the property that one address can only have 
+                // at most 2 of 4 table entries for it.
+                //Shift narrow table entries down, storing in MRU.
+                //But only if the entry was not already the MRU entry.
+                narrowTableMRU.wrReq(idx, Valid(entry));
+                narrowTableLRU.wrReq(idx, lastMissNarrowMRUEntry);
+                Bit#(wideTableIdxBits) wideIdx = truncate(lastMissAddrHash);
+                updateTables(lastMissAddrHash, wideIdx, wideTableMRU, wideTableLRU, wideTagMatchMaybe, narrowTagMatchMaybe,
+                    lastMissWideMRUEntry, lastMissWideLRUEntry, lastMissNarrowMRUEntry);
+            end
+        end
+        else begin
+            //Store lastMissAddr -> currAddr in wide MRU table
+            wideTargetEntryT entry;
+            Bit#(wideTableIdxBits) idx = truncate(lastMissAddrHash);
+            entry.tag = lastMissAddrHash[23:valueOf(wideTableIdxBits)];
+            entry.target = currAddr;
+
+            if (Valid(entry) != lastMissWideMRUEntry) begin
+                //$display("%t Recording miss -- modifying wide table", $time);
+                wideTableMRU.wrReq(idx, Valid(entry));
+                wideTableLRU.wrReq(idx, lastMissWideMRUEntry);
+                Bit#(narrowTableIdxBits) narrowIdx = truncate(lastMissAddrHash);
+                updateTables(lastMissAddrHash, narrowIdx, narrowTableMRU, narrowTableLRU, narrowTagMatchMaybe, wideTagMatchMaybe,
+                    lastMissNarrowMRUEntry, lastMissNarrowLRUEntry, lastMissWideMRUEntry);
+            end
+        end
+    endaction
+    endfunction
+
+    method Action sendReadWriteReq(LineAddr addr, HitOrMiss hitMiss);
+        $display("%t send read write req for %x", $time, addr);
+        Bit#(32) addrHash = hash(addr);
+        Bit#(narrowTableIdxBits) narrowIdx = truncate(addrHash);
+        narrowTableMRU.rdReq(narrowIdx);
+        narrowTableLRU.rdReq(narrowIdx);
+        Bit#(wideTableIdxBits) wideIdx = truncate(addrHash);
+        wideTableMRU.rdReq(wideIdx);
+        wideTableLRU.rdReq(wideIdx);
+        readReqLineAddr <= addr;
+        readReqHitMiss <= hitMiss;
+    endmethod
+
+
+    method ActionValue#(Tuple2#(Maybe#(LineAddr), Maybe#(LineAddr))) readResp();
+        // Returns the read response and if a table had a hit, 
+        // sends a write request to clear the entry in that table
+        narrowTableMRU.deqRdResp;
+        narrowTableLRU.deqRdResp;
+        wideTableMRU.deqRdResp;
+        wideTableLRU.deqRdResp;
+        let addr = readReqLineAddr;
+        Bit#(32) addrHash = hash(addr);
+        if (readReqHitMiss == MISS) begin
+            //Update the entries for the last miss to point to this one
+            writeMissEntry(addr);
+            //Save the raw table entries
+            //$display("idx: %x", addrHash);
+            //$display("%t Read resp: nMRU: ", fshow(narrowTableMRU.rdResp), "wMRU: ", fshow(wideTableMRU.rdResp));
+            //$display("%t Read resp: nLRU: ", fshow(narrowTableLRU.rdResp), "wLRU: ", fshow(wideTableLRU.rdResp));
+            lastMissWideMRUEntry <= wideTableMRU.rdResp;
+            lastMissNarrowMRUEntry <= narrowTableMRU.rdResp;
+            lastMissWideLRUEntry <= wideTableLRU.rdResp;
+            lastMissNarrowLRUEntry <= narrowTableLRU.rdResp;
+            lastMissAddr <= addr; // save for future use
+        end
+        let entryMRU <- checkReadResp(addr, addrHash, narrowTableMRU.rdResp, wideTableMRU.rdResp);
+        let entryLRU <- checkReadResp(addr, addrHash, narrowTableLRU.rdResp, wideTableLRU.rdResp);
+        Tuple2#(Maybe#(LineAddr), Maybe#(LineAddr)) retval = tuple2(entryMRU, entryLRU);
+        $display("%t read resp for %x returning ", $time, addr, fshow(retval));
+        return retval;
+    endmethod
+endmodule
+
 module mkBRAMSingleWindowTargetPrefetcher(Prefetcher) provisos
-();
-    Integer cacheLinesInRange = 2;
+(
+    NumAlias#(numLastRequests, 16)
+);
+    Integer cacheLinesInRange = 1;
     Reg#(LineAddr) rangeEnd <- mkReg(0); //Points to one CLine after end of range
     Reg#(LineAddr) nextToAsk <- mkReg(0);
+
     Reg#(LineAddr) lastChildRequest <- mkReg(0);
-    TargetTableBRAM#(64, 8) targetTable <- mkTargetTableBRAM;
+    TargetTableBRAM#(1024, 128) targetTable <- mkTargetTableBRAM;
     FIFOF#(LineAddr) targetTableReadResp <- mkBypassFIFOF;
 
+    Reg#(Vector#(numLastRequests, Bit#(32))) lastTargetRequests <- mkReg(replicate(0));
+
     rule sendReadReq;
-        let lastAsked = nextToAsk-1;
-        targetTable.readReq(lastAsked);
+        if (!elem(hash(lastChildRequest), lastTargetRequests)) begin 
+            targetTable.readReq(lastChildRequest);
+            $display("%t Prefetcher sending target read request for %h", $time, lastChildRequest);
+            lastTargetRequests <= shiftInAt0(lastTargetRequests, hash(lastChildRequest));
+        end
     endrule
 
     rule getReadResp;
-        let res <- targetTable.readResp(True);
+        let res <- targetTable.readResp(False);
         if (res matches tagged Valid .cline) begin
-            //Reset table entry, so on further calls we prefetch the next successive clines
-            //If we actually take the jump, the table entry will be restored
             targetTableReadResp.enq(cline);
         end
     endrule
 
     method Action reportAccess(Addr addr, HitOrMiss hitMiss);
         let cl = getLineAddr(addr);
+        $display("%t prefecher reportAccess", $time);
         if (hitMiss == HIT && 
             rangeEnd - fromInteger(cacheLinesInRange) - 1 < cl && 
             cl < rangeEnd) begin
@@ -550,7 +777,8 @@ module mkBRAMSingleWindowTargetPrefetcher(Prefetcher) provisos
             rangeEnd <= cl + fromInteger(cacheLinesInRange) + 1;
         end
 
-        if (cl != lastChildRequest + 1 && cl != lastChildRequest && cl != lastChildRequest - 1) begin
+        if (hitMiss == MISS && cl != lastChildRequest + 1 && cl != lastChildRequest && cl != lastChildRequest - 1) begin
+            //Try only recording table entries on a miss!
             $display("%t Prefetcher add target entry from addr %h to addr %h", $time, Addr'{lastChildRequest, '0}, addr);
             targetTable.writeReq(lastChildRequest, cl);
         end
@@ -579,6 +807,7 @@ endmodule
 module mkBRAMMultiWindowTargetPrefetcher(Prefetcher)
 provisos(
     NumAlias#(numWindows, 4),
+    NumAlias#(numLastRequests, 16),
     Alias#(windowIdxT, Bit#(TLog#(numWindows)))
 );
     Integer cacheLinesInRange = 2;
@@ -587,19 +816,21 @@ provisos(
     Vector#(numWindows, Reg#(windowIdxT)) shiftReg <- genWithM(compose(mkReg, fromInteger));
     Reg#(LineAddr) lastChildRequest <- mkReg(0);
 
-    TargetTableBRAM#(64, 8) targetTable <- mkTargetTableBRAM;
+    TargetTableBRAM#(8192, 2048) targetTable <- mkTargetTableBRAM;
     FIFOF#(LineAddr) targetTableReadResp <- mkBypassFIFOF;
+    Reg#(Vector#(numLastRequests, Bit#(32))) lastTargetRequests <- mkReg(replicate(0));
 
     rule sendReadReq;
-        let lastAsked = streams[shiftReg[0]].nextToAsk-1;
-        targetTable.readReq(lastAsked);
+        if (!elem(hash(lastChildRequest), lastTargetRequests)) begin 
+            targetTable.readReq(lastChildRequest);
+            $display("%t Prefetcher sending target read request for %h", $time, Addr'{lastChildRequest, 'h0});
+            lastTargetRequests <= shiftInAt0(lastTargetRequests, hash(lastChildRequest));
+        end
     endrule
 
     rule getReadResp;
-        let res <- targetTable.readResp(True);
+        let res <- targetTable.readResp(False);
         if (res matches tagged Valid .cline) begin
-            //Reset table entry, so on further calls we prefetch the next successive clines
-            //If we actually take the jump, the table entry will be restored
             targetTableReadResp.enq(cline);
         end
     endrule
@@ -679,7 +910,7 @@ provisos(
         end
 
         // Update target prefetcher
-        if (cl != lastChildRequest + 1 && cl != lastChildRequest && cl != lastChildRequest - 1) begin
+        if (hitMiss == MISS && cl != lastChildRequest + 1 && cl != lastChildRequest && cl != lastChildRequest - 1) begin
             $display("%t Prefetcher add target entry from addr %h to addr %h", $time, Addr'{lastChildRequest, '0}, addr);
             targetTable.writeReq(lastChildRequest, cl);
         end
@@ -839,6 +1070,62 @@ module mkBRAMMarkovOnHitPrefetcher(Prefetcher) provisos
 
 endmodule
 
+module mkMarkovOnHit2Prefetcher(Prefetcher) provisos
+(
+    NumAlias#(maxChainLength, 1),
+    NumAlias#(numLastRequests, 32),
+    Alias#(chainLengthT, Bit#(TLog#(TAdd#(maxChainLength,1))))
+);
+    Reg#(LineAddr) lastChildRequest <- mkReg(0);
+    Reg#(Vector#(numLastRequests, Bit#(32))) lastAddrRequests <- mkReg(replicate(0));
+    TargetTableDouble#(2048, 256) targetTable <- mkTargetTableDouble;
+    Fifo#(8, LineAddr) highPriorityPrefetches <- mkOverflowBypassFifo;
+    Fifo#(8, LineAddr) lowPriorityPrefetches <- mkOverflowBypassFifo;
+
+    //on reportAccess, read the current address in both tables, and save it
+    // Next cycle, add any found next lines to prefetch queues. Have 2 prefetch queues, High and low priority.
+    // If this was a miss, save as lastMissEntry
+    // And issue a write of table[lastMissEntry] = thisMiss.
+    // but checking for LRU and everything.
+
+    rule addPrefetchesToQueues;
+        match { .highPrio, .lowPrio } <- targetTable.readResp();
+        if (highPrio matches tagged Valid .cl)
+            highPriorityPrefetches.enq(cl);
+        if (lowPrio matches tagged Valid .cl)
+            lowPriorityPrefetches.enq(cl);
+    endrule
+
+    method ActionValue#(Addr) getNextPrefetchAddr 
+                 if (highPriorityPrefetches.notEmpty || lowPriorityPrefetches.notEmpty);
+                 //if (false);
+        Addr retAddr = unpack(0);
+        if (highPriorityPrefetches.notEmpty) begin
+            retAddr = {highPriorityPrefetches.first, '0};
+            highPriorityPrefetches.deq;
+        end
+        else if (lowPriorityPrefetches.notEmpty) begin
+            retAddr = {lowPriorityPrefetches.first, '0};
+            lowPriorityPrefetches.deq;
+        end
+        $display("%t Prefetcher getNextPrefetchAddr requesting chain entry %h", $time, retAddr);
+        return retAddr; 
+    endmethod
+
+    method Action reportAccess(Addr addr, HitOrMiss hitMiss);
+        let cl = getLineAddr(addr);
+        if (hitMiss == MISS)
+            $display("%t Prefetcher report MISS %h", $time, addr);
+
+        if (hitMiss == MISS || !elem(hash(cl), lastAddrRequests)) begin 
+            //Don't start a markov chain if we started a markov chain with that address recently
+            $display("%t Prefetcher start new chain with %h", $time, addr);
+            targetTable.sendReadWriteReq(cl, hitMiss);
+            lastAddrRequests <= shiftInAt0(lastAddrRequests, hash(cl));
+        end
+    endmethod
+
+endmodule
 module mkBlockPrefetcher(Prefetcher) provisos (
     NumAlias#(numLinesEachWay, 1),
     Alias#(lineCountT, Bit#(TLog#(TAdd#(numLinesEachWay, 1))))
@@ -1065,13 +1352,13 @@ provisos(
 endmodule
 
 typedef enum {
-  EMPTY = 3'd0, INIT = 3'd1, TRANSIENT = 3'd2, STEADY = 3'd3, NO_PRED = 3'd4
+  INIT = 2'd0, TRANSIENT = 2'd1, STEADY = 2'd2, NO_PRED = 2'd3
 } StrideState2 deriving (Bits, Eq, FShow);
 
 typedef struct {
     Bit#(12) lastAddr; 
-    Bit#(13) stride;
-    Bit#(4) cLinesPrefetched; //Stores how many cache lines have been prefetched for this instruction
+    Int#(13) stride;
+    Bit#(2) cLinesPrefetched; //Stores how many cache lines have been prefetched for this instruction
     StrideState2 state;
 } StrideEntry2 deriving (Bits, Eq, FShow);
 
@@ -1087,7 +1374,7 @@ provisos(
 
     Fifo#(8, Addr) addrToPrefetch <- mkOverflowPipelineFifo;
     FIFO#(Tuple3#(StrideEntry2, Addr, Bit#(16))) strideEntryForPrefetch <- mkBypassFIFO();
-    Reg#(Maybe#(Bit#(4))) cLinesPrefetchedLatest <- mkReg(?);
+    Reg#(Maybe#(Bit#(2))) cLinesPrefetchedLatest <- mkReg(?);
     PulseWire holdReadReq <- mkPulseWire;
 
     rule sendReadReq if (!holdReadReq);
@@ -1111,21 +1398,11 @@ provisos(
         StrideEntry2 se = strideTable.rdResp;
         strideTable.deqRdResp;
         StrideEntry2 seNext = se;
-        Bit#(13) observedStride = {1'b0, addr[11:0]} - {1'b0, se.lastAddr};
+        Int#(13) observedStride = unpack({1'b0, addr[11:0]} - {1'b0, se.lastAddr});
         $writeh("%t Stride Prefetcher updateStrideEntry ", $time,
             fshow(hitMiss), " ", addr,
             ". Entry ", index, " state is ", fshow(se.state));
-        if (se.state == EMPTY) begin
-            if (hitMiss == MISS) begin 
-                seNext.lastAddr = truncate(addr);
-                seNext.state = INIT;
-                $display(", allocate entry");
-            end
-            else begin
-                $display(", ignore");
-            end
-        end 
-        else if (se.state == INIT && observedStride != 0) begin
+        if (se.state == INIT && observedStride != 0) begin
             if (se.stride == observedStride) begin
                 //fast track to steady
                 seNext.state = STEADY;
@@ -1190,29 +1467,21 @@ provisos(
     rule createPrefetchRequests;
         match {.se, .addr, .pcHash} = strideEntryForPrefetch.first;
         //If this rule is looping, then we'll have a valid cLinesPrefetchedLatest
-        Bit#(4) cLinesPrefetched = fromMaybe(se.cLinesPrefetched, cLinesPrefetchedLatest);
+        Bit#(2) cLinesPrefetched = fromMaybe(se.cLinesPrefetched, cLinesPrefetchedLatest);
 
         if (se.state == STEADY && 
             cLinesPrefetched != 
             fromInteger(valueof(cLinesAheadToPrefetch))) begin
             //can prefetch
-            
-            Bit#(13) strideToUse;
-            Bit#(13) cLineSize = fromInteger(valueof(DataSz));
-            if (se.stride[12] == 1 && se.stride > -cLineSize) begin
-                //stride is negative and jumps less than one cline
-                strideToUse = -cLineSize;
-            end
-            else if (se.stride[12] == 0 && se.stride < cLineSize) begin
-                //stride is positive and jumps less than one cline
-                strideToUse = cLineSize;
-            end 
-            else begin
-                strideToUse = se.stride;
+
+            Int#(13) cLineSize = fromInteger(valueof(DataSz));
+            Int#(13) strideToUse = se.stride;
+            if (abs(strideToUse) < cLineSize) begin
+                strideToUse = (strideToUse < 0) ? -cLineSize : cLineSize; 
             end
 
-            let reqAddr = addr + 
-                (signExtend(strideToUse) * zeroExtend(cLinesPrefetched + 1));
+            Bit#(13) jumpDist = pack(strideToUse) * zeroExtend(cLinesPrefetched+1);
+            let reqAddr = addr + signExtend(jumpDist);
 
             addrToPrefetch.enq(reqAddr);
             // We will still be processing this StrideEntry next cycle, 
@@ -1238,6 +1507,78 @@ provisos(
     method ActionValue#(Addr) getNextPrefetchAddr;
         addrToPrefetch.deq;
         return addrToPrefetch.first;
+    endmethod
+
+endmodule
+
+typedef struct {
+    Addr lastAddr; 
+    Int#(13) stride;
+    Bit#(2) confidence;
+} SimpleStrideEntry deriving (Bits, Eq, FShow);
+
+//10 minutes of planning
+//25 minutes of implementation
+//30 minutes of writing tests and fixing bugs
+module mkSimpleStridePCPrefetcher(PCPrefetcher)
+provisos(
+    NumAlias#(strideTableSize, 512),
+    NumAlias#(cLinesAheadToPrefetch, 2), 
+    NumAlias#(minConfidenceToPrefetch, 2),
+    Alias#(strideTableIndexT, Bit#(TLog#(strideTableSize)))
+    );
+    Vector#(strideTableSize, Reg#(SimpleStrideEntry)) strideTable <- replicateM(mkReg(unpack(0)));
+
+    Reg#(Addr) addrToPrefetch <- mkReg(0);
+    Reg#(Int#(13)) strideToPrefetch <- mkReg(0);
+    Ehr#(2, Bit#(3)) prefetchesIssued <- mkEhr(fromInteger(valueOf(cLinesAheadToPrefetch)));
+
+    method Action reportAccess(Addr addr, Bit#(16) pcHash, HitOrMiss hitMiss);
+        $display("%t report access %x %x", $time, addr, pcHash);
+        strideTableIndexT idx = truncate(pcHash);
+        SimpleStrideEntry entry = strideTable[idx];
+        Int#(13) calc_stride = unpack(truncate(addr - entry.lastAddr));
+        $display("found stride %x", entry.stride);
+        entry.lastAddr = addr;
+        if (calc_stride == entry.stride) begin
+            if (entry.confidence != 2'd3) begin
+                entry.confidence = entry.confidence + 1;
+            end
+        end
+        else begin
+            if (entry.confidence > 0) begin
+                entry.confidence = entry.confidence - 1;
+            end
+            if (entry.confidence < fromInteger(valueOf(minConfidenceToPrefetch))) begin
+                entry.stride = calc_stride;
+                entry.confidence = 0;
+            end
+        end
+        
+        if (entry.confidence >= fromInteger(valueOf(minConfidenceToPrefetch))) begin
+            prefetchesIssued[1] <= 0;
+            addrToPrefetch <= addr;
+            strideToPrefetch <= entry.stride;
+        end
+        strideTable[idx] <= entry;
+    endmethod
+
+    method ActionValue#(Addr) getNextPrefetchAddr 
+            if (prefetchesIssued[0] < fromInteger(valueOf(cLinesAheadToPrefetch)));
+        
+        Int#(13) strideToUse = strideToPrefetch;
+        Int#(13) cLineSize = fromInteger(valueof(DataSz));
+        if (abs(strideToPrefetch) < cLineSize) begin
+            strideToUse = (strideToPrefetch < 0) ? -cLineSize : cLineSize;
+        end
+
+        prefetchesIssued[0] <= prefetchesIssued[0] + 1; 
+        let reqAddr = addrToPrefetch + 
+            (pack(signExtend(strideToUse)) * zeroExtend(prefetchesIssued[0] + 1));
+
+        check(reqAddr[63:12] == addrToPrefetch[63:12]);
+        $display("%t getprefetchaddr ret %x", $time, reqAddr);
+        return reqAddr;
     endmethod
 
 endmodule
@@ -1453,6 +1794,40 @@ provisos(
 
 endmodule
 
+
+interface PrefetcherVector#(numeric type size);
+    method ActionValue#(Tuple2#(Addr, Bit#(TLog#(size)))) getNextPrefetchAddr;
+    method Action reportAccess(Bit#(TLog#(size)) idx, Addr addr, HitOrMiss hitMiss);
+endinterface
+
+module mkPrefetcherVector#(module#(Prefetcher) mkPrefetcher)
+(
+    PrefetcherVector#(size)
+) provisos (
+    Alias#(idxT, Bit#(TLog#(size)))
+);
+    Vector#(size, Prefetcher) prefetchers <- replicateM(mkPrefetcher);
+    Fifo#(1, Tuple2#(Addr, idxT)) prefetchRq <- mkBypassFifo;
+
+    function XBarDstInfo#(Bit#(0),Tuple2#(Addr, idxT)) convertPrefetchRq(idxT item, Addr a);
+        return XBarDstInfo { 
+            idx: 0,
+            data: tuple2(a, item)
+        };
+    endfunction
+    function Get#(Addr) reqGet(Prefetcher p) = toGet(p.getNextPrefetchAddr);
+    mkXBar(convertPrefetchRq, map(reqGet, prefetchers), vec(toPut(prefetchRq)));
+
+    method ActionValue#(Tuple2#(Addr, idxT)) getNextPrefetchAddr;
+        prefetchRq.deq;
+        return prefetchRq.first;
+    endmethod
+
+    method Action reportAccess(idxT idx, Addr addr, HitOrMiss hitMiss);
+        prefetchers[idx].reportAccess(addr, hitMiss);
+    endmethod
+endmodule
+
 module mkL1IPrefetcher(Prefetcher);
 `ifdef INSTR_PREFETCHER_IN_L1
     `ifdef INSTR_PREFETCHER_NEXT_LINE_ON_ALL
@@ -1535,6 +1910,8 @@ module mkL1DPrefetcher(PCPrefetcher);
         let m <- mkPCPrefetcherAdapter(mkBRAMMarkovPrefetcher);
     `elsif DATA_PREFETCHER_MARKOV_ON_HIT
         let m <- mkPCPrefetcherAdapter(mkBRAMMarkovOnHitPrefetcher);
+    `elsif DATA_PREFETCHER_MARKOV_ON_HIT_2
+        let m <- mkPCPrefetcherAdapter(mkMarkovOnHit2Prefetcher);
     `endif
     //let m <- mkPCPrefetcherAdapter(mkAlwaysRequestPrefetcher);
 `else 
@@ -1555,6 +1932,8 @@ module mkLLDPrefetcherInL1D(PCPrefetcher);
         let m <- mkPCPrefetcherAdapter(mkBRAMMarkovPrefetcher);
     `elsif DATA_PREFETCHER_MARKOV_ON_HIT
         let m <- mkPCPrefetcherAdapter(mkBRAMMarkovOnHitPrefetcher);
+    `elsif DATA_PREFETCHER_MARKOV_ON_HIT_2
+        let m <- mkPCPrefetcherAdapter(mkMarkovOnHit2Prefetcher);
     `endif
     //let m <- mkPCPrefetcherAdapter(mkAlwaysRequestPrefetcher);
 `else 
@@ -1575,6 +1954,8 @@ module mkLLDPrefetcher(Prefetcher);
         let m <- mkBRAMMarkovPrefetcher;
     `elsif DATA_PREFETCHER_MARKOV_ON_HIT
         let m <- mkBRAMMarkovOnHitPrefetcher;
+    `elsif DATA_PREFETCHER_MARKOV_ON_HIT_2
+        let m <- mkMarkovOnHit2Prefetcher;
     `endif
     //let m <- mkPCPrefetcherAdapter(mkAlwaysRequestPrefetcher);
 `else 
