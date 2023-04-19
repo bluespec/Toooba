@@ -816,14 +816,14 @@ provisos(
     Vector#(numWindows, Reg#(windowIdxT)) shiftReg <- genWithM(compose(mkReg, fromInteger));
     Reg#(LineAddr) lastChildRequest <- mkReg(0);
 
-    TargetTableBRAM#(64, 8) targetTable <- mkTargetTableBRAM;
+    TargetTableBRAM#(8192, 2048) targetTable <- mkTargetTableBRAM;
     FIFOF#(LineAddr) targetTableReadResp <- mkBypassFIFOF;
     Reg#(Vector#(numLastRequests, Bit#(32))) lastTargetRequests <- mkReg(replicate(0));
 
     rule sendReadReq;
         if (!elem(hash(lastChildRequest), lastTargetRequests)) begin 
             targetTable.readReq(lastChildRequest);
-            $display("%t Prefetcher sending target read request for %h", $time, lastChildRequest);
+            $display("%t Prefetcher sending target read request for %h", $time, Addr'{lastChildRequest, 'h0});
             lastTargetRequests <= shiftInAt0(lastTargetRequests, hash(lastChildRequest));
         end
     endrule
