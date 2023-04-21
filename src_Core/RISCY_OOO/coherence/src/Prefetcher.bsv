@@ -807,7 +807,7 @@ endmodule
 module mkBRAMMultiWindowTargetPrefetcher(Prefetcher)
 provisos(
     NumAlias#(numWindows, 4),
-    NumAlias#(numLastRequests, 16),
+    NumAlias#(numLastRequests, 15),
     Alias#(windowIdxT, Bit#(TLog#(numWindows)))
 );
     Integer cacheLinesInRange = 2;
