@@ -1357,7 +1357,7 @@ typedef enum {
 
 typedef struct {
     Bit#(12) lastAddr; 
-    Int#(13) stride;
+    Int#(12) stride;
     Bit#(2) cLinesPrefetched; //Stores how many cache lines have been prefetched for this instruction
     StrideState2 state;
 } StrideEntry2 deriving (Bits, Eq, FShow);
@@ -1398,7 +1398,7 @@ provisos(
         StrideEntry2 se = strideTable.rdResp;
         strideTable.deqRdResp;
         StrideEntry2 seNext = se;
-        Int#(13) observedStride = unpack({1'b0, addr[11:0]} - {1'b0, se.lastAddr});
+        Int#(12) observedStride = unpack(addr[11:0] - se.lastAddr);
         $writeh("%t Stride Prefetcher updateStrideEntry ", $time,
             fshow(hitMiss), " ", addr,
             ". Entry ", index, " state is ", fshow(se.state));
@@ -1443,7 +1443,7 @@ provisos(
                 //We jump to some other random location, so reset number of lines prefetched
                 seNext.cLinesPrefetched = 0;
                 seNext.state = INIT;
-                $display(", random jump! Move to INIT, don't reset stride");
+                $display(", random jump (%x)! Move to INIT, don't reset stride", observedStride);
             end
             seNext.lastAddr = truncate(addr);
         end
@@ -1469,19 +1469,22 @@ provisos(
         //If this rule is looping, then we'll have a valid cLinesPrefetchedLatest
         Bit#(2) cLinesPrefetched = fromMaybe(se.cLinesPrefetched, cLinesPrefetchedLatest);
 
+        Int#(16) cLineSize = fromInteger(valueof(DataSz));
+        Int#(16) strideToUse = signExtend(se.stride);
+        if (abs(strideToUse) < cLineSize) begin
+            strideToUse = (strideToUse < 0) ? -cLineSize : cLineSize; 
+                strideToUse = (strideToUse < 0) ? -cLineSize : cLineSize; 
+            strideToUse = (strideToUse < 0) ? -cLineSize : cLineSize; 
+        end
+        Bit#(16) jumpDist = pack(strideToUse) * zeroExtend(cLinesPrefetched+1);
+        let reqAddr = addr + signExtend(jumpDist);
+
         if (se.state == STEADY && 
             cLinesPrefetched != 
-            fromInteger(valueof(cLinesAheadToPrefetch))) begin
+            fromInteger(valueof(cLinesAheadToPrefetch)) &&
+            reqAddr[63:12] == addr[63:12] //Check if same page
+        ) begin
             //can prefetch
-
-            Int#(13) cLineSize = fromInteger(valueof(DataSz));
-            Int#(13) strideToUse = se.stride;
-            if (abs(strideToUse) < cLineSize) begin
-                strideToUse = (strideToUse < 0) ? -cLineSize : cLineSize; 
-            end
-
-            Bit#(13) jumpDist = pack(strideToUse) * zeroExtend(cLinesPrefetched+1);
-            let reqAddr = addr + signExtend(jumpDist);
 
             addrToPrefetch.enq(reqAddr);
             // We will still be processing this StrideEntry next cycle, 

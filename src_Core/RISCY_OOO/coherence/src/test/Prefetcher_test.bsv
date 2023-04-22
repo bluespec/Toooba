@@ -990,6 +990,25 @@ module mkStride2PCPrefetcherTest(Empty);
                 let x <- p.getNextPrefetchAddr;
                 doAssert(x == 'h900000b0, "test fail!");
             endaction
+            
+            // -- test blocking on page boundaries
+            action p.reportAccess('ha0000000, 'h006c, MISS); endaction
+            action p.reportAccess('ha0000400, 'h006c, MISS); endaction
+            action p.reportAccess('ha0000800, 'h006c, MISS); endaction
+            action
+                let x <- p.getNextPrefetchAddr;
+                doAssert(x == 'ha0000c00, "test fail!");
+            endaction
+            action p.reportAccess('ha0000c00, 'h006c, MISS); endaction
+            action p.reportAccess('hb0000000, 'h006c, MISS); endaction
+            action
+                let x <- p.getNextPrefetchAddr;
+                doAssert(x == 'hb0000400, "test fail!");
+            endaction
+            action
+                let x <- p.getNextPrefetchAddr;
+                doAssert(x == 'hb0000800, "test fail!");
+            endaction
         endseq
     );
 endmodule
