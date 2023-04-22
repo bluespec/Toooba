@@ -739,17 +739,12 @@ module mkBRAMSingleWindowTargetPrefetcher(Prefetcher) provisos
     Reg#(LineAddr) nextToAsk <- mkReg(0);
 
     Reg#(LineAddr) lastChildRequest <- mkReg(0);
-    TargetTableBRAM#(1024, 128) targetTable <- mkTargetTableBRAM;
-    FIFOF#(LineAddr) targetTableReadResp <- mkBypassFIFOF;
+    TargetTableBRAM#(8192, 2048) targetTable <- mkTargetTableBRAM;
+    Fifo#(1, LineAddr) targetTableReadResp <- mkOverflowBypassFifo;
 
-    Reg#(Vector#(numLastRequests, Bit#(32))) lastTargetRequests <- mkReg(replicate(0));
+    Reg#(Vector#(numLastRequests, Bit#(16))) lastTargetRequests <- mkReg(replicate(0));
 
     rule sendReadReq;
-        if (!elem(hash(lastChildRequest), lastTargetRequests)) begin 
-            targetTable.readReq(lastChildRequest);
-            $display("%t Prefetcher sending target read request for %h", $time, lastChildRequest);
-            lastTargetRequests <= shiftInAt0(lastTargetRequests, hash(lastChildRequest));
-        end
     endrule
 
     rule getReadResp;
@@ -781,6 +776,13 @@ module mkBRAMSingleWindowTargetPrefetcher(Prefetcher) provisos
             //Try only recording table entries on a miss!
             $display("%t Prefetcher add target entry from addr %h to addr %h", $time, Addr'{lastChildRequest, '0}, addr);
             targetTable.writeReq(lastChildRequest, cl);
+        end
+
+        // Send target request if not in last 16 hits.
+        if (!elem(hash(cl), lastTargetRequests)) begin 
+            targetTable.readReq(cl);
+            $display("%t Prefetcher sending target read request for %h", $time, cl);
+            lastTargetRequests <= shiftInAt0(lastTargetRequests, hash(cl));
         end
         lastChildRequest <= cl;
     endmethod
