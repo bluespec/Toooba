@@ -1473,8 +1473,6 @@ provisos(
         Int#(16) strideToUse = signExtend(se.stride);
         if (abs(strideToUse) < cLineSize) begin
             strideToUse = (strideToUse < 0) ? -cLineSize : cLineSize; 
-                strideToUse = (strideToUse < 0) ? -cLineSize : cLineSize; 
-            strideToUse = (strideToUse < 0) ? -cLineSize : cLineSize; 
         end
         Bit#(16) jumpDist = pack(strideToUse) * zeroExtend(cLinesPrefetched+1);
         let reqAddr = addr + signExtend(jumpDist);
