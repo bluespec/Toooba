@@ -526,7 +526,7 @@ module mkTargetTableDouble(TargetTableDouble#(narrowTableSize, wideTableSize)) p
     NumAlias#(wideTableIdxBits, TLog#(wideTableSize)),
     NumAlias#(narrowTableTagBits, TSub#(24, narrowTableIdxBits)),
     NumAlias#(wideTableTagBits, TSub#(24, wideTableIdxBits)),
-    NumAlias#(narrowDistanceBits, 10),
+    NumAlias#(narrowDistanceBits, 16),
     NumAlias#(narrowMaxDistanceAbs, TExp#(TSub#(narrowDistanceBits, 1))),
     Alias#(narrowTargetEntryT, NarrowTargetEntry#(narrowTableTagBits, narrowDistanceBits)),
     Alias#(wideTargetEntryT, WideTargetEntry#(wideTableTagBits)),
@@ -1080,7 +1080,7 @@ module mkMarkovOnHit2Prefetcher(Prefetcher) provisos
 );
     Reg#(LineAddr) lastChildRequest <- mkReg(0);
     Reg#(Vector#(numLastRequests, Bit#(32))) lastAddrRequests <- mkReg(replicate(0));
-    TargetTableDouble#(2048, 256) targetTable <- mkTargetTableDouble;
+    TargetTableDouble#(65536, 4096) targetTable <- mkTargetTableDouble;
     Fifo#(8, LineAddr) highPriorityPrefetches <- mkOverflowBypassFifo;
     Fifo#(8, LineAddr) lowPriorityPrefetches <- mkOverflowBypassFifo;
 
