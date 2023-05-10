@@ -454,12 +454,12 @@ module mkBRAMSingleWindowTargetPrefetcherTest(Empty);
                 p.reportAccess('h80000140, MISS); //Report miss back home
             endaction
             action
-                let x <- p.getNextPrefetchAddr; 
-                doAssert(x == 'h80000180, "test fail!"); // window addresss recommended
-            endaction
-            action
                 let x <- p.getNextPrefetchAddr; //target address recommended
                 doAssert(x == 'h81000200, "test fail!");
+            endaction
+            action
+                let x <- p.getNextPrefetchAddr; 
+                doAssert(x == 'h80000180, "test fail!"); // window addresss recommended
             endaction
             action
                 p.reportAccess('h80000140, HIT); //Report miss back home
@@ -468,8 +468,11 @@ module mkBRAMSingleWindowTargetPrefetcherTest(Empty);
                 p.reportAccess('h81000200, HIT); 
             endaction
             action
+                p.reportAccess('h80000140, HIT);  //overwrite last target entry
+            endaction
+            action
                 let x <- p.getNextPrefetchAddr; //target addresss recommended
-                doAssert(x == 'h800001c0, "test fail!");
+                doAssert(x == 'h81000200, "test fail!");
             endaction
         endseq
     );
