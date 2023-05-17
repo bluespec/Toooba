@@ -66,8 +66,7 @@ import Clocks       :: *;
 import Cur_Cycle  :: *;
 import GetPut_Aux :: *;
 import Routable   :: *;
-import AXI4       :: *;
-import AXI4Lite   :: *;
+import BlueAXI4   :: *;
 import SourceSink :: *;
 import TagControllerAXI :: *;
 import CacheCore  :: *;
@@ -124,11 +123,11 @@ typedef WindCoreMid #( // AXI lite subordinate control port parameters
                        // AXI manager 0 port parameters
                      , TAdd #(Wd_MId, 1), Wd_Addr, Wd_Data, 0, 0, 0, 0, 0
                        // AXI manager 1 port parameters
-                     , TAdd #(Wd_MId, 1), Wd_Addr, Wd_Data, 0, 0, 0, 0, 0
+                     , TAdd #(Wd_MId, 1), Wd_Addr, Wd_Data_Periph, 0, 0, 0, 0, 0
                        // AXI subordinate 0 port parameters
-                     , Wd_CoreW_Bus_MId, Wd_Addr, Wd_Data
-                     , Wd_AW_User, Wd_W_User, Wd_B_User
-                     , Wd_AR_User, Wd_R_User
+                     , Wd_CoreW_Bus_MId, Wd_Addr, Wd_Data_Periph
+                     , Wd_AW_User_Periph, Wd_W_User_Periph, Wd_B_User_Periph
+                     , Wd_AR_User_Periph, Wd_R_User_Periph
                        // Number of interrupt lines
                      , t_n_irq) CoreW_IFC #(numeric type t_n_irq);
 
@@ -226,8 +225,8 @@ module mkCoreW_reset #(Reset porReset)
    Proc_IFC proc <- mkProc (reset_by all_harts_reset);
 
    // handle uncached interface
-   let proc_uncached =
-       prepend_AXI4_Master_id (0, zero_AXI4_Master_user (proc.master1));
+   AXI4_Master #( Wd_CoreW_Bus_MId, Wd_Addr, Wd_Data_Periph, 0, 0, 0, 0, 0)
+       proc_uncached = prepend_AXI4_Master_id (0, zero_AXI4_Master_user (proc.master1));
    // Bridge for uncached expernal bus transactions.
    let uncached_mem_shim <- mkAXI4ShimFF(reset_by all_harts_reset);
 
@@ -236,6 +235,11 @@ module mkCoreW_reset #(Reset porReset)
    TagControllerAXI #(Wd_MId, Wd_Addr, Wd_Data)
      tagController <- mkTagControllerAXI (reset_by all_harts_reset); // TODO double check if reseting like this is good enough
    mkConnection (proc.master0, tagController.slave, reset_by all_harts_reset);
+   AXI4_Shim#(TAdd #(Wd_MId, 1), Wd_Addr, Wd_Data, 0, 0, 0, 0, 0)
+      tag_controller_deburster <- mkBurstToNoBurst;
+   mkConnection (tagController.master, tag_controller_deburster.slave, reset_by all_harts_reset);
+
+
 `ifdef PERFORMANCE_MONITORING
    rule report_tagController_events;
       EventsCacheCore cache_core_evts = tagController.events;
@@ -310,7 +314,7 @@ module mkCoreW_reset #(Reset porReset)
       rule rl_dm_harts_reset (rg_harts_reset_delay == 0);
          let x <- debug_module.harts_reset_client[core].request.get;
          dm_harts_reset_controller[core].assertReset;
-         rg_harts_reset_delay <= fromInteger (hart_reset_duration + 200);    // NOTE: heuristic
+         rg_harts_reset_delay <= fromInteger (hart_reset_duration + 200); // NOTE: heuristic
          rg_harts_reset_running <= x;
          $display ("%0d: %m.rl_dm_harts_reset: asserting harts reset for %0d cycles",
                 cur_cycle, hart_reset_duration);
@@ -363,7 +367,10 @@ module mkCoreW_reset #(Reset porReset)
    // Create a tap for DM's memory-writes to the bus, and merge-in the trace data.
    DM_Mem_Tap_IFC dm_mem_tap <- mkDM_Mem_Tap;
    mkConnection (debug_module.master, dm_mem_tap.slave);
-   let dm_master_local = dm_mem_tap.master;
+   AXI4_Master #( Wd_CoreW_Bus_MId, Wd_Addr, Wd_Data_Periph
+                , Wd_AW_User_Periph, Wd_W_User_Periph, Wd_B_User_Periph
+                , Wd_AR_User_Periph, Wd_R_User_Periph )
+     dm_master_local = dm_mem_tap.master;
 
    rule rl_merge_dm_mem_trace_data;
       let tmp <- dm_mem_tap.trace_data_out.get;
@@ -429,7 +436,10 @@ module mkCoreW_reset #(Reset porReset)
    mkConnection (debug_module.harts_csr_mem_client, proc.harts_csr_mem_server, reset_by porReset);
 
    // DM's bus master is directly the bus master
-   let dm_master_local = debug_module.master;
+   AXI4_Master #( Wd_CoreW_Bus_MId, Wd_Addr, Wd_Data_Periph
+                , Wd_AW_User_Periph, Wd_W_User_Periph, Wd_B_User_Periph
+                , Wd_AR_User_Periph, Wd_R_User_Periph )
+     dm_master_local = debug_module.master;
 
    // END SECTION: DM, no TV
    // ================================================================
@@ -440,7 +450,10 @@ module mkCoreW_reset #(Reset porReset)
    // BEGIN SECTION: no DM
 
    // No DM, so 'DM bus master' is AXI4 dummy
-   let dm_master_local = culDeSac;
+   AXI4_Master #( Wd_CoreW_Bus_MId, Wd_Addr, Wd_Data_Periph
+                , Wd_AW_User_Periph, Wd_W_User_Periph, Wd_B_User_Periph
+                , Wd_AR_User_Periph, Wd_R_User_Periph )
+     dm_master_local = culDeSac;
 
 `ifdef INCLUDE_TANDEM_VERIF
    // TV, no DM: stub out the dm input to TV
@@ -460,9 +473,10 @@ module mkCoreW_reset #(Reset porReset)
 
    // Masters on the local bus
    Vector #( CoreW_Bus_Num_Masters
-           , AXI4_Master #( Wd_CoreW_Bus_MId, Wd_Addr, Wd_Data
-                          , Wd_AW_User, Wd_W_User, Wd_B_User
-                          , Wd_AR_User, Wd_R_User))
+           , AXI4_Master #( Wd_CoreW_Bus_MId, Wd_Addr, Wd_Data_Periph
+                          , Wd_AW_User_Periph, Wd_W_User_Periph
+                          , Wd_B_User_Periph
+                          , Wd_AR_User_Periph, Wd_R_User_Periph ))
       master_vector = newVector;
    master_vector[cpu_uncached_master_num]     = proc_uncached;
    master_vector[debug_module_sba_master_num] = dm_master_local;
@@ -471,12 +485,12 @@ module mkCoreW_reset #(Reset porReset)
    // Slaves on the local bus
    // default slave is forwarded out directly to the Core interface
    Vector #( CoreW_Bus_Num_Slaves
-           , AXI4_Slave #( Wd_CoreW_Bus_SId, Wd_Addr, Wd_Data
-                         , Wd_AW_User, Wd_W_User, Wd_B_User
-                         , Wd_AR_User, Wd_R_User))
+           , AXI4_Slave #( Wd_CoreW_Bus_SId, Wd_Addr, Wd_Data_Periph
+                         , Wd_AW_User_Periph, Wd_W_User_Periph, Wd_B_User_Periph
+                         , Wd_AR_User_Periph, Wd_R_User_Periph ))
       slave_vector = newVector;
    slave_vector[default_slave_num] = uncached_mem_shim.slave;
-   slave_vector[llc_slave_num]     = proc.debug_module_mem_server;
+   slave_vector[llc_slave_num]     = zero_AXI4_Slave_user (proc.debug_module_mem_server);
    slave_vector[plic_slave_num]    = zero_AXI4_Slave_user (plic.axi4_slave);
 
    function Vector #(CoreW_Bus_Num_Slaves, Bool) route (Bit #(Wd_Addr) addr);
@@ -618,7 +632,7 @@ module mkCoreW_reset #(Reset porReset)
       // memory interfaces
       // -----------------
       // Cached master to Fabric master interface
-      interface manager_0 = tagController.master;
+      interface manager_0 = tag_controller_deburster.master;
       // Uncached master to Fabric master interface
       interface manager_1 = prepend_AXI4_Master_id
             (0, zero_AXI4_Master_user (uncached_mem_shim.master));

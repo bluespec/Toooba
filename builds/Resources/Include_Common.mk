@@ -88,11 +88,11 @@ BSC_COMPILATION_FLAGS += \
 	-D MULT_SYNTH    \
 	-D Near_Mem_Caches    \
 	-D FABRIC64    \
-	-D CheriBusBytes=8 \
+	-D CheriBusBytes=64 \
 	-D CheriMasterIDWidth=1 \
 	-D CheriTransactionIDWidth=6 \
 	-D CAP128 -D BLUESIM \
-	-D MEM64 \
+	-D MEM512 \
 	-D RISCV \
 	-D PERFORMANCE_MONITORING \
 	-D RAS_HIT_TRACING \

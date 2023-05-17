@@ -48,6 +48,10 @@ import SourceSink :: *;
 import Fabric_Defs  :: *;
 import SoC_Map      :: *;
 
+import VnD :: *;
+import Bag :: *;
+import ProcTypes :: *;
+
 // ================================================================
 
 interface LLC_AXI4_Adapter_IFC;
@@ -61,16 +65,27 @@ endinterface
 
 // ================================================================
 
+typedef struct {
+    Bool tag_req; // meaningful to upgrade to E if toState is S
+    idT id; // slot id in child cache
+    childT child; // from which child
+} LLC_AXI_ID#(type idT, type childT) deriving(Bits, Eq, FShow);
+
+typedef 16 OutstandingWrites;
+typedef 16 WriteAddressHashW;
+
 module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
                           (LLC_AXI4_Adapter_IFC)
-   provisos(Bits#(idT, a__),
-            Bits#(childT, b__),
+   provisos(Bits#(idT, idSz),
+            Bits#(childT, childSz),
             FShow#(ToMemMsg#(idT, childT)),
             FShow#(MemRsMsg#(idT, childT)),
-            Add#(SizeOf#(Line), 0, TAdd#(512, 4))); // assert Line sz = 512 + 4 tags
+            Add#(SizeOf#(Line), 0, TAdd#(512, 4)), // assert Line sz = 512 + 4 tags
+            Add#(a__, SizeOf#(LLC_AXI_ID#(idT, childT)), Wd_MId) // LLC_AXI_ID must fit into the external ID.
+           );
 
    // Verbosity: 0: quiet; 1: LLC transactions; 2: loop detail
-   Integer verbosity = 0;
+   Integer verbosity = 2;
    Reg #(Bit #(4)) cfg_verbosity <- mkConfigReg (fromInteger (verbosity));
 
    // ================================================================
@@ -79,25 +94,28 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
    let masterPortShim <- mkAXI4ShimFF;
 
    // For discarding write-responses
-   CreditCounter_IFC #(4) ctr_wr_rsps_pending <- mkCreditCounter; // Max 15 writes outstanding
+   CreditCounter_IFC #(TLog#(OutstandingWrites)) ctr_wr_rsps_pending <- mkCreditCounter; // 16 outstanding writes.
+
+   Bag#(OutstandingWrites, Bit#(Wd_MId), Bit#(WriteAddressHashW)) outstandingWrites <- mkSmallBag;
 
    // ================================================================
    // Functions to interact with the fabric
 
    // Send a read-request into the fabric
-   function Action fa_fabric_send_read_req (Fabric_Addr  addr, Bool tag_req);
+   function Action fa_fabric_send_read_req (Fabric_Addr  addr, LLC_AXI_ID#(idT, childT) id);
       action
-         let mem_req_rd_addr = AXI4_ARFlit {arid:     fabric_default_mid,
+         Bit#(Wd_MId) arid = zeroExtend(pack(id));
+         let mem_req_rd_addr = AXI4_ARFlit {arid:     arid,
                                             araddr:   addr,
-                                            arlen:    tag_req ? 0 : 7,           // burst len = arlen+1
-                                            arsize:   tag_req ? 1 : 8,
+                                            arlen:    0,           // burst len = arlen+1
+                                            arsize:   id.tag_req ? 1 : 64,
                                             arburst:  INCR,
                                             arlock:   fabric_default_lock,
                                             arcache:  fabric_default_arcache,
                                             arprot:   fabric_default_prot,
                                             arqos:    fabric_default_qos,
                                             arregion: fabric_default_region,
-                                            aruser:   pack(tag_req)};
+                                            aruser:   pack(id.tag_req)};
 
          masterPortShim.slave.ar.put(mem_req_rd_addr);
 
@@ -110,16 +128,8 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
 
    // ================================================================
    // Handle read requests and responses
-   // Don't do reads while writes are outstanding.
 
-   // Each 512b cache line takes 8 beats, each handling 64 bits
-   Reg #(Bit #(3)) rg_rd_rsp_beat <- mkReg (0);
-
-   FIFOF #(LdMemRq #(idT, childT)) f_pending_reads <- mkFIFOF;
-   Reg #(CLine) rg_cline <- mkRegU;
-
-   rule rl_handle_read_req (llc.toM.first matches tagged Ld .ld
-                            &&& (ctr_wr_rsps_pending.value == 0));
+   rule rl_handle_read_req (llc.toM.first matches tagged Ld .ld &&& !outstandingWrites.dataMatch(hash(ld.addr[63:6])));
       if ((cfg_verbosity > 0)) begin
          $display ("%0d: LLC_AXI4_Adapter.rl_handle_read_req: Ld request from LLC to memory",
                    cur_cycle);
@@ -127,105 +137,72 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
       end
 
       Addr  line_addr = {ld.addr [63:6], 6'h0 };                      // Addr of containing cache line
-      fa_fabric_send_read_req (line_addr, ld.tag_req);
-      f_pending_reads.enq (ld);
+      fa_fabric_send_read_req (line_addr, LLC_AXI_ID{tag_req: ld.tag_req, id: ld.id, child: ld.child});
       llc.toM.deq;
    endrule
 
    rule rl_handle_read_rsps;
       let mem_rsp <- get(masterPortShim.slave.r);
-
       if (cfg_verbosity > 1) begin
-         $display ("%0d: LLC_AXI4_Adapter.rl_handle_read_rsps: beat %0d ", cur_cycle, rg_rd_rsp_beat);
+         $display ("%0d: LLC_AXI4_Adapter.rl_handle_read_rsps: ", cur_cycle);
          $display ("    ", fshow (mem_rsp));
       end
-
       if (mem_rsp.rresp != OKAY) begin
          // TODO: need to raise a non-maskable interrupt (NMI) here
          $display ("%0d: LLC_AXI4_Adapter.rl_handle_read_rsp: fabric response error; exit", cur_cycle);
          $display ("    ", fshow (mem_rsp));
          $finish (1);
       end
-
-      // Shift next 64 bits from fabric into the cache line being assembled
-      let new_cline_tag = { mem_rsp.ruser, pack(rg_cline.tag) [3:1] };
-      let new_cline_data = { mem_rsp.rdata, pack(rg_cline.data) [511:64] };
-      let new_cline = CLine { tag: rg_rd_rsp_beat[0] == 0 ? unpack(new_cline_tag) : rg_cline.tag
-                            , data: unpack(new_cline_data) };
-
-      if (mem_rsp.rlast) begin
-         let ldreq <- pop (f_pending_reads);
-         MemRsMsg #(idT, childT) resp = MemRsMsg {data:  new_cline,
-                                                  child: ldreq.child,
-                                                  id:    ldreq.id};
-
-         if (ldreq.tag_req) begin
-            resp.data = CLine { tag: unpack(truncate(mem_rsp.rdata)), data: ?};
-         end
-
-         llc.rsFromM.enq (resp);
-
-         if (cfg_verbosity > 1)
-            $display ("    Response to LLC: ", fshow (resp));
-
-         rg_rd_rsp_beat <= 0;
-         rg_cline <= unpack(0);
-      end else begin
-         rg_rd_rsp_beat <= rg_rd_rsp_beat + 1;
-         rg_cline <= new_cline;
+      let new_cline = CLine { tag: unpack(mem_rsp.ruser)
+                            , data: unpack(mem_rsp.rdata) };
+      LLC_AXI_ID#(idT, childT) id = unpack(truncate(mem_rsp.rid));
+      MemRsMsg #(idT, childT) resp = MemRsMsg {data:  new_cline,
+                                              child: id.child,
+                                              id:    id.id};
+      if (id.tag_req) begin
+        resp.data = CLine { tag: unpack(truncate(mem_rsp.rdata)), data: ?};
       end
+      llc.rsFromM.enq (resp);
+      if (cfg_verbosity > 1)
+        $display ("    Response to LLC: ", fshow (resp));
    endrule
 
    // ================================================================
    // Handle write requests and responses
-
-   // Each 512b cache line takes 8 beats, each handling 64 bits
-   Reg #(Bit #(3)) rg_wr_req_beat <- mkReg (0);
-
-   rule rl_handle_write_req (llc.toM.first matches tagged Wb .wb);
-      if ((cfg_verbosity > 0) && (rg_wr_req_beat == 0)) begin
+   Reg#(Bit#(Wd_MId)) wid_reg <- mkRegU;
+   rule rl_handle_write_req (llc.toM.first matches tagged Wb .wb &&& !outstandingWrites.isMember(wid_reg).v);
+      if (cfg_verbosity > 0) begin
          $display ("%d: LLC_AXI4_Adapter.rl_handle_write_req: Wb request from LLC to memory:", cur_cycle);
          $display ("    ", fshow (wb));
       end
 
-      // on first flit...
-      // ================
-      if (rg_wr_req_beat == 0) begin
-         // send AXI4 AW flit
-         masterPortShim.slave.aw.put (AXI4_AWFlit {
-           awid:     fabric_default_mid,
-           awaddr:   { wb.addr [63:6], 6'h0 },
-           awlen:    7, // burst len = awlen+1
-           awsize:   8,
-           awburst:  INCR,
-           awlock:   fabric_default_lock,
-           awcache:  fabric_default_awcache,
-           awprot:   fabric_default_prot,
-           awqos:    fabric_default_qos,
-           awregion: fabric_default_region,
-           awuser:   0});
-         // Expect a fabric response
-         ctr_wr_rsps_pending.incr;
-      end
+      // send AXI4 AW flit
+      masterPortShim.slave.aw.put (AXI4_AWFlit {
+        awid:     wid_reg,
+        awaddr:   { wb.addr [63:6], 6'h0 },
+        awlen:    0, // burst len = awlen+1
+        awsize:   64,
+        awburst:  INCR,
+        awlock:   fabric_default_lock,
+        awcache:  fabric_default_awcache,
+        awprot:   fabric_default_prot,
+        awqos:    fabric_default_qos,
+        awregion: fabric_default_region,
+        awuser:   0});
+      // Expect a fabric response
+      ctr_wr_rsps_pending.incr;
+      outstandingWrites.insert(wid_reg, hash(wb.addr[63:6]));
+      wid_reg <= wid_reg + 1; // Best effort to use unique IDs to allow reordering in the fabric.
+      llc.toM.deq;
 
-      // on last flit...
-      // ===============
-      if (rg_wr_req_beat == 7) begin
-         llc.toM.deq;
-         rg_wr_req_beat <= 0;
-      end else // increment flit counter
-         rg_wr_req_beat <= rg_wr_req_beat + 1;
-
-      // on each flit ...
-      // ================
       Vector #(8, Bit #(8)) line_strb = unpack(pack(wb.byteEn));
       Vector #(4, MemTaggedData) line_data = clineToMemTaggedDataVector(wb.data);
       // send AXI4 W flit
       masterPortShim.slave.w.put(AXI4_WFlit {
-        wdata:  line_data[rg_wr_req_beat[2:1]].data[rg_wr_req_beat[0]],
-        wstrb:  line_strb[rg_wr_req_beat],
-        wlast:  rg_wr_req_beat == 7,
-        wuser:  pack(line_data[rg_wr_req_beat[2:1]].tag)});
+        wdata:  pack(wb.data.data),
+        wstrb:  pack(wb.byteEn),
+        wlast:  True,
+        wuser:  pack(wb.data.tag)});
    endrule
 
    // ----------------
@@ -242,6 +219,7 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
       end
 
       ctr_wr_rsps_pending.decr;
+      outstandingWrites.remove(wr_resp.bid);
 
       if (wr_resp.bresp != OKAY) begin
          // TODO: need to raise a non-maskable interrupt (NMI) here
@@ -255,7 +233,9 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
    // INTERFACE
 
    method Action reset;
-      ctr_wr_rsps_pending.clear;
+      error("Reset called for LLC AXI4 adapter");
+      // XXX resetting this module would cause wedges unless the surrounding
+      // fabric was also fully reset
    endmethod
 
    // Fabric interface for memory

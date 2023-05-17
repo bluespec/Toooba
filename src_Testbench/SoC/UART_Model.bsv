@@ -130,7 +130,7 @@ interface UART_IFC;
    method Action set_addr_map (Fabric_Addr addr_base, Fabric_Addr addr_lim);
 
    // Main Fabric Reqs/Rsps
-   interface AXI4_Slave #(Wd_SId, Wd_Addr, Wd_Data, 0, 0, 0, 0, 0) slave;
+   interface AXI4_Slave #(Wd_SId, Wd_Addr, Wd_Data_Periph, 0, 0, 0, 0, 0) slave;
 
    // To external console
    interface Get #(Bit #(8))  get_to_console;
@@ -367,8 +367,8 @@ module mkUART (UART_IFC);
       end
 
       // Align data byte for AXI4 data bus based on fabric-width
-      Fabric_Data rdata = zeroExtend (rdata_byte);
-      if ((valueOf (Wd_Data) == 64) && (byte_addr [2:0] == 3'b100))
+      Bit#(Wd_Data_Periph) rdata = zeroExtend (rdata_byte);
+      if ((valueOf (Wd_Data_Periph) == 64) && (byte_addr [2:0] == 3'b100))
 	 rdata = rdata << 32;
 
       // Send read-response to bus

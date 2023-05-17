@@ -46,8 +46,8 @@ import Vector        :: *;
 import Cur_Cycle   :: *;
 import GetPut_Aux  :: *;
 import Routable    :: *;
-import AXI4        :: *;
-import AXI4Lite    :: *;
+import BlueBasics  :: *;
+import BlueAXI4    :: *;
 
 // ================================================================
 // Project imports
@@ -153,14 +153,23 @@ module mkSoC_Top #(Reset dm_power_on_reset)
    // SoC Boot ROM
    Boot_ROM_IFC  boot_rom <- mkBoot_ROM;
    // AXI4 Deburster in front of Boot_ROM
-   AXI4_Shim#(Wd_SId, Wd_Addr, Wd_Data, 0, 0, 0, 0, 0)
+   AXI4_Shim#(Wd_SId, Wd_Addr, Wd_Data_Periph, 0, 0, 0, 0, 0)
       boot_rom_axi4_deburster <- mkBurstToNoBurst;
 
    // SoC Memory
    Mem_Controller_IFC  mem0_controller <- mkMem_Controller;
    // AXI4 Deburster in front of SoC Memory
-   AXI4_Shim#(Wd_SId, Wd_Addr, Wd_Data, 0, 0, 0, 0, 0)
+   AXI4_Shim#(Wd_SId, Wd_Addr, Wd_Data_Periph, 0, 0, 0, 0, 0)
       mem0_controller_axi4_deburster <- mkBurstToNoBurst;
+
+   // AXI4 Narrower Master in front of cached memory master
+   NumProxy #(4) proxyInDepth = error ("don't look inside a proxy");
+   NumProxy #(4) proxyOutDepth = error ("don't look inside a proxy");
+   Tuple2 #( AXI4_Slave #(TAdd#(Wd_MId,1), Wd_Addr, Wd_Data, 0, 0, 0, 0, 0)
+           , AXI4_Master #(TAdd#(Wd_MId,1), Wd_Addr, Wd_Data_Periph, 0, 0, 0, 0, 0) )
+     wideS_narrowM <- mkAXI4DataWidthShim_WideToNarrow (proxyInDepth, proxyOutDepth);
+   match {.wideS, .narrowM} = wideS_narrowM;
+   mkConnection(corew.manager_0, wideS);
 
    // SoC IPs
    UART_IFC   uart0  <- mkUART;
@@ -174,12 +183,12 @@ module mkSoC_Top #(Reset dm_power_on_reset)
    // SoC fabric master connections
    // Note: see 'SoC_Map' for 'master_num' definitions
 
-   Vector#(Num_Masters, AXI4_Master #(TAdd#(Wd_MId,1), Wd_Addr, Wd_Data,
+   Vector#(Num_Masters, AXI4_Master #(TAdd#(Wd_MId,1), Wd_Addr, Wd_Data_Periph,
                                       0, 0, 0, 0, 0))
       master_vector = newVector;
 
    // CPU IMem master to fabric
-   master_vector[imem_master_num] = corew.manager_0;
+   master_vector[imem_master_num] = narrowM;
 
    // CPU DMem master to fabric
    master_vector[dmem_master_num] = corew.manager_1;
@@ -188,7 +197,7 @@ module mkSoC_Top #(Reset dm_power_on_reset)
    // SoC fabric slave connections
    // Note: see 'SoC_Map' for 'slave_num' definitions
 
-   Vector#(Num_Slaves, AXI4_Slave #(Wd_SId, Wd_Addr, Wd_Data,
+   Vector#(Num_Slaves, AXI4_Slave #(Wd_SId, Wd_Addr, Wd_Data_Periph,
                                     0, 0, 0, 0, 0))
       slave_vector = newVector;
    Vector#(Num_Slaves, Range#(Wd_Addr)) route_vector = newVector;

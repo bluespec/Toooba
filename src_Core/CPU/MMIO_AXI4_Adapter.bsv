@@ -66,7 +66,7 @@ interface MMIO_AXI4_Adapter_IFC;
    interface Server #(MMIOCRq, MMIODataPRs) core_side;
 
    // Fabric master interface for IO
-   interface AXI4_Master #( Wd_CoreW_Bus_MId, Wd_Addr, Wd_Data
+   interface AXI4_Master #( Wd_CoreW_Bus_MId, Wd_Addr, Wd_Data_Periph
                           , Wd_AW_User, Wd_W_User, Wd_B_User
                           , Wd_AR_User, Wd_R_User) mmio_master;
 endinterface
@@ -251,7 +251,7 @@ module mkMMIO_AXI4_Adapter (MMIO_AXI4_Adapter_IFC);
 
         // on each flit...
         // ===============
-        AXI4_WFlit #(Wd_Data, Wd_W_User)
+        AXI4_WFlit #(Wd_Data_Periph, Wd_W_User)
             wflit = AXI4_WFlit {wdata:  req.data.data[whichHalf],
                                 wstrb:  line_strb[whichHalf],
                                 wlast:  last,

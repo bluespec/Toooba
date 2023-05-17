@@ -67,7 +67,7 @@ Integer  bytes_per_fabric_addr = valueOf (Bytes_per_Fabric_Addr);
 //               |
 //             Periph
 
-typedef 64  Wd_Data;
+typedef 512  Wd_Data;
 
 // ----------------
 // Width of fabric 'user' datapaths. Carry capability tags on data lines.
@@ -118,6 +118,11 @@ Bit#(Wd_W_User)  fabric_default_wuser   = 0;
 Bit#(Wd_B_User)  fabric_default_buser   = 0;
 Bit#(Wd_AR_User) fabric_default_aruser  = 0;
 Bit#(Wd_R_User)  fabric_default_ruser   = 0;
+Bit#(Wd_AW_User_Periph) fabric_default_awuser_periph  = 0;
+Bit#(Wd_W_User_Periph)  fabric_default_wuser_periph   = 0;
+Bit#(Wd_B_User_Periph)  fabric_default_buser_periph   = 0;
+Bit#(Wd_AR_User_Periph) fabric_default_aruser_periph  = 0;
+Bit#(Wd_R_User_Periph)  fabric_default_ruser_periph   = 0;
 
 // ================================================================
 

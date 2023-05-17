@@ -98,7 +98,7 @@ interface PLIC_IFC #(numeric type  t_n_external_sources,
    method Action set_addr_map (Bit #(64)  addr_base, Bit #(64)  addr_lim);
 
    // Memory-mapped access
-   interface AXI4_Slave #( Wd_CoreW_Bus_SId, Wd_Addr, Wd_Data
+   interface AXI4_Slave #( Wd_CoreW_Bus_SId, Wd_Addr, Wd_Data_Periph
                          , 0, 0, 0, 0, 0) axi4_slave;
 
    // sources
@@ -381,13 +381,12 @@ module mkPLIC (PLIC_IFC #(t_n_external_sources, t_n_targets, t_max_priority))
 	 $display ("            ", fshow (rda));
       end
 
-      if ((valueOf (Wd_Data) == 64) && ((addr_offset & 'h7) == 'h4))
+      if ((valueOf (Wd_Data_Periph) == 64) && ((addr_offset & 'h7) == 'h4))
 	 rdata = { rdata [31:0], 32'h0 };
 
       // Send read-response to bus
-      Fabric_Data x = truncate (rdata);
       let rdr = AXI4_RFlit {rid:   rda.arid,
-			    rdata: x,
+			    rdata: rdata,
 			    rresp: rresp,
 			    rlast: True,
 			    ruser: rda.aruser}; // XXX This requires that Wd_AR_User == Wd_R_User
@@ -416,7 +415,7 @@ module mkPLIC (PLIC_IFC #(t_n_external_sources, t_n_targets, t_max_priority))
       end
 
       let addr_offset  = wra.awaddr - rg_addr_base;
-      let wdata32      = (((valueOf (Wd_Data) == 64) && ((addr_offset & 'h7) == 'h4))
+      let wdata32      = (((valueOf (Wd_Data_Periph) == 64) && ((addr_offset & 'h7) == 'h4))
 			  ? wrd.wdata [63:32]
 			  : wrd.wdata [31:0]);
       let bresp = OKAY;
