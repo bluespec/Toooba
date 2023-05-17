@@ -59,6 +59,7 @@ import GetPut       :: *;
 import ClientServer :: *;
 import Connectable  :: *;
 import Clocks       :: *;
+import DefaultValue :: *;
 
 // ----------------
 // BSV additional libs
