@@ -131,7 +131,7 @@ import Trace_Data2 :: *;
 
 // ================================================================
 
-`ifdef SECURITY
+`ifdef SECURITY_BRPRED
 `define SECURITY_OR_INCLUDE_GDB_CONTROL
 `elsif INCLUDE_GDB_CONTROL
 `define SECURITY_OR_INCLUDE_GDB_CONTROL
@@ -364,7 +364,7 @@ module mkCore#(CoreId coreId)(Core);
         );
 
         // whether perf data is collected
-        Reg#(Bool) doStatsReg <- mkConfigReg(False);
+        Reg#(Bool) doStatsReg <- mkConfigReg(True);
 
         // write aggressive elements + wakupe reservation stations
         function Action writeAggr(Integer wrAggrPort, PhyRIndx dst);
@@ -830,8 +830,8 @@ module mkCore#(CoreId coreId)(Core);
     // to finish
     rule flushCaches(doFlushCaches);
         flush_caches <= False;
-        iMem.flush;
-        dMem.flush;
+        //iMem.flush;
+        //dMem.flush;
         // $display ("%0d: %m.rule flushCaches (imem and dmem)", cur_cycle);
     endrule
 

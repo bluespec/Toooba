@@ -295,6 +295,7 @@ typedef struct {
     LdQTag tag;
     Addr paddr;
     ByteOrTagEn shiftedBE;
+    Bit#(16) pcHash;
 } LSQIssueLdInfo deriving(Bits, Eq, FShow);
 
 typedef struct {
@@ -342,6 +343,7 @@ typedef struct {
     MemTaggedData     stData;
     Bool              allowCapAmoLd;
     Maybe#(Trap)      fault;
+    Bit#(16)          pcHash;
 } StQDeqEntry deriving (Bits, Eq, FShow);
 
 interface SplitLSQ;
@@ -354,11 +356,12 @@ interface SplitLSQ;
                         MemInst mem_inst,
                         Maybe#(PhyDst) dst,
                         SpecBits spec_bits,
-                        Bit#(16) pc_hash);
+                        Bit#(16) pcHash);
     method Action enqSt(InstTag inst_tag,
                         MemInst mem_inst,
                         Maybe#(PhyDst) dst,
-                        SpecBits spec_bits);
+                        SpecBits spec_bits,
+                        Bit#(16) pcHash);
     // A mem inst needs orignal BE (not shifted) at addr translation
     method ByteOrTagEn getOrigBE(LdStQTag t);
     // Retrieve information when we want to wakeup RS early in case
@@ -663,7 +666,7 @@ module mkSplitLSQ(SplitLSQ);
     Vector#(LdQSize, Reg#(Bool))                    ld_acq             <- replicateM(mkConfigRegU);
     Vector#(LdQSize, Reg#(Bool))                    ld_rel             <- replicateM(mkConfigRegU);
     Vector#(LdQSize, Reg#(Maybe#(PhyDst)))          ld_dst             <- replicateM(mkConfigRegU);
-    Vector#(LdQSize, Reg#(Bit#(16)))                ld_pc_hash         <- replicateM(mkConfigRegU);
+    Vector#(LdQSize, Reg#(Bit#(16)))                ld_pcHash         <- replicateM(mkConfigRegU);
     Vector#(LdQSize, Reg#(Bool))                    ld_waitForOlderSt  <- replicateM(mkConfigRegU);
     Vector#(LdQSize, Ehr#(2, Addr))                 ld_paddr           <- replicateM(mkEhr(?));
     Vector#(LdQSize, Ehr#(2, Bool))                 ld_isMMIO          <- replicateM(mkEhr(?));
@@ -856,6 +859,7 @@ module mkSplitLSQ(SplitLSQ);
     Vector#(StQSize, Reg#(Bool))                    st_acq       <- replicateM(mkRegU);
     Vector#(StQSize, Reg#(Bool))                    st_rel       <- replicateM(mkRegU);
     Vector#(StQSize, Reg#(Maybe#(PhyDst)))          st_dst       <- replicateM(mkRegU);
+    Vector#(StQSize, Reg#(Bit#(16)))                st_pcHash   <- replicateM(mkRegU);
     Vector#(StQSize, Ehr#(2, Addr))                 st_paddr     <- replicateM(mkEhr(?));
     Vector#(StQSize, Ehr#(2, Bool))                 st_isMMIO    <- replicateM(mkEhr(?));
     Vector#(StQSize, Ehr#(2, MemDataByteEn))        st_shiftedBE <- replicateM(mkEhr(?));
@@ -1126,7 +1130,8 @@ module mkSplitLSQ(SplitLSQ);
             let info = LSQIssueLdInfo {
                 tag: tag,
                 paddr: ld_paddr_findIss[tag],
-                shiftedBE: ld_shiftedBE_findIss[tag]
+                shiftedBE: ld_shiftedBE_findIss[tag],
+                pcHash: ld_pcHash[tag]
             };
             issueLdInfo.wset(info);
             if(verbose) begin
@@ -1458,7 +1463,7 @@ module mkSplitLSQ(SplitLSQ);
                         MemInst mem_inst,
                         Maybe#(PhyDst) dst,
                         SpecBits spec_bits,
-                        Bit#(16) pc_hash) if(ld_can_enq_wire && !wrongSpec_conflict);
+                        Bit#(16) pcHash) if(ld_can_enq_wire && !wrongSpec_conflict);
         if(verbose) begin
             $display("[LSQ - enqLd] enqP %d; ", ld_enqP,
                      "; ", fshow(inst_tag),
@@ -1487,8 +1492,8 @@ module mkSplitLSQ(SplitLSQ);
         ld_executing_enq[ld_enqP] <= False;
         ld_done_enq[ld_enqP] <= False;
         ld_killed_enq[ld_enqP] <= Invalid;
-        ld_pc_hash[ld_enqP] <= pc_hash;
-        ld_waitForOlderSt[ld_enqP] <= stlPred.pred(pc_hash);
+        ld_pcHash[ld_enqP] <= pcHash;
+        ld_waitForOlderSt[ld_enqP] <= stlPred.pred(pcHash);
         ld_readFrom_enq[ld_enqP] <= Invalid;
         ld_depLdQDeq_enq[ld_enqP] <= Invalid;
         ld_depStQDeq_enq[ld_enqP] <= Invalid;
@@ -1516,7 +1521,8 @@ module mkSplitLSQ(SplitLSQ);
     method Action enqSt(InstTag inst_tag,
                         MemInst mem_inst,
                         Maybe#(PhyDst) dst,
-                        SpecBits spec_bits) if(st_can_enq_wire && !wrongSpec_conflict);
+                        SpecBits spec_bits,
+                        Bit#(16) pcHash) if(st_can_enq_wire && !wrongSpec_conflict);
         if(verbose) begin
             $display("[LSQ - enqSt] enqP %d; ", st_enqP,
                      "; ", fshow(inst_tag),
@@ -1540,6 +1546,7 @@ module mkSplitLSQ(SplitLSQ);
         st_rel[st_enqP] <= mem_inst.rl;
         st_dst[st_enqP] <= dst;
         st_fault_enq[st_enqP] <= Invalid;
+        st_pcHash[st_enqP] <= pcHash;
         st_allowCapAmoLd_enq[st_enqP] <= False;
         st_computed_enq[st_enqP] <= False;
         st_verified_enq[st_enqP] <= False;
@@ -1716,7 +1723,7 @@ module mkSplitLSQ(SplitLSQ);
                 LdKilledBy by = lsqTag matches tagged Ld .unuse ? Ld : St;
                 ld_killed_updAddr[killTag] <= Valid (by);
                 if(verbose) begin
-                    $display("[LSQ - updateAddr] kill tag %d", killTag, " ld_hash: %x", ld_pc_hash[killTag]);
+                    $display("[LSQ - updateAddr] kill tag %d", killTag, " ld_hash: %x", ld_pcHash[killTag]);
                 end
                 // checks
                 doAssert(ld_computed_updAddr[killTag], "must be computed");
@@ -2119,7 +2126,7 @@ module mkSplitLSQ(SplitLSQ);
         end
         Bool waited = ld_waitForOlderSt[deqP]; // Don't negative train if we waited for older stores.
         // Update predictor.
-        stlPred.update(ld_pc_hash[deqP], waited, killedLd);
+        stlPred.update(ld_pcHash[deqP], waited, killedLd);
 
         // remove the entry
         ld_valid_deqLd[deqP] <= False;
@@ -2152,7 +2159,8 @@ module mkSplitLSQ(SplitLSQ);
             shiftedBE: st_shiftedBE_deqSt[deqP],
             stData: st_stData_deqSt[deqP],
             allowCapAmoLd: st_allowCapAmoLd_deqSt[deqP],
-            fault: st_fault_deqSt[deqP]
+            fault: st_fault_deqSt[deqP],
+            pcHash: st_pcHash[deqP]
         };
     endmethod
 

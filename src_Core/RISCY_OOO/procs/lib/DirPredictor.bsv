@@ -94,7 +94,7 @@ module mkDirPredictor(DirPredictor#(DirPredTrainInfo));
 `endif
 
 `ifdef DIR_PRED_TOUR
-`ifdef SECURITY
+`ifdef SECURITY_BRPRED
     let m <- mkTourPredSecure;
 `else
     let m <- mkTourPred;

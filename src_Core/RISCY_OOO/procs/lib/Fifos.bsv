@@ -691,3 +691,101 @@ module mkCFSCountFifo#(function Bool isFound(t v, st k))(SCountFifo#(n, t, st)) 
     deqEn[1] <= False;
   endmethod
 endmodule
+
+module mkOverflowPipelineFifo( Fifo#(n, t) ) provisos (Bits#(t,tSz));
+  // A pipeline fifo that also allows enquing to it when full,
+  // discarding the oldest element
+  // n is size of fifo
+  // t is data type of fifo
+  Vector#(n, Reg#(t))   data   <- replicateM(mkReg(unpack(0)));
+  Ehr#(2, Bit#(TLog#(n))) enqP   <- mkEhr(0);
+  Ehr#(3, Bit#(TLog#(n))) deqP   <- mkEhr(0);
+  Ehr#(3, Bool)       empty  <- mkEhr(True);
+  Ehr#(3, Bool)       full   <- mkEhr(False);
+  Bit#(TLog#(n))      max_index = fromInteger(valueOf(n)-1);
+
+  method Bool notFull = True;
+
+  method Action enq(t x);
+    data[enqP[0]] <= x;
+    empty[1] <= False;
+    let next_enqP = (enqP[0] == max_index) ? 0 : enqP[0] + 1;
+    enqP[0] <= next_enqP;
+    if (full[1]) begin
+      deqP[1] <= next_enqP;
+    end
+    else if( next_enqP == deqP[1] ) begin
+      full[1] <= True;
+    end
+  endmethod
+
+  method Bool notEmpty = !empty[0];
+
+  method Action deq if( !empty[0] );
+    full[0] <= False;
+    let next_deqP = (deqP[0] == max_index) ? 0 : deqP[0] + 1;
+    deqP[0] <= next_deqP;
+    if( next_deqP == enqP[0] ) begin
+      empty[0] <= True;
+    end
+  endmethod
+
+  method t first if( !empty[0] );
+    return data[deqP[0]];
+  endmethod
+
+  method Action clear;
+    enqP[1] <= 0;
+    deqP[2] <= 0;
+    empty[2] <= True;
+    full[2] <= False;
+  endmethod
+endmodule
+ 
+module mkOverflowBypassFifo( Fifo#(n, t) ) provisos (Bits#(t,tSz));
+  // n is size of fifo
+  // t is data type of fifo
+  Vector#(n, Ehr#(2,t))   data  <- replicateM(mkEhr(?));
+  Ehr#(2, Bit#(TLog#(n))) enqP  <- mkEhr(0);
+  Ehr#(3, Bit#(TLog#(n))) deqP  <- mkEhr(0);
+  Ehr#(3, Bool)           empty <- mkEhr(True);
+  Ehr#(3, Bool)           full  <- mkEhr(False);
+  Bit#(TLog#(n))          max_index = fromInteger(valueOf(n)-1);
+
+  method Bool notFull = !full[0];
+
+  method Action enq(t x);
+    data[enqP[0]][0] <= x;
+    empty[0] <= False;
+    let next_enqP = (enqP[0] == max_index) ? 0 : enqP[0] + 1;
+    if (full[0]) begin
+      deqP[0] <= next_enqP;
+    end
+    enqP[0] <= next_enqP;
+    if( next_enqP == deqP[0] ) begin
+      full[0] <= True;
+    end
+  endmethod
+
+  method Bool notEmpty = !empty[1];
+
+  method Action deq if( !empty[1] );
+    full[1] <= False;
+    let next_deqP = (deqP[1] == max_index) ? 0 : deqP[1] + 1;
+    deqP[1] <= next_deqP;
+    if( next_deqP == enqP[1] ) begin
+      empty[1] <= True;
+    end
+  endmethod
+
+  method t first if( !empty[1] );
+    return data[deqP[1]][1];
+  endmethod
+
+  method Action clear;
+    enqP[1] <= 0;
+    deqP[2] <= 0;
+    empty[2] <= True;
+    full[2] <= False;
+  endmethod
+endmodule

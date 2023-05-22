@@ -741,7 +741,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                     lsq.enqLd(inst_tag, mem_inst, allow_cap, phy_regs.dst, spec_bits, hash(getAddr(pc)));
                 end
                 else begin
-                    lsq.enqSt(inst_tag, mem_inst, phy_regs.dst, spec_bits);
+                    lsq.enqSt(inst_tag, mem_inst, phy_regs.dst, spec_bits, hash(getAddr(pc)));
                 end
             end
             else begin
@@ -1075,7 +1075,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                     lsq.enqLd(inst_tag, mem_inst, phy_regs.dst, spec_bits, hash(getAddr(pc)));
                                 end
                                 else begin
-                                    lsq.enqSt(inst_tag, mem_inst, phy_regs.dst, spec_bits);
+                                    lsq.enqSt(inst_tag, mem_inst, phy_regs.dst, spec_bits, hash(getAddr(pc)));
                                 end
                             end
                             else begin
