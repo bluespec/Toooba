@@ -12,6 +12,8 @@
 //
 //     This work was supported by NCSC programme grant 4212611/RFA 15971 ("SafeBet").
 //-
+// Prefetcher modifications:
+//     Copyright (c) 2023 Karlis Susters
 //
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
