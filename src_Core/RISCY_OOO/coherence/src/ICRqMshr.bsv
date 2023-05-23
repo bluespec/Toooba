@@ -1,6 +1,9 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// 
+//
+// Prefetcher modifications:
+//     Copyright (c) 2023 Karlis Susters
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +11,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -106,7 +109,7 @@ interface ICRqMshr_pipelineResp#(
 
     method Action setResult(Bit#(TLog#(cRqNum)) n, resultT r); // set a valid result
     method Action setStateSlot(
-        Bit#(TLog#(cRqNum)) n, 
+        Bit#(TLog#(cRqNum)) n,
         ICRqState state,
         ICRqSlot#(wayT, tagT) slot
     );
@@ -139,14 +142,14 @@ interface ICRqMshr_prefetcher#(
 endinterface
 
 interface ICRqMshr#(
-    numeric type cRqNum, 
+    numeric type cRqNum,
     type wayT,
     type tagT,
     type reqT, // child req type
     type resultT // inst result type
 );
     // port for cRqTransfer, initialization is done inside method
-    method ActionValue#(Bit#(TLog#(cRqNum))) getEmptyEntryInit(reqT r); 
+    method ActionValue#(Bit#(TLog#(cRqNum))) getEmptyEntryInit(reqT r);
 
     // port for sendRsToC
     interface ICRqMshr_sendRsToC#(cRqNum, resultT) sendRsToC;

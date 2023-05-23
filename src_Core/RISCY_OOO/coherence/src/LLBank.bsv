@@ -1,6 +1,9 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
 //
+// Prefetcher modifications:
+//     Copyright (c) 2023 Karlis Susters
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without

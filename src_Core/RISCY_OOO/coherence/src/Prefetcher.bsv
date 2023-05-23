@@ -1,3 +1,25 @@
+// Copyright (c) 2023 Karlis Susters 
+//
+// Permission is hereby granted, free of charge, to any person
+// obtaining a copy of this software and associated documentation
+// files (the "Software"), to deal in the Software without
+// restriction, including without limitation the rights to use, copy,
+// modify, merge, publish, distribute, sublicense, and/or sell copies
+// of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+// BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+// ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 import ISA_Decls   :: *;
 import CrossBar::*;
 import GetPut::*;
@@ -1213,17 +1235,16 @@ typedef struct {
 module mkBRAMStridePCPrefetcher(PCPrefetcher)
 provisos(
     NumAlias#(strideTableSize, 512),
-    NumAlias#(cLinesAheadToPrefetch, 2), // TODO fetch more if have repeatedly hit an entry, and if stride big
+    NumAlias#(cLinesAheadToPrefetch, 2), 
     Alias#(strideTableIndexT, Bit#(TLog#(strideTableSize)))
     );
-    //Vector#(strideTableSize, Reg#(StrideEntry)) strideTable <- replicateM(mkReg(unpack(0)));
     RWBramCore#(strideTableIndexT, StrideEntry) strideTable <- mkRWBramCoreForwarded;
     FIFOF#(Tuple3#(Addr, Bit#(16), HitOrMiss)) memAccesses <- mkSizedBypassFIFOF(8);
     Reg#(Tuple3#(Addr, Bit#(16), HitOrMiss)) rdRespEntry <- mkReg(?);
 
     Fifo#(8, Addr) addrToPrefetch <- mkOverflowPipelineFifo;
     FIFO#(Tuple3#(StrideEntry, Addr, Bit#(16))) strideEntryForPrefetch <- mkBypassFIFO();
-    Reg#(Maybe#(Bit#(4))) cLinesPrefetchedLatest <- mkReg(?);
+    Reg#(Maybe#(Bit#(4))) cLinesPrefetchedLatest <- mkReg(Invalid);
     PulseWire holdReadReq <- mkPulseWire;
 
     rule sendReadReq if (!holdReadReq);
@@ -1950,9 +1971,9 @@ module mkLLDPrefetcher(Prefetcher);
     `ifdef DATA_PREFETCHER_BLOCK
         let m <- mkBlockPrefetcher;
     `elsif DATA_PREFETCHER_STRIDE
-        doAssert(False, "Illegal data prefetcher type for LL cache!")
-    `elsif DATA_PREFETCHER_STRIDE
-        doAssert(False, "Illegal data prefetcher type for LL cache!")
+        doAssert(False, "Illegal data prefetcher type for LL cache!");
+    `elsif DATA_PREFETCHER_STRIDE_ADAPTIVE
+        doAssert(False, "Illegal data prefetcher type for LL cache!");
     `elsif DATA_PREFETCHER_MARKOV
         let m <- mkBRAMMarkovPrefetcher;
     `elsif DATA_PREFETCHER_MARKOV_ON_HIT
