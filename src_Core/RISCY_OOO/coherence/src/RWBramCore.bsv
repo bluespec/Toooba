@@ -97,7 +97,7 @@ module mkRWBramCoreForwarded(RWBramCore#(addrT, dataT)) provisos(
 
     method Action rdReq(addrT a);
         if (currentWriteAddr.wget matches tagged Valid .writeAddr &&& writeAddr == a) begin
-            $display ("%t Write same addr as read -- forwarding data!", $time);
+            //$display ("%t Write same addr as read -- forwarding data!", $time);
             rdReqQ.enq(Valid(fromMaybe(?, currentWriteData.wget)));
         end
         else begin
