@@ -214,6 +214,7 @@ typedef struct {
     ByteEn byteEn; // valid when op == Sc
     Data data; // valid when op == Sc/Amo
     AmoInst amoInst; // valid when op == Amo
+    Bit#(16) pcHash; // hash of instruction pc sending the request
 } ProcRq#(type idT) deriving(Bits, Eq, FShow);
 
 interface L1ProcReq#(type idT);
@@ -262,6 +263,7 @@ typedef struct {
     Bool canUpToE; // meaningful to upgrade to E if toState is S
     idT id; // slot id in child cache
     childT child; // from which child
+    Bool isPrefetchRq;
 } CRqMsg#(type idT, type childT) deriving(Bits, Eq, FShow);
 
 typedef struct {

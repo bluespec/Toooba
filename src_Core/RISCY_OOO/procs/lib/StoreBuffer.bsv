@@ -1,6 +1,6 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +8,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -56,6 +56,7 @@ typedef struct {
     SBBlockAddr addr;
     SBByteEn byteEn;
     SBBlock data;
+    Bit#(16) pcHash;
 } SBEntry deriving(Bits, Eq, FShow);
 
 // result of searching (e.g. load byass)
@@ -67,15 +68,15 @@ typedef struct {
 interface StoreBuffer;
     method Bool isEmpty;
     method Maybe#(SBIndex) getEnqIndex(Addr paddr);
-    method Action enq(SBIndex idx, Addr paddr, ByteEn be, Data data);
+    method Action enq(SBIndex idx, Addr paddr, ByteEn be, Data data, Bit#(16) pcHash);
     method ActionValue#(SBEntry) deq(SBIndex idx);
     method ActionValue#(Tuple2#(SBIndex, SBEntry)) issue;
     method SBSearchRes search(Addr paddr, ByteEn be); // load bypass/stall or atomic inst stall
     // check no matching entry for AMO/Lr/Sc issue
     // XXX assume BE has been shifted approriately for paddr offset
     // (for load we need to do that before calling the methods)
-    method Bool noMatchLdQ(Addr paddr, ByteEn be); 
-    method Bool noMatchStQ(Addr paddr, ByteEn be); 
+    method Bool noMatchLdQ(Addr paddr, ByteEn be);
+    method Bool noMatchStQ(Addr paddr, ByteEn be);
 endinterface
 
 /////////////////
@@ -100,7 +101,7 @@ module mkStoreBufferEhr(StoreBuffer);
     // entries with valid bit
     Vector#(SBSize, Ehr#(2, SBEntry)) entry <- replicateM(mkEhr(?));
     Vector#(SBSize, Ehr#(2, Bool)) valid <- replicateM(mkEhr(False));
-    
+
     // FIFO of entries to be issued to memory
     FIFOF#(SBIndex) issueQ <- mkUGSizedFIFOF(valueOf(SBSize));
     // FIFO of empty entries
@@ -141,7 +142,7 @@ module mkStoreBufferEhr(StoreBuffer);
             Vector#(SBBlockNumData, ByteEn) byteEn = unpack(pack(entry[idx][searchPort].byteEn));
             return pack(byteEn[sel]);
         endfunction
-        
+
         // func to determine whether the load matches a store entry
         function Bool matchEntry(Integer i);
             // entry must be valid, addr should match, byte enable should overlap
@@ -179,7 +180,7 @@ module mkStoreBufferEhr(StoreBuffer);
         end
     endmethod
 
-    method Action enq(SBIndex idx, Addr paddr, ByteEn be, Data d) if(inited);
+    method Action enq(SBIndex idx, Addr paddr, ByteEn be, Data d, Bit#(16) pcHash) if(inited);
         // get data offset
         SBBlockDataSel sel = getSBBlockDataSel(paddr);
         // check whether the entry already exists
@@ -200,7 +201,8 @@ module mkStoreBufferEhr(StoreBuffer);
             entry[idx][enqPort] <= SBEntry {
                 addr: getSBBlockAddr(paddr),
                 byteEn: unpack(pack(byteEn)),
-                data: pack(block)
+                data: pack(block),
+                pcHash: pcHash
             };
             // this entry must have been sent to issueQ
         end
@@ -215,7 +217,8 @@ module mkStoreBufferEhr(StoreBuffer);
             entry[idx][enqPort] <= SBEntry {
                 addr: getSBBlockAddr(paddr),
                 byteEn: unpack(pack(byteEn)),
-                data: pack(block)
+                data: pack(block),
+                pcHash: pcHash
             };
             // send this entry to issueQ
             doAssert(issueQ.notFull, "SB issueQ should not be full");
@@ -251,7 +254,7 @@ module mkStoreBufferEhr(StoreBuffer);
             Vector#(SBBlockNumData, ByteEn) byteEn = unpack(pack(entry[idx][searchPort].byteEn));
             return pack(byteEn[sel]);
         endfunction
-        
+
         // func to determine whether the load matches a store entry
         function Bool matchEntry(Integer i);
             // entry must be valid, addr should match, byte enable should overlap
@@ -297,7 +300,7 @@ endmodule
 module mkDummyStoreBuffer(StoreBuffer);
     method Bool isEmpty = True;
     method Maybe#(SBIndex) getEnqIndex(Addr paddr) = Invalid;
-    method Action enq(SBIndex idx, Addr paddr, ByteEn be, Data data);
+    method Action enq(SBIndex idx, Addr paddr, ByteEn be, Data data, Bit#(16) pcHash);
         doAssert(False, "enq should never be called)");
     endmethod
     method ActionValue#(SBEntry) deq(SBIndex idx);
@@ -311,6 +314,6 @@ module mkDummyStoreBuffer(StoreBuffer);
     method SBSearchRes search(Addr paddr, ByteEn be);
         return SBSearchRes {matchIdx: Invalid, forwardData: Invalid};
     endmethod
-    method Bool noMatchLdQ(Addr paddr, ByteEn be) = True; 
-    method Bool noMatchStQ(Addr paddr, ByteEn be) = True; 
+    method Bool noMatchLdQ(Addr paddr, ByteEn be) = True;
+    method Bool noMatchStQ(Addr paddr, ByteEn be) = True;
 endmodule

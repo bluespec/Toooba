@@ -71,7 +71,7 @@ typedef union tagged {
     L1PipeRqIn#(cRqIdxT) CRq;
     L1PipeRqIn#(pRqIdxT) PRq;
     L1PipePRsIn#(wayT) PRs;
-`ifdef SECURITY
+`ifdef SECURITY_CACHES
     L1PipeFlushIn#(wayT, indexT, pRqIdxT) Flush;
 `endif
 } L1PipeIn#(
@@ -91,7 +91,7 @@ typedef union tagged {
     cRqIdxT L1CRq;
     pRqIdxT L1PRq;
     void L1PRs;
-`ifdef SECURITY
+`ifdef SECURITY_CACHES
     L1FlushCmd#(indexT, pRqIdxT) L1Flush;
 `endif
 } L1Cmd#(
@@ -132,7 +132,7 @@ typedef union tagged {
     L1PipeRqIn#(cRqIdxT) CRq;
     L1PipeRqIn#(pRqIdxT) PRq;
     L1PipePRsCmd#(wayT) PRs;
-`ifdef SECURITY
+`ifdef SECURITY_CACHES
     L1PipeFlushIn#(wayT, indexT, pRqIdxT) Flush;
 `endif
 } L1PipeCmd#(
@@ -207,7 +207,7 @@ module mkL1Pipe(
             tagged CRq .r: r.addr;
             tagged PRq .r: r.addr;
             tagged PRs .r: r.addr;
-`ifdef SECURITY
+`ifdef SECURITY_CACHES
             // fake an address for flush req that has the same index
             tagged Flush .r: (zeroExtend(r.index) << (valueOf(LgLineSzBytes) + valueOf(lgBankNum)));
 `endif
@@ -245,7 +245,7 @@ module mkL1Pipe(
                     pRqMiss: False
                 };
             end
-`ifdef SECURITY
+`ifdef SECURITY_CACHES
             else if(cmd matches tagged Flush .flush) begin
                 // flush directly read from cmd
                 return TagMatchResult {
@@ -347,7 +347,7 @@ module mkL1Pipe(
                     way: rs.way
                 }), rs.data, UpCs (rs.toState));
             end
-`ifdef SECURITY
+`ifdef SECURITY_CACHES
             tagged Flush .flush: begin
                 pipe.enq(Flush (flush), Invalid, Invalid);
             end
@@ -363,7 +363,7 @@ module mkL1Pipe(
                 tagged CRq .rq: L1CRq (rq.mshrIdx);
                 tagged PRq .rq: L1PRq (rq.mshrIdx);
                 tagged PRs .rs: L1PRs;
-`ifdef SECURITY
+`ifdef SECURITY_CACHES
                 tagged Flush .flush: L1Flush (L1FlushCmd {
                     index: flush.index,
                     mshrIdx: flush.mshrIdx
@@ -384,7 +384,7 @@ module mkL1Pipe(
         if(swapRq matches tagged Valid .idx) begin // swap in cRq
             Addr addr = getAddrFromCmd(pipe.first.cmd); // inherit addr
             newCmd = Valid (CRq (L1PipeRqIn {addr: addr, mshrIdx: idx}));
-`ifdef SECURITY
+`ifdef SECURITY_CACHES
             doAssert(pipe.first.cmd matches tagged Flush .f ? False : True,
                      "Cannot swap after a flush req");
 `endif

@@ -64,7 +64,7 @@ interface L1PRqMshr_pipelineResp#(numeric type pRqNum);
 
     method Action releaseEntry(Bit#(TLog#(pRqNum)) n);
     method Action setDone_setData(Bit#(TLog#(pRqNum)) n, Maybe#(Line) d);
-`ifdef SECURITY
+`ifdef SECURITY_CACHES
     method Action setFlushAddr(Bit#(TLog#(pRqNum)) n, Addr a);
 `endif
 endinterface
@@ -210,7 +210,7 @@ module mkL1PRqMshrSafe(
             stateVec[n][pipelineResp_port] <= Empty;
         endmethod
 
-`ifdef SECURITY
+`ifdef SECURITY_CACHES
         method Action setFlushAddr(Bit#(TLog#(pRqNum)) n, Addr a);
             reqVec[n][pipelineResp_port] <= PRqMsg {
                 addr: a,

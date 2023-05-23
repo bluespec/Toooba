@@ -108,6 +108,7 @@ copy_coherence_src_files:
 	cp -p $(RISCY_HOME)/$(COHERENCE_SRC)/LLCRqMshr.bsv            ./$(COHERENCE_SRC)/
 	cp -p $(RISCY_HOME)/$(COHERENCE_SRC)/LLPipe.bsv               ./$(COHERENCE_SRC)/
 	cp -p $(RISCY_HOME)/$(COHERENCE_SRC)/MshrDeadlockChecker.bsv  ./$(COHERENCE_SRC)/
+	cp -p $(RISCY_HOME)/$(COHERENCE_SRC)/Prefetcher.bsv  		  ./$(COHERENCE_SRC)/
 	cp -p $(RISCY_HOME)/$(COHERENCE_SRC)/RandomReplace.bsv        ./$(COHERENCE_SRC)/
 	cp -p $(RISCY_HOME)/$(COHERENCE_SRC)/RWBramCore.bsv           ./$(COHERENCE_SRC)/
 	cp -p $(RISCY_HOME)/$(COHERENCE_SRC)/SelfInvIBank.bsv         ./$(COHERENCE_SRC)/

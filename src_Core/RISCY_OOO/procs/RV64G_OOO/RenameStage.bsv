@@ -1,7 +1,7 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
 // Portions Copyright (c) 2019-2020 Bluespec, Inc.
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -9,10 +9,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -691,7 +691,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                     lsq.enqLd(inst_tag, mem_inst, phy_regs.dst, spec_bits);
                 end
                 else begin
-                    lsq.enqSt(inst_tag, mem_inst, phy_regs.dst, spec_bits);
+                    lsq.enqSt(inst_tag, mem_inst, phy_regs.dst, spec_bits, hash(getAddr(pc)));
                 end
             end
             else begin
@@ -1010,10 +1010,10 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                 doAssert(!isValid(spec_tag), "should not have spec tag");
                                 // put in ldstq
                                 if(isLdQ) begin
-                                    lsq.enqLd(inst_tag, mem_inst, phy_regs.dst, spec_bits);
+                                    lsq.enqLd(inst_tag, mem_inst, phy_regs.dst, spec_bits, hash(pc));
                                 end
                                 else begin
-                                    lsq.enqSt(inst_tag, mem_inst, phy_regs.dst, spec_bits);
+                                    lsq.enqSt(inst_tag, mem_inst, phy_regs.dst, spec_bits, hash(pc));
                                 end
                             end
                             else begin
@@ -1034,7 +1034,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                         // deq fetch & update epochs match
                         fetchStage.pipelines[i].deq;
                         epochManager.updatePrevEpoch[i].update(main_epoch);
-                        
+
                         // Claim a speculation tag
                         if (new_speculation) begin
                             specTagClaimed = True; // mark resource used
