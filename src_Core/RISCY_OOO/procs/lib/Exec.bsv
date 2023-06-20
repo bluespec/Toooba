@@ -287,7 +287,7 @@ function CapPipe capModify(CapPipe a, CapPipe b, CapModifyFunc func);
             tagged SetFlags               :
                 setFlags(a_mut, truncate(getAddr(b)));
             tagged FromPtr                :
-                (getAddr(a_mut) == 0 ? nullCap : setOffset(b, getAddr(a)).value);
+                (getAddr(a) == 0 ? nullCap : setOffset(b_mut, getAddr(a)).value);
             tagged BuildCap               :
                 setKind(setValidCap(a_mut, isValidCap(b_mut)), getKind(a)==SENTRY ? SENTRY : UNSEALED);
             tagged Move                   :
@@ -329,7 +329,7 @@ function Data capInspect(CapPipe a, CapPipe b, CapInspectFunc func);
                tagged GetType                :
                    tpl_1(extractType(a));
                tagged ToPtr                  :
-                   (isValidCap(a) && isValidCap(b) ? (getAddr(a) - getBase(b)) : 0);
+                   (isValidCap(a) ? getAddr(a) - getBase(b) : 0);
                default: ?;
         endcase);
     return res;
@@ -438,9 +438,6 @@ function ExecResult basicExec(DecodedInst dInst, CapPipe rVal1, CapPipe rVal2, C
     Maybe#(BoundsCheck) boundsCheck = prepareBoundsCheck(rVal1, aluVal2, pcc,
                                                          nullCap, 0, 0, // These three are only used in the memory pipe
                                                          dInst.capChecks);
-    if (dInst.capChecks.cfromptr_bypass && getAddr(rVal1) == 0) begin
-        capException = Invalid;
-    end
 
     cf.nextPc = setKind(cf.nextPc, UNSEALED);
     cf.mispredict = cf.nextPc != ppc;
