@@ -258,6 +258,7 @@ function CapPipe capModify(CapPipe a, CapPipe b, CapModifyFunc func);
     Bool sealPassthrough = !isValidCap(b) || getKind(a) != UNSEALED || !isInBounds(b, False) || getAddr(b) == otype_unsealed_ext;
     Bool sealIllegal = getKind(b) != UNSEALED || !getHardPerms(b).permitSeal || !validAsType(b, getAddr(b));
     Bool unsealIllegal = !isValidCap(b) || getKind(a) != UNSEALED || getKind(b) == UNSEALED || a_res || getAddr(b) != a_type || !getHardPerms(b).permitUnseal || !isInBounds(b, False);
+    Bool buildCapIllegal = !isValidCap(b) || getKind(b) != UNSEALED || !isDerivable(a) || (getPerms(a) & getPerms(b)) != getPerms(a) || getBase(a) < getBase(b) || getTop(a) > getTop(b); // XXX needs optimisation
     CapPipe res = (case(func) matches
             tagged ModifyOffset .offsetOp :
                 modifyOffset(a_mut, getAddr(b), offsetOp == IncOffset).value;
@@ -290,7 +291,7 @@ function CapPipe capModify(CapPipe a, CapPipe b, CapModifyFunc func);
             tagged FromPtr                :
                 (getAddr(a) == 0 ? nullCap : setOffset(b_mut, getAddr(a)).value);
             tagged BuildCap               :
-                setKind(setValidCap(a_mut, isValidCap(b_mut)), getKind(a)==SENTRY ? SENTRY : UNSEALED);
+                setKind(setValidCap(a_mut, !buildCapIllegal), getKind(a)==SENTRY ? SENTRY : UNSEALED);
             tagged Move                   :
                 a;
             tagged ClearTag               :

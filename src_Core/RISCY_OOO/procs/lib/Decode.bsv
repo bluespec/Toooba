@@ -1140,15 +1140,6 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             dInst.execFunc = Alu (Sub);
                         end
                         f7_cap_CBuildCap: begin
-                            dInst.capChecks.src1_perm_subset_src2 = True;
-                            dInst.capChecks.src1_derivable = True;
-
-                            dInst.capChecks.check_enable = True;
-                            dInst.capChecks.check_authority_src = Src2;
-                            dInst.capChecks.check_low_src = Src1Base;
-                            dInst.capChecks.check_high_src = Src1Top;
-                            dInst.capChecks.check_inclusive = True;
-
                             // Swap arguments so SCR possibly goes in RS2
                             dInst.iType = Cap;
                             regs.dst = Valid(tagged Gpr rd);
