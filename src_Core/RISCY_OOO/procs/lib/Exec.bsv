@@ -52,22 +52,14 @@ function Maybe#(CSR_XCapCause) capChecksExec(CapPipe a, CapPipe b, CapPipe ddc, 
     function Maybe#(CSR_XCapCause) e2(CHERIException e)   = Valid(CSR_XCapCause{cheri_exc_reg: toCheck.rn2, cheri_exc_code: e});
     function Maybe#(CSR_XCapCause) eDDC(CHERIException e) = Valid(CSR_XCapCause{cheri_exc_reg: {1'b1, pack(scrAddrDDC)}, cheri_exc_code: e});
     Maybe#(CSR_XCapCause) result = Invalid;
-    if (toCheck.ddc_tag                        && !isValidCap(ddc))
-        result = eDDC(cheriExcTagViolation);
-    else if (toCheck.src1_tag                  && !isValidCap(a))
+    if (toCheck.src1_tag                  && !isValidCap(a))
         result = e1(cheriExcTagViolation);
     else if (toCheck.src2_tag                  && !isValidCap(b))
         result = e2(cheriExcTagViolation);
-    else if (toCheck.ddc_unsealed              && isValidCap(ddc) && (getKind(ddc) != UNSEALED))
-        result = eDDC(cheriExcSealViolation);
-    else if (toCheck.src1_unsealed             && isValidCap(a) && (getKind(a) != UNSEALED))
-        result = e1(cheriExcSealViolation);
     else if (toCheck.src1_unsealed_or_sentry   && isValidCap(a) && (getKind(a) != UNSEALED) && (getKind(a) != SENTRY))
         result = e1(cheriExcSealViolation);
     else if (toCheck.src1_unsealed_or_imm_zero && isValidCap(a) && (getKind(a) != UNSEALED) && (imm != 0))
         result = e1(cheriExcSealViolation);
-    else if (toCheck.src2_unsealed             && isValidCap(b) && (getKind(b) != UNSEALED))
-        result = e2(cheriExcSealViolation);
     else if (toCheck.src1_sealed_with_type     && (getKind (a) matches tagged SEALED_WITH_TYPE .t ? False : True))
         result = e1(cheriExcSealViolation);
     else if (toCheck.src2_sealed_with_type     && (getKind (b) matches tagged SEALED_WITH_TYPE .t ? False : True))
@@ -84,18 +76,6 @@ function Maybe#(CSR_XCapCause) capChecksExec(CapPipe a, CapPipe b, CapPipe ddc, 
         result = e1(cheriExcPermitXViolation);
     else if (toCheck.src2_no_permit_x          && getHardPerms(b).permitExecute)
         result = e2(cheriExcPermitXViolation);
-    else if (toCheck.src2_permit_unseal        && !getHardPerms(b).permitUnseal)
-        result = e2(cheriExcPermitUnsealViolation);
-    else if (toCheck.src2_permit_seal          && !getHardPerms(b).permitSeal)
-        result = e2(cheriExcPermitSealViolation);
-    else if (toCheck.src2_points_to_src1_type  && getAddr(b) != zeroExtend(getKind(a).SEALED_WITH_TYPE))
-        result = e2(cheriExcTypeViolation);
-    else if (toCheck.src2_addr_valid_type      && !validAsType(b, truncate(getAddr(b))))
-        result = e2(cheriExcLengthViolation);
-    else if (toCheck.src1_perm_subset_src2     && (getPerms(a) & getPerms(b)) != getPerms(a))
-        result = e2(cheriExcSoftwarePermViolation);
-    else if (toCheck.src1_derivable            && !isDerivable(a))
-        result = e1(cheriExcLengthViolation);
     return result;
 endfunction
 
