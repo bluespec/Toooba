@@ -1068,17 +1068,6 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             endcase
                         end
                         f7_cap_CUnseal: begin
-                            dInst.capChecks.src2_tag = True;
-                            dInst.capChecks.src1_sealed_with_type = True;
-                            dInst.capChecks.src2_points_to_src1_type = True;
-                            dInst.capChecks.src2_permit_unseal = True;
-
-                            dInst.capChecks.check_enable = True;
-                            dInst.capChecks.check_authority_src = Src2;
-                            dInst.capChecks.check_low_src = Src2Addr;
-                            dInst.capChecks.check_high_src = Src2Addr;
-                            dInst.capChecks.check_inclusive = False;
-
                             dInst.iType = Cap;
                             regs.dst = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs1);

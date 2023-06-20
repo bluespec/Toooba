@@ -257,6 +257,7 @@ function CapPipe capModify(CapPipe a, CapPipe b, CapModifyFunc func);
     match {.a_type, .a_res} = extractType(a);
     Bool sealPassthrough = !isValidCap(b) || getKind(a) != UNSEALED || !isInBounds(b, False) || getAddr(b) == otype_unsealed_ext;
     Bool sealIllegal = getKind(b) != UNSEALED || !getHardPerms(b).permitSeal || !validAsType(b, getAddr(b));
+    Bool unsealIllegal = !isValidCap(b) || getKind(a) != UNSEALED || getKind(b) == UNSEALED || a_res || getAddr(b) != a_type || !getHardPerms(b).permitUnseal || !isInBounds(b, False);
     CapPipe res = (case(func) matches
             tagged ModifyOffset .offsetOp :
                 modifyOffset(a_mut, getAddr(b), offsetOp == IncOffset).value;
@@ -281,7 +282,7 @@ function CapPipe capModify(CapPipe a, CapPipe b, CapModifyFunc func);
                 (sealPassthrough ? a :
                      clearTagIf(setKind(a_mut, SEALED_WITH_TYPE (truncate(getAddr(b)))), sealIllegal));
             tagged Unseal .src            :
-                clearTagIf(setKind(((src == Src1) ? a:b), UNSEALED), (src == Src1) && (getKind(b) != UNSEALED));
+                clearTagIf(setKind(((src == Src1) ? a:b), UNSEALED), (src == Src1) && sealIllegal);
             tagged AndPerm                :
                 setPerms(a_mut, pack(getPerms(a)) & truncate(getAddr(b)));
             tagged SetFlags               :
