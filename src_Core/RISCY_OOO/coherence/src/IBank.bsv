@@ -145,7 +145,7 @@ module mkIBank#(
     Add#(TAdd#(tagSz, indexSz), TAdd#(lgBankNum, LgLineSzBytes), AddrSz)
 );
 
-    Bool verbose = True;
+    Bool verbose = False;
 
     ICRqMshr#(cRqNum, wayT, tagT, procRqT, resultT) cRqMshr <- mkICRqMshrLocal;
 
@@ -770,7 +770,7 @@ module mkIBank#(
             rsToPIndexQ.enq(PRq (n));
         end
     endrule
-    
+
     rule discardPrefetchRqResult(
             cRqMshr.prefetcher.getResult(prefetchIndexQ.first) matches tagged Valid .inst);
         prefetchIndexQ.deq;

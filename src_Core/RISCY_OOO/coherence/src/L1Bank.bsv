@@ -158,7 +158,7 @@ module mkL1Bank#(
     Add#(TAdd#(tagSz, indexSz), TAdd#(lgBankNum, LgLineSzBytes), AddrSz)
 );
 
-   Bool verbose = False;
+    Bool verbose = False;
 
     L1CRqMshr#(cRqNum, wayT, tagT, procRqT) cRqMshr <- mkL1CRqMshrLocal;
 
@@ -372,7 +372,7 @@ endfunction
         procRqT r = ProcRq {
             id: ?, //Or maybe do 0 here
             addr: addr,
-            toState: S, 
+            toState: S,
             op: Ld,
             byteEn: ?,
             data: ?,

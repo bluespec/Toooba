@@ -85,7 +85,7 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
            );
 
    // Verbosity: 0: quiet; 1: LLC transactions; 2: loop detail
-   Integer verbosity = 2;
+   Integer verbosity = 0;
    Reg #(Bit #(4)) cfg_verbosity <- mkConfigReg (fromInteger (verbosity));
 
    // ================================================================

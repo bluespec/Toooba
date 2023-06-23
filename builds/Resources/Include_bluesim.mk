@@ -40,6 +40,8 @@ BSC_C_FLAGS += \
 	-Xl -v \
 	-Xc -O1 -Xc++ -O1 \
 
+BSC_COMPILATION_FLAGS += \
+        -D RVFI
 
 # For Bluespec_2019.05.beta2-debian9stretch-amd64
 # you may have to remove the line: -Xc++ -D_GLIBCXX_USE_CXX11_ABI=0

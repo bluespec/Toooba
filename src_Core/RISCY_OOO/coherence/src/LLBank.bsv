@@ -191,7 +191,7 @@ module mkLLBank#(
     Add#(TLog#(TDiv#(childNum,2)), c__, TLog#(childNum))
 );
 
-   Bool verbose = True;
+   Bool verbose = False;
 
     LLCRqMshr#(cRqNum, wayT, tagT, Vector#(childNum, DirPend), cRqT) cRqMshr <- mkLLMshr;
 
@@ -431,7 +431,7 @@ endfunction
             fromState: I,
             toState: E,
             canUpToE: True,
-            child: child, 
+            child: child,
             byteEn: ?,
             id: Child (?)
         };
