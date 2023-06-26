@@ -253,7 +253,7 @@ function CapPipe capModify(CapPipe a, CapPipe b, CapModifyFunc func);
                       tagged EPC ._: nullWithAddr(getOffset(b));
                    endcase
             tagged SetAddr .addrSource    :
-                clearTagIf(setAddr(b_mut, (addrSource == Src1Type) ? a_type : getAddr(a) ).value, a_res);
+                clearTagIf(setAddr(b_mut, (addrSource == Src1Type) ? a_type : getAddr(a) ).value, (addrSource == Src1Type) ? a_res : False);
             tagged SealEntry              :
                 setKind(a_mut, SENTRY);
             tagged Seal                   :
