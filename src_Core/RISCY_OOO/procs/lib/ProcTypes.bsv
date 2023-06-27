@@ -301,7 +301,7 @@ typedef enum {
 } ModifyOffsetFunc deriving(Bits, Eq, FShow);
 
 typedef enum {
-    SetBounds, CRRL, CRAM
+    SetBoundsExact, SetBoundsRounding, CRRL, CRAM
 } SetBoundsFunc deriving(Bits, Eq, FShow);
 
 typedef enum {
@@ -330,6 +330,7 @@ typedef union tagged {
     SpecialRWFunc SpecialRW;
     AddrSource SetAddr;
     void Seal;
+    void CSeal;
     void SealEntry;
     SrcSelector Unseal;
     void AndPerm;

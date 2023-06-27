@@ -8,7 +8,7 @@
 `CHERIException(StackUnderflow,           5'd7)
 `CHERIException(SoftwarePermViolation,    5'd8)
 `CHERIException(MMUStoreCapProhibit,      5'd9)
-`CHERIException(RepresentViolation,       5'd10)
+// 5'd10 reserved (obsolete InexactBoundsViolation)
 `CHERIException(UnalignedBase,            5'd11)
 // 5'd12 - 5'd15 reserved
 `CHERIException(GlobalViolation,          5'd16)
@@ -18,10 +18,10 @@
 `CHERIException(PermitRCapViolation,      5'd20)
 `CHERIException(PermitWCapViolation,      5'd21)
 `CHERIException(PermitWLocalCapViolation, 5'd22)
-`CHERIException(PermitSealViolation,      5'd23)
+// 5'd23 reserved (obsolete PermitSealViolation)
 `CHERIException(PermitASRViolation,       5'd24)
 `CHERIException(PermitCCallViolation,     5'd25)
 // 5'd26 reserved (obsolete CCallAccessIDCViolation)
-`CHERIException(PermitUnsealViolation,    5'd27)
+// 5'd27 reserved (obsolete PermitUnsealViolation)
 `CHERIException(PermitSetCIDViolation,    5'd28)
 // 5'd29 - 5'd31 reserved
