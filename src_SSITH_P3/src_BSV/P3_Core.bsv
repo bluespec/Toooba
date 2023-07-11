@@ -20,6 +20,7 @@ package P3_Core;
 
 import Vector        :: *;
 import FIFO          :: *;
+import FIFOF         :: *;
 import GetPut        :: *;
 import ClientServer  :: *;
 import Connectable   :: *;
@@ -38,6 +39,7 @@ import SourceSink :: *;
 import WindCoreInterface :: *;
 import Semi_FIFOF :: *;
 import Cur_Cycle  :: *;
+import FF :: *;
 
 // ================================================================
 // Project imports
@@ -114,6 +116,29 @@ endinterface
 
 // ================================================================
 
+// XXX Move to BlueStuff when happy
+module mkDelayShim #(Bit#(16) delay) (AXI4_Shim#(id_, addr_, data_, awuser_, wuser_, buser_, aruser_, ruser_));
+   FIFOF#(AXI4_AWFlit#(id_, addr_, awuser_)) awff <- mkFIFOF;
+   let wff <- mkFIFOF;
+   FF#(AXI4_BFlit#(id_, buser_), 32) bff <- mkUGFFDelay(delay);
+   let arff <- mkFIFOF;
+   FF#(AXI4_RFlit#(id_, data_, ruser_), 32) rff <- mkUGFFDelay(delay);
+   interface AXI4_Master master;
+      interface aw = toSource(awff);
+      interface w = toSource(wff);
+      interface b = toSink(bff);
+      interface ar = toSource(arff);
+      interface r = toSink(rff);
+   endinterface
+   interface AXI4_Slave slave;
+      interface aw = toSink(awff);
+      interface w = toSink(wff);
+      interface b = toSource(bff);
+      interface ar = toSink(arff);
+      interface r = toSource(rff);
+   endinterface
+endmodule
+
 (* synthesize *)
 module mkP3_Core (P3_Core_IFC);
 
@@ -174,6 +199,13 @@ module mkP3_Core (P3_Core_IFC);
      wideS_narrowM <- mkAXI4DataWidthShim_WideToNarrow (proxyInDepth, proxyOutDepth);
    match {.wideS, .narrowM} = wideS_narrowM;
    mkConnection(corew.manager_0, wideS);
+
+   Bit#(16) latencyCycles = 200;
+   AXI4_Shim#(TAdd#(Wd_MId,1), Wd_Addr, Wd_Data_Periph, 0, 0, 0, 0, 0) master_0_delay <- mkDelayShim(latencyCycles);
+   AXI4_Shim#(TAdd#(Wd_MId,1), Wd_Addr, Wd_Data_Periph, 0, 0, 0, 0, 0) master_1_delay <- mkDelayShim(latencyCycles);
+
+   mkConnection(master_0_delay.slave, narrowM);
+   mkConnection(master_1_delay.slave, corew.manager_1);
 
 `ifdef INCLUDE_GDB_CONTROL
 
@@ -270,8 +302,8 @@ module mkP3_Core (P3_Core_IFC);
 
    // ================================================================
    // INTERFACE
-   let master0_sig <- toAXI4_Master_Sig (narrowM);
-   let master1_sig <- toAXI4_Master_Sig (corew.manager_1);
+   let master0_sig <- toAXI4_Master_Sig (master_0_delay.master);
+   let master1_sig <- toAXI4_Master_Sig (master_1_delay.master);
    // ----------------------------------------------------------------
    // Core CPU interfaces
 
