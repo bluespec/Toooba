@@ -224,7 +224,8 @@ module mkP3_Core (P3_Core_IFC);
               "\n                     w - ", fshow(wflit));
        let bresp = OKAY;
        let latency = truncate(wflit.wdata);
-       case(awflit.awaddr)
+       Bit#(12) addr = truncate(awflit.awaddr);
+       case(addr)
            0:       latencyCycles0 <= latency;
            64:      latencyCycles1 <= latency;
            default: bresp = SLVERR;
@@ -241,7 +242,7 @@ module mkP3_Core (P3_Core_IFC);
        Bit#(12) addr = truncate(arflit.araddr);
        let rresp = OKAY;
        Bit#(Wd_Data_Periph) rdata = ?;
-       case(arflit.araddr)
+       case(addr)
            0:       rdata = zeroExtend(latencyCycles0);
            64:      rdata = zeroExtend(latencyCycles1);
            default: rresp = SLVERR;
