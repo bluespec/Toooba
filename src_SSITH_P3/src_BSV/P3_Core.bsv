@@ -143,6 +143,9 @@ endmodule
 (* synthesize *)
 module mkP3_Core (P3_Core_IFC);
 
+   // System address map
+   SoC_Map_IFC  soc_map  <- mkSoC_Map;
+
    // ================================================================
    // The RISC-V Debug Module is at the following point in the module hierarchy:
    //     p3_core.corew.debug_module
@@ -201,12 +204,67 @@ module mkP3_Core (P3_Core_IFC);
    match {.wideS, .narrowM} = wideS_narrowM;
    mkConnection(corew.manager_0, wideS);
 
-   Bit#(16) latencyCycles = 200;
-   AXI4_Shim#(TAdd#(Wd_MId,1), Wd_Addr, Wd_Data_Periph, 0, 0, 0, 0, 0) master_0_delay <- mkDelayShim(latencyCycles);
-   AXI4_Shim#(TAdd#(Wd_MId,1), Wd_Addr, Wd_Data_Periph, 0, 0, 0, 0, 0) master_1_delay <- mkDelayShim(latencyCycles);
+   // ================================================================
+   // Delay DRAM to compensate for relatively lower FPGA clock
+
+   Bit#(16) defaultLatency = 0;
+   Reg#(Bit#(16)) latencyCycles0 <- mkReg(defaultLatency);
+   Reg#(Bit#(16)) latencyCycles1 <- mkReg(defaultLatency);
+
+   let master_0_delay <- mkDelayShim(latencyCycles0);
+   let master_1_delay <- mkDelayShim(latencyCycles1);
+
+   // Support dynamic changing of latency
+   let latencyToggleShim <- mkAXI4Shim;
+
+   rule changeLatency;
+       let awflit <- get(latencyToggleShim.master.aw);
+       let wflit <- get(latencyToggleShim.master.w);
+       let bresp = OKAY;
+       let latency = truncate(wflit.wdata);
+       case(awflit.awaddr)
+           0:       latencyCycles0 <= latency;
+           64:      latencyCycles1 <= latency;
+           default: bresp = SLVERR;
+       endcase
+       let bflit = AXI4_BFlit { bid: awflit.awid
+                              , bresp: bresp
+                              , buser: awflit.awuser };
+       latencyToggleShim.master.b.put(bflit);
+   endrule
+
+   rule queryLatency;
+       let arflit <- get(latencyToggleShim.master.ar);
+       let rresp = OKAY;
+       Bit#(Wd_Data_Periph) rdata = ?;
+       case(arflit.araddr)
+           0:       rdata = zeroExtend(latencyCycles0);
+           64:      rdata = zeroExtend(latencyCycles1);
+           default: rresp = SLVERR;
+       endcase
+       let rflit = AXI4_RFlit { rid: arflit.arid
+                              , rresp: rresp
+                              , rdata: rdata
+                              , rlast: True
+                              , ruser: arflit.aruser };
+       latencyToggleShim.master.r.put(rflit);
+   endrule
+
+   let master_vector = cons(corew.manager_1, nil);
+   let slave_vector = cons(master_1_delay.slave, cons(latencyToggleShim.slave, nil));
+
+   function Vector #(2, Bool) route (Bit #(Wd_Addr) addr);
+      Vector #(2, Bool) res = replicate(False);
+      if (inRange(soc_map.m_soc_config_addr_range, addr))
+        res[1] = True;
+      else
+        res[0] = True;
+      return res;
+   endfunction
+
+   mkAXI4Bus (route, master_vector, slave_vector);
 
    mkConnection(master_0_delay.slave, narrowM);
-   mkConnection(master_1_delay.slave, corew.manager_1);
 
 `ifdef INCLUDE_GDB_CONTROL
 

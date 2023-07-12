@@ -97,6 +97,7 @@ interface SoC_Map_IFC;
    (* always_ready *)   method  Range#(Wd_Addr)  m_ddr4_0_uncached_addr_range;
    (* always_ready *)   method  Range#(Wd_Addr)  m_ddr4_0_cached_addr_range;
    (* always_ready *)   method  Range#(Wd_Addr)  m_mem0_controller_addr_range;
+   (* always_ready *)   method  Range#(Wd_Addr)  m_soc_config_addr_range;
 
    (* always_ready *)
    method  Bool  m_is_mem_addr (Fabric_Addr addr);
@@ -198,6 +199,14 @@ module mkSoC_Map (SoC_Map_IFC);
    };
 
    // ----------------------------------------------------------------
+   // SoC Config addresses
+
+   let soc_config_addr_range = Range {
+      base: 'h_0000_1000,
+      size: 'h_0000_1000    // 4K
+   };
+
+   // ----------------------------------------------------------------
 
    function fn_is_flash_regs_addr = addr_function('h6240_0000, 'h1000);
    function fn_is_uart1_addr = addr_function('h6230_0000, 'h1000);
@@ -229,6 +238,7 @@ module mkSoC_Map (SoC_Map_IFC);
       return (   inRange(boot_rom_addr_range, addr)
 	      || inRange(ddr4_0_uncached_addr_range, addr)
 	      || inRange(flash_mem_addr_range, addr)
+              || inRange(soc_config_addr_range, addr)
 	      || (   (! imem_not_dmem)
 		  && (   inRange(plic_addr_range, addr)
 		      || inRange(near_mem_io_addr_range, addr)
@@ -271,6 +281,7 @@ module mkSoC_Map (SoC_Map_IFC);
    method  Range#(Wd_Addr)  m_ddr4_0_uncached_addr_range = ddr4_0_uncached_addr_range;
    method  Range#(Wd_Addr)  m_ddr4_0_cached_addr_range = ddr4_0_cached_addr_range;
    method  Range#(Wd_Addr)  m_mem0_controller_addr_range = ddr4_0_cached_addr_range;
+   method  Range#(Wd_Addr)  m_soc_config_addr_range = soc_config_addr_range;
 
    method  Bool  m_is_mem_addr (Fabric_Addr addr) = fn_is_mem_addr (addr);
 
