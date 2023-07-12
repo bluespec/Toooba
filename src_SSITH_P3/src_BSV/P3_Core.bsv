@@ -220,6 +220,8 @@ module mkP3_Core (P3_Core_IFC);
    rule changeLatency;
        let awflit <- get(latencyToggleShim.master.aw);
        let wflit <- get(latencyToggleShim.master.w);
+       $display("rule changeLatency: aw - ", fshow(awflit),
+              "\n                     w - ", fshow(wflit));
        let bresp = OKAY;
        let latency = truncate(wflit.wdata);
        case(awflit.awaddr)
@@ -235,6 +237,8 @@ module mkP3_Core (P3_Core_IFC);
 
    rule queryLatency;
        let arflit <- get(latencyToggleShim.master.ar);
+       $display("rule queryLatency: ar - ", fshow(arflit));
+       Bit#(12) addr = truncate(arflit.araddr);
        let rresp = OKAY;
        Bit#(Wd_Data_Periph) rdata = ?;
        case(arflit.araddr)
