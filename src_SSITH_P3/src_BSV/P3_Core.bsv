@@ -121,8 +121,8 @@ module mkDelayShim #(Bit#(16) delay) (AXI4_Shim#(id_, addr_, data_, awuser_, wus
    let awff <- mkFIFOF;
    let wff <- mkFIFOF;
    FF#(AXI4_BFlit#(id_, buser_), 32) bff <- mkUGFFDelay(delay);
-   let arff <- mkFIFOF;
-   FF#(AXI4_RFlit#(id_, data_, ruser_), 32) rff <- mkUGFFDelay(delay);
+   FF#(AXI4_ARFlit#(id_, addr_, aruser_), 32) arff <- mkUGFFDelay(delay);
+   let rff <- mkFIFOF;
    interface AXI4_Master master;
       interface aw = toSource(awff);
       interface w = toSource(wff);
