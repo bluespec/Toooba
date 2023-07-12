@@ -137,6 +137,7 @@ module mkDelayShim #(Bit#(16) delay) (AXI4_Shim#(id_, addr_, data_, awuser_, wus
       interface ar = toSink(arff);
       interface r = toSource(rff);
    endinterface
+   interface clear = error("clear not supported");
 endmodule
 
 (* synthesize *)
