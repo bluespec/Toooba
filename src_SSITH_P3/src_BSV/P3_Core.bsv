@@ -118,7 +118,7 @@ endinterface
 
 // XXX Move to BlueStuff when happy
 module mkDelayShim #(Bit#(16) delay) (AXI4_Shim#(id_, addr_, data_, awuser_, wuser_, buser_, aruser_, ruser_));
-   FIFOF#(AXI4_AWFlit#(id_, addr_, awuser_)) awff <- mkFIFOF;
+   let awff <- mkFIFOF;
    let wff <- mkFIFOF;
    FF#(AXI4_BFlit#(id_, buser_), 32) bff <- mkUGFFDelay(delay);
    let arff <- mkFIFOF;
