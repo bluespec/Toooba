@@ -35,11 +35,10 @@ import GetPut_Aux :: *;
 import Routable   :: *;
 import BlueBasics :: *;
 import BlueAXI4   :: *;
-import SourceSink :: *;
 import WindCoreInterface :: *;
 import Semi_FIFOF :: *;
 import Cur_Cycle  :: *;
-import FF :: *;
+import AXI4_DelayShim :: *;
 
 // ================================================================
 // Project imports
@@ -116,30 +115,6 @@ endinterface
 
 // ================================================================
 
-// XXX Move to BlueStuff when happy
-module mkDelayShim #(Bit#(16) delay) (AXI4_Shim#(id_, addr_, data_, awuser_, wuser_, buser_, aruser_, ruser_));
-   let awff <- mkFIFOF;
-   let wff <- mkFIFOF;
-   FF#(AXI4_BFlit#(id_, buser_), 128) bff <- mkUGFFDelay(delay);
-   FF#(AXI4_ARFlit#(id_, addr_, aruser_), 128) arff <- mkUGFFDelay(delay);
-   let rff <- mkFIFOF;
-   interface AXI4_Master master;
-      interface aw = toSource(awff);
-      interface w = toSource(wff);
-      interface b = toSink(bff);
-      interface ar = toSource(arff);
-      interface r = toSink(rff);
-   endinterface
-   interface AXI4_Slave slave;
-      interface aw = toSink(awff);
-      interface w = toSink(wff);
-      interface b = toSource(bff);
-      interface ar = toSink(arff);
-      interface r = toSource(rff);
-   endinterface
-   interface clear = error("clear not supported");
-endmodule
-
 (* synthesize *)
 module mkP3_Core (P3_Core_IFC);
 
@@ -211,8 +186,9 @@ module mkP3_Core (P3_Core_IFC);
    Reg#(Bit#(16)) latencyCycles0 <- mkReg(defaultLatency);
    Reg#(Bit#(16)) latencyCycles1 <- mkReg(defaultLatency);
 
-   let master_0_delay <- mkDelayShim(latencyCycles0);
-   let master_1_delay <- mkDelayShim(latencyCycles1);
+   NumProxy#(128) depthProxy = error("Do not look inside proxy");
+   let master_0_delay <- mkAXI4_DelayShim(depthProxy, latencyCycles0);
+   let master_1_delay <- mkAXI4_DelayShim(depthProxy, latencyCycles1);
 
    // Support dynamic changing of latency
    let latencyToggleShim <- mkAXI4Shim;
