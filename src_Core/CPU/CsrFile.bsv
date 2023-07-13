@@ -739,7 +739,17 @@ module mkCsrFile #(Data hartid)(CsrFile);
 
    // RV64: dcsr's upper 32b zeroExtended/ignored
    Reg #(Data) rg_dcsr      <- mkConfigReg (zeroExtend (dcsr_reset_value));
+   `ifndef BSIM
    Reg #(CapReg) rg_dpc     <- mkConfigReg (setAddrUnsafe(almightyCap,soc_map_struct.pc_reset_value));
+   `else
+   Reg #(CapReg) rg_dpc <- mkConfigRegU;
+   Reg #(Bool) rg_dpc_is_init <- mkReg (False);
+   (* fire_when_enabled, no_implicit_conditions *)
+   rule init_rg_dpc (!rg_dpc_is_init);
+      rg_dpc <= setAddrUnsafe (almightyCap, soc_map_struct.pc_reset_value);
+      rg_dpc_is_init <= True;
+   endrule
+   `endif
    Reg #(Data) rg_dscratch0 <- mkConfigRegU;
    Reg #(Data) rg_dscratch1 <- mkConfigRegU;
 `endif
@@ -1027,7 +1037,13 @@ module mkCsrFile #(Data hartid)(CsrFile);
    // ================================================================
    // INTERFACE
 
-    method Data rd(CSR csr);
+    method Data rd(CSR csr)
+`ifdef INCLUDE_GDB_CONTROL
+`ifdef BSIM
+      if (rg_dpc_is_init)
+`endif
+`endif
+      ;
         return get_csr(csr)._read;
     endmethod
 
@@ -1035,7 +1051,13 @@ module mkCsrFile #(Data hartid)(CsrFile);
         return get_scr(scr)._read;
     endmethod
 
-    method Action csrInstWr(CSR csr, Data x);
+    method Action csrInstWr(CSR csr, Data x)
+`ifdef INCLUDE_GDB_CONTROL
+`ifdef BSIM
+      if (rg_dpc_is_init)
+`endif
+`endif
+      ;
         get_csr(csr)._write(x);
 `ifdef INCLUDE_GDB_CONTROL
         if (csr == csrAddrDCSR) begin
@@ -1411,7 +1433,11 @@ module mkCsrFile #(Data hartid)(CsrFile);
 
 `ifdef INCLUDE_GDB_CONTROL
    // Read dpc
-   method CapReg dpc_read ();
+   method CapReg dpc_read
+   `ifdef BSIM
+     if (rg_dpc_is_init)
+   `endif
+   ;
       return rg_dpc;
    endmethod
 
