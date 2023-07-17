@@ -686,6 +686,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
 `endif
                                          );
 
+        let pc = inIfc.rob_getPC(x.tag);
 `ifdef PERFORMANCE_MONITORING
 `ifdef CONTRACTS_VERIFY
         function Bool is_16b_inst (Bit #(n) inst);
@@ -701,7 +702,6 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         end
 `endif
 `endif
-        let pc = inIfc.rob_getPC(x.tag);
 
         // update LSQ
         LSQUpdateAddrResult updRes <- lsq.updateAddr(
