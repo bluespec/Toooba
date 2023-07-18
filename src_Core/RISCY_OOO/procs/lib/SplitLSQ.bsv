@@ -1398,7 +1398,7 @@ module mkSplitLSQ(SplitLSQ);
                         MemInst mem_inst,
                         Maybe#(PhyDst) dst,
                         SpecBits spec_bits,
-                        Bit#(16) pcHash) if(ld_can_enq_wire);
+                        Bit#(16) pcHash) if(ld_can_enq_wire && !wrongSpec_conflict);
         if(verbose) begin
             $display("[LSQ - enqLd] enqP %d; ", ld_enqP,
                      "; ", fshow(inst_tag),
@@ -1456,7 +1456,7 @@ module mkSplitLSQ(SplitLSQ);
                         MemInst mem_inst,
                         Maybe#(PhyDst) dst,
                         SpecBits spec_bits,
-                        Bit#(16) pcHash) if(st_can_enq_wire);
+                        Bit#(16) pcHash) if(st_can_enq_wire && !wrongSpec_conflict);
         if(verbose) begin
             $display("[LSQ - enqSt] enqP %d; ", st_enqP,
                      "; ", fshow(inst_tag),
