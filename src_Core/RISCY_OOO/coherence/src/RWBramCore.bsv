@@ -62,6 +62,52 @@ module mkRWBramCore(RWBramCore#(addrT, dataT)) provisos(
     endmethod
 endmodule
 
+module mkRWBramCoreForwarded(RWBramCore#(addrT, dataT)) provisos(
+    Bits#(addrT, addrSz), Bits#(dataT, dataSz), Eq#(addrT)
+);
+    BRAM_DUAL_PORT#(addrT, dataT) bram <- mkBRAMCore2(valueOf(TExp#(addrSz)), False);
+    BRAM_PORT#(addrT, dataT) wrPort = bram.a;
+    BRAM_PORT#(addrT, dataT) rdPort = bram.b;
+    // 1 elem pipeline fifo to add guard for read req/resp
+    // must be 1 elem to make sure rdResp is not corrupted
+    // BRAMCore should not change output if no req is made
+    Fifo#(1, Maybe#(dataT)) rdReqQ <- mkPipelineFifo;
+    RWire#(addrT) currentWriteAddr <- mkRWire;
+    RWire#(dataT) currentWriteData <- mkRWire;
+
+    method Action wrReq(addrT a, dataT d);
+        wrPort.put(True, a, d);
+        currentWriteAddr.wset(a); //Forward data, if read happens on same cycle
+        currentWriteData.wset(d);
+    endmethod
+
+    method Action rdReq(addrT a);
+        if (currentWriteAddr.wget matches tagged Valid .writeAddr &&& writeAddr == a) begin
+            //$display ("%t Write same addr as read -- forwarding data!", $time);
+            rdReqQ.enq(Valid(fromMaybe(?, currentWriteData.wget)));
+        end
+        else begin
+            rdReqQ.enq(Invalid);
+        end
+        rdPort.put(False, a, ?);
+    endmethod
+
+    method dataT rdResp if(rdReqQ.notEmpty);
+        if (rdReqQ.first matches tagged Valid .data) begin
+            return data;
+        end
+        else begin
+            return rdPort.read;
+        end
+    endmethod
+
+    method rdRespValid = rdReqQ.notEmpty;
+
+    method Action deqRdResp;
+        rdReqQ.deq;
+    endmethod
+endmodule
+
 module mkRWBramCoreUG(RWBramCore#(addrT, dataT)) provisos(
     Bits#(addrT, addrSz), Bits#(dataT, dataSz)
 );

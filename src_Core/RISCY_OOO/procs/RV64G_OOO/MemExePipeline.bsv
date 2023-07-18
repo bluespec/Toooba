@@ -1,6 +1,6 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +8,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -171,7 +171,7 @@ interface MemExeInput;
     method Action mmioRespDeq;
 
     // global broadcast methods
-    // set aggressive sb & wake up RS 
+    // set aggressive sb & wake up RS
     method Action setRegReadyAggr_mem(PhyRIndx dst);
     method Action setRegReadyAggr_forward(PhyRIndx dst);
     // write reg file & set conservative sb
@@ -273,12 +273,12 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
     Fifo#(1, WaitStResp) waitStRespQ <- mkCFFifo;
 `endif
     // fifo for req mem
-    Fifo#(1, Tuple2#(LdQTag, Addr)) reqLdQ <- mkBypassFifo;
+    Fifo#(1, Tuple3#(LdQTag, Addr, Bit#(16))) reqLdQ <- mkBypassFifo;
     Fifo#(1, ProcRq#(DProcReqId)) reqLrScAmoQ <- mkBypassFifo;
 `ifdef TSO_MM
-    Fifo#(1, Addr) reqStQ <- mkBypassFifo;
+    Fifo#(1, Tuple2#(Addr, Bit#(16))) reqStQ <- mkBypassFifo;
 `else
-    Fifo#(1, Tuple2#(SBIndex, Addr)) reqStQ <- mkBypassFifo;
+    Fifo#(1, Tuple3#(SBIndex, Addr, Bit#(16))) reqStQ <- mkBypassFifo;
 `endif
     // fifo for load result
     Fifo#(2, Tuple2#(LdQTag, MemResp)) forwardQ <- mkCFFifo;
@@ -404,7 +404,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         // executed after address transation
         doAssert(!(x.data.mem_func == St && isValid(x.regs.dst)),
                  "St cannot have dst reg");
-        
+
         // go to next stage
         dispToRegQ.enq(ToSpecFifo {
             data: MemDispatchToRegRead {
@@ -559,6 +559,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         Bool non_mmio_st_done = !isValid(cause) && !isMMIO && x.mem_func == St;
         inIfc.rob_setExecuted_doFinishMem(x.tag, x.vaddr, store_data, store_data_BE,
                                           access_at_commit, non_mmio_st_done);
+        let pc = inIfc.rob_getPC(x.tag);
 
         // update LSQ
         LSQUpdateAddrResult updRes <- lsq.updateAddr(
@@ -579,7 +580,8 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             issueLd.wset(LSQIssueLdInfo {
                 tag: ldTag,
                 paddr: paddr,
-                shiftedBE: x.shiftedBE
+                shiftedBE: x.shiftedBE,
+                pcHash: hash(pc)
             });
         end
 
@@ -635,7 +637,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
 `endif
         end
         else if(issRes == ToCache) begin
-            reqLdQ.enq(tuple2(zeroExtend(info.tag), info.paddr));
+            reqLdQ.enq(tuple3(zeroExtend(info.tag), info.paddr, info.pcHash));
             // perf: load mem latency
             ldMemLatTimer.start(info.tag);
         end
@@ -787,7 +789,8 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             op: Lr,
             byteEn: ?,
             data: ?,
-            amoInst: ?
+            amoInst: ?,
+            pcHash: ?
         };
         reqLrScAmoQ.enq(req);
         if(verbose) $display("[doDeqLdQ_Lr_issue] ", fshow(lsqDeqLd), "; ", fshow(req));
@@ -830,7 +833,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         waitLrScAmoMMIOResp <= Invalid;
         // get resp data (need shifting)
         let d <- toGet(respLrScAmoQ).get;
-        Data resp = gatherLoad(lsqDeqLd.paddr, lsqDeqLd.byteEn, lsqDeqLd.unsignedLd, d); 
+        Data resp = gatherLoad(lsqDeqLd.paddr, lsqDeqLd.byteEn, lsqDeqLd.unsignedLd, d);
         // write reg file & set ROB as Executed & wakeup rs
         if(lsqDeqLd.dst matches tagged Valid .dst) begin
             inIfc.writeRegFile(dst.indx, resp);
@@ -968,7 +971,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
     );
         // send to mem
         Addr addr = lsqDeqSt.paddr;
-        reqStQ.enq(addr);
+        reqStQ.enq(tuple2(addr, lsqDeqSt.pcHash));
         // record waiting for store resp
         LineDataOffset offset = getLineDataOffset(addr);
         waitStRespQ.enq(WaitStResp {
@@ -993,7 +996,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
     );
         lsq.deqSt;
         // send to SB
-        stb.enq(sbIdx, lsqDeqSt.paddr, lsqDeqSt.shiftedBE, lsqDeqSt.stData);
+        stb.enq(sbIdx, lsqDeqSt.paddr, lsqDeqSt.shiftedBE, lsqDeqSt.stData, lsqDeqSt.pcHash);
         // ROB should have already been set to executed
         if(verbose) $display("[doDeqStQ_St] ", fshow(lsqDeqSt));
         // normal store should not have .rl, so no need to check SB empty
@@ -1003,7 +1006,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
     // send store to mem
     rule doIssueSB;
         let {sbIdx, en} <- stb.issue;
-        reqStQ.enq(tuple2(sbIdx, {en.addr, 0}));
+        reqStQ.enq(tuple3(sbIdx, {en.addr, 0}, en.pcHash));
         // perf: store mem latency
         stMemLatTimer.start(sbIdx);
     endrule
@@ -1087,7 +1090,8 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
                 doubleWord: lsqDeqSt.shiftedBE == replicate(True),
                 aq: lsqDeqSt.acq,
                 rl: lsqDeqSt.rel
-            }
+            },
+            pcHash: ?
         };
         reqLrScAmoQ.enq(req);
         if(verbose) $display("[doDeqStQ_ScAmo_issue] ", fshow(lsqDeqSt), "; ", fshow(req));
@@ -1274,7 +1278,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
 
     // send req to D$
     rule sendLdToMem;
-        let {lsqTag, addr} <- toGet(reqLdQ).get;
+        let {lsqTag, addr, pcHash} <- toGet(reqLdQ).get;
         dMem.procReq.req(ProcRq {
             id: zeroExtend(lsqTag),
             addr: addr,
@@ -1282,16 +1286,17 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             op: Ld,
             byteEn: ?,
             data: ?,
-            amoInst: ?
+            amoInst: ?,
+            pcHash: pcHash
         });
     endrule
     (* descending_urgency = "sendLdToMem, sendStToMem" *) // prioritize Ld over St
     rule sendStToMem;
 `ifdef TSO_MM
-        let addr <- toGet(reqStQ).get;
+        let {addr, pcHash} <- toGet(reqStQ).get;
         DProcReqId id = 0;
 `else
-        let {sbIdx, addr} <- toGet(reqStQ).get;
+        let {sbIdx, addr, pcHash} <- toGet(reqStQ).get;
         DProcReqId id = zeroExtend(sbIdx);
 `endif
         dMem.procReq.req(ProcRq {
@@ -1301,7 +1306,8 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             op: St,
             byteEn: ?,
             data: ?,
-            amoInst: ?
+            amoInst: ?,
+            pcHash: pcHash
         });
     endrule
     (* descending_urgency = "sendLrScAmoToMem, sendStToMem" *) // prioritize Lr/Sc/Amo over St
