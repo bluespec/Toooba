@@ -24,6 +24,7 @@
 import Types::*;
 import ProcTypes::*;
 import ConfigReg::*;
+import DReg::*;
 import Map::*;
 import Vector::*;
 
@@ -42,6 +43,7 @@ endinterface
 // Local BTB Typedefs
 typedef 1 PcLsbsIgnore;
 typedef 1024 BtbEntries;
+typedef Bit#(16) CompressedTarget;
 typedef 2 BtbAssociativity;
 typedef Bit#(TLog#(SupSizeX2)) BtbBank;
 // Total entries/lanes of superscalar lookup/associativity
@@ -79,10 +81,12 @@ module mkBtbCore(NextAddrPred#(hashSz))
         Add#(1, a__, TDiv#(tagSz, hashSz)),
     Add#(b__, tagSz, TMul#(TDiv#(tagSz, hashSz), hashSz)));
     // Read and Write ordering doesn't matter since this is a predictor
-    Reg#(BtbBank) firstBank_reg <- mkRegU;
-    Vector#(SupSizeX2, MapSplit#(HashedTag#(hashSz), BtbIndex, VnD#(Addr), BtbAssociativity))
-        records <- replicateM(mkMapLossyBRAM);
-    RWire#(BtbUpdate) updateEn <- mkRWire;
+    Reg#(Addr) addr_reg <- mkRegU;
+    Vector#(SupSizeX2, MapSplit#(HashedTag#(hashSz), BtbIndex, VnD#(Addr), 1))
+        fullRecords <- replicateM(mkMapLossyBRAM);
+    Vector#(SupSizeX2, MapSplit#(HashedTag#(hashSz), BtbIndex, VnD#(CompressedTarget), BtbAssociativity))
+        compressedRecords <- replicateM(mkMapLossyBRAM);
+    Reg#(Maybe#(BtbUpdate)) updateEn <- mkDReg(Invalid);
 
     function BtbAddr getBtbAddr(Addr pc) = unpack(truncateLSB(pc));
     function BtbBank getBank(Addr pc) = getBtbAddr(pc).bank;
@@ -93,44 +97,58 @@ module mkBtbCore(NextAddrPred#(hashSz))
 
     // no flush, accept update
     (* fire_when_enabled, no_implicit_conditions *)
-    rule canonUpdate(updateEn.wget matches tagged Valid .upd);
+    rule canonUpdate(updateEn matches tagged Valid .upd);
         let pc = upd.pc;
         let nextPc = upd.nextPc;
         let taken = upd.taken;
         /*$display("MapUpdate in BTB - pc %x, bank: %x, taken: %x, next: %x, time: %t",
                   pc, getBank(pc), taken, nextPc, $time);*/
-        records[getBank(pc)].update(lookupKey(pc), VnD{v:taken, d:nextPc});
+        CompressedTarget shortMask = -1;
+        Addr mask = ~zeroExtend(shortMask);
+        if ((pc&mask) == (nextPc&mask))
+            compressedRecords[getBank(pc)].update(lookupKey(pc), VnD{v:taken, d:truncate(nextPc)});
+        else
+            fullRecords[getBank(pc)].update(lookupKey(pc), VnD{v:taken, d:nextPc});
     endrule
 
     method Action put_pc(Addr pc);
-        BtbAddr addr = getBtbAddr(pc);
-        firstBank_reg <= addr.bank;
+        addr_reg <= pc;
         // Start SupSizeX2 BTB lookups, but ensure to lookup in the appropriate
         // bank for the alignment of each potential branch.
         for (Integer i = 0; i < valueOf(SupSizeX2); i = i + 1) begin
-            BtbAddr a = unpack(pack(addr) + fromInteger(i));
-            records[a.bank].lookupStart(MapKeyIndex{key: hash(a.tag), index: a.index});
+            // Only add lower bits for timing.
+            BtbAddr a = getBtbAddr(pc);
+            a = unpack({a.tag, {a.index,a.bank} + fromInteger(i)});
+            //BtbAddr a = unpack(pack(getBtbAddr(pc)) + fromInteger(i));
+            fullRecords[a.bank].lookupStart(MapKeyIndex{key: hash(a.tag), index: a.index});
+            compressedRecords[a.bank].lookupStart(MapKeyIndex{key: hash(a.tag), index: a.index});
         end
     endmethod
 
     method Vector#(SupSizeX2, Maybe#(Addr)) pred;
         Vector#(SupSizeX2, Maybe#(Addr)) ppcs = replicate(Invalid);
-        for (Integer i = 0; i < valueOf(SupSizeX2); i = i + 1)
-            if (records[i].lookupRead matches tagged Valid .record)
-                ppcs[i] = record.v ? Valid(record.d):Invalid;
-        ppcs = rotateBy(ppcs,unpack(-firstBank_reg)); // Rotate firstBank down to zeroeth element.
+        for (Integer i = 0; i < valueOf(SupSizeX2); i = i + 1) begin
+            if (fullRecords[i].lookupRead matches tagged Valid .r)
+                ppcs[i] = r.v ? Valid(r.d):Invalid;
+            if (compressedRecords[i].lookupRead matches tagged Valid .r)
+                ppcs[i] = r.v ? Valid({truncateLSB(addr_reg),r.d}):Invalid;
+        end
+        ppcs = rotateBy(ppcs,unpack(-getBtbAddr(addr_reg).bank)); // Rotate firstBank down to zeroeth element.
         return ppcs;
     endmethod
 
     method Action update(Addr pc, Addr nextPc, Bool taken);
-        updateEn.wset(BtbUpdate {pc: pc, nextPc: nextPc, taken: taken});
+        updateEn <= Valid(BtbUpdate {pc: pc, nextPc: nextPc, taken: taken});
     endmethod
 
 `ifdef SECURITY
     method Action flush method Action flush;
-        for (Integer i = 0; i < valueOf(SupSizeX2); i = i + 1) records[i].clear;
+        for (Integer i = 0; i < valueOf(SupSizeX2); i = i + 1) begin
+            fullRecords[i].clear;
+            compressedRecords[i].clear;
+        end
     endmethod
-    method flush_done = records[0].clearDone;
+    method flush_done = fullRecords[0].clearDone;
 `else
     method flush = noAction;
     method flush_done = True;

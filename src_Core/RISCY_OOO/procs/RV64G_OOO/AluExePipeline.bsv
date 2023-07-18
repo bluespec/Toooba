@@ -1,6 +1,6 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +8,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -153,7 +153,8 @@ interface AluExeInput;
     // write reg file & set conservative sb
     method Action writeRegFile(PhyRIndx dst, Data data);
     // redirect
-    method Action redirect(Addr new_pc, SpecTag spec_tag, InstTag inst_tag);
+    method Action redirect(Addr new_pc, SpecTag spec_tag, InstTag inst_tag, SpecBits spec_bits);
+    method Bool pauseExecute;
     // spec update
     method Action correctSpec(SpecTag t);
 
@@ -201,7 +202,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
         if(x.regs.dst matches tagged Valid .dst) begin
             inIfc.setRegReadyAggr(dst.indx);
         end
-        
+
         // go to next stage
         dispToRegQ.enq(ToSpecFifo {
             data: AluDispatchToRegRead {
@@ -305,7 +306,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
         });
     endrule
 
-    rule doFinishAlu;
+    rule doFinishAlu(!inIfc.pauseExecute);
         exeToFinQ.deq;
         let exeToFin = exeToFinQ.first;
         let x = exeToFin.data;
@@ -330,7 +331,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
         if (x.controlFlow.mispredict) (* nosplit *) begin
             // wrong branch predictin, we must have spec tag
             doAssert(isValid(x.spec_tag), "mispredicted branch must have spec tag");
-            inIfc.redirect(x.controlFlow.nextPc, validValue(x.spec_tag), x.tag);
+            inIfc.redirect(x.controlFlow.nextPc, validValue(x.spec_tag), x.tag, exeToFin.spec_bits);
             // must be a branch, train branch predictor
             doAssert(x.iType == Jr || x.iType == Br, "only jr and br can mispredict");
             inIfc.fetch_train_predictors(FetchTrainBP {
@@ -342,6 +343,8 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
                 mispred: True,
                 isCompressed: x.isCompressed
             });
+            if(verbose) $display("alu mispredict pc¤: %x, nextPc: %x, %d",
+                                  x.controlFlow.pc, x.controlFlow.nextPc, cur_cycle);
 `ifdef PERF_COUNT
             // performance counter
             if(inIfc.doStats) begin
@@ -358,7 +361,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
             if (x.spec_tag matches tagged Valid .valid_spec_tag) begin
                 inIfc.correctSpec(valid_spec_tag);
             end
-            // train branch predictor if needed 
+            // train branch predictor if needed
             // since we can only do 1 training in a cycle, split the rule
             // XXX not training JAL, reduce chance of conflicts
             if(x.iType == Jr || x.iType == Br) begin
@@ -397,4 +400,3 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
         endcase);
     endmethod
 endmodule
-

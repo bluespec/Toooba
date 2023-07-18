@@ -1,7 +1,7 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
 // Portions Copyright (c) 2019-2020 Bluespec, Inc.
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -9,10 +9,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -193,6 +193,7 @@ interface CoreFixPoint;
     interface MemExePipeline memExeIfc;
     method Action killAll; // kill everything: used by commit stage
     interface Reg#(Bool) doStatsIfc;
+    method Bool pendingIncorrectSpec;
 endinterface
 
 typedef enum {
@@ -314,7 +315,7 @@ module mkCore#(CoreId coreId)(Core);
         );
 
         // whether perf data is collected
-        Reg#(Bool) doStatsReg <- mkConfigReg(False); 
+        Reg#(Bool) doStatsReg <- mkConfigReg(False);
 
         // write aggressive elements + wakupe reservation stations
         function Action writeAggr(Integer wrAggrPort, PhyRIndx dst);
@@ -370,15 +371,16 @@ module mkCore#(CoreId coreId)(Core);
                 method setRegReadyAggr = writeAggr(aluWrAggrPort(i));
                 interface sendBypass = sendBypassIfc;
                 method writeRegFile = writeCons(aluWrConsPort(i));
-                method Action redirect(Addr new_pc, SpecTag spec_tag, InstTag inst_tag);
+                method Action redirect(Addr new_pc, SpecTag spec_tag, InstTag inst_tag, SpecBits spec_bits);
                     if (verbose) begin
                         $display("[ALU redirect - %d] ", i, fshow(new_pc),
                                  "; ", fshow(spec_tag), "; ", fshow(inst_tag));
                     end
                     epochManager.incrementEpoch;
                     fetchStage.redirect(new_pc);
-                    globalSpecUpdate.incorrectSpec(False, spec_tag, inst_tag);
+                    globalSpecUpdate.incorrectSpec(False, spec_tag, inst_tag, spec_bits);
                 endmethod
+                method Bool pauseExecute = globalSpecUpdate.pendingIncorrectSpec;
                 method correctSpec = globalSpecUpdate.correctSpec[finishAluCorrectSpecPort(i)].put;
                 method doStats = doStatsReg._read;
             endinterface);
@@ -438,9 +440,10 @@ module mkCore#(CoreId coreId)(Core);
         interface fpuMulDivExeIfc = fpuMulDivExe;
         interface memExeIfc = memExe;
         method Action killAll;
-            globalSpecUpdate.incorrectSpec(True, ?, ?);
+            globalSpecUpdate.incorrectSpec(True, ?, ?, 0);
         endmethod
         interface doStatsIfc = doStatsReg;
+        method pendingIncorrectSpec = globalSpecUpdate.pendingIncorrectSpec;
     endmodule
     CoreFixPoint coreFix <- moduleFix(mkCoreFixPoint);
 
@@ -575,6 +578,7 @@ module mkCore#(CoreId coreId)(Core);
         method stbEmpty = stb.isEmpty;
         method stqEmpty = lsq.stqEmpty;
         method lsqSetAtCommit = lsq.setAtCommit;
+        method pauseCommit = coreFix.pendingIncorrectSpec;
         method tlbNoPendingReq = iTlb.noPendingReq && dTlb.noPendingReq;
 
         method setFlushTlbs;

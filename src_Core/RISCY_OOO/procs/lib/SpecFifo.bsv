@@ -24,7 +24,9 @@
 import ProcTypes::*;
 import HasSpecBits::*;
 import Vector::*;
+import ConfigReg::*;
 import Ehr::*;
+import DReg::*;
 import Assert::*;
 import Types::*;
 
@@ -41,6 +43,7 @@ interface SpecFifo#(
     method Action enq(ToSpecFifo#(t) x);
     method Action deq;
     method ToSpecFifo#(t) first;
+    method Bool notEmpty;
     interface SpeculationUpdate specUpdate;
 endinterface
 
@@ -86,33 +89,17 @@ module mkSpecFifo#(
     Reg#(idxT) deqP = deqP_ehr[0]; // port 0 is for deq and canon_deqP
 
     // make incorrectSpeculation conflict with others
-    RWire#(void) dummyRWire = (interface RWire;
-        method Maybe#(void) wget = Invalid;
-        method Action wset(void x) = noAction;
-    endinterface);
-    RWire#(void) wrongSpec_enq_conflict = dummyRWire;
-    RWire#(void) wrongSpec_deq_conflict = dummyRWire;
-    RWire#(void) wrongSpec_canon_conflict = dummyRWire;
-    if(sched.wrongSpec_conflict_enq) begin
-        wrongSpec_enq_conflict <- mkRWire;
-    end
-    if(sched.wrongSpec_conflict_deq) begin
-        wrongSpec_deq_conflict <- mkRWire;
-    end
-    if(sched.wrongSpec_conflict_canon) begin
-        wrongSpec_canon_conflict <- mkRWire;
-    end
+    PulseWire wrongSpec_conflict <- mkPulseWire;
 
     function idxT getNextPtr(idxT p);
         return p == fromInteger(valueOf(size) - 1) ? 0 : p + 1;
     endfunction
 
     Bool empty_for_canon = all( \== (False) , readVEhr(sched.validDeqPort, valid) );
-    rule canon_deqP(!valid[deqP][sched.validDeqPort] && (enqP != deqP || !empty_for_canon));
+    rule canon_deqP(!valid[deqP][sched.validDeqPort] && (enqP != deqP || !empty_for_canon)
+                     && !wrongSpec_conflict); // make conflict with incorrect spec
         // element at deqP was killed, so increment deqP
         deqP <= getNextPtr(deqP);
-        // make conflict with incorrect spec
-        wrongSpec_canon_conflict.wset(?);
     endrule
 
     // calculate guard for enq, we can do aggressively or lazily
@@ -142,22 +129,20 @@ module mkSpecFifo#(
         valid_for_enq = valid[enqP][sched.validEnqPort];
     end
 
-    method Action enq(ToSpecFifo#(t) x) if (empty_for_enq || enqP != deqP_for_enq);
+    method Action enq(ToSpecFifo#(t) x) if ((empty_for_enq || enqP != deqP_for_enq)
+                                            && !wrongSpec_conflict); // make conflict with incorrect spec
         // [sizhuo] I don't think valid bit needs to be checked here
         doAssert(!valid_for_enq, "enq entry cannot be valid");
         enqP <= getNextPtr(enqP);
         valid[enqP][sched.validEnqPort] <= True;
         row[enqP] <= x.data;
         specBits[enqP][sched.sbEnqPort] <= x.spec_bits;
-        // make conflict with incorrect spec
-        wrongSpec_enq_conflict.wset(?);
     endmethod
 
-    method Action deq if (valid[deqP][sched.validDeqPort]);
+    method Action deq if (valid[deqP][sched.validDeqPort]
+                          && !wrongSpec_conflict); // make conflict with incorrect spec
         valid[deqP][sched.validDeqPort] <= False;
         deqP <= getNextPtr(deqP);
-        // make conflict with incorrect spec
-        wrongSpec_deq_conflict.wset(?);
     endmethod
 
     method ToSpecFifo#(t) first if (valid[deqP][sched.validDeqPort]);
@@ -166,6 +151,8 @@ module mkSpecFifo#(
             spec_bits: specBits[deqP][sched.sbDeqPort]
         };
     endmethod
+
+    method Bool notEmpty = valid[deqP][sched.validDeqPort];
 
     interface SpeculationUpdate specUpdate;
         method Action correctSpeculation(SpecBits mask);
@@ -193,10 +180,134 @@ module mkSpecFifo#(
             Vector#(size, Integer) idxVec = genVector;
             joinActions(map(incorrectSpec, idxVec));
             // make conflict with others
-            wrongSpec_enq_conflict.wset(?);
-            wrongSpec_canon_conflict.wset(?);
-            wrongSpec_deq_conflict.wset(?);
+            wrongSpec_conflict.send;
         endmethod
+    endinterface
+endmodule
+
+typedef struct {
+    Bool kill_all;
+    SpecTag specTag;
+} IncorrectSpeculation deriving(Bits, Eq, FShow);
+
+module mkSpecFifoCF#(
+    Bool lazyEnq // whether we calculate enq guard lazily
+)(
+    SpecFifo#(size, t, validPortNum, sbPortNum)
+) provisos (
+    Alias#(idxT, Bit#(TLog#(size))),
+    Bits#(t, _tsz),
+    FShow#(t)
+);
+    // correct spec is always the last
+    Integer sbCorrectSpecPort = valueof(sbPortNum) - 1;
+
+    Ehr#(3, Vector#(size, Bool))             valid    <- mkEhr(replicate(False));
+    Vector#(size, Reg#(t))                   row      <- replicateM(mkConfigRegU);
+    Ehr#(3, Vector#(size, SpecBits))         specBits <- mkEhr(?);
+
+    Reg#(Maybe#(SpecBits))                correctSpec <- mkDReg(Invalid);
+    Reg#(Maybe#(IncorrectSpeculation))  incorrectSpec <- mkDReg(Invalid);
+
+    Reg#(idxT) enqP <- mkConfigReg(0);
+    Ehr#(2, idxT) deqP_ehr <- mkEhr(0);
+    Reg#(idxT) deqP = deqP_ehr[0]; // port 0 is for deq and canon_deqP
+    PulseWire enq_wr <- mkPulseWire;
+
+
+    function idxT getNextPtr(idxT p);
+        return p == fromInteger(valueOf(size) - 1) ? 0 : p + 1;
+    endfunction
+
+    Bool empty_for_canon = all( \== (False) , valid[1] );
+    rule canon_deqP(!valid[1][deqP] && (enqP != deqP || !empty_for_canon));
+        // element at deqP was killed, so increment deqP
+        deqP <= getNextPtr(deqP);
+    endrule
+
+    (* fire_when_enabled, no_implicit_conditions *)
+    rule canon_speculation;
+        Vector#(size, SpecBits) newSpecBits = specBits[0];
+        Vector#(size, Bool) newValid = valid[0];
+        // Fold in CorrectSpec update:
+        if (correctSpec matches tagged Valid .mask) begin
+            // clear spec bits for all entries
+            for (Integer i=0; i<valueOf(size); i=i+1)
+                newSpecBits[i] = newSpecBits[i] & mask;
+        end
+        // Fold in IncorrectSpec update:
+        if (incorrectSpec matches tagged Valid .incSpec) begin
+            // clear entries
+            for (Integer i=0; i<valueOf(size); i=i+1)
+                if(incSpec.kill_all || newSpecBits[i][incSpec.specTag] == 1'b1)
+                    newValid[i] = False;
+        end
+        specBits[0] <= newSpecBits;
+        valid[0] <= newValid;
+    endrule
+
+    // Allow enq to schedule independently of deq.
+    rule enqValidCanon(enq_wr);
+        valid[2][enqP] <= True;
+    endrule
+
+    // calculate guard for enq, we can do aggressively or lazily
+    idxT deqP_for_enq = ?;
+    Bool empty_for_enq = ?;
+    Bool valid_for_enq = ?;
+    Integer enq_port = ?;
+    if(lazyEnq) begin
+        // use the stale deqP & valid before canon_deqP or deq fires
+        // because deq, canon_deqP, wrongSpec only set valid to false and move deqP forward
+        // this just makes enq fire less aggressively
+        Wire#(idxT) deqP_for_enq_wire <- mkBypassWire;
+        Wire#(Bool) empty_for_enq_wire <- mkBypassWire;
+        Wire#(Bool) valid_for_enq_wire <- mkBypassWire;
+        (* fire_when_enabled, no_implicit_conditions *)
+        rule setWireForEnq;
+            deqP_for_enq_wire <= deqP;
+            empty_for_enq_wire <= all( \== (False) , valid[1] );
+            valid_for_enq_wire <= valid[1][enqP];
+        endrule
+        deqP_for_enq = deqP_for_enq_wire;
+        empty_for_enq = empty_for_enq_wire;
+        valid_for_enq = valid_for_enq_wire;
+        enq_port = 1;
+    end
+    else begin
+        deqP_for_enq = deqP_ehr[1]; // read up-to-date deqP
+        empty_for_enq = all( \== (False) , valid[2] );
+        valid_for_enq = valid[2][enqP];
+        enq_port = 2;
+    end
+
+    method Action enq(ToSpecFifo#(t) x) if (empty_for_enq || enqP != deqP_for_enq);
+        // [sizhuo] I don't think valid bit needs to be checked here
+        doAssert(!valid_for_enq, "enq entry cannot be valid");
+        row[enqP] <= x.data;
+        enq_wr.send;
+        specBits[enq_port][enqP] <= x.spec_bits;
+        enqP <= getNextPtr(enqP);
+    endmethod
+
+    method Action deq if (valid[1][deqP]);
+        valid[1][deqP] <= False;
+        deqP <= getNextPtr(deqP);
+    endmethod
+
+    method ToSpecFifo#(t) first if (valid[1][deqP]);
+        return ToSpecFifo{
+            data: row[deqP],
+            spec_bits: specBits[1][deqP]
+        };
+    endmethod
+
+    method Bool notEmpty = valid[1][deqP];
+
+    interface SpeculationUpdate specUpdate;
+        method correctSpeculation(mask) = correctSpec._write(Valid(mask));
+        method incorrectSpeculation(kill_all, specTag) =
+            incorrectSpec._write(Valid(IncorrectSpeculation{kill_all: kill_all, specTag: specTag}));
     endinterface
 endmodule
 

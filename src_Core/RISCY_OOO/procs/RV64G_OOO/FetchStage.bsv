@@ -277,6 +277,10 @@ module mkFetchStage(FetchStage);
     Integer pc_fetch3_port = 2;
     Integer pc_redirect_port = 3;
     Integer pc_final_port = 4;
+    // To track the next expected PC in Decode for early lookups for prediction.
+    Ehr#(TAdd#(SupSize, 2), Addr) decode_pc_reg <- mkEhr(?);
+    Integer decode_pc_redirect_port = valueOf(SupSize);
+    Integer decode_pc_final_port = valueOf(SupSize) + 1;
 
     // PC compression structure holding an indexed set of PC blocks so that only indexes need be tracked.
     IndexedMultiset#(PcIdx, PcMSB, SupSizeX2) pcBlocks <- mkIndexedMultisetQueue;
@@ -433,7 +437,7 @@ module mkFetchStage(FetchStage);
        end
     endrule
 
-// Break out of i$
+    // Break out of i$
     Vector#(SupSizeX2,Integer) indexes = genVector;
     function Bool f32d_lane_notFull(Integer i) = f32d.enqS[i].canEnq;
     rule doFetch3(all(f32d_lane_notFull, indexes));
@@ -541,12 +545,21 @@ module mkFetchStage(FetchStage);
       // Note that only 1 redirection may happen in a cycle
       Maybe#(IType) redirectInst = Invalid;
 `endif
-
+      Bool likely_epoch_change = False;
       for (Integer i = 0; i < valueof(SupSize); i=i+1) begin
+         Addr pc = decompressPc(validValue(decodeIn[i]).pc);
+         Addr ppc = decompressPc(validValue(decodeIn[i]).ppc);
+         let decode_result = decode(validValue(decodeIn[i]).inst); // Decode 32b inst, or 32b expansion of 16b inst
+         let dInst = decode_result.dInst;
+         let regs = decode_result.regs;
+         DirPredResult#(DirPredTrainInfo) dir_pred = DirPredResult{taken: False, train: ?};
+         if(decode_result.dInst.iType == Br && !likely_epoch_change) begin
+            dir_pred <- dirPred.pred[i].pred;
+            likely_epoch_change = (dir_pred.taken != validValue(decodeIn[i]).pred_jump);
+         end
+         Maybe#(Addr) dir_ppc = decodeBrPred(pc, decode_result.dInst, dir_pred.taken, (validValue(decodeIn[i]).inst_kind == Inst_32b));
          if (decodeIn[i] matches tagged Valid .in)  begin
             let cause = in.cause;
-            Addr pc = decompressPc(in.pc);
-            Addr ppc = decompressPc(in.ppc);
             pcBlocks.rPort[i].remove(in.pc.idx);
             if (verbose)
                $display("Decode: %0d in = ", i, fshow (in));
@@ -578,14 +591,7 @@ module mkFetchStage(FetchStage);
                // update predicted next pc
                if (!isValid(cause)) begin
                   // direction predict
-                  Bool pred_taken = False;
-                  if(dInst.iType == Br) begin
-                     let pred_res <- dirPred.pred[i].pred(pc);
-                     pred_taken = pred_res.taken;
-                     dp_train = pred_res.train;
-                  end
-                  Maybe#(Addr) nextPc = decodeBrPred(pc, dInst, pred_taken, (in.inst_kind == Inst_32b));
-
+                  Maybe#(Addr) nextPc = dir_ppc;
                   // return address stack link reg is x1 or x5
                   function Bool linkedR(Maybe#(ArchRIndx) register);
                      Bool res = False;
@@ -628,7 +634,7 @@ module mkFetchStage(FetchStage);
                   end
                   if(verbose) begin
                      $display("Branch prediction: ", fshow(dInst.iType), " ; ", fshow(pc), " ; ",
-                              fshow(ppc), " ; ", fshow(pred_taken), " ; ", fshow(nextPc));
+                              fshow(ppc), " ; ", fshow(dir_pred.taken), " ; ", fshow(nextPc));
                   end
 
                   // If we don't have a good guess about where we are going, don't proceed.
@@ -652,10 +658,11 @@ module mkFetchStage(FetchStage);
 `endif
                   end
                end // if (!isValid(cause))
+               decode_pc_reg[i] <= ppc;
                let out = FromFetchStage{pc: pc,
                                         ppc: ppc,
                                         main_epoch: in.main_epoch,
-                                        dpTrain: dp_train,
+                                        dpTrain: dir_pred.train,
                                         inst: in.inst,
                                         dInst: dInst,
                                         orig_inst: in.orig_inst,
@@ -680,8 +687,8 @@ module mkFetchStage(FetchStage);
       end // for (Integer i = 0; i < valueof(SupSize); i=i+1)
 
       // update PC and epoch
-      if(redirectPc matches tagged Valid .nextPc) begin
-         pc_reg[pc_decode_port] <= nextPc;
+      if(redirectPc matches tagged Valid .rp) begin
+         pc_reg[pc_decode_port] <= rp;
       end
       decode_epoch[0] <= decode_epoch_local;
       // send training data for next addr pred
@@ -699,6 +706,10 @@ module mkFetchStage(FetchStage);
          endcase
       end
 `endif
+   endrule
+
+   rule reportDecodePc;
+       dirPred.nextPc(decode_pc_reg[decode_pc_final_port]);
    endrule
 
     // train next addr pred: we use a wire to catch outputs of napTrainByDecQ.
@@ -787,7 +798,7 @@ module mkFetchStage(FetchStage);
         //end
         if (iType == Br) begin
             // Train the direction predictor for all branches
-            dirPred.update(pc, taken, dpTrain, mispred);
+            dirPred.update(taken, dpTrain, mispred);
         end
         // train next addr pred when mispred
         if(mispred) begin

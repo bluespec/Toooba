@@ -60,7 +60,6 @@ typedef TExp#(LgGlobalVecSz) GlobalVecSz;
 typedef Bit#(GlobalVecSz) GlobalVecSelect;
 
 typedef struct {
-    Addr pc;
     Bool taken;
     TourTrainInfo train;
     Bool mispred;
@@ -80,6 +79,9 @@ module mkTourPredSecure(DirPredictor#(TourTrainInfo));
     // choice sat counters: large (taken) -- use local, small (not taken) -- use global
     RegFile#(TabIndex, Vector#(GlobalVecSz, Bit#(2))) choiceBht <- mkRegFileWCF(0, maxBound);
 
+    // Lookup PC
+    Reg#(Addr) pc_reg <- mkRegU;
+
     // EHR to record predict results in this cycle
     Ehr#(TAdd#(1, SupSize), SupCnt) predCnt <- mkEhr(0);
     Ehr#(TAdd#(1, SupSize), Bit#(SupSize)) predRes <- mkEhr(0);
@@ -90,8 +92,9 @@ module mkTourPredSecure(DirPredictor#(TourTrainInfo));
     Reg#(Bool) flushDone <- mkReg(True);
     Reg#(TabIndex) flushIndex <- mkReg(0);
 
-    function Tuple2#(TabIndex, LocalHistVecSelect) getPCIndex(Addr pc);
-        PCIndex pcIdx = truncate(pc >> 2);
+    function PCIndex getPCIndex(Addr pc) = truncate(pc >> 2);
+
+    function Tuple2#(TabIndex, LocalHistVecSelect) getPCIndices(PCIndex pcIdx);
         TabIndex tabIdx = truncateLSB(pcIdx);
         LocalHistVecSelect sel = truncate(pcIdx);
         return tuple2(tabIdx, sel);
@@ -129,9 +132,10 @@ module mkTourPredSecure(DirPredictor#(TourTrainInfo));
     Vector#(SupSize, DirPred#(TourTrainInfo)) predIfc;
     for(Integer i = 0; i < valueof(SupSize); i = i+1) begin
         predIfc[i] = (interface DirPred;
-            method ActionValue#(DirPredResult#(TourTrainInfo)) pred(Addr pc);
+            method ActionValue#(DirPredResult#(TourTrainInfo)) pred;
                 // get local history
-                let {localHistTabIdx, localHistVecSel} = getPCIndex(pc);
+                PCIndex pcIndex = getPCIndex(offsetPc(pc_reg, i));
+                let {localHistTabIdx, localHistVecSel} = getPCIndices(pcIndex);
                 Vector#(LocalHistVecSz, TourLocalHist) localHistVec = localHistTab.sub(localHistTabIdx);
                 TourLocalHist localHist = localHistVec[localHistVecSel];
                 // get local prediction
@@ -167,7 +171,8 @@ module mkTourPredSecure(DirPredictor#(TourTrainInfo));
                         globalHist: globalHist,
                         localHist: localHist,
                         globalTaken: globalTaken,
-                        localTaken: localTaken
+                        localTaken: localTaken,
+                        pcIndex: pcIndex
                     }
                 };
             endmethod
@@ -184,7 +189,6 @@ module mkTourPredSecure(DirPredictor#(TourTrainInfo));
     // no flush, accept update
     (* fire_when_enabled, no_implicit_conditions *)
     rule canonUpdate(flushDone &&& updateEn.wget matches tagged Valid .upd);
-        let pc = upd.pc;
         let taken = upd.taken;
         let train = upd.train;
         let mispred = upd.mispred;
@@ -196,7 +200,7 @@ module mkTourPredSecure(DirPredictor#(TourTrainInfo));
         end
 
         // update local history (assume only 1 branch for an PC in flight)
-        let {localHistTabIdx, localHistVecSel} = getPCIndex(pc);
+        let {localHistTabIdx, localHistVecSel} = getPCIndices(train.pcIndex);
         Vector#(LocalHistVecSz, TourLocalHist) localHistVec = localHistTab.sub(localHistTabIdx);
         localHistVec[localHistVecSel] = truncateLSB({pack(taken), train.localHist});
         localHistTab.upd(localHistTabIdx, localHistVec);
@@ -238,10 +242,12 @@ module mkTourPredSecure(DirPredictor#(TourTrainInfo));
         end
     endrule
 
+    method nextPc = pc_reg._write;
+
     interface pred = predIfc;
 
-    method Action update(Addr pc, Bool taken, TourTrainInfo train, Bool mispred);
-        updateEn.wset(TourUpdate {pc: pc, taken: taken, train: train, mispred: mispred});
+    method Action update(Bool taken, TourTrainInfo train, Bool mispred);
+        updateEn.wset(TourUpdate {taken: taken, train: train, mispred: mispred});
     endmethod
 
     method Action flush if(flushDone);

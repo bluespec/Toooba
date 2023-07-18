@@ -71,7 +71,7 @@ module mkAXI4_Mem_Model (AXI4_Mem_Model_IFC #(wd_id, wd_addr, wd_data, wd_user))
 	     NumAlias #(wd_data, 64));
 
    // 0 = quiet; 1 = show mem transactions
-   Integer verbosity = 1;
+   Integer verbosity = 0;
 
    Reg #(Bool) rg_initialized <- mkReg (False);
 

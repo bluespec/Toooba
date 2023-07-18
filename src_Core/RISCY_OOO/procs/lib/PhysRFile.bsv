@@ -1,6 +1,6 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +8,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -34,6 +34,7 @@ import ProcTypes::*;
 import Vector::*;
 import Ehr::*;
 import ConfigReg::*;
+import SpecialRegs::*;
 
 interface RFileWr;
     method Action wr( PhyRIndx rindx, Data data );
@@ -60,7 +61,9 @@ module mkRFile#(Bool lazy)( RFile#(wrNum, rdNum) ) provisos (
 
     // phy reg init val must be 0: because x0 is renamed to phy reg 0,
     // which must be 0 at all time
-    Vector#(NumPhyReg, Ehr#(ehrPortNum, Data)) rfile <- replicateM(mkEhr(0));
+    // Using a mkRegOR here assumes there will be a single write per register per cycle.
+    // As each register is allocated to a single instruction which will execute once, this should always be true.
+    Vector#(NumPhyReg, Vector#(ehrPortNum, Reg#(Data))) rfile <- replicateM(mkRegOR(0));
 
     Vector#(NumPhyReg, Data) rdData = ?;
     if(lazy) begin
