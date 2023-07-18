@@ -1,6 +1,9 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// 
+//
+// Prefetcher modifications:
+//     Copyright (c) 2023 Karlis Susters
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +11,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -38,6 +41,8 @@ import LatencyTimer::*;
 import Cntrs::*;
 import ConfigReg::*;
 import RandomReplace::*;
+import Prefetcher::*;
+import ProcTypes::*;
 `ifdef PERFORMANCE_MONITORING
 import PerformanceMonitor::*;
 import SpecialRegs::*;
@@ -51,7 +56,7 @@ export mkLLBank;
 // this also ensures that cache pipeline is never blocked
 // so we do not need to buffer mem resp that needs to refill cache
 
-// XXX we need to maintain the invariant that 
+// XXX we need to maintain the invariant that
 // at most 1 pRq sent to a child for an addr
 // and we have to wait for resp before sending anthoer one
 
@@ -169,10 +174,11 @@ module mkLLBank#(
     FShow#(dmaRqIdT),
     Add#(tagSz, a__, AddrSz),
     // make sure: cRqNum <= wayNum
-    Add#(cRqNum, b__, wayNum)
+    Add#(cRqNum, b__, wayNum),
+    Add#(TLog#(TDiv#(childNum,2)), c__, TLog#(childNum))
 );
 
-   Bool verbose = False;
+   Bool verbose = True;
 
     LLCRqMshr#(cRqNum, wayT, tagT, Vector#(childNum, DirPend), cRqT) cRqMshr <- mkLLMshr;
 
@@ -214,12 +220,22 @@ module mkLLBank#(
 
     // performance
     LatencyTimer#(cRqNum, 10) latTimer <- mkLatencyTimer; // max 1K cycle latency
+
+    Count#(Bit#(32)) addedCRqs <- mkCount(0);
+    Count#(Bit#(32)) removedCRqs <- mkCount(0);
+
+    Vector#(cRqNum, Reg#(Bool)) cRqIsPrefetch <- replicateM(mkReg(?));
+    PrefetcherVector#(TDiv#(childNum, 2)) dataPrefetchers <- mkPrefetcherVector(mkLLDPrefetcher);
+    PrefetcherVector#(TDiv#(childNum, 2)) instrPrefetchers <- mkPrefetcherVector(mkLLIPrefetcher);
+
 `ifdef PERF_COUNT
-    Reg#(Bool) doStats <- mkConfigReg(False);
+    Reg#(Bool) doStats <- mkConfigReg(True);
     Count#(Data) dmaMemLdCnt <- mkCount(0);
     Count#(Data) dmaMemLdLat <- mkCount(0);
     Count#(Data) normalMemLdCnt <- mkCount(0);
     Count#(Data) normalMemLdLat <- mkCount(0);
+    Count#(Data) instructionLdCnt <- mkCount(0);
+    Count#(Data) instructionLdLat <- mkCount(0);
     Count#(Data) mshrBlocks <- mkCount(0);
     Count#(Data) downRespCnt <- mkCount(0);
     Count#(Data) downRespDataCnt <- mkCount(0);
@@ -232,7 +248,7 @@ module mkLLBank#(
 `ifdef PERFORMANCE_MONITORING
     Array #(Reg #(EventsCache)) perf_events <- mkDRegOR (2, unpack (0));
 `endif
-function Action incrMissCnt(cRqIndexT idx, Bool isDma);
+function Action incrMissCnt(cRqIndexT idx, Bool isDma, Bool isInstructionAccess);
 action
     let lat <- latTimer.done(idx);
 `ifdef PERF_COUNT
@@ -240,6 +256,10 @@ action
         if(isDma) begin
             dmaMemLdCnt.incr(1);
             dmaMemLdLat.incr(zeroExtend(lat));
+        end
+        else if (isInstructionAccess) begin
+            instructionLdCnt.incr(1);
+            instructionLdLat.incr(zeroExtend(lat));
         end
         else begin
             normalMemLdCnt.incr(1);
@@ -320,8 +340,8 @@ endfunction
             mshrIdx: n
         }));
        if (verbose)
-        $display("%t LL %m cRqTransfer_retry: ", $time, 
-            fshow(n), " ; ", 
+        $display("%t LL %m cRqTransfer_retry: ", $time,
+            fshow(n), " ; ",
             fshow(req)
         );
     endrule
@@ -372,15 +392,82 @@ endfunction
         cRqIndexT n <- cRqMshr.transfer.getEmptyEntryInit(cRq, Invalid);
         // send to pipeline
         pipeline.send(CRq (LLPipeCRqIn {
-            addr: cRq.addr, 
+            addr: cRq.addr,
             mshrIdx: n
         }));
+        cRqIsPrefetch[n] <= r.isPrefetchRq;
         // change round robin
         flipPriorNewCRqSrc;
        if (verbose)
-        $display("%t LL %m cRqTransfer_new_child: ", $time, 
+        $display("%t LL %m cRqTransfer_new_child: ", $time,
             fshow(n), " ; ",
-            fshow(r), " ; ", 
+            fshow(r), " ; ",
+            fshow(cRq)
+        );
+    endrule
+
+    // create new request from data prefetcher and send to pipeline
+    // Rule only fires when no work from child and DMA
+    rule createDataPrefetchRq(newCRqSrc == Invalid);
+        let x <- dataPrefetchers.getNextPrefetchAddr;
+        match {.addr, .cacheIdx} = x;
+        //Request from L1D of cacheIdx-th core
+        childT child = {cacheIdx, '0};
+        cRqT cRq = LLRq {
+            addr: addr,
+            fromState: I,
+            toState: E,
+            canUpToE: True,
+            child: child,
+            byteEn: ?,
+            id: Child (?)
+        };
+        // setup new MSHR entry
+        cRqIndexT n <- cRqMshr.transfer.getEmptyEntryInit(cRq, Invalid);
+        // send to pipeline
+        pipeline.send(CRq (LLPipeCRqIn {
+            addr: cRq.addr,
+            mshrIdx: n
+        }));
+        cRqIsPrefetch[n] <= True;
+        // change round robin
+        flipPriorNewCRqSrc;
+       if (verbose)
+        $display("%t LL %m createDataPrefetchRq: ", $time,
+            fshow(n), " ; ",
+            fshow(cRq)
+        );
+    endrule
+
+    // create new request from instruction prefetcher and send to pipeline
+    // Rule only fires when no work from child and DMA
+    rule createInstrPrefetchRq(newCRqSrc == Invalid);
+        let x <- instrPrefetchers.getNextPrefetchAddr;
+        match {.addr, .cacheIdx} = x;
+        //Request from L1D of cacheIdx-th core
+        childT child = {cacheIdx, '1};
+        cRqT cRq = LLRq {
+            addr: addr,
+            fromState: I,
+            toState: S,
+            canUpToE: True,
+            child: child,
+            byteEn: ?,
+            id: Child (?)
+        };
+        // setup new MSHR entry
+        cRqIndexT n <- cRqMshr.transfer.getEmptyEntryInit(cRq, Invalid);
+        // send to pipeline
+        pipeline.send(CRq (LLPipeCRqIn {
+            addr: cRq.addr,
+            mshrIdx: n
+        }));
+        cRqIsPrefetch[n] <= True;
+        // change round robin
+        flipPriorNewCRqSrc;
+       if (verbose)
+        $display("%t LL %m createInstrPrefetchRq: ", $time,
+            fshow(n), " ; ",
             fshow(cRq)
         );
     endrule
@@ -423,16 +510,17 @@ endfunction
         // setup new MSHR entry and data
         cRqIndexT n <- cRqMshr.transfer.getEmptyEntryInit(cRq, write ? Valid (r.data) : Invalid);
         // send to pipeline
+        cRqIsPrefetch[n] <= False;
         pipeline.send(CRq (LLPipeCRqIn {
-            addr: cRq.addr, 
+            addr: cRq.addr,
             mshrIdx: n
         }));
         // change round robin
         flipPriorNewCRqSrc;
        if (verbose)
-        $display("%t LL %m cRqTransfer_new_dma: ", $time, 
+        $display("%t LL %m cRqTransfer_new_dma: ", $time,
             fshow(n), " ; ",
-            fshow(r), " ; ", 
+            fshow(r), " ; ",
             fshow(cRq)
         );
 `ifdef PERF_COUNT
@@ -453,7 +541,7 @@ endfunction
         !cRqRetryIndexQ.notEmpty && newCRqSrc == Valid (Dma) && doStats
     );
         dmaRqT r = rqFromDmaQ.first;
-        Bool write = r.byteEn != replicate(False);
+        Bool write = r.byteEn != replicate(replicate(False));
         cRqT cRq = LLRq {
             addr: r.addr,
             fromState: I,
@@ -485,9 +573,16 @@ endfunction
         end
 `endif
     endrule
-    
+
+    rule discardPrefetchRqResult(rsToCIndexQ.notEmpty && cRqIsPrefetch[rsToCIndexQ.first.cRqId]);
+        let n = rsToCIndexQ.first.cRqId;
+        $display("%t LL %m discardPrefetchRqResult: ", $time, fshow(n));
+        rsToCIndexQ.deq;
+        cRqMshr.sendRsToDmaC.releaseEntry(n);
+    endrule
+
     // mem resp for child req, will refill cache, send it to pipeline
-    (* descending_urgency = "mRsTransfer, cRsTransfer, cRqTransfer_retry, cRqTransfer_new_child, cRqTransfer_new_dma" *)
+    (* descending_urgency = "mRsTransfer, cRsTransfer, discardPrefetchRqResult, cRqTransfer_retry, cRqTransfer_new_child, cRqTransfer_new_dma, createInstrPrefetchRq, createDataPrefetchRq" *)
 `ifdef PERF_COUNT
     // stop mshr block stats when other higher priority req is being sent to
     // pipeline
@@ -520,7 +615,10 @@ endfunction
             fshow(cSlot), " ; "
         );
         // performance counter: normal miss lat and cnt
-        incrMissCnt(n, False);
+        // Check lowest bit of child ID to determine if this was an ICache access
+        if (!cRqIsPrefetch[n]) begin
+            incrMissCnt(n, False, cRq.child[0] == 1);
+        end
     endrule
 
     // this mem resp is just for a DMA req, won't go into pipeline to refill cache
@@ -533,7 +631,7 @@ endfunction
         cRqMshr.mRsDeq.setData(mRs.id.mshrIdx, Valid (mRs.data));
         rsLdToDmaIndexQ_mRsDeq.enq(mRs.id.mshrIdx);
         // performance counter: dma miss lat and cnt
-        incrMissCnt(mRs.id.mshrIdx, True);
+        incrMissCnt(mRs.id.mshrIdx, True, False);
     endrule
 
     // send rd/wr to mem
@@ -547,7 +645,7 @@ endfunction
         cRqSlotT cSlot = cRqMshr.sendToM.getSlot(n);
         Maybe#(Line) data = cRqMshr.sendToM.getData(n);
        if (verbose)
-        $display("%t LL %m sendToM: ", $time, 
+        $display("%t LL %m sendToM: ", $time,
             fshow(toMInfoQ.first), " ; ",
             fshow(cRq), " ; ",
             fshow(cSlot), " ; ",
@@ -693,7 +791,7 @@ endfunction
     endrule
 
     // send upgrade resp to child
-    rule sendRsToC(rsToCIndexQ.notEmpty);
+    rule sendRsToC(rsToCIndexQ.notEmpty && !cRqIsPrefetch[rsToCIndexQ.first.cRqId]);
         // send upgrade resp to child
         rsToCIndexQ.deq;
         cRqIndexT n = rsToCIndexQ.first.cRqId;
@@ -701,9 +799,9 @@ endfunction
         cRqT cRq = cRqMshr.sendRsToDmaC.getRq(n);
         Maybe#(Line) rsData = cRqMshr.sendRsToDmaC.getData(n);
        if (verbose)
-        $display("%t LL %m sendRsToC: ", $time, 
-            fshow(n), " ; ", 
-            fshow(cRq), " ; ", 
+        $display("%t LL %m sendRsToC: ", $time,
+            fshow(n), " ; ",
+            fshow(cRq), " ; ",
             fshow(rsData), " ; ",
             fshow(toState)
         );
@@ -733,7 +831,7 @@ endfunction
     // round robin select cRq to downgrade child
     // but downgrade must wait for all upgrade resp
     Reg#(cRqIndexT) whichCRq <- mkReg(0);
-    
+
     // we don't perform sending downgrade to child for a cRq processing by pipelineResp_cRs
     // otherwise atomicity issue may arise
     // for safety, we check cRq processed by all pipelineResp_xxx rules
@@ -771,7 +869,7 @@ endfunction
         cRqT cRq = cRqMshr.sendRqToC.getRq(n);
         cRqSlotT cSlot = cRqMshr.sendRqToC.getSlot(n);
         LLCRqState cState = cRqMshr.sendRqToC.getState(n);
-        doAssert(cState == WaitSt || cState == WaitOldTag, 
+        doAssert(cState == WaitSt || cState == WaitOldTag,
             "only WaitSt and WaitOldTag needs req child"
         );
         // find a child to downgrade
@@ -842,7 +940,7 @@ endfunction
     function Action cRqFromCHit(cRqIndexT n, cRqT cRq, Bool isMRs);
     action
        if (verbose)
-        $display("%t LL %m pipelineResp: cRq from child Hit func: ", $time, 
+        $display("%t LL %m pipelineResp: cRq from child Hit func: ", $time,
             fshow(n), " ; ",
             fshow(cRq)
         );
@@ -850,7 +948,7 @@ endfunction
         doAssert(isRqFromC(cRq.id), "should be cRq from child");
         doAssert(ram.info.tag == getTag(cRq.addr) && ram.info.cs > I,
             // this function is called by mRs, cRq, cRs
-            // tag should match even for mRs, because 
+            // tag should match even for mRs, because
             // tag has been written into cache before sending req to parent
             ("cRqHit but tag or cs incorrect")
         );
@@ -869,7 +967,11 @@ endfunction
         cRqMshr.pipelineResp.setData(n, ram.info.dir[cRq.child] == I ? Valid (ram.line) : Invalid);
         // update child dir
         dirT newDir = ram.info.dir;
-        newDir[cRq.child] = toState;
+        if (!cRqIsPrefetch[n]) begin
+            //Only update dir if not a prefetch request, since
+            //Prerefetch request results don't get handed down to children,
+            newDir[cRq.child] = toState;
+        end
         // update cs (may have E -> M)
         Msi newCs = ram.info.cs;
         if(toState == M) begin
@@ -893,6 +995,16 @@ endfunction
             },
             line: ram.line // use line in ram
         }, True); // hit, so update rep info
+        if (!cRqIsPrefetch[n]) begin
+            if (cRq.child[0] == 1) begin
+                instrPrefetchers.reportAccess(
+                        truncateLSB(cRq.child), cRq.addr, HIT);
+            end
+            else begin
+                dataPrefetchers.reportAccess(
+                        truncateLSB(cRq.child), cRq.addr, HIT);
+            end
+        end
     endaction
     endfunction
 
@@ -900,7 +1012,7 @@ endfunction
     function Action cRqFromDmaHit(cRqIndexT n, cRqT cRq);
     action
        if (verbose)
-        $display("%t LL %m pipelineResp: cRq from dma Hit func: ", $time, 
+        $display("%t LL %m pipelineResp: cRq from dma Hit func: ", $time,
             fshow(n), " ; ",
             fshow(cRq)
         );
@@ -1013,7 +1125,7 @@ endfunction
         cRqT cRq = pipeOutCRq;
        if (verbose)
         $display("%t LL %m pipelineResp: cRq: ", $time, fshow(n), " ; ", fshow(cRq));
-        
+
         // find end of dependency chain
         Maybe#(cRqIndexT) cRqEOC = cRqMshr.pipelineResp.searchEndOfChain(cRq.addr);
 
@@ -1021,7 +1133,9 @@ endfunction
         function Vector#(childNum, DirPend) getDirPendNonCompatForChild;
             function DirPend initPend(childT i);
                 if(i == cRq.child) begin
-                    return ram.info.dir[i] <= cRq.fromState ? Invalid : Waiting (cRq.fromState);
+                    //For prefetch requests into L2, ignore what state the line is in L1
+                    if (cRqIsPrefetch[n]) return Invalid;
+                    else return ram.info.dir[i] <= cRq.fromState ? Invalid : Waiting (cRq.fromState);
                 end
                 else begin
                     Msi compatState = toCompat(cRq.toState);
@@ -1085,6 +1199,16 @@ endfunction
                 },
                 line: ram.line
             }, False);
+            if (!cRqIsPrefetch[n]) begin
+                if (cRq.child[0] == 1) begin
+                    instrPrefetchers.reportAccess(
+                            truncateLSB(cRq.child), cRq.addr, MISS);
+                end
+                else begin
+                    dataPrefetchers.reportAccess(
+                            truncateLSB(cRq.child), cRq.addr, MISS);
+                end
+            end
         endaction
         endfunction
 
@@ -1153,9 +1277,19 @@ endfunction
                     dirPend: dirPend
                 });
             end
+            if (!cRqIsPrefetch[n]) begin
+                if (cRq.child[0] == 1) begin
+                    instrPrefetchers.reportAccess(
+                            truncateLSB(cRq.child), cRq.addr, MISS);
+                end
+                else begin
+                    dataPrefetchers.reportAccess(
+                            truncateLSB(cRq.child), cRq.addr, MISS);
+                end
+            end
         endaction
         endfunction
-    
+
         // function to set cRq to Depend, and make no further change to cache
         function Action cRqSetDepNoCacheChange;
         action
@@ -1170,7 +1304,7 @@ endfunction
                 LLCRqState cState = pipeOutCState;
                 doAssert(cState == Init, "owner is other, must first time go through tag match");
                 // tag match must be hit (because replacement algo won't give a way with owner)
-                doAssert(ram.info.cs > I && ram.info.tag == getTag(cRq.addr), 
+                doAssert(ram.info.cs > I && ram.info.tag == getTag(cRq.addr),
                     ("cRq should hit in tag match")
                 );
                 // could be two cases:
@@ -1253,7 +1387,7 @@ endfunction
             if(cRqEOC matches tagged Valid .m &&& cState == Init) begin
 	       if (verbose)
                 $display("%t LL %m pipelineResp: cRq: no owner, depend on cRq ", $time,
-                    fshow(cState), " ; ", 
+                    fshow(cState), " ; ",
                     fshow(cRqEOC)
                 );
                 cRqMshr.pipelineResp.setAddrSucc(m, Valid (n));
@@ -1511,7 +1645,7 @@ endfunction
 `else
         noAction;
 `endif
-    endmethod 
+    endmethod
 
     method Data getPerfData(LLCPerfType t);
         return (case(t)
@@ -1520,6 +1654,8 @@ endfunction
             LLCDmaMemLdLat: dmaMemLdLat;
             LLCNormalMemLdCnt: normalMemLdCnt;
             LLCNormalMemLdLat: normalMemLdLat;
+            LLCInstructionLdCnt: instructionLdCnt;
+            LLCInstructionLdLat: instructionLdLat;
             LLCMshrBlockCycles: mshrBlocks;
             LLCDownRespCnt: downRespCnt;
             LLCDownRespDataCnt: downRespDataCnt;

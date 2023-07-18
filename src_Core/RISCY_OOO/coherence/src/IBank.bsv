@@ -1,6 +1,9 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
 //
+// Prefetcher modifications:
+//     Copyright (c) 2023 Karlis Susters
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -45,6 +48,7 @@ import CacheUtils::*;
 import Performance::*;
 import LatencyTimer::*;
 import RandomReplace::*;
+import Prefetcher::*;
 `ifdef PERFORMANCE_MONITORING
 import PerformanceMonitor::*;
 import SpecialRegs::*;
@@ -129,7 +133,7 @@ module mkIBank#(
     Add#(TAdd#(tagSz, indexSz), TAdd#(lgBankNum, LgLineSzBytes), AddrSz)
 );
 
-       Bool verbose = False;
+    Bool verbose = True;
 
     ICRqMshr#(cRqNum, wayT, tagT, procRqT, resultT) cRqMshr <- mkICRqMshrLocal;
 
@@ -152,6 +156,11 @@ module mkIBank#(
 
     // index Q to order all in flight cRq for in-order resp
     FIFO#(cRqIdxT) cRqIndexQ <- mkSizedFIFO(valueof(cRqNum));
+    FIFO#(cRqIdxT) prefetchIndexQ <- mkSizedFIFO(valueof(cRqNum));
+    Vector#(cRqNum, Reg#(Bool)) cRqIsPrefetch <- replicateM(mkReg(?));
+
+    let prefetcher <- mkL1IPrefetcher;
+    let llcPrefetcher <- mkLLIPrefetcherInL1I;
 
 `ifdef DEBUG_ICACHE
     // id for each cRq, incremented when each new req comes
@@ -162,7 +171,7 @@ module mkIBank#(
 `endif
 
     // security flush
-`ifdef SECURITY
+`ifdef SECURITY_CACHES
     Reg#(Bool) flushDone <- mkReg(True);
     Reg#(Bool) flushReqStart <- mkReg(False);
     Reg#(Bool) flushReqDone <- mkReg(False);
@@ -174,8 +183,10 @@ module mkIBank#(
 `endif
 
     LatencyTimer#(cRqNum, 10) latTimer <- mkLatencyTimer;
+    Count#(Bit#(32)) addedCRqs <- mkCount(0);
+    Count#(Bit#(32)) removedCRqs <- mkCount(0);
 `ifdef PERF_COUNT
-    Reg#(Bool) doStats <- mkConfigReg(False);
+    Reg#(Bool) doStats <- mkConfigReg(True);
     Count#(Data) ldCnt <- mkCount(0);
     Count#(Data) ldMissCnt <- mkCount(0);
     Count#(Data) ldMissLat <- mkCount(0);
@@ -220,6 +231,10 @@ module mkIBank#(
 
     function tagT getTag(Addr a) = truncateLSB(a);
 
+    rule print_cRqIndexQ_len;
+        //$display("L1I cRqIndexQ length= %d", addedCRqs-removedCRqs);
+    endrule
+
     // XXX since I$ may be requested by processor constantly
     // cRq may come at every cycle, so we must make cRq has lower priority than pRq/pRs
     // otherwise the whole system may deadlock/livelock
@@ -240,6 +255,8 @@ module mkIBank#(
         }));
         // enq to indexQ for in order resp
         cRqIndexQ.enq(n);
+        cRqIsPrefetch[n] <= False;
+        addedCRqs.incr(1);
         // performance counter: cRq type
         incrReqCnt;
        if (verbose)
@@ -281,7 +298,31 @@ module mkIBank#(
         doAssert(resp.toState == S && isValid(resp.data), "I$ must upgrade to S with data");
     endrule
 
-`ifdef SECURITY
+    //(* descending_urgency = "createPrefetchRq, pRsTransfer, cRqTransfer" *)
+    (* descending_urgency = "pRqTransfer, cRqTransfer, createPrefetchRq" *)
+    rule createPrefetchRq(flushDone);
+        Addr addr <- prefetcher.getNextPrefetchAddr;
+        procRqT r = ProcRqToI {addr: addr};
+        cRqIdxT n <- cRqMshr.getEmptyEntryInit(r);
+        // send to pipeline
+        pipeline.send(CRq (L1PipeRqIn {
+            addr: r.addr,
+            mshrIdx: n
+        }));
+        // enq to indexQ for in order resp
+        prefetchIndexQ.enq(n);
+        cRqIsPrefetch[n] <= True;
+        addedCRqs.incr(1);
+        // performance counter: cRq type
+        //incrReqCnt; TODO make separate counter for prefetch requests
+       if (verbose)
+        $display("%t I %m createPrefetchRq: ", $time,
+            fshow(n), " ; ",
+            fshow(r)
+        );
+    endrule
+
+`ifdef SECURITY_CACHES
     // start flush when cRq MSHR is empty
     rule startFlushReq(!flushDone && !flushReqStart && cRqMshr.emptyForFlush);
         flushReqStart <= True;
@@ -321,6 +362,7 @@ module mkIBank#(
     endrule
 `endif
 
+    // Used when replacing an evicted cache line
     rule sendRsToP_cRq(rsToPIndexQ.first matches tagged CRq .n);
         rsToPIndexQ.deq;
         // get cRq replacement info
@@ -367,6 +409,25 @@ module mkIBank#(
         doAssert(req.toState == I, "I$ only has downgrade req to I");
     endrule
 
+    (* descending_urgency = "sendRqToP, sendPrefetchRqToP" *)
+    rule sendPrefetchRqToP;
+        let addr <- llcPrefetcher.getNextPrefetchAddr;
+        cRqToPT cRqToP = CRqMsg {
+            addr: addr,
+            fromState: ?,
+            toState: S,
+            canUpToE: False,
+            id: 0,
+            child: ?,
+            isPrefetchRq: True
+        };
+        rqToPQ.enq(cRqToP);
+        if (verbose)
+            $display("%t I %m sendPrefetchRqToP: ", $time,
+                fshow(cRqToP)
+            );
+    endrule
+
     rule sendRqToP;
         rqToPIndexQ.deq;
         cRqIdxT n = rqToPIndexQ.first;
@@ -378,7 +439,8 @@ module mkIBank#(
             toState: S, // I$ upgrade to S
             canUpToE: False,
             id: slot.way,
-            child: ?
+            child: ?,
+            isPrefetchRq: False
         };
         rqToPQ.enq(cRqToP);
        if (verbose)
@@ -458,6 +520,10 @@ module mkIBank#(
             },
             line: ram.line
         }, True); // hit, so update rep info
+        if (!cRqIsPrefetch[n]) begin
+            prefetcher.reportAccess(req.addr, HIT);
+            llcPrefetcher.reportAccess(req.addr, HIT);
+        end
         // process req to get superscalar inst read results
         // set MSHR entry as Done & save inst results
         let instResult = readInst(ram.line, req.addr);
@@ -517,10 +583,15 @@ module mkIBank#(
                 },
                 line: ram.line
             }, False);
+            if (!cRqIsPrefetch[n]) begin
+                prefetcher.reportAccess(procRq.addr, MISS);
+                llcPrefetcher.reportAccess(procRq.addr, MISS);
+            end
         endaction
         endfunction
 
         // function to do replacement for cRq
+        // When we evict an S cache line to make space
         function Action cRqReplacement;
         action
             // deq pipeline
@@ -543,6 +614,10 @@ module mkIBank#(
                 repTag: ram.info.tag, // tag being replaced for sending rs to parent
                 waitP: True
             });
+            if (!cRqIsPrefetch[n]) begin
+                prefetcher.reportAccess(procRq.addr, MISS);
+                llcPrefetcher.reportAccess(procRq.addr, MISS);
+            end
             // send replacement resp to parent
             rsToPIndexQ.enq(CRq (n));
         endaction
@@ -627,7 +702,9 @@ module mkIBank#(
             );
             cRqHit(cOwner, procRq);
             // performance counter: miss cRq
-            incrMissCnt(cOwner);
+            if (!cRqIsPrefetch[cOwner]) begin
+                incrMissCnt(cOwner);
+            end
         end
         else begin
             doAssert(False, ("pRs owner must match some cRq"));
@@ -682,7 +759,18 @@ module mkIBank#(
         end
     endrule
 
-`ifdef SECURITY
+    rule discardPrefetchRqResult(
+            cRqMshr.prefetcher.getResult(prefetchIndexQ.first) matches tagged Valid .inst);
+        prefetchIndexQ.deq;
+        removedCRqs.incr(1);
+        cRqMshr.prefetcher.releaseEntry(prefetchIndexQ.first); // release MSHR entry
+        if (verbose)
+        $display("%t I %m discardPrefetchRqResult: ", $time,
+            fshow(prefetchIndexQ.first)
+        );
+    endrule
+
+`ifdef SECURITY_CACHES
     rule pipelineResp_flush(
         !flushDone &&& !flushRespDone &&&
         pipeOut.cmd matches tagged L1Flush .flush
@@ -770,6 +858,7 @@ module mkIBank#(
                 cRqMshr.sendRsToC.getResult(cRqIndexQ.first) matches tagged Valid .inst
             );
                 cRqIndexQ.deq;
+                removedCRqs.incr(1);
                 cRqMshr.sendRsToC.releaseEntry(cRqIndexQ.first); // release MSHR entry
 	       if (verbose)
                 $display("%t I %m sendRsToC: ", $time,
@@ -797,7 +886,7 @@ module mkIBank#(
 
     interface pRqStuck = pRqMshr.stuck;
 
-`ifdef SECURITY
+`ifdef SECURITY_CACHES
     method Action flush if(flushDone);
         flushDone <= False;
     endmethod

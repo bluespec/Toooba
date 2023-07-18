@@ -52,6 +52,8 @@ typedef enum {
     LLCDmaMemLdLat,
     LLCNormalMemLdCnt,
     LLCNormalMemLdLat,
+    LLCInstructionLdCnt,
+    LLCInstructionLdLat,
     LLCMshrBlockCycles, // full MSHR blocks new cRq
     LLCDownRespCnt,
     LLCDownRespDataCnt,
