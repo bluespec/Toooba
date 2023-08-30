@@ -3,8 +3,7 @@
 This is a prototype of an out-of-order core that implements hardware capabilities (see [CHERI](https://www.cl.cam.ac.uk/research/security/ctsrd/cheri/) for details).
 It is based off of [Bluespec's Toooba](https://github.com/bluespec/Toooba), which is a slight variation of [MIT's RisyOO core](https://github.com/csail-csg/riscy-OOO).
 
-----------------------------------------------------------------
-### Note re. distribution of MIT RISCY-OOO sources.
+## Note re. distribution of MIT RISCY-OOO sources.
 
 The directory `src_Core/RISCY_OOO` contains sources copied from MIT's
 `riscy-OOO` repository.  See `LICENSE_RISCY-OOO` for MIT's license.
@@ -19,8 +18,7 @@ small and mostly additive:
 
 The University of Cambridge made changes to RiscyOO to add support for [CHERI capabilities](https://www.cl.cam.ac.uk/techreports/UCAM-CL-TR-941.pdf). For details on what CHERI instructions do, please see the [Instruction Set Architecture document](https://www.cl.cam.ac.uk/techreports/UCAM-CL-TR-951.pdf).
 
-----------------------------------------------------------------
-### About the source codes (in BSV and Verilog)
+## About the source codes (in BSV and Verilog)
 
 The BSV source code in this repository, from which the synthesizable
 Verilog RTL in this repository is generated, is highly parameterized
@@ -46,7 +44,7 @@ repository are for one specific configuration:
 If you want to generate other Verilog variants, you'll need a Bluespec
 `bsc` compiler, which is open source and can be found in [this repository](https://github.com/B-Lang-org/bsc).
 
-### Testbench included
+## Testbench included
 
 This repository contains a simple testbench (a small SoC) with which
 one can run RISC-V binaries in simulation by loading standard mem hex
@@ -63,11 +61,10 @@ an RV64ACDFIMSUxCHERI simulator, using Bluesim and Verilog simulation.
 There are also RVFI-DII variants of these to be used with [TestRIG](https://github.com/CTSRD-CHERI/TestRIG).
 The generated Verilog is synthesizable.
 
-#### Simulation
+## Simulation
 
 We currently only support Bluesim and Verilator simulation. There is also some code related to simulation on iVerilog, but this is currently not working and not being maintained.
 
-----------------------------------------------------------------
 ## Source codes
 
 This repository contains two levels of source code: Verilog and BSV.
@@ -124,7 +121,6 @@ instruction-by-instruction trace that can be checked for correctness
 against a RISC-V Golden Reference Model.  Please contact Bluespec,
 Inc. for more information.
 
-----------------------------------------------------------------
 ## Build Instructions
 
 First clone this repository and then inside the repository initialize the submodules:
@@ -182,5 +178,3 @@ In the corresponding build directory:
       all the standard RISC-V ISA tests relevant for RV64ACDFIMSU (regression testing).
       This uses the Python script `Tests/Run_regression.py`.
       Please see the documentation at the top of that program for details.
-
-----------------------------------------------------------------
