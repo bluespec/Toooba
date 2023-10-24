@@ -60,9 +60,6 @@
 // #define MAX_MEM_SIZE (((uint64_t) 0x400) * ((uint64_t) 0x400) * ((uint64_t) 0x400))
 #define MAX_MEM_SIZE ((uint64_t) 0x90000000)
 
-// ================================================================
-// Min and max byte addrs for various mem sizes
-
 #define BASE_ADDR_B  0x80000000lu
 
 // For 16 MB memory at 0x_8000_0000
@@ -73,12 +70,7 @@
 #define MIN_MEM_ADDR_1GB  BASE_ADDR_B
 #define MAX_MEM_ADDR_1GB  (BASE_ADDR_B + 0x40000000lu)
 
-#ifdef __APPLE__
-std::vector<uint8_t> mem_buf(MAX_MEM_ADDR_1GB-MIN_MEM_ADDR_1GB,0);
-#else
-uint8_t mem_buf [MAX_MEM_ADDR_1GB-MIN_MEM_ADDR_1GB];
-#endif
-
+uint8_t *mem_buf;
 
 // Features of the ELF binary
 int       bitwidth;
@@ -365,16 +357,11 @@ int main (int argc, char *argv [])
     }
 
     // Zero out the memory buffer before loading the ELF file
-
-    // XXX this is not necessary because global variables are zero initialised
-    // by default. It is better not to bzero because it takes a while and the
-    // kernel will have to allocate physical memory for lots of pages that could
-    // otherwise be CoW zero pages. This caused issues running regressions in
-    // parallel on a VM where the OOM killer kicked in due to memory ballooning
-    // taking a while to catch up.
-
-    // bzero (mem_buf, MAX_MEM_SIZE);
-    // bzero (& (mem_buf [BASE_ADDR_B]), MAX_MEM_SIZE - BASE_ADDR_B);
+    mem_buf = calloc(MAX_MEM_SIZE, sizeof(uint8_t));
+    if (mem_buf == NULL) {
+	fprintf (stderr, "ERROR: unable to allocate %lxMB for mem_buf\n", MAX_MEM_SIZE / 1024 / 1024);
+	return 1;
+    }
 
     c_mem_load_elf (argv [1], "_start", "exit", "tohost");
 
@@ -393,5 +380,6 @@ int main (int argc, char *argv [])
     write_mem_hex_file (fp_out, BASE_ADDR_B, max_addr);
     // write_mem_hex_file (fp_out, BASE_ADDR_B, MAX_MEM_ADDR_1GB);
 
+    free(mem_buf);
     fclose (fp_out);
 }
