@@ -808,8 +808,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
 
     rule doIssueLdFromIssueQ;
         // get issue entry from LSQ
-        LSQIssueLdInfo info <- lsq.getIssueLd;
-        doIssueLd(info, True);
+        doIssueLd(lsq.getIssueLd, True);
     endrule
 
     // we have ordered setRegReadyAggr_forward < setRegReadyAggr_mem to make
