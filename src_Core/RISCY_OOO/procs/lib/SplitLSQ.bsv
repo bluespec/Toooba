@@ -359,7 +359,7 @@ interface SplitLSQ;
         LdQTag lsqTag, Addr paddr, ByteEn shiftedBE, SBSearchRes sbRes
     );
     // Get the load to issue
-    method ActionValue#(LSQIssueLdInfo) getIssueLd;
+    method LSQIssueLdInfo getIssueLd;
     // Get load resp
     method ActionValue#(LSQRespLdResult) respLd(LdQTag t, Data alignedData);
     // Deq LQ entry, and wakeup stalled loads. The guard checks the following:
@@ -534,7 +534,6 @@ module mkSplitLSQ(SplitLSQ);
     // cacheEvict <
     // updateAddr <
     // issueLd, getIssueLd <
-    // enqIssueQ <
     // (wakeupLdStalledBySB (Weak only) CF deqSt) <
     // setAtCommit <
     // respLd <
@@ -627,7 +626,6 @@ module mkSplitLSQ(SplitLSQ);
     Vector#(LdQSize, Ehr#(2, ByteEn))               ld_shiftedBE       <- replicateM(mkEhr(?));
     Vector#(LdQSize, Ehr#(2, Maybe#(Exception)))    ld_fault           <- replicateM(mkEhr(?));
     Vector#(LdQSize, Ehr#(2, Bool))                 ld_computed        <- replicateM(mkEhr(?));
-    Vector#(LdQSize, Ehr#(3, Bool))                 ld_inIssueQ        <- replicateM(mkEhr(?));
     Vector#(LdQSize, Ehr#(2, Bool))                 ld_executing       <- replicateM(mkEhr(?));
     Vector#(LdQSize, Ehr#(2, Bool))                 ld_done            <- replicateM(mkEhr(?));
     Vector#(LdQSize, Ehr#(3, Maybe#(LdKilledBy)))   ld_killed          <- replicateM(mkEhr(?));
@@ -699,12 +697,6 @@ module mkSplitLSQ(SplitLSQ);
     let ld_computed_enqIss  = getVEhrPort(ld_computed, 1); // assert
     let ld_computed_resp    = getVEhrPort(ld_computed, 1); // assert
     let ld_computed_enq     = getVEhrPort(ld_computed, 1); // write
-
-    let ld_inIssueQ_findIss = getVEhrPort(ld_inIssueQ, 0);
-    let ld_inIssueQ_updAddr = getVEhrPort(ld_inIssueQ, 0); // assert
-    let ld_inIssueQ_issue   = getVEhrPort(ld_inIssueQ, 0); // write
-    let ld_inIssueQ_enqIss  = getVEhrPort(ld_inIssueQ, 1); // write
-    let ld_inIssueQ_enq     = getVEhrPort(ld_inIssueQ, 2); // write
 
     let ld_executing_findIss   = getVEhrPort(ld_executing, 0);
     let ld_executing_wrongSpec = getVEhrPort(ld_executing, 0);
@@ -887,16 +879,14 @@ module mkSplitLSQ(SplitLSQ);
     Reg#(StQTag) st_verifyP_verify    = st_verifyP[0]; // write, C with wrongSpec
     Reg#(StQTag) st_verifyP_deqSt     = st_verifyP[1]; // write, C with wrongSpec
 
-    // FIFO of LSQ tags that try to issue, there should be no replication in it
-    LSQIssueLdQ issueLdQ <- mkLSQIssueLdQ;
     // XXX We split the search for ready to issue entry into two phases. Phase
     // 1: rule findIssue: find a ready-to-issue entry at the beginning of the
-    // cycle. Phase 2: rule enqIssueQ: enq the one found in findIssue into
+    // cycle. Phase 2: method issueLd: enq the one found in findIssue into
     // issueQ and set ldInIssueQ We do the split because enq to issueQ must be
     // ordered after getIssueLd method which deq issueQ.  This split is fine
     // because at phase 2, the entry found in phase one should not be changed
     // by any other method.  This is because findIssue < update < issue <
-    // enqIssueQ, i.e. update and issue will not affect the entry found in
+    // issueLd, i.e. update and issue will not affect the entry found in
     // findIssue We use a wire to pass phase 1 result to phase 2.  It is fine
     // that phase 2 dose not fire when phase 1 has fired, next cycle phase 1
     // will redo the work.
@@ -1054,8 +1044,7 @@ module mkSplitLSQ(SplitLSQ);
             return (
                 ld_valid_findIss[i] && ld_memFunc[i] == Ld && // (1) valid load
                 ld_computed_findIss[i] && // (2) computed
-                !ld_inIssueQ_findIss[i] && // (3) not in issueQ
-                !ld_executing_findIss[i] && // (4) not executing (or done)
+                !ld_executing_findIss[i] && // (3) not executing (or done)
                 !isValid(ld_depLdQDeq_findIss[i]) &&
 `ifndef TSO_MM
                 !isValid(ld_depLdEx_findIss[i]) &&
@@ -1083,50 +1072,6 @@ module mkSplitLSQ(SplitLSQ);
                 $display("[LSQ - findIssue] ", fshow(info));
             end
         end
-    endrule
-
-    rule enqIssueQ(issueLdInfo.wget matches tagged Valid .info &&& !wrongSpec_conflict);
-        if(verbose) begin
-            $display("[LSQ - enqIss] ", fshow(info));
-        end
-        // sanity check
-        doAssert(ld_valid_enqIss[info.tag],
-                 "enq issueQ entry is valid");
-        doAssert(ld_memFunc[info.tag] == Ld,
-                 "enq issueQ entry is Ld");
-        doAssert(!isValid(ld_fault_enqIss[info.tag]),
-                 "enq issueQ entry cannot have fault");
-        doAssert(ld_computed_enqIss[info.tag],
-                 "enq issueQ entry is computed");
-        doAssert(!ld_executing_enqIss[info.tag],
-                 "enq issueQ entry cannot be executing");
-        doAssert(!ld_done_enqIss[info.tag],
-                 "enq issueQ entry cannot be done");
-        doAssert(!ld_inIssueQ_enqIss[info.tag],
-                 "enq issueQ entry cannot be in issueQ");
-        doAssert(!isValid(ld_killed_enqIss[info.tag]),
-                 "enq issueQ entry cannot be killed");
-        doAssert(!ld_waitWPResp_enqIss[info.tag],
-                 "enq issueQ entry cannot wait for wrong path resp");
-        doAssert(!ld_isMMIO_enqIss[info.tag],
-                 "enq issueQ entry cannot be MMIO");
-        doAssert(!isValid(ld_depLdQDeq_enqIss[info.tag]) &&
-`ifndef TSO_MM
-                 !isValid(ld_depLdEx_enqIss[info.tag]) &&
-                 !isValid(ld_depSBDeq_enqIss[info.tag]) &&
-`endif
-                 !isValid(ld_depStQDeq_enqIss[info.tag]),
-                 "enq issueQ entry cannot have dependency");
-        doAssert(info.shiftedBE == ld_shiftedBE_enqIss[info.tag],
-                 "BE should match");
-        doAssert(info.paddr == ld_paddr_enqIss[info.tag],
-                 "paddr should match");
-        // enq to issueQ & change state (prevent enq this tag again)
-        issueLdQ.enq(ToSpecFifo {
-            data: info,
-            spec_bits: ld_specBits_enqIss[info.tag]
-        });
-        ld_inIssueQ_enqIss[info.tag] <= True;
     endrule
 
     // Verify SQ entry one by one
@@ -1423,7 +1368,6 @@ module mkSplitLSQ(SplitLSQ);
         ld_dst[ld_enqP] <= dst;
         ld_fault_enq[ld_enqP] <= Invalid;
         ld_computed_enq[ld_enqP] <= False;
-        ld_inIssueQ_enq[ld_enqP] <= False;
         ld_executing_enq[ld_enqP] <= False;
         ld_done_enq[ld_enqP] <= False;
         ld_killed_enq[ld_enqP] <= Invalid;
@@ -1527,7 +1471,6 @@ module mkSplitLSQ(SplitLSQ);
             doAssert(ld_valid_updAddr[tag],
                      "updating entry must be valid");
             doAssert(!ld_computed_updAddr[tag] &&
-                     !ld_inIssueQ_updAddr[tag] &&
                      !ld_executing_updAddr[tag] &&
                      !ld_done_updAddr[tag] &&
                      !isValid(ld_killed_updAddr[tag]),
@@ -1944,17 +1887,8 @@ module mkSplitLSQ(SplitLSQ);
         return issRes;
     endmethod
 
-    method ActionValue#(LSQIssueLdInfo) getIssueLd;
-        if(verbose) begin
-            $display("[LSQ - getIssueLd] ", fshow(issueLdQ.first));
-        end
-        issueLdQ.deq;
-        // reset inIssueQ
-        let tag = issueLdQ.first.data.tag;
-        ld_inIssueQ_issue[tag] <= False;
-        doAssert(ld_inIssueQ_issue[tag], "Ld should be in issueQ");
-        doAssert(ld_memFunc[tag] == Ld, "must be Ld");
-        return issueLdQ.first.data;
+    method LSQIssueLdInfo getIssueLd if (issueLdInfo.wget matches tagged Valid .info &&& !wrongSpec_conflict);
+        return info;
     endmethod
 
     method ActionValue#(LSQRespLdResult) respLd(LdQTag t, Data alignedData) if (!wrongSpec_conflict);
@@ -2212,9 +2146,6 @@ module mkSplitLSQ(SplitLSQ);
             endfunction
             Vector#(StQSize, StQTag) stIdxVec = genWith(fromInteger);
             joinActions(map(correctSpecSt, stIdxVec));
-
-            // clear spec bits for issueQ
-            issueLdQ.specUpdate.correctSpeculation(mask);
         endmethod
 
         method Action incorrectSpeculation(Bool killAll, SpecTag specTag);
@@ -2265,9 +2196,6 @@ module mkSplitLSQ(SplitLSQ);
             endaction
             endfunction
             joinActions(map(killStQ, stIdxVec));
-
-            // kill entries in issueQ
-            issueLdQ.specUpdate.incorrectSpeculation(killAll, specTag);
 
             // change enqP: make valid entries always consecutive: new enqP is
             // the oldest **VALID** entry that gets killed. If such entry does
