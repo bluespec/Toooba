@@ -163,11 +163,11 @@ module mkDTlb#(
     // pendWait = WaitPeer means this entry is waiting for a resp initiated by
     // another req. Thus, pendWait must be None when entry is invalid.
     Vector#(DTlbReqNum, Ehr#(2, Bool)) pendValid <- replicateM(mkEhr(False));
-    Vector#(DTlbReqNum, Reg#(DTlbWait)) pendWait <- replicateM(mkReg(None));
-    Vector#(DTlbReqNum, Reg#(Bool)) pendPoisoned <- replicateM(mkRegU);
-    Vector#(DTlbReqNum, Reg#(instT)) pendInst <- replicateM(mkRegU);
-    Vector#(DTlbReqNum, Reg#(TlbResp)) pendResp <- replicateM(mkRegU);
-    Vector#(DTlbReqNum, Ehr#(2, SpecBits)) pendSpecBits <- replicateM(mkEhr(?));
+    Vector#(DTlbReqNum, Ehr#(2, DTlbWait)) pendWait <- replicateM(mkEhr(None));
+    Vector#(DTlbReqNum, Ehr#(2, Bool)) pendPoisoned <- replicateM(mkEhr(?));
+    Vector#(DTlbReqNum, Ehr#(2, instT)) pendInst <- replicateM(mkEhr(?));
+    Vector#(DTlbReqNum, Ehr#(2, TlbResp)) pendResp <- replicateM(mkEhr(?));
+    Vector#(DTlbReqNum, Ehr#(3, SpecBits)) pendSpecBits <- replicateM(mkEhr(?));
 
     // ordering of methods/rules that access pend reqs
     // procReq mutually exclusive with doPRs (no procReq when pRs ready)
@@ -181,16 +181,31 @@ module mkDTlb#(
     RWire#(void) wrongSpec_doPRs_conflict <- mkRWire;
     RWire#(void) wrongSpec_procReq_conflict <- mkRWire;
 
+    Integer req_port = 1;
+    Integer resp_port = 0;
+
     let pendValid_noMiss = getVEhrPort(pendValid, 0);
     let pendValid_wrongSpec = getVEhrPort(pendValid, 0);
-    let pendValid_procResp = getVEhrPort(pendValid, 0); // write
+    let pendValid_procResp = getVEhrPort(pendValid, resp_port); // write
     let pendValid_doPRs = getVEhrPort(pendValid, 1); // assert
-    let pendValid_procReq = getVEhrPort(pendValid, 1); // write
+    let pendValid_procReq = getVEhrPort(pendValid, req_port); // write
+
+    let pendWait_Resp = getVEhrPort(pendWait,resp_port);
+    let pendWait_Req = getVEhrPort(pendWait,req_port);
+
+    let pendPoisoned_Resp = getVEhrPort(pendPoisoned,resp_port);
+    let pendPoisoned_Req = getVEhrPort(pendPoisoned,req_port);
+
+    let pendInst_Resp = getVEhrPort(pendInst,resp_port);
+    let pendInst_Req = getVEhrPort(pendInst,req_port);
+
+    let pendResp_Resp = getVEhrPort(pendResp,resp_port);
+    let pendResp_Req = getVEhrPort(pendResp,req_port);
 
     let pendSpecBits_wrongSpec = getVEhrPort(pendSpecBits, 0);
-    let pendSpecBits_procResp = getVEhrPort(pendSpecBits, 0);
-    let pendSpecBits_procReq = getVEhrPort(pendSpecBits, 0); // write
-    let pendSpecBits_correctSpec = getVEhrPort(pendSpecBits, 1);
+    let pendSpecBits_procResp = getVEhrPort(pendSpecBits, resp_port);
+    let pendSpecBits_procReq = getVEhrPort(pendSpecBits, req_port); // write
+    let pendSpecBits_correctSpec = getVEhrPort(pendSpecBits, 2);
 
     // free list of pend entries, to cut off path from procResp to procReq
     Fifo#(DTlbReqNum, DTlbReqIdx) freeQ <- mkCFFifo;
@@ -241,7 +256,7 @@ module mkDTlb#(
 
     rule incrAllMissCycles(doStats);
         function Bool isMiss(DTlbWait x) = x != None;
-        when(all(isMiss, readVReg(pendWait)), allMissCycles.incr(1));
+        when(all(isMiss, readVReg(pendWait_Resp)), allMissCycles.incr(1));
     endrule
 `endif
 `ifdef PERFORMANCE_MONITORING
@@ -279,9 +294,9 @@ module mkDTlb#(
         // the current req being served is either the initiating req or other
         // req pending on the same resp
         let idx = fromMaybe(pRs.id, respForOtherReq);
-        TlbReq r = getTlbReq(pendInst[idx]);
+        TlbReq r = getTlbReq(pendInst_Req[idx]);
 
-        if(pendPoisoned[idx]) begin
+        if(pendPoisoned_Req[idx]) begin
             // poisoned inst, do nothing
             if(verbose) $display("[DTLB] refill poisoned: idx %d; ", idx, fshow(r));
         end
@@ -304,7 +319,7 @@ module mkDTlb#(
                 // fill TLB, and record resp
                 tlb.addEntry(en);
                 let trans_addr = translate(r.addr, en.ppn, en.level);
-                pendResp[idx] <= tuple3(trans_addr, Invalid, permCheck.allowCap);
+                pendResp_Req[idx] <= tuple3(trans_addr, Invalid, permCheck.allowCap);
                 if(verbose) begin
                     $display("[DTLB] refill: idx %d; ", idx, fshow(r),
                              "; ", fshow(trans_addr));
@@ -313,7 +328,7 @@ module mkDTlb#(
             else begin
                 // page fault
                 Exception fault = permCheck.excCode;
-                pendResp[idx] <= tuple3(?, Valid (fault), False);
+                pendResp_Req[idx] <= tuple3(?, Valid (fault), False);
                 if(verbose) begin
                     $display("[DTLB] refill no permission: idx %d; ", idx, fshow(r));
                 end
@@ -322,26 +337,26 @@ module mkDTlb#(
         else begin
             // page fault
             Exception fault = r.write ? excStorePageFault : excLoadPageFault;
-            pendResp[idx] <= tuple3(?, Valid (fault), False);
+            pendResp_Req[idx] <= tuple3(?, Valid (fault), False);
             if(verbose) $display("[DTLB] refill page fault: idx %d; ", idx, fshow(r));
         end
 
         // get parent resp, miss resolved, reset wait bit
-        pendWait[idx] <= None;
+        pendWait_Req[idx] <= None;
 
         doAssert(pendValid_doPRs[idx], "entry must be valid");
         if(isValid(respForOtherReq)) begin
-            doAssert(pendWait[idx] == WaitPeer (pRs.id), "entry must be waiting for resp");
+            doAssert(pendWait_Req[idx] == WaitPeer (pRs.id), "entry must be waiting for resp");
         end
         else begin
-            doAssert(pendWait[idx] == WaitParent, "entry must be waiting for resp");
+            doAssert(pendWait_Req[idx] == WaitParent, "entry must be waiting for resp");
         end
 
         // find another req waiting for this resp
         function Bool waitForResp(DTlbReqIdx i);
             // we can ignore pendValid here, because not-None pendWait implies
             // pendValid is true
-            return pendWait[i] == WaitPeer (pRs.id) && i != idx;
+            return pendWait_Req[i] == WaitPeer (pRs.id) && i != idx;
         endfunction
         Vector#(DTlbReqNum, DTlbReqIdx) idxVec = genWith(fromInteger);
         if(find(waitForResp, idxVec) matches tagged Valid .i) begin
@@ -391,7 +406,7 @@ module mkDTlb#(
     // idx of entries that are ready to resp to proc
     function Maybe#(DTlbReqIdx) validProcRespIdx;
         function Bool validResp(DTlbReqIdx i);
-            return pendValid_procResp[i] && pendWait[i] == None && !pendPoisoned[i];
+            return pendValid_procResp[i] && pendWait_Resp[i] == None && !pendPoisoned_Resp[i];
         endfunction
         Vector#(DTlbReqNum, DTlbReqIdx) idxVec = genWith(fromInteger);
         return find(validResp, idxVec);
@@ -399,7 +414,7 @@ module mkDTlb#(
 
     function Maybe#(DTlbReqIdx) poisonedProcRespIdx;
         function Bool poisonedResp(DTlbReqIdx i);
-            return pendValid_procResp[i] && pendWait[i] == None && pendPoisoned[i];
+            return pendValid_procResp[i] && pendWait_Resp[i] == None && pendPoisoned_Resp[i];
         endfunction
         Vector#(DTlbReqNum, DTlbReqIdx) idxVec = genWith(fromInteger);
         return find(poisonedResp, idxVec);
@@ -443,11 +458,11 @@ module mkDTlb#(
         freeQ.deq;
         DTlbReqIdx idx = freeQ.first;
         doAssert(!pendValid_procReq[idx], "free entry cannot be valid");
-        doAssert(pendWait[idx] == None, "entry cannot wait for parent resp");
+        doAssert(pendWait_Req[idx] == None, "entry cannot wait for parent resp");
 
         pendValid_procReq[idx] <= True;
-        pendPoisoned[idx] <= False;
-        pendInst[idx] <= req.inst;
+        pendPoisoned_Req[idx] <= False;
+        pendInst_Req[idx] <= req.inst;
         pendSpecBits_procReq[idx] <= req.specBits;
         // pendWait and pendResp are set later in this method
 
@@ -462,8 +477,8 @@ module mkDTlb#(
         // assume that we allow shared load all the time when in M mode.
         // (Because we are always non speculative in M mode)
         if (!vm_info.sanctum_authShared && outOfProtectionDomain(vm_info, r.addr))begin
-            pendWait[idx] <= None;
-            pendResp[idx] <= tuple3(?, Valid (excLoadAccessFault), False);
+            pendWait_Req[idx] <= None;
+            pendWait_Req[idx] <= tuple3(?, Valid (excLoadAccessFault), False);
         end
 `else
         // No security check
@@ -477,8 +492,8 @@ module mkDTlb#(
             if (!validVirtualAddress(r.addr)) begin
                 // page fault
                 Exception fault = r.write ? excStorePageFault : excLoadPageFault;
-                pendWait[idx] <= None;
-                pendResp[idx] <= tuple3(?, Valid (fault), False);
+                pendWait_Req[idx] <= None;
+                pendResp_Req[idx] <= tuple3(?, Valid (fault), False);
                 if(verbose) $display("[DTLB] req invalid virtual address: idx %d; ", idx, fshow(r));
             end else if (trans_result.hit) begin
                 // TLB hit
@@ -502,8 +517,8 @@ module mkDTlb#(
                     tlb.updateRepByHit(trans_result.index);
                     // translate addr
                     Addr trans_addr = translate(r.addr, entry.ppn, entry.level);
-                    pendWait[idx] <= None;
-                    pendResp[idx] <= tuple3(trans_addr, Invalid, permCheck.allowCap);
+                    pendWait_Req[idx] <= None;
+                    pendResp_Req[idx] <= tuple3(trans_addr, Invalid, permCheck.allowCap);
                     if(verbose) begin
                         $display("[DTLB] req (hit): idx %d; ", idx, fshow(r),
                                  "; ", fshow(trans_result));
@@ -518,8 +533,8 @@ module mkDTlb#(
                 else begin
                     // page fault
                     Exception fault = permCheck.excCode;
-                    pendWait[idx] <= None;
-                    pendResp[idx] <= tuple3(?, Valid (fault), False);
+                    pendWait_Req[idx] <= None;
+                    pendResp_Req[idx] <= tuple3(?, Valid (fault), False);
                     if(verbose) $display("[DTLB] req no permission: idx %d; ", idx, fshow(r));
                 end
             end
@@ -529,13 +544,13 @@ module mkDTlb#(
                 function Bool reqSamePage(DTlbReqIdx i);
                     // we can ignore pendValid here, because not-None pendWait implies
                     // pendValid is true
-                    let r_i = getTlbReq(pendInst[i]);
-                    return pendWait[i] == WaitParent && getVpn(r.addr) == getVpn(r_i.addr);
+                    let r_i = getTlbReq(pendInst_Req[i]);
+                    return pendWait_Req[i] == WaitParent && getVpn(r.addr) == getVpn(r_i.addr);
                 endfunction
                 Vector#(DTlbReqNum, DTlbReqIdx) idxVec = genWith(fromInteger);
                 if(find(reqSamePage, idxVec) matches tagged Valid .i) begin
                     // peer entry has already requested, so don't send duplicate req
-                    pendWait[idx] <= WaitPeer (i);
+                    pendWait_Req[idx] <= WaitPeer (i);
                     doAssert(pendValid_procReq[i], "peer entry must be valid");
                     if(verbose) begin
                         $display("[DTLB] req miss, pend on peer: idx %d, ",
@@ -544,7 +559,7 @@ module mkDTlb#(
                 end
                 else begin
                     // this is the first req for this VPN
-                    pendWait[idx] <= WaitParent;
+                    pendWait_Req[idx] <= WaitParent;
                     rqToPQ.enq(DTlbRqToP {
                         vpn: vpn,
                         id: idx
@@ -560,8 +575,8 @@ module mkDTlb#(
         end
         else begin
             // bare mode
-            pendWait[idx] <= None;
-            pendResp[idx] <= tuple3(r.addr, Invalid, True);
+            pendWait_Req[idx] <= None;
+            pendResp_Req[idx] <= tuple3(r.addr, Invalid, True);
             if(verbose) $display("DTLB %m req (bare): ", fshow(r));
         end
 
@@ -593,8 +608,8 @@ module mkDTlb#(
         validProcRespIdx matches tagged Valid .idx &&& freeQInited
     );
         return DTlbResp {
-            inst: pendInst[idx],
-            resp: pendResp[idx],
+            inst: pendInst_Resp[idx],
+            resp: pendResp_Resp[idx],
             specBits: pendSpecBits_procResp[idx]
         };
     endmethod
@@ -613,7 +628,7 @@ module mkDTlb#(
             // poison entries
             for(Integer i = 0 ; i < valueOf(DTlbReqNum) ; i = i+1) begin
                 if(kill_all || pendSpecBits_wrongSpec[i][x] == 1'b1) begin
-                    pendPoisoned[i] <= True;
+                    pendPoisoned_Resp[i] <= True;
                 end
             end
             // make conflicts with procReq, doPRs, procResp

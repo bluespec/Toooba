@@ -252,7 +252,7 @@ interface MemExePipeline;
 endinterface
 
 module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
-    Bool verbose = False;
+    Bool verbose = True;
 
     // we change cache request in case of single core, becaues our MSI protocol
     // is not good with single core
@@ -455,7 +455,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
     rule doDispatchMem;
         rsMem.doDispatch;
         let x = rsMem.dispatchData;
-        if(verbose) $display("[doDispatchMem] ", fshow(x));
+        if(verbose) $display("%t : [doDispatchMem] ", $time, fshow(x));
 
         // check store not having dst reg: this is for setting store to be
         // executed after address transation
@@ -488,7 +488,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         dispToRegQ.deq;
         let dispToReg = dispToRegQ.first;
         let x = dispToReg.data;
-        if(verbose) $display("[doRegReadMem] ", fshow(dispToReg));
+        if(verbose) $display("%t : [doRegReadMem] ", $time, fshow(dispToReg));
 
         // check conservative scoreboard
         let regsReady = inIfc.sbCons_lazyLookup(x.regs);
@@ -531,7 +531,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         regToExeQ.deq;
         let regToExe = regToExeQ.first;
         let x = regToExe.data;
-        if(verbose) $display("[doExeMem] ", fshow(regToExe));
+        if(verbose) $display("%t : [doExeMem] ", $time, fshow(regToExe));
 
         // get virtual addr & St/Sc/Amo data
         CapPipe vaddr = modifyOffset(x.rVal1, signExtend(x.imm), True).value;
@@ -608,7 +608,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         Maybe#(Trap) cause = Invalid;
         if (expCause matches tagged Valid .c) cause = Valid(Exception(c));
 
-        if(verbose) $display("[doFinishMem] ", fshow(dTlbResp));
+        if(verbose) $display("%t : [doFinishMem] ", $time, fshow(dTlbResp));
         if(isValid(cause) && verbose) $display("  [doFinishMem - dTlb response] PAGEFAULT!");
 
         Data store_data = ?;
