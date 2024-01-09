@@ -181,8 +181,8 @@ module mkDTlb#(
     RWire#(void) wrongSpec_doPRs_conflict <- mkRWire;
     RWire#(void) wrongSpec_procReq_conflict <- mkRWire;
 
-    Integer req_port = 0;
-    Integer resp_port = 1;
+    Integer req_port = 1;
+    Integer resp_port = 0;
 
     let pendValid_noMiss = getVEhrPort(pendValid, 0);
     let pendValid_wrongSpec = getVEhrPort(pendValid, 0);

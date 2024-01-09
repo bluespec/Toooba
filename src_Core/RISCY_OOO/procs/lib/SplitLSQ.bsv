@@ -855,7 +855,7 @@ module mkSplitLSQ(SplitLSQ);
     Vector#(StQSize, Ehr#(2, Addr))                 st_paddr     <- replicateM(mkEhr(?));
     Vector#(StQSize, Ehr#(2, Bool))                 st_isMMIO    <- replicateM(mkEhr(?));
     Vector#(StQSize, Ehr#(2, MemDataByteEn))        st_shiftedBE <- replicateM(mkEhr(?));
-    Vector#(StQSize, Ehr#(2, MemTaggedData))        st_stData    <- replicateM(mkEhr(?));
+    Vector#(StQSize, Ehr#(1, MemTaggedData))        st_stData    <- replicateM(mkEhr(?));
     Vector#(StQSize, Ehr#(2, Maybe#(Trap)))         st_fault     <- replicateM(mkEhr(?));
     Vector#(StQSize, Ehr#(2, Bool))                 st_allowCapAmoLd <- replicateM(mkEhr(?));
     Vector#(StQSize, Ehr#(2, Bool))                 st_computed  <- replicateM(mkEhr(?));
@@ -889,9 +889,9 @@ module mkSplitLSQ(SplitLSQ);
     let st_shiftedBE_issue   = getVEhrPort(st_shiftedBE, 1);
     let st_shiftedBE_deqSt   = getVEhrPort(st_shiftedBE, 1);
 
+    let st_stData_issue   = getVEhrPort(st_stData, 0);
+    let st_stData_deqSt   = getVEhrPort(st_stData, 0);
     let st_stData_updData = getVEhrPort(st_stData, 0); // write
-    let st_stData_issue   = getVEhrPort(st_stData, 1);
-    let st_stData_deqSt   = getVEhrPort(st_stData, 1);
 
     let st_fault_updAddr = getVEhrPort(st_fault, 0); // write
     let st_fault_deqSt   = getVEhrPort(st_fault, 1);
@@ -1501,8 +1501,8 @@ module mkSplitLSQ(SplitLSQ);
     method Action updateData(StQTag t, MemTaggedData d);
 `ifndef INORDER_CORE
         // in-order core allocates entry and write data in the same rule
-        //doAssert(st_valid_updData[t], "entry must be valid");
-        //doAssert(!st_computed_updData[t], "entry cannot be computed");
+        doAssert(st_valid_updData[t], "entry must be valid");
+        doAssert(!st_computed_updData[t], "entry cannot be computed");
 `endif
         st_stData_updData[t] <= d;
     endmethod
