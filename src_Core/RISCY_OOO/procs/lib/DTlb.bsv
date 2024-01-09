@@ -181,8 +181,8 @@ module mkDTlb#(
     RWire#(void) wrongSpec_doPRs_conflict <- mkRWire;
     RWire#(void) wrongSpec_procReq_conflict <- mkRWire;
 
-    Integer req_port = 1;
-    Integer resp_port = 0;
+    Integer req_port = 0;
+    Integer resp_port = 1;
 
     let pendValid_noMiss = getVEhrPort(pendValid, 0);
     let pendValid_wrongSpec = getVEhrPort(pendValid, 0);
@@ -208,7 +208,7 @@ module mkDTlb#(
     let pendSpecBits_correctSpec = getVEhrPort(pendSpecBits, 2);
 
     // free list of pend entries, to cut off path from procResp to procReq
-    Fifo#(DTlbReqNum, DTlbReqIdx) freeQ <- mkCFFifo;
+    Fifo#(TAdd#(DTlbReqNum,1), DTlbReqIdx) freeQ <- mkCFFifo;
     Reg#(Bool) freeQInited <- mkReg(False);
     Reg#(DTlbReqIdx) freeQInitIdx <- mkReg(0);
 
@@ -628,7 +628,7 @@ module mkDTlb#(
             // poison entries
             for(Integer i = 0 ; i < valueOf(DTlbReqNum) ; i = i+1) begin
                 if(kill_all || pendSpecBits_wrongSpec[i][x] == 1'b1) begin
-                    pendPoisoned_Resp[i] <= True;
+                    pendPoisoned_Req[i] <= True;
                 end
             end
             // make conflicts with procReq, doPRs, procResp
