@@ -99,6 +99,7 @@ typedef struct {
     CapPipe rVal1;
     CapPipe rVal2;
     CapChecks cap_checks;
+    ByteOrTagEn origBE;
 } MemRegReadToExe deriving(Bits, FShow);
 
 typedef struct {
@@ -484,6 +485,10 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
 `endif
     endrule
 
+`ifdef RVFI
+    Vector#(TExp#(SizeOf#(LdStQTag)), Reg#(Data)) memData <- replicateM(mkReg(?));
+`endif
+
     rule doRegReadMem;
         dispToRegQ.deq;
         let dispToReg = dispToRegQ.first;
@@ -508,8 +513,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             rVal2 <- readRFBypass(src2, regsReady.src2, inIfc.rf_rd2(src2), bypassWire);
         end
 
-        // go to next stage
-        regToExeQ.enq(ToSpecFifo {
+        let regToExe = ToSpecFifo {
             data: MemRegReadToExe {
                 mem_func: x.mem_func,
                 imm: x.imm,
@@ -517,34 +521,26 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
                 ldstq_tag: x.ldstq_tag,
                 rVal1: rVal1,
                 rVal2: rVal2,
-                cap_checks: x.cap_checks
+                cap_checks: x.cap_checks,
+                origBE: lsq.getOrigBE(x.ldstq_tag)
             },
             spec_bits: dispToReg.spec_bits
-        });
-    endrule
-
-`ifdef RVFI
-    Vector#(TExp#(SizeOf#(LdStQTag)), Reg#(Data)) memData <- replicateM(mkReg(?));
-`endif
-
-    rule doExeMem;
-        regToExeQ.deq;
-        let regToExe = regToExeQ.first;
-        let x = regToExe.data;
-        if(verbose) $display("%t : [doExeMem] ", $time, fshow(regToExe));
+        };
+        let y = regToExe.data;
+        //if(verbose) $display("%t : [doExeMem] ", $time, fshow(regToExe));
 
         // get virtual addr & St/Sc/Amo data
-        CapPipe vaddr = modifyOffset(x.rVal1, signExtend(x.imm), True).value;
-        CapPipe data = x.rVal2;
+        CapPipe vaddr = modifyOffset(y.rVal1, signExtend(y.imm), True).value;
+        CapPipe data = y.rVal2;
         MemTaggedData toMemData = unpack(pack(toMem(data)));
 
 `ifdef RVFI
-        memData[pack(x.ldstq_tag)] <= getAddr(data);
+        memData[pack(y.ldstq_tag)] <= getAddr(data);
 `endif
 
         // get shifted data and BE
         // we can use virtual addr to shift, since page size > dword size
-        ByteOrTagEn origBE = lsq.getOrigBE(x.ldstq_tag);
+        ByteOrTagEn origBE = y.origBE;
         function Tuple2#(MemDataByteEn, MemTaggedData) getShiftedBEData(
             Addr addr, MemDataByteEn be, MemTaggedData d);
             Bit#(TLog#(MemDataBytes)) byteOffset = truncate(addr);
@@ -569,6 +565,52 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
 `endif
         end
 
+        // go to next stage
+        regToExeQ.enq(regToExe);
+    endrule
+
+    rule doExeMem;
+        regToExeQ.deq;
+        let regToExe = regToExeQ.first;
+        let x = regToExe.data;
+        if(verbose) $display("%t : [doExeMem] ", $time, fshow(regToExe));
+
+        // get virtual addr & St/Sc/Amo data
+        CapPipe vaddr = modifyOffset(x.rVal1, signExtend(x.imm), True).value;
+        CapPipe data = x.rVal2;
+        MemTaggedData toMemData = unpack(pack(toMem(data)));
+/*
+`ifdef RVFI
+        memData[pack(x.ldstq_tag)] <= getAddr(data);
+`endif
+*/
+        // get shifted data and BE
+        // we can use virtual addr to shift, since page size > dword size
+        ByteOrTagEn origBE = x.origBE;
+        function Tuple2#(MemDataByteEn, MemTaggedData) getShiftedBEData(
+            Addr addr, MemDataByteEn be, MemTaggedData d);
+            Bit#(TLog#(MemDataBytes)) byteOffset = truncate(addr);
+            return tuple2(unpack(pack(be) << byteOffset), MemTaggedData {
+                           tag: (byteOffset == 0 && be == replicate(True)) ? d.tag : False
+                         , data: unpack(pack(d.data) << {byteOffset, 3'b0})});
+        endfunction
+        let {shiftBEData, shiftData} = getShiftedBEData(getAddr(vaddr), origBE.DataMemAccess, toMemData);
+        let shiftBE = DataMemAccess(shiftBEData);
+        if (origBE == TagMemAccess) begin
+            shiftBE = TagMemAccess;
+        end
+/*
+        // update LSQ data now
+        if(x.ldstq_tag matches tagged St .stTag) begin
+            MemTaggedData d = x.mem_func == Amo ? toMemData : shiftData; // XXX don't shift for AMO
+            lsq.updateData(stTag, d);
+`ifdef PERFORMANCE_MONITORING
+            EventsCore events = unpack(0);
+            events.evt_MEM_CAP_STORE_TAG_SET = (d.tag) ? 1 : 0;
+            events_reg[4] <= events;
+`endif
+        end
+*/
         CapPipe ddc = cast(inIfc.scaprf_rd(scrAddrDDC));
 
         // get size of the access
