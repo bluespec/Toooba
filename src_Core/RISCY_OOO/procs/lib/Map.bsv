@@ -73,7 +73,7 @@ Bitwise#(ix), Eq#(ix), Arith#(ix));
     Reg#(ix) clearCount <- mkReg(0);
     PulseWire didUpdate <- mkPulseWire;
     rule doClear(clearReg && !didUpdate);
-        for (Integer i = 0; i < a; i = i + 1) mem[i].upd(clearCount, unpack(0));
+        for (Integer i = 0; i < a; i = i + 1) mem[i].upd(clearCount, default_value);
         clearCount <= clearCount + 1;
         if (clearCount == ~0) clearReg <= False;
     endrule
