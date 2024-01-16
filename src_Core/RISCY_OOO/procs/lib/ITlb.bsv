@@ -115,7 +115,7 @@ module mkITlb(ITlb::ITlb);
     Reg#(Bool) waitFlushP <- mkReg(False);
 
     // resp FIFO to proc
-    Fifo#(2, TlbResp) hitQ <- mkCFFifo;
+    Fifo#(2, TlbResp) hitQ <- mkBypassFifo;
 
     // current processor VM information
     Reg#(VMInfo) vm_info <- mkReg(defaultValue);
@@ -294,14 +294,9 @@ module mkITlb(ITlb::ITlb);
                 eparvm_info.sanctum_evmask = 0;
                 if ((vm_info.prv == prvM ? (outOfProtectionDomain(parvm_info,vaddr) && outOfProtectionDomain(eparvm_info,vaddr)) : outOfProtectionDomain(vm_info, vaddr))) begin
                     hitQ.enq(tuple2(?, Valid (excInstAccessFault)));
-                end
-`else
-                // No security check
-                if (False) begin
-                    noAction;
-                end
+                end else
 `endif
-                else if (vm_info.sv39) begin
+                if (vm_info.sv39) begin
                     let vpn = getVpn(vaddr);
                     let trans_result = tlb.translate(vpn, vm_info.asid);
                     if (!validVirtualAddress(vaddr)) hitQ.enq(tuple3(?, Valid (excInstPageFault), False));
