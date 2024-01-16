@@ -105,6 +105,7 @@ endinterface
 
 // PC "compression" types to facilitate storing common upper PC bits in a
 // shared structure
+// Must be at least a page offset.
 typedef 12 PcLsbSz; // Defines PC block size for PCs that will share an index for upper bits.
 typedef TLog#(TMul#(SupSize,4)) PcIdxSz; // Number of distinct PC blocks allowed in-flight in the Fetch pipeline.
 typedef Bit#(PcLsbSz) PcLSB;
@@ -254,8 +255,8 @@ module mkFetchStage(FetchStage);
     // rule ordering: Fetch1 (BTB+TLB) < Fetch3 (decode & dir pred) < redirect method
     // Fetch1 < Fetch3 to avoid bypassing path on PC and epochs
 
-    Bool verbose = False;
-    Integer verbosity = 0;
+    Bool verbose = True;
+    Integer verbosity = 2;
 
     // Basic State Elements
     Reg#(Bool) started <- mkReg(False);
@@ -290,7 +291,7 @@ module mkFetchStage(FetchStage);
     Reg#(Epoch) f_main_epoch <- mkReg(0); // fetch estimate of main epoch
 
     // Pipeline Stage FIFOs
-    Fifo#(2, Fetch1ToFetch2) f12f2 <- mkBypassFifo;
+    Fifo#(4, Addr) translateAddress <- mkCFFifo;
     Fifo#(4, Fetch2ToFetch3) f22f3 <- mkCFFifo; // FIFO should match I$ latency
     // These two fifos needs a capacity of 3 for full throughput if we fire only when we can enq on on channels.
     SupFifo#(SupSizeX2, 3, Fetch3ToDecode) f32d <- mkUGSupFifo; // Unguarded to prevent the static analyser from exploding.
@@ -348,55 +349,9 @@ module mkFetchStage(FetchStage);
         nextAddrPred.put_pc(pc_reg[pc_final_port]);
     endrule
 
-    // We don't send req to TLB when waiting for redirect or TLB flush. Since
-    // there is no FIFO between doFetch1 and TLB, when OOO commit stage wait
-    // TLB idle to change VM CSR / signal flush TLB, there is no wrong path
-    // request afterwards to race with the system code that manage paget table.
-    rule doFetch1(started && !waitForRedirect[0] && !waitForFlush[0]);
-        let pc = pc_reg[pc_fetch1_port];
-
-        // Grab a chain of predictions from the BTB, which predicts targets for the next
-        // set of addresses based on the current PC.
-        Vector#(SupSizeX2, Maybe#(Addr)) pred_future_pc = nextAddrPred.pred;
-
-        // Next pc is the first nextPc that breaks the chain of pc+4 or
-        // that is at the end of a cacheline.
-        Vector#(SupSizeX2,Integer) indexes = genVector;
-        function Bool findNextPc(Addr p, Integer i);
-            Bool notLastInst = getLineInstOffset(p + fromInteger(2*i)) != maxBound;
-            Bool noJump = !isValid(pred_future_pc[i]);
-            return (!(notLastInst && noJump));
-        endfunction
-        Bit#(TLog#(SupSizeX2)) posLastSupX2 = fromInteger(fromMaybe(valueof(SupSizeX2) - 1, find(findNextPc(pc), indexes)));
-        Maybe#(Addr) pred_next_pc = pred_future_pc[posLastSupX2];
-        let next_fetch_pc = fromMaybe(pc + 2 * (zeroExtend(posLastSupX2) + 1), pred_next_pc);
-        pc_reg[pc_fetch1_port] <= next_fetch_pc;
-
-        // Send TLB request.
-        tlb_server.request.put (pc);
-
-        let pc_idxs <- pcBlocks.insertAndReserve(truncateLSB(pc), truncateLSB(next_fetch_pc));
-        PcIdx pc_idx = pc_idxs.inserted;
-        PcIdx ppc_idx = pc_idxs.reserved;
-        let out = Fetch1ToFetch2 {
-            pc: compressPc(pc_idx, pc),
-            inst_frags_fetched: posLastSupX2,
-            pred_next_pc: isValid(pred_next_pc) ?
-                Valid(compressPc(ppc_idx, validValue(pred_next_pc))) : Invalid,
-            decode_epoch: decode_epoch[0],
-            main_epoch: f_main_epoch};
-
-        f12f2.enq(out);
-        if (verbose) $display("%d Fetch1: ", cur_cycle, fshow(out), " posLastSupX2: %d", posLastSupX2);
-    endrule
-
-    rule doFetch2;
-        let in = f12f2.first;
-        f12f2.deq;
-
-        // Get TLB response
-        match {.phys_pc, .cause} <- tlb_server.response.get;
-
+    function Action start_imem_lookup(Fetch1ToFetch2 in, TlbResp tr) = action
+        match {.buffered_phys_pc, .cause} = tr;
+        Addr phys_pc = unpack({buffered_phys_pc[63:12],in.pc.lsb[11:0]});
         // Access main mem or boot rom if no TLB exception
         Bool access_mmio = False;
         if (!isValid(cause)) begin
@@ -430,11 +385,75 @@ module mkFetchStage(FetchStage);
             main_epoch: in.main_epoch };
         f22f3.enq(out);
 
-       if (verbosity >= 2) begin
-	  $display ("----------------");
-	  $display ("Fetch2: TLB response pyhs_pc 0x%0h  cause ", phys_pc, fshow (cause));
-	  $display ("Fetch2: f2_tof3.enq: out ", fshow (out));
-       end
+        if (verbosity >= 2) begin
+            $display ("%d ----------------", cur_cycle);
+            $display ("%d Fetch1: TLB response pyhs_pc 0x%0h  cause ", cur_cycle, phys_pc, fshow (cause));
+            $display ("%d Fetch1: f2_tof3.enq: out ", cur_cycle, fshow (out));
+        end
+    endaction;
+
+    Reg#(Maybe#(Vpn)) buffered_translation_virt_pc <- mkReg(Invalid);
+    Reg#(TlbResp) buffered_translation_tlb_resp <- mkRegU;
+
+    rule invalidate_buffered_translation(!iTlb.flush_done);
+        buffered_translation_virt_pc <= Invalid;
+    endrule
+
+    rule getTlbResp(iTlb.flush_done);
+        // Get TLB response
+        TlbResp tr <- tlb_server.response.get;
+        buffered_translation_virt_pc <= Valid(getVpn(translateAddress.first));
+        buffered_translation_tlb_resp <= tr;
+        translateAddress.deq;
+        if (verbosity >= 2) $display ("%d Fetch Translate: pc: %x, ", cur_cycle, translateAddress.first, fshow (tr));
+    endrule
+
+    // We don't send req to TLB when waiting for redirect or TLB flush. Since
+    // there is no FIFO between doFetch1 and TLB, when OOO commit stage wait
+    // TLB idle to change VM CSR / signal flush TLB, there is no wrong path
+    // request afterwards to race with the system code that manage paget table.
+    rule doFetch1(started && !waitForRedirect[0] && !waitForFlush[0]);
+        let pc = pc_reg[pc_fetch1_port];
+
+        // Grab a chain of predictions from the BTB, which predicts targets for the next
+        // set of addresses based on the current PC.
+        Vector#(SupSizeX2, Maybe#(Addr)) pred_future_pc = nextAddrPred.pred;
+
+        // Next pc is the first nextPc that breaks the chain of pc+4 or
+        // that is at the end of a cacheline.
+        Vector#(SupSizeX2,Integer) indexes = genVector;
+        function Bool findNextPc(Addr in_pc, Integer i);
+            Bool notLastInst = getLineInstOffset(in_pc + fromInteger(2*i)) != maxBound;
+            Bool noJump = !isValid(pred_future_pc[i]);
+            return (!(notLastInst && noJump));
+        endfunction
+        Bit#(TLog#(SupSizeX2)) posLastSupX2 = fromInteger(fromMaybe(valueof(SupSizeX2) - 1, find(findNextPc(pc), indexes)));
+        Maybe#(Addr) pred_next_pc = pred_future_pc[posLastSupX2];
+
+        if (buffered_translation_virt_pc matches tagged Valid .vpn &&& getVpn(pc) == vpn) begin
+            let next_fetch_pc = fromMaybe(pc + (2 * (zeroExtend(posLastSupX2) + 1)), pred_next_pc);
+            let pc_idxs <- pcBlocks.insertAndReserve(truncateLSB(pc), truncateLSB(next_fetch_pc));
+            PcIdx pc_idx = pc_idxs.inserted;
+            PcIdx ppc_idx = pc_idxs.reserved;
+            let out = Fetch1ToFetch2 {
+                pc: compressPc(pc_idx, pc),
+    `ifdef RVFI_DII
+                dii_pid: dii_pid,
+    `endif
+                inst_frags_fetched: posLastSupX2,
+                pred_next_pc: isValid(pred_next_pc) ?
+                    Valid(compressPc(ppc_idx, validValue(pred_next_pc))) : Invalid,
+                decode_epoch: decode_epoch[0],
+                main_epoch: f_main_epoch};
+            start_imem_lookup(out, buffered_translation_tlb_resp);
+            pc_reg[pc_fetch1_port] <= next_fetch_pc;
+            if (verbose) $display("%d Fetch1: ", cur_cycle, fshow(out), " posLastSupX2: %d", posLastSupX2);
+        end else begin
+            // Send TLB request.
+            translateAddress.enq(pc);
+            tlb_server.request.put(pc);
+            if (verbose) $display("%d Fetch1 lookup: ", cur_cycle, " posLastSupX2: %d", posLastSupX2);
+        end
     endrule
 
     // Break out of i$
@@ -444,9 +463,9 @@ module mkFetchStage(FetchStage);
         let fetch3In = f22f3.first;
         if (verbosity >= 2) begin
             if (f22f3.notEmpty)
-                $display("Fetch3: fetch3In: ", fshow (fetch3In));
+                $display("%d Fetch3: fetch3In: ", cur_cycle, fshow (fetch3In));
             else
-                $display("Fetch3: Nothing else from Fetch2");
+                $display("%d Fetch3: Nothing else from Fetch2", cur_cycle);
         end
 
         let drop_f22f3 =    f22f3.notEmpty
@@ -534,7 +553,7 @@ module mkFetchStage(FetchStage);
       if (m_used_frag_count matches tagged Valid .used_frag_count) begin
          for (Integer i = 0; i < valueOf(SupSizeX2) && fromInteger(i) <= used_frag_count; i = i + 1) f32d.deqS[i].deq;
          if (verbose)
-            $display("Decode: dequed %d instruction fragments", used_frag_count);
+            $display("%d Decode: dequed %d instruction fragments", cur_cycle, used_frag_count);
       end
 
       Maybe#(Addr) redirectPc = Invalid; // next pc redirect by branch predictor
@@ -735,7 +754,7 @@ module mkFetchStage(FetchStage);
     // (2) all internal FIFOs are empty (the output sup fifo needs not to be
     // empty, but why leave this security hole)
     Bool empty_for_flush = waitForFlush[0] &&
-                           !f12f2.notEmpty && !f22f3.notEmpty &&
+                           !translateAddress.notEmpty && !f22f3.notEmpty &&
                            f32d.internalEmpty && out_fifo.internalEmpty;
 
     interface Vector pipelines = out_fifo.deqS;
