@@ -115,7 +115,7 @@ module mkITlb(ITlb::ITlb);
     Reg#(Bool) waitFlushP <- mkReg(False);
 
     // resp FIFO to proc
-    Fifo#(2, TlbResp) hitQ <- mkBypassFifo;
+    Fifo#(2, TlbResp) hitQ <- mkCFFifo;
 
     // current processor VM information
     Reg#(VMInfo) vm_info <- mkReg(defaultValue);
