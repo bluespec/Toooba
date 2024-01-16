@@ -114,7 +114,7 @@ module mkITlb(ITlb::ITlb);
     Reg#(Bool) waitFlushP <- mkReg(False);
 
     // resp FIFO to proc
-    Fifo#(2, TlbResp) hitQ <- mkCFFifo;
+    Fifo#(2, TlbResp) hitQ <- mkBypassFifo;
 
     // current processor VM information
     Reg#(VMInfo) vm_info <- mkReg(defaultValue);
@@ -296,8 +296,8 @@ module mkITlb(ITlb::ITlb);
                 if (False) begin
                     noAction;
                 end
-`endif
-                else if (vm_info.sv39) begin
+
+                if (vm_info.sv39) begin
                     let vpn = getVpn(vaddr);
                     let trans_result = tlb.translate(vpn, vm_info.asid);
                     if (!validVirtualAddress(vaddr)) hitQ.enq(tuple2(?, Valid (InstPageFault)));
