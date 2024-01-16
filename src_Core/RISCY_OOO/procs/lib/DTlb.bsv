@@ -466,8 +466,14 @@ module mkDTlb#(
         pendSpecBits_procReq[idx] <= req.specBits;
         // pendWait and pendResp are set later in this method
 
-        // try to translate
+        // attempt the tlb translation which will be correct if we hit.
+        // This shortens the path for trans_addr for a zero-cycle TLB.
         TlbReq r = getTlbReq(req.inst);
+        let vpn = getVpn(r.addr);
+        let trans_result = tlb.translate(vpn, vm_info.asid);
+        Addr trans_addr = translate(r.addr, trans_result.entry.ppn, trans_result.entry.level);
+        Maybe#(Exception) trans_exp = Invalid;
+        Bool trans_cap = False;
 
 `ifdef SECURITY
         // Security check
@@ -479,27 +485,20 @@ module mkDTlb#(
         if (!vm_info.sanctum_authShared && outOfProtectionDomain(vm_info, r.addr))begin
             pendWait_Req[idx] <= None;
             pendWait_Req[idx] <= tuple3(?, Valid (excLoadAccessFault), False);
-        end
-`else
-        // No security check
-        if (False) begin
-            noAction;
-        end
+        end else
 `endif
-        else if (vm_info.sv39) begin
-            let vpn = getVpn(r.addr);
-            let trans_result = tlb.translate(vpn, vm_info.asid);
+        if (vm_info.sv39) begin
             if (!validVirtualAddress(r.addr)) begin
                 // page fault
                 Exception fault = r.write ? excStorePageFault : excLoadPageFault;
                 pendWait_Req[idx] <= None;
-                pendResp_Req[idx] <= tuple3(?, Valid (fault), False);
+                trans_exp = Valid (fault);
                 if(verbose) $display("[DTLB] req invalid virtual address: idx %d; ", idx, fshow(r));
             end else if (trans_result.hit) begin
                 // TLB hit
                 let entry = trans_result.entry;
                 // check permission
-            $display("procReq: vm_info: ", fshow(vm_info),
+                $display("procReq: vm_info: ", fshow(vm_info),
                      "         en     : ", fshow(entry),
                      "         r      : ", fshow(r)
                      );
@@ -515,10 +514,9 @@ module mkDTlb#(
                 if (permCheck.allowed) begin
                     // update TLB replacement info
                     tlb.updateRepByHit(trans_result.index);
-                    // translate addr
-                    Addr trans_addr = translate(r.addr, entry.ppn, entry.level);
+                    // We're ready to consume this translation.
                     pendWait_Req[idx] <= None;
-                    pendResp_Req[idx] <= tuple3(trans_addr, Invalid, permCheck.allowCap);
+                    trans_cap = permCheck.allowCap;
                     if(verbose) begin
                         $display("[DTLB] req (hit): idx %d; ", idx, fshow(r),
                                  "; ", fshow(trans_result));
@@ -534,7 +532,7 @@ module mkDTlb#(
                     // page fault
                     Exception fault = permCheck.excCode;
                     pendWait_Req[idx] <= None;
-                    pendResp_Req[idx] <= tuple3(?, Valid (fault), False);
+                    trans_exp = Valid (fault);
                     if(verbose) $display("[DTLB] req no permission: idx %d; ", idx, fshow(r));
                 end
             end
@@ -576,9 +574,12 @@ module mkDTlb#(
         else begin
             // bare mode
             pendWait_Req[idx] <= None;
-            pendResp_Req[idx] <= tuple3(r.addr, Invalid, True);
+            trans_addr = r.addr;
+            trans_cap = True;
             if(verbose) $display("DTLB %m req (bare): ", fshow(r));
         end
+
+        pendResp_Req[idx] <= tuple3(trans_addr, trans_exp, trans_cap);
 
 `ifdef PERF_COUNT
         // perf: access
