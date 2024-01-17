@@ -98,8 +98,10 @@ typedef struct {
     // src reg vals
     CapPipe rVal1;
     CapPipe rVal2;
+    CapPipe vaddr;
     CapChecks cap_checks;
     ByteOrTagEn origBE;
+    MemDataByteEn shiftBEData;
 } MemRegReadToExe deriving(Bits, FShow);
 
 typedef struct {
@@ -513,34 +515,18 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             rVal2 <- readRFBypass(src2, regsReady.src2, inIfc.rf_rd2(src2), bypassWire);
         end
 
-        let regToExe = ToSpecFifo {
-            data: MemRegReadToExe {
-                mem_func: x.mem_func,
-                imm: x.imm,
-                tag: x.tag,
-                ldstq_tag: x.ldstq_tag,
-                rVal1: rVal1,
-                rVal2: rVal2,
-                cap_checks: x.cap_checks,
-                origBE: lsq.getOrigBE(x.ldstq_tag)
-            },
-            spec_bits: dispToReg.spec_bits
-        };
-        let y = regToExe.data;
-        //if(verbose) $display("%t : [doExeMem] ", $time, fshow(regToExe));
-
         // get virtual addr & St/Sc/Amo data
-        CapPipe vaddr = modifyOffset(y.rVal1, signExtend(y.imm), True).value;
-        CapPipe data = y.rVal2;
+        CapPipe vaddr = modifyOffset(rVal1, signExtend(x.imm), True).value;
+        CapPipe data = rVal2;
         MemTaggedData toMemData = unpack(pack(toMem(data)));
 
 `ifdef RVFI
-        memData[pack(y.ldstq_tag)] <= getAddr(data);
+        memData[pack(x.ldstq_tag)] <= getAddr(data);
 `endif
 
         // get shifted data and BE
         // we can use virtual addr to shift, since page size > dword size
-        ByteOrTagEn origBE = y.origBE;
+        ByteOrTagEn origBE = lsq.getOrigBE(x.ldstq_tag);
         function Tuple2#(MemDataByteEn, MemTaggedData) getShiftedBEData(
             Addr addr, MemDataByteEn be, MemTaggedData d);
             Bit#(TLog#(MemDataBytes)) byteOffset = truncate(addr);
@@ -549,10 +535,6 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
                          , data: unpack(pack(d.data) << {byteOffset, 3'b0})});
         endfunction
         let {shiftBEData, shiftData} = getShiftedBEData(getAddr(vaddr), origBE.DataMemAccess, toMemData);
-        let shiftBE = DataMemAccess(shiftBEData);
-        if (origBE == TagMemAccess) begin
-            shiftBE = TagMemAccess;
-        end
 
         // update LSQ data now
         if(x.ldstq_tag matches tagged St .stTag) begin
@@ -566,7 +548,21 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         end
 
         // go to next stage
-        regToExeQ.enq(regToExe);
+        regToExeQ.enq(ToSpecFifo {
+            data: MemRegReadToExe {
+                mem_func: x.mem_func,
+                imm: x.imm,
+                tag: x.tag,
+                ldstq_tag: x.ldstq_tag,
+                rVal1: rVal1,
+                rVal2: rVal2,
+                vaddr: vaddr,
+                cap_checks: x.cap_checks,
+                origBE: origBE,
+                shiftBEData: shiftBEData
+            },
+            spec_bits: dispToReg.spec_bits
+        });
     endrule
 
     rule doExeMem;
@@ -575,47 +571,16 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         let x = regToExe.data;
         if(verbose) $display("%t : [doExeMem] ", $time, fshow(regToExe));
 
-        // get virtual addr & St/Sc/Amo data
-        CapPipe vaddr = modifyOffset(x.rVal1, signExtend(x.imm), True).value;
-        CapPipe data = x.rVal2;
-        MemTaggedData toMemData = unpack(pack(toMem(data)));
-/*
-`ifdef RVFI
-        memData[pack(x.ldstq_tag)] <= getAddr(data);
-`endif
-*/
-        // get shifted data and BE
-        // we can use virtual addr to shift, since page size > dword size
-        ByteOrTagEn origBE = x.origBE;
-        function Tuple2#(MemDataByteEn, MemTaggedData) getShiftedBEData(
-            Addr addr, MemDataByteEn be, MemTaggedData d);
-            Bit#(TLog#(MemDataBytes)) byteOffset = truncate(addr);
-            return tuple2(unpack(pack(be) << byteOffset), MemTaggedData {
-                           tag: (byteOffset == 0 && be == replicate(True)) ? d.tag : False
-                         , data: unpack(pack(d.data) << {byteOffset, 3'b0})});
-        endfunction
-        let {shiftBEData, shiftData} = getShiftedBEData(getAddr(vaddr), origBE.DataMemAccess, toMemData);
-        let shiftBE = DataMemAccess(shiftBEData);
-        if (origBE == TagMemAccess) begin
+        let shiftBE = DataMemAccess(x.shiftBEData);
+        if (x.origBE == TagMemAccess) begin
             shiftBE = TagMemAccess;
         end
-/*
-        // update LSQ data now
-        if(x.ldstq_tag matches tagged St .stTag) begin
-            MemTaggedData d = x.mem_func == Amo ? toMemData : shiftData; // XXX don't shift for AMO
-            lsq.updateData(stTag, d);
-`ifdef PERFORMANCE_MONITORING
-            EventsCore events = unpack(0);
-            events.evt_MEM_CAP_STORE_TAG_SET = (d.tag) ? 1 : 0;
-            events_reg[4] <= events;
-`endif
-        end
-*/
+
         CapPipe ddc = cast(inIfc.scaprf_rd(scrAddrDDC));
 
         // get size of the access
-        Bit#(TAdd#(CacheUtils::LogCLineNumMemDataBytes,1)) accessByteCount = zeroExtend(pack(countOnes(pack(origBE.DataMemAccess))));
-        if (origBE == TagMemAccess) begin
+        Bit#(TAdd#(CacheUtils::LogCLineNumMemDataBytes,1)) accessByteCount = zeroExtend(pack(countOnes(pack(x.origBE.DataMemAccess))));
+        if (x.origBE == TagMemAccess) begin
             accessByteCount = fromInteger(valueOf(CacheUtils::CLineNumMemDataBytes));
         end
 
@@ -626,17 +591,17 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
                 tag: x.tag,
                 ldstq_tag: x.ldstq_tag,
                 shiftedBE: shiftBE,
-                vaddr: vaddr,
+                vaddr: x.vaddr,
 `ifdef INCLUDE_TANDEM_VERIF
-                store_data: data,
+                store_data: x.rVal2,
                 store_data_BE: origBE,
 `endif
-                misaligned: memAddrMisaligned(getAddr(vaddr), origBE),
-                capStore: isValidCap(data) && origBE == DataMemAccess(unpack(~0)),
-                allowCapLoad: getHardPerms(x.rVal1).permitLoadCap && origBE == DataMemAccess(unpack(~0)),
-                capException: capChecksMem(x.rVal1, x.rVal2, x.cap_checks, x.mem_func, origBE),
+                misaligned: memAddrMisaligned(getAddr(x.vaddr), x.origBE),
+                capStore: isValidCap(x.rVal2) && x.origBE == DataMemAccess(unpack(~0)),
+                allowCapLoad: getHardPerms(x.rVal1).permitLoadCap && x.origBE == DataMemAccess(unpack(~0)),
+                capException: capChecksMem(x.rVal1, x.rVal2, x.cap_checks, x.mem_func, x.origBE),
                 check: prepareBoundsCheck(x.rVal1, x.rVal2, almightyCap/*ToDo: pcc*/,
-                                          ddc, getAddr(vaddr), accessByteCount, x.cap_checks)
+                                          ddc, getAddr(x.vaddr), accessByteCount, x.cap_checks)
             },
             specBits: regToExe.spec_bits
         });
