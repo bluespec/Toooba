@@ -408,10 +408,7 @@ module mkFetchStage(FetchStage);
         TlbResp tr <- tlb_server.response.get;
         translateAddress.deq;
         // Check if, because of pipelining, we already have this vpn.
-        Bool found = False;
-        for (Integer i = 0; i < valueOf(PageBuffSize); i=i+1)
-            if (buffered_translation_virt_pc[i] matches tagged Valid .vpn &&& getVpn(translateAddress.first) == vpn)
-                found = True;
+        Bool found = elem(Valid(getVpn(translateAddress.first)), buffered_translation_virt_pc);
         if (!found) begin
             buffered_translation_virt_pc[buffered_translation_count] <= Valid(getVpn(translateAddress.first));
             buffered_translation_tlb_resp[buffered_translation_count] <= tr;
@@ -443,10 +440,7 @@ module mkFetchStage(FetchStage);
         Maybe#(Addr) pred_next_pc = pred_future_pc[posLastSupX2];
 
         // Search the last few translations to look for a match.
-        Maybe#(Bit#(TLog#(PageBuffSize))) m_buff_match_idx = Invalid;
-        for (Integer i = 0; i < valueOf(PageBuffSize); i=i+1)
-            if (buffered_translation_virt_pc[i] matches tagged Valid .vpn &&& getVpn(pc) == vpn)
-                m_buff_match_idx = tagged Valid fromInteger(i);
+        Maybe#(UInt#(TLog#(PageBuffSize))) m_buff_match_idx = findElem(Valid(getVpn(pc)), buffered_translation_virt_pc);
         if (m_buff_match_idx matches tagged Valid .buff_match_idx) begin
             let next_fetch_pc = fromMaybe(pc + (2 * (zeroExtend(posLastSupX2) + 1)), pred_next_pc);
             let pc_idxs <- pcBlocks.insertAndReserve(truncateLSB(pc), truncateLSB(next_fetch_pc));
