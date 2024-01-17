@@ -323,6 +323,9 @@ typedef struct {
     CapMem nextPc;
 } TrainNAP deriving(Bits, Eq, FShow);
 
+// "micro-TLB" size (buffer of past few translations)
+typedef 2 PageBuffSize;
+
 // ================================================================
 // Functions for 'C' instruction set
 
@@ -530,19 +533,28 @@ module mkFetchStage(FetchStage);
         end
     endaction;
 
-    Reg#(Maybe#(Vpn)) buffered_translation_virt_pc <- mkReg(Invalid);
-    Reg#(TlbResp) buffered_translation_tlb_resp <- mkRegU;
+    Reg#(Vector#(PageBuffSize,Maybe#(Vpn))) buffered_translation_virt_pc <- mkReg(replicate(Invalid));
+    Reg#(Vector#(PageBuffSize,TlbResp)) buffered_translation_tlb_resp <- mkRegU;
+    Reg#(Bit#(TLog#(PageBuffSize))) buffered_translation_count <- mkRegU;
 
     rule invalidate_buffered_translation(!iTlb.flush_done);
-        buffered_translation_virt_pc <= Invalid;
+        buffered_translation_virt_pc <= replicate(Invalid);
     endrule
 
     rule getTlbResp(iTlb.flush_done);
         // Get TLB response
         TlbResp tr <- tlb_server.response.get;
-        buffered_translation_virt_pc <= Valid(getVpn(translateAddress.first));
-        buffered_translation_tlb_resp <= tr;
         translateAddress.deq;
+        // Check if, because of pipelining, we already have this vpn.
+        Bool found = False;
+        for (Integer i = 0; i < valueOf(PageBuffSize); i=i+1)
+            if (buffered_translation_virt_pc[i] matches tagged Valid .vpn &&& getVpn(translateAddress.first) == vpn)
+                found = True;
+        if (!found) begin
+            buffered_translation_virt_pc[buffered_translation_count] <= Valid(getVpn(translateAddress.first));
+            buffered_translation_tlb_resp[buffered_translation_count] <= tr;
+            buffered_translation_count <= buffered_translation_count + 1;
+        end
         if (verbosity >= 2) $display ("%d Fetch Translate: pc: %x, ", cur_cycle, translateAddress.first, fshow (tr));
     endrule
 
@@ -573,7 +585,12 @@ module mkFetchStage(FetchStage);
         dii_pid_reg[pc_fetch1_port] <= dii_pid + (zeroExtend(posLastSupX2) + 1);
 `endif
 
-        if (buffered_translation_virt_pc matches tagged Valid .vpn &&& getVpn(getAddr(pc)) == vpn) begin
+        // Search the last few translations to look for a match.
+        Maybe#(Bit#(TLog#(PageBuffSize))) m_buff_match_idx = Invalid;
+        for (Integer i = 0; i < valueOf(PageBuffSize); i=i+1)
+            if (buffered_translation_virt_pc[i] matches tagged Valid .vpn &&& getVpn(getAddr(pc)) == vpn)
+                m_buff_match_idx = tagged Valid fromInteger(i);
+        if (m_buff_match_idx matches tagged Valid .buff_match_idx) begin
             let next_fetch_pc = fromMaybe(addPc(pc, 2 * (zeroExtend(posLastSupX2) + 1)), pred_next_pc);
             let pc_idxs <- pcBlocks.insertAndReserve(truncateLSB(pc), truncateLSB(next_fetch_pc));
             PcIdx pc_idx = pc_idxs.inserted;
@@ -588,7 +605,7 @@ module mkFetchStage(FetchStage);
                     Valid(compressPc(ppc_idx, validValue(pred_next_pc))) : Invalid,
                 decode_epoch: decode_epoch[0],
                 main_epoch: f_main_epoch};
-            start_imem_lookup(out, buffered_translation_tlb_resp);
+            start_imem_lookup(out, buffered_translation_tlb_resp[buff_match_idx]);
             pc_reg[pc_fetch1_port] <= next_fetch_pc;
             if (verbose) $display("%d Fetch1: ", cur_cycle, fshow(out), " posLastSupX2: %d", posLastSupX2);
         end else begin
