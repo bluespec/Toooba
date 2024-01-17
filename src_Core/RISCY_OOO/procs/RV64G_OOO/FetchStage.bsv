@@ -584,9 +584,6 @@ module mkFetchStage(FetchStage);
 
         // Search the last few translations to look for a match.
         Maybe#(UInt#(TLog#(PageBuffSize))) m_buff_match_idx = findElem(Valid(getVpn(getAddr(pc))), buffered_translation_virt_pc);
-        /*for (Integer i = 0; i < valueOf(PageBuffSize); i=i+1)
-            if (buffered_translation_virt_pc[i] matches tagged Valid .vpn &&& getVpn(getAddr(pc)) == vpn)
-                m_buff_match_idx = tagged Valid fromInteger(i);*/
         if (m_buff_match_idx matches tagged Valid .buff_match_idx) begin
             let next_fetch_pc = fromMaybe(addPc(pc, 2 * (zeroExtend(posLastSupX2) + 1)), pred_next_pc);
             let pc_idxs <- pcBlocks.insertAndReserve(truncateLSB(pc), truncateLSB(next_fetch_pc));
