@@ -541,17 +541,19 @@ module mkFetchStage(FetchStage);
         buffered_translation_virt_pc <= replicate(Invalid);
     endrule
 
-    rule getTlbResp(iTlb.flush_done);
+    rule getTlbResp;
         // Get TLB response
         TlbResp tr <- tlb_server.response.get;
         translateAddress.deq;
-        // Check if, because of pipelining, we already have this vpn.
-        Bool found = elem(Valid(getVpn(translateAddress.first)), buffered_translation_virt_pc);
-        if (!found) begin
-            buffered_translation_virt_pc[buffered_translation_count] <= Valid(getVpn(translateAddress.first));
-            buffered_translation_tlb_resp[buffered_translation_count] <= tr;
-            buffered_translation_count <= buffered_translation_count + 1;
-        end
+        if (iTlb.flush_done) begin
+            // Check if, because of pipelining, we already have this vpn.
+            Bool found = elem(Valid(getVpn(translateAddress.first)), buffered_translation_virt_pc);
+            if (!found) begin
+                buffered_translation_virt_pc[buffered_translation_count] <= Valid(getVpn(translateAddress.first));
+                buffered_translation_tlb_resp[buffered_translation_count] <= tr;
+                buffered_translation_count <= buffered_translation_count + 1;
+            end
+        end else buffered_translation_virt_pc <= replicate(Invalid);
         if (verbosity >= 2) $display ("%d Fetch Translate: pc: %x, ", cur_cycle, translateAddress.first, fshow (tr));
     endrule
 
