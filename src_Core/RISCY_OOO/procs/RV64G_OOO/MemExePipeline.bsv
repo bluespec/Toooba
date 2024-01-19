@@ -115,18 +115,19 @@ typedef struct {
     Data shiftedData;
 } WaitStResp deriving(Bits, Eq, FShow);
 
+//SpecFifo#(2,IncorrectSpec,1,1) incorrectSpec_ff <- mkSpecFifoCF(True);
 // synthesized pipeline fifos
-typedef SpecFifo_SB_deq_enq_C_deq_enq#(1, MemDispatchToRegRead) MemDispToRegFifo;
+//typedef SpecFifo_SB_deq_enq_C_deq_enq#(1, MemDispatchToRegRead) MemDispToRegFifo;
 (* synthesize *)
-module mkMemDispToRegFifo(MemDispToRegFifo);
-    let m <- mkSpecFifo_SB_deq_enq_C_deq_enq(False);
+module mkMemDispToRegFifo(SpecFifo#(2,MemDispatchToRegRead,1,1));
+    let m <- mkSpecFifoCF2(True);
     return m;
 endmodule
 
-typedef SpecFifo_SB_deq_enq_C_deq_enq#(1, MemRegReadToExe) MemRegToExeFifo;
+//typedef SpecFifo_SB_deq_enq_C_deq_enq#(1, MemRegReadToExe) MemRegToExeFifo;
 (* synthesize *)
-module mkMemRegToExeFifo(MemRegToExeFifo);
-    let m <- mkSpecFifo_SB_deq_enq_C_deq_enq(False);
+module mkMemRegToExeFifo(SpecFifo#(2,MemRegReadToExe,1,1));
+    let m <- mkSpecFifoCF2(True);
     return m;
 endmodule
 

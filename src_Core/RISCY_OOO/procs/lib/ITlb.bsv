@@ -245,6 +245,8 @@ module mkITlb(ITlb::ITlb);
         no_pending_wire <= !isValid(miss);
     endrule
 
+    Reg#(Bool) vm_info_change <- mkReg(False);
+
     method Action flush if(!needFlush);
         needFlush <= True;
         waitFlushP <= False;
@@ -253,9 +255,10 @@ module mkITlb(ITlb::ITlb);
         // (2) flush truly starts when there is no pending req
     endmethod
 
-    method Bool flush_done = !needFlush;
+    method Bool flush_done = !needFlush && !vm_info_change;
 
     method Action updateVMInfo(VMInfo vm);
+        if (vm_info != vm) vm_info_change <= True;
         vm_info <= vm;
     endmethod
 
