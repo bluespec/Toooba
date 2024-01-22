@@ -579,11 +579,6 @@ module mkFetchStage(FetchStage);
         Bit#(TLog#(SupSizeX2)) posLastSupX2 = fromInteger(fromMaybe(valueof(SupSizeX2) - 1, find(findNextPc(pc), indexes)));
         Maybe#(CapMem) pred_next_pc = pred_future_pc[posLastSupX2];
 
-`ifdef RVFI_DII
-        Dii_Parcel_Id dii_pid = dii_pid_reg[pc_fetch1_port];
-        dii_pid_reg[pc_fetch1_port] <= dii_pid + (zeroExtend(posLastSupX2) + 1);
-`endif
-
         // Search the last few translations to look for a match.
         Maybe#(UInt#(TLog#(PageBuffSize))) m_buff_match_idx = findElem(Valid(getVpn(getAddr(pc))), buffered_translation_virt_pc);
         if (m_buff_match_idx matches tagged Valid .buff_match_idx) begin
@@ -591,6 +586,10 @@ module mkFetchStage(FetchStage);
             let pc_idxs <- pcBlocks.insertAndReserve(truncateLSB(pc), truncateLSB(next_fetch_pc));
             PcIdx pc_idx = pc_idxs.inserted;
             PcIdx ppc_idx = pc_idxs.reserved;
+`ifdef RVFI_DII
+            Dii_Parcel_Id dii_pid = dii_pid_reg[pc_fetch1_port];
+            dii_pid_reg[pc_fetch1_port] <= dii_pid + (zeroExtend(posLastSupX2) + 1);
+`endif
             let out = Fetch1ToFetch2 {
                 pc: compressPc(pc_idx, pc),
     `ifdef RVFI_DII
