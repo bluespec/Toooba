@@ -43,6 +43,7 @@ import ProcTypes::*;
 import TlbTypes::*;
 import Performance::*;
 import FullAssocTlb::*;
+import DReg::*;
 import ConfigReg::*;
 import Fifos::*;
 import Cntrs::*;
@@ -245,7 +246,7 @@ module mkITlb(ITlb::ITlb);
         no_pending_wire <= !isValid(miss);
     endrule
 
-    Reg#(Bool) vm_info_change <- mkReg(False);
+    Reg#(Bool) vm_info_change <- mkDReg(False);
 
     method Action flush if(!needFlush);
         needFlush <= True;
