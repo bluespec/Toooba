@@ -194,22 +194,11 @@ typedef struct {
 `endif
     Bit#(TLog#(SupSizeX2)) inst_frags_fetched;
     Maybe#(PcCompressed) pred_next_pc;
-    Bool decode_epoch;
-    Epoch main_epoch;
-} Fetch1ToFetch2 deriving(Bits, Eq, FShow);
-
-typedef struct {
-    PcCompressed pc;
-`ifdef RVFI_DII
-    Dii_Parcel_Id dii_pid;
-`endif
-    Bit#(TLog#(SupSizeX2)) inst_frags_fetched;
-    Maybe#(PcCompressed) pred_next_pc;
     Maybe#(Exception) cause;
     Bool access_mmio; // inst fetch from MMIO
     Bool decode_epoch;
     Epoch main_epoch;
-} Fetch2ToFetch3 deriving(Bits, Eq, FShow);
+} Fetch1ToFetch2 deriving(Bits, Eq, FShow);
 
 typedef struct {
     PcCompressed pc;
@@ -221,7 +210,7 @@ typedef struct {
 `ifdef RVFI_DII
     Dii_Parcel_Id dii_pid;
 `endif
-} Fetch3ToDecode deriving(Bits, Eq, FShow);
+} Fetch2ToDecode deriving(Bits, Eq, FShow);
 
 // Used purely internally in doDecode.
 typedef struct {
@@ -239,7 +228,7 @@ typedef struct {
   Maybe#(Exception) cause;
   Bool cause_second_half;
   Bool mispred_first_half;
-} InstrFromFetch3 deriving(Bits, Eq, FShow);
+} InstrFromFetch2 deriving(Bits, Eq, FShow);
 
 function Bool popInst(DecodeResult dr);
     let dInst = dr.dInst;
@@ -266,8 +255,8 @@ function Bool popInst(DecodeResult dr);
     return doPop;
 endfunction
 
-function InstrFromFetch3 fetch3_2_instC(Fetch3ToDecode in, Instruction inst, Bit#(32) orig_inst) =
-   InstrFromFetch3 {
+function InstrFromFetch2 fetch2_2_instC(Fetch2ToDecode in, Instruction inst, Bit#(32) orig_inst) =
+   InstrFromFetch2 {
       pc: in.pc,
 `ifdef RVFI_DII
       dii_pid: in.dii_pid,
@@ -287,9 +276,9 @@ function InstrFromFetch3 fetch3_2_instC(Fetch3ToDecode in, Instruction inst, Bit
       mispred_first_half: False
    };
 
-function InstrFromFetch3 fetch3s_2_inst(Fetch3ToDecode inHi, Fetch3ToDecode inLo);
+function InstrFromFetch2 fetch2s_2_inst(Fetch2ToDecode inHi, Fetch2ToDecode inLo);
    Instruction inst = {inHi.inst_frag, inLo.inst_frag};
-   InstrFromFetch3 ret = fetch3_2_instC(inHi, inst, inst);
+   InstrFromFetch2 ret = fetch2_2_instC(inHi, inst, inst);
    if (isValid(inLo.cause)) ret.cause = inLo.cause;
    else if (isValid(inHi.cause)) ret.cause_second_half = True;
    ret.inst_kind = Inst_32b;
@@ -363,8 +352,8 @@ deriving (Bits, Eq, FShow);
 
 (* synthesize *)
 module mkFetchStage(FetchStage);
-    // rule ordering: Fetch1 (BTB+TLB) < Fetch3 (decode & dir pred) < redirect method
-    // Fetch1 < Fetch3 to avoid bypassing path on PC and epochs
+    // rule ordering: Fetch1 (BTB+TLB) < Fetch2 (decode & dir pred) < redirect method
+    // Fetch1 < Fetch2 to avoid bypassing path on PC and epochs
 
     Bool verbose = True;
     Integer verbosity = 2;
@@ -391,7 +380,7 @@ module mkFetchStage(FetchStage);
 `endif
     Integer pc_fetch1_port = 0;
     Integer pc_decode_port = 1;
-    Integer pc_fetch3_port = 2;
+    Integer pc_fetch2_port = 2;
     Integer pc_redirect_port = 3;
     Integer pc_final_port = 4;
     // To track the next expected PC in Decode for early lookups for prediction.
@@ -418,10 +407,10 @@ module mkFetchStage(FetchStage);
     endaction);
 
     // Pipeline Stage FIFOs
-    Fifo#(4, Addr) translateAddress <- mkCFFifo;
-    Fifo#(4, Fetch2ToFetch3) f22f3 <- mkCFFifo; // FIFO should match I$ latency
+    Fifo#(1, Addr) translateAddress <- mkCFFifo;
+    Fifo#(4, Fetch1ToFetch2) fetch1toFetch2 <- mkCFFifo; // FIFO should match I$ latency
     // These two fifos needs a capacity of 3 for full throughput if we fire only when we can enq on on channels.
-    SupFifo#(SupSizeX2, 3, Fetch3ToDecode) f32d <- mkUGSupFifo; // Unguarded to prevent the static analyser from exploding.
+    SupFifo#(SupSizeX2, 3, Fetch2ToDecode) f2d <- mkUGSupFifo; // Unguarded to prevent the static analyser from exploding.
     SupFifo#(SupSize, 3, FromFetchStage) out_fifo <- mkSupFifo;
        // Can the fifo size be smaller?
 
@@ -479,60 +468,6 @@ module mkFetchStage(FetchStage);
         nextAddrPred.put_pc(pc_reg[pc_final_port]);
     endrule
 
-    function Action start_imem_lookup(Fetch1ToFetch2 in, TlbResp tr) = action
-        match {.buffered_phys_pc, .cause, .allow_cap} = tr;
-        Addr phys_pc = unpack({buffered_phys_pc[63:12],in.pc.lsb[11:0]});
-        // Access main mem or boot rom if no TLB exception
-        Bool access_mmio = False;
-`ifdef RVFI_DII
-        // We 32-bit align PC (and increment nbSupX2 accordingly) in
-        // doFetch1 for the real MMIO and ICache require 32-bit, so make
-        // DII look like that by decrementing pid if PC is "odd"; this
-        // extra parcel on the front will be discarded by fav_parse_insts.
-        dii.fromDii.request.put(in.dii_pid);
-`else
-        if (!isValid(cause)) begin
-            case(mmio.getFetchTarget(phys_pc))
-                MainMem: begin
-                    // Send ICache request
-                    mem_server.request.put(phys_pc);
-                end
-                IODevice: begin
-                    // Send MMIO req. Luckily boot rom is also aligned with
-                    // cache line size, so all nbSup+1 insts can be fetched
-                    // from boot rom. It won't happen that insts fetched from
-                    // boot rom is less than requested.
-                    mmio.bootRomReq(phys_pc, in.inst_frags_fetched);
-                    access_mmio = True;
-                end
-                default: begin
-                    // Access fault
-                    cause = Valid (excInstAccessFault);
-                end
-            endcase
-        end
-`endif
-
-        let out = Fetch2ToFetch3 {
-            pc: in.pc,
-`ifdef RVFI_DII
-            dii_pid: in.dii_pid,
-`endif
-            inst_frags_fetched: in.inst_frags_fetched,
-            pred_next_pc: in.pred_next_pc,
-            cause: cause,
-            access_mmio: access_mmio,
-            decode_epoch: in.decode_epoch,
-            main_epoch: in.main_epoch };
-        f22f3.enq(out);
-
-        if (verbosity >= 2) begin
-            $display ("%d ----------------", cur_cycle);
-            $display ("%d Fetch1: TLB response pyhs_pc 0x%0h  cause ", cur_cycle, phys_pc, fshow (cause));
-            $display ("%d Fetch1: f2_tof3.enq: out ", cur_cycle, fshow (out));
-        end
-    endaction;
-
     Reg#(Vector#(PageBuffSize,Maybe#(Vpn))) buffered_translation_virt_pc <- mkReg(replicate(Invalid));
     Reg#(Vector#(PageBuffSize,TlbResp)) buffered_translation_tlb_resp <- mkRegU;
     Reg#(Bit#(TLog#(PageBuffSize))) buffered_translation_count <- mkRegU;
@@ -541,6 +476,8 @@ module mkFetchStage(FetchStage);
         buffered_translation_virt_pc <= replicate(Invalid);
     endrule
 
+    // getTlbResp catches a iTLB translation and writes it into translation
+    // buffer. If there is an active iTlb flush, clear the buffer.
     rule getTlbResp;
         // Get TLB response
         TlbResp tr <- tlb_server.response.get;
@@ -557,10 +494,11 @@ module mkFetchStage(FetchStage);
         if (verbosity >= 2) $display ("%d Fetch Translate: pc: %x, ", cur_cycle, translateAddress.first, fshow (tr));
     endrule
 
-    // We don't send req to TLB when waiting for redirect or TLB flush. Since
-    // there is no FIFO between doFetch1 and TLB, when OOO commit stage wait
-    // TLB idle to change VM CSR / signal flush TLB, there is no wrong path
-    // request afterwards to race with the system code that manage paget table.
+    // doFetch1 pulls a prediction out of the BTB and attempts to translate it
+    // from a small buffer (~2) of recent TLB translations.
+    // If the necessary translation is not in the buffer, doFetch1 submits a TLB
+    // lookup request and then retrys until getTlbResp has populated the buffer
+    // and the lookup succeeds.
     rule doFetch1(started && !waitForRedirect[0] && !waitForFlush[0]);
         let pc = pc_reg[pc_fetch1_port];
 
@@ -590,17 +528,59 @@ module mkFetchStage(FetchStage);
             Dii_Parcel_Id dii_pid = dii_pid_reg[pc_fetch1_port];
             dii_pid_reg[pc_fetch1_port] <= dii_pid + (zeroExtend(posLastSupX2) + 1);
 `endif
-            let out = Fetch1ToFetch2 {
-                pc: compressPc(pc_idx, pc),
+            match {.buffered_phys_pc, .cause, .allow_cap} = buffered_translation_tlb_resp[buff_match_idx];
+            Addr phys_pc = unpack({buffered_phys_pc[63:12],getAddr(pc)[11:0]});
+            // Access main mem or boot rom if no TLB exception
+            Bool access_mmio = False;
     `ifdef RVFI_DII
-                dii_pid: dii_pid,
+            // We 32-bit align PC (and increment nbSupX2 accordingly) in
+            // doFetch1 for the real MMIO and ICache require 32-bit, so make
+            // DII look like that by decrementing pid if PC is "odd"; this
+            // extra parcel on the front will be discarded by fav_parse_insts.
+            dii.fromDii.request.put(dii_pid);
+    `else
+            if (!isValid(cause)) begin
+                case(mmio.getFetchTarget(phys_pc))
+                    MainMem: begin
+                        // Send ICache request
+                        mem_server.request.put(phys_pc);
+                    end
+                    IODevice: begin
+                        // Send MMIO req. Luckily boot rom is also aligned with
+                        // cache line size, so all nbSup+1 insts can be fetched
+                        // from boot rom. It won't happen that insts fetched from
+                        // boot rom is less than requested.
+                        mmio.bootRomReq(phys_pc, posLastSupX2);
+                        access_mmio = True;
+                    end
+                    default: begin
+                        // Access fault
+                        cause = Valid (excInstAccessFault);
+                    end
+                endcase
+            end
     `endif
+
+
+            Fetch1ToFetch2 out = Fetch1ToFetch2 {
+                pc: compressPc(pc_idx, pc),
+`ifdef RVFI_DII
+                dii_pid: dii_pid,
+`endif
                 inst_frags_fetched: posLastSupX2,
                 pred_next_pc: isValid(pred_next_pc) ?
                     Valid(compressPc(ppc_idx, validValue(pred_next_pc))) : Invalid,
+                cause: cause,
+                access_mmio: access_mmio,
                 decode_epoch: decode_epoch[0],
-                main_epoch: f_main_epoch};
-            start_imem_lookup(out, buffered_translation_tlb_resp[buff_match_idx]);
+                main_epoch: f_main_epoch };
+            fetch1toFetch2.enq(out);
+
+            if (verbosity >= 2) begin
+                $display ("%d ----------------", cur_cycle);
+                $display ("%d Fetch1: TLB response pyhs_pc 0x%0h  cause ", cur_cycle, phys_pc, fshow (cause));
+                $display ("%d Fetch1: f2_tof3.enq: out ", cur_cycle, fshow (out));
+            end
             pc_reg[pc_fetch1_port] <= next_fetch_pc;
             if (verbose) $display("%d Fetch1: ", cur_cycle, fshow(out), " posLastSupX2: %d", posLastSupX2);
         end else begin
@@ -613,14 +593,14 @@ module mkFetchStage(FetchStage);
 
 // Break out of i$
     Vector#(SupSizeX2,Integer) indexes = genVector;
-    function Bool f32d_lane_notFull(Integer i) = f32d.enqS[i].canEnq;
-    rule doFetch3(all(f32d_lane_notFull, indexes));
-        let fetch3In = f22f3.first;
+    function Bool f2d_lane_notFull(Integer i) = f2d.enqS[i].canEnq;
+    rule doFetch2(all(f2d_lane_notFull, indexes));
+        let fetch2In = fetch1toFetch2.first;
         if (verbosity >= 2) begin
-            if (f22f3.notEmpty)
-                $display("%d Fetch3: fetch3In: ", cur_cycle, fshow (fetch3In));
+            if (fetch1toFetch2.notEmpty)
+                $display("%d Fetch2: fetch2In: ", cur_cycle, fshow (fetch2In));
             else
-                $display("%d Fetch3: Nothing else from Fetch2", cur_cycle);
+                $display("%d Fetch2: Nothing else from Fetch1", cur_cycle);
         end
 
         // Get ICache/MMIO response if no exception
@@ -628,67 +608,67 @@ module mkFetchStage(FetchStage);
         // (it will be turned to an exception later), so inst_data[0] must be
         // valid.
         Vector#(SupSizeX2,Maybe#(Instruction16)) inst_d = replicate(tagged Valid (0));
-        f22f3.deq();
+        fetch1toFetch2.deq();
 `ifdef RVFI_DII
         inst_d <- dii.fromDii.response.get;
 `else
-        if (!isValid(fetch3In.cause)) begin
-           if(fetch3In.access_mmio) begin
+        if (!isValid(fetch2In.cause)) begin
+           if(fetch2In.access_mmio) begin
               inst_d <- mmio.bootRomResp;
-              if(verbose) $display("get answer from MMIO 0x%0x", getAddr(decompressPc(fetch3In.pc)), " ", fshow(inst_d));
+              if(verbose) $display("get answer from MMIO 0x%0x", getAddr(decompressPc(fetch2In.pc)), " ", fshow(inst_d));
            end
            else begin
-              if(verbose) $display("get answer from memory 0x%0x", getAddr(decompressPc(fetch3In.pc)));
+              if(verbose) $display("get answer from memory 0x%0x", getAddr(decompressPc(fetch2In.pc)));
                  inst_d <- mem_server.response.get;
            end
         end
 `endif
 
-        for (Integer i = 0; i < valueOf(SupSizeX2) && fromInteger(i) <= fetch3In.inst_frags_fetched; i = i + 1) begin
-           PcCompressed pc = fetch3In.pc;
+        for (Integer i = 0; i < valueOf(SupSizeX2) && fromInteger(i) <= fetch2In.inst_frags_fetched; i = i + 1) begin
+           PcCompressed pc = fetch2In.pc;
            pc.lsb = pc.lsb + (2 * fromInteger(i));
-           f32d.enqS[i].enq (Fetch3ToDecode {
+           f2d.enqS[i].enq (Fetch2ToDecode {
                pc: pc,
 `ifdef RVFI_DII
-               dii_pid: fetch3In.dii_pid + fromInteger(i),
+               dii_pid: fetch2In.dii_pid + fromInteger(i),
 `endif
-               ppc: (fromInteger(i)==fetch3In.inst_frags_fetched) ? fetch3In.pred_next_pc : Invalid,
+               ppc: (fromInteger(i)==fetch2In.inst_frags_fetched) ? fetch2In.pred_next_pc : Invalid,
                inst_frag: validValue(inst_d[i]),
-               cause: fetch3In.cause,
-               decode_epoch: fetch3In.decode_epoch,
-               main_epoch: fetch3In.main_epoch
+               cause: fetch2In.cause,
+               decode_epoch: fetch2In.decode_epoch,
+               main_epoch: fetch2In.main_epoch
            });
         end
-    endrule: doFetch3
+    endrule: doFetch2
 
-   function Bool isCurrent(Fetch3ToDecode in) = (main_epoch_spec.notEmpty &&
+   function Bool isCurrent(Fetch2ToDecode in) = (main_epoch_spec.notEmpty &&
                                                  in.main_epoch == f_main_epoch &&
                                                  in.decode_epoch == decode_epoch[0]);
 
-   rule doDecodeFlush(f32d.deqS[0].canDeq && !isCurrent(f32d.deqS[0].first));
+   rule doDecodeFlush(f2d.deqS[0].canDeq && !isCurrent(f2d.deqS[0].first));
       for (Integer i = 0; i < valueOf(SupSizeX2); i = i + 1)
-         if (f32d.deqS[i].canDeq &&& !isCurrent(f32d.deqS[i].first)) begin
-            pcBlocks.rPort[i].remove(f32d.deqS[i].first.pc.idx);
-            f32d.deqS[i].deq;
+         if (f2d.deqS[i].canDeq &&& !isCurrent(f2d.deqS[i].first)) begin
+            pcBlocks.rPort[i].remove(f2d.deqS[i].first.pc.idx);
+            f2d.deqS[i].deq;
          end
    endrule: doDecodeFlush
 
-   Vector#(SupSize, Maybe#(InstrFromFetch3)) decodeIn = replicate(Invalid);
+   Vector#(SupSize, Maybe#(InstrFromFetch2)) decodeIn = replicate(Invalid);
    // Express the incoming fragments as a vector of maybes.
-   Vector#(SupSizeX2, Maybe#(Fetch3ToDecode)) frags;
+   Vector#(SupSizeX2, Maybe#(Fetch2ToDecode)) frags;
    for (Integer i = 0; i < valueOf(SupSizeX2); i = i + 1)
-      frags[i] = (f32d.deqS[i].canDeq) ? Valid (f32d.deqS[i].first) : Invalid;
-   // Pick as up to SupSize instructions from the f32d SupFifo.
+      frags[i] = (f2d.deqS[i].canDeq) ? Valid (f2d.deqS[i].first) : Invalid;
+   // Pick as up to SupSize instructions from the f2d SupFifo.
    // Stop picking when we have SupSize instructions or when we have exhausted the ports on the instruction fragment FIFO.
    Maybe#(Bit#(TLog#(SupSizeX2))) m_used_frag_count = Invalid;
    Bit#(TLog#(SupSize)) pick_count = 0;
    Bool prev_frag_available = False;
    for (Integer i = 0; i < valueOf(SupSizeX2) && !isValid(decodeIn[valueOf(SupSize) - 1]); i = i + 1) begin
-      Maybe#(InstrFromFetch3) new_pick = Invalid;
+      Maybe#(InstrFromFetch2) new_pick = Invalid;
       if (frags[i] matches tagged Valid .frag) begin
-         Fetch3ToDecode prev_frag = (i != 0) ? validValue(frags[i-1]) : ?;
+         Fetch2ToDecode prev_frag = (i != 0) ? validValue(frags[i-1]) : ?;
          if (prev_frag_available &&& !is_16b_inst(prev_frag.inst_frag)) begin // 2nd half of 32-bit instruction
-            new_pick = tagged Valid fetch3s_2_inst(frag, prev_frag);
+            new_pick = tagged Valid fetch2s_2_inst(frag, prev_frag);
             /*if (!validValue(new_pick).mispred_first_half) begin
                doAssert(getAddr(decompressPc(prev_frag.pc))+2 == getAddr(decompressPc(frag.pc)), "Attached fragments with non-contigious PCs");
    `ifdef RVFI_DII
@@ -696,7 +676,7 @@ module mkFetchStage(FetchStage);
    `endif
             end*/
          end else if (is_16b_inst(frag.inst_frag) || isValid(frag.cause)) begin // 16-bit instruction
-            new_pick = tagged Valid fetch3_2_instC(frag,
+            new_pick = tagged Valid fetch2_2_instC(frag,
                                                    fv_decode_C (misa, misa_mxl_64, getFlags(decompressPc(frag.pc))==1, frag.inst_frag),
                                                    zeroExtend(frag.inst_frag));
          end
@@ -732,9 +712,9 @@ module mkFetchStage(FetchStage);
    delay_epoch = delay_epoch || delayForPop;
 `endif
 
-   rule doDecode(f32d.deqS[0].canDeq && isCurrent(f32d.deqS[0].first) && !delay_epoch);
+   rule doDecode(f2d.deqS[0].canDeq && isCurrent(f2d.deqS[0].first) && !delay_epoch);
       if (m_used_frag_count matches tagged Valid .used_frag_count) begin
-         for (Integer i = 0; i < valueOf(SupSizeX2) && fromInteger(i) <= used_frag_count; i = i + 1) f32d.deqS[i].deq;
+         for (Integer i = 0; i < valueOf(SupSizeX2) && fromInteger(i) <= used_frag_count; i = i + 1) f2d.deqS[i].deq;
          if (verbose)
             $display("%d Decode: dequed %d instruction fragments", cur_cycle, used_frag_count);
       end
@@ -957,8 +937,8 @@ module mkFetchStage(FetchStage);
     // (2) all internal FIFOs are empty (the output sup fifo needs not to be
     // empty, but why leave this security hole)
     Bool empty_for_flush = waitForFlush[0] &&
-                           !translateAddress.notEmpty && !f22f3.notEmpty &&
-                           f32d.internalEmpty && out_fifo.internalEmpty;
+                           !translateAddress.notEmpty && !fetch1toFetch2.notEmpty &&
+                           f2d.internalEmpty && out_fifo.internalEmpty;
 
     interface Vector pipelines = out_fifo.deqS;
     interface iTlbIfc = iTlb;
