@@ -408,7 +408,7 @@ module mkFetchStage(FetchStage);
 
     // Pipeline Stage FIFOs
     Fifo#(1, Addr) translateAddress <- mkCFFifo;
-    Fifo#(4, Fetch1ToFetch2) fetch1toFetch2 <- mkCFFifo; // FIFO should match I$ latency
+    Fifo#(3, Fetch1ToFetch2) fetch1toFetch2 <- mkCFFifo; // FIFO should match I$ latency
     // These two fifos needs a capacity of 3 for full throughput if we fire only when we can enq on on channels.
     SupFifo#(SupSizeX2, 3, Fetch2ToDecode) f2d <- mkUGSupFifo; // Unguarded to prevent the static analyser from exploding.
     SupFifo#(SupSize, 3, FromFetchStage) out_fifo <- mkSupFifo;
@@ -532,13 +532,13 @@ module mkFetchStage(FetchStage);
             Addr phys_pc = unpack({buffered_phys_pc[63:12],getAddr(pc)[11:0]});
             // Access main mem or boot rom if no TLB exception
             Bool access_mmio = False;
-    `ifdef RVFI_DII
+`ifdef RVFI_DII
             // We 32-bit align PC (and increment nbSupX2 accordingly) in
             // doFetch1 for the real MMIO and ICache require 32-bit, so make
             // DII look like that by decrementing pid if PC is "odd"; this
             // extra parcel on the front will be discarded by fav_parse_insts.
             dii.fromDii.request.put(dii_pid);
-    `else
+`else
             if (!isValid(cause)) begin
                 case(mmio.getFetchTarget(phys_pc))
                     MainMem: begin
@@ -559,9 +559,7 @@ module mkFetchStage(FetchStage);
                     end
                 endcase
             end
-    `endif
-
-
+`endif
             Fetch1ToFetch2 out = Fetch1ToFetch2 {
                 pc: compressPc(pc_idx, pc),
 `ifdef RVFI_DII
@@ -578,8 +576,8 @@ module mkFetchStage(FetchStage);
 
             if (verbosity >= 2) begin
                 $display ("%d ----------------", cur_cycle);
-                $display ("%d Fetch1: TLB response pyhs_pc 0x%0h  cause ", cur_cycle, phys_pc, fshow (cause));
-                $display ("%d Fetch1: f2_tof3.enq: out ", cur_cycle, fshow (out));
+                $display ("%d Fetch1: translated pyhs_pc 0x%0h  cause ", cur_cycle, phys_pc, fshow (cause));
+                $display ("%d Fetch1: fetch1toFetch2.enq: out ", cur_cycle, fshow (out));
             end
             pc_reg[pc_fetch1_port] <= next_fetch_pc;
             if (verbose) $display("%d Fetch1: ", cur_cycle, fshow(out), " posLastSupX2: %d", posLastSupX2);
