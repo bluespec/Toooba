@@ -246,7 +246,7 @@ module mkSelfInvIPipe(
     // rep RAM (dummy)
     RWBramCore#(indexT, repT) repRam <- mkRandRepRam;
     // data RAM
-    RWBramCore#(dataIndexT, Line) dataRam <- mkRWBramCore;
+    Vector#(wayNum, RWBramCore#(indexT, Line)) dataRam <- replicateM(mkRWBramCoreForwarded);
 
     // initialize RAM
     Reg#(Bool) initDone <- mkReg(False);

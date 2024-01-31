@@ -150,7 +150,7 @@ module mkSelfInvLLPipe(
     // RAMs
     Vector#(wayNum, RWBramCore#(indexT, infoT)) infoRam <- replicateM(mkRWBramCore);
     RWBramCore#(indexT, repT) repRam <- mkRandRepRam;
-    RWBramCore#(dataIndexT, Line) dataRam <- mkRWBramCore;
+    Vector#(wayNum, RWBramCore#(indexT, Line)) dataRam <- replicateM(mkRWBramCore);
     
     // initialize RAM
     Reg#(Bool) initDone <- mkReg(False);

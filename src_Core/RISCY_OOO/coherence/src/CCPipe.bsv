@@ -1,6 +1,7 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// 
+// Copyright (c) 2020 Jonathan Woodruff
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +9,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -120,7 +121,7 @@ typedef struct {
     CacheInfo#(tagT, msiT, dirT, ownerT, otherT) info;
     repT repInfo;
     // bypassed or resp line
-    Maybe#(lineT) line;
+    lineT line;
 } Match2Out#(
     type wayT,
     type tagT,
@@ -163,7 +164,7 @@ typedef struct {
     msiT cs;
     dirT dir;
 } UpdateByDownDir#(type msiT, type dirT) deriving(Bits, Eq, FShow);
-
+/*
 // index to data ram: {way, normal index}
 function dataIndexT getDataRamIndex(wayT w, indexT i) provisos(
     Alias#(wayT, Bit#(_waySz)),
@@ -172,7 +173,7 @@ function dataIndexT getDataRamIndex(wayT w, indexT i) provisos(
 );
     return {w, i};
 endfunction
-
+*/
 module mkCCPipe#(
     ReadOnly#(Bool) initDone,
     function indexT getIndex(pipeCmdT cmd),
@@ -180,7 +181,7 @@ module mkCCPipe#(
         // actionvalue enable us to do checking inside the function
         pipeCmdT cmd,
         // below are current RAM outputs, is merged with ram write from final stage
-        // but is NOT merged with state changes carried in PRs/CRs 
+        // but is NOT merged with state changes carried in PRs/CRs
         Vector#(wayNum, tagT) tagVec,
         Vector#(wayNum, msiT) csVec,
         Vector#(wayNum, ownerT) ownerVec,
@@ -195,7 +196,7 @@ module mkCCPipe#(
     function ActionValue#(repT) updateRepInfo(repT oldRep, wayT hitWay),
     Vector#(wayNum, RWBramCore#(indexT, infoT)) infoRam,
     RWBramCore#(indexT, repT) repRam,
-    RWBramCore#(dataIndexT, lineT) dataRam
+    Vector#(wayNum, RWBramCore#(dataIndexT, lineT)) dataRam
 )(
     CCPipe#(wayNum, indexT, tagT, msiT, dirT, ownerT, otherT, repT, lineT, pipeCmdT)
 ) provisos (
@@ -217,31 +218,31 @@ module mkCCPipe#(
     Bits#(lineT, _lineSz),
     Bits#(pipeCmdT, _pipeCmdSz),
     // index to data ram: {way, normal index}
-    Alias#(dataIndexT, Bit#(TAdd#(TLog#(wayNum), _indexSz)))
+    Alias#(dataIndexT, Bit#(_indexSz))
 );
 
     // pipeline regs
 
     Ehr#(3, Maybe#(enq2MatchT)) enq2Mat <- mkEhr(Invalid);
     // port 0: bypass
-    Reg#(Maybe#(enq2MatchT)) enq2Mat_bypass = enq2Mat[0];
+    //Reg#(Maybe#(enq2MatchT)) enq2Mat_bypass = enq2Mat[0];
     // port 1: tag match
     Reg#(Maybe#(enq2MatchT)) enq2Mat_match = enq2Mat[1];
     // port 2: enq
     Reg#(Maybe#(enq2MatchT)) enq2Mat_enq = enq2Mat[2];
 
     Ehr#(2, Maybe#(match2OutT)) mat2Out <- mkEhr(Invalid);
-    // port 0: out
-    Reg#(Maybe#(match2OutT)) mat2Out_out = mat2Out[0];
-    // port 1: tag match
-    Reg#(Maybe#(match2OutT)) mat2Out_match = mat2Out[1];
+    // port 0: tag match
+    Reg#(Maybe#(match2OutT)) mat2Out_match = mat2Out[0];
+    // port 1: out
+    Reg#(Maybe#(match2OutT)) mat2Out_out = mat2Out[1];
 
     // bypass write to ram
-    RWire#(bypassInfoT) bypass <- mkRWire;
+    //RWire#(bypassInfoT) bypass <- mkRWire;
 
     // stage 2: first get bypass
-    (* fire_when_enabled, no_implicit_conditions *)
-    rule doMatch_bypass(isValid(bypass.wget) && isValid(enq2Mat_bypass) && initDone);
+//    (* fire_when_enabled, no_implicit_conditions *)
+/*    rule doMatch_bypass(isValid(bypass.wget) && isValid(enq2Mat_bypass) && initDone);
         bypassInfoT b = fromMaybe(?, bypass.wget);
         enq2MatchT e2m = fromMaybe(?, enq2Mat_bypass);
         if(b.index == getIndex(e2m.cmd)) begin
@@ -249,18 +250,22 @@ module mkCCPipe#(
             e2m.repInfo = Valid (b.repInfo);
         end
         enq2Mat_bypass <= Valid (e2m);
-    endrule
+    endrule*/
 
     rule doTagMatch(isValid(enq2Mat_match) && !isValid(mat2Out_match) && initDone);
         enq2MatchT e2m = fromMaybe(?, enq2Mat_match);
-        // get cache output & merge with bypass
+        // get cache output
         Vector#(wayNum, infoT) infoVec;
+        Vector#(wayNum, lineT) dataVec;
         for(Integer i = 0; i < valueOf(wayNum); i = i+1) begin
             infoRam[i].deqRdResp;
             infoVec[i] = fromMaybe(infoRam[i].rdResp, e2m.infoVec[i]);
+            dataRam[i].deqRdResp;
+            dataVec[i] = dataRam[i].rdResp;
         end
         repRam.deqRdResp;
         repT repInfo = fromMaybe(repRam.rdResp, e2m.repInfo);
+        $display("%t : doTagMatch repRamdeqRdResp ", $time);
         // do tag match to get way to occupy
         Vector#(wayNum, tagT) tagVec;
         Vector#(wayNum, msiT) csVec;
@@ -273,9 +278,6 @@ module mkCCPipe#(
         let tmRes <- tagMatch(e2m.cmd, tagVec, csVec, ownerVec, repInfo);
         wayT way = tmRes.way;
         Bool pRqMiss = tmRes.pRqMiss;
-        // read data
-        indexT index = getIndex(e2m.cmd);
-        dataRam.rdReq(getDataRamIndex(way, index));
         // set mat2out & merge with CRs/PRs & merge with data bypass
         // resp data has higher priority than data bypass
         match2OutT m2o = Match2Out {
@@ -284,7 +286,7 @@ module mkCCPipe#(
             pRqMiss: pRqMiss,
             info: infoVec[way],
             repInfo: repInfo,
-            line: e2m.respLine
+            line: fromMaybe(dataVec[way],e2m.respLine)
         };
         if(e2m.toState matches tagged UpCs .s) begin
             UpdateByUpCs#(msiT) upd <- updateByUpCs(
@@ -299,16 +301,20 @@ module mkCCPipe#(
             m2o.info.cs = upd.cs;
             m2o.info.dir = upd.dir;
         end
-        if(bypass.wget matches tagged Valid .b &&& b.index == index &&& b.way == way &&& !isValid(m2o.line)) begin
+        indexT index = getIndex(e2m.cmd);
+        if (e2m.respLine matches tagged Valid .rl)
+            m2o.line = rl;
+        else /*if(bypass.wget matches tagged Valid .b &&& b.index == index &&& b.way == way)
             // bypass has lower priority than resp data
-            m2o.line = Valid (b.ram.line);
-        end
+            m2o.line = b.ram.line;
+        else*/
+            m2o.line = dataVec[way];
         mat2Out_match <= Valid (m2o);
         // reset enq2mat
         enq2Mat_match <= Invalid;
     endrule
 
-    // construct output with bypass/resp data
+    // construct output with resp data
     function pipeOutT firstOut;
         match2OutT m2o = fromMaybe(?, mat2Out_out);
         return PipeOut {
@@ -317,7 +323,7 @@ module mkCCPipe#(
             pRqMiss: m2o.pRqMiss,
             ram: RamData {
                 info: m2o.info,
-                line: fromMaybe(dataRam.rdResp, m2o.line)
+                line: m2o.line
             },
             repInfo: m2o.repInfo
         };
@@ -333,8 +339,10 @@ module mkCCPipe#(
         indexT index = getIndex(cmd);
         for(Integer i = 0; i < valueOf(wayNum); i = i+1) begin
             infoRam[i].rdReq(index);
+            dataRam[i].rdReq(index);
         end
         repRam.rdReq(index);
+        $display("%t : enq repRam.rdReq ", $time);
         // write reg & get bypass
         enq2MatchT e2m = Enq2Match {
             cmd: cmd,
@@ -343,10 +351,11 @@ module mkCCPipe#(
             respLine: respLine,
             toState: toState
         };
-        if(bypass.wget matches tagged Valid .b &&& b.index == index) begin
+        /*if(bypass.wget matches tagged Valid .b &&& b.index == index) begin
             e2m.infoVec[b.way] = Valid (b.ram.info);
             e2m.repInfo = Valid (b.repInfo);
-        end
+            e2m.respLine = Valid (b.ram.line);
+        end*/
         enq2Mat_enq <= Valid (e2m);
     endmethod
 
@@ -374,14 +383,14 @@ module mkCCPipe#(
         // write ram
         infoRam[way].wrReq(index, wrRam.info);
         repRam.wrReq(index, repInfo);
-        dataRam.wrReq(getDataRamIndex(way, index), wrRam.line);
-        // set bypass to Enq and Match stages
+        dataRam[way].wrReq(index, wrRam.line);
+        /* set bypass to Enq and Match stages
         bypass.wset(BypassInfo {
             index: index,
             way: way,
             ram: wrRam,
             repInfo: repInfo
-        });
+        });*/
         // change pipeline reg
         if(newCmd matches tagged Valid .cmd) begin
             // update pipeline reg
@@ -391,12 +400,10 @@ module mkCCPipe#(
                 pRqMiss: False, // reset (not valid for swapped in pRq)
                 info: wrRam.info, // get bypass
                 repInfo: repInfo, // get bypass
-                line: Valid (wrRam.line) // get bypass
+                line: wrRam.line // get bypass
             });
         end
         else begin
-            // XXX deq ram resp, I think this should not block
-            dataRam.deqRdResp;
             // reset pipeline reg
             mat2Out_out <= Invalid;
         end

@@ -117,17 +117,17 @@ typedef struct {
 
 //SpecFifo#(2,IncorrectSpec,1,1) incorrectSpec_ff <- mkSpecFifoCF(True);
 // synthesized pipeline fifos
-//typedef SpecFifo_SB_deq_enq_C_deq_enq#(1, MemDispatchToRegRead) MemDispToRegFifo;
+typedef SpecFifo_SB_deq_enq_C_deq_enq#(1, MemDispatchToRegRead) MemDispToRegFifo;
 (* synthesize *)
-module mkMemDispToRegFifo(SpecFifo#(2,MemDispatchToRegRead,1,1));
-    let m <- mkSpecFifoCF2(True);
+module mkMemDispToRegFifo(MemDispToRegFifo);
+    let m <- mkSpecFifo_SB_deq_enq_C_deq_enq(False);
     return m;
 endmodule
 
-//typedef SpecFifo_SB_deq_enq_C_deq_enq#(1, MemRegReadToExe) MemRegToExeFifo;
+typedef SpecFifo_SB_deq_enq_C_deq_enq#(1, MemRegReadToExe) MemRegToExeFifo;
 (* synthesize *)
-module mkMemRegToExeFifo(SpecFifo#(2,MemRegReadToExe,1,1));
-    let m <- mkSpecFifoCF2(True);
+module mkMemRegToExeFifo(MemRegToExeFifo);
+    let m <- mkSpecFifo_SB_deq_enq_C_deq_enq(False);
     return m;
 endmodule
 
@@ -620,7 +620,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         // search LSQ
         LSQIssueLdResult issRes <- lsq.issueLd(info.tag, info.paddr, info.shiftedBE, sbRes);
         if(verbose) begin
-            $display("[doIssueLd] fromIssueQ: ", fshow(fromIssueQ), " ; ",
+            $display("%t : [doIssueLd] fromIssueQ: ", $time, fshow(fromIssueQ), " ; ",
                      fshow(info), " ; ", fshow(sbRes), " ; ", fshow(issRes));
         end
         // summarize
