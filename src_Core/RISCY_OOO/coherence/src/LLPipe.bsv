@@ -13,7 +13,7 @@
 //
 //     This work was supported by NCSC programme grant 4212611/RFA 15971 ("SafeBet").
 //-
-// 
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -21,10 +21,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -151,7 +151,7 @@ module mkLLPipe(
     Alias#(updateByUpCsT, UpdateByUpCs#(Msi)),
     Alias#(updateByDownDirT, UpdateByDownDir#(Msi, dirT)),
     Alias#(dataIndexT, Bit#(TAdd#(TLog#(wayNum), indexSz))),
-    // requirement 
+    // requirement
     Alias#(indexT, Bit#(indexSz)),
     Alias#(tagT, Bit#(tagSz)),
     Alias#(cRqIdxT, Bit#(_cRqIdxSz)),
@@ -164,8 +164,8 @@ module mkLLPipe(
     // RAMs
     Vector#(wayNum, RWBramCore#(indexT, infoT)) infoRam <- replicateM(mkRWBramCore);
     RWBramCore#(indexT, repT) repRam <- mkRandRepRam;
-    RWBramCore#(dataIndexT, Line) dataRam <- mkRWBramCore;
-    
+    Vector#(wayNum, RWBramCore#(indexT, Line)) dataRam <- replicateM(mkRWBramCore);
+
     // initialize RAM
     Reg#(Bool) initDone <- mkReg(False);
     Reg#(indexT) initIndex <- mkReg(0);
@@ -207,8 +207,8 @@ module mkLLPipe(
 
     function ActionValue#(tagMatchResT) tagMatch(
         pipeCmdT cmd,
-        Vector#(wayNum, tagT) tagVec, 
-        Vector#(wayNum, Msi) csVec, 
+        Vector#(wayNum, tagT) tagVec,
+        Vector#(wayNum, Msi) csVec,
         Vector#(wayNum, ownerT) ownerVec,
         repT repInfo
     );
@@ -216,11 +216,11 @@ module mkLLPipe(
             function tagT getTag(Addr a) = truncateLSB(a);
 
             if (verbose)
-            $display("%t LL %m tagMatch: ", $time, 
-                fshow(cmd), " ; ", 
+            $display("%t LL %m tagMatch: ", $time,
+                fshow(cmd), " ; ",
                 fshow(getTag(getAddrFromCmd(cmd))), " ; ",
-                fshow(tagVec), " ; ", 
-                fshow(csVec), " ; ", 
+                fshow(tagVec), " ; ",
+                fshow(csVec), " ; ",
                 fshow(ownerVec)
             );
             if(cmd matches tagged MRs .rs) begin

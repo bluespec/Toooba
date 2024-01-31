@@ -490,6 +490,32 @@ module mkSpecFifo_SB_deq_enq_C_deq_enq#(Bool lazyEnq)(
     return m;
 endmodule
 
+
+// deq < enq (< correctSpec)
+// wrongSpec C enq
+// wrongSpec C deq
+typedef SpecFifo#(
+    size, t, 2, 2
+) SpecFifo_SB_enq_deq_C_enq_deq#(numeric type size, type t);
+
+module mkSpecFifo_SB_enq_deq_C_enq_deq(
+    SpecFifo_SB_deq_enq_C_deq_enq#(size, t)
+) provisos(Bits#(t, w), FShow#(t));
+    let sched = SpecFifoSched {
+        validDeqPort: 1,
+        validEnqPort: 0,
+        validWrongSpecPort: 0,
+        sbDeqPort: 0,
+        sbEnqPort: 0,
+        sbWrongSpecPort: 0,
+        wrongSpec_conflict_enq: True,
+        wrongSpec_conflict_deq: True,
+        wrongSpec_conflict_canon: True // acutally canon never fire
+    };
+    let m <- mkSpecFifo(sched, True);
+    return m;
+endmodule
+
 module mkSpecFifoUG#(Bool lazyEnq)(
     SpecFifo#(size, t, validPortNum, sbPortNum)
 ) provisos (
