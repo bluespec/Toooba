@@ -223,34 +223,17 @@ module mkCCPipe#(
 
     // pipeline regs
 
-    Ehr#(3, Maybe#(enq2MatchT)) enq2Mat <- mkEhr(Invalid);
-    // port 0: bypass
-    //Reg#(Maybe#(enq2MatchT)) enq2Mat_bypass = enq2Mat[0];
-    // port 1: tag match
-    Reg#(Maybe#(enq2MatchT)) enq2Mat_match = enq2Mat[1];
-    // port 2: enq
-    Reg#(Maybe#(enq2MatchT)) enq2Mat_enq = enq2Mat[2];
+    Ehr#(2, Maybe#(enq2MatchT)) enq2Mat <- mkEhr(Invalid);
+    // port 0: tag match
+    Reg#(Maybe#(enq2MatchT)) enq2Mat_match = enq2Mat[0];
+    // port 1: enq
+    Reg#(Maybe#(enq2MatchT)) enq2Mat_enq = enq2Mat[1];
 
     Ehr#(2, Maybe#(match2OutT)) mat2Out <- mkEhr(Invalid);
     // port 0: tag match
     Reg#(Maybe#(match2OutT)) mat2Out_match = mat2Out[0];
     // port 1: out
     Reg#(Maybe#(match2OutT)) mat2Out_out = mat2Out[1];
-
-    // bypass write to ram
-    //RWire#(bypassInfoT) bypass <- mkRWire;
-
-    // stage 2: first get bypass
-//    (* fire_when_enabled, no_implicit_conditions *)
-/*    rule doMatch_bypass(isValid(bypass.wget) && isValid(enq2Mat_bypass) && initDone);
-        bypassInfoT b = fromMaybe(?, bypass.wget);
-        enq2MatchT e2m = fromMaybe(?, enq2Mat_bypass);
-        if(b.index == getIndex(e2m.cmd)) begin
-            e2m.infoVec[b.way] = Valid (b.ram.info);
-            e2m.repInfo = Valid (b.repInfo);
-        end
-        enq2Mat_bypass <= Valid (e2m);
-    endrule*/
 
     rule doTagMatch(isValid(enq2Mat_match) && !isValid(mat2Out_match) && initDone);
         enq2MatchT e2m = fromMaybe(?, enq2Mat_match);
@@ -278,8 +261,7 @@ module mkCCPipe#(
         let tmRes <- tagMatch(e2m.cmd, tagVec, csVec, ownerVec, repInfo);
         wayT way = tmRes.way;
         Bool pRqMiss = tmRes.pRqMiss;
-        // set mat2out & merge with CRs/PRs & merge with data bypass
-        // resp data has higher priority than data bypass
+        // set mat2out & merge with CRs/PRs
         match2OutT m2o = Match2Out {
             cmd: e2m.cmd,
             way: way,
@@ -302,14 +284,11 @@ module mkCCPipe#(
             m2o.info.dir = upd.dir;
         end
         indexT index = getIndex(e2m.cmd);
-        if (e2m.respLine matches tagged Valid .rl)
+        if (e2m.respLine matches tagged Valid .rl) begin
             m2o.line = rl;
-        else /*if(bypass.wget matches tagged Valid .b &&& b.index == index &&& b.way == way)
-            // bypass has lower priority than resp data
-            m2o.line = b.ram.line;
-        else*/
+        end else begin
             m2o.line = dataVec[way];
-        mat2Out_match <= Valid (m2o);
+        end mat2Out_match <= Valid (m2o);
         // reset enq2mat
         enq2Mat_match <= Invalid;
     endrule
@@ -333,7 +312,7 @@ module mkCCPipe#(
 
     Bool deq_guard = isValid(mat2Out_out) && initDone;
 
-    // stage 1: enq req to pipeline: access info+rep RAM & bypass
+    // stage 1: enq req to pipeline: access info+rep RAM
     method Action enq(pipeCmdT cmd, Maybe#(lineT) respLine, respStateT toState) if(enq_guard);
         // read ram
         indexT index = getIndex(cmd);
@@ -343,7 +322,7 @@ module mkCCPipe#(
         end
         repRam.rdReq(index);
         $display("%t : enq repRam.rdReq ", $time);
-        // write reg & get bypass
+        // write reg
         enq2MatchT e2m = Enq2Match {
             cmd: cmd,
             infoVec: replicate(Invalid),
@@ -351,11 +330,6 @@ module mkCCPipe#(
             respLine: respLine,
             toState: toState
         };
-        /*if(bypass.wget matches tagged Valid .b &&& b.index == index) begin
-            e2m.infoVec[b.way] = Valid (b.ram.info);
-            e2m.repInfo = Valid (b.repInfo);
-            e2m.respLine = Valid (b.ram.line);
-        end*/
         enq2Mat_enq <= Valid (e2m);
     endmethod
 
@@ -384,13 +358,6 @@ module mkCCPipe#(
         infoRam[way].wrReq(index, wrRam.info);
         repRam.wrReq(index, repInfo);
         dataRam[way].wrReq(index, wrRam.line);
-        /* set bypass to Enq and Match stages
-        bypass.wset(BypassInfo {
-            index: index,
-            way: way,
-            ram: wrRam,
-            repInfo: repInfo
-        });*/
         // change pipeline reg
         if(newCmd matches tagged Valid .cmd) begin
             // update pipeline reg
@@ -398,9 +365,9 @@ module mkCCPipe#(
                 cmd: cmd, // swapped in new cmd
                 way: way, // keep way same
                 pRqMiss: False, // reset (not valid for swapped in pRq)
-                info: wrRam.info, // get bypass
-                repInfo: repInfo, // get bypass
-                line: wrRam.line // get bypass
+                info: wrRam.info,
+                repInfo: repInfo,
+                line: wrRam.line
             });
         end
         else begin
