@@ -36,7 +36,6 @@
 
 import BRAMCore::*;
 import Fifos::*;
-import RegFile::*;
 
 interface RWBramCore#(type addrT, type dataT);
     method Action wrReq(addrT a, dataT d);
@@ -78,18 +77,43 @@ module mkRWBramCore(RWBramCore#(addrT, dataT)) provisos(
 endmodule
 
 module mkRWBramCoreForwarded(RWBramCore#(addrT, dataT)) provisos(
-        Bits#(addrT, addr_sz),
-        Bounded#(addrT),
-        Bits#(dataT, data_sz));
+    Bits#(addrT, addrSz), Bits#(dataT, dataSz), Eq#(addrT)
+);
+    BRAM_DUAL_PORT#(addrT, dataT) bram <- mkBRAMCore2(valueOf(TExp#(addrSz)), False);
+    BRAM_PORT#(addrT, dataT) wrPort = bram.a;
+    BRAM_PORT#(addrT, dataT) rdPort = bram.b;
+    // 1 elem pipeline fifo to add guard for read req/resp
+    // must be 1 elem to make sure rdResp is not corrupted
+    // BRAMCore should not change output if no req is made
+    Fifo#(1, void) rdReqQ <- mkPipelineFifo;
+    Reg#(addrT) readAddr[2] <- mkCReg(2,?);
+    Reg#(addrT) currentWriteAddr <- mkRegU;
+    Reg#(dataT) currentWriteData <- mkRegU;
 
-	  RegFile#(addrT,dataT) regFile <- mkRegFileWCF(minBound, maxBound); // BRAM
-	  Fifo#(1, addrT) readReq <- mkPipelineFifo;
+    rule doRead;
+        rdPort.put(False, readAddr[1], ?);
+    endrule
 
-  	method Action rdReq(addrT a) = readReq.enq(a);
-    method dataT rdResp() = regFile.sub(readReq.first());
-    method rdRespValid = readReq.notEmpty;
-    method Action deqRdResp = readReq.deq();
-    method Action wrReq(addrT a, dataT x) = regFile.upd(a,x);
+    method Action wrReq(addrT a, dataT d);
+        wrPort.put(True, a, d);
+        currentWriteAddr <= a; //Forward data, if read happens on same cycle
+        currentWriteData <= d;
+    endmethod
+
+    method Action rdReq(addrT a);
+        readAddr[0] <= a;
+        rdReqQ.enq(?);
+    endmethod
+
+    method dataT rdResp if(rdReqQ.notEmpty);
+        return (readAddr[0] == currentWriteAddr) ? currentWriteData : rdPort.read;
+    endmethod
+
+    method rdRespValid = rdReqQ.notEmpty;
+
+    method Action deqRdResp;
+        rdReqQ.deq;
+    endmethod
 endmodule
 
 module mkRWBramCoreUG(RWBramCore#(addrT, dataT)) provisos(
