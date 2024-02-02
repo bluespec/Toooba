@@ -408,7 +408,7 @@ module mkFetchStage(FetchStage);
 
     // Pipeline Stage FIFOs
     Fifo#(1, Addr) translateAddress <- mkCFFifo;
-    Fifo#(3, Fetch1ToFetch2) fetch1toFetch2 <- mkCFFifo; // FIFO should match I$ latency
+    Fifo#(2, Fetch1ToFetch2) fetch1toFetch2 <- mkCFFifo; // FIFO should match I$ latency
     // These two fifos needs a capacity of 3 for full throughput if we fire only when we can enq on all channels.
     SupFifo#(SupSizeX2, 3, Fetch2ToDecode) f2d <- mkUGSupFifo; // Unguarded to prevent the static analyser from exploding.
     SupFifo#(SupSize, 3, FromFetchStage) out_fifo <- mkSupFifo;
