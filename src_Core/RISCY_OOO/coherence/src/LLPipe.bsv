@@ -162,9 +162,9 @@ module mkLLPipe(
    Bool verbose = False;
 
     // RAMs
-    Vector#(wayNum, RWBramCore#(indexT, infoT)) infoRam <- replicateM(mkRWBramCoreForwarded);
+    Vector#(wayNum, RWBramCore#(indexT, infoT)) infoRam <- replicateM(mkRWBramCore);
     RWBramCore#(indexT, repT) repRam <- mkRandRepRam;
-    Vector#(wayNum, RWBramCore#(indexT, Line)) dataRam <- replicateM(mkRWBramCoreForwarded);
+    RWBramCore#(dataIndexT, Line) dataRam <- mkRWBramCore;
 
     // initialize RAM
     Reg#(Bool) initDone <- mkReg(False);
