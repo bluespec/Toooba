@@ -145,7 +145,7 @@ module mkCoreW (CoreW_IFC #(t_n_irq));
 `ifdef RVFI_DII
           , .rvfi
 `endif
-          , .ifc} 
+          , .ifc}
      <- mkCoreW_reset ( rst, reset_by newRst.new_rst);
    (* no_implicit_conditions, fire_when_enabled *)
    rule rl_forward_debug_reset (otherRst);
@@ -236,10 +236,10 @@ module mkCoreW_reset #(Reset porReset)
    TagControllerAXI #(Wd_MId, Wd_Addr, Wd_Data)
      tagController <- mkTagControllerAXI (reset_by all_harts_reset); // TODO double check if reseting like this is good enough
    mkConnection (proc.master0, tagController.slave, reset_by all_harts_reset);
-   AXI4_Shim#(TAdd #(Wd_MId, 1), Wd_Addr, Wd_Data, 0, 0, 0, 0, 0)
+   /*AXI4_Shim#(TAdd #(Wd_MId, 1), Wd_Addr, Wd_Data, 0, 0, 0, 0, 0)
       tag_controller_deburster <- mkBurstToNoBurst;
    mkConnection (tagController.master, tag_controller_deburster.slave, reset_by all_harts_reset);
-
+   */
 
 `ifdef PERFORMANCE_MONITORING
    rule report_tagController_events;
@@ -633,7 +633,7 @@ module mkCoreW_reset #(Reset porReset)
       // memory interfaces
       // -----------------
       // Cached master to Fabric master interface
-      interface manager_0 = tag_controller_deburster.master;
+      interface manager_0 = tagController.master;
       // Uncached master to Fabric master interface
       interface manager_1 = prepend_AXI4_Master_id
             (0, zero_AXI4_Master_user (uncached_mem_shim.master));
