@@ -170,7 +170,8 @@ module mkLLC_AXi4_Adapter #(MemFifoClient #(idT, childT) llc)
    // ================================================================
    // Handle write requests and responses
    Reg#(Bit#(Wd_MId)) wid_reg <- mkRegU;
-   rule rl_handle_write_req (llc.toM.first matches tagged Wb .wb &&& !outstandingWrites.isMember(wid_reg).v);
+   rule rl_handle_write_req (llc.toM.first matches tagged Wb .wb &&&
+                             !outstandingWrites.isMember(wid_reg).v && !outstandingWrites.dataMatch(hash(wb.addr[63:6])));
       if (cfg_verbosity > 0) begin
          $display ("%d: LLC_AXI4_Adapter.rl_handle_write_req: Wb request from LLC to memory:", cur_cycle);
          $display ("    ", fshow (wb));
