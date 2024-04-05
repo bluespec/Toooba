@@ -340,13 +340,9 @@ module mkP3_Core (P3_Core_IFC);
    // ================================================================
 `endif
 
-   // Work around issue that is not understood with multiple outstanding
-   // requests in VCU118 GFE system.
-   let master0_inOrder <- mkAXI4SingleIDMaster(master_0_delay.master);
-
    // ================================================================
    // INTERFACE
-   let master0_sig <- toAXI4_Master_Sig (master0_inOrder);
+   let master0_sig <- toAXI4_Master_Sig (master_0_delay.master);
    let master1_sig <- toAXI4_Master_Sig (master_1_delay.master);
    // ----------------------------------------------------------------
    // Core CPU interfaces
