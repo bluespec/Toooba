@@ -230,6 +230,12 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                     stop = True;
                 end
                 else begin
+`ifdef KONATA 
+                    $display("KONATAE\t%d\t0\tRnm", x.u_id);
+                    $display("KONATAL\t%0d\t0\tWrongPathRename %x", x.u_id, x.pc);
+                    $display("KONATAR\t%d\t%d\t1\t//KILLRENAME", x.u_id, x.u_id);
+                    $fflush;
+`endif
                     // wrong path, kill it & update prev epoch
                     fetchStage.pipelines[i].deq;
                     epochManager.updatePrevEpoch[i].update(x.main_epoch);
@@ -389,8 +395,16 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
 `ifdef RVFI
                                 , traceBundle: unpack(0)
 `endif
+`ifdef KONATA 
+                                , u_id : x.u_id 
+`endif
                                };
         rob.enqPort[0].enq(y);
+`ifdef KONATA 
+        $display("KONATAE\t%d\t0\tRnm", x.u_id);
+        $display("KONATAS\t%d\t0\tE", x.u_id);
+        $fflush;
+`endif
         // record if we issue an interrupt
         if(firstTrap matches tagged Valid (tagged Interrupt .i)) begin
             inIfc.issueCsrInstOrInterrupt;
@@ -603,9 +617,16 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
 `ifdef RVFI
                                 , traceBundle: unpack(0)
 `endif
+`ifdef KONATA 
+                                , u_id : x.u_id 
+`endif
                                };
         rob.enqPort[0].enq(y);
-
+`ifdef KONATA 
+        $display("KONATAE\t%d\t0\tRnm", x.u_id);
+        $display("KONATAS\t%d\t0\tE", x.u_id);
+        $fflush;
+`endif
 `ifdef PERFORMANCE_MONITORING
         EventsTransExe events = unpack(0);
         events.evt_RENAMED_INST = 1;
@@ -787,9 +808,17 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
 `ifdef RVFI_DII
                                 , dii_pid: x.dii_pid
 `endif
+`ifdef KONATA 
+                                , u_id : x.u_id 
+`endif
                                };
         rob.enqPort[0].enq(y);
 
+`ifdef KONATA 
+        $display("KONATAE\t%d\t0\tRnm", x.u_id);
+        $display("KONATAS\t%d\t0\tE", x.u_id);
+        $fflush;
+`endif
 `ifdef CHECK_DEADLOCK
         renameCorrectPath.send;
 `endif
@@ -1154,9 +1183,16 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
 `ifdef RVFI
                                                 , traceBundle: unpack(0)
 `endif
+`ifdef KONATA 
+                                                , u_id : x.u_id 
+`endif
                                                };
                         rob.enqPort[i].enq(y);
-
+`ifdef KONATA 
+                        $display("KONATAE\t%0d\t0\tRnm", x.u_id);
+                        $display("KONATAS\t%0d\t0\tE", x.u_id);
+                        $fflush;
+`endif
                         // record activity
                         doCorrectPath = True;
                         renameCnt = renameCnt + 1;
