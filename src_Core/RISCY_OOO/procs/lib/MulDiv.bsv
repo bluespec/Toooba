@@ -82,12 +82,20 @@ typedef struct {
     Maybe#(PhyDst) dst;
     InstTag tag;
     // spec bits is not used in later stage, so not included here
+`ifdef KONATA
+    Bit#(64) u_id;
+`endif
 } MulDivResp deriving(Bits, Eq, FShow);
 
 interface MulDivExec;
     // input req
+`ifdef KONATA
+    method Action exec(MulDivInst mdInst, Data rVal1, Data rVal2,
+                       Maybe#(PhyDst) dst, InstTag tag, SpecBits spec_bits, Bit#(64) u_id);
+`else
     method Action exec(MulDivInst mdInst, Data rVal1, Data rVal2,
                        Maybe#(PhyDst) dst, InstTag tag, SpecBits spec_bits);
+`endif
     // output
     method ActionValue#(MulDivResp) mulResp;
     method ActionValue#(MulDivResp) divResp;
@@ -102,6 +110,9 @@ typedef struct {
     // generic bookkeepings
     Maybe#(PhyDst) dst;
     InstTag tag;
+`ifdef KONATA
+    Bit#(64) u_id;
+`endif
 } MulDivExecInfo deriving(Bits, Eq, FShow);
 
 typedef SpecPoisonFifo#(`BOOKKEEPING_INT_MUL_SIZE, MulDivExecInfo) MulExecQ;
@@ -138,8 +149,13 @@ module mkMulDivExec(MulDivExec);
         divUnit.deqResp;
     endrule
 
+`ifdef KONATA
+    method Action exec(MulDivInst mdInst, Data rVal1, Data rVal2,
+                       Maybe#(PhyDst) dst, InstTag tag, SpecBits spec_bits, Bit#(64) u_id);
+`else
     method Action exec(MulDivInst mdInst, Data rVal1, Data rVal2,
                        Maybe#(PhyDst) dst, InstTag tag, SpecBits spec_bits);
+`endif
         if(verbose) begin
             $display("[MulDiv] ", fshow(mdInst), ", ",
                      fshow(rVal1), ", ", fshow(rVal2));
@@ -162,6 +178,9 @@ module mkMulDivExec(MulDivExec);
             w: mdInst.w,
             dst: dst,
             tag: tag
+`ifdef KONATA
+            , u_id: u_id
+`endif
         };
         if(isMulFunc(mdInst.func)) begin
             mulUnit.req(a, b, getXilinxMulSign(mdInst.sign), ?);
@@ -199,6 +218,9 @@ module mkMulDivExec(MulDivExec);
             data: data,
             dst: info.dst,
             tag: info.tag
+`ifdef KONATA
+            , u_id: info.u_id
+`endif
         };
     endmethod
 
@@ -221,6 +243,9 @@ module mkMulDivExec(MulDivExec);
             data: data,
             dst: info.dst,
             tag: info.tag
+`ifdef KONATA
+            , u_id: info.u_id
+`endif
         };
     endmethod
 

@@ -5,6 +5,7 @@
 // RVFI_DII + CHERI modifications:
 //     Copyright (c) 2020 Peter Rugg
 //     Copyright (c) 2020 Jonathan Woodruff
+//     Copyright (c) 2024 Franz Fuchs
 //     All rights reserved.
 //
 //     This software was developed by SRI International and the University of
@@ -13,6 +14,10 @@
 //     DARPA SSITH research programme.
 //
 //     This work was supported by NCSC programme grant 4212611/RFA 15971 ("SafeBet").
+//     This software was developed by the University of  Cambridge
+//     Department of Computer Science and Technology under the
+//     SIPP (Secure IoT Processor Platform with Remote Attestation)
+//     project funded by EPSRC: EP/S030868/1
 //-
 //
 // Permission is hereby granted, free of charge, to any person
@@ -771,11 +776,11 @@ module mkSupReorderBuffer#(
                 // move deqP & reset valid
                 deqP[i] <= getNextPtr(deqP[i]);
                 valid[i][deqP[i]][valid_deq_port] <= False;
-`ifdef KONATA 
-                let id = uid[i][deqP[i]][valid_deq_port];
-                $display("KONATAR\t%0d\t%0d\t0", id, id);
-                $fflush;
-`endif
+//`ifdef KONATA 
+//                let id = uid[i][deqP[i]][valid_deq_port];
+//                $display("KONATAR\t%0d\t%0d\t0", id, id);
+//                $fflush;
+//`endif
             end
         end
         // update firstDeqWay: find the first deq port that is not enabled
@@ -811,8 +816,7 @@ module mkSupReorderBuffer#(
                     valid[w][i][valid_wrongSpec_port] <= False;
 `ifdef KONATA 
                 if (valid[w][i][valid_wrongSpec_port]) begin
-                    $display("KONATAE\t%0d\t0\tE", uid[w][i][valid_wrongSpec_port]);
-                    $display("KONATAR\t%0d\t%0d\t1\t//KILLALLROB", uid[w][i][valid_wrongSpec_port], uid[w][i][valid_wrongSpec_port]);
+                    $display("KONATAR\t%0d\t%0d\t%0d\t1\t//KILLALLROB", cur_cycle, uid[w][i][valid_wrongSpec_port], uid[w][i][valid_wrongSpec_port]);
                     $fflush;
                 end
 `endif
@@ -839,8 +843,7 @@ module mkSupReorderBuffer#(
                         valid[w][i][valid_wrongSpec_port] <= False;
 `ifdef KONATA 
                     if (valid[w][i][valid_wrongSpec_port]) begin
-                        $display("KONATAE\t%0d\t0\tE", uid[w][i][valid_wrongSpec_port]);
-                        $display("KONATAR\t%0d\t%0d\t1\t//KILLMISPREDICTION", uid[w][i][valid_wrongSpec_port], uid[w][i][valid_wrongSpec_port]);
+                        $display("KONATAR\t%0d\t%0d\t%0d\t1\t//KILLMISPREDICTION", cur_cycle, uid[w][i][valid_wrongSpec_port], uid[w][i][valid_wrongSpec_port]);
                         $fflush;
                     end
 `endif

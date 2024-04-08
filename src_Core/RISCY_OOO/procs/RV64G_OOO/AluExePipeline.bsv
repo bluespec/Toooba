@@ -6,6 +6,7 @@
 //     Copyright (c) 2020 Jessica Clarke
 //     Copyright (c) 2020 Peter Rugg
 //     Copyright (c) 2020 Jonathan Woodruff
+//     Copyright (c) 2024 Franz Fuchs
 //     All rights reserved.
 //
 //     This software was developed by SRI International and the University of
@@ -14,6 +15,11 @@
 //     DARPA SSITH research programme.
 //
 //     This work was supported by NCSC programme grant 4212611/RFA 15971 ("SafeBet").
+//
+//     This software was developed by the University of  Cambridge
+//     Department of Computer Science and Technology under the
+//     SIPP (Secure IoT Processor Platform with Remote Attestation)
+//     project funded by EPSRC: EP/S030868/1
 //-
 //
 // Permission is hereby granted, free of charge, to any person
@@ -80,6 +86,9 @@ typedef struct {
     PredTrainInfo trainInfo;
     // specualtion
     Maybe#(SpecTag) spec_tag;
+`ifdef KONATA
+    Bit#(64) u_id;
+`endif
 } AluDispatchToRegRead deriving(Bits, Eq, FShow);
 
 typedef struct {
@@ -96,6 +105,9 @@ typedef struct {
     Bit #(32) orig_inst;
     // specualtion
     Maybe#(SpecTag) spec_tag;
+`ifdef KONATA
+    Bit#(64) u_id;
+`endif
 } AluRegReadToExe deriving(Bits, FShow);
 
 typedef struct {
@@ -116,6 +128,9 @@ typedef struct {
     Maybe#(SpecTag) spec_tag;
 `ifdef RVFI
     ExtraTraceBundle   traceBundle;
+`endif
+`ifdef KONATA
+    Bit#(64) u_id;
 `endif
 } AluExeToFinish deriving(Bits, FShow);
 
@@ -267,6 +282,11 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
         if(x.regs.dst matches tagged Valid .dst) begin
             inIfc.setRegReadyAggr(dst.indx);
         end
+`ifdef KONATA 
+        $display("KONATAE\t%0d\t%0d\t0\tRsvA", cur_cycle, x.u_id);
+        $display("KONATAS\t%0d\t%0d\t0\tAlu1", cur_cycle, x.u_id);
+        $fflush;
+`endif
 
         // go to next stage
         dispToRegQ.enq(ToSpecFifo {
@@ -276,6 +296,9 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
                 tag: x.tag,
                 trainInfo: x.data.trainInfo,
                 spec_tag: x.spec_tag
+`ifdef KONATA
+                , u_id: x.u_id
+`endif
             },
             spec_bits: x.spec_bits
         });
@@ -340,6 +363,12 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
 `endif
 `endif
 
+`ifdef KONATA 
+        $display("KONATAE\t%0d\t%0d\t0\tAlu1", cur_cycle, x.u_id);
+        $display("KONATAS\t%0d\t%0d\t0\tAlu2", cur_cycle, x.u_id);
+        $fflush;
+`endif
+
         // go to next stage
         regToExeQ.enq(ToSpecFifo {
             data: AluRegReadToExe {
@@ -353,6 +382,9 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
                 ppc: ppc,
                 orig_inst: orig_inst,
                 spec_tag: x.spec_tag
+`ifdef KONATA
+                , u_id: x.u_id
+`endif
             },
             spec_bits: dispToReg.spec_bits
         });
@@ -408,6 +440,11 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
 
         Bool is_scr_or_csr = (isValid(x.dInst.scr) && x.dInst.iType == Scr) || isValid(x.dInst.csr);
 
+`ifdef KONATA 
+        $display("KONATAE\t%0d\t%0d\t0\tAlu2", cur_cycle, x.u_id);
+        $display("KONATAS\t%0d\t%0d\t0\tAlu3", cur_cycle, x.u_id);
+        $fflush;
+`endif
         // go to next stage
         exeToFinQ.enq(ToSpecFifo {
             data: AluExeToFinish {
@@ -426,6 +463,9 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
                     regWriteData: getAddr(exec_result.data),
                     memByteEn: replicate(False)
                 },
+`endif
+`ifdef KONATA
+                u_id: x.u_id,
 `endif
                 controlFlow: exec_result.controlFlow,
                 spec_tag: x.spec_tag
@@ -466,6 +506,11 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
 `endif
         );
 
+`ifdef KONATA 
+        $display("KONATAE\t%0d\t%0d\t0\tAlu3\t%0d", cur_cycle, x.u_id, cur_cycle);
+        $display("KONATAS\t%0d\t%0d\t0\tAlu4\t%0d", cur_cycle, x.u_id, cur_cycle);
+        $fflush;
+`endif
 `ifdef PERFORMANCE_MONITORING
 `ifdef CONTRACTS_VERIFY
         // get PC and PPC

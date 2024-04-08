@@ -7,6 +7,7 @@
 //     Copyright (c) 2020 Jessica Clarke
 //     Copyright (c) 2020 Peter Rugg
 //     Copyright (c) 2020 Jonathan Woodruff
+//     Copyright (c) 2024 Franz Fuchs
 //     All rights reserved.
 //
 //     This software was developed by SRI International and the University of
@@ -15,6 +16,11 @@
 //     DARPA SSITH research programme.
 //
 //     This work was supported by NCSC programme grant 4212611/RFA 15971 ("SafeBet").
+//
+//     This software was developed by the University of  Cambridge
+//     Department of Computer Science and Technology under the
+//     SIPP (Secure IoT Processor Platform with Remote Attestation)
+//     project funded by EPSRC: EP/S030868/1
 //-
 //
 // Permission is hereby granted, free of charge, to any person
@@ -231,9 +237,9 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                 end
                 else begin
 `ifdef KONATA 
-                    $display("KONATAE\t%d\t0\tRnm", x.u_id);
-                    $display("KONATAL\t%0d\t0\tWrongPathRename %x", x.u_id, x.pc);
-                    $display("KONATAR\t%d\t%d\t1\t//KILLRENAME", x.u_id, x.u_id);
+                    $display("KONATAE\t%0d\t%d\t0\tRnm", cur_cycle, x.u_id);
+                    $display("KONATAL\t%0d\t%0d\t0\tWrongPathRename %x", cur_cycle, x.u_id, x.pc);
+                    $display("KONATAR\t%0d\t%d\t%d\t1\t//KILLRENAME", cur_cycle, x.u_id, x.u_id);
                     $fflush;
 `endif
                     // wrong path, kill it & update prev epoch
@@ -401,8 +407,8 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                };
         rob.enqPort[0].enq(y);
 `ifdef KONATA 
-        $display("KONATAE\t%d\t0\tRnm", x.u_id);
-        $display("KONATAS\t%d\t0\tE", x.u_id);
+        $display("KONATAE\t%0d\t%d\t0\tD", cur_cycle, x.u_id);
+        $display("KONATAS\t%0d\t%d\t0\tC", cur_cycle, x.u_id);
         $fflush;
 `endif
         // record if we issue an interrupt
@@ -563,6 +569,9 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                 spec_bits: spec_bits,
                 spec_tag: Invalid,
                 regs_ready: regs_ready_aggr // alu will recv bypass
+`ifdef KONATA
+                , u_id: x.u_id
+`endif
             });
         end
 
@@ -623,8 +632,8 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                };
         rob.enqPort[0].enq(y);
 `ifdef KONATA 
-        $display("KONATAE\t%d\t0\tRnm", x.u_id);
-        $display("KONATAS\t%d\t0\tE", x.u_id);
+        $display("KONATAE\t%0d\t%d\t0\tD", cur_cycle, x.u_id);
+        $display("KONATAS\t%0d\t%d\t0\tRnm", cur_cycle, x.u_id);
         $fflush;
 `endif
 `ifdef PERFORMANCE_MONITORING
@@ -815,8 +824,8 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
         rob.enqPort[0].enq(y);
 
 `ifdef KONATA 
-        $display("KONATAE\t%d\t0\tRnm", x.u_id);
-        $display("KONATAS\t%d\t0\tE", x.u_id);
+        $display("KONATAE\t%0d\t%d\t0\tD", cur_cycle, x.u_id);
+        $display("KONATAS\t%0d\t%d\t0\tRnm", cur_cycle, x.u_id);
         $fflush;
 `endif
 `ifdef CHECK_DEADLOCK
@@ -1032,6 +1041,11 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                         if(scheduleRS(aluRSCount, aluReady) matches tagged Valid .k) begin
                             // can process, send to ALU rs
                             aluExeUsed[k] = True; // mark resource used
+`ifdef KONATA
+                            $display("KONATAE\t%0d\t%0d\t0\tD", cur_cycle, x.u_id);
+                            $display("KONATAS\t%0d\t%0d\t0\tRnm", cur_cycle, x.u_id);
+                            $fflush;
+`endif
                             reservationStationAlu[k].enq(ToReservationStation {
                                 data: AluRSData {dInst: dInst, trainInfo: trainInfo},
                                 regs: phy_regs,
@@ -1039,6 +1053,9 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                 spec_bits: spec_bits,
                                 spec_tag: spec_tag,
                                 regs_ready: regs_ready_aggr // alu will recv bypass
+`ifdef KONATA
+                                , u_id: x.u_id
+`endif
                             });
                         end
                         else begin
@@ -1052,6 +1069,11 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                         if(scheduleRS(fpuMulDivRSCount, fpuMulDivReady) matches tagged Valid .k) begin
                             // can process, send to FPU MUL DIV rs
                             fpuMulDivExeUsed[k] = True; // mark resource used
+`ifdef KONATA
+                            $display("KONATAE\t%0d\t%0d\t0\tD", cur_cycle, x.u_id);
+                            $display("KONATAS\t%0d\t%0d\t0\tRnm", cur_cycle, x.u_id);
+                            $fflush;
+`endif
                             reservationStationFpuMulDiv[k].enq(ToReservationStation {
                                 data: FpuMulDivRSData {execFunc: dInst.execFunc},
                                 regs: phy_regs,
@@ -1059,6 +1081,9 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                 spec_bits: spec_bits,
                                 spec_tag: spec_tag,
                                 regs_ready: regs_ready_aggr // fpu mul div recv bypass
+`ifdef KONATA
+                                , u_id: x.u_id
+`endif
                             });
                             doAssert(ppc == fallthrough_pc, "FpuMulDiv next PC is not PC+4/PC+2");
                             doAssert(!isValid(dInst.csr), "FpuMulDiv never explicitly read/write CSR");
@@ -1078,6 +1103,11 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                 // can process, send to Mem rs and LSQ
                                 memExeUsed = True; // mark resource used
                                 lsq_tag = lsqTag; // record LSQ tag
+`ifdef KONATA 
+                                $display("KONATAE\t%0d\t%0d\t0\tD", cur_cycle, x.u_id);
+                                $display("KONATAS\t%0d\t%0d\t0\tRnm", cur_cycle, x.u_id);
+                                $fflush;
+`endif
                                 if (dInst.iType != Fence) begin // fence does not go to RS
                                     reservationStationMem.enq(ToReservationStation {
                                         data: MemRSData {
@@ -1092,6 +1122,9 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
                                         spec_bits: spec_bits,
                                         spec_tag: spec_tag,
                                         regs_ready: regs_ready_aggr // mem currently recv bypass
+`ifdef KONATA
+                                        , u_id: x.u_id
+`endif
                                     });
                                 end
                                 doAssert(ppc == fallthrough_pc, "Mem next PC is not PC+4/PC+2");
@@ -1188,11 +1221,7 @@ module mkRenameStage#(RenameInput inIfc)(RenameStage);
 `endif
                                                };
                         rob.enqPort[i].enq(y);
-`ifdef KONATA 
-                        $display("KONATAE\t%0d\t0\tRnm", x.u_id);
-                        $display("KONATAS\t%0d\t0\tE", x.u_id);
-                        $fflush;
-`endif
+
                         // record activity
                         doCorrectPath = True;
                         renameCnt = renameCnt + 1;

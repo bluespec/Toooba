@@ -31,6 +31,10 @@ import Ehr::*;
 import GetPut::*;
 import Assert::*;
 
+`ifdef KONATA
+import Cur_Cycle :: *;
+`endif
+
 typedef struct{
     a data;
     PhyRegs regs;
@@ -40,6 +44,9 @@ typedef struct{
     Maybe#(SpecTag) spec_tag;
     // scheduling
     RegsReady regs_ready;
+`ifdef KONATA
+    Bit#(64) u_id;
+`endif
 } ToReservationStation#(type a) deriving(Bits, Eq, FShow);
 
 interface ReservationStation#(
@@ -99,6 +106,9 @@ module mkReservationStation#(Bool lazySched, Bool lazyEnq, Bool countValid)(
     Vector#(size, Reg#(Maybe#(SpecTag)))             spec_tag   <- replicateM(mkRegU);
     Vector#(size, Ehr#(2, SpecBits))                 spec_bits  <- replicateM(mkEhr(?));
     Vector#(size, Ehr#(regsReadyPortNum, RegsReady)) regs_ready <- replicateM(mkEhr(?));
+`ifdef KONATA
+    Vector#(size, Reg#(Bit#(64)))                    uid        <- replicateM(mkRegU);
+`endif
 
     // wrong spec conflict with enq and dispatch
     RWire#(void) wrongSpec_enq_conflict <- mkRWire;
@@ -161,6 +171,18 @@ module mkReservationStation#(Bool lazySched, Bool lazyEnq, Bool countValid)(
         return r;
     endfunction
     Vector#(size, Bool) can_schedule = zipWith( \&& , readVEhr(valid_dispatch_port, valid), map(get_ready, ready_wire) );
+
+`ifdef KONATA
+    rule printRsvKonata;
+        for(Integer i = 0; i < valueof(size); i = i + 1) begin
+            if(!can_schedule[i] && valid[i][valid_dispatch_port]) begin
+                $display("KONATAE\t%0d\t%0d\t0\tRnm", cur_cycle, uid[i]);
+                $display("KONATAS\t%0d\t%0d\t0\tRsv", cur_cycle, uid[i]);
+                $fflush;
+            end
+        end
+    endrule
+`endif
     
     // oldest index to dispatch
     let can_schedule_index = findOldest(can_schedule);
@@ -225,6 +247,9 @@ module mkReservationStation#(Bool lazySched, Bool lazyEnq, Bool countValid)(
         spec_tag[idx] <= x.spec_tag;
         spec_bits[idx][sb_enq_port] <= x.spec_bits;
         regs_ready[idx][ready_enq_port] <= x.regs_ready;
+`ifdef KONATA
+        uid[idx] <= x.u_id;
+`endif
         // conflict with wrong spec
         wrongSpec_enq_conflict.wset(?);
     endmethod
@@ -247,6 +272,9 @@ module mkReservationStation#(Bool lazySched, Bool lazyEnq, Bool countValid)(
                 src3: True,
                 dst: True
             }
+`ifdef KONATA
+            , u_id: uid[i]
+`endif
         };
     endmethod
 
