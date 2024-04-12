@@ -401,7 +401,7 @@ module mkSelfInvL1Pipe(
 
     CCPipe#(
         wayNum, indexT, tagT, Msi, dirT, ownerT, otherT, repT, Line, pipeCmdT
-    ) pipe <- mkCCPipe(
+    ) pipe <- mkCCPipeSingleCycle(
         regToReadOnly(initDone), getIndex, tagMatch,
         updateByUpCs, updateByDownDir, updateRepInfo,
         infoRam, repRam, dataRam
