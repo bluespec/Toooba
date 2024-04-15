@@ -357,7 +357,7 @@ int main (int argc, char *argv [])
     }
 
     // Zero out the memory buffer before loading the ELF file
-    mem_buf = calloc(MAX_MEM_SIZE, sizeof(uint8_t));
+    mem_buf = (uint8_t *)(calloc(MAX_MEM_SIZE, sizeof(uint8_t)));
     if (mem_buf == NULL) {
 	fprintf (stderr, "ERROR: unable to allocate %lxMB for mem_buf\n", MAX_MEM_SIZE / 1024 / 1024);
 	return 1;
