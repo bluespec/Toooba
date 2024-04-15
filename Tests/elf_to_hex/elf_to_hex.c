@@ -15,14 +15,26 @@
 #include <gelf.h>
 
 // ================================================================
+// Alternate printf format specifiers on Linux vs. Apple MacOS
+
+#if !defined(__APPLE__)
+// Linux
+
+#define PRIX PRIx64
+#else
+// MacOS
+
+#define PRIX "lx"
+#endif
+
+// ================================================================
 // Memory buffer into which we load the ELF file before
 // writing it back out to the output file.
 
-// 1 Gigabyte size
 // #define MAX_MEM_SIZE (((uint64_t) 0x400) * ((uint64_t) 0x400) * ((uint64_t) 0x400))
 #define MAX_MEM_SIZE ((uint64_t) 0x90000000)
 
-uint8_t mem_buf [MAX_MEM_SIZE];
+uint8_t *mem_buf;    // Is malloc'd in main
 
 // Features of the ELF binary
 int       bitwidth;
@@ -168,9 +180,8 @@ void c_mem_load_elf (char *elf_filename,
 	    if (shdr.sh_type != SHT_NOBITS) {
 		memcpy (& (mem_buf [shdr.sh_addr]), data->d_buf, data->d_size);
 	    }
-	    fprintf (stdout, "addr %16" PRIx64 " to addr %16" PRIx64 "; size 0x%8lx (= %0ld) bytes\n",
+	    fprintf (stdout, "addr %16" PRIX " to addr %16" PRIX "; size 0x%8lx (= %0ld) bytes\n",
 		     shdr.sh_addr, shdr.sh_addr + data->d_size, data->d_size, data->d_size);
-
 	}
 
 	// If we find the symbol table, search for symbols of interest
@@ -262,7 +273,7 @@ void write_mem_hex_file (FILE *fp, uint64_t addr1, uint64_t addr2)
     uint64_t bytes_per_raw_mem_word  = bits_per_raw_mem_word / 8;    // 32
     uint64_t raw_mem_word_align_mask = (~ ((uint64_t) (bytes_per_raw_mem_word - 1)));
 
-    fprintf (stdout, "Subtracting 0x%08" PRIx64 " base from addresses\n", BASE_ADDR_B);
+    fprintf (stdout, "Subtracting 0x%08" PRIX " base from addresses\n", BASE_ADDR_B);
 
     // Align the start and end addrs to raw mem words
     uint64_t a1 = (addr1 & raw_mem_word_align_mask);
@@ -304,8 +315,8 @@ void print_usage (FILE *fp, int argc, char *argv [])
     fprintf (fp, "    %s  <ELF filename>  <mem hex filename>\n", argv [0]);
     fprintf (fp, "Reads ELF file and writes a Verilog Hex Memory image file\n");
     fprintf (fp, "ELF file should have addresses within this range:\n");
-    fprintf (fp, "<  Max: 0x%8" PRIx64 "\n", MAX_MEM_ADDR_256MB);
-    fprintf (fp, ">= Min: 0x%8" PRIx64 "\n", MIN_MEM_ADDR_256MB);
+    fprintf (fp, "<  Max: 0x%8" PRIX "\n", MAX_MEM_ADDR_256MB);
+    fprintf (fp, ">= Min: 0x%8" PRIX "\n", MIN_MEM_ADDR_256MB);
 }
 
 // ================================================================
@@ -318,6 +329,12 @@ int main (int argc, char *argv [])
     }
     else if (argc != 3) {
 	print_usage (stderr, argc, argv);
+	return 1;
+    }
+
+    mem_buf = (uint8_t *) malloc (MAX_MEM_SIZE);
+    if (mem_buf == NULL) {
+	fprintf (stderr, "ERROR: malloc failed for %" PRIx64 " bytes\n", MAX_MEM_SIZE);
 	return 1;
     }
 
