@@ -8,6 +8,7 @@
 //     Copyright (c) 2020 Alexandre Joannou
 //     Copyright (c) 2020 Peter Rugg
 //     Copyright (c) 2020 Jonathan Woodruff
+//     Copyright (c) 2024 Franz Fuchs
 //     All rights reserved.
 //
 //     This software was developed by SRI International and the University of
@@ -16,6 +17,10 @@
 //     DARPA SSITH research programme.
 //
 //     This work was supported by NCSC programme grant 4212611/RFA 15971 ("SafeBet").
+//     This software was developed by the University of  Cambridge
+//     Department of Computer Science and Technology under the
+//     SIPP (Secure IoT Processor Platform with Remote Attestation)
+//     project funded by EPSRC: EP/S030868/1
 //-
 //
 // Permission is hereby granted, free of charge, to any person
@@ -72,6 +77,10 @@ import Cur_Cycle :: *;
 
 `ifdef INCLUDE_TANDEM_VERIF
 import Trace_Data2 :: *;
+`endif
+
+`ifdef KONATA
+import Ehr :: *;
 `endif
 
 typedef struct {
@@ -401,6 +410,10 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
     // cycle.
     Vector#(SupSize, RWire#(LdStQTag)) setLSQAtCommit <- replicateM(mkRWire);
 
+`ifdef KONATA
+    Vector#(SupSize, Ehr#(2, Maybe#(Bit#(64)))) printCommits <- replicateM(mkEhr(Invalid));
+`endif
+
     for(Integer i = 0; i< valueof(SupSize); i = i+1) begin
         (* fire_when_enabled, no_implicit_conditions *)
         rule doSetLSQAtCommit(setLSQAtCommit[i].wget matches tagged Valid .tag);
@@ -696,7 +709,11 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 `ifdef INCLUDE_TANDEM_VERIF
         f_rob_data.enq (x);    // Save data to be sent to TV in rule doCommitTrap_handle, next
 `endif
-
+`ifdef KONATA
+        $display("KONATAL\t%0d\t%0d\t0\tTrap %x", cur_cycle, x.u_id, x.pc);
+        $display("KONATAR\t%0d\t%0d\t%0d\t1", cur_cycle, x.u_id, x.u_id);
+        $fflush;
+`endif
         if (verbosity >= 1) begin
            $display ("instret:%0d  PC:0x%0h  instr:0x%08h", rg_serial_num, x.pc, x.orig_inst,
                      "  iType:", fshow (x.iType), "    [doCommitTrap] %d", cur_cycle);
@@ -1004,7 +1021,12 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 
         // incr inst cnt
         csrf.incInstret(1);
-
+`ifdef KONATA
+        $display("KONATAE\t%0d\t%0d\t0\tAlu4", cur_cycle, x.u_id);
+        $display("KONATAS\t%0d\t%0d\t0\tC", cur_cycle, x.u_id);
+        $fflush;
+        printCommits[0][1] <= tagged Valid x.u_id;
+`endif
 `ifdef PERF_COUNT
         if(inIfc.doStats) begin
             comSysCnt.incr(1);
@@ -1283,6 +1305,27 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                         end
                     endcase
                     if (opcode == opcMiscMem && funct3 == fnFENCE) fenceCnt = fenceCnt + 1;
+`ifdef KONATA
+                    case(x.iType)
+                        Alu, J, Jr, Br, Auipc, Auipcc, CCall, CJAL, CJALR, Cap: begin
+                            $display("KONATAE\t%0d\t%0d\t0\tAlu4", cur_cycle, x.u_id);
+                            $display("KONATAS\t%0d\t%0d\t0\tC", cur_cycle, x.u_id);
+                            $fflush; 
+                        end
+                        Ld, St, Lr, Sc, Amo: begin
+                            $display("KONATAE\t%0d\t%0d\t0\tMem4", cur_cycle, x.u_id);
+                            $display("KONATAS\t%0d\t%0d\t0\tC", cur_cycle, x.u_id);
+                            $fflush; 
+                        end
+                        Fpu: begin
+                            $display("KONATAE\t%0d\t%0d\t0\tFpu4", cur_cycle, x.u_id);
+                            $display("KONATAS\t%0d\t%0d\t0\tC", cur_cycle, x.u_id);
+                            $fflush; 
+                        end
+                    endcase
+                    printCommits[i][1] <= tagged Valid x.u_id;
+                    $fflush; 
+`endif
                 end
             end
 `ifdef PERFORMANCE_MONITORING
@@ -1378,6 +1421,25 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
 `endif
         );
     endrule
+
+`ifdef KONATA
+    rule doPrintCommitKONATA;
+        for(Integer i = 0; i < valueof(SupSize); i = i + 1) begin
+            if(printCommits[i][0] matches tagged Valid .u_id) begin
+                $display("KCommit print");
+                $display("KONATAE\t%0d\t%0d\t0\tC", cur_cycle, u_id);
+                $display("KONATAR\t%0d\t%0d\t%0d\t0", cur_cycle, u_id, u_id);
+                $fflush;
+            end
+        end
+    endrule
+
+    rule doMakePrintCommitInvalid;
+        for(Integer i = 0; i < valueof(SupSize); i = i + 1) begin
+            printCommits[i][0] <= Invalid;
+        end
+    endrule
+`endif
 
    // ================================================================
    // INTERFACE

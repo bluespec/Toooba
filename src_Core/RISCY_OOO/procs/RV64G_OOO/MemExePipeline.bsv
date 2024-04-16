@@ -6,6 +6,7 @@
 //     Copyright (c) 2020 Alexandre Joannou
 //     Copyright (c) 2020 Peter Rugg
 //     Copyright (c) 2020 Jonathan Woodruff
+//     Copyright (c) 2024 Franz Fuchs
 //     All rights reserved.
 //
 //     This software was developed by SRI International and the University of
@@ -14,6 +15,11 @@
 //     DARPA SSITH research programme.
 //
 //     This work was supported by NCSC programme grant 4212611/RFA 15971 ("SafeBet").
+//
+//     This software was developed by the University of  Cambridge
+//     Department of Computer Science and Technology under the
+//     SIPP (Secure IoT Processor Platform with Remote Attestation)
+//     project funded by EPSRC: EP/S030868/1
 //-
 //
 // Permission is hereby granted, free of charge, to any person
@@ -87,6 +93,9 @@ typedef struct {
     LdStQTag ldstq_tag;
     CapChecks cap_checks;
     Bool ddc_offset;
+`ifdef KONATA
+    Bit#(64) u_id;
+`endif
 } MemDispatchToRegRead deriving(Bits, Eq, FShow);
 
 typedef struct {
@@ -102,6 +111,9 @@ typedef struct {
     CapChecks cap_checks;
     ByteOrTagEn origBE;
     MemDataByteEn shiftBEData;
+`ifdef KONATA
+    Bit#(64) u_id;
+`endif
 } MemRegReadToExe deriving(Bits, FShow);
 
 typedef struct {
@@ -122,6 +134,9 @@ typedef struct {
     Bool allowCapLoad;
     Maybe#(CSR_XCapCause) capException;
     Maybe#(BoundsCheck) check;
+`ifdef KONATA
+    Bit#(64) u_id;
+`endif
 } MemExeToFinish deriving(Bits, FShow);
 
 // bookkeeping when waiting for MMIO resp which may cause exception
@@ -465,7 +480,11 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         // executed after address transation
         doAssert(!(x.data.mem_func == St && isValid(x.regs.dst)),
                  "St cannot have dst reg");
-
+`ifdef KONATA 
+        $display("KONATAE\t%0d\t%0d\t0\tRsvM", cur_cycle, x.u_id);
+        $display("KONATAS\t%0d\t%0d\t0\tMem1", cur_cycle, x.u_id);
+        $fflush;
+`endif
         // go to next stage
         dispToRegQ.enq(ToSpecFifo {
             data: MemDispatchToRegRead {
@@ -476,6 +495,9 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
                 ldstq_tag: x.data.ldstq_tag,
                 cap_checks: x.data.cap_checks,
                 ddc_offset: x.data.ddc_offset
+`ifdef KONATA
+                , u_id: x.u_id
+`endif
             },
             spec_bits: x.spec_bits
         });
@@ -548,6 +570,11 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
 `endif
         end
 
+`ifdef KONATA 
+        $display("KONATAE\t%0d\t%0d\t0\tMem1", cur_cycle, x.u_id);
+        $display("KONATAS\t%0d\t%0d\t0\tMem2", cur_cycle, x.u_id);
+        $fflush;
+`endif
         // go to next stage
         regToExeQ.enq(ToSpecFifo {
             data: MemRegReadToExe {
@@ -561,6 +588,9 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
                 cap_checks: x.cap_checks,
                 origBE: origBE,
                 shiftBEData: shiftBEData
+`ifdef KONATA
+                , u_id: x.u_id
+`endif
             },
             spec_bits: dispToReg.spec_bits
         });
@@ -585,6 +615,11 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
             accessByteCount = fromInteger(valueOf(CacheUtils::CLineNumMemDataBytes));
         end
 
+`ifdef KONATA 
+        $display("KONATAE\t%0d\t%0d\t0\tMem2", cur_cycle, x.u_id);
+        $display("KONATAS\t%0d\t%0d\t0\tMem3", cur_cycle, x.u_id);
+        $fflush;
+`endif
         // go to next stage by sending to TLB
         dTlb.procReq(DTlbReq {
             inst: MemExeToFinish {
@@ -603,6 +638,9 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
                 capException: capChecksMem(x.rVal1, x.rVal2, x.cap_checks, x.mem_func, x.origBE),
                 check: prepareBoundsCheck(x.rVal1, x.rVal2, almightyCap/*ToDo: pcc*/,
                                           ddc, getAddr(x.vaddr), accessByteCount, x.cap_checks)
+`ifdef KONATA
+                , u_id: x.u_id
+`endif
             },
             specBits: regToExe.spec_bits
         });
@@ -711,6 +749,11 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
 `endif
 `endif
 
+`ifdef KONATA 
+        $display("KONATAE\t%0d\t%0d\t0\tMem3", cur_cycle, x.u_id);
+        $display("KONATAS\t%0d\t%0d\t0\tMem4", cur_cycle, x.u_id);
+        $fflush;
+`endif
         // update LSQ
         LSQUpdateAddrResult updRes <- lsq.updateAddr(
             x.ldstq_tag, cause, x.allowCapLoad && allowCapPTE, paddr, isMMIO, x.shiftedBE

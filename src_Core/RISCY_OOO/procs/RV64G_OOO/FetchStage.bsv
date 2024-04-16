@@ -8,6 +8,7 @@
 //     Copyright (c) 2020 Alexandre Joannou
 //     Copyright (c) 2020 Peter Rugg
 //     Copyright (c) 2020 Jonathan Woodruff
+//     Copyright (c) 2024 Franz Fuchs
 //     All rights reserved.
 //
 //     This software was developed by SRI International and the University of
@@ -16,6 +17,10 @@
 //     DARPA SSITH research programme.
 //
 //     This work was supported by NCSC programme grant 4212611/RFA 15971 ("SafeBet").
+//     This software was developed by the University of  Cambridge
+//     Department of Computer Science and Technology under the
+//     SIPP (Secure IoT Processor Platform with Remote Attestation)
+//     project funded by EPSRC: EP/S030868/1
 //-
 //
 // Permission is hereby granted, free of charge, to any person
@@ -198,6 +203,9 @@ typedef struct {
     Bool access_mmio; // inst fetch from MMIO
     Bool decode_epoch;
     Epoch main_epoch;
+`ifdef KONATA 
+    Bit#(64) u_id;
+`endif
 } Fetch1ToFetch2 deriving(Bits, Eq, FShow);
 
 typedef struct {
@@ -209,6 +217,9 @@ typedef struct {
     Epoch main_epoch;
 `ifdef RVFI_DII
     Dii_Parcel_Id dii_pid;
+`endif
+`ifdef KONATA 
+    Bit#(64) u_id;
 `endif
 } Fetch2ToDecode deriving(Bits, Eq, FShow);
 
@@ -228,6 +239,9 @@ typedef struct {
   Maybe#(Exception) cause;
   Bool cause_second_half;
   Bool mispred_first_half;
+`ifdef KONATA 
+  Bit#(64) u_id;
+`endif
 } InstrFromFetch2 deriving(Bits, Eq, FShow);
 
 function Bool popInst(DecodeResult dr);
@@ -274,6 +288,9 @@ function InstrFromFetch2 fetch2_2_instC(Fetch2ToDecode in, Instruction inst, Bit
       cause: in.cause,
       cause_second_half: False,
       mispred_first_half: False
+`ifdef KONATA 
+      , u_id: in.u_id
+`endif
    };
 
 function InstrFromFetch2 fetch2s_2_inst(Fetch2ToDecode inHi, Fetch2ToDecode inLo);
@@ -304,6 +321,9 @@ typedef struct {
   ArchRegs regs;
   Maybe#(Exception) cause;
   Addr              tval;    // in case of exception
+`ifdef KONATA 
+  Bit#(64) u_id;
+`endif
 } FromFetchStage deriving (Bits, Eq, FShow);
 
 // train next addr pred (BTB)
@@ -347,6 +367,22 @@ typedef enum {Inst_16b,        // A 16b instruction
               Inst_32b         // A 32b instruction
    } Inst_Kind
 deriving (Bits, Eq, FShow);
+
+`ifdef KONATA
+typedef struct {
+    Bit#(64) puid;
+    Bit#(64) cuid;
+    PcCompressed pc;
+} KMergedFrag deriving(Bits, Eq, FShow);
+typedef struct {
+    Bit#(64) cuid;
+} KSingleFrag deriving(Bits, Eq, FShow);
+typedef union tagged {
+    KMergedFrag MergedFrag;
+    KSingleFrag SingleFrag;
+} KInfo deriving (Bits, Eq, FShow);
+
+`endif
 
 // ================================================================
 
@@ -463,6 +499,22 @@ module mkFetchStage(FetchStage);
 `ifdef PERFORMANCE_MONITORING
     Reg#(Bool) redirect_evt_reg <- mkDReg(False);
 `endif
+`ifdef KONATA 
+    Reg#(Bit#(64)) uid <- mkReg(0);
+    Reg#(Bool) k_reset <- mkReg(True);
+
+    //rule header(k_reset);
+    //    k_reset <= ! k_reset;
+    //    $display("KONATAKanata\t0004");
+    //    $display("KONATAC=\t0");
+    //    $fflush;
+    //endrule
+
+    //rule displayCycle(!k_reset);
+    //    $display("KONATAC\t1");
+    //          $fflush;
+    //endrule
+`endif
 
     rule updatePcInBtb;
         nextAddrPred.put_pc(pc_reg[pc_final_port]);
@@ -571,9 +623,23 @@ module mkFetchStage(FetchStage);
                 cause: cause,
                 access_mmio: access_mmio,
                 decode_epoch: decode_epoch[0],
-                main_epoch: f_main_epoch };
+                main_epoch: f_main_epoch
+`ifdef KONATA
+                , u_id: uid
+`endif
+            };
             fetch1toFetch2.enq(out);
 
+`ifdef KONATA 
+            Bit#(TAdd#(TLog#(SupSizeX2),1)) posLastSupX2ex = zeroExtend(posLastSupX2);
+            uid <= uid + fromInteger(valueof(SupSizeX2));
+            for (Integer i = 0;  fromInteger(i) <= posLastSupX2ex; i = i+1)
+            begin
+                $display("KONATAI\t%0d\t%0d\t%0d\t0", cur_cycle, uid + fromInteger(i), uid + fromInteger(i));
+                $display("KONATAS\t%0d\t%0d\t0\tF1", cur_cycle, uid + fromInteger(i));
+                $fflush;
+            end 
+`endif
             if (verbosity >= 2) begin
                 $display ("%d ----------------", cur_cycle);
                 $display ("%d Fetch1: translated pyhs_pc 0x%0h  cause ", cur_cycle, phys_pc, fshow (cause));
@@ -635,7 +701,15 @@ module mkFetchStage(FetchStage);
                cause: fetch2In.cause,
                decode_epoch: fetch2In.decode_epoch,
                main_epoch: fetch2In.main_epoch
+`ifdef KONATA 
+               , u_id: fetch2In.u_id + fromInteger(i)
+`endif
            });
+`ifdef KONATA 
+           $display("KONATAE\t%0d\t%0d\t0\tF1", cur_cycle, fetch2In.u_id + fromInteger(i));
+           $display("KONATAS\t%0d\t%0d\t0\tF2", cur_cycle, fetch2In.u_id + fromInteger(i));
+           $fflush;
+`endif
         end
     endrule: doFetch2
 
@@ -648,6 +722,12 @@ module mkFetchStage(FetchStage);
          if (f2d.deqS[i].canDeq &&& !isCurrent(f2d.deqS[i].first)) begin
             pcBlocks.rPort[i].remove(f2d.deqS[i].first.pc.idx);
             f2d.deqS[i].deq;
+`ifdef KONATA 
+            $display("KONATAL\t%0d\t%0d\t0\tWrongPathDecode %x", cur_cycle, f2d.deqS[i].first.u_id, f2d.deqS[i].first.pc);
+            $display("KONATAE\t%0d\t%0d\t0\tF2", cur_cycle, f2d.deqS[i].first.u_id);
+            $display("KONATAR\t%0d\t%0d\t%0d\t1\t//KILLDECODE", cur_cycle, f2d.deqS[i].first.u_id, f2d.deqS[i].first.u_id);
+            $fflush;
+`endif
          end
    endrule: doDecodeFlush
 
@@ -661,12 +741,19 @@ module mkFetchStage(FetchStage);
    Maybe#(Bit#(TLog#(SupSizeX2))) m_used_frag_count = Invalid;
    Bit#(TLog#(SupSize)) pick_count = 0;
    Bool prev_frag_available = False;
+`ifdef KONATA
+   Vector#(SupSizeX2, Maybe#(KInfo)) kinfos = replicate(Invalid);
+`endif
    for (Integer i = 0; i < valueOf(SupSizeX2) && !isValid(decodeIn[valueOf(SupSize) - 1]); i = i + 1) begin
       Maybe#(InstrFromFetch2) new_pick = Invalid;
       if (frags[i] matches tagged Valid .frag) begin
          Fetch2ToDecode prev_frag = (i != 0) ? validValue(frags[i-1]) : ?;
          if (prev_frag_available &&& !is_16b_inst(prev_frag.inst_frag)) begin // 2nd half of 32-bit instruction
+`ifdef KONATA
+            kinfos[i] = Valid (tagged MergedFrag ( KMergedFrag{ puid: prev_frag.u_id, cuid: fromMaybe(?,frags[i]).u_id, pc: prev_frag.pc}));
+`endif
             new_pick = tagged Valid fetch2s_2_inst(frag, prev_frag);
+
             /*if (!validValue(new_pick).mispred_first_half) begin
                doAssert(getAddr(decompressPc(prev_frag.pc))+2 == getAddr(decompressPc(frag.pc)), "Attached fragments with non-contigious PCs");
    `ifdef RVFI_DII
@@ -674,6 +761,9 @@ module mkFetchStage(FetchStage);
    `endif
             end*/
          end else if (is_16b_inst(frag.inst_frag) || isValid(frag.cause)) begin // 16-bit instruction
+`ifdef KONATA
+            kinfos[i] = Valid (tagged SingleFrag ( KSingleFrag{ cuid: fromMaybe(?,frags[i]).u_id}));
+`endif
             new_pick = tagged Valid fetch2_2_instC(frag,
                                                    fv_decode_C (misa, misa_mxl_64, getFlags(decompressPc(frag.pc))==1, frag.inst_frag),
                                                    zeroExtend(frag.inst_frag));
@@ -710,7 +800,32 @@ module mkFetchStage(FetchStage);
    delay_epoch = delay_epoch || delayForPop;
 `endif
 
-   rule doDecode(f2d.deqS[0].canDeq && isCurrent(f2d.deqS[0].first) && !delay_epoch);
+
+`ifdef KONATA
+   rule doPrintFragKONATA;
+      for (Integer i = 0; i < valueOf(SupSizeX2); i = i + 1) begin
+        if(kinfos[i] matches tagged Valid .k) begin
+            $display(k);
+            $fflush;
+            if(k matches tagged MergedFrag .m) begin
+                $display("KONATAL\t%0d\t%0d\t0\tBrought Fragment %x", cur_cycle, m.puid, m.pc);
+                $display("KONATAE\t%0d\t%0d\t0\tF2", cur_cycle, m.puid);
+                $display("KONATAR\t%0d\t%0d\t%0d\t1\t//MERGE FRAGMENT", cur_cycle, m.puid, m.puid);
+                $display("KONATAE\t%0d\t%0d\t0\tF2", cur_cycle, m.cuid);
+                $display("KONATAS\t%0d\t%0d\t0\tD", cur_cycle, m.cuid);
+                $fflush;
+            end
+            else if(k matches tagged SingleFrag .s) begin
+                $display("KONATAE\t%0d\t%0d\t0\tF2", cur_cycle, s.cuid);
+                $display("KONATAS\t%0d\t%0d\t0\tD", cur_cycle, s.cuid);
+                $fflush;
+            end
+        end
+      end
+   endrule
+`endif
+
+    rule doDecode(f2d.deqS[0].canDeq && isCurrent(f2d.deqS[0].first) && !delay_epoch);
       if (m_used_frag_count matches tagged Valid .used_frag_count) begin
          for (Integer i = 0; i < valueOf(SupSizeX2) && fromInteger(i) <= used_frag_count; i = i + 1) f2d.deqS[i].deq;
          if (verbose)
@@ -756,6 +871,12 @@ module mkFetchStage(FetchStage);
                // We predicted a taken branch for PC, but this is an
                // uncompressed instruction, so we redirect to this PC and
                // train it to fetch the other half in future.
+`ifdef KONATA 
+                $display("KONATAE\t%0d\t%0d\t0\tD", cur_cycle, in.u_id);
+                $display("KONATAL\t%0d\t%0d\t0\t%x ", cur_cycle, in.u_id, pc);
+                $display("KONATAR\t%0d\t%0d\t%0d\t1\t//depoch wrong", cur_cycle, in.u_id, in.u_id);
+                $fflush;
+`endif
                if (verbose) $display("mispredicted first half in decode: pc :  %h", pc);
                decode_epoch_local = !decode_epoch_local;
                redirectPc = Valid (pc); // record redirect to the first PC in this bundle.
@@ -847,6 +968,12 @@ module mkFetchStage(FetchStage);
                end // if (!isValid(cause))
                if (isValid(m_push_addr)) trainInfo.ras = trainInfo.ras + 1;
                decode_pc_reg[i] <= getAddr(ppc);
+`ifdef KONATA 
+               //$display("KONATAE\t%0d\t%0d\t0\tF3", cur_cycle, in.u_id);
+               $display("KONATAL\t%0d\t%0d\t0\t%x ", cur_cycle, in.u_id, getAddr(pc), fshow(dInst.iType));
+               //$display("KONATAS\t%0d\t%0d\t0\tD", cur_cycle, in.u_id);
+               $fflush;
+`endif
                let out = FromFetchStage{pc: pc,
 `ifdef RVFI_DII
                                         dii_pid: in.dii_pid,
@@ -860,6 +987,9 @@ module mkFetchStage(FetchStage);
                                         regs: decode_result.regs,
                                         cause: cause,
                                         tval: getAddr(pc) + ((in.cause_second_half) ? 2:0)
+`ifdef KONATA 
+                                        , u_id : in.u_id
+`endif
                                         };
                out_fifo.enqS[i].enq(out);
                if (verbosity >= 1) begin
@@ -871,6 +1001,12 @@ module mkFetchStage(FetchStage);
                end
             end // if (in.decode_epoch == decode_epoch_local)
             else begin
+`ifdef KONATA 
+               $display("KONATAE\t%0d\t%0d\t0\tD", cur_cycle, in.u_id);
+               $display("KONATAL\t%0d\t%0d\t0\t%x ", cur_cycle, in.u_id, pc);
+               $display("KONATAR\t%0d\t%0d\t%0d\t1\t//depoch wrong", cur_cycle, in.u_id, in.u_id);
+               $fflush;
+`endif
                if (verbose) $display("Drop decoded within a superscalar");
                // just drop wrong path instructions
             end
