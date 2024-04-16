@@ -75,12 +75,20 @@ typedef struct {
     Maybe#(PhyDst) dst;
     InstTag tag;
     // spec bits is not used in later stage, so not included here
+`ifdef KONATA
+    Bit#(64) u_id;
+`endif
 } FpuResp deriving(Bits, Eq, FShow);
 
 interface FpuExec;
     // input req
+`ifdef KONATA
     method Action exec(FpuInst fpu_inst, Data rVal1, Data rVal2, Data rVal3,
-                       Maybe#(PhyDst) dst, InstTag tag, SpecBits specBits);
+                       Maybe#(PhyDst) dst, InstTag tag, SpecBits spec_bits, Bit#(64) u_id);
+`else
+    method Action exec(FpuInst fpu_inst, Data rVal1, Data rVal2, Data rVal3,
+                       Maybe#(PhyDst) dst, InstTag tag, SpecBits spec_bits);
+`endif
     // output
     method ActionValue#(FpuResp) simpleResp;
     method ActionValue#(FpuResp) fmaResp;
@@ -737,6 +745,9 @@ typedef struct {
     // generic bookkeeping
     Maybe#(PhyDst) dst;
     InstTag tag;
+`ifdef KONATA
+    Bit#(64) u_id;
+`endif
 } FpuExecInfo deriving(Bits, Eq, FShow);
 
 typedef SpecPoisonFifo#(n, FpuExecInfo) FpuExecQ#(numeric type n);
@@ -815,6 +826,9 @@ module mkFpuExecPipeline(FpuExec);
             res: res,
             dst: info.dst,
             tag: info.tag
+`ifdef KONATA
+            , u_id: info.u_id
+`endif
         };
     endfunction
 
@@ -832,8 +846,13 @@ module mkFpuExecPipeline(FpuExec);
         let x <- double_sqrt.response.get;
     endrule
 
+`ifdef KONATA
+    method Action exec(FpuInst fpu_inst, Data rVal1, Data rVal2, Data rVal3,
+                       Maybe#(PhyDst) dst, InstTag tag, SpecBits spec_bits, Bit#(64) u_id);
+`else
     method Action exec(FpuInst fpu_inst, Data rVal1, Data rVal2, Data rVal3,
                        Maybe#(PhyDst) dst, InstTag tag, SpecBits spec_bits);
+`endif
         // Convert the Risc-V RVRoundMode to FloatingPoint::RoundMode
         FpuRoundMode fpu_rm = (case (fpu_inst.rm)
                 rmRNE:      Rnd_Nearest_Even;
@@ -899,6 +918,9 @@ module mkFpuExecPipeline(FpuExec);
             negateResult: fpu_inst.func == FNMSub || fpu_inst.func == FNMAdd,
             dst: dst,
             tag: tag
+`ifdef KONATA
+            , u_id : u_id
+`endif
         };
         case (fpu_inst.func)
             FAdd, FSub, FMul, FMAdd, FMSub, FNMSub, FNMAdd: begin
@@ -927,6 +949,9 @@ module mkFpuExecPipeline(FpuExec);
                         res: fpu_result,
                         dst: dst,
                         tag: tag
+`ifdef KONATA
+                        , u_id: u_id
+`endif
                     },
                     spec_bits: spec_bits
                 });

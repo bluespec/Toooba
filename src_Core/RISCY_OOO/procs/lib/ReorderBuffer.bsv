@@ -5,6 +5,7 @@
 // RVFI_DII + CHERI modifications:
 //     Copyright (c) 2020 Peter Rugg
 //     Copyright (c) 2020 Jonathan Woodruff
+//     Copyright (c) 2024 Franz Fuchs
 //     All rights reserved.
 //
 //     This software was developed by SRI International and the University of
@@ -13,6 +14,10 @@
 //     DARPA SSITH research programme.
 //
 //     This work was supported by NCSC programme grant 4212611/RFA 15971 ("SafeBet").
+//     This software was developed by the University of  Cambridge
+//     Department of Computer Science and Technology under the
+//     SIPP (Secure IoT Processor Platform with Remote Attestation)
+//     project funded by EPSRC: EP/S030868/1
 //-
 //
 // Permission is hereby granted, free of charge, to any person
@@ -116,6 +121,9 @@ typedef struct {
 `endif
 `ifdef RVFI
     ExtraTraceBundle   traceBundle;
+`endif
+`ifdef KONATA 
+    Bit#(64) u_id;
 `endif
 } ToReorderBuffer deriving(Bits, FShow);
 
@@ -282,6 +290,9 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
 `ifdef RVFI
     Ehr#(TAdd#(2, TAdd#(fpuMulDivExeNum, aluExeNum)), ExtraTraceBundle) traceBundle      <- mkEhr(?);
 `endif
+`ifdef KONATA 
+    Reg#(Bit#(64))                                                  uid                  <- mkReg(?);
+`endif
 
     // wires to get stale (EHR port 0) values of PPC
     Wire#(CapMem) predPcWire <- mkBypassWire;
@@ -409,6 +420,9 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
 
     method Action write_enq(ToReorderBuffer x);
         pc <= x.pc;
+`ifdef KONATA 
+        uid <= x.u_id;
+`endif
         orig_inst <= x.orig_inst;
         iType <= x.iType;
         rg_dst_reg <= x.dst;
@@ -482,6 +496,9 @@ module mkReorderBufferRowEhr(ReorderBufferRowEhr#(aluExeNum, fpuMulDivExeNum)) p
             traceBundle: traceBundle[traceBundle_deq_port],
 `endif
             spec_bits: spec_bits[sb_deq_port]
+`ifdef KONATA 
+            , u_id: uid
+`endif
         };
     endmethod
 
@@ -692,6 +709,9 @@ module mkSupReorderBuffer#(
     Vector#(SupSize, Vector#(SingleScalarSize, Ehr#(2, Bool))) valid <- replicateM(replicateM(mkEhr(False)));
     Vector#(SupSize, Reg#(SingleScalarPtr)) enqP <- replicateM(mkReg(0));
     Vector#(SupSize, Ehr#(2, SingleScalarPtr)) deqP_ehr <- replicateM(mkEhr(0));
+`ifdef KONATA 
+    Vector#(SupSize, Vector#(SingleScalarSize, Ehr#(2, Bit#(64)))) uid <- replicateM(replicateM(mkEhr(0)));
+`endif
     let deqP = getVEhrPort(deqP_ehr, 0);
     let deqP_wrongSpec = getVEhrPort(deqP_ehr, 1); // for overwrite deqP when killing all
 
@@ -756,6 +776,11 @@ module mkSupReorderBuffer#(
                 // move deqP & reset valid
                 deqP[i] <= getNextPtr(deqP[i]);
                 valid[i][deqP[i]][valid_deq_port] <= False;
+//`ifdef KONATA 
+//                let id = uid[i][deqP[i]][valid_deq_port];
+//                $display("KONATAR\t%0d\t%0d\t0", id, id);
+//                $fflush;
+//`endif
             end
         end
         // update firstDeqWay: find the first deq port that is not enabled
@@ -789,6 +814,12 @@ module mkSupReorderBuffer#(
             for(Integer w = 0; w < valueof(SupSize); w = w+1) begin
                 for(Integer i = 0; i < valueof(SingleScalarSize); i = i+1) begin
                     valid[w][i][valid_wrongSpec_port] <= False;
+`ifdef KONATA 
+                if (valid[w][i][valid_wrongSpec_port]) begin
+                    $display("KONATAR\t%0d\t%0d\t%0d\t1\t//KILLALLROB", cur_cycle, uid[w][i][valid_wrongSpec_port], uid[w][i][valid_wrongSpec_port]);
+                    $fflush;
+                end
+`endif
                 end
             end
             // reset all ptrs to 0
@@ -810,6 +841,12 @@ module mkSupReorderBuffer#(
                 for(Integer i = 0; i < valueof(SingleScalarSize); i = i+1) begin
                     if(row[w][i].dependsOn_wrongSpec(specTag)) begin
                         valid[w][i][valid_wrongSpec_port] <= False;
+`ifdef KONATA 
+                    if (valid[w][i][valid_wrongSpec_port]) begin
+                        $display("KONATAR\t%0d\t%0d\t%0d\t1\t//KILLMISPREDICTION", cur_cycle, uid[w][i][valid_wrongSpec_port], uid[w][i][valid_wrongSpec_port]);
+                        $fflush;
+                    end
+`endif
                     end
                 end
             end
@@ -970,6 +1007,9 @@ module mkSupReorderBuffer#(
                 enqP[i] <= getNextPtr(enqP[i]);
                 row[i][enqP[i]].write_enq(x);
                 valid[i][enqP[i]][valid_enq_port] <= True;
+`ifdef KONATA 
+                uid[i][enqP[i]][valid_enq_port] <= x.u_id;
+`endif
             end
         end
         // update firstEnqWay: find the first enq port that is not enabled

@@ -4,6 +4,7 @@
 //-
 // RVFI_DII + CHERI modifications:
 //     Copyright (c) 2020 Jonathan Woodruff
+//     Copyright (c) 2024 Franz Fuchs
 //     All rights reserved.
 //
 //     This software was developed by SRI International and the University of
@@ -12,6 +13,11 @@
 //     DARPA SSITH research programme.
 //
 //     This work was supported by NCSC programme grant 4212611/RFA 15971 ("SafeBet").
+//
+//     This software was developed by the University of  Cambridge
+//     Department of Computer Science and Technology under the
+//     SIPP (Secure IoT Processor Platform with Remote Attestation)
+//     project funded by EPSRC: EP/S030868/1
 //-
 //
 // Permission is hereby granted, free of charge, to any person
@@ -56,12 +62,19 @@ import CHERICap::*;
 import CHERICC_Fat::*;
 import ISA_Decls_CHERI::*;
 
+`ifdef KONATA
+import Cur_Cycle :: *;
+`endif
+
 typedef struct {
     // inst info
     ExecFunc execFunc;
     PhyRegs regs;
     InstTag tag;
     // FpuMulDiv must not have valid spec tag
+`ifdef KONATA
+    Bit#(64) u_id;
+`endif
 } FpuMulDivDispatchToRegRead deriving(Bits, Eq, FShow);
 
 typedef struct {
@@ -73,6 +86,9 @@ typedef struct {
     Data rVal1;
     Data rVal2;
     Data rVal3;
+`ifdef KONATA
+    Bit#(64) u_id;
+`endif
 } FpuMulDivRegReadToExe deriving(Bits, Eq, FShow);
 
 typedef struct {
@@ -172,12 +188,20 @@ module mkFpuMulDivExePipeline#(FpuMulDivExeInput inIfc)(FpuMulDivExePipeline);
         // FPU MUL DIV never have exception or misprecition, so no spec tag
         doAssert(!isValid(x.spec_tag), "FpuMulDiv should not carry any spec tag");
 
+`ifdef KONATA 
+        $display("KONATAE\t%0d\t%0d\t0\tRsvF", cur_cycle, x.u_id);
+        $display("KONATAS\t%0d\t%0d\t0\tFpu1", cur_cycle, x.u_id);
+        $fflush;
+`endif
         // go to next stage
         dispToRegQ.enq(ToSpecFifo {
             data: FpuMulDivDispatchToRegRead {
                 execFunc: x.data.execFunc,
                 regs: x.regs,
                 tag: x.tag
+`ifdef KONATA
+                , u_id: x.u_id
+`endif
             },
             spec_bits: x.spec_bits
         });
@@ -210,6 +234,11 @@ module mkFpuMulDivExePipeline#(FpuMulDivExeInput inIfc)(FpuMulDivExePipeline);
             rVal3 <- readRFBypass(src3, regsReady.src3, inIfc.rf_rd3(src3), bypassWire);
         end
 
+`ifdef KONATA 
+        $display("KONATAE\t%0d\t%0d\t0\tFpu1", cur_cycle, x.u_id);
+        $display("KONATAS\t%0d\t%0d\t0\tFpu2", cur_cycle, x.u_id);
+        $fflush;
+`endif
         // go to next stage
         regToExeQ.enq(ToSpecFifo {
             data: FpuMulDivRegReadToExe {
@@ -219,6 +248,9 @@ module mkFpuMulDivExePipeline#(FpuMulDivExeInput inIfc)(FpuMulDivExePipeline);
                 rVal1: rVal1,
                 rVal2: rVal2,
                 rVal3: rVal3
+`ifdef KONATA
+                , u_id: x.u_id
+`endif
             },
             spec_bits: dispToReg.spec_bits
         });
@@ -237,10 +269,24 @@ module mkFpuMulDivExePipeline#(FpuMulDivExeInput inIfc)(FpuMulDivExePipeline);
         Data rVal3 = x.rVal3;
         case (x.execFunc) matches
             tagged Fpu .fpu_inst: begin
+`ifdef KONATA
+                fpuExec.exec(fpu_inst, rVal1, rVal2, rVal3, x.dst, x.tag, spec_bits, x.u_id);
+                $display("KONATAE\t%0d\t%0d\t0\tFpu2", cur_cycle, x.u_id);
+                $display("KONATAS\t%0d\t%0d\t0\tFpu3", cur_cycle, x.u_id);
+                $fflush;
+`else
                 fpuExec.exec(fpu_inst, rVal1, rVal2, rVal3, x.dst, x.tag, spec_bits);
+`endif
             end
             tagged MulDiv .muldiv_inst: begin
+`ifdef KONATA
+                mulDivExec.exec(muldiv_inst, rVal1, rVal2, x.dst, x.tag, spec_bits, x.u_id);
+                $display("KONATAE\t%0d\t%0d\t0\tFpu2", cur_cycle, x.u_id);
+                $display("KONATAS\t%0d\t%0d\t0\tFpu3", cur_cycle, x.u_id);
+                $fflush;
+`else
                 mulDivExec.exec(muldiv_inst, rVal1, rVal2, x.dst, x.tag, spec_bits);
+`endif
             end
             default: begin
                 doAssert(False, "unknown execFunc for doExeFpuMulDiv");
@@ -248,13 +294,22 @@ module mkFpuMulDivExePipeline#(FpuMulDivExeInput inIfc)(FpuMulDivExePipeline);
         endcase
     endrule
 
+`ifdef KONATA
+    function Action doFinish(Maybe#(PhyDst) dst, InstTag tag, Data data, Bit#(5) fflags, Bit#(64) u_id);
+`else
     function Action doFinish(Maybe#(PhyDst) dst, InstTag tag, Data data, Bit#(5) fflags);
+`endif
     action
         // write to register file
         if(dst matches tagged Valid .valid_dst) begin
             inIfc.writeRegFile(valid_dst.indx, data);
         end
         // update the instruction in the reorder buffer.
+`ifdef KONATA 
+        $display("KONATAE\t%0d\t%0d\t0\tFpu3", cur_cycle, u_id);
+        $display("KONATAS\t%0d\t%0d\t0\tFpu4", cur_cycle, u_id);
+        $fflush;
+`endif
         inIfc.rob_setExecuted(tag,
 `ifdef INCLUDE_TANDEM_VERIF
                               data,
@@ -275,13 +330,21 @@ module mkFpuMulDivExePipeline#(FpuMulDivExeInput inIfc)(FpuMulDivExePipeline);
     rule doFinishFpSimple;
         FpuResp resp <- fpuExec.simpleResp;
         if(verbose) $display("[doFinishFpSimple] ", fshow(resp));
+`ifdef KONATA
+        doFinish(resp.dst, resp.tag, resp.res.data, resp.res.fflags, resp.u_id);
+`else
         doFinish(resp.dst, resp.tag, resp.res.data, resp.res.fflags);
+`endif
     endrule
 
     rule doFinishFpFma;
         FpuResp resp <- fpuExec.fmaResp;
         if(verbose) $display("[doFinishFpFma] ", fshow(resp));
+`ifdef KONATA
+        doFinish(resp.dst, resp.tag, resp.res.data, resp.res.fflags, resp.u_id);
+`else
         doFinish(resp.dst, resp.tag, resp.res.data, resp.res.fflags);
+`endif
 `ifdef PERF_COUNT
         if(inIfc.doStats) begin
             exeFpFmaCnt.incr(1);
@@ -292,7 +355,11 @@ module mkFpuMulDivExePipeline#(FpuMulDivExeInput inIfc)(FpuMulDivExePipeline);
     rule doFinishFpDiv;
         FpuResp resp <- fpuExec.divResp;
         if(verbose) $display("[doFinishFpDiv] ", fshow(resp));
+`ifdef KONATA
+        doFinish(resp.dst, resp.tag, resp.res.data, resp.res.fflags, resp.u_id);
+`else
         doFinish(resp.dst, resp.tag, resp.res.data, resp.res.fflags);
+`endif
 `ifdef PERF_COUNT
         if(inIfc.doStats) begin
             exeFpDivCnt.incr(1);
@@ -303,7 +370,11 @@ module mkFpuMulDivExePipeline#(FpuMulDivExeInput inIfc)(FpuMulDivExePipeline);
     rule doFinishFpSqrt;
         FpuResp resp <- fpuExec.sqrtResp;
         if(verbose) $display("[doFinishFpSqrt] ", fshow(resp));
+`ifdef KONATA
+        doFinish(resp.dst, resp.tag, resp.res.data, resp.res.fflags, resp.u_id);
+`else
         doFinish(resp.dst, resp.tag, resp.res.data, resp.res.fflags);
+`endif
 `ifdef PERF_COUNT
         if(inIfc.doStats) begin
             exeFpSqrtCnt.incr(1);
@@ -314,7 +385,11 @@ module mkFpuMulDivExePipeline#(FpuMulDivExeInput inIfc)(FpuMulDivExePipeline);
     rule doFinishIntMul;
         MulDivResp resp <- mulDivExec.mulResp;
         if(verbose) $display("[doFinishIntMul] ", fshow(resp));
+`ifdef KONATA
+        doFinish(resp.dst, resp.tag, resp.data, 0, resp.u_id);
+`else
         doFinish(resp.dst, resp.tag, resp.data, 0);
+`endif
 `ifdef PERF_COUNT
         if(inIfc.doStats) begin
             exeIntMulCnt.incr(1);
@@ -325,7 +400,11 @@ module mkFpuMulDivExePipeline#(FpuMulDivExeInput inIfc)(FpuMulDivExePipeline);
     rule doFinishIntDiv;
         MulDivResp resp <- mulDivExec.divResp;
         if(verbose) $display("[doFinishIntDiv] ", fshow(resp));
+`ifdef KONATA
+        doFinish(resp.dst, resp.tag, resp.data, 0, resp.u_id);
+`else
         doFinish(resp.dst, resp.tag, resp.data, 0);
+`endif
 `ifdef PERF_COUNT
         if(inIfc.doStats) begin
             exeIntDivCnt.incr(1);
