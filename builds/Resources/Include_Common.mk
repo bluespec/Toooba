@@ -33,37 +33,11 @@ help:
 all: compile  simulator
 
 # ================================================================
-# Path to RISCY-OOO sources
-
-RISCY_HOME ?= ../../src_Core/RISCY_OOO
-# RISCY_HOME ?= $(HOME)/Projects/RISCV/MIT-riscy/riscy-OOO
-
-RISCY_DIRS = $(RISCY_HOME)/procs/RV64G_OOO:$(RISCY_HOME)/procs/lib:$(RISCY_HOME)/coherence/src:$(RISCY_HOME)/fpgautils/lib
-
-CONNECTAL_DIRS = $(RISCY_HOME)/connectal/bsv:$(RISCY_HOME)/connectal/tests/spi:$(RISCY_HOME)/connectal/lib/bsv
-
-CHERI_DIRS = $(RISCY_HOME)/../../libs/cheri-cap-lib
-
-# ALL_RISCY_DIRS = $(RISCY_DIRS)
-ALL_RISCY_DIRS = $(EXTRA_DIRS):$(RISCY_DIRS):$(CONNECTAL_DIRS):$(CHERI_DIRS)
-
-# ================================================================
 # Search path for bsc for .bsv files
-
-CORE_DIRS = $(REPO)/src_Core/CPU:$(REPO)/src_Core/ISA:$(REPO)/src_Core/Core:$(REPO)/src_Core/PLIC:$(REPO)/src_Core/Debug_Module:$(REPO)/src_Core/BSV_Additional_Libs
 
 TESTBENCH_DIRS = $(REPO)/src_Testbench/Top:$(REPO)/src_Testbench/SoC
 
-BLUESTUFFDIR ?= $(REPO)/libs/BlueStuff
-include $(BLUESTUFFDIR)/bluestuff.inc.mk # sets the BLUESTUFF_DIRS variable
-
-WINDCOREIFC_DIRS = $(REPO)/libs/WindCoreInterface
-
-TAGCONTROLLER_DIRS = $(REPO)/libs/TagController/TagController:$(REPO)/libs/TagController/TagController/CacheCore
-
-RISCV_HPM_Events_DIR = $(REPO)/libs/RISCV_HPM_Events
-
-BSC_PATH = $(BLUESTUFF_DIRS):$(WINDCOREIFC_DIRS):$(ALL_RISCY_DIRS):$(CORE_DIRS):$(TESTBENCH_DIRS):$(TAGCONTROLLER_DIRS):$(RISCV_HPM_Events_DIR):+
+BSC_PATH += -p +:$(TESTBENCH_DIRS):$(EXTRA_DIRS)
 
 # ----------------
 # Top-level file and module
@@ -76,23 +50,12 @@ TOPMODULE ?= mkTop_HW_Side
 
 BSC_COMPILATION_FLAGS += \
 	-D BSIM \
-	-D RV64 \
-	-D ISA_PRIV_M  -D ISA_PRIV_U  -D ISA_PRIV_S  \
-	-D SV39  \
-	-D ISA_I  -D ISA_M  -D ISA_A  -D ISA_F  -D ISA_D  -D ISA_FD_DIV  -D ISA_C  \
-	-D SHIFT_BARREL    \
 	-D MULT_SYNTH    \
 	-D Near_Mem_Caches    \
 	-D FABRIC64    \
-	-D CheriBusBytes=64 \
-	-D CheriMasterIDWidth=1 \
-	-D CheriTransactionIDWidth=6 \
-	-D CAP128 -D BLUESIM \
-	-D MEM512 \
-	-D RISCV \
+	-D BLUESIM \
 	-D PERFORMANCE_MONITORING \
 	-D RAS_HIT_TRACING \
-	-D TSO_MM \
 	-D NO_SPEC_TRAINING -D NO_SPEC_REDIRECT -D NO_SPEC_STRAIGHT_PATH -D SPEC_RSB_FIXUP -D MELTDOWN_CF \
 	-keep-fires -aggressive-conditions -no-warn-action-shadowing -check-assert \
 	-suppress-warnings G0020 -steps-max-intervals 10000000   \
@@ -150,17 +113,17 @@ TagTableStructure.bsv: $(REPO)/libs/TagController/tagsparams.py
 
 .PHONY: generate_hpm_vector
 generate_hpm_vector: GenerateHPMVector.bsv
-GenerateHPMVector.bsv: $(RISCV_HPM_Events_DIR)/parse_counters.py
+GenerateHPMVector.bsv: $(RISCVHPMEVENTSDIR)/parse_counters.py
 	@echo "INFO: Re-generating GenerateHPMVector bluespec file"
-	$^ $(RISCV_HPM_Events_DIR)/counters.yaml -m ProcTypes -b $@
+	$^ $(RISCVHPMEVENTSDIR)/counters.yaml -m ProcTypes -b $@
 	@echo "INFO: Re-generated GenerateHPMVector bluespec file"
 
 
 .PHONY: stat_counters
 stat_counters: StatCounters.bsv
-StatCounters.bsv: $(RISCV_HPM_Events_DIR)/parse_counters.py
+StatCounters.bsv: $(RISCVHPMEVENTSDIR)/parse_counters.py
 	@echo "INFO: Re-generating HPM events struct bluepsec file"
-	$^ $(RISCV_HPM_Events_DIR)/counters.yaml -m ProcTypes -s $@
+	$^ $(RISCVHPMEVENTSDIR)/counters.yaml -m ProcTypes -s $@
 	@echo "INFO: Re-generated HPM events struct bluespec file"
 compile: tagsparams #stat_counters generate_hpm_vector
 

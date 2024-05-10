@@ -18,12 +18,12 @@ include .depends.mk
 # BSC_COMPILATION_FLAGS += -D RVFI
 
 .depends.mk: TagTableStructure.bsv StatCounters.bsv GenerateHPMVector.bsv | build_dir
-	if ! bluetcl -exec makedepend -elab -sim  $(TMP_DIRS)  $(RTL_GEN_DIRS)  $(BSC_COMPILATION_FLAGS)  -p $(BSC_PATH) -o $@ $(TOPFILE); then rm -f $@ && false; fi
+	if ! bluetcl -exec makedepend -elab -sim  $(TMP_DIRS)  $(RTL_GEN_DIRS)  $(BSC_COMPILATION_FLAGS)  $(BSC_PATH) -o $@ $(TOPFILE); then rm -f $@ && false; fi
 endif
 
 %.bo:
 	$(info building $@)
-	bsc -elab -sim  $(TMP_DIRS)  $(RTL_GEN_DIRS)  $(BSC_COMPILATION_FLAGS)  -p $(BSC_PATH) $<
+	bsc -elab -sim  $(TMP_DIRS)  $(RTL_GEN_DIRS)  $(BSC_COMPILATION_FLAGS)  $(BSC_PATH) $<
 
 .PHONY: compile
 compile: build_dir/Top_HW_Side.bo | build_dir

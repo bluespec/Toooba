@@ -6,7 +6,7 @@ ARCH ?= RV64ACDFIMSUxCHERI
 # ================================================================
 # Path to RISCY-OOO sources not included in Common
 
-EXTRA_DIRS = $(RISCY_HOME)/../../src_Verifier:$(RISCY_HOME)/../../src_Verifier/BSV-RVFI-DII
+EXTRA_DIRS = $(REPO)/src_Verifier:$(REPO)/src_Verifier/BSV-RVFI-DII
 
 # ================================================================
 # RISC-V config macros passed into Bluespec 'bsc' compiler
@@ -16,14 +16,14 @@ EXTRA_DIRS = $(RISCY_HOME)/../../src_Verifier:$(RISCY_HOME)/../../src_Verifier/B
 TEST ?= rv64ui-p-add
 
 #================================================================
-# Common boilerplate rules
-
-include $(REPO)/builds/Resources/Include_Common.mk
-
-#================================================================
 # Parameter settings for MIT RISCY
 
 include $(REPO)/builds/Resources/Include_RISCY_Config.mk
+
+#================================================================
+# Common boilerplate rules
+
+include $(REPO)/builds/Resources/Include_Common.mk
 
 #================================================================
 # Makefile rules for building for specific simulator: bluesim

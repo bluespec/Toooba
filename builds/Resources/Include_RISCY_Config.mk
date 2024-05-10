@@ -21,7 +21,7 @@ USE_XILINX_FPU ?= false
 # default 1 core
 CORE_NUM ?= 1
 # TSO or WEAK
-TSO_MM ?= false
+TSO_MM ?= true
 # Lr upgrades line to E (no forward progress guarantee)
 LR_UP_TO_E ?= false
 # Forbid LLC from respoding a load (toS) request with E state
@@ -98,7 +98,18 @@ BSC_COMPILATION_FLAGS += \
 	-D INSTR_PREFETCHER_IN_$(INSTR_PREFETCHER_LOCATION) \
 	-D INSTR_PREFETCHER_$(INSTR_PREFETCHER_TYPE) \
 	-D DATA_PREFETCHER_IN_$(DATA_PREFETCHER_LOCATION) \
-	-D DATA_PREFETCHER_$(DATA_PREFETCHER_TYPE)
+	-D DATA_PREFETCHER_$(DATA_PREFETCHER_TYPE) \
+	-D CAP128 \
+	-D MEM512 \
+	-D RISCV \
+	-D TSO_MM \
+	-D RV64 \
+	-D ISA_PRIV_M  -D ISA_PRIV_S  -D ISA_PRIV_U  \
+	-D SV39 \
+	-D ISA_I  -D ISA_M  -D ISA_A  -D ISA_F  -D ISA_D  -D ISA_FD_DIV  -D ISA_C  \
+	-D CheriBusBytes=64 \
+	-D CheriMasterIDWidth=1 \
+	-D CheriTransactionIDWidth=6
 
 # TODO:
 #    -D SELF_INV_CACHE -D L1D_MAX_HITS=$(SELF_INV_CACHE)
@@ -111,3 +122,26 @@ BSC_COMPILATION_FLAGS += \
 # +RTS -K1G -RTS " --bscflags=" -steps-max-intervals 200  -check-assert
 
 # ================================================================
+
+# ================================================================
+# Search path for bsc for .bsv files
+COREDIR ?= $(REPO)
+COREW_DIRS = $(COREDIR)/src_Core/Core:$(COREDIR)/src_Core/CPU:$(COREDIR)/src_Core/ISA:$(COREDIR)/src_Core/PLIC:$(COREDIR)/src_Core/Debug_Module:$(COREDIR)/src_Core/BSV_Additional_Libs:$(COREDIR)/src_Core/RISCY_OOO/procs/RV64G_OOO:$(COREDIR)/src_Core/RISCY_OOO/procs/lib:$(COREDIR)/src_Core/RISCY_OOO/coherence/src:$(COREDIR)/src_Core/RISCY_OOO/fpgautils/lib
+WINDCOREIFCDIR ?= $(COREDIR)/libs/WindCoreInterface
+CHERICAPLIBDIR ?= $(COREDIR)/libs/cheri-cap-lib
+TAGCONTROLLERDIR ?= $(COREDIR)/libs/TagController
+RISCVHPMEVENTSDIR ?= $(COREDIR)/libs/RISCV_HPM_Events
+TAGCONTROLLER_DIRS = $(TAGCONTROLLERDIR)/TagController:$(TAGCONTROLLERDIR)/TagController/CacheCore
+BLUESTUFFDIR ?= $(COREDIR)/libs/BlueStuff
+include $(BLUESTUFFDIR)/bluestuff.inc.mk # sets the BLUESTUFF_DIRS variable
+
+# search path for bsc imports
+ifdef BSC_CONTRIB_DIR
+BSC_CONTRIB_LIB_DIR = $(BSC_CONTRIB_DIR)/lib/Libraries
+else
+BSC_CONTRIB_LIB_DIR = %/Libraries
+endif
+BSC_CONTRIB_DIRS = $(BSC_CONTRIB_LIB_DIR)/Bus
+
+BSVPATH = +:$(BSC_CONTRIB_DIRS):$(WINDCOREIFCDIR):$(RISCVHPMEVENTSDIR):$(CHERICAPLIBDIR):$(TAGCONTROLLER_DIRS):$(COREW_DIRS):$(BLUESTUFF_DIRS)
+BSC_PATH = -p $(BSVPATH)
