@@ -19,26 +19,19 @@ compile: compile_sim compile_synth
 REPO ?= $(CURDIR)/..
 ARCH ?= RV64ACDFIMSUxCHERI
 
+# Set number of cores for RISCY config
+CORE_NUM = 2
+
+# Set X and Y
+include $(REPO)/builds/Resources/Include_RISCY_Config.mk
+
 # ================================================================
 # RISC-V config macros passed into Bluespec 'bsc' compiler
 
 BSC_COMPILATION_FLAGS += \
-	-D RV64 \
-	-D ISA_PRIV_M  -D ISA_PRIV_S  -D ISA_PRIV_U  \
-	-D SV39 \
-	-D ISA_I  -D ISA_M  -D ISA_A  -D ISA_F  -D ISA_D  -D ISA_FD_DIV  -D ISA_C  \
-	-D CheriBusBytes=64 \
-	-D CheriMasterIDWidth=1 \
-	-D CheriTransactionIDWidth=6 \
 	-D PERFORMANCE_MONITORING \
-	-D SHIFT_BARREL    \
-	-D MULT_SERIAL    \
 	-D Near_Mem_Caches    \
 	-D FABRIC64    \
-	-D CAP128 \
-	-D MEM512 \
-	-D RISCV \
-	-D TSO_MM \
 	-D INCLUDE_GDB_CONTROL \
 	-D BRVF_TRACE \
 	-D XILINX_BSCAN  -D JTAG_TAP
@@ -52,36 +45,6 @@ SYNTH_BSC_OPTIONS = -D XILINX_XCVU9P
 
 # Sim only BSC_COMPILATION_FLAGS
 SIM_BSC_OPTIONS = -D BSIM
-
-# Set number of cores for RISCY config
-CORE_NUM = 2
-
-# Only used if we don't have INCLUDE_GDB_CONTROL
-#	-D EXTERNAL_DEBUG_MODULE
-
-include $(REPO)/builds/Resources/Include_RISCY_Config.mk
-
-# ================================================================
-# Search path for bsc for .bsv files
-COREDIR ?= $(REPO)
-COREW_DIRS = $(CURDIR)/src_BSV:$(COREDIR)/src_Core/Core:$(COREDIR)/src_Core/CPU:$(COREDIR)/src_Core/ISA:$(COREDIR)/src_Core/PLIC:$(COREDIR)/src_Core/Debug_Module:$(COREDIR)/src_Core/BSV_Additional_Libs:$(COREDIR)/src_Core/RISCY_OOO/procs/RV64G_OOO:$(COREDIR)/src_Core/RISCY_OOO/procs/lib:$(COREDIR)/src_Core/RISCY_OOO/coherence/src:$(COREDIR)/src_Core/RISCY_OOO/fpgautils/lib
-WINDCOREIFCDIR ?= $(COREDIR)/libs/WindCoreInterface
-CHERICAPLIBDIR ?= $(COREDIR)/libs/cheri-cap-lib
-TAGCONTROLLERDIR ?= $(COREDIR)/libs/TagController
-RISCVHPMEVENTSDIR ?= $(COREDIR)/libs/RISCV_HPM_Events
-TAGCONTROLLER_DIRS = $(TAGCONTROLLERDIR)/TagController:$(TAGCONTROLLERDIR)/TagController/CacheCore
-BLUESTUFFDIR ?= $(COREDIR)/libs/BlueStuff
-include $(BLUESTUFFDIR)/bluestuff.inc.mk # sets the BLUESTUFF_DIRS variable
-
-# search path for bsc imports
-ifdef BSC_CONTRIB_DIR
-BSC_CONTRIB_LIB_DIR = $(BSC_CONTRIB_DIR)/lib/Libraries
-else
-BSC_CONTRIB_LIB_DIR = %/Libraries
-endif
-BSC_CONTRIB_DIRS = $(BSC_CONTRIB_LIB_DIR)/Bus
-BSVPATH = +:$(BSC_CONTRIB_DIRS):$(WINDCOREIFCDIR):$(RISCVHPMEVENTSDIR):$(CHERICAPLIBDIR):$(TAGCONTROLLER_DIRS):$(COREW_DIRS):$(BLUESTUFF_DIRS)
-BSC_PATH = -p $(BSVPATH)
 
 # ----------------
 # Top-level file and module
@@ -115,17 +78,17 @@ src_BSV/TagTableStructure.bsv: $(REPO)/libs/TagController/tagsparams.py
 
 .PHONY: generate_hpm_vector
 generate_hpm_vector: GenerateHPMVector.bsv
-GenerateHPMVector.bsv: $(RISCVHPMEVENTSDIR)/parse_counters.py
+GenerateHPMVector.bsv: $(RISCV_HPM_EVENTS_DIR)/parse_counters.py
 	@echo "INFO: Re-generating GenerateHPMVector bluespec file"
-	$^ $(RISCVHPMEVENTSDIR)/counters.yaml -m ProcTypes -b $@
+	$^ $(RISCV_HPM_EVENTS_DIR)/counters.yaml -m ProcTypes -b $@
 	@echo "INFO: Re-generated GenerateHPMVector bluespec file"
 
 
 .PHONY: stat_counters
 stat_counters: StatCounters.bsv
-StatCounters.bsv: $(RISCVHPMEVENTSDIR)/parse_counters.py
+StatCounters.bsv: $(RISCV_HPM_EVENTS_DIR)/parse_counters.py
 	@echo "INFO: Re-generating HPM events struct bluepsec file"
-	$^ $(RISCVHPMEVENTSDIR)/counters.yaml -m ProcTypes -s $@
+	$^ $(RISCV_HPM_EVENTS_DIR)/counters.yaml -m ProcTypes -s $@
 	@echo "INFO: Re-generated HPM events struct bluespec file"
 compile_sim: tagsparams stat_counters generate_hpm_vector
 compile_synth: tagsparams stat_counters generate_hpm_vector
@@ -151,13 +114,13 @@ Verilog_RTL_sim:
 .PHONY: compile_synth
 compile_synth: | build_dir_synth Verilog_RTL
 	@echo  "INFO: Generating RTL into Verilog_RTL for synthesis ..."
-	bsc -u -elab -verilog  -vdir Verilog_RTL $(BUILD_DIRS_SYNTH)  $(BSC_COMPILATION_FLAGS)  $(SYNTH_BSC_OPTIONS) $(BSC_PATH)  $(TOPFILE)
+	bsc -u -elab -verilog  -vdir Verilog_RTL $(BUILD_DIRS_SYNTH)  $(BSC_COMPILATION_FLAGS)  $(SYNTH_BSC_OPTIONS) $(BSC_PATH) -p +:src_BSV $(TOPFILE)
 	@echo  "INFO: Generated Synth RTL into Verilog_RTL"
 
 .PHONY: compile_sim
 compile_sim: | build_dir_sim Verilog_RTL_sim
 	@echo  "INFO: Generating RTL into Verilog_RTL_sim for simulation ..."
-	bsc -u -elab -verilog  -vdir Verilog_RTL_sim $(BUILD_DIRS_SIM)  $(BSC_COMPILATION_FLAGS) $(SIM_BSC_OPTIONS) $(BSC_PATH)  $(TOPFILE)
+	bsc -u -elab -verilog  -vdir Verilog_RTL_sim $(BUILD_DIRS_SIM)  $(BSC_COMPILATION_FLAGS) $(SIM_BSC_OPTIONS) $(BSC_PATH) -p +:src_BSV $(TOPFILE)
 
 # ================================================================
 

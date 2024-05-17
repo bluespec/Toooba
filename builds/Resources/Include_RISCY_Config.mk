@@ -21,7 +21,7 @@ USE_XILINX_FPU ?= false
 # default 1 core
 CORE_NUM ?= 1
 # TSO or WEAK
-TSO_MM ?= false
+TSO_MM ?= true
 # Lr upgrades line to E (no forward progress guarantee)
 LR_UP_TO_E ?= false
 # Forbid LLC from respoding a load (toS) request with E state
@@ -98,7 +98,19 @@ BSC_COMPILATION_FLAGS += \
 	-D INSTR_PREFETCHER_IN_$(INSTR_PREFETCHER_LOCATION) \
 	-D INSTR_PREFETCHER_$(INSTR_PREFETCHER_TYPE) \
 	-D DATA_PREFETCHER_IN_$(DATA_PREFETCHER_LOCATION) \
-	-D DATA_PREFETCHER_$(DATA_PREFETCHER_TYPE)
+	-D DATA_PREFETCHER_$(DATA_PREFETCHER_TYPE) \
+	-D CAP128 \
+	-D MEM512 \
+	-D RISCV \
+	-D TSO_MM \
+	-D RV64 \
+	-D ISA_PRIV_M  -D ISA_PRIV_S  -D ISA_PRIV_U  \
+	-D SV39 \
+	-D ISA_I  -D ISA_M  -D ISA_A  -D ISA_F  -D ISA_D  -D ISA_FD_DIV  -D ISA_C  \
+	-D NO_SPEC_TRAINING -D NO_SPEC_REDIRECT -D NO_SPEC_STRAIGHT_PATH -D SPEC_RSB_FIXUP -D MELTDOWN_CF \
+	-D CheriBusBytes=64 \
+	-D CheriMasterIDWidth=1 \
+	-D CheriTransactionIDWidth=6
 
 # TODO:
 #    -D SELF_INV_CACHE -D L1D_MAX_HITS=$(SELF_INV_CACHE)
@@ -107,7 +119,31 @@ BSC_COMPILATION_FLAGS += \
 #    -D NO_LOAD_RESP_E
 # various SECURITY related flags
 #    -D PERF_COUNT    -D CHECK_DEADLOCK    -D RENAME_DEBUG ...
+#    -D NO_SPEC_RSB_PUSH -D NO_SPEC_STL -D RVFI
 
 # +RTS -K1G -RTS " --bscflags=" -steps-max-intervals 200  -check-assert
 
 # ================================================================
+
+# ================================================================
+# Search path for bsc for .bsv files
+CORE_DIR ?= $(REPO)
+COREW_DIRS = $(CORE_DIR)/src_Core/Core:$(CORE_DIR)/src_Core/CPU:$(CORE_DIR)/src_Core/ISA:$(CORE_DIR)/src_Core/PLIC:$(CORE_DIR)/src_Core/Debug_Module:$(CORE_DIR)/src_Core/BSV_Additional_Libs:$(CORE_DIR)/src_Core/RISCY_OOO/procs/RV64G_OOO:$(CORE_DIR)/src_Core/RISCY_OOO/procs/lib:$(CORE_DIR)/src_Core/RISCY_OOO/coherence/src:$(CORE_DIR)/src_Core/RISCY_OOO/fpgautils/lib
+WINDCORE_IFC_DIR ?= $(CORE_DIR)/libs/WindCoreInterface
+CHERICAPLIB_DIR ?= $(CORE_DIR)/libs/cheri-cap-lib
+TAG_CONTROLLER_DIR ?= $(CORE_DIR)/libs/TagController
+RISCV_HPM_EVENTS_DIR ?= $(CORE_DIR)/libs/RISCV_HPM_Events
+TAG_CONTROLLER_DIRS = $(TAG_CONTROLLER_DIR)/TagController:$(TAG_CONTROLLER_DIR)/TagController/CacheCore
+BLUESTUFFDIR ?= $(CORE_DIR)/libs/BlueStuff
+include $(BLUESTUFFDIR)/bluestuff.inc.mk # sets the BLUESTUFF_DIRS variable
+
+# search path for bsc imports
+ifdef BSC_CONTRIB_DIR
+BSC_CONTRIB_LIB_DIR = $(BSC_CONTRIB_DIR)/lib/Libraries
+else
+BSC_CONTRIB_LIB_DIR = %/Libraries
+endif
+BSC_CONTRIB_DIRS = $(BSC_CONTRIB_LIB_DIR)/Bus
+
+BSVPATH = +:$(BSC_CONTRIB_DIRS):$(WINDCORE_IFC_DIR):$(RISCV_HPM_EVENTS_DIR):$(CHERICAPLIB_DIR):$(TAG_CONTROLLER_DIRS):$(COREW_DIRS):$(BLUESTUFF_DIRS)
+BSC_PATH = -p $(BSVPATH)
