@@ -56,7 +56,6 @@ BSC_COMPILATION_FLAGS += \
 	-D BLUESIM \
 	-D PERFORMANCE_MONITORING \
 	-D RAS_HIT_TRACING \
-	-D NO_SPEC_TRAINING -D NO_SPEC_REDIRECT -D NO_SPEC_STRAIGHT_PATH -D SPEC_RSB_FIXUP -D MELTDOWN_CF \
 	-keep-fires -aggressive-conditions -no-warn-action-shadowing -check-assert \
 	-suppress-warnings G0020 -steps-max-intervals 10000000   \
 	-steps-warn-interval 1000000 \
@@ -113,17 +112,17 @@ TagTableStructure.bsv: $(REPO)/libs/TagController/tagsparams.py
 
 .PHONY: generate_hpm_vector
 generate_hpm_vector: GenerateHPMVector.bsv
-GenerateHPMVector.bsv: $(RISCVHPMEVENTSDIR)/parse_counters.py
+GenerateHPMVector.bsv: $(RISCV_HPM_EVENTS_DIR)/parse_counters.py
 	@echo "INFO: Re-generating GenerateHPMVector bluespec file"
-	$^ $(RISCVHPMEVENTSDIR)/counters.yaml -m ProcTypes -b $@
+	$^ $(RISCV_HPM_EVENTS_DIR)/counters.yaml -m ProcTypes -b $@
 	@echo "INFO: Re-generated GenerateHPMVector bluespec file"
 
 
 .PHONY: stat_counters
 stat_counters: StatCounters.bsv
-StatCounters.bsv: $(RISCVHPMEVENTSDIR)/parse_counters.py
+StatCounters.bsv: $(RISCV_HPM_EVENTS_DIR)/parse_counters.py
 	@echo "INFO: Re-generating HPM events struct bluepsec file"
-	$^ $(RISCVHPMEVENTSDIR)/counters.yaml -m ProcTypes -s $@
+	$^ $(RISCV_HPM_EVENTS_DIR)/counters.yaml -m ProcTypes -s $@
 	@echo "INFO: Re-generated HPM events struct bluespec file"
 compile: tagsparams #stat_counters generate_hpm_vector
 

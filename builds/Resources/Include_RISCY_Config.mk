@@ -107,6 +107,7 @@ BSC_COMPILATION_FLAGS += \
 	-D ISA_PRIV_M  -D ISA_PRIV_S  -D ISA_PRIV_U  \
 	-D SV39 \
 	-D ISA_I  -D ISA_M  -D ISA_A  -D ISA_F  -D ISA_D  -D ISA_FD_DIV  -D ISA_C  \
+	-D NO_SPEC_TRAINING -D NO_SPEC_REDIRECT -D NO_SPEC_STRAIGHT_PATH -D SPEC_RSB_FIXUP -D MELTDOWN_CF \
 	-D CheriBusBytes=64 \
 	-D CheriMasterIDWidth=1 \
 	-D CheriTransactionIDWidth=6
@@ -118,6 +119,7 @@ BSC_COMPILATION_FLAGS += \
 #    -D NO_LOAD_RESP_E
 # various SECURITY related flags
 #    -D PERF_COUNT    -D CHECK_DEADLOCK    -D RENAME_DEBUG ...
+#    -D NO_SPEC_RSB_PUSH -D NO_SPEC_STL -D RVFI
 
 # +RTS -K1G -RTS " --bscflags=" -steps-max-intervals 200  -check-assert
 
@@ -125,14 +127,14 @@ BSC_COMPILATION_FLAGS += \
 
 # ================================================================
 # Search path for bsc for .bsv files
-COREDIR ?= $(REPO)
-COREW_DIRS = $(COREDIR)/src_Core/Core:$(COREDIR)/src_Core/CPU:$(COREDIR)/src_Core/ISA:$(COREDIR)/src_Core/PLIC:$(COREDIR)/src_Core/Debug_Module:$(COREDIR)/src_Core/BSV_Additional_Libs:$(COREDIR)/src_Core/RISCY_OOO/procs/RV64G_OOO:$(COREDIR)/src_Core/RISCY_OOO/procs/lib:$(COREDIR)/src_Core/RISCY_OOO/coherence/src:$(COREDIR)/src_Core/RISCY_OOO/fpgautils/lib
-WINDCOREIFCDIR ?= $(COREDIR)/libs/WindCoreInterface
-CHERICAPLIBDIR ?= $(COREDIR)/libs/cheri-cap-lib
-TAGCONTROLLERDIR ?= $(COREDIR)/libs/TagController
-RISCVHPMEVENTSDIR ?= $(COREDIR)/libs/RISCV_HPM_Events
-TAGCONTROLLER_DIRS = $(TAGCONTROLLERDIR)/TagController:$(TAGCONTROLLERDIR)/TagController/CacheCore
-BLUESTUFFDIR ?= $(COREDIR)/libs/BlueStuff
+CORE_DIR ?= $(REPO)
+COREW_DIRS = $(CORE_DIR)/src_Core/Core:$(CORE_DIR)/src_Core/CPU:$(CORE_DIR)/src_Core/ISA:$(CORE_DIR)/src_Core/PLIC:$(CORE_DIR)/src_Core/Debug_Module:$(CORE_DIR)/src_Core/BSV_Additional_Libs:$(CORE_DIR)/src_Core/RISCY_OOO/procs/RV64G_OOO:$(CORE_DIR)/src_Core/RISCY_OOO/procs/lib:$(CORE_DIR)/src_Core/RISCY_OOO/coherence/src:$(CORE_DIR)/src_Core/RISCY_OOO/fpgautils/lib
+WINDCORE_IFC_DIR ?= $(CORE_DIR)/libs/WindCoreInterface
+CHERICAPLIB_DIR ?= $(CORE_DIR)/libs/cheri-cap-lib
+TAG_CONTROLLER_DIR ?= $(CORE_DIR)/libs/TagController
+RISCV_HPM_EVENTS_DIR ?= $(CORE_DIR)/libs/RISCV_HPM_Events
+TAG_CONTROLLER_DIRS = $(TAG_CONTROLLER_DIR)/TagController:$(TAG_CONTROLLER_DIR)/TagController/CacheCore
+BLUESTUFFDIR ?= $(CORE_DIR)/libs/BlueStuff
 include $(BLUESTUFFDIR)/bluestuff.inc.mk # sets the BLUESTUFF_DIRS variable
 
 # search path for bsc imports
@@ -143,5 +145,5 @@ BSC_CONTRIB_LIB_DIR = %/Libraries
 endif
 BSC_CONTRIB_DIRS = $(BSC_CONTRIB_LIB_DIR)/Bus
 
-BSVPATH = +:$(BSC_CONTRIB_DIRS):$(WINDCOREIFCDIR):$(RISCVHPMEVENTSDIR):$(CHERICAPLIBDIR):$(TAGCONTROLLER_DIRS):$(COREW_DIRS):$(BLUESTUFF_DIRS)
+BSVPATH = +:$(BSC_CONTRIB_DIRS):$(WINDCORE_IFC_DIR):$(RISCV_HPM_EVENTS_DIR):$(CHERICAPLIB_DIR):$(TAG_CONTROLLER_DIRS):$(COREW_DIRS):$(BLUESTUFF_DIRS)
 BSC_PATH = -p $(BSVPATH)
