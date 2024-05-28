@@ -18,6 +18,14 @@ SIM_DRAM_TYPE := AWSF1
 # use Xilinx FPU IP cores
 USE_XILINX_FPU ?= false
 
+# default to not including RVFI at all.
+# setting this to true enables debug-displaying of executed instructions using the RVFI trace format. See Core.bsv.
+RVFI ?= false
+# Adding "-D RVFI_DII", linking $(CORE_DIR)/src_Verifier/BSV-RVFI-DII/SocketPacketUtils/socket_packet_utils.c
+# into simulation, and adding $(CORE_DIR)/src_Verifier to the include path allows injecting instructions
+# *and* retrieving those RVFI traces over a socket, which is used for TestRIG. See <https://github.com/CTSRD-CHERI/TestRIG/blob/master/RVFI-DII.md>.
+# See the builds/*_RVFI_DII_*/ Makefiles.
+
 # default 1 core
 CORE_NUM ?= 1
 # TSO or WEAK
@@ -119,7 +127,7 @@ BSC_COMPILATION_FLAGS += \
 #    -D NO_LOAD_RESP_E
 # various SECURITY related flags
 #    -D PERF_COUNT    -D CHECK_DEADLOCK    -D RENAME_DEBUG ...
-#    -D NO_SPEC_RSB_PUSH -D NO_SPEC_STL -D RVFI
+#    -D NO_SPEC_RSB_PUSH -D NO_SPEC_STL
 
 # +RTS -K1G -RTS " --bscflags=" -steps-max-intervals 200  -check-assert
 
@@ -145,5 +153,10 @@ BSC_CONTRIB_LIB_DIR = %/Libraries
 endif
 BSC_CONTRIB_DIRS = $(BSC_CONTRIB_LIB_DIR)/Bus
 
-BSVPATH = +:$(BSC_CONTRIB_DIRS):$(WINDCORE_IFC_DIR):$(RISCV_HPM_EVENTS_DIR):$(CHERICAPLIB_DIR):$(TAG_CONTROLLER_DIRS):$(COREW_DIRS):$(BLUESTUFF_DIRS)
-BSC_PATH = -p $(BSVPATH)
+BSC_PATH += -p +:$(BSC_CONTRIB_DIRS):$(WINDCORE_IFC_DIR):$(RISCV_HPM_EVENTS_DIR):$(CHERICAPLIB_DIR):$(TAG_CONTROLLER_DIRS):$(COREW_DIRS):$(BLUESTUFF_DIRS)
+
+ifeq ($(RVFI),true)
+BSC_COMPILATION_FLAGS += \
+	-D RVFI
+BSC_PATH += -p +:$(CORE_DIR)/src_Verifier/BSV-RVFI-DII
+endif

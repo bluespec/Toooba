@@ -15,8 +15,6 @@ build_dir:
 ifeq (,$(filter clean full_clean,$(MAKECMDGOALS)))
 include .depends.mk
 
-# BSC_COMPILATION_FLAGS += -D RVFI
-
 .depends.mk: TagTableStructure.bsv StatCounters.bsv GenerateHPMVector.bsv | build_dir
 	if ! bluetcl -exec makedepend -elab -sim  $(TMP_DIRS)  $(RTL_GEN_DIRS)  $(BSC_COMPILATION_FLAGS)  $(BSC_PATH) -o $@ $(TOPFILE); then rm -f $@ && false; fi
 endif
@@ -40,8 +38,8 @@ BSC_C_FLAGS += \
 	-Xl -v \
 	-Xc -O1 -Xc++ -O1 \
 
-BSC_COMPILATION_FLAGS += \
-        -D RVFI
+# socket_packet_utils.c is only necessary if RVFI_DII is defined, as it's the bridge that allows 
+# RVFI injection/trace retrieval, but we can compile+link it no matter what.
 
 # For Bluespec_2019.05.beta2-debian9stretch-amd64
 # you may have to remove the line: -Xc++ -D_GLIBCXX_USE_CXX11_ABI=0

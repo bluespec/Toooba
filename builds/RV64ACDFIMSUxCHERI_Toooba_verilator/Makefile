@@ -11,14 +11,14 @@ ARCH ?= RV64ACDFIMSUxCHERI
 TEST ?= rv64ui-p-add
 
 #================================================================
+# Parameter settings for MIT RISCY, setup paths etc. for Include_Common
+
+include $(REPO)/builds/Resources/Include_RISCY_Config.mk
+
+#================================================================
 # Common boilerplate rules
 
 include $(REPO)/builds/Resources/Include_Common.mk
-
-#================================================================
-# Parameter settings for MIT RISCY
-
-include $(REPO)/builds/Resources/Include_RISCY_Config.mk
 
 #================================================================
 # Makefile rules for building for specific simulator: verilator

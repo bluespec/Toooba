@@ -4,11 +4,6 @@ REPO ?= ../..
 ARCH ?= RV64ACDFIMSUxCHERI
 
 # ================================================================
-# Path to RISCY-OOO sources not included in Common
-
-EXTRA_DIRS = $(REPO)/src_Verifier:$(REPO)/src_Verifier/BSV-RVFI-DII
-
-# ================================================================
 # RISC-V config macros passed into Bluespec 'bsc' compiler
 
 # Default ISA test
@@ -16,7 +11,7 @@ EXTRA_DIRS = $(REPO)/src_Verifier:$(REPO)/src_Verifier/BSV-RVFI-DII
 TEST ?= rv64ui-p-add
 
 #================================================================
-# Parameter settings for MIT RISCY
+# Parameter settings for MIT RISCY, setup paths etc. for Include_Common
 
 include $(REPO)/builds/Resources/Include_RISCY_Config.mk
 
