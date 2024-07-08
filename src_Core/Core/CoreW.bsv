@@ -120,7 +120,7 @@ import DM_CPU_Req_Rsp ::*;
 // The Core module
 
 typedef WindCoreMid #( // AXI lite subordinate control port parameters
-                       21, 32, 0, 0, 0, 0, 0
+                       20, 32, 0, 0, 0, 0, 0
                        // AXI manager 0 port parameters
                      , TAdd #(Wd_MId, 1), Wd_Addr, Wd_Data, 0, 0, 0, 0, 0
                        // AXI manager 1 port parameters
