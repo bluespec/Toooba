@@ -1,6 +1,7 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// 
+// Copyright (c) 2020 Jonathan Woodruff
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +9,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -180,7 +181,7 @@ module mkCCPipe#(
         // actionvalue enable us to do checking inside the function
         pipeCmdT cmd,
         // below are current RAM outputs, is merged with ram write from final stage
-        // but is NOT merged with state changes carried in PRs/CRs 
+        // but is NOT merged with state changes carried in PRs/CRs
         Vector#(wayNum, tagT) tagVec,
         Vector#(wayNum, msiT) csVec,
         Vector#(wayNum, ownerT) ownerVec,
@@ -397,6 +398,210 @@ module mkCCPipe#(
         else begin
             // XXX deq ram resp, I think this should not block
             dataRam.deqRdResp;
+            // reset pipeline reg
+            mat2Out_out <= Invalid;
+        end
+    endmethod
+
+    method Bool emptyForFlush;
+        return !isValid(mat2Out[0]) && !isValid(enq2Mat[0]);
+    endmethod
+endmodule
+
+module mkCCPipeSingleCycle#(
+    ReadOnly#(Bool) initDone,
+    function indexT getIndex(pipeCmdT cmd),
+    function ActionValue#(TagMatchResult#(wayT)) tagMatch(
+        // actionvalue enable us to do checking inside the function
+        pipeCmdT cmd,
+        // below are current RAM outputs, is merged with ram write from final stage
+        // but is NOT merged with state changes carried in PRs/CRs
+        Vector#(wayNum, tagT) tagVec,
+        Vector#(wayNum, msiT) csVec,
+        Vector#(wayNum, ownerT) ownerVec,
+        repT repInfo
+    ),
+    function ActionValue#(UpdateByUpCs#(msiT)) updateByUpCs(
+        pipeCmdT cmd, msiT toState, Bool dataValid, msiT oldCs
+    ),
+    function ActionValue#(UpdateByDownDir#(msiT, dirT)) updateByDownDir(
+        pipeCmdT cmd, msiT toState, Bool dataValid, msiT oldCs, dirT oldDir
+    ),
+    function ActionValue#(repT) updateRepInfo(repT oldRep, wayT hitWay),
+    Vector#(wayNum, RWBramCore#(indexT, infoT)) infoRam,
+    RWBramCore#(indexT, repT) repRam,
+    // Must be BRAMs with integrated forwarding; e.g. mkRWBramCoreForwarded
+    Vector#(wayNum, RWBramCore#(dataIndexT, lineT)) dataRam
+)(
+    CCPipe#(wayNum, indexT, tagT, msiT, dirT, ownerT, otherT, repT, lineT, pipeCmdT)
+) provisos (
+    Alias#(wayT, Bit#(TLog#(wayNum))),
+    Alias#(indexT, Bit#(_indexSz)),
+    Alias#(infoT, CacheInfo#(tagT, msiT, dirT, ownerT, otherT)),
+    Alias#(ramDataT, RamData#(tagT, msiT, dirT, ownerT, otherT, lineT)),
+    Alias#(respStateT, RespState#(msiT)),
+    Alias#(pipeOutT, PipeOut#(wayT, tagT, msiT, dirT, ownerT, otherT, repT, lineT, pipeCmdT)),
+    Alias#(enq2MatchT, Enq2Match#(wayNum, tagT, msiT, dirT, ownerT, otherT, repT, lineT, pipeCmdT)),
+    Alias#(match2OutT, Match2Out#(wayT, tagT, msiT, dirT, ownerT, otherT, repT, lineT, pipeCmdT)),
+    Alias#(bypassInfoT, BypassInfo#(wayT, indexT, tagT, msiT, dirT, ownerT, otherT, repT, lineT)),
+    Bits#(tagT, _tagSz),
+    Bits#(msiT, _msiSz),
+    Bits#(dirT, _dirSz),
+    Bits#(ownerT, _ownerSz),
+    Bits#(otherT, _otherSz),
+    Bits#(repT, _repSz),
+    Bits#(lineT, _lineSz),
+    Bits#(pipeCmdT, _pipeCmdSz),
+    Alias#(dataIndexT, Bit#(_indexSz))
+);
+
+    // pipeline regs
+
+    Ehr#(2, Maybe#(enq2MatchT)) enq2Mat <- mkEhr(Invalid);
+    // port 0: tag match
+    Reg#(Maybe#(enq2MatchT)) enq2Mat_match = enq2Mat[0];
+    // port 1: enq
+    Reg#(Maybe#(enq2MatchT)) enq2Mat_enq = enq2Mat[1];
+
+    Ehr#(2, Maybe#(match2OutT)) mat2Out <- mkEhr(Invalid);
+    // port 0: tag match
+    Reg#(Maybe#(match2OutT)) mat2Out_match = mat2Out[0];
+    // port 1: out
+    Reg#(Maybe#(match2OutT)) mat2Out_out = mat2Out[1];
+
+    rule doTagMatch(isValid(enq2Mat_match) && !isValid(mat2Out_match) && initDone);
+        enq2MatchT e2m = fromMaybe(?, enq2Mat_match);
+        // get cache output
+        Vector#(wayNum, infoT) infoVec;
+        Vector#(wayNum, lineT) dataVec;
+        for(Integer i = 0; i < valueOf(wayNum); i = i+1) begin
+            infoRam[i].deqRdResp;
+            infoVec[i] = fromMaybe(infoRam[i].rdResp, e2m.infoVec[i]);
+            dataRam[i].deqRdResp;
+            dataVec[i] = dataRam[i].rdResp;
+        end
+        repRam.deqRdResp;
+        repT repInfo = fromMaybe(repRam.rdResp, e2m.repInfo);
+        $display("%t : doTagMatch repRamdeqRdResp ", $time);
+        // do tag match to get way to occupy
+        Vector#(wayNum, tagT) tagVec;
+        Vector#(wayNum, msiT) csVec;
+        Vector#(wayNum, ownerT) ownerVec;
+        for(Integer i = 0; i < valueOf(wayNum); i = i+1) begin
+            tagVec[i] = infoVec[i].tag;
+            csVec[i] = infoVec[i].cs;
+            ownerVec[i] = infoVec[i].owner;
+        end
+        let tmRes <- tagMatch(e2m.cmd, tagVec, csVec, ownerVec, repInfo);
+        wayT way = tmRes.way;
+        Bool pRqMiss = tmRes.pRqMiss;
+        // set mat2out & merge with CRs/PRs
+        match2OutT m2o = Match2Out {
+            cmd: e2m.cmd,
+            way: way,
+            pRqMiss: pRqMiss,
+            info: infoVec[way],
+            repInfo: repInfo,
+            line: isValid(e2m.respLine) ? e2m.respLine:Valid(dataVec[way])
+        };
+        if(e2m.toState matches tagged UpCs .s) begin
+            UpdateByUpCs#(msiT) upd <- updateByUpCs(
+                e2m.cmd, s, isValid(e2m.respLine), m2o.info.cs
+            );
+            m2o.info.cs = upd.cs;
+        end
+        else if(e2m.toState matches tagged DownDir .s) begin
+            UpdateByDownDir#(msiT, dirT) upd <- updateByDownDir(
+                e2m.cmd, s, isValid(e2m.respLine), m2o.info.cs, m2o.info.dir
+            );
+            m2o.info.cs = upd.cs;
+            m2o.info.dir = upd.dir;
+        end
+        //indexT index = getIndex(e2m.cmd);
+        //m2o.line = isValid(e2m.respLine) ? e2m.respLine:Valid(dataVec[way]);
+        mat2Out_match <= Valid (m2o);
+        // reset enq2mat
+        enq2Mat_match <= Invalid;
+    endrule
+
+    // construct output with resp data
+    function pipeOutT firstOut;
+        match2OutT m2o = fromMaybe(?, mat2Out_out);
+        return PipeOut {
+            cmd: m2o.cmd,
+            way: m2o.way,
+            pRqMiss: m2o.pRqMiss,
+            ram: RamData {
+                info: m2o.info,
+                line: m2o.line.Valid
+            },
+            repInfo: m2o.repInfo
+        };
+    endfunction
+
+    Bool enq_guard = !isValid(enq2Mat_enq) && initDone;
+
+    Bool deq_guard = isValid(mat2Out_out) && initDone;
+
+    // stage 1: enq req to pipeline: access info+rep RAM
+    method Action enq(pipeCmdT cmd, Maybe#(lineT) respLine, respStateT toState) if(enq_guard);
+        // read ram
+        indexT index = getIndex(cmd);
+        for(Integer i = 0; i < valueOf(wayNum); i = i+1) begin
+            infoRam[i].rdReq(index);
+            dataRam[i].rdReq(index);
+        end
+        repRam.rdReq(index);
+        $display("%t : enq repRam.rdReq ", $time);
+        // write reg
+        enq2MatchT e2m = Enq2Match {
+            cmd: cmd,
+            infoVec: replicate(Invalid),
+            repInfo: Invalid,
+            respLine: respLine,
+            toState: toState
+        };
+        enq2Mat_enq <= Valid (e2m);
+    endmethod
+
+    method Bool notFull = enq_guard;
+
+    method pipeOutT first if(deq_guard);
+        return firstOut;
+    endmethod
+
+    method pipeOutT unguard_first;
+        return firstOut;
+    endmethod
+
+    method Bool notEmpty = deq_guard;
+
+    method Action deqWrite(Maybe#(pipeCmdT) newCmd, ramDataT wrRam, Bool updateRep) if(deq_guard);
+        match2OutT m2o = fromMaybe(?, mat2Out_out);
+        wayT way = m2o.way;
+        indexT index = getIndex(m2o.cmd);
+        // update replacement info
+        repT repInfo = m2o.repInfo;
+        if(updateRep) begin
+            repInfo <- updateRepInfo(m2o.repInfo, way);
+        end
+        // write ram
+        infoRam[way].wrReq(index, wrRam.info);
+        repRam.wrReq(index, repInfo);
+        dataRam[way].wrReq(index, wrRam.line);
+        // change pipeline reg
+        if(newCmd matches tagged Valid .cmd) begin
+            // update pipeline reg
+            mat2Out_out <= Valid (Match2Out {
+                cmd: cmd, // swapped in new cmd
+                way: way, // keep way same
+                pRqMiss: False, // reset (not valid for swapped in pRq)
+                info: wrRam.info,
+                repInfo: repInfo,
+                line: Valid(wrRam.line)
+            });
+        end
+        else begin
             // reset pipeline reg
             mat2Out_out <= Invalid;
         end

@@ -1,6 +1,7 @@
 
 // Copyright (c) 2017 Massachusetts Institute of Technology
-// 
+// Copyright (c) 2020 Jonathan Woodruff
+//
 // Permission is hereby granted, free of charge, to any person
 // obtaining a copy of this software and associated documentation
 // files (the "Software"), to deal in the Software without
@@ -8,10 +9,10 @@
 // modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be
 // included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -77,7 +78,7 @@ typedef union tagged {
 } L1PipeIn#(
     type wayT,
     type indexT,
-    type cRqIdxT, 
+    type cRqIdxT,
     type pRqIdxT
 ) deriving (Bits, Eq, FShow);
 
@@ -96,7 +97,7 @@ typedef union tagged {
 `endif
 } L1Cmd#(
     type indexT,
-    type cRqIdxT, 
+    type cRqIdxT,
     type pRqIdxT
 ) deriving (Bits, Eq, FShow);
 
@@ -105,12 +106,12 @@ interface L1Pipe#(
     numeric type wayNum,
     type indexT,
     type tagT,
-    type cRqIdxT, 
+    type cRqIdxT,
     type pRqIdxT
 );
     method Action send(L1PipeIn#(Bit#(TLog#(wayNum)), indexT, cRqIdxT, pRqIdxT) r);
     method PipeOut#(
-        Bit#(TLog#(wayNum)), 
+        Bit#(TLog#(wayNum)),
         tagT, Msi, void, // no dir
         Maybe#(cRqIdxT), void, RandRepInfo, // no other
         Line, L1Cmd#(indexT, cRqIdxT, pRqIdxT)
@@ -138,7 +139,7 @@ typedef union tagged {
 } L1PipeCmd#(
     type wayT,
     type indexT,
-    type cRqIdxT, 
+    type cRqIdxT,
     type pRqIdxT
 ) deriving (Bits, Eq, FShow);
 
@@ -173,10 +174,10 @@ module mkL1Pipe(
    Bool verbose = False;
 
     // RAMs
-    Vector#(wayNum, RWBramCore#(indexT, infoT)) infoRam <- replicateM(mkRWBramCore);
+    Vector#(wayNum, RWBramCore#(indexT, infoT)) infoRam <- replicateM(mkRWBramCoreForwarded);
     RWBramCore#(indexT, repT) repRam <- mkRandRepRam;
-    RWBramCore#(dataIndexT, Line) dataRam <- mkRWBramCore;
-    
+    Vector#(wayNum, RWBramCore#(indexT, Line)) dataRam <- replicateM(mkRWBramCoreForwarded);
+
     // initialize RAM
     Reg#(Bool) initDone <- mkReg(False);
     Reg#(indexT) initIndex <- mkReg(0);
@@ -222,22 +223,22 @@ module mkL1Pipe(
 
     function ActionValue#(tagMatchResT) tagMatch(
         pipeCmdT cmd,
-        Vector#(wayNum, tagT) tagVec, 
-        Vector#(wayNum, Msi) csVec, 
+        Vector#(wayNum, tagT) tagVec,
+        Vector#(wayNum, Msi) csVec,
         Vector#(wayNum, ownerT) ownerVec,
         repT repInfo
     );
         return actionvalue
             function tagT getTag(Addr a) = truncateLSB(a);
 
-	    if (verbose)
-            $display("%t L1 %m tagMatch: ", $time, 
-                fshow(cmd), " ; ", 
-                fshow(getTag(getAddrFromCmd(cmd))),
-                fshow(tagVec), " ; ", 
-                fshow(csVec), " ; ", 
-                fshow(ownerVec), " ; " 
-            );
+	        if (verbose)
+                $display("%t L1 %m tagMatch: ", $time, 
+                    fshow(cmd), " ; ", 
+                    fshow(getTag(getAddrFromCmd(cmd))),
+                    fshow(tagVec), " ; ",
+                    fshow(csVec), " ; ",
+                    fshow(ownerVec), " ; "
+                );
             if(cmd matches tagged PRs .rs) begin
                 // PRs directly read from cmd
                 return TagMatchResult {
@@ -327,7 +328,7 @@ module mkL1Pipe(
 
     CCPipe#(
         wayNum, indexT, tagT, Msi, dirT, ownerT, otherT, repT, Line, pipeCmdT
-    ) pipe <- mkCCPipe(
+    ) pipe <- mkCCPipeSingleCycle(
         regToReadOnly(initDone), getIndex, tagMatch,
         updateByUpCs, updateByDownDir, updateRepInfo,
         infoRam, repRam, dataRam

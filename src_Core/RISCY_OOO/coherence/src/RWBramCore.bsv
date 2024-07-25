@@ -71,34 +71,28 @@ module mkRWBramCoreForwarded(RWBramCore#(addrT, dataT)) provisos(
     // 1 elem pipeline fifo to add guard for read req/resp
     // must be 1 elem to make sure rdResp is not corrupted
     // BRAMCore should not change output if no req is made
-    Fifo#(1, Maybe#(dataT)) rdReqQ <- mkPipelineFifo;
-    RWire#(addrT) currentWriteAddr <- mkRWire;
-    RWire#(dataT) currentWriteData <- mkRWire;
+    Fifo#(1, void) rdReqQ <- mkPipelineFifo;
+    Reg#(addrT) readAddr[2] <- mkCReg(2,?);
+    Reg#(addrT) currentWriteAddr <- mkRegU;
+    Reg#(dataT) currentWriteData <- mkRegU;
+
+    rule doRead;
+        rdPort.put(False, readAddr[1], ?);
+    endrule
 
     method Action wrReq(addrT a, dataT d);
         wrPort.put(True, a, d);
-        currentWriteAddr.wset(a); //Forward data, if read happens on same cycle
-        currentWriteData.wset(d);
+        currentWriteAddr <= a; //Forward data, if read happens on same cycle
+        currentWriteData <= d;
     endmethod
 
     method Action rdReq(addrT a);
-        if (currentWriteAddr.wget matches tagged Valid .writeAddr &&& writeAddr == a) begin
-            //$display ("%t Write same addr as read -- forwarding data!", $time);
-            rdReqQ.enq(Valid(fromMaybe(?, currentWriteData.wget)));
-        end
-        else begin
-            rdReqQ.enq(Invalid);
-        end
-        rdPort.put(False, a, ?);
+        readAddr[0] <= a;
+        rdReqQ.enq(?);
     endmethod
 
     method dataT rdResp if(rdReqQ.notEmpty);
-        if (rdReqQ.first matches tagged Valid .data) begin
-            return data;
-        end
-        else begin
-            return rdPort.read;
-        end
+        return (readAddr[0] == currentWriteAddr) ? currentWriteData : rdPort.read;
     endmethod
 
     method rdRespValid = rdReqQ.notEmpty;

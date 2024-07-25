@@ -115,6 +115,7 @@ typedef struct {
     Data shiftedData;
 } WaitStResp deriving(Bits, Eq, FShow);
 
+//SpecFifo#(2,IncorrectSpec,1,1) incorrectSpec_ff <- mkSpecFifoCF(True);
 // synthesized pipeline fifos
 typedef SpecFifo_SB_deq_enq_C_deq_enq#(1, MemDispatchToRegRead) MemDispToRegFifo;
 (* synthesize *)
@@ -619,7 +620,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
         // search LSQ
         LSQIssueLdResult issRes <- lsq.issueLd(info.tag, info.paddr, info.shiftedBE, sbRes);
         if(verbose) begin
-            $display("[doIssueLd] fromIssueQ: ", fshow(fromIssueQ), " ; ",
+            $display("%t : [doIssueLd] fromIssueQ: ", $time, fshow(fromIssueQ), " ; ",
                      fshow(info), " ; ", fshow(sbRes), " ; ", fshow(issRes));
         end
         // summarize
@@ -665,8 +666,7 @@ module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
 
     rule doIssueLdFromIssueQ;
         // get issue entry from LSQ
-        LSQIssueLdInfo info <- lsq.getIssueLd;
-        doIssueLd(info, True);
+        doIssueLd(lsq.getIssueLd, True);
     endrule
 
     // we have ordered setRegReadyAggr_forward < setRegReadyAggr_mem to make

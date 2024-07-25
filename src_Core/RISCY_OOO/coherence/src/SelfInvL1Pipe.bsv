@@ -262,7 +262,7 @@ module mkSelfInvL1Pipe(
     // rep RAM (dummy)
     RWBramCore#(indexT, repT) repRam <- mkRandRepRam;
     // data RAM
-    RWBramCore#(dataIndexT, Line) dataRam <- mkRWBramCore;
+    Vector#(wayNum, RWBramCore#(indexT, Line)) dataRam <- replicateM(mkRWBramCoreForwarded);
 
     // initialize RAM
     Reg#(Bool) initDone <- mkReg(False);
@@ -401,7 +401,7 @@ module mkSelfInvL1Pipe(
 
     CCPipe#(
         wayNum, indexT, tagT, Msi, dirT, ownerT, otherT, repT, Line, pipeCmdT
-    ) pipe <- mkCCPipe(
+    ) pipe <- mkCCPipeSingleCycle(
         regToReadOnly(initDone), getIndex, tagMatch,
         updateByUpCs, updateByDownDir, updateRepInfo,
         infoRam, repRam, dataRam
