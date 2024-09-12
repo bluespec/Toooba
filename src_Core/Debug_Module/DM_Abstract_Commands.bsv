@@ -298,7 +298,7 @@ module mkDM_Abstract_Commands (DM_Abstract_Commands_IFC);
 	       if (verbosity != 0)
 		  $display ("%0d: DM_Abstract_Commands.rl_csr_write_finish hart %0d: ", cur_cycle, core, fshow (rsp));
 
-	       rg_abstractcs_cmderr <= (rsp.ok ? DM_ABSTRACTCS_CMDERR_NONE : DM_ABSTRACTCS_CMDERR_HALT_RESUME);
+	       rg_abstractcs_cmderr <= (rsp.ok ? DM_ABSTRACTCS_CMDERR_NONE : DM_ABSTRACTCS_CMDERR_EXCEPTION);
 	       rg_abstractcs_busy   <= False;
 	    endrule
 	 endrules

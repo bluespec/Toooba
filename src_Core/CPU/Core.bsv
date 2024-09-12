@@ -1362,7 +1362,7 @@ module mkCore#(CoreId coreId)(Core);
       Bit #(12) csr_addr = req.address;
       let data_out = csrf.rd (unpack (csr_addr));
 
-      let rsp = DM_CPU_Rsp {ok: True, data: data_out};
+      let rsp = DM_CPU_Rsp {ok: implementedCSR(csr_addr), data: data_out};
       f_csr_rsps.enq (rsp);
 
       if (show_DM_interactions)
