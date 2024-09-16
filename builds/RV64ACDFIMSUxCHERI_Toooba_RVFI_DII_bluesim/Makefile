@@ -1,14 +1,14 @@
 ###  -*-Makefile-*-
 
 # ================================================================
-# Path to RISCY-OOO sources not included in Common
-
-EXTRA_DIRS = $(RISCY_HOME)/../../src_Verifier
-
-# ================================================================
 
 REPO ?= ../..
 ARCH ?= RV64ACDFIMSUxCHERI
+
+# ================================================================
+# Path to RISCY-OOO sources not included in Common
+
+EXTRA_DIRS = $(REPO)/src_Verifier
 
 # ================================================================
 # RISC-V config macros passed into Bluespec 'bsc' compiler
