@@ -80,16 +80,19 @@ module mkDM_Abstract_Commands (DM_Abstract_Commands_IFC);
    // FIFOs for request/response to access GPRs
    Vector #(CoreNum, FIFOF #(DM_CPU_Req #(5,  XLEN))) f_harts_gpr_reqs <- replicateM(mkFIFOF);
    Vector #(CoreNum, FIFOF #(DM_CPU_Rsp #(XLEN)))     f_harts_gpr_rsps <- replicateM(mkFIFOF);
+   Vector #(CoreNum, FIFOF#(Bool))                    f_gpr_read_width_64 <- replicateM(mkFIFOF);
 
    // FIFOs for request/response to access FPRs
 `ifdef ISA_F
    Vector #(CoreNum, FIFOF #(DM_CPU_Req #(5,  FLEN))) f_harts_fpr_reqs <- replicateM(mkFIFOF);
    Vector #(CoreNum, FIFOF #(DM_CPU_Rsp #(FLEN)))     f_harts_fpr_rsps <- replicateM(mkFIFOF);
+   Vector #(CoreNum, FIFOF#(Bool))                    f_fpr_read_width_64 <- replicateM(mkFIFOF);
 `endif
 
    // FIFOs for request/response to access CSRs
    Vector #(CoreNum, FIFOF #(DM_CPU_Req #(12, XLEN))) f_harts_csr_reqs <- replicateM(mkFIFOF);
    Vector #(CoreNum, FIFOF #(DM_CPU_Rsp #(XLEN)))     f_harts_csr_rsps <- replicateM(mkFIFOF);
+   Vector #(CoreNum, FIFOF#(Bool))                    f_csr_read_width_64 <- replicateM(mkFIFOF);
 
    // ----------------------------------------------------------------
    // rg_data0
@@ -150,13 +153,15 @@ module mkDM_Abstract_Commands (DM_Abstract_Commands_IFC);
    // postexec no register, since we don't support Program Buffer
    // transfer no register, since we always do transfers
 
+   Reg #(DM_command_access_reg_size) rg_command_access_size <- mkConfigRegU;
+
    Reg #(Bool) rg_command_access_reg_write <- mkConfigRegU;
 
    // regno: we only implement lower 13 bits of this 16-bit field
    Reg #(Bit #(13)) rg_command_access_reg_regno <- mkConfigRegU;
 
    DM_Word virt_rg_command = fn_mk_command_access_reg (
-        DM_COMMAND_ACCESS_REG_SIZE_LOWER32
+        rg_command_access_size
       , False     // postexec
       , True      // transfer
       , rg_command_access_reg_write
@@ -199,7 +204,7 @@ module mkDM_Abstract_Commands (DM_Abstract_Commands_IFC);
 `endif
 `ifdef RV64
 	    // Only lower 32-bit and 64-bit access is supported
-	    else if (size != DM_COMMAND_ACCESS_REG_SIZE_LOWER64)
+	    else if (size != DM_COMMAND_ACCESS_REG_SIZE_LOWER64 && size != DM_COMMAND_ACCESS_REG_SIZE_LOWER32)
 	       begin
 		  cmderr = DM_ABSTRACTCS_CMDERR_NOT_SUPPORTED;
 		  $display ("%0d: DM_Abstract_Commands.write: [command] <= 0x%08h: ERROR", cur_cycle, dm_word);
@@ -226,6 +231,7 @@ module mkDM_Abstract_Commands (DM_Abstract_Commands_IFC);
 	       Bool      is_write = fn_command_access_reg_write (dm_word);
 	       Bit #(13) regno    = truncate (fn_command_access_reg_regno (dm_word));
 
+	       rg_command_access_size      <= size;
 	       rg_command_access_reg_write <= is_write;
 	       rg_command_access_reg_regno <= regno;
 	       rg_abstractcs_busy          <= True;
@@ -277,7 +283,7 @@ module mkDM_Abstract_Commands (DM_Abstract_Commands_IFC);
 			       data:    rg_data0
 `endif
 `ifdef RV64
-			       data:    {rg_data1, rg_data0}
+			       data:    {rg_command_access_size == DM_COMMAND_ACCESS_REG_SIZE_LOWER64 ? rg_data1 : 32'h0, rg_data0}
 `endif
 			       };
 	 f_harts_csr_reqs[core].enq (req);
@@ -315,6 +321,7 @@ module mkDM_Abstract_Commands (DM_Abstract_Commands_IFC);
 	 Bit #(XLEN) data = ?;
 	 let req = DM_CPU_Req {write: False, address: csr_addr, data: data};
 	 f_harts_csr_reqs[core].enq (req);
+	 f_csr_read_width_64[core].enq (rg_command_access_size == DM_COMMAND_ACCESS_REG_SIZE_LOWER64);
 	 rg_start_reg_access <= False;
 
 	 if (verbosity != 0)
@@ -338,9 +345,12 @@ module mkDM_Abstract_Commands (DM_Abstract_Commands_IFC);
 `endif
 `ifdef RV64
 	       rg_data0 <= truncate (rsp.data);
-	       rg_data1 <= rsp.data[63:32];
+	       if (f_csr_read_width_64[core].first) begin
+	           rg_data1 <= rsp.data[63:32];
+	       end
 `endif
 	       rg_abstractcs_busy <= False;
+	       f_csr_read_width_64[core].deq;
 	    endrule
 	 endrules
       );
@@ -359,7 +369,7 @@ module mkDM_Abstract_Commands (DM_Abstract_Commands_IFC);
 			       data:    rg_data0
 `endif
 `ifdef RV64
-			       data:    {rg_data1, rg_data0}
+			       data:    {rg_command_access_size == DM_COMMAND_ACCESS_REG_SIZE_LOWER64 ? rg_data1 : 32'h0, rg_data0}
 `endif
 			       };
 	 f_harts_gpr_reqs[core].enq (req);
@@ -396,6 +406,7 @@ module mkDM_Abstract_Commands (DM_Abstract_Commands_IFC);
 	 Bit #(XLEN) data = ?;
 	 let req = DM_CPU_Req {write: False, address: gpr_addr, data: data };
 	 f_harts_gpr_reqs[core].enq (req);
+	 f_gpr_read_width_64[core].enq (rg_command_access_size == DM_COMMAND_ACCESS_REG_SIZE_LOWER64);
 	 rg_start_reg_access <= False;
 
 	 if (verbosity != 0)
@@ -418,10 +429,13 @@ module mkDM_Abstract_Commands (DM_Abstract_Commands_IFC);
 `endif
 `ifdef RV64
 	       rg_data0 <= truncate (rsp.data);
-	       rg_data1 <= rsp.data[63:32];
+	       if (f_gpr_read_width_64[core].first) begin
+	           rg_data1 <= rsp.data[63:32];
+	       end
 `endif
 	       rg_abstractcs_cmderr <= (rsp.ok ? DM_ABSTRACTCS_CMDERR_NONE : DM_ABSTRACTCS_CMDERR_HALT_RESUME);
 	       rg_abstractcs_busy <= False;
+	       f_gpr_read_width_64[core].deq;
 	    endrule
 	 endrules
       );
@@ -442,7 +456,7 @@ module mkDM_Abstract_Commands (DM_Abstract_Commands_IFC);
 							   data:    unpack(zeroExtend(rg_data0))
 `endif
 `ifdef RV64
-							   data:    unpack({rg_data1, rg_data0})
+							   data:    unpack({rg_command_access_size == DM_COMMAND_ACCESS_REG_SIZE_LOWER64 ? rg_data1 : 32'h0, rg_data0})
 `endif
 							  };
 	 f_harts_fpr_reqs[core].enq (req);
@@ -479,6 +493,7 @@ module mkDM_Abstract_Commands (DM_Abstract_Commands_IFC);
 	 Bit #(FLEN) data = ?;
 	 let req = DM_CPU_Req {write: False, address: fpr_addr, data: data };
 	 f_harts_fpr_reqs[core].enq (req);
+	 f_fpr_read_width_64[core].enq(rg_command_access_size == DM_COMMAND_ACCESS_REG_SIZE_LOWER64);
 	 rg_start_reg_access <= False;
 
 	 if (verbosity != 0)
@@ -498,10 +513,13 @@ module mkDM_Abstract_Commands (DM_Abstract_Commands_IFC);
 
 	       rg_data0 <= truncate (rsp.data);
 `ifdef RV64
-	       rg_data1 <= rsp.data[63:32];
+	       if (f_fpr_read_width_64[core].first) begin
+	           rg_data1 <= rsp.data[63:32];
+	       end
 `endif
 	       rg_abstractcs_cmderr <= (rsp.ok ? DM_ABSTRACTCS_CMDERR_NONE : DM_ABSTRACTCS_CMDERR_HALT_RESUME);
 	       rg_abstractcs_busy <= False;
+	       f_fpr_read_width_64[core].deq;
 	    endrule
 	 endrules
       );
@@ -551,6 +569,10 @@ module mkDM_Abstract_Commands (DM_Abstract_Commands_IFC);
       mapM_(proj_clear, f_harts_gpr_rsps);
       mapM_(proj_clear, f_harts_csr_reqs);
       mapM_(proj_clear, f_harts_csr_rsps);
+
+      mapM_(proj_clear, f_csr_read_width_64);
+      mapM_(proj_clear, f_gpr_read_width_64);
+      mapM_(proj_clear, f_fpr_read_width_64);
 
       rg_abstractcs_busy   <= False;
       rg_abstractcs_cmderr <= DM_ABSTRACTCS_CMDERR_NONE;
