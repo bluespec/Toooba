@@ -26,6 +26,8 @@ DM_Addr max_DM_Addr = 'h5F;
 
 typedef Bit #(32) DM_Word;
 
+typedef Bit #(10) DM_Reset_Count;
+
 // ================================================================
 // Debug Module address map
 

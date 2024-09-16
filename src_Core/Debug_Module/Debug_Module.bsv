@@ -150,6 +150,8 @@ module mkDebug_Module (Debug_Module_IFC);
    // Local verbosity: 0 = quiet; 1 = print DMI transactions
    Integer verbosity = 0;
 
+   Reg #(Maybe#(DM_Reset_Count)) rg_reset_count <- mkReg(Valid(~0));
+
    // The three parts
    DM_Run_Control_IFC        dm_run_control       <- mkDM_Run_Control;
    DM_Abstract_Commands_IFC  dm_abstract_commands <- mkDM_Abstract_Commands;
@@ -158,13 +160,22 @@ module mkDebug_Module (Debug_Module_IFC);
    FIFO#(DM_Addr) f_read_addr <- mkFIFO1;
 
    // ================================================================
-   // Reset all three parts when dm_run_control.dmactive is low
+   // Reset all three parts: triggered when dm_run_control.dmactive is low
 
-   rule rl_reset (! dm_run_control.dmactive);
-      $display ("%0d: Debug_Module reset", cur_cycle);
+   rule rl_reset_start (dm_run_control.dmactive_cleared && rg_reset_count == Invalid);
+      rg_reset_count <= Valid(~0);
+   endrule
+
+   rule rl_reset_wait (rg_reset_count matches tagged Valid .c &&& c != 0);
+      rg_reset_count <= Valid(c - 1);
+   endrule
+
+   rule rl_reset_done (rg_reset_count == Valid(0));
+      $display ("%0d: Debug_Module reset complete", cur_cycle);
       dm_run_control.reset;
       dm_abstract_commands.reset;
       dm_system_bus.reset;
+      rg_reset_count <= Invalid;
    endrule
 
    // ================================================================
@@ -174,7 +185,7 @@ module mkDebug_Module (Debug_Module_IFC);
    // Facing GDB/DMI (Debug Module Interface)
 
    interface DMI dmi;
-      method Action read_addr  (DM_Addr dm_addr) if (dm_run_control.dmactive);
+      method Action read_addr  (DM_Addr dm_addr);
 	 f_read_addr.enq(dm_addr);
 
 	 if (verbosity != 0)
@@ -241,58 +252,60 @@ module mkDebug_Module (Debug_Module_IFC);
 	 return dm_word;
       endmethod
 
-      method Action write (DM_Addr dm_addr, DM_Word dm_word) if (dm_run_control.dmactive);
+      method Action write (DM_Addr dm_addr, DM_Word dm_word);
 
 	 Bool handled = False;
 
-	 if (   (dm_addr == dm_addr_dmcontrol)
-	    || (dm_addr == dm_addr_dmstatus)
-	    || (dm_addr == dm_addr_hartinfo)
-	    || (dm_addr == dm_addr_haltsum0)
-	    || (dm_addr == dm_addr_hawindowsel)
-	    || (dm_addr == dm_addr_hawindow)
-	    || (dm_addr == dm_addr_devtreeaddr0)
-	    || (dm_addr == dm_addr_authdata)
-	    || (dm_addr == dm_addr_verbosity)) begin
+         if (rg_reset_count == Invalid) begin
+	    if (   (dm_addr == dm_addr_dmcontrol)
+	       || (dm_addr == dm_addr_dmstatus)
+	       || (dm_addr == dm_addr_hartinfo)
+	       || (dm_addr == dm_addr_haltsum0)
+	       || (dm_addr == dm_addr_hawindowsel)
+	       || (dm_addr == dm_addr_hawindow)
+	       || (dm_addr == dm_addr_devtreeaddr0)
+	       || (dm_addr == dm_addr_authdata)
+	       || (dm_addr == dm_addr_verbosity)) begin
 
-	    dm_run_control.write (dm_addr, dm_word);
-	    handled = True;
-	 end
+	       dm_run_control.write (dm_addr, dm_word);
+	       handled = True;
+	    end
 
-	 if (  (dm_addr == dm_addr_dmcontrol)
-	    || (dm_addr == dm_addr_abstractcs)
-		  || (dm_addr == dm_addr_command)
-		  || (dm_addr == dm_addr_data0)
-		  || (dm_addr == dm_addr_data1)
-		  || (dm_addr == dm_addr_data2)
-		  || (dm_addr == dm_addr_data3)
-		  || (dm_addr == dm_addr_data4)
-		  || (dm_addr == dm_addr_data5)
-		  || (dm_addr == dm_addr_data6)
-		  || (dm_addr == dm_addr_data7)
-		  || (dm_addr == dm_addr_data8)
-		  || (dm_addr == dm_addr_data9)
-		  || (dm_addr == dm_addr_data10)
-		  || (dm_addr == dm_addr_data11)
-		  || (dm_addr == dm_addr_abstractauto)
-	    || (dm_addr == dm_addr_progbuf0)) begin
+	    if (  (dm_addr == dm_addr_dmcontrol)
+	       || (dm_addr == dm_addr_abstractcs)
+	             || (dm_addr == dm_addr_command)
+	             || (dm_addr == dm_addr_data0)
+	             || (dm_addr == dm_addr_data1)
+	             || (dm_addr == dm_addr_data2)
+	             || (dm_addr == dm_addr_data3)
+	             || (dm_addr == dm_addr_data4)
+	             || (dm_addr == dm_addr_data5)
+	             || (dm_addr == dm_addr_data6)
+	             || (dm_addr == dm_addr_data7)
+	             || (dm_addr == dm_addr_data8)
+	             || (dm_addr == dm_addr_data9)
+	             || (dm_addr == dm_addr_data10)
+	             || (dm_addr == dm_addr_data11)
+	             || (dm_addr == dm_addr_abstractauto)
+	       || (dm_addr == dm_addr_progbuf0)) begin
 
-	    dm_abstract_commands.write (dm_addr, dm_word);
-	    handled = True;
-	 end
+	       dm_abstract_commands.write (dm_addr, dm_word);
+	       handled = True;
+	    end
 
-	 if (  (dm_addr == dm_addr_sbcs)
-		  || (dm_addr == dm_addr_sbaddress0)
-		  || (dm_addr == dm_addr_sbaddress1)
-		  || (dm_addr == dm_addr_sbaddress2)
-		  || (dm_addr == dm_addr_sbdata0)
-		  || (dm_addr == dm_addr_sbdata1)
-		  || (dm_addr == dm_addr_sbdata2)
-	    || (dm_addr == dm_addr_sbdata3)) begin
+	    if (  (dm_addr == dm_addr_sbcs)
+	             || (dm_addr == dm_addr_sbaddress0)
+	             || (dm_addr == dm_addr_sbaddress1)
+	             || (dm_addr == dm_addr_sbaddress2)
+	             || (dm_addr == dm_addr_sbdata0)
+	             || (dm_addr == dm_addr_sbdata1)
+	             || (dm_addr == dm_addr_sbdata2)
+	       || (dm_addr == dm_addr_sbdata3)) begin
 
-	    dm_system_bus.write (dm_addr, dm_word);
-	    handled = True;
-	 end
+	       dm_system_bus.write (dm_addr, dm_word);
+	       handled = True;
+	    end
+         end
 
 	 if (! handled) begin
 	    // TODO: set error status?
