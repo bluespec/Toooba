@@ -186,7 +186,9 @@ Bit #(5) f5rs2_cap_CSealEntry  = 5'h11;
 Bit #(5) f5rs2_cap_CLoadTags   = 5'h12;
 // 5'h13 unused
 Bit #(5) f5rs2_cap_JALR_PCC    = 5'h14;
-// 5'h15-5'h1f unused (5'h1f reserved for 1-reg instructions)
+// 5'h15-5'h16 unused
+Bit #(5) f5rs2_cap_CGetHigh    = 5'h17;
+// 5'h18-5'h1f unused (5'h1f reserved for 1-reg instructions)
 
 // ================================================================
 // f7_cap_{Load, Store} opcode subdivision
