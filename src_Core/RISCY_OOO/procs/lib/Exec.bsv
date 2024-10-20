@@ -308,6 +308,8 @@ function Data capInspect(CapPipe a, CapPipe b, CapInspectFunc func);
                    zeroExtend(getFlags(a));
                tagged GetPerm                :
                    zeroExtend(getPerms(a));
+               tagged GetHigh                : 
+                   zeroExtend(getHigh(pack(toMem(a))));
                tagged GetType                :
                    tpl_1(extractType(a));
                tagged ToPtr                  :
@@ -624,7 +626,11 @@ function MemTaggedData gatherLoad( Addr addr, ByteOrTagEn byteOrTagEn
         return dataToMemTaggedData(extend(dataVec[offset]));
     end
 endfunction
+function Bit#(64) getHigh(CapMem cap);
+    Bit #(129) cap_mem_bits = unpack(pack(cap));
+    return cap_mem_bits[128-1:64];
 
+endfunction 
 function Tuple2#(ByteEn, Data) scatterStore(Addr addr, ByteEn byteEn, Data data);
     Bit#(IndxShamt) offset = truncate(addr);
     if(byteEn[7]) begin

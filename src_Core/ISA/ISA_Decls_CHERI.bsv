@@ -184,6 +184,7 @@ Bit #(5) f5rs2_cap_CGetAddr    = 5'h0f;
 Bit #(5) f5rs2_cap_CClearFPReg = 5'h10;
 Bit #(5) f5rs2_cap_CSealEntry  = 5'h11;
 Bit #(5) f5rs2_cap_CLoadTags   = 5'h12;
+Bit #(5) f5rs2_cap_CGetHigh    = 5'h17;
 // 5'h13 unused
 Bit #(5) f5rs2_cap_JALR_PCC    = 5'h14;
 // 5'h15-5'h1f unused (5'h1f reserved for 1-reg instructions)
