@@ -257,7 +257,7 @@ function Maybe#(RVFI_DII_Execution#(DataSz,DataSz)) genRVFI(ToReorderBuffer rot,
             end
             tagged PPC .ppc: begin
                 CapPipe cp = cast(ppc);
-                next_pc = getOffset(cp);
+                next_pc = getAddr(cp);
             end
             tagged CSRData .csrdata: if (rot.iType == Csr) data = getAddr(csrdata);
         endcase
@@ -1177,7 +1177,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
                     if (verbose) $display("%t : [doCommitNormalInst - %d] ", $time(), i, fshow(inst_tag), " ; ", fshow(x));
 `ifdef RVFI
                     CapPipe pipePc = cast(x.pc);
-                    rvfis[i] = genRVFI(x, traceCnt + zeroExtend(whichTrace), getTSB(), getOffset(pipePc) + (is_16b_inst(x.orig_inst) ? 2:4), inIfc.lookupPAddr[i].sub(x.lsqTag));
+                    rvfis[i] = genRVFI(x, traceCnt + zeroExtend(whichTrace), getTSB(), getAddr(pipePc) + (is_16b_inst(x.orig_inst) ? 2:4), inIfc.lookupPAddr[i].sub(x.lsqTag));
                     whichTrace = whichTrace + 1;
 `endif
 
