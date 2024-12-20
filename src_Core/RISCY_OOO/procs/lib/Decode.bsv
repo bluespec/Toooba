@@ -1039,7 +1039,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             regs.dst = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs1);
                             regs.src2 = Valid(tagged Gpr rs2);
-                            dInst.capFunc = CapModify (Seal);
+                            dInst.capFunc = CapModify (CSeal);
                         end
                         f7_cap_TwoSrc: begin
                             case (rd)
