@@ -30,9 +30,11 @@ import Vector::*;
 import BrPred::*;
 import Bht::*;
 import GSelectPred::*;
+import Bimodal::*;
 import GSharePred::*;
 import TourPred::*;
 import TourPredSecure::*;
+import TageTest::*;
 
 export DirPredTrainInfo(..);
 export mkDirPredictor;
@@ -48,6 +50,12 @@ typedef GShareTrainInfo DirPredTrainInfo;
 `endif
 `ifdef DIR_PRED_TOUR
 typedef TourTrainInfo DirPredTrainInfo;
+`endif
+`ifdef DIR_PRED_BIMODAL
+typedef BimodalTrainInfo DirPredTrainInfo;
+`endif
+`ifdef DIR_PRED_TAGETEST
+typedef TageTestTrainInfo DirPredTrainInfo;
 `endif
 
 (* synthesize *)
@@ -79,6 +87,13 @@ module mkDirPredictor(DirPredictor#(DirPredTrainInfo));
 `else
     let m <- mkTourPred;
 `endif
+`endif
+
+`ifdef DIR_PRED_BIMODAL
+    let m <- mkBimodal;
+`endif
+`ifdef DIR_PRED_TAGETEST
+    let m <- mkTageTest;
 `endif
 
     return m;
