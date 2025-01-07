@@ -76,7 +76,7 @@ typedef struct {
     Bit#(TLog#(numTables)) provider_table;
     Bit#(`MAX_INDEX_SIZE) index;
     TaggedTableEntry#(`MAX_TAGGED) provider_entry;
-} ProviderTrainInfo#(numeric type numTables) deriving (FShow, Bits);
+} ProviderTrainInfo#(numeric type numTables) deriving (Eq, FShow, Bits);
 
 typedef struct{
     Bool use_alt;

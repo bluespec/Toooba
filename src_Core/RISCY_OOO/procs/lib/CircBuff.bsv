@@ -3,6 +3,7 @@ import BrPred::*;
 import Ehr::*;
 import ProcTypes::*;
 
+import ConfigReg::*;
 import Vector::*;
 
 typedef Bit#(TLog#(sz)) CircBuffIndex#(numeric type sz);
@@ -25,10 +26,10 @@ module mkCircBuff(CircBuff#(size, t)) provisos(Bits#(t, a__));
     // Really only an Ehr 2 is necessary but to avoid conflicts in the assingIfc it is this
     Vector#(size, Ehr#(TAdd#(SupSize,2),Maybe#(t))) buff <- replicateM(mkEhr(tagged Invalid));
     
-    Reg#(CircBuffIndex#(size)) startSpec <- mkReg(0);
+    Reg#(CircBuffIndex#(size)) startSpec <- mkConfigReg(0);
     
     // For now - allow for multiple predictions in a cycle
-    Ehr#(TAdd#(SupSize,1), CircBuffIndex#(size)) endSpec <- mkEhr(0);
+    Ehr#(TAdd#(SupSize,2), CircBuffIndex#(size)) endSpec <- mkEhr(0);
 
     function CircBuffIndex#(size) nextIndex(CircBuffIndex#(size) ind);
         return ind == fromInteger(valueOf(size)-1) ? 0 : ind + 1;
@@ -77,7 +78,7 @@ module mkCircBuff(CircBuff#(size, t)) provisos(Bits#(t, a__));
     endmethod
     
     method ActionValue#(Maybe#(t)) retrieveNext;
-        if(startSpec != endSpec[valueOf(SupSize)] &&& buff[startSpec][valueOf(SupSize)+1] matches tagged Valid .data) begin
+        if(startSpec != endSpec[valueOf(SupSize)+1] &&& buff[startSpec][valueOf(SupSize)+1] matches tagged Valid .data) begin
             `ifdef DEBUG
             $display("Updated %d", data);
             `endif

@@ -44,8 +44,8 @@ module mkBimodalTable#(String predInitFile, String hystInitFile)(BimodalTable#(p
     Add#(predIndexSize, a_, 64),
     Add#(hystIndexSize, b_, 64)
     );
-    RegFile#(Bit#(predIndexSize), BimodalPredictionEntry) predTable <- mkRegFileWCFLoad(predInitFile, 0, maxBound);
-    RegFile#(Bit#(hystIndexSize), BimodalHysteresisEntry) hystTable <- mkRegFileWCFLoad(hystInitFile, 0, maxBound);
+    RegFile#(Bit#(predIndexSize), BimodalPredictionEntry) predTable <- mkRegFileWCF(0, maxBound);
+    RegFile#(Bit#(hystIndexSize), BimodalHysteresisEntry) hystTable <- mkRegFileWCF(0, maxBound);
 
     
     function BimodalInd#(predIndexSize, hystIndexSize) pcToIndex(Addr pc);

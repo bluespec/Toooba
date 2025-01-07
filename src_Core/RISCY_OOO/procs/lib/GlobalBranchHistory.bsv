@@ -35,7 +35,7 @@ module mkGlobalBranchHistory(GlobalBranchHistory#(length));
 
     Vector#(MaxSpecSize, RecoverMechanism#(length)) recoverIfc;
 
-    (* no_implicit_conditions, fire_when_enabled *)
+    (* no_implicit_conditions *)
     rule updateHist(updateHistoryData.wget matches tagged Valid {.results, .count} &&& !recover);
         shift_register[1] <= truncateLSB({shift_register[0], reverseBits(results)} << count);
         Bit#(SupSize) bits = shift_register[0][valueOf(length)-1: valueOf(length)-valueOf(SupSize)];
