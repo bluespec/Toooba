@@ -30,10 +30,16 @@ module mkCircBuff(CircBuff#(size, t)) provisos(Bits#(t, a__));
     
     // For now - allow for multiple predictions in a cycle
     Ehr#(TAdd#(SupSize,2), CircBuffIndex#(size)) endSpec <- mkEhr(0);
+    Reg#(CircBuffIndex#(size)) endSpecLast <- mkConfigReg(0);
 
     function CircBuffIndex#(size) nextIndex(CircBuffIndex#(size) ind);
         return ind == fromInteger(valueOf(size)-1) ? 0 : ind + 1;
     endfunction
+
+    (* no_implicit_conditions, fire_when_enabled*)
+    rule updateEndSpecLast;
+        endSpecLast <= endSpec[valueOf(SupSize)+1];
+    endrule
 
     // Methods should not conflict as the indices for update and predict theoretically should not overlap
 
@@ -69,7 +75,7 @@ module mkCircBuff(CircBuff#(size, t)) provisos(Bits#(t, a__));
             In the predictor it already stops predictions from updating the history in the case of a misprediction in the same cycle
             So recovery isn't needed for these bits.
         */
-        let recoverBy = index < endSpec[0] ? endSpec[0] - index - 1: endSpec[0] + (fromInteger(valueOf(size)-1) - index);
+        let recoverBy = index < endSpecLast ? endSpecLast - index - 1: endSpecLast + (fromInteger(valueOf(size)-1) - index);
         `ifdef DEBUG   
             $display("Mispredict on %d, p1=%d, p2=%d\n", index, startSpec, endSpec[valueOf(SupSize)]);
             $display("recovered history by %d bits\n", recoverBy+1);
