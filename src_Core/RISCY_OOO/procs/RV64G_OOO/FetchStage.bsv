@@ -1165,7 +1165,6 @@ module mkFetchStage(FetchStage);
         if (iType == Br) begin
             // Train the direction predictor for all branches
             dirPred.update(taken, trainInfo.dir, mispred);
-            $display("Branch train PC: %x, taken: %x, mispred: %x", getAddr(pc), taken, mispred);
         end
         // train next addr pred when mispred
         if(mispred) begin

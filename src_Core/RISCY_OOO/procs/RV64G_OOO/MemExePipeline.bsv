@@ -271,7 +271,7 @@ interface MemExePipeline;
 endinterface
 
 module mkMemExePipeline#(MemExeInput inIfc)(MemExePipeline);
-    Bool verbose = True;
+    Bool verbose = False;
 
     // we change cache request in case of single core, becaues our MSI protocol
     // is not good with single core

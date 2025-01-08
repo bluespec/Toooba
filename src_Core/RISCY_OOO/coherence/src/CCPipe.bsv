@@ -494,7 +494,6 @@ module mkCCPipeSingleCycle#(
         end
         repRam.deqRdResp;
         repT repInfo = fromMaybe(repRam.rdResp, e2m.repInfo);
-        $display("%t : doTagMatch repRamdeqRdResp ", $time);
         // do tag match to get way to occupy
         Vector#(wayNum, tagT) tagVec;
         Vector#(wayNum, msiT) csVec;
@@ -564,7 +563,6 @@ module mkCCPipeSingleCycle#(
             dataRam[i].rdReq(index);
         end
         repRam.rdReq(index);
-        $display("%t : enq repRam.rdReq ", $time);
         // write reg
         enq2MatchT e2m = Enq2Match {
             cmd: cmd,
