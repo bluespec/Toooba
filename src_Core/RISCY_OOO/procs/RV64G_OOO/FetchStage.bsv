@@ -647,7 +647,7 @@ module mkFetchStage(FetchStage);
                      end
                   end
                   if(verbose) begin
-                     $display("Branch prediction: ", fshow(dInst.iType), " ; ", fshow(pc), " ; ",
+                     $display("Cycle: %0d, Branch prediction: ",cur_cycle, fshow(dInst.iType), " ; ", fshow(pc), " ; ",
                               fshow(ppc), " ; ", fshow(dir_pred.taken), " ; ", fshow(nextPc));
                   end
 

@@ -162,7 +162,7 @@ deriving (Eq, FShow, Bits);
 module mkCommitStage#(CommitInput inIfc)(CommitStage);
     Bool verbose = False;
 
-    Integer verbosity = 1;   // Bluespec: for lightweight verbosity trace
+    Integer verbosity = 0;   // Bluespec: for lightweight verbosity trace
 
     // Used to inform tandem-verifier about program order.
     // 0 is used to indicate we've just come out of reset
@@ -554,7 +554,7 @@ module mkCommitStage#(CommitInput inIfc)(CommitStage);
         f_rob_data.enq (x);    // Save data to be sent to TV in rule doCommitTrap_handle, next
 `endif
 
-        if (verbosity >= 1) begin
+        if (verbosity >= 0) begin
 	   $display ("instret:%0d  PC:0x%0h  instr:0x%08h", rg_serial_num, x.pc, x.orig_inst,
 		     "  iType:", fshow (x.iType), "    [doCommitTrap]");
 	end
