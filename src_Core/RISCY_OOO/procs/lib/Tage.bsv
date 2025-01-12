@@ -14,6 +14,9 @@ import GlobalBranchHistory::*;
 import Ehr::*;
 import Util::*;
 import CircBuff::*;
+
+// For debugging
+import Cur_Cycle :: *;
 /*
 export DirPredTrainInfo(..);
 export TageTrainInfo(..);
@@ -158,13 +161,10 @@ module mkTage(Tage#(numTables)) provisos(
     Vector#(7, ChosenTaggedTables) taggedTablesVector = cons(T_9_9_5(t1), cons(T_9_9_9(t2), cons(T_9_10_15(t3), cons(T_9_10_25(t4), cons(T_9_11_44(t5), cons(T_9_11_76(t6), cons(T_9_12_130(t7), nil)))))));
     Reg#(Addr) currentPc <- mkRegU;
     Reg#(UInt#(`METAPREDICTOR_CTR_SIZE)) alt_on_na <- mkReg(1 << (`METAPREDICTOR_CTR_SIZE-1));
-    CircBuff#(MaxSpecSize, UpdateInfo#(numTables)) ooBuff <- mkCircBuff;
-
-    RWire#(Tuple2#(Bit#(TLog#(MaxSpecSize)), Bit#(1))) historyUpdateBits <- mkRWire;
+    CircBuff#(MaxSpecSize, Bool) ooBuff <- mkCircBuff;
 
     PulseWire mispredictWire <- mkPulseWire;
-    PulseWire updateThisCycleWire <- mkPulseWire;
-    
+
     Ehr#(TAdd#(1, SupSize), SupCnt) numPred <- mkEhr(0);
     Ehr#(TAdd#(1, SupSize), Bit#(SupSize)) predResults <- mkEhr(0);
 
@@ -250,7 +250,6 @@ module mkTage(Tage#(numTables)) provisos(
         return tuple2(ret, replaceableEntries);
     endfunction
 
-
     // WARNING - REMOVE ACTIONVALUE AFTER DEBUG
     function ActionValue#(Maybe#(TableIndex#(numTables))) allocate(TageTrainInfo#(numTables) train, Bool taken);
         actionvalue
@@ -320,13 +319,6 @@ module mkTage(Tage#(numTables)) provisos(
         bimodalTable.updateEntry(train.pc, taken);
         Bool mispredict = taken != train.taken;
 
-        updateThisCycleWire.send;
-        
-        // Allocate on misprediction
-        if (mispredict) begin
-            let i <- allocate(train, taken);
-        end
-
         // Tagged tables update
         if(train.provider_info matches tagged Valid .info) begin
             let entry = info.provider_entry;
@@ -348,39 +340,37 @@ module mkTage(Tage#(numTables)) provisos(
         end
 
         // Update LSFR
-        `ifndef OFF_GOLD_STANDARD
+        `ifdef GOLD_STANDARD
             lfsr.next;
         `endif
     endaction
     endfunction
 
       
-    (* no_implicit_conditions*)
-    rule updateHistory(historyUpdateBits.wget matches tagged Invalid);
-        // Update history speculatively
-        let num = numPred[valueOf(SupSize)];
-        let results = predResults[valueOf(SupSize)];
-
-        if(num != 0) begin
-            global.addHistoryBits(results, num);
-            for(Integer i = 0; i < valueOf(numTables); i = i+1) begin
-                let tab = taggedTablesVector[i];
-                `CASE_ALL_TABLES(tab, (*/ t.updateHistory(results, num); /*))
-            end
-        end
-    endrule
-
+    
+    
+    //rule updateHistory(!mispredictWire); NOT SURE ABOUT THIS -------------------------------------
     (* no_implicit_conditions, fire_when_enabled *)
-    rule recoverHistory(historyUpdateBits.wget matches tagged Valid {.updNum, .taken});
-        // Recover histories first, then update bit
-        let recoverNumber = updNum;
-        global.recoverFrom[recoverNumber].undo;
-        global.updateRecoveredHistory(pack(taken));
-        for (Integer i = 0; i < valueOf(numTables); i = i +1) begin
-            let tab = taggedTablesVector[i];
-            /* It is untested if this will work for Toooba */
-            `CASE_ALL_TABLES(tab, (*/ t.recoverHistory(recoverNumber); t.updateRecovered(taken); /*))
-        end 
+    rule updateHistory;
+        //if(!mispredictWire) begin
+        // Update history speculatively
+            let num = numPred[valueOf(SupSize)];
+            let results = predResults[valueOf(SupSize)];
+
+            
+            if(num != 0) begin
+                `ifdef DEBUG_TAGETEST   
+                $display("TAGETEST Update history, cycle %d\n", cur_cycle);
+                $display("TAGETEST Global %b\n", global.history);
+                `endif
+
+                global.addHistoryBits(results, num);
+                for(Integer i = 0; i < valueOf(numTables); i = i+1) begin
+                    let tab = taggedTablesVector[i];
+                    `CASE_ALL_TABLES(tab, (*/ t.updateHistory(results, num); /*))
+                end
+            end
+      //  end
     endrule
 
     (* no_implicit_conditions, fire_when_enabled *)
@@ -390,24 +380,26 @@ module mkTage(Tage#(numTables)) provisos(
             lfsr.seed('d9);
             starting <= False;
         end
-        `ifdef OFF_GOLD_STANDARD
-        else
-            lfsr.next;
-        `endif
+        else begin
+            `ifndef GOLD_STANDARD
+                lfsr.next;
+            `endif
 
-        numPred[valueOf(SupSize)] <= 0;
-        predResults[valueOf(SupSize)] <= 0;
+            numPred[valueOf(SupSize)] <= 0;
+            predResults[valueOf(SupSize)] <= 0;
+        end
     endrule
 
+    /*
     (* no_implicit_conditions, fire_when_enabled *)
     rule scheduleUpdate(!starting);
         let updateThisCycle <- ooBuff.retrieveNext;
         (*split*)
-        if(updateThisCycle matches tagged Valid .trainInfo) begin
-            (*nosplit*)
-            updateWithTrain(trainInfo.taken, trainInfo.tageInfo, trainInfo.mispred);
+        if(updateThisCycle matches tagged Valid .train) (* nosplit *) begin
+            updateWithTrain(train.taken, train.tageInfo, train.mispred, train.allocateInfo);
         end
     endrule
+    */
 
     for(Integer i=0; i < valueOf(SupSize); i=i+1) begin
         predIfc[i] = (interface DirPred;
@@ -421,6 +413,7 @@ module mkTage(Tage#(numTables)) provisos(
             ret.replaceableEntries = replaceableEntries;
             ret.pc = pc;
 
+            
             if(pred matches tagged Valid {.pred_index, .pred_entry}) begin 
                 Bool prediction = takenFromCounter(pred_entry.predictionCounter);
                 ret.provider_prediction = prediction;
@@ -466,6 +459,13 @@ module mkTage(Tage#(numTables)) provisos(
 
             // Update counters and results
             // Forces predictions in order.
+
+
+            `ifdef DEBUG_TAGETEST   
+                $display("TAGETEST Prediction on: %x,%d, Taken: %d, cycle %d\n", currentPc , i, ret.taken, cur_cycle);
+            `endif
+
+
             numPred[i] <= numPred[i] + 1;
             predResults[i] <= predResults[i] | (zeroExtend(pack(ret.taken)) << numPred[i]);
             let ooIndex <- ooBuff.specAssign[i].specAssign;
@@ -497,7 +497,7 @@ module mkTage(Tage#(numTables)) provisos(
 
     method Action debugAllocate(Addr pc, Bit#(TLog#(numTables)) tableNum);
         ChosenTaggedTables tab = taggedTablesVector[tableNum];
-        `CASE_ALL_TABLES(tab, (*/ t.allocateEntry(pc, True); /*))
+        //`CASE_ALL_TABLES(tab, (*/ t.allocateEntry(pc, True); /*))
     endmethod
 
     method Action debugResetEntry(Addr pc, Bit#(TLog#(numTables)) tableNum);
@@ -506,7 +506,7 @@ module mkTage(Tage#(numTables)) provisos(
     endmethod
 
     method ActionValue#(Maybe#(TableIndex#(numTables))) debugMispredictAllocation(TageTrainInfo#(numTables) train, Bool taken);
-        let ind <- allocate(train, taken);
+        let ind <- allocateGivenEntry(train, taken);
         return ind;
     endmethod
 
@@ -520,12 +520,41 @@ module mkTage(Tage#(numTables)) provisos(
     interface  dirPredInterface = interface DirPredictor#(OOTageTrainInfo);
         interface pred = predIfc;
         method Action update(Bool taken, OOTageTrainInfo#(numTables) train, Bool mispred);
-            UpdateInfo#(numTables) upd = UpdateInfo{tageInfo: train.tageInfo, mispred: mispred, taken: taken};
-            ooBuff.enqueue(upd, train.ooIndex);
-            if(mispred) begin
+            (* split *)
+            if(mispred) (* nosplit *) begin
+                mispredictWire.send;
+                
                 let numBits <- ooBuff.handleMispred(train.ooIndex);
-                historyUpdateBits.wset(tuple2(numBits, pack(taken)));
+                // Recover histories first, then update bit
+                let recoverNumber = numBits;
+                global.recoverFrom[recoverNumber].undo;
+                global.updateRecoveredHistory(pack(taken));
+
+                `ifdef DEBUG_TAGETEST   
+                $display("TAGETEST Recover history by %d, cycle %d\n", cur_cycle, recoverNumber);
+                $display("TAGETEST Misprediction on %x, cycle %d\n", train.tageInfo.pc, cur_cycle);
+                `endif
+                for (Integer i = 0; i < valueOf(numTables); i = i +1) begin
+                    let tab = taggedTablesVector[i];
+                    /* It is untested if this will work for Toooba */
+                    `CASE_ALL_TABLES(tab, (*/ t.recoverHistory(recoverNumber); t.updateRecovered(pack(taken)); /*))
+                end 
+                // Retrieve allocation information for next update.
+                ooBuff.enqueue(True, train.ooIndex);
+
+                let trainInfo = train.tageInfo;
+                let allocatedIndex <- allocate(trainInfo, taken);
+                updateWithTrain(taken, trainInfo, mispred);
             end
+            else (* nosplit *) begin
+                ooBuff.enqueue(True, train.ooIndex);
+                let trainInfo = train.tageInfo;
+                updateWithTrain(taken, trainInfo, mispred);
+                `ifdef DEBUG_TAGETEST
+                $display("TAGETEST correct prediction on %x, cycle %d\n", train.tageInfo.pc, cur_cycle);
+                `endif
+            end
+            
         endmethod
     
         method Action nextPc(Addr pc);

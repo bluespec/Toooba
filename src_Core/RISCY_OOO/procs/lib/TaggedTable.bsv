@@ -183,14 +183,7 @@ module mkTaggedTable#(GlobalBranchHistory#(GlobalHistoryLength) global) (TaggedT
             Alternatively could drag the indices of every table in the training data.
 
             If recovered in this cycle - can use getHistory(True), otherwise we need to remove a bit.
-        */        
-        HistoryRetrieve hr;
-        if(sameCycleRecovery) begin
-            hr = AFTER_RECOVERY;
-        end
-        else
-            hr = PREV_LAST_UPDATE;
-
+        */
         match {.tag, .index} = getHistory(AFTER_RECOVERY, pc);
         
         // Weakly taken = 100 - 1, weakly not taken = 100 - 1

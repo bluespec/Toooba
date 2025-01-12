@@ -76,9 +76,9 @@ module mkCircBuff(CircBuff#(size, t)) provisos(Bits#(t, a__));
             So recovery isn't needed for these bits.
         */
         let recoverBy = index < endSpecLast ? endSpecLast - index - 1: endSpecLast + (fromInteger(valueOf(size)-1) - index);
-        `ifdef DEBUG   
-            $display("Mispredict on %d, p1=%d, p2=%d\n", index, startSpec, endSpec[valueOf(SupSize)]);
-            $display("recovered history by %d bits\n", recoverBy+1);
+        `ifdef DEBUG_TAGETEST   
+            $display("TAGETEST Mispredict on %d, p1=%d, p2=%d\n", index, startSpec, endSpec[valueOf(SupSize)]);
+            $display("TAGETEST recovered history by %d bits\n", recoverBy+1);
         `endif
         return recoverBy;
     endmethod
