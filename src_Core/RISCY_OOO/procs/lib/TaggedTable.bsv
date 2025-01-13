@@ -5,7 +5,9 @@ import BranchParams::*;
 import ProcTypes::*;
 import Types::*;
 import Util::*;
+
 import RegFile::*;
+import Vector::*;
 
 
 `define MAX_TAGGED 12
@@ -31,8 +33,7 @@ typedef enum {
 
 typedef enum {
     BEFORE_RECOVERY,
-    AFTER_RECOVERY,
-    PREV_LAST_UPDATE
+    AFTER_RECOVERY
 } HistoryRetrieve deriving (Bits, Eq, FShow);
 
 function Bool takenFromCounter(PredCtr ctr);
@@ -46,9 +47,15 @@ function Bool weakCounter(PredCtr ctr);
     return (pack(ctr) == (1 << valueOf(TSub#(PredCtrSz,1)))) || (pack(ctr) == ((1 << valueOf(TSub#(PredCtrSz,1)))-1));
 endfunction
 
+interface AccessPredInfo#(numeric type tagSize, numeric type indexSize);
+    method Tuple2#(Bit#(`MAX_TAGGED), Bit#(`MAX_INDEX_SIZE)) access(Addr pc);
+endinterface
+
 interface TaggedTable#(numeric type indexSize, numeric type tagSize, numeric type historyLength);
-    method TaggedTableEntry#(tagSize) access_entry(Addr pc);
-    method TaggedTableEntry#(`MAX_TAGGED) access_wrapped_entry(Addr pc);
+    interface Vector#(SupSize, AccessPredInfo#(tagSize, indexSize)) accessPredInfo;
+    method TaggedTableEntry#(`MAX_TAGGED) access_wrapped_entry(Addr pc, Bit#(indexSize) index);
+
+    //method TaggedTableEntry#(`MAX_TAGGED) access_wrapped_entry(Addr pc);
     method Tuple2#(Bit#(tagSize), Bit#(indexSize)) trainingInfo(Addr pc, HistoryRetrieve recovered); // To be used in training
 
     method Action updateHistory(Bit#(SupSize) results, SupCnt count);
@@ -68,6 +75,10 @@ interface TaggedTable#(numeric type indexSize, numeric type tagSize, numeric typ
         method Action debugUnsetEntry(Addr pc);
         method TaggedTableEntry#(tagSize) debugGetEntry(Bit#(indexSize) index);
     `endif
+
+    `ifdef DEBUG_TAGETEST
+        method Bit#(TAdd#(tagSize, indexSize)) debugGetHistory(HistoryRetrieve hr, Maybe#(Bit#(TLog#(SupSize))) count);
+    `endif
 endinterface
 
 
@@ -82,24 +93,45 @@ module mkTaggedTable#(GlobalBranchHistory#(GlobalHistoryLength) global) (TaggedT
     Add#(c__, indexSize, `MAX_INDEX_SIZE));
     
     FoldedHistory#(TAdd#(tagSize, indexSize)) folded <- mkFoldedHistory(valueOf(historyLength), global);
-    RegFile#(Bit#(indexSize), TaggedTableEntry#(tagSize)) tab <- mkRegFileWCF(0, maxBound);
+    RegFile#(Bit#(indexSize), TaggedTableEntry#(tagSize)) tab <- mkRegFileWCFLoad(regInitTaggedTableFilename, 0, maxBound);
     PulseWire sameCycleRecovery <- mkPulseWire;
 
-    function Tuple2#(Bit#(tagSize), Bit#(indexSize)) getHistory(HistoryRetrieve hr, Addr pc);
+    Vector#(SupSize, AccessPredInfo#(tagSize, indexSize)) accessPredInfoIfc;
+
+    
+
+    function Tuple2#(Bit#(tagSize), Bit#(indexSize)) getHistory(HistoryRetrieve hr, Addr pc, Maybe#(Bit#(TLog#(SupSize))) count);
         Bit#(TAdd#(tagSize, indexSize)) hist = 0;
         if(hr == AFTER_RECOVERY)
             hist = folded.recoveredHistory;
         else if(hr == BEFORE_RECOVERY)
-            hist = folded.history;
-        else
-            hist = folded.historyOneBefore;
+            if(count matches tagged Valid .num)
+                hist = folded.sameWindowHistory[num].history;
+            else
+                hist = folded.history;
 
         let combined = (pack(pc) ^ (pack(pc) >> 2) ^ (pack(pc) >> 5)) ^ zeroExtend(hist);
         
         let index = combined[valueOf(indexSize)-1:0];
-        let tag = combined[valueOf(tagSize)+valueOf(indexSize)-1:valueOf(indexSize)];
+        let tag = combined[valueOf(tagSize)+valueOf(indexSize)-1:valueOf(indexSize)] ^ truncate(pack(pc));
         return tuple2(tag, index);
     endfunction
+    
+    for(Integer i = 0; i < valueOf(SupSize); i = i+1) begin
+        accessPredInfoIfc[i] = (interface AccessPredInfo#(tagSize, indexSize);
+            method Tuple2#(Bit#(`MAX_TAGGED), Bit#(`MAX_INDEX_SIZE)) access(Addr pc);
+                match {.tag, .index} = getHistory(BEFORE_RECOVERY, pc, tagged Valid fromInteger(i));
+                return tuple2(zeroExtend(tag), zeroExtend(index));
+            endmethod
+        endinterface);
+    end
+    interface accessPredInfo = accessPredInfoIfc;
+
+    method TaggedTableEntry#(`MAX_TAGGED) access_wrapped_entry(Addr pc, Bit#(indexSize) index);
+        TaggedTableEntry#(tagSize) entry = tab.sub(index);
+        TaggedTableEntry#(`MAX_TAGGED) ret = TaggedTableEntry{tag: zeroExtend(entry.tag), predictionCounter: entry.predictionCounter, usefulCounter: entry.usefulCounter};      
+        return ret;
+    endmethod
 
     // ----------------- DEBUG
     `ifdef DEBUG
@@ -112,9 +144,24 @@ module mkTaggedTable#(GlobalBranchHistory#(GlobalHistoryLength) global) (TaggedT
     endmethod
 
     method Action debugUnsetEntry(Addr pc);
-        match {.tag, .index} = getHistory(AFTER_RECOVERY, pc);
+        match {.tag, .index} = getHistory(AFTER_RECOVERY, pc, tagged Invalid);
         tab.upd(index, TaggedTableEntry{tag: 0, predictionCounter:0, usefulCounter:0});
     endmethod
+    `endif
+
+    `ifdef DEBUG_TAGETEST
+        method Bit#(TAdd#(tagSize, indexSize)) debugGetHistory(HistoryRetrieve hr, Maybe#(Bit#(TLog#(SupSize))) count);
+            Bit#(TAdd#(tagSize, indexSize)) hist = 0;
+            if(hr == AFTER_RECOVERY)
+                hist = folded.recoveredHistory;
+            else if(hr == BEFORE_RECOVERY)
+                if(count matches tagged Valid .num)
+                    hist = folded.sameWindowHistory[num].history;
+                else
+                    hist = folded.history;
+
+            return hist;
+        endmethod
     `endif
     
     
@@ -132,23 +179,9 @@ module mkTaggedTable#(GlobalBranchHistory#(GlobalHistoryLength) global) (TaggedT
 
   
     method Tuple2#(Bit#(tagSize), Bit#(indexSize)) trainingInfo(Addr pc, HistoryRetrieve recovered); // To be used in training
-        return getHistory(recovered, pc);
+        return getHistory(recovered, pc, tagged Invalid);
     endmethod
 
-    method TaggedTableEntry#(tagSize) access_entry(Addr pc);
-         // Shift necessary?
-        //folded.history[valueOf(indexSize)-1:0] ^ truncate(pc >> 2);
-        Bit#(indexSize) index = tpl_2(getHistory(BEFORE_RECOVERY, pc));
-        return tab.sub(index);
-    endmethod
-
-    method TaggedTableEntry#(`MAX_TAGGED) access_wrapped_entry(Addr pc);
-        // Shift necessary?
-       Bit#(indexSize) index = tpl_2(getHistory(BEFORE_RECOVERY, pc));
-       TaggedTableEntry#(tagSize) entry = tab.sub(index);
-       TaggedTableEntry#(`MAX_TAGGED) ret = TaggedTableEntry{tag: zeroExtend(entry.tag), predictionCounter: entry.predictionCounter, usefulCounter: entry.usefulCounter};
-       return ret;
-   endmethod
 
     method Action updateEntry(Bit#(`MAX_INDEX_SIZE) index, Bit#(`MAX_TAGGED) tag, Bool taken, UsefulCtrUpdate usefulUpdate);
         let currentEntry = tab.sub(truncate(index));
@@ -169,7 +202,7 @@ module mkTaggedTable#(GlobalBranchHistory#(GlobalHistoryLength) global) (TaggedT
 
     
     method Action decrementUsefulCounter(Addr pc);
-        match {.tag, .index} = getHistory(AFTER_RECOVERY, pc); // Need to use the recovered history!
+        match {.tag, .index} = getHistory(AFTER_RECOVERY, pc, tagged Invalid); // Need to use the recovered history!
         // Idea - seperate the useful counters? or some other way of doing this without a read. Could instead drag useful counters.
         TaggedTableEntry#(tagSize) entry = tab.sub(index);
         entry.usefulCounter = boundedUpdate(entry.usefulCounter, False);
@@ -184,7 +217,7 @@ module mkTaggedTable#(GlobalBranchHistory#(GlobalHistoryLength) global) (TaggedT
 
             If recovered in this cycle - can use getHistory(True), otherwise we need to remove a bit.
         */
-        match {.tag, .index} = getHistory(AFTER_RECOVERY, pc);
+        match {.tag, .index} = getHistory(AFTER_RECOVERY, pc, tagged Invalid);
         
         // Weakly taken = 100 - 1, weakly not taken = 100 - 1
         Bit#(PredCtrSz) counter_init = 1 << (valueOf(PredCtrSz)-1);
