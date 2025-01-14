@@ -287,7 +287,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
         src3: tagged Invalid,
         dst: tagged Invalid
     };
-    Bool illegalInst = False;
+    Bool legalInst = False;
 
     Opcode opcode = unpackOpcode(inst[  6 :  0 ]);
     let rd        =              inst[ 11 :  7 ];
@@ -317,20 +317,22 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
     Maybe#(MemInst) mem_inst = decodeMemInst(inst, cap_mode);
     Maybe#(MemInst) exp_bnds_mem_inst = decodeExplicitBoundsMemInst(inst);
 
-    // TODO better detection of illegal insts
     case (opcode)
         opcOpImm: begin
             dInst.iType = Alu;
-            dInst.execFunc = tagged Alu (case (funct3)
-                fnADD: Add;
-                fnSLT: Slt;
-                fnSLTU: Sltu;
-                fnAND: And;
-                fnOR: Or;
-                fnXOR: Xor;
-                fnSLL: Sll;
-                fnSR: (immI[10] == 0 ? Srl : Sra);
-            endcase);
+            Maybe#(AluFunc) mAluFunc = case (funct3)
+                fnADD: Valid(Add);
+                fnSLT: Valid(Slt);
+                fnSLTU: Valid(Sltu);
+                fnAND: Valid(And);
+                fnOR: Valid(Or);
+                fnXOR: Valid(Xor);
+                fnSLL: Valid(Sll);
+                fnSR: Valid(immI[10] == 0 ? Srl : Sra);
+                default: Invalid;
+            endcase;
+            legalInst = isValid(mAluFunc);
+            dInst.execFunc = tagged Alu mAluFunc.Valid;
             regs.dst  = Valid(tagged Gpr rd);
             regs.src1 = Valid(tagged Gpr rs1);
             regs.src2 = Invalid;
@@ -340,11 +342,14 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
 
         opcOpImm32: begin
             dInst.iType = Alu;
-            dInst.execFunc = tagged Alu (case (funct3)
-                fnADD: Addw;
-                fnSLL: Sllw;
-                fnSR: (immI[10] == 0 ? Srlw : Sraw);
-            endcase);
+            Maybe#(AluFunc) mAluFunc = case (funct3)
+                fnADD: Valid(Addw);
+                fnSLL: Valid(Sllw);
+                fnSR: Valid(immI[10] == 0 ? Srlw : Sraw);
+                default: Invalid;
+            endcase;
+            legalInst = isValid(mAluFunc);
+            dInst.execFunc = tagged Alu mAluFunc.Valid;
             regs.dst  = Valid(tagged Gpr rd);
             regs.src1 = Valid(tagged Gpr rs1);
             regs.src2 = Invalid;
@@ -361,38 +366,45 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
             dInst.csr = tagged Invalid;
             case (funct7)
                 opALU1: begin
-                    dInst.execFunc = tagged Alu (case(funct3)
-                        fnADD: Add;
-                        fnSLT: Slt;
-                        fnSLTU: Sltu;
-                        fnAND: And;
-                        fnOR: Or;
-                        fnXOR: Xor;
-                        fnSLL: Sll;
-                        fnSR: Srl;
-                    endcase);
+                    Maybe#(AluFunc) mAluFunc = case(funct3)
+                        fnADD: Valid(Add);
+                        fnSLT: Valid(Slt);
+                        fnSLTU: Valid(Sltu);
+                        fnAND: Valid(And);
+                        fnOR: Valid(Or);
+                        fnXOR: Valid(Xor);
+                        fnSLL: Valid(Sll);
+                        fnSR: Valid(Srl);
+                        default: Invalid;
+                    endcase;
+                    legalInst = isValid(mAluFunc);
+                    dInst.execFunc = tagged Alu mAluFunc.Valid;
                 end
                 opALU2: begin
-                    dInst.execFunc = tagged Alu (case (funct3)
-                        fnADD: Sub;
-                        fnSR: Sra;
-                    endcase);
+                    Maybe#(AluFunc) mAluFunc = case (funct3)
+                        fnADD: Valid(Sub);
+                        fnSR: Valid(Sra);
+                        default: Invalid;
+                    endcase;
+                    legalInst = isValid(mAluFunc);
+                    dInst.execFunc = tagged Alu mAluFunc.Valid;
                 end
                 opMULDIV: begin
                     if (isa.m) begin
                         // Processor includes "M" extension
-                        MulDivFunc func = (case(funct3)
-                            fnMUL    : Mul;
-                            fnMULH   : Mulh;
-                            fnMULHSU : Mulh;
-                            fnMULHU  : Mulh;
-                            fnDIV    : Div;
-                            fnDIVU   : Div;
-                            fnREM    : Rem;
-                            fnREMU   : Rem;
-                        endcase);
+                        Maybe#(MulDivFunc) mFunc = case(funct3)
+                            fnMUL    : Valid(Mul);
+                            fnMULH   : Valid(Mulh);
+                            fnMULHSU : Valid(Mulh);
+                            fnMULHU  : Valid(Mulh);
+                            fnDIV    : Valid(Div);
+                            fnDIVU   : Valid(Div);
+                            fnREM    : Valid(Rem);
+                            fnREMU   : Valid(Rem);
+                            default  : Invalid;
+                        endcase;
                         Bool w = False;
-                        MulDivSign sign = (case(funct3)
+                        MulDivSign sign = case(funct3)
                             fnMUL    : Signed;
                             fnMULH   : Signed;
                             fnMULHSU : SignedUnsigned;
@@ -401,13 +413,11 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             fnDIVU   : Unsigned;
                             fnREM    : Signed;
                             fnREMU   : Unsigned;
-                        endcase);
+                        endcase;
+                        legalInst = isValid(mFunc);
                         dInst.execFunc = tagged MulDiv (MulDivInst {
-                            func: func, w: w, sign: sign
+                            func: mFunc.Valid, w: w, sign: sign
                         });
-                    end else begin
-                        // Processor doesn't include "M" extension
-                        illegalInst = True;
                     end
                 end
             endcase
@@ -417,34 +427,41 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
             dInst.iType = Alu;
             case (funct7)
                 opALU1: begin
-                    dInst.execFunc = tagged Alu (case(funct3)
-                        fnADD: Addw;
-                        fnSLL: Sllw;
-                        fnSR: Srlw;
-                    endcase);
+                    Maybe#(AluFunc) mAluFunc = case(funct3)
+                        fnADD: Valid(Addw);
+                        fnSLL: Valid(Sllw);
+                        fnSR: Valid(Srlw);
+                        default: Invalid;
+                    endcase;
+                    legalInst = isValid(mAluFunc);
+                    dInst.execFunc = tagged Alu mAluFunc.Valid;
                 end
                 opALU2: begin
-                    dInst.execFunc = tagged Alu (case (funct3)
-                        fnADD: Subw;
-                        fnSR: Sraw;
-                    endcase);
+                    Maybe#(AluFunc) mAluFunc = case (funct3)
+                        fnADD: Valid(Subw);
+                        fnSR: Valid(Sraw);
+                        default: Invalid;
+                    endcase;
+                    legalInst = isValid(mAluFunc);
+                    dInst.execFunc = tagged Alu mAluFunc.Valid;
                 end
                 opMULDIV: begin
                     if (isa.m) begin
                         // Processor includes "M" extension
                         // TODO mark MULH as illegal inst
-                        MulDivFunc func = (case(funct3)
-                            fnMUL    : Mul;
-                            fnMULH   : Mulh; // illegal
-                            fnMULHSU : Mulh; // illegal
-                            fnMULHU  : Mulh; // illegal
-                            fnDIV    : Div;
-                            fnDIVU   : Div;
-                            fnREM    : Rem;
-                            fnREMU   : Rem;
-                        endcase);
+                        Maybe#(MulDivFunc) mFunc = case(funct3)
+                            fnMUL    : Valid(Mul);
+                            fnMULH   : Invalid;
+                            fnMULHSU : Invalid;
+                            fnMULHU  : Invalid;
+                            fnDIV    : Valid(Div);
+                            fnDIVU   : Valid(Div);
+                            fnREM    : Valid(Rem);
+                            fnREMU   : Valid(Rem);
+                            default  : Invalid;
+                        endcase;
                         Bool w = True;
-                        MulDivSign sign = (case(funct3)
+                        MulDivSign sign = case(funct3)
                             fnMUL    : Signed;
                             fnMULH   : Signed; // illegal
                             fnMULHSU : SignedUnsigned; // illegal
@@ -453,13 +470,11 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             fnDIVU   : Unsigned;
                             fnREM    : Signed;
                             fnREMU   : Unsigned;
-                        endcase);
+                        endcase;
+                        legalInst = isValid(mFunc);
                         dInst.execFunc = tagged MulDiv (MulDivInst{
-                            func: func, w: w, sign: sign
+                            func: mFunc.Valid, w: w, sign: sign
                         });
-                    end else begin
-                        // Processor doesn't include "M" extension
-                        illegalInst = True;
                     end
                 end
             endcase
@@ -471,6 +486,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
         end
 
         opcLui: begin // treated as an x0 + immU
+            legalInst = True;
             dInst.iType = Alu;
             dInst.execFunc = tagged Alu Add;
             regs.dst = Valid(tagged Gpr rd);
@@ -481,6 +497,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
         end
 
         opcAuipc: begin
+            legalInst = True;
             dInst.iType = cap_mode ? Auipcc : Auipc;
             dInst.execFunc = tagged Alu Add;
             regs.dst  = Valid(tagged Gpr rd);
@@ -498,6 +515,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                 dInst.iType = J;
             end
 
+            legalInst = True;
             regs.dst  = Valid(tagged Gpr rd);
             regs.src1 = Invalid;
             regs.src2 = Invalid;
@@ -519,7 +537,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
             dInst.csr = tagged Invalid;
             dInst.execFunc = tagged Br AT;
 
-            if (funct3 != 0) illegalInst = True;
+            if (funct3 == 0) legalInst = True;
 
             dInst.capChecks.check_enable = True;
             dInst.capChecks.check_low_src = Src1Addr;
@@ -544,17 +562,17 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
 
         opcBranch: begin
             dInst.iType = Br;
-            ExecFunc execFunc = ?;
-            {illegalInst, execFunc} = case(funct3)
-                fnBEQ:   tuple2(False, Br(Eq));
-                fnBNE:   tuple2(False, Br(Neq));
-                fnBLT:   tuple2(False, Br(Lt));
-                fnBLTU:  tuple2(False, Br(Ltu));
-                fnBGE:   tuple2(False, Br(Ge));
-                fnBGEU:  tuple2(False, Br(Geu));
-                default: tuple2(True,  Br(?));
+            Maybe#(BrFunc) mBrFunc = case(funct3)
+                fnBEQ:   Valid(Eq);
+                fnBNE:   Valid(Neq);
+                fnBLT:   Valid(Lt);
+                fnBLTU:  Valid(Ltu);
+                fnBGE:   Valid(Ge);
+                fnBGEU:  Valid(Geu);
+                default: Invalid;
             endcase;
-            dInst.execFunc = execFunc;
+            legalInst = isValid(mBrFunc);
+            dInst.execFunc = tagged Br mBrFunc.Valid;
 
             regs.dst  = Invalid;
             regs.src1 = Valid(tagged Gpr rs1);
@@ -570,11 +588,8 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
 
         opcLoad: begin
             dInst.iType = Ld;
-            if (isValid(mem_inst)) begin
-                dInst.execFunc = tagged Mem fromMaybe(?, mem_inst);
-            end else begin
-                illegalInst = True;
-            end
+            legalInst = isValid(mem_inst);
+            dInst.execFunc = tagged Mem mem_inst.Valid;
             regs.dst  = Valid(tagged Gpr rd);
             regs.src1 = Valid(tagged Gpr rs1);
             regs.src2 = Invalid;
@@ -585,11 +600,8 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
 
         opcStore: begin
             dInst.iType = St;
-            if (isValid(mem_inst)) begin
-                dInst.execFunc = tagged Mem fromMaybe(?, mem_inst);
-            end else begin
-                illegalInst = True;
-            end
+            legalInst = isValid(mem_inst);
+            dInst.execFunc = tagged Mem mem_inst.Valid;
             regs.dst  = Invalid;
             regs.src1 = Valid(tagged Gpr rs1);
             regs.src2 = Valid(tagged Gpr rs2);
@@ -599,10 +611,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
         end
 
         opcAmo: begin
-            if (!isa.a) begin
-                // unsupported
-                illegalInst = True;
-            end else begin
+            if (isa.a) begin
                 // AMO defaults
                 dInst.iType = Amo;
                 regs.dst  = Valid(tagged Gpr rd);
@@ -614,11 +623,8 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                 case (funct5)
                     fnLR: begin
                         dInst.iType = Lr;
-                        if (isValid(mem_inst)) begin
-                            dInst.execFunc = tagged Mem fromMaybe(?, mem_inst);
-                        end else begin
-                            illegalInst = True;
-                        end
+                        legalInst = isValid(mem_inst);
+                        dInst.execFunc = tagged Mem mem_inst.Valid;
                         regs.dst  = Valid(tagged Gpr rd);
                         regs.src1 = Valid(tagged Gpr rs1);
                         regs.src2 = Invalid;
@@ -628,11 +634,8 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
 
                     fnSC: begin
                         dInst.iType = Sc;
-                        if (isValid(mem_inst)) begin
-                            dInst.execFunc = tagged Mem fromMaybe(?, mem_inst);
-                        end else begin
-                            illegalInst = True;
-                        end
+                        legalInst = isValid(mem_inst);
+                        dInst.execFunc = tagged Mem mem_inst.Valid;
                         regs.dst  = Valid(tagged Gpr rd);
                         regs.src1 = Valid(tagged Gpr rs1);
                         regs.src2 = Valid(tagged Gpr rs2);
@@ -649,15 +652,8 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                     fnAMOMAX,
                     fnAMOMINU,
                     fnAMOMAXU: begin
-                        if (isValid(mem_inst)) begin
-                            dInst.execFunc = tagged Mem fromMaybe(?, mem_inst);
-                        end else begin
-                            illegalInst = True;
-                        end
-                    end
-
-                    default: begin
-                        illegalInst = True;
+                        legalInst = isValid(mem_inst);
+                        dInst.execFunc = tagged Mem mem_inst.Valid;
                     end
                 endcase
             end
@@ -665,10 +661,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
 
         // Instructions for "F" and "D" ISA extensions - FPU
         opcOpFp: begin
-            // check if instruction is supported
-            if ((fmt == fmtS && !isa.f) || (fmt == fmtD && !isa.d) || (fmt != fmtS && fmt != fmtD)) begin
-                illegalInst = True;
-            end else begin
+            if (!((fmt == fmtS && !isa.f) || (fmt == fmtD && !isa.d) || (fmt != fmtS && fmt != fmtD))) begin
                 // Instruction is supported
                 dInst.iType = Fpu;
                 regs.dst  = Valid(tagged Fpu rd);
@@ -676,23 +669,25 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                 regs.src2 = Valid(tagged Fpu rs2);
                 dInst.imm  = Invalid;
                 dInst.csr = tagged Invalid;
-                FpuFunc func = (case (funct5)
-                    opFADD:     FAdd;
-                    opFSUB:     FSub;
-                    opFMUL:     FMul;
-                    opFDIV:     FDiv;
-                    opFSQRT:    FSqrt;
-                    opFSGNJ:    ((funct3 == 0) ? FSgnj : ((funct3 == 1) ? FSgnjn : FSgnjx));
-                    opFMINMAX:  ((funct3 == 0) ? FMin : FMax);
-                    opFCMP:     ((funct3 == 0) ? FLe : ((funct3 == 1) ? FLt : FEq));
-                    opFMV_XF:   ((funct3 == 0) ? FMv_XF : FClass); // also CLASS
-                    opFMV_FX:   FMv_FX;
-                    opFCVT_FF:  FCvt_FF;
-                    opFCVT_WF:  ((rs2 == 0) ? FCvt_WF : ((rs2 == 1) ? FCvt_WUF : ((rs2 == 2) ? FCvt_LF : FCvt_LUF)));
-                    opFCVT_FW:  ((rs2 == 0) ? FCvt_FW : ((rs2 == 1) ? FCvt_FWU : ((rs2 == 2) ? FCvt_FL : FCvt_FLU)));
-                endcase);
+                Maybe#(FpuFunc) mFunc = case (funct5)
+                    opFADD:     Valid(FAdd);
+                    opFSUB:     Valid(FSub);
+                    opFMUL:     Valid(FMul);
+                    opFDIV:     Valid(FDiv);
+                    opFSQRT:    Valid(FSqrt);
+                    opFSGNJ:    Valid((funct3 == 0) ? FSgnj : ((funct3 == 1) ? FSgnjn : FSgnjx));
+                    opFMINMAX:  Valid((funct3 == 0) ? FMin : FMax);
+                    opFCMP:     Valid((funct3 == 0) ? FLe : ((funct3 == 1) ? FLt : FEq));
+                    opFMV_XF:   Valid((funct3 == 0) ? FMv_XF : FClass); // also CLASS
+                    opFMV_FX:   Valid(FMv_FX);
+                    opFCVT_FF:  Valid(FCvt_FF);
+                    opFCVT_WF:  Valid((rs2 == 0) ? FCvt_WF : ((rs2 == 1) ? FCvt_WUF : ((rs2 == 2) ? FCvt_LF : FCvt_LUF)));
+                    opFCVT_FW:  Valid((rs2 == 0) ? FCvt_FW : ((rs2 == 1) ? FCvt_FWU : ((rs2 == 2) ? FCvt_FL : FCvt_FLU)));
+                    default:    Invalid;
+                endcase;
                 FpuPrecision precision = (fmt == fmtS) ? Single : Double;
-                dInst.execFunc = tagged Fpu(FpuInst{func: func, rm: unpack(funct3), precision: precision});
+                legalInst = isValid(mFunc);
+                dInst.execFunc = tagged Fpu(FpuInst{func: mFunc.Valid, rm: unpack(funct3), precision: precision});
                 // Special cases
                 case (funct5)
                     opFSQRT: begin
@@ -735,17 +730,12 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
         end
         opcLoadFp: begin
             // check if instruction is supported
-            if (!isa.f && !isa.d) begin
-                // FIXME: Check more cases
-                illegalInst = True;
-            end else begin
+            // FIXME: Check more cases
+            if (isa.f || isa.d) begin
                 // Same decode logic as Int Ld
                 dInst.iType = Ld;
-                if (isValid(mem_inst)) begin
-                    dInst.execFunc = tagged Mem fromMaybe(?, mem_inst);
-                end else begin
-                    illegalInst = True;
-                end
+                legalInst = isValid(mem_inst);
+                dInst.execFunc = tagged Mem mem_inst.Valid;
                 regs.dst  = Valid(tagged Fpu rd);
                 regs.src1 = Valid(tagged Gpr rs1);
                 regs.src2 = Invalid;
@@ -756,17 +746,12 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
         end
         opcStoreFp: begin
             // check if instruction is supported
-            if (!isa.f && !isa.d) begin
-                // FIXME: Check more cases
-                illegalInst = True;
-            end else begin
+            // FIXME: Check more cases
+            if (isa.f || isa.d) begin
                 // Same decode logic as Int St
                 dInst.iType = St;
-                if (isValid(mem_inst)) begin
-                    dInst.execFunc = tagged Mem fromMaybe(?, mem_inst);
-                end else begin
-                    illegalInst = True;
-                end
+                legalInst = isValid(mem_inst);
+                dInst.execFunc = tagged Mem mem_inst.Valid;
                 regs.dst  = Invalid;
                 regs.src1 = Valid(tagged Gpr rs1);
                 regs.src2 = Valid(tagged Fpu rs2);
@@ -777,24 +762,21 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
         end
         opcFmadd, opcFmsub, opcFnmsub, opcFnmadd: begin
             // check if instruction is supported
-            if ((fmt == fmtS && !isa.f) ||
-                (fmt == fmtD && !isa.d) ||
-                (fmt != fmtS && fmt != fmtD)) begin
-                dInst.iType = Unsupported;
-                illegalInst = True;
-            end else begin
+            if (!((fmt == fmtS && !isa.f) ||
+                  (fmt == fmtD && !isa.d) ||
+                  (fmt != fmtS && fmt != fmtD))) begin
                 // Instruction is supported
                 dInst.iType = Fpu;
-                FpuFunc func = ?;
-                case (opcode)
-                    opcFmadd:  func = FMAdd;
-                    opcFmsub:  func = FMSub;
-                    opcFnmsub: func = FNMSub;
-                    opcFnmadd: func = FNMAdd;
-                    default: illegalInst = True;
-                endcase
+                Maybe#(FpuFunc) mFunc = case (opcode)
+                    opcFmadd:  Valid(FMAdd);
+                    opcFmsub:  Valid(FMSub);
+                    opcFnmsub: Valid(FNMSub);
+                    opcFnmadd: Valid(FNMAdd);
+                    default: Invalid;
+                endcase;
+                legalInst = isValid(mFunc);
                 dInst.execFunc = tagged Fpu (FpuInst {
-                    func: func,
+                    func: mFunc.Valid,
                     rm: unpack(funct3),
                     precision: fmt == fmtS ? Single : Double
                 });
@@ -815,10 +797,12 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
             dInst.csr  = Invalid;
             case (funct3)
                 fnFENCEI: begin
+                    legalInst = True;
                     dInst.iType = FenceI;
                     dInst.execFunc = tagged Other;
                 end
                 fnFENCE: begin
+                    legalInst = True;
                     // extract bits for P/S IORW
                     Bool old_st = unpack(inst[26] | inst[24]); // PO, PW
                     Bool young_ld = unpack(inst[23] | inst[21]); // SI, SR
@@ -859,11 +843,8 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                 end
                 fnLC: begin
                     dInst.iType = Ld;
-                    if (isValid(mem_inst)) begin
-                        dInst.execFunc = tagged Mem fromMaybe(?, mem_inst);
-                    end else begin
-                        illegalInst = True;
-                    end
+                    legalInst = isValid(mem_inst);
+                    dInst.execFunc = tagged Mem mem_inst.Valid;
                     regs.dst  = Valid(tagged Gpr rd);
                     regs.src1 = Valid(tagged Gpr rs1);
                     regs.src2 = Invalid;
@@ -871,7 +852,6 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                     dInst.csr = tagged Invalid;
                     dInst.capChecks = memCapChecks(cap_mode);
                 end
-                default: illegalInst = True;
             endcase
         end
 
@@ -879,18 +859,21 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
             if (funct3 == fnPRIV) begin
                 if (funct7 == privSFENCEVMA) begin
                     dInst.iType = SFence;
+                    legalInst = True;
                     // FIXME SFENCE.VMA is implemented in coarse grain,
                     // ignoring rs1 and rs2
                 end
                 else begin
-                    case (truncate(immI))
-                        privSRET: dInst.iType = Sret;
-                        privMRET: dInst.iType = Mret;
-                        privECALL: dInst.iType = Ecall;
-                        privEBREAK: dInst.iType = Ebreak;
-                        privWFI: dInst.iType = Nop; // treat as NOP
-                        default: illegalInst = True;
-                    endcase
+                    Maybe#(IType) mIType = case (truncate(immI))
+                        privSRET: Valid(Sret);
+                        privMRET: Valid(Mret);
+                        privECALL: Valid(Ecall);
+                        privEBREAK: Valid(Ebreak);
+                        privWFI: Valid(Nop); // treat as NOP
+                        default: Invalid;
+                    endcase;
+                    legalInst = isValid(mIType);
+                    dInst.iType = mIType.Valid;
                 end
                 regs.dst  = Invalid;
                 regs.src1 = Invalid;
@@ -907,28 +890,31 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                     dInst.imm = (funct3[2] == 0 ? Invalid : Valid(zeroExtend(rs1)));
                     regs.src2 = Invalid;
 
-                    CSRAccessFunc accessFunc = (case (funct3)
-                        fnCSRRWI, fnCSRRW: Write;
-                        fnCSRRSI, fnCSRRS: Set;
-                        fnCSRRCI, fnCSRRC: Clear;
-                    endcase);
+                    Maybe#(CSRAccessFunc) mAccessFunc = case (funct3)
+                        fnCSRRWI, fnCSRRW: Valid(Write);
+                        fnCSRRSI, fnCSRRS: Valid(Set);
+                        fnCSRRCI, fnCSRRC: Valid(Clear);
+                        default          : Invalid;
+                    endcase;
+
+                    legalInst = isValid(mAccessFunc); // Non-existent CSRs are checked for later
 
                     let scrType = ?;
                     case (truncate(immI))
                         pack(csrAddrMEPC): begin
-                            scrType = EPC (accessFunc);
+                            scrType = EPC (mAccessFunc.Valid);
                             dInst.scr = Valid (scrAddrMEPCC);
                         end
                         pack(csrAddrMTVEC): begin
-                            scrType = TVEC (accessFunc);
+                            scrType = TVEC (mAccessFunc.Valid);
                             dInst.scr = Valid (scrAddrMTCC);
                         end
                         pack(csrAddrSEPC): begin
-                            scrType = EPC (accessFunc);
+                            scrType = EPC (mAccessFunc.Valid);
                             dInst.scr = Valid (scrAddrSEPCC);
                         end
                         pack(csrAddrSTVEC): begin
-                            scrType = TVEC (accessFunc);
+                            scrType = TVEC (mAccessFunc.Valid);
                             dInst.scr = Valid (scrAddrSTCC);
                         end
                     endcase
@@ -936,12 +922,15 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                     dInst.capFunc = CapModify (SpecialRW (scrType));
                 end else begin
                     dInst.iType = Csr;
-                    dInst.execFunc = (case (funct3)
-                        fnCSRRWI, fnCSRRW: tagged Alu Csrw;
-                        fnCSRRSI, fnCSRRS: tagged Alu Csrs;
-                        fnCSRRCI, fnCSRRC: tagged Alu Csrc;
-                    endcase);
+                    Maybe#(AluFunc) mAluFunc = case (funct3)
+                        fnCSRRWI, fnCSRRW: Valid(Csrw);
+                        fnCSRRSI, fnCSRRS: Valid(Csrs);
+                        fnCSRRCI, fnCSRRC: Valid(Csrc);
+                        default:           Invalid;
+                    endcase;
 
+                    legalInst = isValid(mAluFunc); // Non-existent CSRs are checked for later
+                    dInst.execFunc = tagged Alu mAluFunc.Valid;
                     regs.dst = Valid(tagged Gpr rd);
                     regs.src1 = Invalid; // going to be CSR Reg
                     regs.src2 = (funct3[2] == 0 ? Valid(tagged Gpr rs1) : Invalid);
@@ -954,6 +943,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
         opcOpCHERI: begin
             case (funct3)
                 f3_cap_CIncOffsetImmediate: begin
+                    legalInst = True;
                     dInst.iType = Cap;
                     regs.dst = Valid(tagged Gpr rd);
                     regs.src1 = Valid(tagged Gpr rs1);
@@ -961,6 +951,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                     dInst.capFunc = CapModify (ModifyOffset (IncOffset));
                 end
                 f3_cap_CSetBoundsImmediate: begin
+                    legalInst = True;
                     dInst.iType = Cap;
                     regs.dst = Valid(tagged Gpr rd);
                     regs.src1 = Valid(tagged Gpr rs1);
@@ -970,6 +961,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                 f3_cap_ThreeOp: begin
                     case (funct7)
                         f7_cap_CSpecialRW: begin
+                            legalInst = True; // Non-existent SCRs are checked for later
                             dInst.iType = rs1 == 0 ? Cap : Scr;
                             regs.dst = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs1);
@@ -993,6 +985,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             dInst.capFunc = CapModify (SpecialRW (scrType));
                         end
                         f7_cap_CSetBounds: begin
+                            legalInst = True;
                             dInst.iType = Cap;
                             regs.dst = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs1);
@@ -1000,6 +993,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             dInst.capFunc = CapModify (SetBounds (SetBoundsRounding));
                         end
                         f7_cap_CSetBoundsExact: begin
+                            legalInst = True;
                             dInst.iType = Cap;
                             regs.dst = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs1);
@@ -1007,6 +1001,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             dInst.capFunc = CapModify (SetBounds (SetBoundsExact));
                         end
                         f7_cap_CSetOffset: begin
+                            legalInst = True;
                             dInst.iType = Cap;
                             regs.dst = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs1);
@@ -1014,6 +1009,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             dInst.capFunc = CapModify (ModifyOffset (SetOffset));
                         end
                         f7_cap_CSetAddr: begin
+                            legalInst = True;
                             dInst.iType = Cap;
                             regs.dst = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs2);
@@ -1021,6 +1017,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             dInst.capFunc = CapModify (SetAddr (Src1Addr));
                         end
                         f7_cap_CIncOffset: begin
+                            legalInst = True;
                             dInst.iType = Cap;
                             regs.dst = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs1);
@@ -1028,6 +1025,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             dInst.capFunc = CapModify (ModifyOffset (IncOffset));
                         end
                         f7_cap_CSeal: begin
+                            legalInst = True;
                             dInst.iType = Cap;
                             regs.dst = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs1);
@@ -1035,6 +1033,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             dInst.capFunc = CapModify (Seal);
                         end
                         f7_cap_CCSeal: begin
+                            legalInst = True;
                             dInst.iType = Cap;
                             regs.dst = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs1);
@@ -1044,6 +1043,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                         f7_cap_TwoSrc: begin
                             case (rd)
                                 rd_cap_CCall: begin
+                                    legalInst = True;
                                     dInst.capChecks.src1_tag = True;
                                     dInst.capChecks.src2_tag = True;
                                     dInst.capChecks.src1_sealed_with_type = True;
@@ -1068,12 +1068,10 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                                     regs.src1 = Valid(tagged Gpr rs1);
                                     regs.src2 = Valid(tagged Gpr rs2);
                                 end
-                                default: begin
-                                    illegalInst = True;
-                                end
                             endcase
                         end
                         f7_cap_CUnseal: begin
+                            legalInst = True;
                             dInst.iType = Cap;
                             regs.dst = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs1);
@@ -1081,6 +1079,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             dInst.capFunc = CapModify (Unseal (Src1));
                         end
                         f7_cap_CTestSubset: begin
+                            legalInst = True;
                             dInst.iType = Cap;
                             regs.dst = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs2);
@@ -1089,6 +1088,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             dInst.capFunc = CapInspect (TestSubset);
                         end
                         f7_cap_CSetEqualExact: begin
+                            legalInst = True;
                             dInst.iType = Cap;
                             regs.dst = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs1);
@@ -1096,6 +1096,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             dInst.capFunc = CapInspect (SetEqualExact);
                         end
                         f7_cap_CCopyType: begin
+                            legalInst = True;
                             dInst.iType = Cap;
                             regs.dst = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs2);
@@ -1103,6 +1104,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             dInst.capFunc = CapModify (SetAddr (Src1Type));
                         end
                         f7_cap_CAndPerm: begin
+                            legalInst = True;
                             dInst.iType = Cap;
                             regs.dst = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs1);
@@ -1110,6 +1112,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             dInst.capFunc = CapModify (AndPerm);
                         end
                         f7_cap_CSetFlags: begin
+                            legalInst = True;
                             dInst.iType = Cap;
                             regs.dst = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs1);
@@ -1117,6 +1120,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             dInst.capFunc = CapModify (SetFlags);
                         end
                         f7_cap_CToPtr: begin
+                            legalInst = True;
                             dInst.iType = Cap;
                             regs.dst = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs1);
@@ -1130,6 +1134,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             dInst.capFunc = CapInspect (ToPtr);
                         end
                         f7_cap_CFromPtr: begin
+                            legalInst = True;
                             dInst.iType = Cap;
                             regs.dst = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs2);
@@ -1139,6 +1144,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                         end
                         f7_cap_CSub: begin
                             // CSub is just a riscv subtract
+                            legalInst = True;
                             dInst.iType = Alu;
                             regs.dst  = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs1);
@@ -1146,6 +1152,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             dInst.execFunc = Alu (Sub);
                         end
                         f7_cap_CBuildCap: begin
+                            legalInst = True;
                             // Swap arguments so SCR possibly goes in RS2
                             dInst.iType = Cap;
                             regs.dst = Valid(tagged Gpr rd);
@@ -1159,13 +1166,11 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                         end
                         f7_cap_Loads: begin
                             dInst.iType = Ld;
+                            legalInst = isValid(exp_bnds_mem_inst);
                             MemInst mi = exp_bnds_mem_inst.Valid;
-                            if (isValid(exp_bnds_mem_inst)) begin
-                                dInst.execFunc = tagged Mem mi;
-                                if (mi.mem_func == Lr)
-                                    dInst.iType = Lr;
-                            end
-                            else illegalInst = True;
+                            dInst.execFunc = tagged Mem mi;
+                            if (mi.mem_func == Lr)
+                                dInst.iType = Lr;
                             regs.dst  = Valid(tagged Gpr rd);
                             regs.src1 = Valid(tagged Gpr rs1);
                             dInst.imm = Valid (0);
@@ -1173,15 +1178,13 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                         end
                         f7_cap_Stores: begin
                             dInst.iType = St;
+                            legalInst = isValid(exp_bnds_mem_inst);
                             MemInst mi = exp_bnds_mem_inst.Valid;
-                            if (isValid(exp_bnds_mem_inst)) begin
-                                dInst.execFunc = tagged Mem mi;
-                                if (mi.mem_func == Sc) begin
-                                    dInst.iType = Sc;
-                                    regs.dst = Valid(tagged Gpr rs2);
-                                end
+                            dInst.execFunc = tagged Mem mi;
+                            if (mi.mem_func == Sc) begin
+                                dInst.iType = Sc;
+                                regs.dst = Valid(tagged Gpr rs2);
                             end
-                            else illegalInst = True;
                             regs.src1 = Valid(tagged Gpr rs1);
                             regs.src2 = Valid(tagged Gpr rs2);
                             dInst.imm = Valid (0);
@@ -1190,37 +1193,43 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                         f7_cap_TwoOp: begin
                             case (funct5rs2)
                                 f5rs2_cap_CGetLen: begin
+                                    legalInst = True;
                                     dInst.iType = Cap;
                                     regs.dst = Valid(tagged Gpr rd);
                                     regs.src1 = Valid(tagged Gpr rs1);
                                     dInst.capFunc = CapInspect (GetLen);
                                 end
                                 f5rs2_cap_CGetBase: begin
+                                    legalInst = True;
                                     dInst.iType = Cap;
                                     regs.dst = Valid(tagged Gpr rd);
                                     regs.src1 = Valid(tagged Gpr rs1);
                                     dInst.capFunc = CapInspect (GetBase);
                                 end
                                 f5rs2_cap_CGetTag: begin
+                                    legalInst = True;
                                     dInst.iType = Cap;
                                     regs.dst = Valid(tagged Gpr rd);
                                     regs.src1 = Valid(tagged Gpr rs1);
                                     dInst.capFunc = CapInspect (GetTag);
                                 end
                                 f5rs2_cap_CGetSealed: begin
+                                    legalInst = True;
                                     dInst.iType = Cap;
                                     regs.dst = Valid(tagged Gpr rd);
                                     regs.src1 = Valid(tagged Gpr rs1);
                                     dInst.capFunc = CapInspect (GetSealed);
                                 end
                                 f5rs2_cap_CRRL: begin
-                                     dInst.iType = Cap;
-                                     regs.dst = Valid(tagged Gpr rd);
-                                     regs.src1 = Valid(tagged Gpr 0); // Operate on nullcap
-                                     regs.src2 = Valid(tagged Gpr rs1);
-                                     dInst.capFunc = CapModify (SetBounds (CRRL));
+                                    legalInst = True;
+                                    dInst.iType = Cap;
+                                    regs.dst = Valid(tagged Gpr rd);
+                                    regs.src1 = Valid(tagged Gpr 0); // Operate on nullcap
+                                    regs.src2 = Valid(tagged Gpr rs1);
+                                    dInst.capFunc = CapModify (SetBounds (CRRL));
                                 end
                                 f5rs2_cap_CRAM: begin
+                                    legalInst = True;
                                     dInst.iType = Cap;
                                     regs.dst = Valid(tagged Gpr rd);
                                     regs.src1 = Valid(tagged Gpr 0); // Operate on nullcap
@@ -1228,48 +1237,56 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                                     dInst.capFunc = CapModify (SetBounds (CRAM));
                                 end
                                 f5rs2_cap_CMove: begin
+                                    legalInst = True;
                                     dInst.iType = Cap;
                                     regs.dst = Valid(tagged Gpr rd);
                                     regs.src1 = Valid(tagged Gpr rs1);
                                     dInst.capFunc = CapModify (Move);
                                 end
                                 f5rs2_cap_CClearTag: begin
+                                    legalInst = True;
                                     dInst.iType = Cap;
                                     regs.dst = Valid(tagged Gpr rd);
                                     regs.src1 = Valid(tagged Gpr rs1);
                                     dInst.capFunc = CapModify (ClearTag);
                                 end
                                 f5rs2_cap_CGetAddr: begin
+                                    legalInst = True;
                                     dInst.iType = Cap;
                                     regs.dst = Valid(tagged Gpr rd);
                                     regs.src1 = Valid(tagged Gpr rs1);
                                     dInst.capFunc = CapInspect (GetAddr);
                                 end
                                 f5rs2_cap_CSealEntry: begin
+                                    legalInst = True;
                                     dInst.iType = Cap;
                                     regs.dst = Valid(tagged Gpr rd);
                                     regs.src1 = Valid(tagged Gpr rs1);
                                     dInst.capFunc = CapModify (SealEntry);
                                 end
                                 f5rs2_cap_CGetOffset: begin
+                                    legalInst = True;
                                     dInst.iType = Cap;
                                     regs.dst = Valid(tagged Gpr rd);
                                     regs.src1 = Valid(tagged Gpr rs1);
                                     dInst.capFunc = CapInspect (GetOffset);
                                 end
                                 f5rs2_cap_CGetFlags: begin
+                                    legalInst = True;
                                     dInst.iType = Cap;
                                     regs.dst = Valid(tagged Gpr rd);
                                     regs.src1 = Valid(tagged Gpr rs1);
                                     dInst.capFunc = CapInspect (GetFlags);
                                 end
                                 f5rs2_cap_CGetPerm: begin
+                                    legalInst = True;
                                     dInst.iType = Cap;
                                     regs.dst = Valid(tagged Gpr rd);
                                     regs.src1 = Valid(tagged Gpr rs1);
                                     dInst.capFunc = CapInspect (GetPerm);
                                 end
                                 f5rs2_cap_JALR_CAP: begin
+                                    legalInst = True;
                                     dInst.capChecks.src1_tag = True;
                                     dInst.capChecks.src1_permit_x = True;
                                     dInst.capChecks.src1_unsealed_or_sentry = True;
@@ -1286,6 +1303,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                                     regs.src1 = Valid(tagged Gpr rs1);
                                 end
                                 f5rs2_cap_JALR_PCC: begin
+                                    legalInst = True;
                                     dInst.capChecks.check_enable = True;
                                     dInst.capChecks.check_authority_src = Pcc;
                                     dInst.capChecks.check_low_src = Src1Addr;
@@ -1298,12 +1316,14 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                                     regs.src1 = Valid(tagged Gpr rs1);
                                 end
                                 f5rs2_cap_CGetType: begin
+                                    legalInst = True;
                                     dInst.iType = Cap;
                                     regs.dst = Valid(tagged Gpr rd);
                                     regs.src1 = Valid(tagged Gpr rs1);
                                     dInst.capFunc = CapInspect (GetType);
                                 end
                                 f5rs2_cap_CLoadTags: begin
+                                    legalInst = True;
                                     dInst.iType = Ld;
                                     dInst.imm = Valid(0);
                                     dInst.execFunc = tagged Mem MemInst{
@@ -1318,23 +1338,11 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                                     regs.src1 = Valid(tagged Gpr rs1);
                                     dInst.capChecks = memCapChecks(True);
                                 end
-                                default: begin
-                                    illegalInst = True;
-                                end
                             endcase
-                        end
-                        default: begin
-                            illegalInst = True;
                         end
                     endcase
                 end
-                default: begin
-                    illegalInst = True;
-                end
             endcase
-        end
-        default: begin
-            illegalInst = True;
         end
     endcase
 
@@ -1347,7 +1355,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
         regs.dst = tagged Invalid;
     end
 
-    return DecodeResult{dInst: dInst, regs: regs, illegalInst: illegalInst};
+    return DecodeResult{dInst: dInst, regs: regs, illegalInst: !legalInst};
 endfunction
 
 // All this does is add the CSR state to the decoding
