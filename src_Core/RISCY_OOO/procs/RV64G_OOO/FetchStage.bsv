@@ -566,12 +566,6 @@ module mkFetchStage(FetchStage);
          let decode_result = decode(validValue(decodeIn[i]).inst); // Decode 32b inst, or 32b expansion of 16b inst
          let dInst = decode_result.dInst;
          let regs = decode_result.regs;
-         DirPredResult#(DirPredTrainInfo) dir_pred = DirPredResult{taken: False, train: ?};
-         if(decode_result.dInst.iType == Br && !likely_epoch_change) begin
-            dir_pred <- dirPred.pred[i].pred;
-            likely_epoch_change = (dir_pred.taken != validValue(decodeIn[i]).pred_jump);
-         end
-         Maybe#(Addr) dir_ppc = decodeBrPred(pc, decode_result.dInst, dir_pred.taken, (validValue(decodeIn[i]).inst_kind == Inst_32b));
          if (decodeIn[i] matches tagged Valid .in)  begin
             let cause = in.cause;
             pcBlocks.rPort[i].remove(in.pc.idx);
@@ -588,7 +582,13 @@ module mkFetchStage(FetchStage);
                decode_epoch_local = !decode_epoch_local;
                redirectPc = Valid (pc); // record redirect to the first PC in this bundle.
                trainNAP = Valid (TrainNAP {pc: pc, nextPc: pc + 2});
-            end else if (in.decode_epoch == decode_epoch_local) begin
+            end else if (in.decode_epoch == decode_epoch_local) begin   
+               DirPredResult#(DirPredTrainInfo) dir_pred = DirPredResult{taken: False, train: ?};
+               if(decode_result.dInst.iType == Br && !likely_epoch_change) begin
+                dir_pred <- dirPred.pred[i].pred;
+                likely_epoch_change = (dir_pred.taken != validValue(decodeIn[i]).pred_jump);
+               end
+               Maybe#(Addr) dir_ppc = decodeBrPred(pc, decode_result.dInst, dir_pred.taken, (validValue(decodeIn[i]).inst_kind == Inst_32b));
                doAssert(in.main_epoch == f_main_epoch, "main epoch must match");
 
                let decode_result = decode(in.inst);    // Decode 32b inst, or 32b expansion of 16b inst

@@ -159,7 +159,6 @@ module mkTaggedTable#(GlobalBranchHistory#(GlobalHistoryLength) global) (TaggedT
                     hist = folded.sameWindowHistory[num].history;
                 else
                     hist = folded.history;
-
             return hist;
         endmethod
     `endif

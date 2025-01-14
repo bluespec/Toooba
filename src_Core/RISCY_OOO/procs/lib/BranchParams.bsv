@@ -1,5 +1,5 @@
 typedef 256 GlobalHistoryLength;
-typedef 16 MaxSpecSize;
+typedef 18 MaxSpecSize;
 
 String dirGoldStandard  = "/home/katy/C++/Toooba/";
 

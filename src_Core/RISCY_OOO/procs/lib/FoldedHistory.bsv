@@ -7,6 +7,8 @@ import Vector::*;
 import ConfigReg::*; // Need to use this because of run rule reading the history
 import Ehr::*;
 
+import Assert::*;
+
 
 
 // Assuming out of order updates, would actually be simpler with in order updates as I could keep a pointer
@@ -61,11 +63,13 @@ module mkFoldedHistory#(Integer histLength, GlobalBranchHistory#(GlobalHistoryLe
         Bit#(SupSize) new_bits = newHist ^ folded[valueOf(length)-1: valueOf(length)-valueOf(SupSize)];
         Bit#(length) new_folded_history = truncateLSB({folded, new_bits} << count);
 
+        Bit#(SupSize) elim = 0;
+        elim = truncateLSB({elim, eliminateBits} << count);
         for(Integer j = 0; j < valueOf(SupSize); j = j + 1) begin
             // Eliminate history out of bounds
             if(fromInteger(j) < count) begin
                 Integer i = (histLength + j) % valueOf(length);
-                new_folded_history[i] = new_folded_history[i] ^ reverseBits(eliminateBits)[j];
+                new_folded_history[i] = new_folded_history[i] ^ elim[j];
             end
         end
         return new_folded_history;
@@ -181,8 +185,9 @@ module mkFoldedHistory#(Integer histLength, GlobalBranchHistory#(GlobalHistoryLe
     for(Integer i = 0; i < valueOf(SupSize); i = i+1) begin
     sameWindowHistoryIfc[i] = (interface HistorySameWindow#(length);
         method Bit#(length) history;
-            if (i == 0)
+            if (i == 0) begin
                 return folded_history[0];
+            end
             else begin
                 Bit#(SupSize) eliminateBits = global.history[histLength-1 : histLength-valueOf(SupSize)];
                 return updatedHistory(folded_history[0], eliminateBits, 0, fromInteger(i));
@@ -195,14 +200,16 @@ module mkFoldedHistory#(Integer histLength, GlobalBranchHistory#(GlobalHistoryLe
 
     interface sameWindowHistory = sameWindowHistoryIfc;
 
-    method Bit#(length) history = folded_history[0]; //recompute(False, tagged Invalid);
+    //recompute(False, tagged Invalid);
+    //recompute(True, tagged Invalid);
+    method Bit#(length) history;
+        return folded_history[0];
+    endmethod
 
-    method Bit#(length) recoveredHistory = folded_history[1]; //recompute(True, tagged Invalid);
+    method Bit#(length) recoveredHistory; 
+        return folded_history[1];
+    endmethod
 
-
-    // How to know the pointer? Realistically commit stage cannot know
-    // If in order then fetch stage will know which branch because we can keep a pointer
-    // But that also requires sending back correct updates to the global history
 
     method Action updateHistory(Bit#(SupSize) newHistory, SupCnt count);
         // Shift and add new history bit, with older history
