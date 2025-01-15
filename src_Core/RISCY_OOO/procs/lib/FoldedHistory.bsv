@@ -8,9 +8,6 @@ import ConfigReg::*; // Need to use this because of run rule reading the history
 import Ehr::*;
 
 import Assert::*;
-
-
-
 // Assuming out of order updates, would actually be simpler with in order updates as I could keep a pointer
 /*
 Alternatively - why not simply recompute the global brnach history which will be easier since we will just shift and load
@@ -21,8 +18,6 @@ Also need to think about folding historu size, what if less than th
 Periodically shift for recovery?
 
 Multiple recovery updates to history? hopefully not possible but may need EHRs
-
-
 */
 interface HistorySameWindow#(numeric type length);
     method Bit#(length) history;
@@ -39,6 +34,7 @@ interface FoldedHistory#(numeric type length);
         
     `ifdef DEBUG
     method Action debugInitialise(Bit#(length) newHistory);
+    method Bit#(length) recomputedHistory(Bool recovery, Maybe#(Bit#(TLog#(SupSize))) count);
     `endif
 endinterface
 
@@ -85,33 +81,6 @@ module mkFoldedHistory#(Integer histLength, GlobalBranchHistory#(GlobalHistoryLe
             last_spec_outcomes[1] <= truncateLSB({last_spec_outcomes[1], newHist} << count);
             last_removed_history[1] <= truncateLSB({last_removed_history[1], eliminateBits} << count);
         endaction
-    endfunction
-
-    function Bit#(length) recompute(Bool recovery, Maybe#(Bit#(TLog#(SupSize))) count);
-        Bit#(length) ret = 0;
-        Bit#(GlobalHistoryLength) g = 0;
-        
-        if(recovery)
-            g = global.recoveredHistory;
-        else
-            g = global.history;
-            if(count matches tagged Valid .c)
-                g = g << c;
-        
-        Integer div = histLength / valueOf(length);
-        Integer rem = histLength - (div * valueOf(length));
-
-        for(Integer i = 0; i < div; i = i + 1) begin
-            Bit#(length) val = g[(i+1)*valueOf(length)-1:i*valueOf(length)];
-            ret = ret ^ val;
-        end
-        
-        if(rem > 0) begin
-            Bit#(length) val2 = g[rem+(div*valueOf(length))-1 : div*valueOf(length)];
-            ret = ret ^ val2;
-        end
-        return ret;
-        
     endfunction
 
     // Normal update
@@ -228,6 +197,31 @@ module mkFoldedHistory#(Integer histLength, GlobalBranchHistory#(GlobalHistoryLe
     method Action debugInitialise(Bit#(length) newHistory);
         folded_history[0] <= newHistory;
     endmethod
+
+    method Bit#(length) recomputedHistory(Bool recovery, Maybe#(Bit#(TLog#(SupSize))) count);
+        Bit#(length) ret = 0;
+        Bit#(GlobalHistoryLength) g = 0;
+        
+        if(recovery)
+            g = global.recoveredHistory;
+        else
+            g = global.history;
+            if(count matches tagged Valid .c)
+                g = g << c;
+        
+        Integer div = histLength / valueOf(length);
+        Integer rem = histLength - (div * valueOf(length));
+
+        for(Integer i = 0; i < div; i = i + 1) begin
+            Bit#(length) val = g[(i+1)*valueOf(length)-1:i*valueOf(length)];
+            ret = ret ^ val;
+        end
+        
+        if(rem > 0) begin
+            Bit#(length) val2 = g[rem+(div*valueOf(length))-1 : div*valueOf(length)];
+            ret = ret ^ val2;
+        end
+        return ret;
+    endmethod
     `endif
 endmodule
-//if(lat[j].wget matches tagged Valid .x)

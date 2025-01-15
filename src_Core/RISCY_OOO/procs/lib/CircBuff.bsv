@@ -85,14 +85,9 @@ module mkCircBuff(CircBuff#(size, t)) provisos(Bits#(t, a__));
     
     method ActionValue#(Maybe#(t)) retrieveNext;
         if(startSpec != endSpec[valueOf(SupSize)+1] &&& buff[startSpec][valueOf(SupSize)+1] matches tagged Valid .data) begin
-            `ifdef DEBUG
-            $display("Updated %d", data);
-            `endif
-
             buff[startSpec][valueOf(SupSize)+1] <= tagged Invalid;
             startSpec <= nextIndex(startSpec);
         end
         return buff[startSpec][valueOf(SupSize)+1];
     endmethod
-
 endmodule
