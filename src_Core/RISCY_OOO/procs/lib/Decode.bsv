@@ -48,7 +48,7 @@ import ISA_Decls_CHERI::*;
 Bit#(3) memWU   = 3'b110;
 
 // Smaller decode functions
-function Maybe#(MemInst) decodeMemInst(Instruction inst, Bool cap_mode);
+function Maybe#(MemInst) decodeMemInst(Instruction inst, Bool cap_mode, RiscVISASubset isa);
     Bool illegalInst = False;
     Opcode opcode = unpackOpcode(inst[6:0]);
     let funct5 = inst[31:27];
@@ -94,6 +94,14 @@ function Maybe#(MemInst) decodeMemInst(Instruction inst, Bool cap_mode);
 
     Bool capWidth = (mem_func != Ld && funct3 == f3_SQ)
                  || (opcode   == opcMiscMem && funct3 == f3_LQ);
+
+    Bool illegalFP =    (opcode == opcStoreFp || opcode == opcLoadFp)
+                     && !(   (funct3 == memW && isa.f)
+                          || (funct3 == memD && isa.d));
+
+    if (illegalFP) begin
+        illegalInst = True;
+    end
 
     if (capWidth && amo_func != None && amo_func != Swap) begin
         illegalInst = True; // Don't support atomic cap arithmetic
@@ -306,6 +314,9 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
     // For "xCHERI" ISA extension
     let funct5rs2 =              inst[ 24 : 20 ];
 
+    // For floating point instructions: is the fmt field in the current isa
+    Bool fpFmtInISA = (isa.f && fmt == fmtS) || (isa.d && fmt == fmtD);
+
     ImmData immI  = signExtend(inst[31:20]);
     ImmData immS  = signExtend({ inst[31:25], inst[11:7] });
     ImmData immB  = signExtend({ inst[31], inst[7], inst[30:25], inst[11:8], 1'b0});
@@ -314,7 +325,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
     ImmData immIunsigned = zeroExtend(inst[31:20]);
 
     // Results of mini-decoders
-    Maybe#(MemInst) mem_inst = decodeMemInst(inst, cap_mode);
+    Maybe#(MemInst) mem_inst = decodeMemInst(inst, cap_mode, isa);
     Maybe#(MemInst) exp_bnds_mem_inst = decodeExplicitBoundsMemInst(inst);
 
     case (opcode)
@@ -661,7 +672,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
 
         // Instructions for "F" and "D" ISA extensions - FPU
         opcOpFp: begin
-            if (!((fmt == fmtS && !isa.f) || (fmt == fmtD && !isa.d) || (fmt != fmtS && fmt != fmtD))) begin
+            if (fpFmtInISA) begin
                 // Instruction is supported
                 dInst.iType = Fpu;
                 regs.dst  = Valid(tagged Fpu rd);
@@ -730,7 +741,6 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
         end
         opcLoadFp: begin
             // check if instruction is supported
-            // FIXME: Check more cases
             if (isa.f || isa.d) begin
                 // Same decode logic as Int Ld
                 dInst.iType = Ld;
@@ -746,7 +756,6 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
         end
         opcStoreFp: begin
             // check if instruction is supported
-            // FIXME: Check more cases
             if (isa.f || isa.d) begin
                 // Same decode logic as Int St
                 dInst.iType = St;
@@ -761,11 +770,7 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
             end
         end
         opcFmadd, opcFmsub, opcFnmsub, opcFnmadd: begin
-            // check if instruction is supported
-            if (!((fmt == fmtS && !isa.f) ||
-                  (fmt == fmtD && !isa.d) ||
-                  (fmt != fmtS && fmt != fmtD))) begin
-                // Instruction is supported
+            if (fpFmtInISA) begin
                 dInst.iType = Fpu;
                 Maybe#(FpuFunc) mFunc = case (opcode)
                     opcFmadd:  Valid(FMAdd);
