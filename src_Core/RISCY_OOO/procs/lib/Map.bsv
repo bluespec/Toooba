@@ -118,6 +118,7 @@ Bitwise#(ix), Eq#(ix), Arith#(ix));
 endmodule
 
 interface MapSplit#(type ky, type ix, type vl, numeric type as);
+    method Action updateMayInsert(MapKeyIndex#(ky,ix) key, vl value, Bool insert);
     method Action update(MapKeyIndex#(ky,ix) key, vl value);
     method Action lookupStart(MapKeyIndex#(ky,ix) lookup_key);
     method Maybe#(vl) lookupRead;
@@ -133,6 +134,7 @@ Bitwise#(ix), Eq#(ix), Arith#(ix), PrimIndex#(ix, a__));
     Vector#(as, RWBramCore#(ix, ky)) updateKeys <- replicateM(mkRWBramCoreUG);
     Reg#(MapKeyIndex#(ky,ix)) lookupReg <- mkRegU;
     Reg#(MapKeyIndexValue#(ky,ix,vl)) updateReg <- mkRegU;
+    Reg#(Bool) updateInsert <- mkRegU;
     Reg#(Bool) updateFresh <- mkDReg(False);
     Reg#(Bit#(TLog#(as))) wayNext <- mkReg(0);
     Integer a = valueof(as);
@@ -147,23 +149,32 @@ Bitwise#(ix), Eq#(ix), Arith#(ix), PrimIndex#(ix, a__));
             if (clearCount == ~0) clearReg <= False;
         end else if (updateFresh) begin
             let u = updateReg;
-            Bit#(TLog#(as)) way = wayNext;
+            Maybe#(Bit#(TLog#(as))) hitWay = Invalid;
             for (Integer i = 0; i < a; i = i + 1)
-                if (updateKeys[i].rdResp == u.key) way = fromInteger(i);
+                if (updateKeys[i].rdResp == u.key) hitWay = Valid(fromInteger(i));
             // Always write to both the main memory bank and the copy used for updates.
             /*$display("MapUpdate - index: %x, key: %x, value: %x, way: %x",
                      u.index, u.key, u.value, way);*/
-            mem[way].wrReq(u.index, MapKeyValue{key: u.key, value: u.value});
-            updateKeys[way].wrReq(u.index, u.key);
-            wayNext <= (wayNext == fromInteger(a-1)) ? 0 : (wayNext + 1);
+            if (updateInsert || isValid(hitWay)) begin
+                let way = fromMaybe(wayNext, hitWay);
+                mem[way].wrReq(u.index, MapKeyValue{key: u.key, value: u.value});
+                updateKeys[way].wrReq(u.index, u.key);
+                wayNext <= (wayNext == fromInteger(a-1)) ? 0 : (wayNext + 1);
+            end
         end
     endrule
 
-    method Action update(MapKeyIndex#(ky,ix) ki, vl value);
+    function Action updateFn(MapKeyIndex#(ky,ix) ki, vl value, Bool insert) = action
         updateReg <= MapKeyIndexValue{key: ki.key, index: ki.index, value: value};
         updateFresh <= True;
+        updateInsert <= insert;
         for (Integer i = 0; i < a; i = i + 1) updateKeys[i].rdReq(ki.index);
-    endmethod
+    endaction;
+
+    method Action updateMayInsert(MapKeyIndex#(ky,ix) ki, vl value, Bool insert) =
+        updateFn(ki, value, insert);
+    method Action update(MapKeyIndex#(ky,ix) ki, vl value) =
+        updateFn(ki, value, True);
     method Action lookupStart(MapKeyIndex#(ky,ix) ki);
         lookupReg <= ki;
         for (Integer i = 0; i < a; i = i + 1) mem[i].rdReq(ki.index);

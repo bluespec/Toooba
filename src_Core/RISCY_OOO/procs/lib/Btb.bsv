@@ -120,10 +120,11 @@ module mkBtbCore(NextAddrPred#(hashSz))
                   pc, getBank(pc), taken, nextPc, $time);*/
         CompressedTarget shortMask = -1;
         CapMem mask = ~zeroExtend(shortMask);
-        if ((pc&mask) == (nextPc&mask))
-            compressedRecords[getBank(pc)].update(lookupKey(pc), VnD{v:taken, d:truncate(nextPc)});
-        else
-            fullRecords[getBank(pc)].update(lookupKey(pc), VnD{v:taken, d:nextPc});
+        let compressable = (pc&mask) == (nextPc&mask);
+        if (compressable || !taken)
+            compressedRecords[getBank(pc)].updateMayInsert(lookupKey(pc), VnD{v:taken, d:truncate(nextPc)}, taken);
+        if (!compressable || !taken)
+            fullRecords[getBank(pc)].updateMayInsert(lookupKey(pc), VnD{v:taken, d:nextPc}, taken);
     endrule
 
     method Action put_pc(CapMem pc);
