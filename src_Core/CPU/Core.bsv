@@ -63,6 +63,7 @@ import ReorderBuffer::*;
 import ReorderBufferSynth::*;
 import Scoreboard::*;
 import ScoreboardSynth::*;
+import SpecFifo::*;
 import SpecTagManager::*;
 import Fpu::*;
 import MulDiv::*;
@@ -84,6 +85,7 @@ import MMIOCore::*;
 import RenameStage::*;
 import CommitStage::*;
 import Bypass::*;
+import DirPredictor::*;
 
 import CsrFile :: *;
 
@@ -305,11 +307,18 @@ module mkCore#(CoreId coreId)(Core);
         for(Integer i = 0; i < valueof(FpuMulDivExeNum); i = i+1) begin
             fpuMulDivSpecUpdate[i] = fix.fpuMulDivExeIfc[i].specUpdate;
         end
+
+        Vector#(AluExeNum, SpecFifo#(`NUM_SPEC_TAGS, FetchTrainBP, 1, 1)) trainBPQ <- replicateM(mkSpecFifoUG(True));
+        Vector#(AluExeNum, SpeculationUpdate) btqSpecUpdate;
+        for(Integer i = 0; i < valueof(AluExeNum); i = i+1) begin
+            btqSpecUpdate[i] = trainBPQ[i].specUpdate;
+        end
+        
         GlobalSpecUpdate#(CorrectSpecPortNum, ConflictWrongSpecPortNum) globalSpecUpdate <- mkGlobalSpecUpdate(
             joinSpeculationUpdate(
-                append(append(vec(regRenamingTable.specUpdate,
+                append(append(append(vec(regRenamingTable.specUpdate,
                                   specTagManager.specUpdate,
-                                  fix.memExeIfc.specUpdate), aluSpecUpdate), fpuMulDivSpecUpdate)
+                                  fix.memExeIfc.specUpdate), aluSpecUpdate), fpuMulDivSpecUpdate), btqSpecUpdate)
             ),
             rob.specUpdate
         );
@@ -339,7 +348,7 @@ module mkCore#(CoreId coreId)(Core);
         endaction
         endfunction
 
-        Vector#(AluExeNum, FIFO#(FetchTrainBP)) trainBPQ <- replicateM(mkFIFO);
+     
         Vector#(AluExeNum, AluExePipeline) aluExe;
         for(Integer i = 0; i < valueof(AluExeNum); i = i+1) begin
             Vector#(2, SendBypass) sendBypassIfc; // exe and finish
@@ -367,7 +376,10 @@ module mkCore#(CoreId coreId)(Core);
                 method rob_getPredPC = rob.getOrigPredPC[i].get;
                 method rob_getOrig_Inst = rob.getOrig_Inst[i].get;
                 method rob_setExecuted = rob.setExecuted_doFinishAlu[i].set;
-                method fetch_train_predictors = toPut(trainBPQ[i]).put;
+                method fetch_train_predictors = trainBPQ[i].enq;
+                method Action fetch_recover_spec(DirPredSpecInfo specInfo, Bool taken); 
+                    fetchStage.recover_spec(specInfo, taken);
+                endmethod
                 method setRegReadyAggr = writeAggr(aluWrAggrPort(i));
                 interface sendBypass = sendBypassIfc;
                 method writeRegFile = writeCons(aluWrConsPort(i));
@@ -385,9 +397,13 @@ module mkCore#(CoreId coreId)(Core);
                 method doStats = doStatsReg._read;
             endinterface);
             aluExe[i] <- mkAluExePipeline(aluExeInput);
+            
+            Bool train_ready = (trainBPQ[i].first.spec_bits == 0);
+
             // truly call fetch method to train branch predictor
-            rule doFetchTrainBP;
-                let train <- toGet(trainBPQ[i]).get;
+            rule doFetchTrainBP(trainBPQ[i].notEmpty && train_ready);
+                let train = trainBPQ[i].first.data;
+                trainBPQ[i].deq;
                 fetchStage.train_predictors(
                     train.pc, train.nextPc, train.iType, train.taken,
                     train.dpTrain, train.mispred, train.isCompressed
