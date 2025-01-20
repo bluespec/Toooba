@@ -95,7 +95,9 @@ module mkRas(ReturnAddrStack) provisos(NumAlias#(TExp#(TLog#(RasEntries)), RasEn
     Vector#(SupSize, RAS) rasIfc;
     for(Integer i = 0; i < valueof(SupSize); i = i+1) begin
         rasIfc[i] = (interface RAS;
-            method CapMem first = stack[head[i]][0];
+            // first should use head[i], but this is better for timing.
+            // head[0] misbehaves with two pops in the same cycle.
+            method CapMem first = stack[head[0]][0];
             method ActionValue#(RasIndex) pop(Bool doPop);
                 RasIndex h = head[i];
                 if (doPop) begin
