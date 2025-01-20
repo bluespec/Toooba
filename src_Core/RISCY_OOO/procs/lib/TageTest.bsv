@@ -12,15 +12,17 @@ import GlobalBranchHistory::*;
 import Cur_Cycle :: *;
 
 export TageTestTrainInfo;
+export TageTestSpecInfo;
 export Entry;
 export PCIndex;
 export PCIndexSz;
 export mkTageTest;
 
 `define NUM_TABLES 7
-typedef OOTageTrainInfo#(`NUM_TABLES) TageTestTrainInfo;
+typedef TageTrainInfo#(`NUM_TABLES) TageTestTrainInfo;
+typedef TageSpecInfo TageTestSpecInfo;
 
-module mkTageTest(DirPredictor#(OOTageTrainInfo#(`NUM_TABLES)));
+module mkTageTest(DirPredictor#(TageTrainInfo#(`NUM_TABLES), TageSpecInfo));
     Reg#(Bool) starting <- mkReg(True);
     Tage#(7) tage <- mkTage;
     Reg#(UInt#(64)) predCount <- mkReg(0);
@@ -28,11 +30,11 @@ module mkTageTest(DirPredictor#(OOTageTrainInfo#(`NUM_TABLES)));
 
 
     
-    Vector#(SupSize, DirPred#(OOTageTrainInfo#(`NUM_TABLES))) predIfc;
+    Vector#(SupSize, DirPred#(TageTrainInfo#(`NUM_TABLES), TageSpecInfo)) predIfc;
     for(Integer i=0; i < valueOf(SupSize); i=i+1) begin
         predIfc[i] = (interface DirPred;
         
-        method ActionValue#(DirPredResult#(OOTageTrainInfo#(`NUM_TABLES))) pred;
+        method ActionValue#(DirPredResult#(TageTrainInfo#(`NUM_TABLES), TageSpecInfo)) pred;
             let result <- tage.dirPredInterface.pred[i].pred;
             return result;
         endmethod
@@ -41,7 +43,7 @@ module mkTageTest(DirPredictor#(OOTageTrainInfo#(`NUM_TABLES)));
     
     interface pred = predIfc;
 
-    method Action update(Bool taken, OOTageTrainInfo#(`NUM_TABLES) train, Bool mispred);
+    method Action update(Bool taken, TageTrainInfo#(`NUM_TABLES) train, Bool mispred);
         predCount <= predCount+1;
         if(mispred)
             misPredCount <= misPredCount + 1;
@@ -52,6 +54,10 @@ module mkTageTest(DirPredictor#(OOTageTrainInfo#(`NUM_TABLES)));
 
     method Action nextPc(Addr pc);
         tage.dirPredInterface.nextPc(pc);
+    endmethod
+
+    method Action specRecover(TageSpecInfo specInfo, Bool taken);
+        tage.dirPredInterface.specRecover(specInfo, taken);
     endmethod
 
     method flush = noAction;

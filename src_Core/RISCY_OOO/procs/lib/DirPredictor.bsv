@@ -37,6 +37,7 @@ import TourPredSecure::*;
 import TageTest::*;
 
 export DirPredTrainInfo(..);
+export DirPredSpecInfo(..);
 export mkDirPredictor;
 
 `ifdef DIR_PRED_BHT
@@ -56,10 +57,11 @@ typedef BimodalTrainInfo DirPredTrainInfo;
 `endif
 `ifdef DIR_PRED_TAGETEST
 typedef TageTestTrainInfo DirPredTrainInfo;
+typedef TageTestSpecInfo DirPredSpecInfo;
 `endif
 
 (* synthesize *)
-module mkDirPredictor(DirPredictor#(DirPredTrainInfo));
+module mkDirPredictor(DirPredictor#(DirPredTrainInfo, DirPredSpecInfo));
 `ifdef DIR_PRED_BHT
 `ifdef SECURITY
     staticAssert(False, "BHT with flush methods is not implemented");

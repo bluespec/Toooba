@@ -35,6 +35,7 @@ export GShareTrainInfo;
 export mkGSharePred;
 export BhtIndexSz;
 export BhtIndex;
+export GShareSpecInfo;
 
 // 16KB gshare predictor (to match BOOM evaluation paper)
 
@@ -52,6 +53,7 @@ typedef struct {
     BhtIndex index;
 } GShareTrainInfo deriving(Bits, Eq, FShow);
 
+typedef Bit#(1) GShareSpecInfo;
 // global history
 typedef GlobalBrHistReg#(GShareGHistSz) GShareGHistReg;
 
@@ -62,7 +64,7 @@ module mkGShareGHistReg(GShareGHistReg);
 endmodule
 
 (* synthesize *)
-module mkGSharePred(DirPredictor#(GShareTrainInfo));
+module mkGSharePred(DirPredictor#(GShareTrainInfo, GShareSpecInfo));
     // sat counter table
     RegFile#(BhtIndex, Bit#(2)) tab <- mkRegFileWCF(0, maxBound);
 
@@ -96,10 +98,10 @@ module mkGSharePred(DirPredictor#(GShareTrainInfo));
 
     GShareGHist curGHist = globalHist.history; // global history: MSB is the latest branch
 
-    Vector#(SupSize, DirPred#(GShareTrainInfo)) predIfc;
+    Vector#(SupSize, DirPred#(GShareTrainInfo, GShareSpecInfo)) predIfc;
     for(Integer i = 0; i < valueof(SupSize); i = i+1) begin
         predIfc[i] = (interface DirPred;
-            method ActionValue#(DirPredResult#(GShareTrainInfo)) pred;
+            method ActionValue#(DirPredResult#(GShareTrainInfo, GShareSpecInfo)) pred;
                 // get the global history
                 // all previous branch in this cycle must be not taken
                 // otherwise this branch should be on wrong path
@@ -120,7 +122,8 @@ module mkGSharePred(DirPredictor#(GShareTrainInfo));
                     train: GShareTrainInfo {
                         gHist: gHist,
                         index: index
-                    }
+                    },
+                    spec: 0
                 };
             endmethod
         endinterface);
@@ -148,6 +151,7 @@ module mkGSharePred(DirPredictor#(GShareTrainInfo));
         tab.upd(train.index, updateCnt(cnt, taken));
     endmethod
 
+    method Action specRecover(GShareSpecInfo dummy, Bool taken) = noAction;
     method flush = noAction;
     method flush_done = True;
 endmodule

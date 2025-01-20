@@ -36,6 +36,7 @@ export mkGSelectPred;
 export PCIndexSz;
 export BhtIndexSz;
 export BhtIndex;
+export GSelectSpecInfo;
 
 // 1KB gselect predictor
 
@@ -53,6 +54,7 @@ typedef struct {
     BhtIndex index;
 } GSelectTrainInfo deriving(Bits, Eq, FShow);
 
+typedef Bit#(1) GSelectSpecInfo;
 // global history
 typedef GlobalBrHistReg#(GSelectGHistSz) GSelectGHistReg;
 
@@ -63,7 +65,7 @@ module mkGSelectGHistReg(GSelectGHistReg);
 endmodule
 
 (* synthesize *)
-module mkGSelectPred(DirPredictor#(GSelectTrainInfo));
+module mkGSelectPred(DirPredictor#(GSelectTrainInfo, GSelectSpecInfo));
     // sat counter table
     RegFile#(BhtIndex, Bit#(2)) tab <- mkRegFileWCF(0, maxBound);
 
@@ -97,10 +99,10 @@ module mkGSelectPred(DirPredictor#(GSelectTrainInfo));
 
     GSelectGHist curGHist = globalHist.history; // global history: MSB is the latest branch
 
-    Vector#(SupSize, DirPred#(GSelectTrainInfo)) predIfc;
+    Vector#(SupSize, DirPred#(GSelectTrainInfo, GSelectSpecInfo)) predIfc;
     for(Integer i = 0; i < valueof(SupSize); i = i+1) begin
         predIfc[i] = (interface DirPred;
-            method ActionValue#(DirPredResult#(GSelectTrainInfo)) pred;
+            method ActionValue#(DirPredResult#(GSelectTrainInfo, GSelectSpecInfo)) pred;
                 // get the global history
                 // all previous branch in this cycle must be not taken
                 // otherwise this branch should be on wrong path
@@ -121,7 +123,8 @@ module mkGSelectPred(DirPredictor#(GSelectTrainInfo));
                     train: GSelectTrainInfo {
                         gHist: gHist,
                         index: index
-                    }
+                    },
+                    spec: 0
                 };
             endmethod
         endinterface);
@@ -149,6 +152,8 @@ module mkGSelectPred(DirPredictor#(GSelectTrainInfo));
         Bit#(2) cnt = tab.sub(index);
         tab.upd(index, updateCnt(cnt, taken));
     endmethod
+
+    method Action specRecover(GSelectSpecInfo dummy, Bool taken) = noAction;
 
     method flush = noAction;
     method flush_done = True;

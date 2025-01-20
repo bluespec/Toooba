@@ -66,7 +66,7 @@ typedef struct {
 } TourUpdate deriving(Bits, Eq, FShow);
 
 (* synthesize *)
-module mkTourPredSecure(DirPredictor#(TourTrainInfo));
+module mkTourPredSecure(DirPredictor#(TourTrainInfo, TourPredSpecInfo));
     // FIXME: The regfile should be initialized (on FPGA, all 0 after programming)
     // local history: MSB is the latest branch
     RegFile#(TabIndex, Vector#(LocalHistVecSz, TourLocalHist)) localHistTab <- mkRegFileWCF(0, maxBound);
@@ -129,10 +129,10 @@ module mkTourPredSecure(DirPredictor#(TourTrainInfo));
 
     TourGlobalHist curGHist = gHistReg.history; // global history: MSB is the latest branch
 
-    Vector#(SupSize, DirPred#(TourTrainInfo)) predIfc;
+    Vector#(SupSize, DirPred#(TourTrainInfo, TourPredSpecInfo)) predIfc;
     for(Integer i = 0; i < valueof(SupSize); i = i+1) begin
         predIfc[i] = (interface DirPred;
-            method ActionValue#(DirPredResult#(TourTrainInfo)) pred;
+            method ActionValue#(DirPredResult#(TourTrainInfo, TourPredSpecInfo)) pred;
                 // get local history
                 PCIndex pcIndex = getPCIndex(offsetPc(pc_reg, i));
                 let {localHistTabIdx, localHistVecSel} = getPCIndices(pcIndex);
@@ -173,7 +173,8 @@ module mkTourPredSecure(DirPredictor#(TourTrainInfo));
                         globalTaken: globalTaken,
                         localTaken: localTaken,
                         pcIndex: pcIndex
-                    }
+                    },
+                    spec: 0
                 };
             endmethod
         endinterface);
@@ -249,6 +250,8 @@ module mkTourPredSecure(DirPredictor#(TourTrainInfo));
     method Action update(Bool taken, TourTrainInfo train, Bool mispred);
         updateEn.wset(TourUpdate {taken: taken, train: train, mispred: mispred});
     endmethod
+
+    method Action specRecover(TourPredSpecInfo dummy, Bool taken) = noAction;
 
     method Action flush if(flushDone);
         flushDone <= False;
