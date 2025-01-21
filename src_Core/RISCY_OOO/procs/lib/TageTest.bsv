@@ -27,6 +27,7 @@ module mkTageTest(DirPredictor#(TageTrainInfo#(`NUM_TABLES), TageSpecInfo));
     Tage#(7) tage <- mkTage;
     Reg#(UInt#(64)) predCount <- mkReg(0);
     Reg#(UInt#(64)) misPredCount <- mkReg(0);
+    Reg#(Addr) currentPc <- mkRegU;
 
 
     
@@ -35,6 +36,7 @@ module mkTageTest(DirPredictor#(TageTrainInfo#(`NUM_TABLES), TageSpecInfo));
         predIfc[i] = (interface DirPred;
         
         method ActionValue#(DirPredResult#(TageTrainInfo#(`NUM_TABLES), TageSpecInfo)) pred;
+            $display("Cycle %0d, TAGETEST, Prediction on %x\n", cur_cycle, currentPc);
             let result <- tage.dirPredInterface.pred[i].pred;
             return result;
         endmethod
@@ -54,6 +56,7 @@ module mkTageTest(DirPredictor#(TageTrainInfo#(`NUM_TABLES), TageSpecInfo));
 
     method Action nextPc(Addr pc);
         tage.dirPredInterface.nextPc(pc);
+        currentPc <= pc;
     endmethod
 
     method Action specRecover(TageSpecInfo specInfo, Bool taken);

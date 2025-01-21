@@ -343,8 +343,12 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
             inIfc.redirect(x.controlFlow.nextPc, validValue(x.spec_tag), x.tag, exeToFin.spec_bits);
             // must be a branch, train branch predictor
             doAssert(x.iType == Jr || x.iType == Br, "only jr and br can mispredict");
-            
-            inIfc.fetch_recover_spec(x.dpSpec, x.controlFlow.taken);
+
+            if(x.iType == Br) begin
+                inIfc.fetch_recover_spec(x.dpSpec, x.controlFlow.taken);
+            end
+
+            $display("Cycle %d REDIRECT ",  cur_cycle, fshow(x.iType), " %x, SPEC_TAG %b\n", x.controlFlow.pc, validValue(x.spec_tag));
 
             inIfc.fetch_train_predictors(ToSpecFifo{
                 data: FetchTrainBP {

@@ -51,6 +51,7 @@ typedef GShareTrainInfo DirPredTrainInfo;
 `endif
 `ifdef DIR_PRED_TOUR
 typedef TourTrainInfo DirPredTrainInfo;
+typedef TourPredSpecInfo DirPredSpecInfo;
 `endif
 `ifdef DIR_PRED_BIMODAL
 typedef BimodalTrainInfo DirPredTrainInfo;
