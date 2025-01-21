@@ -52,11 +52,17 @@ export mkTourPred;
 export PCIndexSz;
 export PCIndex;
 
-// 4KB tournament predictor
-
-typedef 12 TourGlobalHistSz;
-typedef 10 TourLocalHistSz;
-typedef 10 PCIndexSz;
+`ifdef SMALL_BRANCH_PREDICTOR
+    // 512B tournament predictor
+    typedef 9 TourGlobalHistSz;
+    typedef 7 TourLocalHistSz;
+    typedef 7 PCIndexSz;
+`else
+    // 4KB tournament predictor
+    typedef 12 TourGlobalHistSz;
+    typedef 10 TourLocalHistSz;
+    typedef 10 PCIndexSz;
+`endif
 
 typedef Bit#(TourGlobalHistSz) TourGlobalHist;
 typedef Bit#(TourLocalHistSz) TourLocalHist;
@@ -94,6 +100,7 @@ module mkTourPred(DirPredictor#(TourTrainInfo));
 
     // Lookup PC
     Reg#(Addr) pc_reg <- mkRegU;
+    Reg#(Vector#(SupSize, PCIndex)) pcIndex <- mkRegU;
 
     // EHR to record predict results in this cycle
     Ehr#(TAdd#(1, SupSize), SupCnt) predCnt <- mkEhr(0);
@@ -109,6 +116,7 @@ module mkTourPred(DirPredictor#(TourTrainInfo));
         boundedPlus(cnt, (taken) ? -1 : 1);
 
     TourGlobalHist curGHist = gHistReg.history; // global history: MSB is the latest branch
+    Reg#(TourGlobalHist) prevGHist <- mkRegU;
     Reg#(Vector#(SupSize, Bool)) globalTakenVec <- mkRegU;
     Reg#(Vector#(SupSize, Bool)) useLocalVec <- mkRegU;
 
@@ -116,9 +124,8 @@ module mkTourPred(DirPredictor#(TourTrainInfo));
     for(Integer i = 0; i < valueof(SupSize); i = i+1) begin
         predIfc[i] = (interface DirPred;
             method ActionValue#(DirPredResult#(TourTrainInfo)) pred;
-                PCIndex pcIndex = getPCIndex(offsetPc(pc_reg, i));
                 // get local history & prediction
-                TourLocalHist localHist = localHistTab.sub(pcIndex);
+                TourLocalHist localHist = localHistTab.sub(pcIndex[i]);
                 Bool localTaken = isTaken(localBht.sub(localHist));
 
                 // get the global history
@@ -126,6 +133,10 @@ module mkTourPred(DirPredictor#(TourTrainInfo));
                 // otherwise this branch should be on wrong path
                 // because all inst in same cycle are fetched consecutively
                 // get global prediction
+                // XXX This isn't true anymore...
+                // The current pipeline does not keep fetched bundles
+                // together at decode; you might get decoded next
+                // to an instruction from the next bundle.
                 Bool globalTaken = globalTakenVec[predCnt[i]];
 
                 // make choice
@@ -142,11 +153,11 @@ module mkTourPred(DirPredictor#(TourTrainInfo));
                 return DirPredResult {
                     taken: taken,
                     train: TourTrainInfo {
-                        globalHist: curGHist >> predCnt[i],
+                        globalHist: prevGHist >> predCnt[i],
                         localHist: localHist,
                         globalTaken: globalTaken,
                         localTaken: localTaken,
-                        pcIndex: pcIndex
+                        pcIndex: pcIndex[i]
                     }
                 };
             endmethod
@@ -155,8 +166,8 @@ module mkTourPred(DirPredictor#(TourTrainInfo));
 
     (* fire_when_enabled, no_implicit_conditions *)
     rule canonGlobalHist;
+        // Update history for next cycle's lookup.
         gHistReg.addHistory(predRes[valueof(SupSize)], predCnt[valueof(SupSize)]);
-        // Buffer useLocalVec
         // Reproduce next history; this would ideally be done in GlobalBrHistReg to avoid duplicating logic.
         TourGlobalHist nHist = truncate({predRes[valueof(SupSize)], curGHist} >> predCnt[valueof(SupSize)]);
         function Bool globalTakenLookup (Integer i) = isTaken(globalBht.sub(nHist >> i));
@@ -166,9 +177,14 @@ module mkTourPred(DirPredictor#(TourTrainInfo));
         // Reset counters and prediction.
         predRes[valueof(SupSize)] <= 0;
         predCnt[valueof(SupSize)] <= 0;
+        prevGHist <= nHist;
     endrule
 
-    method nextPc = pc_reg._write;
+    method Action nextPc(Addr pc);
+        pc_reg <= pc;
+        function PCIndex genPcIndex(Integer i) = getPCIndex(offsetPc(pc, i));
+        pcIndex <= genWith(genPcIndex); // Call getPCIndex with 0-SupSize.
+    endmethod
 
     interface pred = predIfc;
 

@@ -50,11 +50,17 @@ export mkTourPredSecure;
 // logic. It is guaranteed outside that no prediction or update can happen when
 // flushing.
 
-typedef 10 PCIndexSz;
+`ifdef SMALL_BRANCH_PREDICTOR
+    typedef 7 PCIndexSz;
+    typedef 6 TabIndexSz;
+`else
+    typedef 10 PCIndexSz;
+    typedef 9 TabIndexSz;
+`endif
+
 typedef Bit#(PCIndexSz) PCIndex;
 
 // We group several sat counters/local hists together in order to flush faster
-typedef 9 TabIndexSz;
 typedef Bit#(TabIndexSz) TabIndex;
 
 // vector of local hists
