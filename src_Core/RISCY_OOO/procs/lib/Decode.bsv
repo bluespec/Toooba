@@ -1156,6 +1156,14 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                             regs.src2 = Valid(tagged Gpr rs2);
                             dInst.execFunc = Alu (Sub);
                         end
+                        f7_cap_CSetHigh: begin
+                            legalInst = True;
+                            dInst.iType = Cap;
+                            regs.dst = Valid(tagged Gpr rd);
+                            regs.src1 = Valid(tagged Gpr rs1);
+                            regs.src2 = Valid(tagged Gpr rs2);
+                            dInst.capFunc = CapModify (SetHigh);
+                        end
                         f7_cap_CBuildCap: begin
                             legalInst = True;
                             // Swap arguments so SCR possibly goes in RS2

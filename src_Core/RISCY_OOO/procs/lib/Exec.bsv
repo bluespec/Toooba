@@ -270,6 +270,8 @@ function CapPipe capModify(CapPipe a, CapPipe b, CapModifyFunc func);
                 setFlags(a_mut, truncate(getAddr(b)));
             tagged FromPtr                :
                 (getAddr(a) == 0 ? nullCap : setOffset(b_mut, getAddr(a)).value);
+            tagged SetHigh:
+                fromMem(tuple2(False, {getAddr(b), getAddr(a)}));
             tagged BuildCap               :
                 setKind(setValidCap(a_mut, !buildCapIllegal), getKind(a)==SENTRY ? SENTRY : UNSEALED);
             tagged Move                   :
