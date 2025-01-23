@@ -338,8 +338,10 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
                 fnAND: Valid(And);
                 fnOR: Valid(Or);
                 fnXOR: Valid(Xor);
-                fnSLL: Valid(Sll);
-                fnSR: Valid(immI[10] == 0 ? Srl : Sra);
+                fnSLL: (immI[11:6] == 6'b000000 ? Valid(Sll) : Invalid);
+                fnSR: (immI[11:6] == 6'b000000 ? Valid(Srl) :
+                       immI[11:6] == 6'b010000 ? Valid(Sra) :
+                       Invalid);
                 default: Invalid;
             endcase;
             legalInst = isValid(mAluFunc);
@@ -355,8 +357,10 @@ function DecodeResult decode(Instruction inst, Bool cap_mode);
             dInst.iType = Alu;
             Maybe#(AluFunc) mAluFunc = case (funct3)
                 fnADD: Valid(Addw);
-                fnSLL: Valid(Sllw);
-                fnSR: Valid(immI[10] == 0 ? Srlw : Sraw);
+                fnSLL: (immI[11:5] == 7'b0000000 ? Valid(Sllw) : Invalid);
+                fnSR: (immI[11:5] == 7'b0000000 ? Valid(Srlw) :
+                       immI[11:5] == 7'b0100000 ? Valid(Sraw) :
+                       Invalid);
                 default: Invalid;
             endcase;
             legalInst = isValid(mAluFunc);
