@@ -40,6 +40,7 @@ export mkTourGHistReg;
 export mkTourPred;
 export PCIndexSz;
 export PCIndex;
+export TourPredSpecInfo;
 
 // 4KB tournament predictor
 
@@ -59,6 +60,8 @@ typedef struct {
     PCIndex pcIndex;
 } TourTrainInfo deriving(Bits, Eq, FShow);
 
+typedef Bit#(1) TourPredSpecInfo;
+
 // global history reg
 typedef GlobalBrHistReg#(TourGlobalHistSz) TourGHistReg;
 
@@ -69,7 +72,7 @@ module mkTourGHistReg(TourGHistReg);
 endmodule
 
 (* synthesize *)
-module mkTourPred(DirPredictor#(TourTrainInfo));
+module mkTourPred(DirPredictor#(TourTrainInfo, TourPredSpecInfo));
     // local history: MSB is the latest branch
     RegFile#(PCIndex, TourLocalHist) localHistTab <- mkRegFileWCF(0, maxBound);
     // local sat counters
@@ -116,10 +119,10 @@ module mkTourPred(DirPredictor#(TourTrainInfo));
     Reg#(Vector#(SupSize, Bool)) globalTakenVec <- mkRegU;
     Reg#(Vector#(SupSize, Bool)) useLocalVec <- mkRegU;
 
-    Vector#(SupSize, DirPred#(TourTrainInfo)) predIfc;
+    Vector#(SupSize, DirPred#(TourTrainInfo, TourPredSpecInfo)) predIfc;
     for(Integer i = 0; i < valueof(SupSize); i = i+1) begin
         predIfc[i] = (interface DirPred;
-            method ActionValue#(DirPredResult#(TourTrainInfo)) pred;
+            method ActionValue#(DirPredResult#(TourTrainInfo, TourPredSpecInfo)) pred;
                 PCIndex pcIndex = getPCIndex(offsetPc(pc_reg, i));
                 // get local history & prediction
                 TourLocalHist localHist = localHistTab.sub(pcIndex);
@@ -151,7 +154,8 @@ module mkTourPred(DirPredictor#(TourTrainInfo));
                         globalTaken: globalTaken,
                         localTaken: localTaken,
                         pcIndex: pcIndex
-                    }
+                    },
+                    spec: 0
                 };
             endmethod
         endinterface);
@@ -202,6 +206,8 @@ module mkTourPred(DirPredictor#(TourTrainInfo));
             choiceBht.upd(train.globalHist, updateCnt(choiceCnt, useLocal));
         end
     endmethod
+
+    method Action specRecover(TourPredSpecInfo dummy, Bool taken) = noAction;
 
     method flush = noAction;
     method flush_done = True;

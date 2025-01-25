@@ -88,6 +88,8 @@ interface FetchStage;
         DirPredTrainInfo dpTrain, Bool mispred, Bool isCompressed
     );
 
+    method Action recover_spec(DirPredSpecInfo dpSpec, Bool taken);
+
     // security
     method Bool emptyForFlush;
     method Action flush_predictors;
@@ -193,6 +195,7 @@ typedef struct {
   Addr ppc;
   Epoch main_epoch;
   DirPredTrainInfo dpTrain;
+  DirPredSpecInfo dpSpec;
   Instruction inst;
   DecodedInst dInst;
   Bit #(32) orig_inst;    // original 16b or 32b instruction ([1:0] will distinguish 16b or 32b)
@@ -583,7 +586,7 @@ module mkFetchStage(FetchStage);
                redirectPc = Valid (pc); // record redirect to the first PC in this bundle.
                trainNAP = Valid (TrainNAP {pc: pc, nextPc: pc + 2});
             end else if (in.decode_epoch == decode_epoch_local) begin   
-               DirPredResult#(DirPredTrainInfo) dir_pred = DirPredResult{taken: False, train: ?};
+               DirPredResult#(DirPredTrainInfo, DirPredSpecInfo) dir_pred = DirPredResult{taken: False, train: ?, spec: ?};
                if(decode_result.dInst.iType == Br && !likely_epoch_change) begin
                 dir_pred <- dirPred.pred[i].pred;
                 likely_epoch_change = (dir_pred.taken != validValue(decodeIn[i]).pred_jump);
@@ -677,6 +680,7 @@ module mkFetchStage(FetchStage);
                                         ppc: ppc,
                                         main_epoch: in.main_epoch,
                                         dpTrain: dir_pred.train,
+                                        dpSpec: dir_pred.spec,
                                         inst: in.inst,
                                         dInst: dInst,
                                         orig_inst: in.orig_inst,
@@ -799,6 +803,10 @@ module mkFetchStage(FetchStage);
         // So the effect of setting waitForFlush in redirect method will not be overwritten
         // Then we don't need to make two methods conflict
         // It's fine for the effect of this method to be overwritten, because it fires very often
+    endmethod
+
+    method Action recover_spec(DirPredSpecInfo dpSpec, Bool taken);
+        dirPred.specRecover(dpSpec, taken);
     endmethod
 
     method Action train_predictors(

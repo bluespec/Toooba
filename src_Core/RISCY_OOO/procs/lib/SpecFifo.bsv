@@ -238,7 +238,7 @@ module mkSpecFifoCF#(
         return p == fromInteger(valueOf(size) - 1) ? 0 : p + 1;
     endfunction
 
-    Bool empty_for_canon = all( \== (False) , valid[0] );
+    Bool empty_for_canon = all( \== (False) , valid[1] );
     rule canon_deqP(!valid[1][deqP] && (enqP != deqP || !empty_for_canon));
         // element at deqP was killed, so increment deqP
         deqP <= getNextPtr(deqP);

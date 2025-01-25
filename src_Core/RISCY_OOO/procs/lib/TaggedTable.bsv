@@ -66,9 +66,9 @@ interface TaggedTable#(numeric type indexSize, numeric type tagSize, numeric typ
     method Action updateEntry(Bit#(`MAX_INDEX_SIZE) index, Bit#(`MAX_TAGGED) tag, Bool taken, UsefulCtrUpdate usefulUpdate);
     
     // Only done on misprediction
-    method Action decrementUsefulCounter(Addr pc);
+    method Action decrementUsefulCounter(Bit#(indexSize) index);
 
-    method Action allocateEntry(Addr pc, Bool taken);
+    method Action allocateEntry(Bit#(indexSize) index, Bit#(tagSize) tag, Bool taken);
 
     /// Debug
     `ifdef DEBUG
@@ -200,8 +200,9 @@ module mkTaggedTable#(GlobalBranchHistory#(GlobalHistoryLength) global) (TaggedT
     endmethod
 
     
-    method Action decrementUsefulCounter(Addr pc);
-        match {.tag, .index} = getHistory(AFTER_RECOVERY, pc, tagged Invalid); // Need to use the recovered history!
+    method Action decrementUsefulCounter(Bit#(indexSize) index);
+        //match {.tag, .index} = getHistory(AFTER_RECOVERY, pc, tagged Invalid); // Need to use the recovered history!
+        
         // Idea - seperate the useful counters? or some other way of doing this without a read. Could instead drag useful counters.
         TaggedTableEntry#(tagSize) entry = tab.sub(index);
         entry.usefulCounter = boundedUpdate(entry.usefulCounter, False);
@@ -209,15 +210,13 @@ module mkTaggedTable#(GlobalBranchHistory#(GlobalHistoryLength) global) (TaggedT
     endmethod
 
     // 3 bits 100 011
-    method Action allocateEntry(Addr pc,  Bool taken);
+    method Action allocateEntry(Bit#(indexSize) index, Bit#(tagSize) tag, Bool taken);
         /*
             Need to remove last history bit to get the correct index
             Alternatively could drag the indices of every table in the training data.
 
             If recovered in this cycle - can use getHistory(True), otherwise we need to remove a bit.
-        */
-        match {.tag, .index} = getHistory(AFTER_RECOVERY, pc, tagged Invalid);
-        
+        */    
         // Weakly taken = 100 - 1, weakly not taken = 100 - 1
         Bit#(PredCtrSz) counter_init = 1 << (valueOf(PredCtrSz)-1);
         if (!taken) begin

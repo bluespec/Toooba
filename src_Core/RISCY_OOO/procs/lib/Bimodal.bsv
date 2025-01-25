@@ -12,6 +12,7 @@ export Entry;
 export PCIndex;
 export PCIndexSz;
 export mkBimodal;
+export BimodalSpecInfo;
 
 typedef 12 PCIndexSz;
 typedef Bit#(PCIndexSz) PCIndex;
@@ -23,18 +24,19 @@ typedef struct {
 } BimodalTrainInfo deriving(Bits, Eq, FShow);
 
 typedef BimodalTrainInfo DirPredTrainInfo;
+typedef Bit#(1) BimodalSpecInfo;
 
-module mkBimodal(DirPredictor#(BimodalTrainInfo));
+module mkBimodal(DirPredictor#(BimodalTrainInfo, BimodalSpecInfo));
     RegFile#(PCIndex, Entry) bimodal_table <- mkRegFileWCF(0, maxBound);
     Reg#(Addr) currentPc <- mkReg(?);
 
-    Vector#(SupSize, DirPred#(BimodalTrainInfo)) predIfc;
+    Vector#(SupSize, DirPred#(BimodalTrainInfo, BimodalSpecInfo)) predIfc;
     Reg#(Bit#(1)) dummy <- mkReg(0);
 
     `ifdef DEBUG_DATA
     for(Integer i=0; i < valueOf(SupSize); i=i+1) begin
         predIfc[i] = (interface DirPred;
-            method ActionValue#(DirPredResultWithDebugData#(BimodalTrainInfo)) pred;
+            method ActionValue#(DirPredResultWithDebugData#(BimodalTrainInfo, BimodalSpecInfo)) pred;
                 PCIndex index = truncate(offsetPc(currentPc,i));
                 Entry entry = bimodal_table.sub(index);
                 $display("BIMODAL\n");
@@ -59,7 +61,7 @@ module mkBimodal(DirPredictor#(BimodalTrainInfo));
     `else
         for(Integer i=0; i < valueOf(SupSize); i=i+1) begin
             predIfc[i] = (interface DirPred;
-                method ActionValue#(DirPredResult#(BimodalTrainInfo)) pred;
+                method ActionValue#(DirPredResult#(BimodalTrainInfo, BimodalSpecInfo)) pred;
                     PCIndex index = truncate(offsetPc(currentPc,i));
                     Entry entry = bimodal_table.sub(index);
                     //$display("pc: %d bsv index: %d counter: %d\n", currentPc, index, entry);
@@ -69,7 +71,8 @@ module mkBimodal(DirPredictor#(BimodalTrainInfo));
                         train: BimodalTrainInfo {
                             counter: entry,
                             pc: index
-                        }
+                        },
+                        spec: 0
                     };
                 endmethod
             endinterface);
@@ -93,6 +96,8 @@ module mkBimodal(DirPredictor#(BimodalTrainInfo));
     method Action nextPc(Addr pc);
         currentPc <= pc;
     endmethod
+
+    method Action specRecover(BimodalSpecInfo dummy, Bool taken) = noAction;
 
     method flush = noAction;
     method flush_done = True;

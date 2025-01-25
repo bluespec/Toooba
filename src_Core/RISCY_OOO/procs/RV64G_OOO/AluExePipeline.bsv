@@ -54,6 +54,7 @@ typedef struct {
     PhyRegs regs;
     InstTag tag;
     DirPredTrainInfo dpTrain;
+    DirPredSpecInfo dpSpec;
     // specualtion
     Maybe#(SpecTag) spec_tag;
 } AluDispatchToRegRead deriving(Bits, Eq, FShow);
@@ -64,6 +65,7 @@ typedef struct {
     Maybe#(PhyDst) dst;
     InstTag tag;
     DirPredTrainInfo dpTrain;
+    DirPredSpecInfo dpSpec;
     // src reg vals & pc & ppc
     Data rVal1;
     Data rVal2;
@@ -80,6 +82,7 @@ typedef struct {
     Maybe#(PhyDst) dst;
     InstTag tag;
     DirPredTrainInfo dpTrain;
+    DirPredSpecInfo dpSpec;
     Bool isCompressed;
     // result
     Data data; // alu compute result
@@ -143,7 +146,8 @@ interface AluExeInput;
     method Bit #(32) rob_getOrig_Inst (InstTag t);
     method Action rob_setExecuted(InstTag t, Data dst_data, Maybe#(Data) csrData, ControlFlow cf);
     // Fetch stage
-    method Action fetch_train_predictors(FetchTrainBP train);
+    method Action fetch_train_predictors(ToSpecFifo#(FetchTrainBP) train);
+    method Action fetch_recover_spec(DirPredSpecInfo specInfo, Bool taken);
 
     // global broadcast methods
     // set aggressive sb & wake up inst in RS
@@ -210,6 +214,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
                 regs: x.regs,
                 tag: x.tag,
                 dpTrain: x.data.dpTrain,
+                dpSpec: x.data.dpSpec,
                 spec_tag: x.spec_tag
             },
             spec_bits: x.spec_bits
@@ -252,6 +257,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
                 dst: x.regs.dst,
                 tag: x.tag,
                 dpTrain: x.dpTrain,
+                dpSpec: x.dpSpec,
                 rVal1: rVal1,
                 rVal2: rVal2,
                 pc: pc,
@@ -296,6 +302,7 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
                 dst: x.dst,
                 tag: x.tag,
                 dpTrain: x.dpTrain,
+                dpSpec: x.dpSpec,
                 isCompressed: x.orig_inst[1:0] != 2'b11,
                 data: exec_result.data,
                 csrData: isValid(x.dInst.csr) ? Valid (exec_result.csrData) : Invalid,
@@ -326,6 +333,8 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
             x.controlFlow
         );
 
+        let train_spec_bits = exeToFin.spec_bits;
+
         // handle spec tags for branch predictions
         (* split *)
         if (x.controlFlow.mispredict) (* nosplit *) begin
@@ -334,14 +343,22 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
             inIfc.redirect(x.controlFlow.nextPc, validValue(x.spec_tag), x.tag, exeToFin.spec_bits);
             // must be a branch, train branch predictor
             doAssert(x.iType == Jr || x.iType == Br, "only jr and br can mispredict");
-            inIfc.fetch_train_predictors(FetchTrainBP {
-                pc: x.controlFlow.pc,
-                nextPc: x.controlFlow.nextPc,
-                iType: x.iType,
-                taken: x.controlFlow.taken,
-                dpTrain: x.dpTrain,
-                mispred: True,
-                isCompressed: x.isCompressed
+
+            if(x.iType == Br) begin
+                inIfc.fetch_recover_spec(x.dpSpec, x.controlFlow.taken);
+            end
+
+            inIfc.fetch_train_predictors(ToSpecFifo{
+                data: FetchTrainBP {
+                    pc: x.controlFlow.pc,
+                    nextPc: x.controlFlow.nextPc,
+                    iType: x.iType,
+                    taken: x.controlFlow.taken,
+                    dpTrain: x.dpTrain,
+                    mispred: True,
+                    isCompressed: x.isCompressed
+                },
+                spec_bits: train_spec_bits
             });
             if(verbose) $display("alu mispredict pc¤: %x, nextPc: %x, %d",
                                   x.controlFlow.pc, x.controlFlow.nextPc, cur_cycle);
@@ -365,14 +382,17 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
             // since we can only do 1 training in a cycle, split the rule
             // XXX not training JAL, reduce chance of conflicts
             if(x.iType == Jr || x.iType == Br) begin
-                inIfc.fetch_train_predictors(FetchTrainBP {
-                    pc: x.controlFlow.pc,
-                    nextPc: x.controlFlow.nextPc,
-                    iType: x.iType,
-                    taken: x.controlFlow.taken,
-                    dpTrain: x.dpTrain,
-                    mispred: False,
-                    isCompressed: x.isCompressed
+                inIfc.fetch_train_predictors( ToSpecFifo{
+                    data: FetchTrainBP {
+                        pc: x.controlFlow.pc,
+                        nextPc: x.controlFlow.nextPc,
+                        iType: x.iType,
+                        taken: x.controlFlow.taken,
+                        dpTrain: x.dpTrain,
+                        mispred: False,
+                        isCompressed: x.isCompressed
+                    },
+                    spec_bits: train_spec_bits
                 });
             end
         end

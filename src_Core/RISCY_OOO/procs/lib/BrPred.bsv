@@ -56,15 +56,17 @@ function Addr offsetPc(Addr pc, Integer i) = {truncateLSB(pc), pc[7:0] + (fromIn
 typedef struct {
     Bool taken;
     trainInfoT train; // info that a branch must keep for future training
-} DirPredResult#(type trainInfoT) deriving(Bits, Eq, FShow);
+    specInfoT spec;
+} DirPredResult#(type trainInfoT, type specInfoT) deriving(Bits, Eq, FShow);
 
-interface DirPred#(type trainInfoT);
-    method ActionValue#(DirPredResult#(trainInfoT)) pred;
+interface DirPred#(type trainInfoT, type specInfoT);
+    method ActionValue#(DirPredResult#(trainInfoT, specInfoT)) pred;
 endinterface
 
-interface DirPredictor#(type trainInfoT);
+interface DirPredictor#(type trainInfoT, type specInfoT);
     method Action nextPc(Addr nextPc);
-    interface Vector#(SupSize, DirPred#(trainInfoT)) pred;
+    method Action specRecover(specInfoT specInfo, Bool taken);
+    interface Vector#(SupSize, DirPred#(trainInfoT, specInfoT)) pred;
     method Action update(Bool taken, trainInfoT train, Bool mispred);
     method Action flush;
     method Bool flush_done;
