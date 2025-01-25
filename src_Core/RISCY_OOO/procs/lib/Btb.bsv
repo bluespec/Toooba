@@ -33,8 +33,8 @@ export mkBtb;
 
 interface NextAddrPred#(numeric type hashSz);
     method Action put_pc(Addr pc);
-    interface Vector#(SupSizeX2, Maybe#(Addr)) pred;
-    method Action update(Addr pc, Addr brTarget, Bool taken);
+    method Vector#(SupSizeX2, Tuple2#(Maybe#(Addr), Bool)) pred;
+    method Action update(Addr pc, Addr brTarget, Bool taken, Bool branch);
     // security
     method Action flush;
     method Bool flush_done;
@@ -62,6 +62,7 @@ typedef struct {
     Addr pc;
     Addr nextPc;
     Bool taken;
+    Bool branch;
 } BtbUpdate deriving(Bits, Eq, FShow);
 
 typedef struct {
@@ -82,9 +83,9 @@ module mkBtbCore(NextAddrPred#(hashSz))
     Add#(b__, tagSz, TMul#(TDiv#(tagSz, hashSz), hashSz)));
     // Read and Write ordering doesn't matter since this is a predictor
     Reg#(Addr) addr_reg <- mkRegU;
-    Vector#(SupSizeX2, MapSplit#(HashedTag#(hashSz), BtbIndex, VnD#(Addr), 1))
+    Vector#(SupSizeX2, MapSplit#(HashedTag#(hashSz), BtbIndex, VnD#(Tuple2#(Addr, Bool)), 1))
         fullRecords <- replicateM(mkMapLossyBRAM);
-    Vector#(SupSizeX2, MapSplit#(HashedTag#(hashSz), BtbIndex, VnD#(CompressedTarget), BtbAssociativity))
+    Vector#(SupSizeX2, MapSplit#(HashedTag#(hashSz), BtbIndex, VnD#(Tuple2#(CompressedTarget, Bool)), BtbAssociativity))
         compressedRecords <- replicateM(mkMapLossyBRAM);
     Reg#(Maybe#(BtbUpdate)) updateEn <- mkDReg(Invalid);
 
@@ -101,14 +102,15 @@ module mkBtbCore(NextAddrPred#(hashSz))
         let pc = upd.pc;
         let nextPc = upd.nextPc;
         let taken = upd.taken;
+        let branch = upd.branch;
         /*$display("MapUpdate in BTB - pc %x, bank: %x, taken: %x, next: %x, time: %t",
                   pc, getBank(pc), taken, nextPc, $time);*/
         CompressedTarget shortMask = -1;
         Addr mask = ~zeroExtend(shortMask);
         if ((pc&mask) == (nextPc&mask))
-            compressedRecords[getBank(pc)].update(lookupKey(pc), VnD{v:taken, d:truncate(nextPc)});
+            compressedRecords[getBank(pc)].update(lookupKey(pc), VnD{v:taken, d:tuple2(truncate(nextPc), branch)});
         else
-            fullRecords[getBank(pc)].update(lookupKey(pc), VnD{v:taken, d:nextPc});
+            fullRecords[getBank(pc)].update(lookupKey(pc), VnD{v:taken, d:tuple2(nextPc, branch)});
     endrule
 
     method Action put_pc(Addr pc);
@@ -125,20 +127,20 @@ module mkBtbCore(NextAddrPred#(hashSz))
         end
     endmethod
 
-    method Vector#(SupSizeX2, Maybe#(Addr)) pred;
-        Vector#(SupSizeX2, Maybe#(Addr)) ppcs = replicate(Invalid);
+    method Vector#(SupSizeX2, Tuple2#(Maybe#(Addr), Bool)) pred;
+        Vector#(SupSizeX2, Tuple2#(Maybe#(Addr), Bool)) ppcs = replicate(tuple2(Invalid, False));
         for (Integer i = 0; i < valueOf(SupSizeX2); i = i + 1) begin
             if (fullRecords[i].lookupRead matches tagged Valid .r)
-                ppcs[i] = r.v ? Valid(r.d):Invalid;
+                ppcs[i] = r.v ? tuple2(Valid(tpl_1(r.d)), tpl_2(r.d)): tuple2(Invalid, tpl_2(r.d));
             if (compressedRecords[i].lookupRead matches tagged Valid .r)
-                ppcs[i] = r.v ? Valid({truncateLSB(addr_reg),r.d}):Invalid;
+                ppcs[i] = r.v ? tuple2(Valid({truncateLSB(addr_reg),tpl_1(r.d)}), tpl_2(r.d)): tuple2(Invalid, tpl_2(r.d));
         end
         ppcs = rotateBy(ppcs,unpack(-getBtbAddr(addr_reg).bank)); // Rotate firstBank down to zeroeth element.
         return ppcs;
     endmethod
 
-    method Action update(Addr pc, Addr nextPc, Bool taken);
-        updateEn <= Valid(BtbUpdate {pc: pc, nextPc: nextPc, taken: taken});
+    method Action update(Addr pc, Addr nextPc, Bool taken, Bool branch);
+        updateEn <= Valid(BtbUpdate {pc: pc, nextPc: nextPc, taken: taken, branch: branch});
     endmethod
 
 `ifdef SECURITY

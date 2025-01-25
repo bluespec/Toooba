@@ -48,7 +48,7 @@
 
 // tournament predictor, other options are: BHT, TOUR, GSELECT, GSHARE. NOTE
 // that the predictors are of different size.
-`define DIR_PRED_TAGETEST
+`define DIR_PRED_TOUR_STAGED
 
 `define LOG_DEADLOCK_CYCLES 26 // 64M cycles for deadlock detection
 

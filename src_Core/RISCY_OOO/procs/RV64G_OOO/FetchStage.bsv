@@ -190,6 +190,14 @@ function InstrFromFetch2 fetch2s_2_inst(Fetch2ToDecode inHi, Fetch2ToDecode inLo
    return ret;
 endfunction
 
+// REMOVE LATER
+function ActionValue#(Bit#(1)) dummy(Bit#(1) in);
+    actionvalue
+        let c <- cur_cycle;
+        return in ^ pack(c)[0];
+    endactionvalue
+endfunction
+
 typedef struct {
   Addr pc;
   Addr ppc;
@@ -208,6 +216,7 @@ typedef struct {
 typedef struct {
     Addr pc;
     Addr nextPc;
+    Bool branch;
 } TrainNAP deriving(Bits, Eq, FShow);
 
 // "micro-TLB" size (buffer of past few translations)
@@ -294,11 +303,14 @@ module mkFetchStage(FetchStage);
     // These two fifos needs a capacity of 3 for full throughput if we fire only when we can enq on all channels.
     SupFifo#(SupSizeX2, 3, Fetch2ToDecode) f2d <- mkUGSupFifo; // Unguarded to prevent the static analyser from exploding.
     SupFifo#(SupSize, 3, FromFetchStage) out_fifo <- mkSupFifo;
+    
+    SupFifo#(SupSizeX2, 4, PredIn) predInput <- mkUGSupFifo;
+    SupFifo#(SupSize, 6, GuardedResult#(DirPredTrainInfo, DirPredSpecInfo)) predOutput <- mkUGSupFifo;
        // Can the fifo size be smaller?
 
     // Branch Predictors
     let             nextAddrPred <- mkBtb;
-    let             dirPred      <- mkDirPredictor;
+    let             dirPred      <- mkDirPredictor(predOutput.enqS);
     ReturnAddrStack ras          <- mkRas;
     // Wire to train next addr pred (NAP)
     RWire#(TrainNAP) napTrainByExe <- mkRWire;
@@ -383,18 +395,31 @@ module mkFetchStage(FetchStage);
 
         // Grab a chain of predictions from the BTB, which predicts targets for the next
         // set of addresses based on the current PC.
-        Vector#(SupSizeX2, Maybe#(Addr)) pred_future_pc = nextAddrPred.pred;
+        Vector#(SupSizeX2, Tuple2#(Maybe#(Addr), Bool)) pred_future_pc = nextAddrPred.pred;
 
         // Next pc is the first nextPc that breaks the chain of pc+4 or
         // that is at the end of a cacheline.
         Vector#(SupSizeX2,Integer) indexes = genVector;
         function Bool findNextPc(Addr in_pc, Integer i);
             Bool notLastInst = getLineInstOffset(in_pc + fromInteger(2*i)) != maxBound;
-            Bool noJump = !isValid(pred_future_pc[i]);
+            Bool noJump = !isValid(tpl_1(pred_future_pc[i]));
             return (!(notLastInst && noJump));
         endfunction
         Bit#(TLog#(SupSizeX2)) posLastSupX2 = fromInteger(fromMaybe(valueof(SupSizeX2) - 1, find(findNextPc(pc), indexes)));
-        Maybe#(Addr) pred_next_pc = pred_future_pc[posLastSupX2];
+        Maybe#(Addr) pred_next_pc = tpl_1(pred_future_pc[posLastSupX2]);
+
+        Vector#(SupSize, Maybe#(PredIn)) in = replicate(tagged Invalid);
+        Vector#(SupSizeX2, Maybe#(PredIn)) branches = replicate(tagged Invalid);
+        Bit#(TAdd#(TLog#(SupSizeX2),1)) count = 0;
+        Bit#(TAdd#(TLog#(SupSizeX2),1)) enqCount = 0; // Because SpecFifo forces consecutive enqueues
+        
+        // How to do this efficiently???
+        for(Integer i = 0; i < valueOf(SupSizeX2) && fromInteger(i) < posLastSupX2; i = i + 1) begin
+            if (tpl_2(pred_future_pc[i])) begin
+                count = count + 1;
+                branches[count] = tagged Valid PredIn{pc: pc + fromInteger(2*i), main_epoch: f_main_epoch, decode_epoch: decode_epoch[0]};
+            end
+        end
 
         // Search the last few translations to look for a match.
         Maybe#(UInt#(TLog#(PageBuffSize))) m_buff_match_idx = findElem(Valid(getVpn(pc)), buffered_translation_virt_pc);
@@ -438,6 +463,33 @@ module mkFetchStage(FetchStage);
                 decode_epoch: decode_epoch[0],
                 main_epoch: f_main_epoch };
             fetch1toFetch2.enq(out);
+
+            // Set up branch prediction
+            // Nicer to have a FIFO which handles the bypass, but complications
+            for(Integer i = 0; i < valueOf(SupSize); i = i + 1) begin
+                if(predInput.deqS[i].canDeq) begin // Missing guard?
+                    if(isValid(branches[i]) && predInput.enqS[enqCount].canEnq)
+                        predInput.enqS[enqCount].enq(validValue(branches[i]));
+                    predInput.deqS[i].deq;
+                    enqCount = enqCount + 1;
+                    in[i] = tagged Valid predInput.deqS[i].first;
+                end
+                else begin
+                    in[i] = branches[i];
+                end
+            end
+
+            // Possible remaining branches
+            for(Integer i = valueOf(SupSize); i < valueOf(SupSizeX2); i = i + 1) begin
+                if(isValid(branches[i]) && predInput.enqS[enqCount].canEnq) begin
+                    enqCount = enqCount + 1;
+                    predInput.enqS[enqCount].enq(validValue(branches[i]));
+                end
+                else
+                    doAssert(False, "Failed to enqueue to predIn\n");
+            end
+            // Trigger branch predictor
+            dirPred.nextPc(in);
 
             if (verbosity >= 2) begin
                 $display ("%d ----------------", cur_cycle);
@@ -504,6 +556,7 @@ module mkFetchStage(FetchStage);
     endrule: doFetch2
 
    function Bool isCurrent(Fetch2ToDecode in) = (in.main_epoch == f_main_epoch && in.decode_epoch == decode_epoch[0]);
+   function Bool isCurrentPred(GuardedResult#(DirPredTrainInfo, DirPredSpecInfo) in) = (in.main_epoch == f_main_epoch && in.decode_epoch == decode_epoch[0]);
 
    rule doDecodeFlush(f2d.deqS[0].canDeq && !isCurrent(f2d.deqS[0].first));
       for (Integer i = 0; i < valueOf(SupSizeX2); i = i + 1)
@@ -513,7 +566,25 @@ module mkFetchStage(FetchStage);
          end
    endrule: doDecodeFlush
 
-   rule doDecode(f2d.deqS[0].canDeq && isCurrent(f2d.deqS[0].first));
+   rule doDecodeFlushPred(predOutput.deqS[0].canDeq && !isCurrentPred(predOutput.deqS[0].first));
+    for (Integer i = 0; i < valueOf(SupSize); i = i + 1)
+       if (predOutput.deqS[i].canDeq &&& !isCurrentPred(predOutput.deqS[i].first)) begin
+          predOutput.deqS[i].deq;
+       end
+   endrule: doDecodeFlushPred
+
+
+   function Bool isCurrentOrEmptyPred(Integer i); 
+        if(predOutput.deqS[i].canDeq) begin
+            let in = predOutput.deqS[i].first;
+            return (in.main_epoch == f_main_epoch && in.decode_epoch == decode_epoch[0]);
+        end
+        else
+            return True;
+   endfunction
+   Vector#(SupSize,Integer) indices = genVector;
+
+   rule doDecode(f2d.deqS[0].canDeq && isCurrent(f2d.deqS[0].first) && all(isCurrentOrEmptyPred, indices));
       Vector#(SupSize, Maybe#(InstrFromFetch2)) decodeIn = replicate(Invalid);
       // Express the incoming fragments as a vector of maybes.
       Vector#(SupSizeX2, Maybe#(Fetch2ToDecode)) frags;
@@ -524,6 +595,14 @@ module mkFetchStage(FetchStage);
       Maybe#(Bit#(TLog#(SupSizeX2))) m_used_frag_count = Invalid;
       Bit#(TLog#(SupSize)) pick_count = 0;
       Bool prev_frag_available = False;
+      
+      Vector#(SupSize, Maybe#(DirPredResult#(DirPredTrainInfo, DirPredSpecInfo))) predResults = replicate(Invalid);
+      for (Integer i = 0; i < valueOf(SupSize); i = i + 1) begin
+        if(predOutput.deqS[i].canDeq) begin
+            predResults[i] = tagged Valid predOutput.deqS[i].first.result;
+        end
+       end
+      
       for (Integer i = 0; i < valueOf(SupSizeX2) && !isValid(decodeIn[valueOf(SupSize) - 1]); i = i + 1) begin
          Maybe#(InstrFromFetch2) new_pick = Invalid;
          if (frags[i] matches tagged Valid .frag) begin
@@ -563,6 +642,10 @@ module mkFetchStage(FetchStage);
       Maybe#(IType) redirectInst = Invalid;
 `endif
       Bool likely_epoch_change = False;
+
+      Bit#(TAdd#(TLog#(SupSize),1)) branchCountRecieved = 0;
+      Bit#(TAdd#(TLog#(SupSize),1)) branchCount = 0;
+      Bit#(SupSize) branchResults = 0;
       for (Integer i = 0; i < valueof(SupSize); i=i+1) begin
          Addr pc = decompressPc(validValue(decodeIn[i]).pc);
          Addr ppc = decompressPc(validValue(decodeIn[i]).ppc);
@@ -584,12 +667,28 @@ module mkFetchStage(FetchStage);
                if (verbose) $display("mispredicted first half in decode: pc :  %h", pc);
                decode_epoch_local = !decode_epoch_local;
                redirectPc = Valid (pc); // record redirect to the first PC in this bundle.
-               trainNAP = Valid (TrainNAP {pc: pc, nextPc: pc + 2});
+               trainNAP = Valid (TrainNAP {pc: pc, nextPc: pc + 2, branch: False});
             end else if (in.decode_epoch == decode_epoch_local) begin   
-               DirPredResult#(DirPredTrainInfo, DirPredSpecInfo) dir_pred = DirPredResult{taken: False, train: ?, spec: ?};
+               DirPredResult#(DirPredTrainInfo, DirPredSpecInfo) dir_pred = DirPredResult{taken: False, train: ?, spec: ?, pc: ?};
                if(decode_result.dInst.iType == Br && !likely_epoch_change) begin
-                dir_pred <- dirPred.pred[i].pred;
-                likely_epoch_change = (dir_pred.taken != validValue(decodeIn[i]).pred_jump);
+                    branchResults[branchCount] = pack(validValue(decodeIn[i]).pred_jump);
+                    
+                    // So it compiles - REMOVE LATER
+                    Bit#(1) took <- dummy(1);
+                    dir_pred.taken = unpack(took);
+
+                    $display("DECODE PREDICT\n");
+                    if(predResults[branchCountRecieved] matches tagged Valid .res &&& res.pc == pc) begin
+                        predOutput.deqS[branchCountRecieved].deq;
+                        
+                        branchCountRecieved = branchCountRecieved + 1;
+                        dir_pred = res;
+                        likely_epoch_change = (dir_pred.taken != validValue(decodeIn[i]).pred_jump);
+
+                        $display("PREDICT with %x %x %d %d\n", pc, dir_pred.pc, dir_pred.taken);
+                        branchResults[branchCount] = pack(dir_pred.taken);
+                    end
+                    branchCount = branchCount + 1;
                end
                Maybe#(Addr) dir_ppc = decodeBrPred(pc, decode_result.dInst, dir_pred.taken, (validValue(decodeIn[i]).inst_kind == Inst_32b));
                doAssert(in.main_epoch == f_main_epoch, "main epoch must match");
@@ -667,7 +766,7 @@ module mkFetchStage(FetchStage);
                      ppc = decode_pred_next_pc;
                      // train next addr pred when mispredict
                      let last_x16_pc = pc + ((in.inst_kind == Inst_32b) ? 2 : 0);
-                     trainNAP = Valid (TrainNAP {pc: last_x16_pc, nextPc: decode_pred_next_pc});
+                     trainNAP = Valid (TrainNAP {pc: last_x16_pc, nextPc: decode_pred_next_pc, branch: decode_result.dInst.iType == Br});
 `ifdef PERF_COUNT
                      // performance stats: record decode redirect
                      doAssert(redirectInst == Invalid, "at most 1 decode redirect per cycle");
@@ -713,6 +812,8 @@ module mkFetchStage(FetchStage);
       if (trainNAP matches tagged Valid .x) begin
          napTrainByDecQ.enq(x);
       end
+
+      dirPred.confirmPred(branchResults, branchCount);
 `ifdef PERF_COUNT
       // performance counter: check whether redirect happens
       if(redirectInst matches tagged Valid .iType &&& doStats) begin
@@ -726,9 +827,9 @@ module mkFetchStage(FetchStage);
 `endif
    endrule
 
-   rule reportDecodePc;
+   /*rule reportDecodePc;
        dirPred.nextPc(decode_pc_reg[decode_pc_final_port]);
-   endrule
+   endrule*/
 
     // train next addr pred: we use a wire to catch outputs of napTrainByDecQ.
     // This prevents napTrainByDecQ from clogging doDecode rule when
@@ -745,7 +846,7 @@ module mkFetchStage(FetchStage);
         // only when misprediction happens, i.e., train by dec is already at
         // wrong path.
         TrainNAP train = fromMaybe(validValue(napTrainByDec.wget), napTrainByExe.wget);
-        nextAddrPred.update(train.pc, train.nextPc, train.nextPc != train.pc + 2);
+        nextAddrPred.update(train.pc, train.nextPc, train.nextPc != train.pc + 2, train.branch);
     endrule
 
     // Security: we can flush when front end is empty, i.e.
@@ -825,7 +926,7 @@ module mkFetchStage(FetchStage);
         // train next addr pred when mispred
         if(mispred) begin
             let last_x16_pc = pc + (isCompressed ? 0 : 2);
-            napTrainByExe.wset(TrainNAP {pc: last_x16_pc, nextPc: next_pc});
+            napTrainByExe.wset(TrainNAP {pc: last_x16_pc, nextPc: next_pc, branch: iType == Br});
         end
     endmethod
 
