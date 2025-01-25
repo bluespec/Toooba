@@ -308,7 +308,7 @@ module mkCore#(CoreId coreId)(Core);
             fpuMulDivSpecUpdate[i] = fix.fpuMulDivExeIfc[i].specUpdate;
         end
 
-        Vector#(AluExeNum, SpecFifo#(`NUM_SPEC_TAGS, FetchTrainBP, 1, 1)) trainBPQ <- replicateM(mkSpecFifoUG(True));
+        Vector#(AluExeNum, SpecFifo#(TDiv#(`NUM_SPEC_TAGS,2), FetchTrainBP, 1, 1)) trainBPQ <- replicateM(mkSpecFifoUG(True));
         Vector#(AluExeNum, SpeculationUpdate) btqSpecUpdate;
         for(Integer i = 0; i < valueof(AluExeNum); i = i+1) begin
             btqSpecUpdate[i] = trainBPQ[i].specUpdate;

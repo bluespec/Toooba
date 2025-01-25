@@ -221,7 +221,6 @@ module mkSpecFifoCF#(
     FShow#(t)
 );
     // correct spec is always the last
-
     Integer sbCorrectSpecPort = valueof(sbPortNum) - 1;
 
     Ehr#(3, Vector#(size, Bool))             valid    <- mkEhr(replicate(False));
@@ -244,7 +243,6 @@ module mkSpecFifoCF#(
         // element at deqP was killed, so increment deqP
         deqP <= getNextPtr(deqP);
     endrule
-    
 
     (* fire_when_enabled, no_implicit_conditions *)
     rule canon_speculation;
@@ -518,7 +516,6 @@ module mkSpecFifo_SB_enq_deq_C_enq_deq(
     let m <- mkSpecFifo(sched, True);
     return m;
 endmodule
-
 
 module mkSpecFifoUG#(Bool lazyEnq)(
     SpecFifo#(size, t, validPortNum, sbPortNum)

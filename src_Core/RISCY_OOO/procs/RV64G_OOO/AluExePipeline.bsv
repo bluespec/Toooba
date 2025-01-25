@@ -348,8 +348,6 @@ module mkAluExePipeline#(AluExeInput inIfc)(AluExePipeline);
                 inIfc.fetch_recover_spec(x.dpSpec, x.controlFlow.taken);
             end
 
-            $display("Cycle %d REDIRECT ",  cur_cycle, fshow(x.iType), " %x, SPEC_TAG %b\n", x.controlFlow.pc, validValue(x.spec_tag));
-
             inIfc.fetch_train_predictors(ToSpecFifo{
                 data: FetchTrainBP {
                     pc: x.controlFlow.pc,

@@ -36,7 +36,7 @@ module mkTageTest(DirPredictor#(TageTrainInfo#(`NUM_TABLES), TageSpecInfo));
         predIfc[i] = (interface DirPred;
         
         method ActionValue#(DirPredResult#(TageTrainInfo#(`NUM_TABLES), TageSpecInfo)) pred;
-            $display("Cycle %0d, TAGETEST, Prediction on %x\n", cur_cycle, currentPc);
+            //$display("Cycle %0d, TAGETEST, Prediction on %x\n", cur_cycle, currentPc);
             let result <- tage.dirPredInterface.pred[i].pred;
             return result;
         endmethod
