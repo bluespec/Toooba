@@ -139,6 +139,7 @@ module mkTourPredStaged#(Vector#(SupSize, SupFifoEnq#(GuardedResult#(TourTrainIn
 
     for (Integer i = 0; i < valueOf(SupSize); i = i + 1) begin
         rule predStageOne(predIn[i].wget matches tagged Valid .in);
+            $display("Prediction on %x\n", in.pc);
             PCIndex pcIndex = getPCIndex(offsetPc(in.pc, i));
             // get local history & prediction
             TourLocalHist localHist = localHistTab.sub(pcIndex);
@@ -172,14 +173,29 @@ module mkTourPredStaged#(Vector#(SupSize, SupFifoEnq#(GuardedResult#(TourTrainIn
     end
 
     // Should fix schedueling as it will make pred1 < pred2 when they actually should be conflict free
-    for (Integer i = 0; i < valueOf(SupSize); i = i + 1) begin
-        rule predStageTwo(pred1ToPred2[i] matches tagged Valid .in);
-            if(outInf[i].canEnq)
-                outInf[i].enq(in);
+
+    // Very awkward, it doesn't like me doing it directly, as it thinks there is a conflict
+    rule predStageTwo;
+        Vector#(SupSize, GuardedResult#(TourTrainInfo, TourPredSpecInfo)) results = replicate(unpack(0));
+        Bit#(TAdd#(TLog#(SupSize),1)) count = 0;
+        for (Integer i = 0; i < valueOf(SupSize); i = i + 1) begin
+            if(pred1ToPred2[i] matches tagged Valid .in) begin
+                $display("Predict2 detected %x %d", results[i].result.pc, i);
+                results[count] = in;
+                count = count + 1;
+            end
+        end
+
+        for (Integer i = 0; fromInteger(i) < valueOf(SupSize) && fromInteger(i) < count; i = i + 1) begin
+            if(outInf[i].canEnq) begin
+                    $display("Predict enqueue %x onto %d", results[i].result.pc, i);
+                    outInf[i].enq(results[i]);
+            end
             else
                 doAssert(False, "FAIL TO ENQUEUE PRED2");
-        endrule
-    end
+        end
+    endrule
+    
 
     method Action confirmPred(Bit#(SupSize) results, SupCnt count);
         predCnt[0] <= count;

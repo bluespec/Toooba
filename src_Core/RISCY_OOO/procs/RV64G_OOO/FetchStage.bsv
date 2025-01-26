@@ -414,12 +414,14 @@ module mkFetchStage(FetchStage);
         Bit#(TAdd#(TLog#(SupSizeX2),1)) enqCount = 0; // Because SpecFifo forces consecutive enqueues
         
         // How to do this efficiently???
-        for(Integer i = 0; i < valueOf(SupSizeX2) && fromInteger(i) < posLastSupX2; i = i + 1) begin
+        for(Integer i = 0; i < valueOf(SupSizeX2) && fromInteger(i) <= posLastSupX2; i = i + 1) begin
             if (tpl_2(pred_future_pc[i])) begin
-                count = count + 1;
                 branches[count] = tagged Valid PredIn{pc: pc + fromInteger(2*i), main_epoch: f_main_epoch, decode_epoch: decode_epoch[0]};
+                count = count + 1;
             end
         end
+
+        $display("FETCH1 %x, Cycle: %d last inst: %d branch count: %d", pc, cur_cycle, posLastSupX2, count);
 
         // Search the last few translations to look for a match.
         Maybe#(UInt#(TLog#(PageBuffSize))) m_buff_match_idx = findElem(Valid(getVpn(pc)), buffered_translation_virt_pc);
@@ -471,6 +473,7 @@ module mkFetchStage(FetchStage);
                     if(isValid(branches[i]) && predInput.enqS[enqCount].canEnq)
                         predInput.enqS[enqCount].enq(validValue(branches[i]));
                     predInput.deqS[i].deq;
+                    $display("Enqueue %d to %d\n", i, enqCount);
                     enqCount = enqCount + 1;
                     in[i] = tagged Valid predInput.deqS[i].first;
                 end
@@ -481,12 +484,15 @@ module mkFetchStage(FetchStage);
 
             // Possible remaining branches
             for(Integer i = valueOf(SupSize); i < valueOf(SupSizeX2); i = i + 1) begin
-                if(isValid(branches[i]) && predInput.enqS[enqCount].canEnq) begin
-                    enqCount = enqCount + 1;
-                    predInput.enqS[enqCount].enq(validValue(branches[i]));
+                if(isValid(branches[i])) begin
+                    if(predInput.enqS[enqCount].canEnq) begin
+                        $display("Enqueue %d\n", i);
+                        predInput.enqS[enqCount].enq(validValue(branches[i]));
+                        enqCount = enqCount + 1;
+                    end 
+                    else
+                        doAssert(False, "Failed to enqueue to predIn\n");
                 end
-                else
-                    doAssert(False, "Failed to enqueue to predIn\n");
             end
             // Trigger branch predictor
             dirPred.nextPc(in);
@@ -664,7 +670,7 @@ module mkFetchStage(FetchStage);
                // We predicted a taken branch for PC, but this is an
                // uncompressed instruction, so we redirect to this PC and
                // train it to fetch the other half in future.
-               if (verbose) $display("mispredicted first half in decode: pc :  %h", pc);
+               if (True) $display("mispredicted first half in decode: pc :  %h", pc);
                decode_epoch_local = !decode_epoch_local;
                redirectPc = Valid (pc); // record redirect to the first PC in this bundle.
                trainNAP = Valid (TrainNAP {pc: pc, nextPc: pc + 2, branch: False});
@@ -677,8 +683,12 @@ module mkFetchStage(FetchStage);
                     Bit#(1) took <- dummy(1);
                     dir_pred.taken = unpack(took);
 
-                    $display("DECODE PREDICT\n");
-                    if(predResults[branchCountRecieved] matches tagged Valid .res &&& res.pc == pc) begin
+                    let last_x16_pc = pc + ((in.inst_kind == Inst_32b) ? 2 : 0);
+                    $display("DECODE PREDICT on %x %x\n", pc, last_x16_pc);
+                    if(predResults[branchCountRecieved] matches tagged Valid .res) begin
+                        $display("DECODE PRED RESULTS %d on %x\n",branchCountRecieved, res.pc);
+                    end
+                    if(predResults[branchCountRecieved] matches tagged Valid .res &&& res.pc == last_x16_pc) begin
                         predOutput.deqS[branchCountRecieved].deq;
                         
                         branchCountRecieved = branchCountRecieved + 1;
@@ -687,6 +697,10 @@ module mkFetchStage(FetchStage);
 
                         $display("PREDICT with %x %x %d %d\n", pc, dir_pred.pc, dir_pred.taken);
                         branchResults[branchCount] = pack(dir_pred.taken);
+                    end
+                    else begin
+                        let next = decodeBrPred(pc, decode_result.dInst, False, (validValue(decodeIn[i]).inst_kind == Inst_32b));
+                        trainNAP = Valid (TrainNAP {pc: last_x16_pc, nextPc: validValue(next), branch: decode_result.dInst.iType == Br});    
                     end
                     branchCount = branchCount + 1;
                end
@@ -766,6 +780,7 @@ module mkFetchStage(FetchStage);
                      ppc = decode_pred_next_pc;
                      // train next addr pred when mispredict
                      let last_x16_pc = pc + ((in.inst_kind == Inst_32b) ? 2 : 0);
+                     $display("DECODE NAP TRAIN %x\n", last_x16_pc);
                      trainNAP = Valid (TrainNAP {pc: last_x16_pc, nextPc: decode_pred_next_pc, branch: decode_result.dInst.iType == Br});
 `ifdef PERF_COUNT
                      // performance stats: record decode redirect
@@ -846,6 +861,7 @@ module mkFetchStage(FetchStage);
         // only when misprediction happens, i.e., train by dec is already at
         // wrong path.
         TrainNAP train = fromMaybe(validValue(napTrainByDec.wget), napTrainByExe.wget);
+        $display("Train BTB on %x next pc: %d branch: %d", train.pc, train.nextPc, train.branch);
         nextAddrPred.update(train.pc, train.nextPc, train.nextPc != train.pc + 2, train.branch);
     endrule
 
