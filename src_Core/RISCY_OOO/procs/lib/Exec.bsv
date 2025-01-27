@@ -237,6 +237,8 @@ function CapPipe capModify(CapPipe a, CapPipe b, CapModifyFunc func);
     match {.a_type, .a_res} = extractType(a);
     Bool sealPassthrough = !isValidCap(b) || getKind(a) != UNSEALED || !isInBounds(b, False) || getAddr(b) == otype_unsealed_ext;
     Bool sealIllegal = getKind(b) != UNSEALED || !getHardPerms(b).permitSeal || !validAsType(b, getAddr(b));
+    let new_hard_perms = getHardPerms(a);
+    new_hard_perms.global = new_hard_perms.global && getHardPerms(b).global;
     Bool unsealIllegal = !isValidCap(b) || getKind(a) != UNSEALED || getKind(b) == UNSEALED || a_res || getAddr(b) != a_type || !getHardPerms(b).permitUnseal || !isInBounds(b, False);
     Bool buildCapIllegal = !isValidCap(b) || getKind(b) != UNSEALED || !isDerivable(a) || (getPerms(a) & getPerms(b)) != getPerms(a) || getBase(a) < getBase(b) || getTop(a) > getTop(b); // XXX needs optimisation
     CapPipe res = (case(func) matches
@@ -263,7 +265,7 @@ function CapPipe capModify(CapPipe a, CapPipe b, CapModifyFunc func);
                 (sealPassthrough ? a :
                      clearTagIf(setKind(a_mut, SEALED_WITH_TYPE (truncate(getAddr(b)))), sealIllegal));
             tagged Unseal .src            :
-                clearTagIf(setKind(((src == Src1) ? a:b), UNSEALED), (src == Src1) && unsealIllegal);
+                clearTagIf(setHardPerms(setKind(((src == Src1) ? a:b), UNSEALED), new_hard_perms), (src == Src1) && unsealIllegal);
             tagged AndPerm                :
                 setPerms(a_mut, pack(getPerms(a)) & truncate(getAddr(b)));
             tagged SetFlags               :
