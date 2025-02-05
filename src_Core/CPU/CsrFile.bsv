@@ -354,10 +354,10 @@ module mkStatsCsr(StatsCsr);
 endmodule
 
 function Reg#(Data) scrToCsr(Reg#(CapReg) scr) = interface Reg
-        method _write (x) = action CapPipe scr_pipe = cast(scr); scr <= cast(setOffset(scr_pipe, x).value); endaction;
+        method _write (x) = action CapPipe scr_pipe = cast(scr); scr <= cast(setAddr(scr_pipe, x).value); endaction;
         method Data _read;
           CapPipe scr_pipe = cast(scr);
-          return getOffset(scr_pipe);
+          return getAddr(scr_pipe);
         endmethod
     endinterface;
 
