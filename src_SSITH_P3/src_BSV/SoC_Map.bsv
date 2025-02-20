@@ -91,6 +91,7 @@ interface SoC_Map_IFC;
    (* always_ready *)   method  Range#(Wd_Addr)  m_flash_mem_addr_range;
    (* always_ready *)   method  Range#(Wd_Addr)  m_ethernet_0_addr_range;
    (* always_ready *)   method  Range#(Wd_Addr)  m_dma_0_addr_range;
+   (* always_ready *)   method  Range#(Wd_Addr)  m_timer_0_addr_range;
    (* always_ready *)   method  Range#(Wd_Addr)  m_uart16550_0_addr_range;
    (* always_ready *)   method  Range#(Wd_Addr)  m_gpio_0_addr_range;
    (* always_ready *)   method  Range#(Wd_Addr)  m_boot_rom_addr_range;
@@ -155,6 +156,14 @@ module mkSoC_Map (SoC_Map_IFC);
 
    let dma_0_addr_range = Range {
       base: 'h_6220_0000,
+      size: 'h_0001_0000    // 64K
+   };
+
+   // ----------------------------------------------------------------
+   // Timer
+
+   let timer_0_addr_range = Range {
+      base: 'h_5000_0000,
       size: 'h_0001_0000    // 64K
    };
 
@@ -244,6 +253,7 @@ module mkSoC_Map (SoC_Map_IFC);
 		      || inRange(near_mem_io_addr_range, addr)
 		      || inRange(ethernet_0_addr_range, addr)
 		      || inRange(dma_0_addr_range, addr)
+		      || inRange(timer_0_addr_range, addr)
 		      || inRange(uart16550_0_addr_range, addr)
 		      || inRange(gpio_0_addr_range, addr)
 		      || fn_is_flash_regs_addr (addr)
@@ -275,6 +285,7 @@ module mkSoC_Map (SoC_Map_IFC);
    method  Range#(Wd_Addr)  m_flash_mem_addr_range = flash_mem_addr_range;
    method  Range#(Wd_Addr)  m_ethernet_0_addr_range = ethernet_0_addr_range;
    method  Range#(Wd_Addr)  m_dma_0_addr_range = dma_0_addr_range;
+   method  Range#(Wd_Addr)  m_timer_0_addr_range = timer_0_addr_range;
    method  Range#(Wd_Addr)  m_uart16550_0_addr_range = uart16550_0_addr_range;
    method  Range#(Wd_Addr)  m_gpio_0_addr_range = gpio_0_addr_range;
    method  Range#(Wd_Addr)  m_boot_rom_addr_range = boot_rom_addr_range;
