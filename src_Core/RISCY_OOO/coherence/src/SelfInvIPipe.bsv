@@ -100,7 +100,7 @@ interface SelfInvIPipe#(
         Bit#(TLog#(wayNum)),
         tagT, Msi, void, // no dir
         Maybe#(cRqIdxT), void, RandRepInfo, // no other
-        Line, SelfInvICmd#(cRqIdxT)
+        Line, void, SelfInvICmd#(cRqIdxT) // no aux set data
     ) first;
     method Action deqWrite(
         Maybe#(cRqIdxT) swapRq,
@@ -239,7 +239,7 @@ module mkSelfInvIPipe(
     Alias#(pipeInT, SelfInvIPipeIn#(wayT, cRqIdxT)),
     Alias#(pipeCmdT, SelfInvIPipeCmd#(wayT, cRqIdxT)),
     Alias#(iCmdT, SelfInvICmd#(cRqIdxT)),
-    Alias#(pipeOutT, PipeOut#(wayT, tagT, Msi, dirT, ownerT, otherT, repT, Line, iCmdT)), // output type
+    Alias#(pipeOutT, PipeOut#(wayT, tagT, Msi, dirT, ownerT, otherT, repT, Line, void, iCmdT)), // output type
     Alias#(infoT, CacheInfo#(tagT, Msi, dirT, ownerT, otherT)),
     Alias#(ramDataT, RamData#(tagT, Msi, dirT, ownerT, otherT, Line)),
     Alias#(respStateT, RespState#(Msi)),
@@ -262,6 +262,7 @@ module mkSelfInvIPipe(
     RWBramCore#(indexT, repT) repRam <- mkRandRepRam;
     // data RAM
     RWBramCore#(dataIndexT, Line) dataRam <- mkRWBramCore;
+    RWBramCore#(indexT, void) setAuxDataRam <- mkDummyBramCore;
 
     // initialize RAM
     Reg#(Bool) initDone <- mkReg(False);
@@ -392,11 +393,11 @@ module mkSelfInvIPipe(
     endfunction
 
     CCPipe#(
-        wayNum, indexT, tagT, Msi, dirT, ownerT, otherT, repT, Line, pipeCmdT
+        wayNum, indexT, tagT, Msi, dirT, ownerT, otherT, repT, Line, void, pipeCmdT
     ) pipe <- mkCCPipe(
         regToReadOnly(initDone), getIndex, tagMatch,
         updateByUpCs, updateByDownDir, updateRepInfo,
-        infoRam, repRam, dataRam
+        infoRam, repRam, dataRam, setAuxDataRam
     );
 
     // reconcile: wait until pipeline empty and drop all S states. Stall
@@ -458,7 +459,8 @@ module mkSelfInvIPipe(
             way: pout.way,
             pRqMiss: pout.pRqMiss,
             ram: pout.ram,
-            repInfo: pout.repInfo
+            repInfo: pout.repInfo,
+            setAuxData: ?
         };
     endmethod
 
@@ -470,7 +472,7 @@ module mkSelfInvIPipe(
             newCmd = Valid (CRq (SelfInvIPipeRqIn {addr: addr, mshrIdx: idx}));
         end
         // call pipe
-        pipe.deqWrite(newCmd, wrRam, updateRep);
+        pipe.deqWrite(newCmd, wrRam, ?, updateRep);
         // conflict with reconcile
         conflict_reconcile_deq.wset(?);
     endmethod

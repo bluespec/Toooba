@@ -126,11 +126,12 @@ interface L1Pipe#(
         Bit#(TLog#(wayNum)),
         tagT, Msi, void, // no dir
         Maybe#(cRqIdxT), void, RandRepInfo, // no other
-        Line, L1Cmd#(indexT, cRqIdxT, pRqIdxT)
+        Line, Maybe#(cRqIdxT), L1Cmd#(indexT, cRqIdxT, pRqIdxT)
     ) first;
     method Action deqWrite(
         Maybe#(cRqIdxT) swapRq,
         RamData#(tagT, Msi, void, Maybe#(cRqIdxT), void, Line) wrRam, // always write BRAM
+        Maybe#(cRqIdxT) nextInQueue,
         Bool updateRep
     );
 endinterface
@@ -162,11 +163,12 @@ module mkL1Pipe(
     Alias#(dirT, void), // no directory
     Alias#(ownerT, Maybe#(cRqIdxT)),
     Alias#(otherT, void), // no other cache info
+    Alias#(setAuxT, Maybe#(cRqIdxT)),
     Alias#(repT, RandRepInfo), // use random replace
     Alias#(pipeInT, L1PipeIn#(wayT, indexT, cRqIdxT, pRqIdxT)),
     Alias#(pipeCmdT, L1PipeCmd#(wayT, indexT, cRqIdxT, pRqIdxT)),
     Alias#(l1CmdT, L1Cmd#(indexT, cRqIdxT, pRqIdxT)),
-    Alias#(pipeOutT, PipeOut#(wayT, tagT, Msi, dirT, ownerT, otherT, repT, Line, l1CmdT)), // output type
+    Alias#(pipeOutT, PipeOut#(wayT, tagT, Msi, dirT, ownerT, otherT, repT, Line, setAuxT, l1CmdT)), // output type
     Alias#(infoT, CacheInfo#(tagT, Msi, dirT, ownerT, otherT)),
     Alias#(ramDataT, RamData#(tagT, Msi, dirT, ownerT, otherT, Line)),
     Alias#(respStateT, RespState#(Msi)),
@@ -189,6 +191,7 @@ module mkL1Pipe(
     Vector#(wayNum, RWBramCore#(indexT, infoT)) infoRam <- replicateM(mkRWBramCoreForwarded);
     RWBramCore#(indexT, repT) repRam <- mkRandRepRam;
     Vector#(wayNum, RWBramCore#(indexT, Line)) dataRam <- replicateM(mkRWBramCoreForwarded);
+    RWBramCore#(indexT, setAuxT) queueRam <- mkRWBramCoreForwarded;
 
     // initialize RAM
     Reg#(Bool) initDone <- mkReg(False);
@@ -205,6 +208,7 @@ module mkL1Pipe(
             });
         end
         repRam.wrReq(initIndex, randRepInitInfo); // useless for random replace
+        queueRam.wrReq(initIndex, Invalid);
         initIndex <= initIndex + 1;
         if(initIndex == maxBound) begin
             initDone <= True;
@@ -272,11 +276,11 @@ module mkL1Pipe(
                 Addr addr = getAddrFromCmd(cmd);
                 tagT tag = getTag(addr);
                 // find hit way (nothing is being replaced)
-                function Bool isMatch(Tuple2#(Msi, tagT) csTag);
-                    match {.cs, .t} = csTag;
-                    return cs > I && t == tag;
+                function Bool isMatch(Tuple3#(Msi, tagT, ownerT) csTagOwner);
+                    match {.cs, .t, .o} = csTagOwner;
+                    return (cs > I || isValid(o)) && t == tag;
                 endfunction
-                Maybe#(wayT) hitWay = searchIndex(isMatch, zip(csVec, tagVec));
+                Maybe#(wayT) hitWay = searchIndex(isMatch, zip3(csVec, tagVec, ownerVec));
                 if(hitWay matches tagged Valid .w) begin
                     return TagMatchResult {
                         way: w,
@@ -300,9 +304,14 @@ module mkL1Pipe(
                     end
                     Maybe#(wayT) repWay = randRep.getReplaceWay(unlocked, invalid);
                     // sanity check: repWay must be valid
+                    // ^ Not true if there are more MSHRs than ways
+                    // Just choose a locked way. This will create a dependency chain.
+                    // TODO: Maybe would be nice to replace the way that becomes free the soonest.
                     if(!isValid(repWay)) begin
-                        $fwrite(stderr, "[L1Pipe] ERROR: ", fshow(cmd), " cannot find way to replace\n");
-                        $finish;
+                        if(verbose)
+                            $display("%t L1 %m tagMatch: set oversubscription", $time);
+                        //$fwrite(stderr, "[L1Pipe] ERROR: ", fshow(cmd), " cannot find way to replace\n");
+                        //$finish;
                     end
                     return TagMatchResult {
                         way: fromMaybe(?, repWay),
@@ -339,11 +348,11 @@ module mkL1Pipe(
     endfunction
 
     CCPipe#(
-        wayNum, indexT, tagT, Msi, dirT, ownerT, otherT, repT, Line, pipeCmdT
+        wayNum, indexT, tagT, Msi, dirT, ownerT, otherT, repT, Line, setAuxT, pipeCmdT
     ) pipe <- mkCCPipeSingleCycle(
         regToReadOnly(initDone), getIndex, tagMatch,
         updateByUpCs, updateByDownDir, updateRepInfo,
-        infoRam, repRam, dataRam
+        infoRam, repRam, dataRam, queueRam
     );
 
     method Action send(pipeInT req);
@@ -387,11 +396,12 @@ module mkL1Pipe(
             way: pout.way,
             pRqMiss: pout.pRqMiss,
             ram: pout.ram,
-            repInfo: pout.repInfo
+            repInfo: pout.repInfo,
+            setAuxData: pout.setAuxData
         };
     endmethod
 
-    method Action deqWrite(Maybe#(cRqIdxT) swapRq, ramDataT wrRam, Bool updateRep);
+    method Action deqWrite(Maybe#(cRqIdxT) swapRq, ramDataT wrRam, Maybe#(cRqIdxT) nextInQueue, Bool updateRep);
         // get new cmd
         Maybe#(pipeCmdT) newCmd = Invalid;
         if(swapRq matches tagged Valid .idx) begin // swap in cRq
@@ -403,6 +413,6 @@ module mkL1Pipe(
 `endif
         end
         // call pipe
-        pipe.deqWrite(newCmd, wrRam, updateRep);
+        pipe.deqWrite(newCmd, wrRam, nextInQueue, updateRep);
     endmethod
 endmodule

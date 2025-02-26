@@ -112,12 +112,15 @@ typedef Bit#(TMax#(SizeOf#(LdQTag), SizeOf#(SBIndex))) DProcReqId;
 
 (* synthesize *)
 module mkDCRqMshrWrapper(
-    L1CRqMshr#(DCRqNum, L1Way, DTag, ProcRq#(DProcReqId))
+    L1CRqMshr#(DCRqNum, DIndex, L1Way, DTag, ProcRq#(DProcReqId))
 );
     function Addr getAddrFromReq(ProcRq#(DProcReqId) r);
         return r.addr;
     endfunction
-    let m <- mkL1CRqMshr(getAddrFromReq);
+    function DIndex getIndexFromAddr(Addr addr);
+        return truncate(addr >> (valueOf(LgLineSzBytes) + valueOf(LgDBankNum)));
+    endfunction
+    let m <- mkL1CRqMshr(getAddrFromReq, getIndexFromAddr);
     return m;
 endmodule
 
