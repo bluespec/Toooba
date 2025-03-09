@@ -160,7 +160,7 @@ module mkL1Bank#(
     Add#(TAdd#(tagSz, indexSz), TAdd#(lgBankNum, LgLineSzBytes), AddrSz)
 );
 
-    Bool verbose = False;
+    Bool verbose = True;
 
     L1CRqMshr#(cRqNum, indexT, wayT, tagT, procRqT) cRqMshr <- mkL1CRqMshrLocal;
 
@@ -870,7 +870,6 @@ endfunction
         function Action cRqDrop;
         action
             cRqMshr.pipelineResp.releaseEntry(n);
-            crqMshrDeqs <= crqMshrDeqs + 1;
             pipeline.deqWrite(Invalid, pipeOut.ram, pipeOutNextInQueue, False);
         endaction
         endfunction
@@ -964,7 +963,7 @@ endfunction
                 doAssert(cs_valid, "hit, so cs must > I");
                 if (verbose)
                 $display("%t L1 %m pipelineResp: cRq: no owner, hit", $time);
-                cRqHit(n, procRq, False);
+                cRqHit(n, procRq);
             end
             else if(scFail) begin
                 // Sc already fails, so we don't need to req parent.  Since
