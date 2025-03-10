@@ -278,7 +278,9 @@ module mkL1Pipe(
                 // find hit way (nothing is being replaced)
                 function Bool isMatch(Tuple3#(Msi, tagT, ownerT) csTagOwner);
                     match {.cs, .t, .o} = csTagOwner;
-                    return (cs > I || isValid(o)) && t == tag;
+                    Bool cRqHit = (cs > I || isValid(o)) && t == tag;
+                    Bool pRqHit = cs > I && t == tag;
+                    return cmd matches tagged CRq .* ? cRqHit : pRqHit;
                 endfunction
                 Maybe#(wayT) hitWay = searchIndex(isMatch, zip3(csVec, tagVec, ownerVec));
                 if(hitWay matches tagged Valid .w) begin
@@ -303,15 +305,10 @@ module mkL1Pipe(
                         unlocked[i] = !isValid(ownerVec[i]);
                     end
                     Maybe#(wayT) repWay = randRep.getReplaceWay(unlocked, invalid);
-                    // sanity check: repWay must be valid
-                    // ^ Not true if there are more MSHRs than ways
-                    // Just choose a locked way. This will create a dependency chain.
-                    // TODO: Maybe would be nice to replace the way that becomes free the soonest.
-                    if(!isValid(repWay)) begin
-                        if(verbose)
-                            $display("%t L1 %m tagMatch: set oversubscription", $time);
-                        //$fwrite(stderr, "[L1Pipe] ERROR: ", fshow(cmd), " cannot find way to replace\n");
-                        //$finish;
+                    // There may be no way to replace if all ways are locked.
+                    // Just choose a locked way. This will cause the request to be queued.
+                    if(verbose && !isValid(repWay)) begin
+                        $display("%t L1 %m tagMatch: set oversubscription", $time);
                     end
                     return TagMatchResult {
                         way: fromMaybe(?, repWay),
