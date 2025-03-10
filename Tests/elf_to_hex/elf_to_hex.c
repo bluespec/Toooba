@@ -43,14 +43,11 @@
 #include <inttypes.h>
 #include <string.h>
 #include <fcntl.h>
+#include <gelf.h>
 
 #ifdef __APPLE__
-#include <libelf/gelf.h>
 #include <vector>
-#else
-#include <gelf.h>
 #endif
-
 
 // ================================================================
 // Memory buffer into which we load the ELF file before

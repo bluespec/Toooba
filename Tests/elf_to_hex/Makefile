@@ -12,7 +12,7 @@ CFLAGS = -g  -o elf_to_hex  elf_to_hex.c -lelf
 
 ifeq ($(uname_S), Darwin)
     CC = clang++
-	APPLE_FLAGS = -I /opt/homebrew/lib -I /opt/homebrew/Cellar/libelf/0.8.13_1/include/
+    APPLE_FLAGS = -L /opt/homebrew/lib -I /opt/homebrew/include/libelf -I /opt/homebrew/include
 endif
 
 elf_to_hex: elf_to_hex.c
