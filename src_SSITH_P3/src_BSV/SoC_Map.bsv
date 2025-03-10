@@ -70,7 +70,7 @@ SoC_Map_Struct {
    boot_rom_addr_size:     'h_0000_1000,
 
    main_mem_addr_base:     'h_C000_0000,
-   main_mem_addr_size:     'h_4000_0000,
+   main_mem_addr_size:     'h_C000_0000,
 
    pc_reset_value:         'h_7000_0000    // = boot_rom_addr_base
    };
@@ -251,7 +251,7 @@ module mkSoC_Map (SoC_Map_IFC);
    // DDR memory 0 cached
 
    Fabric_Addr ddr4_0_cached_addr_base = 'h_C000_0000;
-   Fabric_Addr ddr4_0_cached_addr_size = 'h_4000_0000;    // 1G
+   Fabric_Addr ddr4_0_cached_addr_size = 'h_C000_0000;    // 3G
    Fabric_Addr ddr4_0_cached_addr_lim  = ddr4_0_cached_addr_base + ddr4_0_cached_addr_size;
 
    function Bool fn_is_ddr4_0_cached_addr (Fabric_Addr addr);
