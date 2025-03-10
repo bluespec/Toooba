@@ -643,11 +643,12 @@ endfunction
                 line: newLine // write new data into cache
             }, isValid(succ) ? pipeOutNextInQueue : pipeOutSecondInQueue, True); // hit, so update rep info
             if (!isValid(succ) &&& pipeOutNextInQueue matches tagged Valid .nextInQueue) begin
-                $display("%t L1D dequeuing queued req: mshr: %d, queueSucc: ",
-                    $time,
-                    nextInQueue,
-                    fshow(pipeOutSecondInQueue)
-                );
+                if (verbose)
+                    $display("%t L1 %m pipelineResp: Hit func: dequeuing req: mshr: %d, queueSucc: ",
+                        $time,
+                        nextInQueue,
+                        fshow(pipeOutSecondInQueue)
+                    );
                 cRqRetryIndexQ.enq(nextInQueue);
                 cRqMshr.manageQueue.resetEntry(nextInQueue);
             end
@@ -913,6 +914,10 @@ endfunction
                         end
                         cRqQueue;
                     end
+                    if (verbose)
+                        $display("%t L1 %m pipelineResp: cRq: all ways owned, queuing ", $time,
+                            fshow(n), " after ", fshow(cRqQueuedEOC)
+                        );
                 end
             end
             else begin
@@ -1092,11 +1097,12 @@ endfunction
                 line: ram.line
             }, pipeOutSecondInQueue, False);
             if (pipeOutNextInQueue matches tagged Valid .nextInQueue) begin
-                $display("%t L1D dequeuing queued req: mshr: %d, queueSucc: ",
-                    $time,
-                    nextInQueue,
-                    fshow(pipeOutSecondInQueue)
-                );
+                if (verbose)
+                    $display("%t L1 %m pipelineResp: pRq: dequeuing req: mshr: %d, queueSucc: ",
+                        $time,
+                        nextInQueue,
+                        fshow(pipeOutSecondInQueue)
+                    );
                 cRqRetryIndexQ.enq(nextInQueue);
                 cRqMshr.manageQueue.resetEntry(nextInQueue);
             end
