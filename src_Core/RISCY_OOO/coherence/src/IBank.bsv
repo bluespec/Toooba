@@ -648,8 +648,9 @@ module mkIBank#(
         if(ram.info.owner matches tagged Valid .cOwner) begin
             if(cOwner != n) begin
                 // owner is another cRq, so must just go through tag match
-                // tag match must be hit (because replacement algo won't give a way with owner)
-                doAssert(ram.info.cs == S && ram.info.tag == getTag(procRq.addr),
+                // tag match must be hit (because L1I has an equal number of ways and MSHRs,
+                // so it should never need to queue cRqs)
+                doAssert(ram.info.tag == getTag(procRq.addr),
                     "cRq should hit in tag match"
                 );
                 // should be added to a cRq in dependency chain & deq from pipeline
@@ -675,14 +676,8 @@ module mkIBank#(
         end
         else begin
             // cache has no owner, cRq must just go through tag match
-            // check for cRqEOC to append to dependency chain
-            if(cRqEOC matches tagged Valid .k) begin
-               if (verbose)
-                $display("%t I %m pipelineResp: cRq: no owner, depend on cRq ", $time, fshow(k));
-                cRqMshr.pipelineResp.setSucc(k, Valid (n));
-                cRqSetDepNoCacheChange;
-            end
-            else if(ram.info.cs == I || ram.info.tag == getTag(procRq.addr)) begin
+            doAssert(!isValid(cRqEOC), "end of chain is valid but the chosen way is not owned");
+            if(ram.info.cs == I || ram.info.tag == getTag(procRq.addr)) begin
                 // No Replacement necessary
                 if(ram.info.cs > I) begin
                    if (verbose)
