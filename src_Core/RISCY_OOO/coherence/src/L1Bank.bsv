@@ -155,8 +155,6 @@ module mkL1Bank#(
     FShow#(procRqIdT),
     FShow#(pipeOutT),
     Add#(tagSz, a__, AddrSz),
-    // make sure: cRqNum <= wayNum
-    Add#(cRqNum, b__, wayNum),
     Add#(TAdd#(tagSz, indexSz), TAdd#(lgBankNum, LgLineSzBytes), AddrSz)
 );
 
@@ -1372,8 +1370,6 @@ module mkL1Cache#(
     FShow#(procRqIdT),
     FShow#(pipeOutT),
     Add#(tagSz, a__, AddrSz),
-    // make sure: cRqNum <= wayNum
-    Add#(cRqNum, b__, wayNum),
     Add#(lgBankNum, c__, AddrSz),
     Add#(1, d__, bankNum),
     Add#(TAdd#(tagSz, indexSz), TAdd#(lgBankNum, LgLineSzBytes), AddrSz)
