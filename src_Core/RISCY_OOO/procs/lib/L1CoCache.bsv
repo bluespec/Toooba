@@ -103,7 +103,11 @@ typedef Bit#(DIndexSz) DIndex;
 typedef GetTagSz#(LgDBankNum, LgDSetNum) DTagSz;
 typedef Bit#(DTagSz) DTag;
 
+`ifdef L1D_CRQ_NUM
+typedef `L1D_CRQ_NUM DCRqNum;
+`else
 typedef L1WayNum DCRqNum;
+`endif
 typedef 4 DPRqNum; // match cache pipeline latency
 typedef Bit#(TLog#(DCRqNum)) DCRqMshrIdx;
 typedef Bit#(TLog#(DPRqNum)) DPRqMshrIdx;
