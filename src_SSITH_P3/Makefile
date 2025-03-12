@@ -32,7 +32,7 @@ BSC_COMPILATION_FLAGS += \
 	-D PERFORMANCE_MONITORING \
 	-D FABRIC64    \
 	-D INCLUDE_GDB_CONTROL \
-	-D INCLUDE_TANDEM_VERIF \
+	-D PERFORMANCE_MONITORING \
 	-D BRVF_TRACE \
 	-D XILINX_BSCAN  -D JTAG_TAP
 
@@ -41,6 +41,9 @@ SYNTH_BSC_OPTIONS = -D XILINX_XCVU9P
 
 # Sim only BSC_COMPILATION_FLAGS
 SIM_BSC_OPTIONS = -D BSIM
+
+# Set number of cores for RISCY config
+CORE_NUM = 2
 
 # Only used if we don't have INCLUDE_GDB_CONTROL
 #	-D EXTERNAL_DEBUG_MODULE
@@ -67,8 +70,9 @@ ALL_RISCY_DIRS = $(RISCY_DIRS):$(CONNECTAL_DIRS):$(BLUESTUFF_DIRS)
 CORE_DIRS = $(REPO)/src_Core/CPU:$(REPO)/src_Core/ISA:$(REPO)/src_Core/Core:$(REPO)/src_Core/PLIC:$(REPO)/src_Core/Debug_Module:$(REPO)/src_Core/BSV_Additional_Libs
 
 TESTBENCH_DIRS  = $(REPO)/src_Testbench/Fabrics/AXI4
+TLM_DIRS = %/Libraries/TLM3:%/Libraries/Axi:%/Libraries/Axi4:%/Libraries/AMBA_TLM3/TLM3:%/Libraries/AMBA_TLM3/Axi:%/Libraries/AMBA_TLM3/Axi4:%/Libraries/Bus
 
-BSC_PATH = -p $(ALL_RISCY_DIRS):$(CORE_DIRS):src_BSV:$(TESTBENCH_DIRS):+:%/Libraries/AMBA_TLM3/TLM3:%/Libraries/AMBA_TLM3/Axi:%/Libraries/AMBA_TLM3/Axi4:%/Libraries/Bus
+BSC_PATH = -p $(ALL_RISCY_DIRS):$(CORE_DIRS):src_BSV:$(TESTBENCH_DIRS):+:$(TLM_DIRS)
 
 # ----------------
 # Top-level file and module
