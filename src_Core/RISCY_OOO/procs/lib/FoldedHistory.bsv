@@ -115,10 +115,36 @@ module mkFoldedHistory#(Integer histLength, GlobalBranchHistory#(GlobalHistoryLe
         return recovered;
     endfunction
 
+    function Bit#(length) recomputedHistory(Bool recovery, Maybe#(Bit#(TLog#(SupSize))) count);
+        Bit#(length) ret = 0;
+        Bit#(GlobalHistoryLength) g = 0;
+        
+        if(recovery)
+            g = global.recoveredHistory;
+        else
+            g = global.history;
+            if(count matches tagged Valid .c)
+                g = g << c;
+        
+        Integer div = histLength / valueOf(length);
+        Integer rem = histLength - (div * valueOf(length));
+
+        for(Integer i = 0; i < div; i = i + 1) begin
+            Bit#(length) val = g[(i+1)*valueOf(length)-1:i*valueOf(length)];
+            ret = ret ^ val;
+        end
+        
+        if(rem > 0) begin
+            Bit#(length) val2 = g[rem+(div*valueOf(length))-1 : div*valueOf(length)];
+            ret = ret ^ val2;
+        end
+        return ret;
+    endfunction
+
     function ActionValue#(Bit#(length)) undoHistory(Bit#(TLog#(MaxSpecSize)) i, Bit#(TLog#(length)) shiftNum);
         actionvalue
             recover.send;
-            let recovered = getUndidHistory(i, shiftNum);
+            let recovered = recomputedHistory(True, tagged Invalid);
             folded_history[0] <= recovered;
             
             last_removed_history[0] <= last_removed_history[0] >> (i+1);
