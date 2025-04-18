@@ -1211,10 +1211,6 @@ endmodule
 
 module mkPrintPCPrefetcher(PCPrefetcher);
     method Action reportAccess(Addr addr, Bit#(16) pcHash, HitOrMiss hitMiss);
-        if (hitMiss == HIT)
-            $display("%t PCPrefetcher report HIT %h", $time, addr);
-        else
-            $display("%t PCPrefetcher report MISS %h", $time, addr);
     endmethod
     method ActionValue#(Addr) getNextPrefetchAddr if (False);
         return 64'h0000000080000080;
@@ -1269,24 +1265,24 @@ provisos(
         strideTable.deqRdResp;
         StrideEntry seNext = se;
         Bit#(13) observedStride = {1'b0, addr[11:0]} - {1'b0, se.lastAddr};
-        $writeh("%t Stride Prefetcher updateStrideEntry ", $time,
-            fshow(hitMiss), " ", addr,
-            ". Entry ", index, " state is ", fshow(se.state));
+        //$writeh("%t Stride Prefetcher updateStrideEntry ", $time,
+        //    fshow(hitMiss), " ", addr,
+        //    ". Entry ", index, " state is ", fshow(se.state));
         if (se.state == EMPTY) begin
             if (hitMiss == MISS) begin 
                 seNext.lastAddr = truncate(addr);
                 seNext.state = INIT;
-                $display(", allocate entry");
+                //$display(", allocate entry");
             end
             else begin
-                $display(", ignore");
+                //$display(", ignore");
             end
         end 
         else if (se.state == INIT && observedStride != 0) begin
             seNext.stride = observedStride;
             seNext.state = TRANSIENT;
             seNext.lastAddr = truncate(addr);
-            $display(", set stride to %h", seNext.stride);
+            //$display(", set stride to %h", seNext.stride);
         end
         else if ((se.state == TRANSIENT || se.state == STEADY) && observedStride != 0) begin
             if (observedStride == se.stride) begin
@@ -1304,17 +1300,17 @@ provisos(
                 end
                 seNext.state = STEADY;
                 seNext.lastAddr = truncate(addr);
-                $display(", stride %h is confirmed!", seNext.stride);
+                //$display(", stride %h is confirmed!", seNext.stride);
             end
             else begin
                 seNext.state = TRANSIENT;
                 seNext.stride = observedStride;
                 seNext.lastAddr = truncate(addr);
-                $display(", old stride is broken! New stride: %h", seNext.stride);
+                //$display(", old stride is broken! New stride: %h", seNext.stride);
             end
         end
         else
-            $display("");
+            //$display("");
         
         strideEntryForPrefetch.enq(tuple3(seNext, addr, pcHash));
     endrule
@@ -1351,7 +1347,7 @@ provisos(
             // so hold off any potential read requests until we do a writeback
             holdReadReq.send();
             cLinesPrefetchedLatest <= Valid(cLinesPrefetched + 1);
-            $display("%t Stride Prefetcher getNextPrefetchAddr requesting %h for entry %h", $time, reqAddr, pcHash[7:0]);
+            //$display("%t Stride Prefetcher getNextPrefetchAddr requesting %h for entry %h", $time, reqAddr, pcHash[7:0]);
         end
         else begin
             //cant prefetch
@@ -1402,7 +1398,7 @@ provisos(
 
     rule sendReadReq if (!holdReadReq);
         match {.addr, .pcHash, .hitMiss} = memAccesses.first;
-        $display("%t Sending read req for %h!", $time, pcHash);
+        //$display("%t Sending read req for %h!", $time, pcHash);
         strideTable.rdReq(truncate(pcHash));
         rdRespEntry <= memAccesses.first;
         memAccesses.deq;
@@ -1422,19 +1418,19 @@ provisos(
         strideTable.deqRdResp;
         StrideEntry2 seNext = se;
         Int#(12) observedStride = unpack(addr[11:0] - se.lastAddr);
-        $writeh("%t Stride Prefetcher updateStrideEntry ", $time,
-            fshow(hitMiss), " ", addr,
-            ". Entry ", index, " state is ", fshow(se.state));
+        //$writeh("%t Stride Prefetcher updateStrideEntry ", $time,
+          //   fshow(hitMiss), " ", addr,
+           // ". Entry ", index, " state is ", fshow(se.state));
         if (se.state == INIT && observedStride != 0) begin
             if (se.stride == observedStride) begin
                 //fast track to steady
                 seNext.state = STEADY;
-                $display(", stride matches so fast track back to STEADY");
+                //$display(", stride matches so fast track back to STEADY");
             end
             else begin
                 seNext.stride = observedStride;
                 seNext.state = TRANSIENT;
-                $display(", stride doesn't match, so set to %h", seNext.stride);
+                //$display(", stride doesn't match, so set to %h", seNext.stride);
             end
             seNext.lastAddr = truncate(addr);
         end
@@ -1443,13 +1439,13 @@ provisos(
                 //stride confimed, move to steady
                 seNext.cLinesPrefetched = 0;
                 seNext.state = STEADY;
-                $display(", stride %h is confirmed!", seNext.stride);
+                //$display(", stride %h is confirmed!", seNext.stride);
             end
             else begin
                 //We're seeing random accesses, go to no pred
                 seNext.state = NO_PRED;
                 seNext.stride = observedStride;
-                $display(", we have a random stride (%h), go to NO_PRED", seNext.stride);
+                //$display(", we have a random stride (%h), go to NO_PRED", seNext.stride);
             end
             seNext.lastAddr = truncate(addr);
         end
@@ -1460,24 +1456,24 @@ provisos(
                     seNext.cLinesPrefetched = 
                         (se.cLinesPrefetched == 0) ? 0 : se.cLinesPrefetched - 1;
                 end
-                $display(", stride %h stays confirmed!", seNext.stride);
+                //$display(", stride %h stays confirmed!", seNext.stride);
             end
             else begin
                 //We jump to some other random location, so reset number of lines prefetched
                 seNext.cLinesPrefetched = 0;
                 seNext.state = INIT;
-                $display(", random jump (%x)! Move to INIT, don't reset stride", observedStride);
+                //$display(", random jump (%x)! Move to INIT, don't reset stride", observedStride);
             end
             seNext.lastAddr = truncate(addr);
         end
         else if (se.state == NO_PRED && observedStride != 0) begin
             if (observedStride == se.stride) begin
                 seNext.state = TRANSIENT;
-                $display(", have repeated stride: %h, move to TRANSIENT", seNext.stride);
+                //$display(", have repeated stride: %h, move to TRANSIENT", seNext.stride);
             end
             else begin
                 seNext.stride = observedStride;
-                $display(", have random stride: %h", seNext.stride);
+                //$display(", have random stride: %h", seNext.stride);
             end
             seNext.lastAddr = truncate(addr);
         end
@@ -1512,11 +1508,11 @@ provisos(
             // so hold off any potential read requests until we do a writeback
             holdReadReq.send();
             cLinesPrefetchedLatest <= Valid(cLinesPrefetched + 1);
-            $display("%t Stride Prefetcher getNextPrefetchAddr requesting %h for entry %h", $time, reqAddr, pcHash[7:0]);
+            //$display("%t Stride Prefetcher getNextPrefetchAddr requesting %h for entry %h", $time, reqAddr, pcHash[7:0]);
         end
         else begin
             //cant prefetch
-            $display("%t Stride Prefetcher no possible prefetch for entry %h", $time, strideTableIndexT'(truncate(pcHash)));
+            //$display("%t Stride Prefetcher no possible prefetch for entry %h", $time, strideTableIndexT'(truncate(pcHash)));
             strideEntryForPrefetch.deq;
             se.cLinesPrefetched = cLinesPrefetched;
             cLinesPrefetchedLatest <= Invalid;
@@ -1558,11 +1554,11 @@ provisos(
     Ehr#(2, Bit#(3)) prefetchesIssued <- mkEhr(fromInteger(valueOf(cLinesAheadToPrefetch)));
 
     method Action reportAccess(Addr addr, Bit#(16) pcHash, HitOrMiss hitMiss);
-        $display("%t report access %x %x", $time, addr, pcHash);
+        //$display("%t report access %x %x", $time, addr, pcHash);
         strideTableIndexT idx = truncate(pcHash);
         SimpleStrideEntry entry = strideTable[idx];
         Int#(13) calc_stride = unpack(truncate(addr - entry.lastAddr));
-        $display("found stride %x", entry.stride);
+        //$display("found stride %x", entry.stride);
         entry.lastAddr = addr;
         if (calc_stride == entry.stride) begin
             if (entry.confidence != 2'd3) begin
@@ -1601,7 +1597,7 @@ provisos(
             (pack(signExtend(strideToUse)) * zeroExtend(prefetchesIssued[0] + 1));
 
         check(reqAddr[63:12] == addrToPrefetch[63:12]);
-        $display("%t getprefetchaddr ret %x", $time, reqAddr);
+        //$display("%t getprefetchaddr ret %x", $time, reqAddr);
         return reqAddr;
     endmethod
 
@@ -1681,7 +1677,7 @@ provisos(
 
     rule sendReadReq if (!holdReadReq);
         match {.addr, .pcHash, .hitMiss} = memAccesses.first;
-        $display("%t Sending read req for %h!", $time, pcHash);
+        //$display("%t Sending read req for %h!", $time, pcHash);
         strideTable.rdReq(truncate(pcHash));
         rdRespEntry <= memAccesses.first;
         memAccesses.deq;
@@ -1701,36 +1697,36 @@ provisos(
         strideTable.deqRdResp;
         StrideEntryAdaptive seNext = se;
         Bit#(13) observedStride = {1'b0, addr[11:0]} - {1'b0, se.lastAddr};
-        $writeh("%t Stride Prefetcher updateStrideEntry ", $time,
-            fshow(hitMiss), " ", addr,
-            ". Entry ", index, " state is ", fshow(se.state));
+        //$writeh("%t Stride Prefetcher updateStrideEntry ", $time,
+        //    fshow(hitMiss), " ", addr,
+        //    ". Entry ", index, " state is ", fshow(se.state));
         if (se.state == EMPTY) begin
             if (hitMiss == MISS) begin 
                 seNext.lastAddr = truncate(addr);
                 seNext.state = INIT;
-                $display(", allocate entry");
+                //$display(", allocate entry");
             end
             else begin
-                $display(", ignore");
+                //$display(", ignore");
             end
         end 
         else if (se.state == INIT && observedStride != 0) begin
             seNext.stride = observedStride;
             seNext.state = TRANSIENT;
             seNext.lastAddr = truncate(addr);
-            $display(", set stride to %h", seNext.stride);
+            //$display(", set stride to %h", seNext.stride);
         end
         else if (se.state == TRANSIENT && observedStride != 0) begin
             if (observedStride == se.stride) begin
                 //Here we transition from TRANSIENT to STEADY, so init this field
                 seNext.cLinesPrefetched = 0;
                 seNext.state = STEADY1;
-                $display(", stride %h is confirmed!", seNext.stride);
+                //$display(", stride %h is confirmed!", seNext.stride);
             end
             else begin
                 seNext.state = TRANSIENT;
                 seNext.stride = observedStride;
-                $display(", old stride is broken! New stride: %h", seNext.stride);
+                //$display(", old stride is broken! New stride: %h", seNext.stride);
             end
             seNext.lastAddr = truncate(addr);
         end
@@ -1742,18 +1738,18 @@ provisos(
                         (se.cLinesPrefetched == 0) ? 0 : se.cLinesPrefetched - 1;
                 end
                 seNext.state = incrementSteady(se.state);
-                $display(", stride %h is sustained, advance STEADY number!", se.stride);
+                //$display(", stride %h is sustained, advance STEADY number!", se.stride);
             end
             else if (se.state == STEADY4 || se.state == STEADYLAST) begin
                 //Leniency towards some stride changes
                 seNext.state = STEADY1;
                 seNext.cLinesPrefetched = 0; //We've jumped to some other address, so start fetching again!
-                $display(", old stride is broken, but tolerate it! Keep old stride: %h", se.stride);
+                //$display(", old stride is broken, but tolerate it! Keep old stride: %h", se.stride);
             end
             else begin
                 seNext.state = TRANSIENT;
                 seNext.stride = observedStride;
-                $display(", old stride is broken! New stride: %h", seNext.stride);
+                //$display(", old stride is broken! New stride: %h", seNext.stride);
             end
             seNext.lastAddr = truncate(addr);
         end
@@ -1795,11 +1791,11 @@ provisos(
             // so hold off any potential read requests until we do a writeback
             holdReadReq.send();
             cLinesPrefetchedLatest <= Valid(cLinesPrefetched + 1);
-            $display("%t Stride Prefetcher getNextPrefetchAddr requesting %h for entry %h", $time, reqAddr, pcHash[7:0]);
+            //$display("%t Stride Prefetcher getNextPrefetchAddr requesting %h for entry %h", $time, reqAddr, pcHash[7:0]);
         end
         else begin
             //cant prefetch
-            $display("%t Stride Prefetcher no possible prefetch for entry %h", $time, strideTableIndexT'(truncate(pcHash)));
+            //$display("%t Stride Prefetcher no possible prefetch for entry %h", $time, strideTableIndexT'(truncate(pcHash)));
             strideEntryForPrefetch.deq;
             se.cLinesPrefetched = cLinesPrefetched;
             cLinesPrefetchedLatest <= Invalid;
