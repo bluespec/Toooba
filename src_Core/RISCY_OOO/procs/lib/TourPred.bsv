@@ -43,9 +43,9 @@ export PCIndex;
 
 // 4KB tournament predictor
 
-typedef 13 TourGlobalHistSz;
-typedef 11 TourLocalHistSz;
-typedef 11 PCIndexSz;
+typedef 17 TourGlobalHistSz;
+typedef 17 TourLocalHistSz;
+typedef 17 PCIndexSz;
 
 typedef Bit#(TourGlobalHistSz) TourGlobalHist;
 typedef Bit#(TourLocalHistSz) TourLocalHist;
