@@ -344,7 +344,7 @@ module mkFetchStage(FetchStage);
         nextAddrPred.put_pc(pc_reg[pc_final_port]);
     endrule
 
-    Reg#(Vector#(PageBuffSize,Maybe#(Vpn))) buffered_translation_virt_pc <- mkReg(replicate(Invalid));
+    Reg#(Vector#(PageBuffSize,Maybe#(Addr))) buffered_translation_virt_pc <- mkReg(replicate(Invalid));
     Reg#(Vector#(PageBuffSize,TlbResp)) buffered_translation_tlb_resp <- mkRegU;
     Reg#(Bit#(TLog#(PageBuffSize))) buffered_translation_count <- mkRegU;
 
@@ -360,9 +360,9 @@ module mkFetchStage(FetchStage);
         translateAddress.deq;
         if (iTlb.flush_done) begin
             // Check if, because of pipelining, we already have this vpn.
-            Bool found = elem(Valid(getVpn(translateAddress.first)), buffered_translation_virt_pc);
+            Bool found = elem(Valid(translateAddress.first), buffered_translation_virt_pc);
             if (!found) begin
-                buffered_translation_virt_pc[buffered_translation_count] <= Valid(getVpn(translateAddress.first));
+                buffered_translation_virt_pc[buffered_translation_count] <= Valid(translateAddress.first);
                 buffered_translation_tlb_resp[buffered_translation_count] <= tr;
                 buffered_translation_count <= buffered_translation_count + 1;
             end
@@ -394,7 +394,7 @@ module mkFetchStage(FetchStage);
         Maybe#(Addr) pred_next_pc = pred_future_pc[posLastSupX2];
 
         // Search the last few translations to look for a match.
-        Maybe#(UInt#(TLog#(PageBuffSize))) m_buff_match_idx = findElem(Valid(getVpn(pc)), buffered_translation_virt_pc);
+        Maybe#(UInt#(TLog#(PageBuffSize))) m_buff_match_idx = findElem(Valid(pc), buffered_translation_virt_pc);
         if (m_buff_match_idx matches tagged Valid .buff_match_idx) begin
             let next_fetch_pc = fromMaybe(pc + (2 * (zeroExtend(posLastSupX2) + 1)), pred_next_pc);
             let pc_idxs <- pcBlocks.insertAndReserve(truncateLSB(pc), truncateLSB(next_fetch_pc));
