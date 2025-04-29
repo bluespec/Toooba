@@ -1242,7 +1242,7 @@ provisos(
     );
 
     RWBramCore#(strideTableIndexT, StrideEntry) strideTable <- mkRWBramCoreForwarded;
-    FIFOF#(Tuple3#(Addr, Bit#(16), HitOrMiss)) memAccesses <- mkSizedBypassFIFOF(8);
+    FIFOF#(Tuple3#(Addr, Bit#(16), HitOrMiss)) memAccesses <- mkUGSizedFIFOF(8);
     Reg#(Tuple3#(Addr, Bit#(16), HitOrMiss)) rdRespEntry <- mkReg(?);
 
     Fifo#(8, Addr) addrToPrefetch <- mkOverflowPipelineFifo;
@@ -1250,7 +1250,7 @@ provisos(
     Reg#(Maybe#(Bit#(4))) cLinesPrefetchedLatest <- mkReg(Invalid);
     PulseWire holdReadReq <- mkPulseWire;
 
-    rule sendReadReq if (!holdReadReq);
+    rule sendReadReq if (!holdReadReq && memAccesses.notEmpty);
         match {.addr, .pcHash, .hitMiss} = memAccesses.first;
         if (verbose) $display("%t Sending read req for %h!", $time, pcHash);
         strideTable.rdReq(truncate(pcHash));
@@ -1367,7 +1367,7 @@ provisos(
     endrule
 
     method Action reportAccess(Addr addr, Bit#(16) pcHash, HitOrMiss hitMiss);
-        memAccesses.enq(tuple3 (addr, pcHash, hitMiss));
+        if (memAccesses.notFull) memAccesses.enq(tuple3 (addr, pcHash, hitMiss));
     endmethod
 
     method ActionValue#(Addr) getNextPrefetchAddr;
@@ -1631,7 +1631,7 @@ provisos(
     Alias#(strideTableIndexT, Bit#(TLog#(strideTableSize)))
     );
     RWBramCore#(strideTableIndexT, StrideEntryAdaptive) strideTable <- mkRWBramCoreForwarded;
-    FIFOF#(Tuple3#(Addr, Bit#(16), HitOrMiss)) memAccesses <- mkSizedBypassFIFOF(8);
+    FIFOF#(Tuple3#(Addr, Bit#(16), HitOrMiss)) memAccesses <- mkUGSizedFIFOF(8);
     Reg#(Tuple3#(Addr, Bit#(16), HitOrMiss)) rdRespEntry <- mkReg(?);
 
     Fifo#(8, Addr) addrToPrefetch <- mkOverflowPipelineFifo;
@@ -1682,7 +1682,7 @@ provisos(
         end
     endfunction
 
-    rule sendReadReq if (!holdReadReq);
+    rule sendReadReq if (!holdReadReq && memAccesses.notEmpty);
         match {.addr, .pcHash, .hitMiss} = memAccesses.first;
         if (verbose) $display("%t Sending read req for %h!", $time, pcHash);
         strideTable.rdReq(truncate(pcHash));
@@ -1811,7 +1811,7 @@ provisos(
     endrule
 
     method Action reportAccess(Addr addr, Bit#(16) pcHash, HitOrMiss hitMiss);
-        memAccesses.enq(tuple3 (addr, pcHash, hitMiss));
+        if (memAccesses.notFull) memAccesses.enq(tuple3 (addr, pcHash, hitMiss));
     endmethod
 
     method ActionValue#(Addr) getNextPrefetchAddr;
