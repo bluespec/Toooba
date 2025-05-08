@@ -453,6 +453,10 @@ function CSR unpackCSR(Bit#(12) x);
     endcase);
 endfunction
 
+function Bool implementedCSR(Bit#(12) addr);
+    return (unpackCSR(addr) != CSRnone);
+endfunction
+
 // values for CSRmspec
 Bit#(2) mSpecAll    = 0; // every inst can speculate
 Bit#(2) mSpecNonMem = 1; // only non-memory inst can speculate

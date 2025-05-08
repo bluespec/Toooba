@@ -324,6 +324,8 @@ module mkDM_System_Bus (DM_System_Bus_IFC);
 				 wuser: fabric_default_user};
 	 master_xactor.i_wr_data.enq (wrd);
 
+	 rg_sb_state <= SB_WRITE_FINISH;
+
 	 if (verbosity != 0) begin
 	    $display ("    DM_System_Bus.fa_fabric_send_write_req:");
 	    $display ("    ", fshow (wra));
@@ -567,6 +569,7 @@ module mkDM_System_Bus (DM_System_Bus_IFC);
       let wrr <- pop_o (master_xactor.o_wr_resp);
       if (wrr.bresp != axi4_resp_okay)
 	 rg_sbcs_sberror <= DM_SBERROR_OTHER;
+      rg_sb_state <= SB_NOTBUSY;
    endrule
 
    // ================================================================
