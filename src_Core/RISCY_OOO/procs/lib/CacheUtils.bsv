@@ -65,7 +65,7 @@ function CLineDataSel getCLineDataSel(Addr a) =
 typedef struct {
   Vector#(CLineNumMemTaggedData, MemTag) tag;
   Vector#(CLineNumMemTaggedData, MemData) data;
-} CLine deriving (Bits, Eq, FShow);
+} CLine deriving (Bits, Eq, FShow, Bounded);
 function Vector#(CLineNumMemTaggedData, MemTaggedData) clineToMemTaggedDataVector(CLine line);
   function f(x,y) = MemTaggedData{tag: x, data: y};
   return zipWith(f, line.tag, line.data);

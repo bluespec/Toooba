@@ -218,6 +218,16 @@ interface L1ProcResp#(type idT);
     method ActionValue#(Tuple2#(LineByteEn, Line)) respSt(idT id);
     method Action evict(LineAddr a); // called when cache line is evicted
 endinterface
+// General replacement interface
+interface ReplacePolicy#(numeric type wayNum, type repInfoT);
+    method repInfoT initRepInfo;
+    method Maybe#(Bit#(TLog#(wayNum))) getReplaceWay(
+        Vector#(wayNum, Bool) unlocked, 
+        Vector#(wayNum, Bool) invalid,
+        repInfoT repInfo
+    );
+    method repInfoT updateRepInfo(repInfoT old, Bit#(TLog#(wayNum)) way);
+endinterface
 
 // RISCV-specific store-cond return values
 typedef 0 ScSuccVal;

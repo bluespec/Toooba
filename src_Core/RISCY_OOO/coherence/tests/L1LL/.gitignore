@@ -1,0 +1,4 @@
+build*
+sim*
+*.log
+log
