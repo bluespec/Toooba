@@ -56,7 +56,7 @@ typedef Vector#(DataBytes, Bool) ByteEn;
 typedef struct {
   tag_t tag;
   data_t data;
-} TaggedData#(type tag_t, type data_t) deriving (Bits, FShow, Eq, Bounded);
+} TaggedData#(type tag_t, type data_t) deriving (Bits, FShow, Eq);
 function tag_t getTag(TaggedData#(tag_t, data_t) td) = td.tag;
 function data_t getData(TaggedData#(tag_t, data_t) td) = td.data;
 typedef Vector#(2, Data) MemData;

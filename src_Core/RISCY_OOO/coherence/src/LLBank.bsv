@@ -191,7 +191,7 @@ module mkLLBank#(
     Add#(TLog#(TDiv#(childNum,2)), c__, TLog#(childNum))
 );
 
-   Bool verbose = True;
+   Bool verbose = False;
 
     LLCRqMshr#(cRqNum, wayT, tagT, Vector#(childNum, DirPend), cRqT) cRqMshr <- mkLLMshr;
 
@@ -1012,7 +1012,6 @@ endfunction
             line: ram.line // use line in ram
         }, True); // hit, so update rep info
         if (!cRqIsPrefetch[n]) begin
-            /*
             if (cRq.child[0] == 1) begin
                 instrPrefetchers.reportAccess(
                         truncateLSB(cRq.child), cRq.addr, HIT);
@@ -1021,7 +1020,6 @@ endfunction
                 dataPrefetchers.reportAccess(
                         truncateLSB(cRq.child), cRq.addr, HIT);
             end
-            */
         end
     endaction
     endfunction
@@ -1219,7 +1217,6 @@ endfunction
                 line: ram.line
             }, False);
             if (!cRqIsPrefetch[n]) begin
-                /*
                 if (cRq.child[0] == 1) begin
                     instrPrefetchers.reportAccess(
                             truncateLSB(cRq.child), cRq.addr, MISS);
@@ -1228,7 +1225,6 @@ endfunction
                     dataPrefetchers.reportAccess(
                             truncateLSB(cRq.child), cRq.addr, MISS);
                 end
-                */
             end
         endaction
         endfunction
@@ -1299,7 +1295,6 @@ endfunction
                 });
             end
             if (!cRqIsPrefetch[n]) begin
-                /*
                 if (cRq.child[0] == 1) begin
                     instrPrefetchers.reportAccess(
                             truncateLSB(cRq.child), cRq.addr, MISS);
@@ -1308,7 +1303,6 @@ endfunction
                     dataPrefetchers.reportAccess(
                             truncateLSB(cRq.child), cRq.addr, MISS);
                 end
-                */
             end
         endaction
         endfunction

@@ -67,7 +67,6 @@ export L1Num;
 export LgL1WayNum;
 export L1WayNum;
 export L1Way;
-export LgDBankNum;
 
 export DProcReqId;
 export L1DCRqStuck(..);
